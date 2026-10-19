@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Bread dole — wicker basket of ring loaves</title>
+<defs>
+<linearGradient id="a-bread-dole-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+<linearGradient id="a-bread-dole-bark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bd8c55"/><stop offset="0.48" stop-color="#8f5e35"/><stop offset="1" stop-color="#51351f"/></linearGradient>
+<linearGradient id="a-bread-dole-wheat" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3dda0"/><stop offset="0.48" stop-color="#d8be73"/><stop offset="1" stop-color="#a07b38"/></linearGradient>
+</defs>
+<path d="M7 29Q32 25 57 29L53 53Q51 58 45 58H19Q13 58 11 53Z" fill="url(#a-bread-dole-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M46 31L56 30L52 53Q51 57 44 57H35L40 51Z" fill="#8b633b"/>
+<ellipse cx="19" cy="24" rx="12" ry="13" fill="url(#a-bread-dole-wheat)" stroke="#181210" stroke-width="2.5"/>
+<path d="M24 15Q34 26 23 35L17 36Q28 28 24 15Z" fill="#a07b38"/>
+<ellipse cx="19" cy="24" rx="4" ry="5" fill="#51351f" stroke="#89662e" stroke-width="1.75"/>
+<path d="M11 24Q10 17 16 14M18 31Q21 32 24 29" fill="none" stroke="#fff0c0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<ellipse cx="33" cy="19" rx="13" ry="13" fill="url(#a-bread-dole-wheat)" stroke="#181210" stroke-width="2.5"/>
+<path d="M39 10Q49 21 37 30L30 31Q41 24 39 10Z" fill="#a07b38"/>
+<ellipse cx="33" cy="19" rx="4.5" ry="5" fill="#51351f" stroke="#89662e" stroke-width="1.75"/>
+<path d="M25 17Q26 11 31 10M32 26L36 24" fill="none" stroke="#fff0c0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<ellipse cx="46" cy="27" rx="12" ry="12" fill="url(#a-bread-dole-wheat)" stroke="#181210" stroke-width="2.5"/>
+<path d="M52 19Q62 30 50 37L44 38Q53 31 52 19Z" fill="#a07b38"/>
+<ellipse cx="46" cy="27" rx="4" ry="4.5" fill="#51351f" stroke="#89662e" stroke-width="1.75"/>
+<path d="M38 25Q39 19 44 18M44 34L49 32" fill="none" stroke="#fff0c0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M7 32Q32 37 57 32L53 53Q51 58 45 58H19Q13 58 11 53Z" fill="url(#a-bread-dole-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M47 35L56 34L52 53Q50 57 44 57H35L40 53Z" fill="#8b633b"/>
+<path d="M10 40Q32 45 55 40M12 47Q32 52 53 47M16 54Q32 57 49 54M17 37L21 55M28 38L30 56M39 38L38 56M50 36L46 54" fill="none" stroke="#8b633b" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M7 30Q32 35 57 30V37Q32 42 7 37Z" fill="url(#a-bread-dole-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M8 36Q32 41 56 36V37Q32 42 8 37ZM49 44L54 43L52 53Q50 57 44 57H35V55L45 54Z" fill="#624123"/>
+<path d="M9 32Q25 36 40 34M13 42L15 49M19 56H27" fill="none" stroke="#f6dfb0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M22 44L25 45M32 51H35M44 42L47 41" fill="none" stroke="#a87643" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

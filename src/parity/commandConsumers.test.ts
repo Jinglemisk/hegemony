@@ -29,23 +29,26 @@ describe("behavioral command-consumer parity", () => {
     moves.buildBuilding("tile-a", "marketplace");
     moves.growPop("tile-a", "citizens");
     moves.movePops("tile-a", "tile-b", pops);
-    moves.resolvePendingPlayerEvent("tile-a", 2);
+    moves.resolvePendingPlayerEvent("tile-a");
+    moves.resolveHunger([{ tileId: "tile-a", pop: "freemen" }]);
     moves.bankSell("wood");
     moves.bankBuy("stone");
+    moves.dole();
+    moves.pickIdea("2", "good-harvest");
+    moves.buyIdea("treasury-grant");
     moves.civicCalm("influence");
     moves.promotePop("tile-a", "freemen");
     moves.demotePop("tile-a", "citizens");
-    moves.fundExpedition("merchantConvoy", "gold");
+    moves.fundExpedition("merchantConvoy");
     moves.buyRiotInsurance("concession", { tileId: "tile-a", from: "citizens" });
     moves.resolveRiot();
     moves.assemblyDraw("1", "demosthenes");
     moves.assemblyDiscardHeld("1");
-    moves.assemblyPropose("1", "law-old", "2");
+    moves.assemblyPropose("1", "2");
     moves.assemblyProposeRepeal("1", "law-a");
     moves.assemblyPass("1");
-    moves.assemblyBribe("1");
+    moves.assemblyBribe("1", "gold");
     moves.assemblyVote("1", true);
-    moves.assemblyVeto("1");
     moves.assemblyClose();
     events.endTurn();
 
@@ -73,11 +76,18 @@ describe("behavioral command-consumer parity", () => {
         actor: undefined,
       },
       {
-        command: { type: "resolveEvent", choiceIndex: 2, targetTileId: "tile-a" },
+        command: { type: "resolveEvent", targetTileId: "tile-a" },
+        actor: undefined,
+      },
+      {
+        command: { type: "resolveHunger", leave: [{ tileId: "tile-a", pop: "freemen" }] },
         actor: undefined,
       },
       { command: { type: "bankSell", material: "wood" }, actor: undefined },
       { command: { type: "bankBuy", material: "stone" }, actor: undefined },
+      { command: { type: "dole" }, actor: undefined },
+      { command: { type: "pickIdea", ideaId: "good-harvest" }, actor: "2" },
+      { command: { type: "buyIdea", ideaId: "treasury-grant" }, actor: undefined },
       { command: { type: "civicCalm", payment: "influence" }, actor: undefined },
       {
         command: { type: "promotePop", tileId: "tile-a", from: "freemen" },
@@ -88,7 +98,7 @@ describe("behavioral command-consumer parity", () => {
         actor: undefined,
       },
       {
-        command: { type: "fundExpedition", expeditionId: "merchantConvoy", stake: "gold" },
+        command: { type: "fundExpedition", expeditionId: "merchantConvoy" },
         actor: undefined,
       },
       {
@@ -103,14 +113,13 @@ describe("behavioral command-consumer parity", () => {
       { command: { type: "assemblyDraw", politician: "demosthenes" }, actor: "1" },
       { command: { type: "assemblyDiscardHeld" }, actor: "1" },
       {
-        command: { type: "assemblyPropose", replaces: "law-old", target: "2" },
+        command: { type: "assemblyPropose", target: "2" },
         actor: "1",
       },
       { command: { type: "assemblyProposeRepeal", cardId: "law-a" }, actor: "1" },
       { command: { type: "assemblyPass" }, actor: "1" },
-      { command: { type: "assemblyBribe" }, actor: "1" },
+      { command: { type: "assemblyBribe", payment: "gold" }, actor: "1" },
       { command: { type: "assemblyVote", yea: true }, actor: "1" },
-      { command: { type: "assemblyVeto" }, actor: "1" },
       { command: { type: "assemblyClose" }, actor: undefined },
       { command: { type: "endTurn" }, actor: undefined },
     ]);

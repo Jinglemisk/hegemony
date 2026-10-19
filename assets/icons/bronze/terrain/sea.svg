@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Sea — three rolling waves with ivory foam</title>
+<defs>
+<linearGradient id="a-sea-sea" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2e8a9a"/><stop offset="0.48" stop-color="#206e7c"/><stop offset="1" stop-color="#17505c"/></linearGradient>
+<linearGradient id="a-sea-marble" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#f7ecd2"/><stop offset="1" stop-color="#c9b48c"/></linearGradient>
+</defs>
+<path d="M6 24Q11 11 24 8Q37 5 40 13Q28 10 27 20Q30 25 40 22Q48 19 58 13V31L48 38H16L6 32Z" fill="url(#a-sea-sea)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M7 23Q12 12 24 9Q35 6 39 13Q27 9 25 20Q17 18 7 26Z" fill="url(#a-sea-marble)"/>
+<path d="M28 22Q40 29 57 17V29L47 35H18Z" fill="#17505c"/>
+<path d="M6 36Q16 37 23 27Q31 16 44 20Q51 22 51 29Q44 24 40 29Q37 35 45 38Q52 39 58 32V47L45 51H13L6 46Z" fill="url(#a-sea-sea)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M10 36Q19 35 24 27Q32 18 44 21Q49 23 50 28Q42 23 37 29L33 34Q22 40 10 39Z" fill="url(#a-sea-marble)"/>
+<path d="M40 37Q48 43 57 36V46L45 49H17L18 45Q33 46 40 37Z" fill="#17505c"/>
+<path d="M6 45Q14 47 22 41Q33 33 40 40Q30 39 28 45Q27 50 38 50Q51 49 58 43V58H6Z" fill="url(#a-sea-sea)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M7 46Q15 48 23 42Q32 35 39 40Q29 38 25 46Q19 52 7 51Z" fill="url(#a-sea-marble)"/>
+<path d="M35 53Q47 53 57 47V57H7V54Q20 58 28 52Z" fill="#17505c"/>
+<path d="M11 20Q17 12 25 11M27 26Q34 21 41 23M9 48Q16 49 21 45" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M33 18L37 17M46 33L50 32M37 55L44 54" fill="none" stroke="#49a0a6" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M11 29Q17 26 21 27M33 44L36 44" fill="none" stroke="#15424b" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

@@ -21,9 +21,7 @@ describe("workflow actor eligibility", () => {
     expect(currentWorkflow(G)).toBe("eventDecision");
     expect(eligibleActors(G)).toEqual(["2"]);
     expect(commandActorEligibility(G, "2", { type: "endTurn" }).eligible).toBe(false);
-    expect(commandActorEligibility(G, "2", { type: "resolveEvent", choiceIndex: 0 }).eligible).toBe(
-      true,
-    );
+    expect(commandActorEligibility(G, "2", { type: "resolveEvent" }).eligible).toBe(true);
   });
 
   it("admits every undecided Assembly proposer, then only the sequential voter and closer", () => {
@@ -61,8 +59,10 @@ describe("player and spectator projections", () => {
     expect(JSON.stringify(G)).toBe(before);
     expect(view.state.seed).toBe(0);
     expect(view.state.rng).toBe(0);
-    expect(view.state.seasonalDrawPile).toHaveLength(G.seasonalDrawPile.length);
-    expect(view.state.seasonalDrawPile.every((card) => card.id === "__hidden_event__")).toBe(true);
+    expect(view.state.yearDrawPile).toHaveLength(G.yearDrawPile.length);
+    // The next year card stays hidden from every viewer.
+    expect(view.state.yearDrawPile.every((card) => card.id === "__hidden_year__")).toBe(true);
+    expect(JSON.stringify(view.state.yearDrawPile)).not.toContain(G.yearDrawPile[0].name);
     expect(view.state.playerDrawPile.every((card) => card.id === "__hidden_event__")).toBe(true);
     for (const deck of Object.values(view.state.politicianDecks)) {
       expect(deck.every((cardId) => cardId === "__hidden_resolution__")).toBe(true);
@@ -75,7 +75,7 @@ describe("player and spectator projections", () => {
     openAssembly(G, G.currentPlayer);
     const held = getResolutionCard(G.definition.content, "land-reform")!;
     const proposed = getResolutionCard(G.definition.content, "public-works")!;
-    G.assembly!.held["0"] = { card: held, draws: 1 };
+    G.assembly!.held["0"] = { card: held };
     G.assembly!.proposals["1"] = { kind: "enact", card: proposed, proposer: "1" };
 
     const player0 = projectForPlayer(G.definition, G, "0");
@@ -93,22 +93,20 @@ describe("player and spectator projections", () => {
     expect(spectator.legalOptions).toEqual([]);
   });
 
-  it("keeps a pending event choice private to its actor", () => {
-    const G = scenario().stackPlayerEvent("player-temple-donation").opening().build();
+  it("keeps a pending player card private to its actor", () => {
+    const G = scenario().stackPlayerEvent("player-patronage").opening().build();
     expect(G.pendingPlayerEvent?.playerID).toBe("0");
     const actor = projectForPlayer(G.definition, G, "0");
     const rival = projectForPlayer(G.definition, G, "1");
     const spectator = projectForSpectator(G.definition, G);
 
-    expect(actor.state.pendingPlayerEvent?.card.id).toBe("player-temple-donation");
+    expect(actor.state.pendingPlayerEvent?.card.id).toBe("player-patronage");
     expect(actor.legalOptions.every(({ command }) => command.type === "resolveEvent")).toBe(true);
     expect(rival.state.pendingPlayerEvent).toBeNull();
     expect(rival.state.lastPlayerEvent).toBeNull();
     expect(rival.legalOptions).toEqual([]);
     expect(spectator.state.pendingPlayerEvent).toBeNull();
-    expect(spectator.state.log.some((entry) => entry.message.includes("Temple Donation"))).toBe(
-      false,
-    );
+    expect(spectator.state.log.some((entry) => entry.message.includes("Patronage"))).toBe(false);
     expect(spectator.workflow).toBe("eventDecision");
     expect(spectator.eligibleActors).toEqual(["0"]);
   });

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { collectIncome } from "./actions";
 import { applyResourceDeltaWithFloors, canAfford } from "./core/resources";
+import { calculateIncome } from "./economy/income";
 import { getPlayerEventCards } from "./content";
 import { resolvePendingPlayerEvent } from "./events";
 import { rollOnTable } from "./tables";
@@ -9,7 +10,7 @@ import { materialTile, scenario } from "./testing/scenario";
 import type { EventTableDefinition, Resources } from "./types";
 
 describe("configured stockpile floors", () => {
-  it("clamps real income without changing the calculated food deficit", () => {
+  it("lets income, and only income, take food below its floor", () => {
     const builder = scenario({ patch: { economy: { stockpileFloors: { food: 0 } } } });
     const G = builder.build();
     const tile = materialTile(G);
@@ -23,10 +24,28 @@ describe("configured stockpile floors", () => {
       });
 
     expect(collectIncome(G, "0").ok).toBe(true);
-    expect(G.players["0"].resources.food).toBe(0);
+    expect(G.players["0"].resources.food).toBe(-4);
     expect(G.log.find((entry) => entry.message.includes("collected income"))?.message).toContain(
-      "-1 food",
+      "-5 food",
     );
+  });
+
+  it("holds every other stock at zero: Civic Pride takes no gold a seat does not have", () => {
+    const builder = scenario();
+    const G = builder.build();
+    builder
+      .withSettlement("0", materialTile(G).id, "capital", { citizens: 0, freemen: 0, slaves: 0 })
+      .withResources("0", { gold: 0 })
+      .mutate((state) => {
+        state.phase = "gameplay";
+        state.currentPlayer = "0";
+        state.pendingPlayerEvent = null;
+        state.activeLaws.push({ cardId: "civic-pride", author: "1", enactedYear: 1, order: 0 });
+      });
+
+    expect(calculateIncome(G, "0").gold).toBe(-1);
+    expect(collectIncome(G, "0").ok).toBe(true);
+    expect(G.players["0"].resources.gold).toBe(0);
   });
 
   it("uses the same floor for event losses and reports the applied amount", () => {
@@ -34,7 +53,7 @@ describe("configured stockpile floors", () => {
       .withResources("0", { wood: 3 })
       .build();
     const card = getPlayerEventCards(G.definition.content).find(
-      (candidate) => candidate.id === "player-warehouse-fire",
+      (candidate) => candidate.id === "player-fire",
     )!;
     G.pendingPlayerEvent = { card, playerID: "0" };
 
@@ -73,7 +92,6 @@ describe("configured stockpile floors", () => {
       gold: 0,
       food: 1,
       influence: 0,
-      happiness: 0,
     };
     const delta: Resources = {
       wood: -3,
@@ -81,11 +99,10 @@ describe("configured stockpile floors", () => {
       gold: 0,
       food: -3,
       influence: -3,
-      happiness: -3,
     };
     applyResourceDeltaWithFloors(resources, delta, { wood: 0, influence: 0 });
 
-    expect(resources).toMatchObject({ wood: 0, food: -2, influence: 0, happiness: -3 });
+    expect(resources).toMatchObject({ wood: 0, food: -2, influence: 0 });
     expect(canAfford(resources, { wood: 1 })).toBe(false);
   });
 });

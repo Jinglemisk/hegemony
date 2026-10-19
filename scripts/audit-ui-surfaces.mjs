@@ -18,8 +18,9 @@ export const SIZES = [
 ];
 
 // ── surfaces ─────────────────────────────────────────────────────────────────
-const LEFT = ["Cities", "Pops", "Build", "Market"];
-const RIGHT = ["Chronicle", "Codex", "Victory", "Agora"];
+// The realm sheet's pages (tabs) and the bar's consult pages (toggle buttons).
+const LEFT = ["Cities", "Ladder", "Build", "Market"];
+const RIGHT = ["Codex", "Victory", "Agora"];
 
 const dismissDialogs = async (p) => {
   for (let i = 0; i < 4; i += 1) {
@@ -27,7 +28,7 @@ const dismissDialogs = async (p) => {
     if (!(await d.count())) return;
     const btn = d
       .getByRole("button", {
-        name: /^(Endure It|Take It|So Be It|Resolve Choice|Place Pops|Continue|Close)$/,
+        name: /^(Endure It|Take It|Take the .+|So Be It|Place Pop|Place Unrest|Clear Unrest|Continue|Close)$/,
       })
       .first();
     if (!(await btn.count())) return;
@@ -36,8 +37,58 @@ const dismissDialogs = async (p) => {
   }
 };
 
-const closeTab = async (p, tab) => {
-  const t = p.locator(`.tabRail button[aria-label="${tab}"]`).first();
+const realmTab = (p, tab) => p.locator(".realm-tabs").getByRole("tab", { name: tab, exact: true });
+const consultButton = (p, tab) => p.locator(`.consult-btn[aria-label="${tab}"]`).first();
+const verb = (p, name) => p.locator(`.verb-btn[aria-label^="${name}"]`).first();
+
+/** Open a verb's fan from the keyboard (Enter never runs the disc's own
+ *  option), then take each named option in turn: a second fan, or the act. */
+const pressVerb = async (p, group, options = []) => {
+  const disc = verb(p, group);
+  if (!(await disc.count())) return;
+  await disc.focus().catch(() => {});
+  await p.keyboard.press("Enter");
+  await p.waitForTimeout(400);
+  for (const option of options) {
+    const item = p
+      .locator(`.is-open > .fan > .fan-item > .fan-btn[aria-label^="${option}."]`)
+      .first();
+    if (!(await item.count()) || (await item.getAttribute("aria-disabled")) === "true") break;
+    await item.click().catch(() => {});
+    await p.waitForTimeout(400);
+  }
+  await p.waitForTimeout(400);
+};
+
+/** Pick the first tile whose name plate and label pass `test`, and wait for its page. */
+/* global document */
+const pickTile = async (p, test) => {
+  const id = await p.evaluate((source) => {
+    const fits = new Function(`return ${source}`)();
+    const tile = [...document.querySelectorAll(".island [data-tile-id]")].find((e) =>
+      fits(e.querySelector(".plate-text")?.textContent ?? "", e.getAttribute("aria-label") ?? ""),
+    );
+    return tile?.dataset.tileId ?? null;
+  }, test.toString());
+  if (id)
+    await p
+      .locator(`[data-tile-id="${id}"]`)
+      .click({ force: true })
+      .catch(() => {});
+  await p.waitForTimeout(400);
+};
+
+/** The Chronicle drops from the ticker; it stays open until its tab is pressed again. */
+const setChronicle = async (p, open) => {
+  const t = p.locator(".ticker-head");
+  if ((await t.count()) && ((await t.getAttribute("aria-expanded")) === "true") !== open) {
+    await t.click().catch(() => {});
+    await p.waitForTimeout(250);
+  }
+};
+
+const closeConsult = async (p, tab) => {
+  const t = consultButton(p, tab);
   if ((await t.count()) && (await t.getAttribute("aria-pressed")) === "true") {
     await t.click().catch(() => {});
     await p.waitForTimeout(250);
@@ -54,22 +105,34 @@ export const SURFACES = [
     },
   },
   { name: "table", go: async (p) => dismissDialogs(p) },
+  {
+    name: "tab-subject",
+    go: async (p) => {
+      const t = p.locator(".realm-tab.is-subject").first();
+      if (await t.count()) await t.click().catch(() => {});
+      await p.waitForTimeout(400);
+    },
+  },
   ...LEFT.map((tab) => ({
     name: `tab-${tab.toLowerCase()}`,
     go: async (p) => {
-      for (const other of LEFT) if (other !== tab) await closeTab(p, other);
-      const t = p.locator(`.tabRail button[aria-label="${tab}"]`).first();
-      if ((await t.count()) && (await t.getAttribute("aria-pressed")) !== "true") {
-        await t.click().catch(() => {});
-      }
+      const t = realmTab(p, tab);
+      if (await t.count()) await t.click().catch(() => {});
       await p.waitForTimeout(500);
     },
   })),
+  {
+    name: "tab-chronicle",
+    go: async (p) => {
+      await setChronicle(p, true);
+      await p.waitForTimeout(250);
+    },
+  },
   ...RIGHT.map((tab) => ({
     name: `tab-${tab.toLowerCase()}`,
     go: async (p) => {
-      for (const other of RIGHT) if (other !== tab) await closeTab(p, other);
-      const t = p.locator(`.tabRail button[aria-label="${tab}"]`).first();
+      await setChronicle(p, false);
+      const t = consultButton(p, tab);
       if ((await t.count()) && (await t.getAttribute("aria-pressed")) !== "true") {
         await t.click().catch(() => {});
       }
@@ -79,26 +142,29 @@ export const SURFACES = [
   {
     name: "codex-cards",
     go: async (p) => {
-      const t = p.getByRole("button", { name: /^The Cards$/i }).first();
-      if (await t.count()) await t.click().catch(() => {});
-      await p.waitForTimeout(400);
+      // The Codex opens on its contents page; a chapter is one click from there.
+      const codex = consultButton(p, "Codex");
+      if ((await codex.count()) && (await codex.getAttribute("aria-pressed")) !== "true") {
+        await codex.click().catch(() => {});
+      }
+      for (const name of [/How to Win/i, /^The Cards$/i]) {
+        const t = p.getByRole("button", { name }).first();
+        if (await t.count()) await t.click().catch(() => {});
+        await p.waitForTimeout(400);
+      }
     },
   },
   {
     name: "board-clear",
     go: async (p) => {
-      for (const tab of [...LEFT, ...RIGHT]) await closeTab(p, tab);
+      for (const tab of RIGHT) await closeConsult(p, tab);
       await p.waitForTimeout(300);
     },
   },
   {
     name: "targeting-grow",
     go: async (p) => {
-      const v = p.locator('.railVerb:has-text("Grow")').first();
-      if ((await v.count()) && (await v.getAttribute("aria-disabled")) !== "true") {
-        await v.click().catch(() => {});
-        await p.waitForTimeout(600);
-      }
+      await pressVerb(p, "Grow", ["Slave"]);
     },
     after: async (p) => {
       await p.keyboard.press("Escape");
@@ -108,11 +174,7 @@ export const SURFACES = [
   {
     name: "targeting-build",
     go: async (p) => {
-      const v = p.locator('.railVerb:has-text("Build")').first();
-      if ((await v.count()) && (await v.getAttribute("aria-disabled")) !== "true") {
-        await v.click().catch(() => {});
-        await p.waitForTimeout(600);
-      }
+      await pressVerb(p, "Build", ["Freemen"]);
     },
     after: async (p) => {
       await p.keyboard.press("Escape");
@@ -120,15 +182,33 @@ export const SURFACES = [
     },
   },
   {
-    name: "calm",
+    name: "fan-civic",
     go: async (p) => {
-      const c = p.locator('.railVerb:has-text("Calm")').first();
-      if ((await c.count()) && (await c.getAttribute("aria-disabled")) !== "true") {
-        await c.click().catch(() => {});
-        await p.waitForTimeout(600);
-      }
+      await pressVerb(p, "Civic");
     },
     after: async (p) => {
+      await p.keyboard.press("Escape");
+      await p.waitForTimeout(300);
+    },
+  },
+  {
+    name: "fan-build-slaves",
+    go: async (p) => {
+      await pressVerb(p, "Build", ["Slaves"]);
+    },
+    after: async (p) => {
+      await p.keyboard.press("Escape");
+      await p.keyboard.press("Escape");
+      await p.waitForTimeout(300);
+    },
+  },
+  {
+    name: "fan-exchange-wood",
+    go: async (p) => {
+      await pressVerb(p, "Exchange", ["Wood"]);
+    },
+    after: async (p) => {
+      await p.keyboard.press("Escape");
       await p.keyboard.press("Escape");
       await p.waitForTimeout(300);
     },
@@ -136,11 +216,7 @@ export const SURFACES = [
   {
     name: "venture-pick",
     go: async (p) => {
-      const v = p.locator('.railVerb:has-text("Venture")').first();
-      if (await v.count()) {
-        await v.click().catch(() => {});
-        await p.waitForTimeout(600);
-      }
+      await pressVerb(p, "Civic", ["Venture"]);
     },
   },
   {
@@ -171,68 +247,69 @@ export const SURFACES = [
     },
   },
   {
-    // The FIRST Assembly always convenes at 0 of 6 laws with every orator on zero,
-    // so half of this surface — the law cap, a stele carrying more than one pip, a
-    // repeal that is actually armed, a voice ledger with a number in it — never
-    // appeared in either auditor. `?dev=assembly2` plays the first sitting out and
-    // stops at the second, which is where all of that is standing.
+    // Year 8 exposes standing Laws and eligible Year 4 repeals.
     name: "assembly-standing",
     go: async (p) => {
-      await p.goto(`${BASE}/?dev=assembly2&seed=42`, { waitUntil: "networkidle" });
+      await p.goto(`${BASE}/?dev=assembly4&seed=42`, { waitUntil: "networkidle" });
       await p.waitForTimeout(2200);
     },
   },
   {
     name: "assembly-vote",
     go: async (p) => {
-      for (let round = 0; round < 6; round += 1) {
-        const pass = p.getByRole("button", { name: /^Pass/i }).first();
-        if (await pass.count()) {
-          await pass.click().catch(() => {});
-          await p.waitForTimeout(400);
-        }
-        const seats = p.locator(".asmSeat, .roster .seat");
-        for (let i = 0, n = await seats.count(); i < n; i += 1) {
-          await seats
-            .nth(i)
-            .click()
-            .catch(() => {});
-          await p.waitForTimeout(180);
-          const again = p.getByRole("button", { name: /^Pass/i }).first();
-          if (await again.count()) {
-            await again.click().catch(() => {});
-            await p.waitForTimeout(320);
-          }
-        }
-        if (await p.locator(".voteTally").count()) break;
+      // Year 4 seats can afford a draw. A Directive has no protected replacement.
+      await p.goto(`${BASE}/?dev=assembly2&seed=42`, { waitUntil: "networkidle" });
+      await p.waitForTimeout(1400);
+      await p.getByRole("button", { name: "Draw from Stratokles", exact: true }).click();
+      await p.locator(".sit-pick").first().click();
+      await p.getByRole("button", { name: /^Seal against/ }).click();
+      // The other seats propose in turn, each after its turn notice, and hold their peace.
+      for (let seat = 0; seat < 4; seat += 1) {
+        const begin = p.locator(".turn-notice .confirm-btn");
+        if (await begin.count()) await begin.click().catch(() => {});
+        await p.waitForTimeout(320);
+        const peace = p.getByRole("button", { name: "Hold your peace", exact: true });
+        if (!(await peace.count())) break;
+        await peace.click().catch(() => {});
+        await p.waitForTimeout(320);
       }
+      await p
+        .getByRole("button", { name: /^Open the vote/ })
+        .click()
+        .catch(() => {});
       await p.waitForTimeout(400);
     },
   },
   {
-    // The socket picker is the one control on Cities that neither auditor could
-    // see: `tab-cities` walks the page with every picker shut, so a surface that
-    // reports clean says nothing about the nine rows that open out of it. It
-    // starts from its own `goto` because it runs after the Assembly surfaces and
-    // inherits their scene otherwise.
-    name: "cities-socket-picker",
+    // The realm's last tab shows whatever the map last picked. These start from
+    // their own `goto` because they run after the Assembly surfaces and would
+    // inherit their scene otherwise.
+    name: "pick-rival",
     go: async (p) => {
       await p.goto(`${BASE}/?dev=preload&seed=42`, { waitUntil: "networkidle" });
       await p.waitForTimeout(1300);
       await dismissDialogs(p);
-      for (const other of LEFT) if (other !== "Cities") await closeTab(p, other);
-      const tab = p.locator(`.tabRail button[aria-label="Cities"]`).first();
-      if ((await tab.count()) && (await tab.getAttribute("aria-pressed")) !== "true") {
-        await tab.click().catch(() => {});
-        await p.waitForTimeout(500);
-      }
-      const socket = p.locator(".socketAdd").first();
-      if (await socket.count()) await socket.click().catch(() => {});
-      await p.waitForTimeout(500);
+      await pickTile(p, (plate) => plate && !["PHLIOUS", "NEMEA"].includes(plate));
     },
-    after: async (p) => {
-      await p.keyboard.press("Escape");
-      await p.waitForTimeout(300);
+  },
+  { name: "pick-land", go: (p) => pickTile(p, (plate, label) => !plate && !/oracle/i.test(label)) },
+  { name: "pick-oracle", go: (p) => pickTile(p, (_plate, label) => /oracle/i.test(label)) },
+  {
+    name: "pick-mooring",
+    go: async (p) => {
+      await p
+        .locator(".island .moor")
+        .first()
+        .click({ force: true })
+        .catch(() => {});
+      await p.waitForTimeout(400);
+    },
+  },
+  {
+    name: "pick-sea",
+    go: async (p) => {
+      await p.mouse.click(60, 300);
+      await p.waitForTimeout(400);
     },
   },
 ];

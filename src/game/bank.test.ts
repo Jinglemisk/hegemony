@@ -11,8 +11,19 @@ const clearPending = (draft: HegemonyState) => {
 };
 
 describe("bank rate derivation (D6/Q14)", () => {
-  it("classes the classic board by tile supply: wood abundant, stone & food baseline", () => {
+  it("prices every material at baseline by default: one price per verb", () => {
     const G = scenario().opening().mutate(clearPending).build();
+
+    for (const material of ["wood", "stone", "food"] as const) {
+      expect(G.bank[material]).toEqual({ sell: 3, buy: 2 });
+    }
+  });
+
+  it("the scarcity knob classes the classic board by tile supply: wood abundant", () => {
+    const G = scenario({ patch: { economy: { bank: { derivation: "scarcity" } } } })
+      .opening()
+      .mutate(clearPending)
+      .build();
 
     // Phase 2 composition: 15 wood tiles, 8 stone, 8 food. Wood is strictly most common
     // (abundant); stone and food tie at 8, so neither is strictly rarest → both baseline.
@@ -21,20 +32,9 @@ describe("bank rate derivation (D6/Q14)", () => {
     expect(G.bank.food).toEqual(DEFAULT_RULESET.economy.bank.baseline);
   });
 
-  it("uniform derivation prices everything at baseline", () => {
-    const G = scenario({ patch: { economy: { bank: { derivation: "uniform" } } } })
-      .opening()
-      .mutate(clearPending)
-      .build();
-
-    for (const material of ["wood", "stone", "food"] as const) {
-      expect(G.bank[material]).toEqual(DEFAULT_RULESET.economy.bank.baseline);
-    }
-  });
-
   it("an evenly supplied board collapses to baseline everywhere", () => {
     const tile = (type: "wood" | "stone" | "food") =>
-      ({ resource: { type, amount: 4 } }) as Parameters<typeof deriveBankRates>[0][number];
+      ({ resource: { type } }) as Parameters<typeof deriveBankRates>[0][number];
     const rates = deriveBankRates(
       [tile("wood"), tile("stone"), tile("food")],
       DEFAULT_RULESET.economy.bank,
@@ -46,18 +46,18 @@ describe("bank rate derivation (D6/Q14)", () => {
   });
 
   it("rates are static: the ruleset knob changes games, never a game in flight", () => {
-    const scarcity = scenario().opening().mutate(clearPending).build();
-    const uniform = scenario({ patch: { economy: { bank: { derivation: "uniform" } } } })
+    const scarcity = scenario({ patch: { economy: { bank: { derivation: "scarcity" } } } })
       .opening()
       .mutate(clearPending)
       .build();
+    const uniform = scenario().opening().mutate(clearPending).build();
 
     expect(scarcity.bank.wood.sell).not.toBe(uniform.bank.wood.sell);
     // deriveRuleset merges cleanly — the knob is data, not code.
     expect(
-      deriveRuleset(DEFAULT_RULESET, { economy: { bank: { derivation: "uniform" } } }).economy.bank
+      deriveRuleset(DEFAULT_RULESET, { economy: { bank: { derivation: "scarcity" } } }).economy.bank
         .derivation,
-    ).toBe("uniform");
+    ).toBe("scarcity");
   });
 });
 
@@ -98,9 +98,14 @@ describe("bank trades", () => {
     }
   });
 
-  it("stays shut while a riot is pending — income comes before commerce", () => {
+  it("stays shut while a committed turn awaits its riot", () => {
     const G = scenario().opening().mutate(clearPending).build();
-    G.pendingRiot = { playerID: "0", tier: "unrest", boughtInsurance: [] };
+    G.pendingRiot = {
+      playerID: "0",
+      boughtInsurance: [],
+      tokensCleared: 0,
+      concessionTileId: null,
+    };
 
     expect(bankSell(G, "0", "wood").ok).toBe(false);
     expect(bankBuy(G, "0", "wood").ok).toBe(false);

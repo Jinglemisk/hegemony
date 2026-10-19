@@ -33,37 +33,6 @@
   transform: none;
 }
 
-.sharedTooltip.activeEffectsTooltip {
-  display: grid;
-  width: min(360px, calc(100vw - 20px));
-}
-
-.sharedTooltip.resourceTooltip {
-  position: fixed;
-  display: grid;
-  width: min(340px, calc(100vw - 20px));
-  opacity: 1;
-  pointer-events: none;
-}
-
-.sharedTooltip.topbarEventTooltip {
-  position: fixed;
-  display: grid;
-  width: min(264px, calc(100vw - 20px));
-  opacity: 1;
-  pointer-events: none;
-}
-
-.sharedTooltip.detailTooltip {
-  position: fixed;
-  width: min(260px, calc(100vw - 20px));
-  transform: none;
-}
-
-.sharedTooltip.detailTooltip.placement-above {
-  transform: none;
-}
-
 @keyframes sharedOverlayIn {
   from {
     opacity: 0;
@@ -174,11 +143,6 @@
   line-height: 1.25;
 }
 
-.verbTooltipTrigger {
-  flex: 0 0 auto;
-  width: 76px;
-}
-
 .popoverActionTooltipTrigger,
 .popoverChoiceTooltipTrigger {
   display: flex;
@@ -188,22 +152,4 @@
 .popoverActionTooltipTrigger > button,
 .popoverChoiceTooltipTrigger > button {
   width: 100%;
-}
-
-.resourceGrid > .resourcePill,
-.topbarEvents > .topbarEventCard {
-  min-width: 0;
-}
-
-.candidateTooltipTrigger {
-  display: flex;
-  width: 100%;
-}
-
-.candidateTooltipTrigger > button {
-  width: 100%;
-}
-
-.candidateTooltipTrigger + .candidateTooltipTrigger {
-  border-top: 1px solid var(--ledger-rule);
 }

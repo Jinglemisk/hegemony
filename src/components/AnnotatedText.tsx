@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { POLITICIANS } from "../game/assembly/deck";
 import { getAuthoredGameContent } from "../game/content";
 import { capitalize } from "../game/core/format";
-import type { BuildingId, PopType, Resource, SettlementKind } from "../game/types";
+import type { BuildingId, PopType, SettlementKind, Stat } from "../game/types";
 import { resourceCssVars } from "../ui/resourceVisuals";
 import { useCodexLink, type CodexLink } from "./codexLink";
 import {
@@ -22,7 +22,7 @@ import type { GlyphId } from "../ui/icons/glyphs";
  */
 
 type Token =
-  | { type: "resource"; key: Resource }
+  | { type: "resource"; key: Stat }
   | { type: "pop"; key: PopType }
   | { type: "building"; key: BuildingId }
   | { type: "settlement"; key: SettlementKind }
@@ -43,29 +43,23 @@ const TOKEN_MAP: Record<string, Token> = {
   slave: { type: "pop", key: "slaves" },
   slaves: { type: "pop", key: "slaves" },
   // Generic pops get the roster's population glyph; a generic "building" reads as
-  // the workshop (tools) — both so table rows and chronicle lines can be chip-only.
+  // the Estate — both so table rows and chronicle lines can be chip-only.
   pop: { type: "pop", key: "citizens" },
   pops: { type: "pop", key: "citizens" },
-  building: { type: "building", key: "workshop" },
-  buildings: { type: "building", key: "workshop" },
+  building: { type: "building", key: "estate" },
+  buildings: { type: "building", key: "estate" },
   marketplace: { type: "building", key: "marketplace" },
   marketplaces: { type: "building", key: "marketplace" },
   temple: { type: "building", key: "temple" },
   temples: { type: "building", key: "temple" },
-  workshop: { type: "building", key: "workshop" },
-  workshops: { type: "building", key: "workshop" },
+  estate: { type: "building", key: "estate" },
+  estates: { type: "building", key: "estate" },
   granary: { type: "building", key: "granary" },
   granaries: { type: "building", key: "granary" },
   forum: { type: "building", key: "forum" },
   forums: { type: "building", key: "forum" },
-  aqueduct: { type: "building", key: "aqueduct" },
-  aqueducts: { type: "building", key: "aqueduct" },
-  odeon: { type: "building", key: "odeon" },
-  odeons: { type: "building", key: "odeon" },
-  villa: { type: "building", key: "villa" },
-  villas: { type: "building", key: "villa" },
-  gymnasion: { type: "building", key: "gymnasion" },
-  gymnasions: { type: "building", key: "gymnasion" },
+  port: { type: "building", key: "port" },
+  ports: { type: "building", key: "port" },
   // Settlements — their own glyph, link to the Settlements chapter.
   capital: { type: "settlement", key: "capital" },
   capitals: { type: "settlement", key: "capital" },
@@ -77,14 +71,12 @@ const TOKEN_MAP: Record<string, Token> = {
   settlement: { type: "settlement", key: "city" },
   settlements: { type: "settlement", key: "city" },
   // Concept terms — no glyph, just a clay keyword that opens its chapter.
-  card: { type: "concept", chapter: "seasons" },
-  cards: { type: "concept", chapter: "seasons" },
-  event: { type: "concept", chapter: "seasons" },
-  events: { type: "concept", chapter: "seasons" },
-  season: { type: "concept", chapter: "seasons" },
-  seasons: { type: "concept", chapter: "seasons" },
-  omen: { type: "concept", chapter: "seasons" },
-  omens: { type: "concept", chapter: "seasons" },
+  card: { type: "concept", chapter: "years" },
+  cards: { type: "concept", chapter: "years" },
+  event: { type: "concept", chapter: "years" },
+  events: { type: "concept", chapter: "years" },
+  year: { type: "concept", chapter: "years" },
+  years: { type: "concept", chapter: "years" },
   venture: { type: "concept", chapter: "ventures" },
   ventures: { type: "concept", chapter: "ventures" },
   expedition: { type: "concept", chapter: "ventures" },
@@ -112,7 +104,6 @@ const TOKEN_MAP: Record<string, Token> = {
   patron: { type: "concept", chapter: "assembly" },
   patronage: { type: "concept", chapter: "assembly" },
   repeal: { type: "concept", chapter: "assembly" },
-  veto: { type: "concept", chapter: "assembly" },
   agora: { type: "concept", chapter: "assembly" },
 };
 
@@ -138,13 +129,8 @@ const TOKEN_PATTERN = new RegExp(
  * matching them verbatim (case included) needs no capitalisation heuristic,
  * which would have misfired on every sentence start and every player name.
  *
- * Two filters keep the list honest, and both matter:
- *
- * · Only titles that a term can actually collide with are listed — a name the
- *   tokeniser never matches has nothing to protect.
- * · A title that IS the term is left alone. "Ada built Granary." names the
- *   granary and means the granary, so the glyph there is right; only a compound
- *   like "Granary Rats", where the word no longer denotes the thing, is muted.
+ * Card titles are protected even when a title is also a glossary term, such as
+ * Patronage. Buildings that name the glossary term itself still get their glyph.
  *
  * Derived at module load, so authoring a new card extends the list for free —
  * and `AnnotatedText.test.tsx` walks every authored name to prove it.
@@ -154,18 +140,21 @@ const PROPER_NAMES: string[] = (() => {
 
   return [
     ...content.buildings,
-    ...content.seasonalEvents,
+    ...content.yearCards,
     ...content.playerEvents,
     ...content.resolutions,
     ...POLITICIANS,
     content.riotTable,
-    content.omenTable,
     ...content.expeditionTables,
   ]
     .map((authored) => authored.name)
     .filter((name) => {
       TOKEN_PATTERN.lastIndex = 0;
-      return TOKEN_PATTERN.test(name) && !(name.toLowerCase() in TOKEN_MAP);
+      return (
+        TOKEN_PATTERN.test(name) &&
+        (!(name.toLowerCase() in TOKEN_MAP) ||
+          content.playerEvents.some((card) => card.name === name))
+      );
     })
     .sort((a, b) => b.length - a.length);
 })();
@@ -229,10 +218,13 @@ export function AnnotatedText({
   text,
   className,
   links = true,
+  linkContext,
 }: {
   text: string;
   className?: string;
   links?: boolean;
+  /** Identifies repeated glossary controls when several cards share a term. */
+  linkContext?: string;
 }) {
   const contextCodexLink = useCodexLink();
   const codexLink = links ? contextCodexLink : null;
@@ -247,13 +239,13 @@ export function AnnotatedText({
     let name: RegExpExecArray | null;
 
     while ((name = PROPER_NAME_PATTERN.exec(text)) !== null) {
-      annotateInto(nodes, text.slice(cursor, name.index), cursor, codexLink);
+      annotateInto(nodes, text.slice(cursor, name.index), cursor, codexLink, linkContext);
       nodes.push(name[0]);
       cursor = name.index + name[0].length;
     }
   }
 
-  annotateInto(nodes, text.slice(cursor), cursor, codexLink);
+  annotateInto(nodes, text.slice(cursor), cursor, codexLink, linkContext);
 
   return <span className={className}>{nodes.map(signPlainText)}</span>;
 }
@@ -264,6 +256,7 @@ function annotateInto(
   text: string,
   offset: number,
   codexLink: CodexLink | null,
+  linkContext?: string,
 ) {
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -296,6 +289,7 @@ function annotateInto(
           className="richToken richTokenLink"
           key={key}
           role="button"
+          aria-label={linkContext ? `${label} rules for ${linkContext}` : undefined}
           tabIndex={0}
           onClick={(event) => {
             event.stopPropagation();

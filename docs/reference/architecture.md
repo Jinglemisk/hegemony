@@ -30,9 +30,13 @@ state reaches a consumer. AI policies receive the same fair player observation v
 ## Integrity and compatibility
 
 Post-transition invariants cover settlement indexes, population and transfers, card zones,
-Assembly state, stable definition identity, and compatibility versions. Saves and scripts
+Assembly state, Idea ownership, stable definition identity, and compatibility versions. Saves and scripts
 distinguish unsupported historical versions from deterministic replay divergence. Supported
-recipes replay byte-for-byte.
+recipes replay byte-for-byte. Step 18 uses state schema 12 and command schema 6. Older saves and scripts are
+rejected. Assembly proposals name no replacement; a vote purchase names gold or
+influence. Idea commands name the Idea and New Settlers' optional pop/settlement choice. A hunger
+choice names one settlement and class per pop that leaves. House items and vetoes are gone. Event resolution takes only an optional
+settlement target; ventures take an expedition, with their cost read from the ruleset.
 
 ## Mechanical gates
 

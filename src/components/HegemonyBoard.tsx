@@ -1,26 +1,29 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { DEV_SHELL, privateMoment } from "../client/controller";
 import type { GameEvents, GameMoves, LocalContext } from "../client/controller";
 import {
+  EMPTY_POPS,
+  GROWABLE_POPS,
   POP_TYPES,
   calculateEconomyProjection,
   canPlaceColonyOnTile,
   getBuildBuildingOptions,
   claimableLuxuriesAt,
   getBuildBuildingStatus,
-  happinessBreakdown,
   getActiveEffects,
   getFoundColonyStatus,
   getGrowPopStatus,
+  getMovePopsStatus,
   getUpgradeColonyToCityStatus,
   toPlayerId,
-  totalPops,
+  turnEndUnrest,
+  victoryThreats,
 } from "../game/rules";
-import type { BuildingId, HegemonyState, PlayerId, Resource } from "../game/types";
-import { PLAYER_NAMES } from "../game/data";
-import { getOmenTable } from "../game/content";
-import { HexMap } from "./HexMap";
-import { ResourceGrid } from "./ResourceGrid";
+import { realmAlarms } from "../game/alarms";
+import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
 import { BuildPopover } from "./board/map/BuildPopover";
+import { IdeasModal } from "./board/modals/IdeasModal";
+import { HungerModal } from "./board/modals/HungerModal";
 import { PopulationPickerModal } from "./board/modals/PopulationPickerModal";
 import { UpgradeCityModal } from "./board/modals/UpgradeCityModal";
 import { FoundColonyPopover } from "./board/modals/FoundColonyPopover";
@@ -29,30 +32,34 @@ import { LadderPopover } from "./board/map/LadderPopover";
 import { MovePopsSourcePopover, MovePopsTargetPopover } from "./board/map/MovePopsPopover";
 import { selectionCaption, type MapSelectionMode } from "./board/map/mapSelection";
 import { useMapSelection } from "./board/map/useMapSelection";
-import { CommandDock } from "./board/command/CommandDock";
 import { armedVerbOf, isTurnOpen, turnCommitTitle } from "./board/command/verbs";
-import { CalmModal } from "./board/modals/CalmModal";
-import { EventTableModal } from "./board/modals/EventTableModal";
+import type { VerbContext } from "./board/command/verbs";
 import { GameOverModal } from "./board/modals/GameOverModal";
-import { EmpireIntelPanel } from "./board/ledger/EmpireIntelPanel";
-import { LedgerRail } from "./board/ledger/LedgerRail";
-import { ConsultRail } from "./board/ledger/ConsultRail";
 import { ConsultPanel } from "./board/ledger/ConsultPanel";
-import { routeTo, type ConsultRoute, type LedgerRoute } from "./board/ledger/route";
+import type { ConsultTab } from "./board/types";
 import { PendingPlayerEventModal } from "./board/modals/PendingPlayerEventModal";
 import { RiotModal } from "./board/modals/RiotModal";
+import { RevoltModal } from "./board/modals/RevoltModal";
+import { YearCardModal } from "./board/modals/YearCardModal";
 import { VentureModal } from "./board/modals/VentureModal";
-import { MechanicsDetails } from "./MechanicsDetails";
-import { Tooltip } from "./overlays/Tooltip";
-import { PlayerScoreboard } from "./board/topbar/PlayerScoreboard";
-import { TurnDial } from "./board/topbar/TurnDial";
-import { TopbarEvents } from "./board/topbar/TopbarEvents";
-import { AssemblyPanel } from "./board/assembly/AssemblyPanel";
+import { AssemblyDock, AssemblySitting } from "./board/assembly/AssemblySitting";
+import { useSitting } from "./board/assembly/sitting";
 import { GameUiProvider } from "./board/GameUiProvider";
 import type { GameUi } from "./board/GameUiContext";
 import { CodexLinkProvider } from "./codexLink";
 import { getOwnedHoldings } from "./board/helpers";
-import { ActiveEffectsList } from "./ActiveEffectsList";
+import { endTurnWarning, happinessDisplay, hungerShortfall } from "../ui/frameSelectors";
+import { Island } from "./frame/island/Island";
+import { TopBar } from "./frame/TopBar";
+import { ConsultStrip } from "./frame/ConsultStrip";
+import { Ticker } from "./frame/Ticker";
+import { ToastLane } from "./frame/Toasts";
+import { useMomentToasts, useOwnMoment } from "./frame/moments";
+import { TurnNotice } from "./frame/TurnNotice";
+import { RealmPanel, type RealmSubject, type RealmTab } from "./frame/RealmPanel";
+import { Alarms } from "./frame/Alarms";
+import { EndTurn } from "./frame/EndTurn";
+import { discGroups } from "./frame/discs";
 
 type BoardProps = {
   G: HegemonyState;
@@ -62,12 +69,8 @@ type BoardProps = {
   playerID: PlayerId;
   onPlayerIDChange: (playerID: PlayerId) => void;
   isActive: boolean;
-};
-
-type PendingTileConfirmation = {
-  action: "foundColony" | "upgradeCity";
-  label: string;
-  tileId: string;
+  /** People share this screen, seat by seat; false only when bots play alone. */
+  hotseat: boolean;
 };
 
 type SetupPlacement = "capital" | "city" | "colony";
@@ -78,31 +81,19 @@ const PLACEMENT_LABELS: Record<SetupPlacement, string> = {
   colony: "founding colony",
 };
 
-// One spine, dead centre of the top bar. The resources used to be split in two
-// halves flanking the season medallion; that arrangement made the bar's centre a
-// picture rather than the numbers, and the numbers are what a player reads
-// forty times a turn. The medallion became the season clock on the bottom rail.
-/* The spine reads out from the dial in the middle of it: what the land gives on
-   the left, what the city makes of it on the right. Split rather than run as one
-   row of six because the middle of that row is where the turn dial now sits, and
-   an odd number of numerals either side of a large object reads as a scale that
-   balances. */
-const MATERIAL_RESOURCES: Resource[] = ["wood", "stone", "food"];
-const CIVIC_RESOURCES: Resource[] = ["gold", "influence", "happiness"];
-
 /**
  * Exactly one dialog owns the screen at a time — the union makes that a type
  * invariant instead of a rule six independent booleans could break. The
  * self-mounting dialogs are deliberately NOT here: riot, pending event, game
- * over and the omen mount off engine state (G.pendingRiot, G.pendingPlayerEvent,
+ * over mount off engine state (G.pendingRiot, G.pendingPlayerEvent,
  * ctx.phase), so they cannot be opened or closed by a click and must not be
  * modelled as UI intent.
  */
 type ActiveModal =
   | { kind: "populationPrompt"; placement: SetupPlacement; tileId: string }
   | { kind: "upgradeCity" }
-  | { kind: "calm" }
-  | { kind: "venture" };
+  | { kind: "venture" }
+  | { kind: "ideas" };
 
 export function HegemonyBoard({
   G,
@@ -111,46 +102,103 @@ export function HegemonyBoard({
   events,
   playerID = "0",
   onPlayerIDChange,
-  isActive,
+  isActive: seatActive,
+  hotseat,
 }: BoardProps) {
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
-  const [tileConfirmation, setTileConfirmation] = useState<PendingTileConfirmation | null>(null);
-  const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
+  // `?dev=ideas` opens on the purchase list.
+  const [activeModal, setActiveModal] = useState<ActiveModal | null>(
+    DEV_SHELL.ideasOpen ? { kind: "ideas" } : null,
+  );
   const [gameOverDismissed, setGameOverDismissed] = useState(false);
   // Keeps the riot modal mounted one beat past resolution so the outcome can be read.
-  const [riotResultOpen, setRiotResultOpen] = useState(false);
-  // Initialized to the omen standing at mount so a reload never re-announces it.
-  const [seenOmenYear, setSeenOmenYear] = useState<number | null>(() => G.yearOmen?.year ?? null);
-  // Each panel's page is a ROUTE ({view, entry?, scroll?}), not a bare tab enum
-  // (two-panel.md) — one frame deep for now, so Phase 3's deep-links/history widen it
-  // rather than retrofit an enum. The ledger boots open on Cities (ui-refit Step 2); a
-  // rail disc toggles it, its own × closes it, so the sea can be read whole.
-  const [ledgerRoute, setLedgerRoute] = useState<LedgerRoute>({ view: "cities" });
-  const [isLedgerOpen, setLedgerOpen] = useState(true);
-  // The right consult rail (two-panel.md): Chronicle/Codex/Victory. Independent of the
-  // left ledger — both can be open at once (owner, 2026-07-18). Boots closed; the sea
-  // outranks reference, and the dock ticker keeps the latest chronicle line visible.
-  const [consultRoute, setConsultRoute] = useState<ConsultRoute>({ view: "chronicle" });
-  const [isConsultOpen, setConsultOpen] = useState(false);
+  const [riotResultOpen, setRiotResultOpen] = useState(DEV_SHELL.riotResult);
+  // The last year whose card has been read; a later year shows its card first. Bots
+  // never wait for it, and a game opened mid-year starts on it read.
+  const [yearRead, setYearRead] = useState(() =>
+    (G.phase !== "gameplay" && G.phase !== "gameOver") || DEV_SHELL.draftSummary
+      ? 0
+      : DEV_SHELL.yearReveal
+        ? G.year - 1
+        : G.year,
+  );
+  const [yearFaceOpen, setYearFaceOpen] = useState(false);
+  // The private moment last begun (see `privateMoment`): a new one waits behind the
+  // turn notice. A game opened mid-turn starts begun.
+  const [hungerAsk, setHungerAsk] = useState(DEV_SHELL.hungerAsk);
+  const [handedOver, setHandedOver] = useState(() =>
+    DEV_SHELL.turnNotice || DEV_SHELL.viewer ? null : privateMoment(G),
+  );
+  // The draft is read back once its last pick lands, until the opener turns the year.
+  const [draftDone, setDraftDone] = useState(DEV_SHELL.draftSummary);
+  const [seenPhase, setSeenPhase] = useState(ctx.phase);
+  if (seenPhase !== ctx.phase) {
+    setSeenPhase(ctx.phase);
+    if (seenPhase === "setupIdeas") setDraftDone(true);
+  }
+  // The realm sheet's page, and the consult page open on the right (null: none).
+  // The realm boots on its overview; picking a place on the map opens its page.
+  const [realmTab, setRealmTab] = useState<RealmTab>("subject");
+  // What the map last picked, which the realm's last tab shows: the sea (the
+  // realm itself), a tile, or a luxury good's mooring.
+  const [subject, setSubject] = useState<RealmSubject>({ kind: "realm" });
+  const [consultTab, setConsultTab] = useState<ConsultTab | null>(null);
   // Deep-links (two-panel.md piece 4): a Codex-term click opens the consult panel's
   // rulebook at a chapter. The nonce lets the same term re-navigate the codex even if
   // the target chapter is unchanged (you clicked away and clicked the link again).
   const [codexTarget, setCodexTarget] = useState<{ chapter: string; nonce: number } | null>(null);
   const openCodexTo = useCallback((chapter: string) => {
     setCodexTarget((current) => ({ chapter, nonce: (current?.nonce ?? 0) + 1 }));
-    setConsultRoute(routeTo("codex"));
-    setConsultOpen(true);
+    setConsultTab("codex");
   }, []);
   const codexLink = useMemo(() => ({ openCodexTo }), [openCodexTo]);
   const currentPlayerId = toPlayerId(ctx.currentPlayer);
   const viewerId = toPlayerId(playerID);
   const viewer = G.players[viewerId];
-  const hasPendingPlayerEvent = Boolean(G.pendingPlayerEvent);
+  // While the Assembly sits the shell only reads: the sitting owns every action.
+  const sitting = useSitting(G, viewerId);
+  const inAssembly = Boolean(G.assembly);
+  const isActive = seatActive && !inAssembly;
+  // Hunger waiting on its choice blocks the turn exactly as a drawn fate card does.
+  const hasPendingPlayerEvent = Boolean(G.pendingPlayerEvent || G.pendingHunger);
+  // Food short now: End turn opens the hunger card first, with a way back to buy food.
+  const shortfall = hungerShortfall(G, viewerId);
   // The one gate the turn dial needs. It is the same gate every verb sits behind
   // (verbs.tsx), asked without a board fact in sight.
-  const turnGate = { isActive, phase: ctx.phase, hasPendingPlayerEvent };
+  const turnGate = { isActive, phase: ctx.phase, hasPendingPlayerEvent, inAssembly };
   const turnOpen = isTurnOpen(turnGate);
   const activeEffects = useMemo(() => getActiveEffects(G, viewerId), [G, viewerId]);
+  const toasts = useMomentToasts(G, viewerId, DEV_SHELL.toastReplayFrom, DEV_SHELL.titlesFrom);
+  // A revolt is the seat's own card in hotseat; against bots it is only a toast.
+  const revolt = useOwnMoment(G, viewerId, "revolt", hotseat, DEV_SHELL.momentsFrom);
+  const threats = useMemo(() => victoryThreats(G), [G]);
+  const alarms = useMemo(() => realmAlarms(G, viewerId), [G, viewerId]);
+
+  // One moment owns the screen at a time, in the order the engine ran them: the last
+  // seat's riot or revolt, the year card, the game's end; then the turn notice
+  // before a private moment; behind it the Assembly and the fate card.
+  const riotShown = Boolean(G.pendingRiot) || riotResultOpen;
+  const revoltShown = !riotShown && Boolean(revolt.entry);
+  const yearShown =
+    hotseat &&
+    !riotShown &&
+    !revoltShown &&
+    !draftDone &&
+    G.phase !== "setupIdeas" &&
+    Boolean(G.activeYearCard) &&
+    G.year > yearRead;
+  const gameOverShown =
+    ctx.phase === "gameOver" && !gameOverDismissed && !riotShown && !revoltShown && !yearShown;
+  const moment = privateMoment(G);
+  const noticeShown =
+    hotseat &&
+    moment !== null &&
+    moment !== handedOver &&
+    !riotShown &&
+    !revoltShown &&
+    !yearShown &&
+    !draftDone;
+  const momentAhead = riotShown || revoltShown || yearShown || noticeShown || draftDone;
   const gameUi = useMemo<GameUi>(
     () => ({
       G,
@@ -197,15 +245,23 @@ export function HegemonyBoard({
   const canGrowPops = useMemo(
     () =>
       getOwnedHoldings(G, viewerId).some(({ tile }) =>
-        POP_TYPES.some((pop) => getGrowPopStatus(G, viewerId, tile.id, pop).can),
+        GROWABLE_POPS.some((pop) => getGrowPopStatus(G, viewerId, tile.id, pop).can),
       ),
     [G, viewerId],
   );
+  // Move is live when the engine would move one pop somewhere: it knows the
+  // once-a-turn limit, the price and the room at the far end.
   const canMovePops = useMemo(() => {
     const holdings = getOwnedHoldings(G, viewerId);
 
-    return (
-      holdings.length >= 2 && holdings.some(({ settlement }) => totalPops(settlement.pops) > 0)
+    return holdings.some((from) =>
+      holdings.some((to) =>
+        POP_TYPES.some(
+          (pop) =>
+            getMovePopsStatus(G, viewerId, from.tile.id, to.tile.id, { ...EMPTY_POPS, [pop]: 1 })
+              .can,
+        ),
+      ),
     );
   }, [G, viewerId]);
   // Build is live when some settlement could raise some building — the same engine
@@ -252,21 +308,18 @@ export function HegemonyBoard({
   const armSelection = useCallback(
     (mode: MapSelectionMode) => {
       setActiveModal(null);
-      setTileConfirmation(null);
       armMapSelection(mode);
     },
     [armMapSelection],
   );
-  // The chronicle is a right-rail consult page now (two-panel.md); its newest line
-  // still rides the command bar so the narration is never fully hidden.
-  const latestChronicleLine = G.log.length > 0 ? G.log[G.log.length - 1].message : null;
-
-  // Handing the turn over closes everything the previous seat had open.
+  // The handoff closes the previous seat's choices. A riot result stays open
+  // until dismissed, even though its roll has already passed the turn.
+  const handoff = useRef({ phase: ctx.phase, player: ctx.currentPlayer });
   useEffect(() => {
-    setTileConfirmation(null);
+    if (handoff.current.phase === ctx.phase && handoff.current.player === ctx.currentPlayer) return;
+    handoff.current = { phase: ctx.phase, player: ctx.currentPlayer };
     setActiveModal(null);
     clearMapSelection();
-    setRiotResultOpen(false);
   }, [ctx.phase, ctx.currentPlayer, clearMapSelection]);
 
   // A drawn event takes the screen: dismiss the player's own dialogs behind it.
@@ -277,13 +330,11 @@ export function HegemonyBoard({
       return;
     }
 
-    setTileConfirmation(null);
     clearMapSelection();
     setActiveModal(null);
   }, [G.pendingPlayerEvent, clearMapSelection]);
 
-  // `?` toggles the codex from anywhere — it is a consult page now (right panel), so
-  // this is the same act as pressing its rail disc.
+  // `?` toggles the codex from anywhere: the same act as pressing its consult icon.
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
@@ -296,15 +347,15 @@ export function HegemonyBoard({
       }
 
       if (event.key === "?") {
-        setConsultOpen((open) => !(open && consultRoute.view === "codex"));
-        setConsultRoute(routeTo("codex"));
+        setCodexTarget(null);
+        setConsultTab((open) => (open === "codex" ? null : "codex"));
       }
       // Escape is ModalShell's job — every dialog gets it from the one place.
     };
 
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [consultRoute.view]);
+  }, []);
 
   const handleTileAction = useCallback(
     (tileId: string) => {
@@ -331,6 +382,11 @@ export function HegemonyBoard({
         return;
       }
 
+      // Otherwise the pick becomes the realm's last page; an armed mode keeps
+      // the page it was armed from.
+      setSubject({ kind: "tile", tileId });
+      setRealmTab("subject");
+
       if (
         ctx.phase === "setupCapital" ||
         ctx.phase === "setupCity" ||
@@ -338,33 +394,12 @@ export function HegemonyBoard({
       ) {
         const placement: SetupPlacement =
           ctx.phase === "setupCapital" ? "capital" : ctx.phase === "setupCity" ? "city" : "colony";
-        setTileConfirmation(null);
         setActiveModal({ kind: "populationPrompt", placement, tileId });
         return;
       }
-
-      if (!isActive) {
-        return;
-      }
-
-      setTileConfirmation(null);
     },
-    [mapSelection, setMapSelectionTarget, ctx.phase, isActive],
+    [mapSelection, setMapSelectionTarget, ctx.phase],
   );
-
-  const confirmTileAction = useCallback(() => {
-    if (!tileConfirmation) {
-      return;
-    }
-
-    if (tileConfirmation.action === "foundColony") {
-      armMapSelection({ kind: "foundColony" });
-    } else {
-      setActiveModal({ kind: "upgradeCity" });
-    }
-
-    setTileConfirmation(null);
-  }, [tileConfirmation, armMapSelection]);
 
   const requestBuildBuilding = useCallback(
     (tileId: string, buildingId: BuildingId, claimVertexId?: string) => {
@@ -390,184 +425,191 @@ export function HegemonyBoard({
     [ctx.phase, isActive, hasPendingPlayerEvent, G, viewerId, moves],
   );
 
-  const confirmation = useMemo(
-    () =>
-      tileConfirmation
-        ? {
-            label: tileConfirmation.label,
-            tileId: tileConfirmation.tileId,
-            onCancel: () => setTileConfirmation(null),
-            onConfirm: confirmTileAction,
-          }
-        : null,
-    [tileConfirmation, confirmTileAction],
-  );
+  const verbContext: VerbContext = {
+    G,
+    playerID: viewerId,
+    phase: ctx.phase,
+    isActive,
+    hasPendingPlayerEvent,
+    inAssembly,
+    canGrowPops,
+    canMovePops,
+    canFoundColony,
+    canUpgradeCity,
+    canBuild,
+    armedVerb: armedVerbOf(mapSelection.selection?.mode),
+    calmUsed: viewer.civicCalmUsedThisTurn,
+    ventureUsed: viewer.ventureUsedThisTurn,
+  };
+  // Found, from a tile's page: arm the mode and open its popover on that tile.
+  const foundHere = (tileId: string) => {
+    const element = document.querySelector(`[data-tile-id="${tileId}"]`);
+    if (!element) return;
+    if (mapSelection.selection?.mode.kind !== "foundColony") armSelection({ kind: "foundColony" });
+    setMapSelectionTarget({ tileId, anchor: element.getBoundingClientRect() });
+  };
 
   return (
     <GameUiProvider value={gameUi}>
       <CodexLinkProvider value={codexLink}>
-        <main className="shell uiOverhaulShell">
-          {/* The map is the stage now, not a grid cell: a full-bleed sea the chrome
-          floats over (ui-refit Step 1). The captions ride the stage so they stay
-          pinned to the sea, not to a docked frame. */}
-          <div className="mapStage">
-            <HexMap
-              G={G}
-              confirmation={confirmation}
-              pendingTileId={tileConfirmation?.tileId ?? null}
-              selectedTileId={selectedTileId}
-              highlightTileIds={
-                mapSelection.selection ? mapSelection.candidateTileIds : setupColonyValidTileIds
-              }
-              placementActive={Boolean(mapSelection.selection) || ctx.phase === "setupColony"}
-              onTileAction={handleTileAction}
-            />
-            {isSetup ? (
-              <div className="mapSetupCaption" role="status">
-                {pendingSetupCopy}
-              </div>
-            ) : null}
-            {mapSelection.selection ? (
-              <div className="mapSetupCaption placementCaption" role="status">
-                {selectionCaption(
-                  mapSelection.selection.mode,
-                  mapSelection.candidateTileIds.length,
-                )}
-              </div>
-            ) : null}
-          </div>
-
-          {/* Symmetric, and absolutely so: the event slips read from the left, the
-          roster sits at the right, and the resource spine is pinned to the bar's
-          true centre rather than to whatever space the two ends left over. The
-          turn dial is the centre of that spine, so the one object the eye goes to
-          first is also the only thing on the bar that never moves. */}
-          <header className="topbar strategyTopbar">
-            <TopbarEvents G={G} />
-
-            <div className="resourceSpine">
-              <ResourceGrid
-                order={MATERIAL_RESOURCES}
-                tiles={G.board.tiles}
-                resources={viewer.resources}
-                deltas={projectedIncome}
-                breakdown={projectedIncomeBreakdown}
-                resetKey={`res-${viewerId}`}
-              />
-
-              <Tooltip
-                content={
-                  <MechanicsDetails
-                    blockedReason={turnOpen ? undefined : turnCommitTitle(turnGate)}
-                    heading="End Turn"
-                  >
-                    {turnOpen ? (
-                      <p className="mechanicsExplanation">{turnCommitTitle(turnGate)}</p>
-                    ) : null}
-                  </MechanicsDetails>
+        <main className="frame">
+          {G.phase !== "setupIdeas" && !draftDone ? (
+            <>
+              <Island
+                G={G}
+                highlightTileIds={
+                  mapSelection.selection ? mapSelection.candidateTileIds : setupColonyValidTileIds
                 }
-                triggerClassName="turnDialTrigger"
-              >
-                <TurnDial
+                onBackgroundAction={() => {
+                  setSelectedTileId(null);
+                  setSubject({ kind: "realm" });
+                  setRealmTab("subject");
+                }}
+                onMooringAction={(vertexId) => {
+                  setSelectedTileId(null);
+                  setSubject({ kind: "mooring", vertexId });
+                  setRealmTab("subject");
+                }}
+                onTileAction={handleTileAction}
+                // A popover pinned to a tile's old spot closes when the map moves;
+                // the mode stays armed, so the next click re-opens it in place.
+                onViewChange={() => setMapSelectionTarget(null)}
+                placementActive={Boolean(mapSelection.selection) || ctx.phase === "setupColony"}
+                selectedTileId={selectedTileId}
+              />
+
+              <div className="hud hud-top">
+                <TopBar
                   G={G}
-                  actingPlayerId={currentPlayerId}
-                  canEndTurn={turnOpen}
-                  onEndTurn={events.endTurn}
+                  actingId={currentPlayerId}
+                  breakdown={projectedIncomeBreakdown}
+                  happiness={happinessDisplay(G, viewerId)}
+                  income={projectedIncome}
+                  onSeat={onPlayerIDChange}
+                  threats={threats.map((threat) => threat.seat)}
+                  viewerId={viewerId}
                 />
-              </Tooltip>
+                <Ticker G={G} />
+                <ConsultStrip
+                  onClose={() => setConsultTab(null)}
+                  onConsult={(tab) => {
+                    // Only a term link opens the Codex at a chapter; the strip opens its contents.
+                    setCodexTarget(null);
+                    setConsultTab((open) => (open === tab ? null : tab));
+                  }}
+                  open={consultTab}
+                />
+                {sitting?.minimised ? (
+                  <AssemblyDock sitting={sitting} />
+                ) : (
+                  <ToastLane onDismiss={toasts.dismiss} toast={toasts.toast} />
+                )}
+                <Alarms
+                  alarms={alarms}
+                  G={G}
+                  hunger={shortfall}
+                  onOpenYear={() => setYearFaceOpen(true)}
+                  threatOpen={Boolean(DEV_SHELL.titlesFrom)}
+                  viewerId={viewerId}
+                />
+              </div>
 
-              <ResourceGrid
-                order={CIVIC_RESOURCES}
-                tiles={G.board.tiles}
-                resources={viewer.resources}
-                deltas={projectedIncome}
-                breakdown={projectedIncomeBreakdown}
-                resetKey={`res-${viewerId}`}
-                happiness={happinessBreakdown(G, viewerId)}
-              />
-            </div>
+              {isSetup || mapSelection.selection ? (
+                <div className="map-caption" role="status">
+                  {mapSelection.selection
+                    ? selectionCaption(
+                        mapSelection.selection.mode,
+                        mapSelection.candidateTileIds.length,
+                      )
+                    : pendingSetupCopy}
+                </div>
+              ) : null}
 
-            <div className="topbarStatusCluster">
-              <ActiveEffectsList variant="board" />
-              <PlayerScoreboard
-                currentPlayerId={currentPlayerId}
-                onPlayerIDChange={onPlayerIDChange}
-                viewerId={viewerId}
-              />
-            </div>
-          </header>
-
-          {/* The KYKLOS ledger (ui-refit Step 2): a disc rail threaded on the left
-          spine, and the tab contents in a floating ivory card the rail opens. */}
-          <section className="workbench strategyWorkbench">
-            <LedgerRail
-              activeTab={ledgerRoute.view}
-              isOpen={isLedgerOpen}
-              onSelectTab={(tab) => {
-                // A disc opens the ledger to its tab; pressing the tab already showing
-                // closes it. So the same disc both reveals and dismisses.
-                setLedgerOpen((open) => !(open && tab === ledgerRoute.view));
-                setLedgerRoute(routeTo(tab));
-              }}
-            />
-
-            {isLedgerOpen ? (
-              <aside className="panel empirePanel intelPanel">
-                <EmpireIntelPanel
-                  activeTab={ledgerRoute.view}
-                  onBuildBuildingRequest={requestBuildBuilding}
-                  onBankSell={moves.bankSell}
+              <div className="hud hud-bottom">
+                <RealmPanel
+                  locked={inAssembly}
+                  groups={discGroups(
+                    verbContext,
+                    {
+                      // The fans arm the map for the exact choice; nothing covers the answer.
+                      onArm: armSelection,
+                      onMovePopsRequest: () => armSelection({ kind: "movePops" }),
+                      onFoundColonyRequest: () => armSelection({ kind: "foundColony" }),
+                      onUpgradeCityRequest: () => setActiveModal({ kind: "upgradeCity" }),
+                      onVentureRequest: () => setActiveModal({ kind: "venture" }),
+                      onCalm: moves.civicCalm,
+                      onDole: moves.dole,
+                      onIdeasRequest: () => setActiveModal({ kind: "ideas" }),
+                      onBankBuy: moves.bankBuy,
+                      onBankSell: moves.bankSell,
+                    },
+                    mapSelection.selection?.mode ?? null,
+                  )}
                   onBankBuy={moves.bankBuy}
+                  onBankSell={moves.bankSell}
+                  onBuildBuildingRequest={requestBuildBuilding}
                   onLadderRequest={(request) => armSelection({ kind: "ladder", request })}
+                  income={projectedIncome}
+                  onFound={foundHere}
+                  onSubject={(next) => {
+                    setSubject(next);
+                    setSelectedTileId(next.kind === "tile" ? next.tileId : null);
+                  }}
+                  onTab={setRealmTab}
+                  subject={subject}
+                  tab={realmTab}
                 />
-              </aside>
-            ) : null}
+                <EndTurn
+                  actingId={currentPlayerId}
+                  canEndTurn={turnOpen}
+                  confirmOpen={DEV_SHELL.endTurnConfirm}
+                  onCalm={moves.civicCalm}
+                  onEndTurn={() => (shortfall ? setHungerAsk(true) : events.endTurn())}
+                  title={turnCommitTitle(turnGate)}
+                  waitingLabel={inAssembly ? "In Assembly" : undefined}
+                  unrest={turnOpen ? turnEndUnrest(G, currentPlayerId) : null}
+                  warning={endTurnWarning(G, currentPlayerId)}
+                />
+              </div>
 
-            {/* The right consult rail + its floating card, mirroring the left ledger on the
-            far edge (two-panel.md). Independent of the ledger — both may be open. */}
-            <ConsultRail
-              activeTab={consultRoute.view}
-              isOpen={isConsultOpen}
-              onSelectTab={(tab) => {
-                setConsultOpen((open) => !(open && tab === consultRoute.view));
-                setConsultRoute(routeTo(tab));
-              }}
-            />
+              {consultTab ? (
+                <aside
+                  aria-label="Consult"
+                  className="consult-sheet"
+                  data-c="consult-sheet"
+                  data-tab={consultTab}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") {
+                      event.stopPropagation();
+                      setConsultTab(null);
+                    }
+                  }}
+                >
+                  <ConsultPanel activeTab={consultTab} codexTarget={codexTarget} />
+                </aside>
+              ) : null}
+            </>
+          ) : null}
 
-            {isConsultOpen ? (
-              <aside className="panel consultPanel">
-                <ConsultPanel activeTab={consultRoute.view} codexTarget={codexTarget} />
-              </aside>
-            ) : null}
-          </section>
-
-          <CommandDock
-            canGrowPops={canGrowPops}
-            canMovePops={canMovePops}
-            canFoundColony={canFoundColony}
-            canUpgradeCity={canUpgradeCity}
-            canBuild={canBuild}
-            armedVerb={armedVerbOf(mapSelection.selection?.mode)}
-            chronicleTicker={latestChronicleLine}
-            // Grow / Move / Found / Build are map modes, not dialogs (refit scope 3):
-            // each arms the board and clears any open dialog, so nothing covers the answer.
-            onGrowPopRequest={() => armSelection({ kind: "growPop" })}
-            onMovePopsRequest={() => armSelection({ kind: "movePops" })}
-            onFoundColonyRequest={() => armSelection({ kind: "foundColony" })}
-            onBuildRequest={() => armSelection({ kind: "build" })}
-            // Calm and Venture ask no "which tile?" question — they stay dialogs.
-            onCalmRequest={() => setActiveModal({ kind: "calm" })}
-            onVentureRequest={() => setActiveModal({ kind: "venture" })}
-            onUpgradeCityRequest={() => setActiveModal({ kind: "upgradeCity" })}
-          />
-
+          {G.phase === "setupIdeas" ? (
+            <IdeasModal key={viewerId} />
+          ) : draftDone ? (
+            <IdeasModal draftDone onClose={() => setDraftDone(false)} />
+          ) : activeModal?.kind === "ideas" ? (
+            <IdeasModal onClose={closeModal} />
+          ) : null}
           {activeModal?.kind === "populationPrompt" ? (
             <PopulationPickerModal
               title={`Choose ${PLACEMENT_LABELS[activeModal.placement]} pops`}
               description={`Allocate exactly ${G.ruleset.placementPopCounts[activeModal.placement]} starting ${
                 G.ruleset.placementPopCounts[activeModal.placement] === 1 ? "pop" : "pops"
-              } before placing this ${PLACEMENT_LABELS[activeModal.placement]}.`}
+              } before placing this ${PLACEMENT_LABELS[activeModal.placement]}: ${
+                G.ruleset.placementCitizens[activeModal.placement] === 0
+                  ? "no citizens"
+                  : `${G.ruleset.placementCitizens[activeModal.placement]} citizen`
+              }, the rest slaves or freemen.`}
               requiredTotal={G.ruleset.placementPopCounts[activeModal.placement]}
+              requiredCitizens={G.ruleset.placementCitizens[activeModal.placement]}
               confirmLabel={`Place ${PLACEMENT_LABELS[activeModal.placement]}`}
               onCancel={() => setActiveModal(null)}
               onConfirm={(pops) => {
@@ -607,6 +649,7 @@ export function HegemonyBoard({
                   return (
                     <GrowPopPopover
                       anchor={anchor}
+                      initialPop={mode.pop}
                       onCancel={mapSelection.clear}
                       onConfirm={(target, pop) => {
                         moves.growPop(target, pop);
@@ -621,6 +664,7 @@ export function HegemonyBoard({
                   return (
                     <BuildPopover
                       anchor={anchor}
+                      initialBuildingId={mode.buildingId}
                       onCancel={mapSelection.clear}
                       onConfirm={(target, buildingId, claimVertexId) => {
                         requestBuildBuilding(target, buildingId, claimVertexId);
@@ -689,44 +733,67 @@ export function HegemonyBoard({
               }}
             />
           ) : null}
-          {activeModal?.kind === "calm" ? <CalmModal onClose={closeModal} /> : null}
           {activeModal?.kind === "venture" ? <VentureModal onClose={closeModal} /> : null}
-          {G.pendingRiot || riotResultOpen ? (
+          {riotShown ? (
             <RiotModal
               onRolled={() => setRiotResultOpen(true)}
               onDismissResult={() => setRiotResultOpen(false)}
             />
           ) : null}
-          {ctx.phase === "gameOver" && !gameOverDismissed ? (
-            <GameOverModal G={G} onInspectBoard={() => setGameOverDismissed(true)} />
+          {revoltShown && revolt.entry ? (
+            <RevoltModal entry={revolt.entry} onClose={revolt.dismiss} />
           ) : null}
-          {G.pendingPlayerEvent ? <PendingPlayerEventModal /> : null}
-          {/* The Assembly TAKES OVER the table from spring of Year 2
-          (assembly-politicians.md §1.2; owner ruling 2026-08-15). It mounts off
-          engine state like the omen, and it covers the whole viewport — bars,
-          rails and dock included. It therefore takes the seat switcher with it:
-          the roster it covers is the only way a hotseat changes hands, and each
-          of the scene's seat plaques performs that same act. */}
-          {G.assembly ? <AssemblyPanel onTakeSeat={onPlayerIDChange} /> : null}
-          {G.yearOmen &&
-          G.yearOmen.year !== seenOmenYear &&
-          !G.pendingRiot &&
-          !G.pendingPlayerEvent &&
-          !G.assembly ? (
-            <EventTableModal
-              table={getOmenTable(G.definition.content)}
-              modifier={0}
-              result={G.yearOmen.record}
-              subtitle={`${PLAYER_NAMES[G.seasonOpener]} takes the auspices for Year ${G.yearOmen.year} — the sign stands over every polis until spring.`}
-              onDismiss={() => setSeenOmenYear(G.yearOmen?.year ?? null)}
-              footer={
-                <button
-                  className="primaryButton eventResolveButton"
-                  onClick={() => setSeenOmenYear(G.yearOmen?.year ?? null)}
-                >
-                  So Be It
-                </button>
-              }
+          {yearShown ? (
+            <YearCardModal
+              holdBack={DEV_SHELL.yearBack}
+              onClose={() => setYearRead(G.year)}
+              reveal
+            />
+          ) : yearFaceOpen && !momentAhead ? (
+            <YearCardModal onClose={() => setYearFaceOpen(false)} reveal={false} />
+          ) : null}
+          {gameOverShown ? (
+            <GameOverModal
+              G={G}
+              onInspectBoard={() => setGameOverDismissed(true)}
+              viewerId={viewerId}
+            />
+          ) : null}
+          {/* Asked from End turn, the card ends the turn and names who leaves in one
+          go. A turn already committed (a restored game) only waits for the names. */}
+          {G.pendingHunger?.playerID === viewerId && !momentAhead ? (
+            <HungerModal
+              key={`pending-${ctx.turn}`}
+              onCommit={moves.resolveHunger}
+              unfed={G.pendingHunger.unfed}
+            />
+          ) : hungerAsk && turnOpen && shortfall ? (
+            <HungerModal
+              key={`ask-${ctx.turn}-${shortfall.unfed}`}
+              onBack={() => setHungerAsk(false)}
+              onCommit={(leave) => {
+                setHungerAsk(false);
+                events.endTurn();
+                moves.resolveHunger(leave);
+              }}
+              unfed={shortfall.unfed}
+            />
+          ) : null}
+          {G.pendingPlayerEvent && !momentAhead ? <PendingPlayerEventModal /> : null}
+          {/* The Assembly sits in a modal over the shell. It mounts off engine state;
+          minimised, it is the dock under the ticker. A proposal is private, and its
+          seat begins it at the turn notice. */}
+          {sitting && !sitting.minimised && !momentAhead ? (
+            <AssemblySitting sitting={sitting} />
+          ) : null}
+          {noticeShown ? (
+            <TurnNotice
+              onBegin={() => {
+                setHandedOver(moment);
+                onPlayerIDChange(currentPlayerId);
+              }}
+              proposal={G.assembly?.phase === "proposal"}
+              seat={currentPlayerId}
             />
           ) : null}
         </main>

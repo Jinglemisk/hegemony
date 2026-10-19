@@ -83,35 +83,35 @@ export const COMMAND_PARITY = {
   },
   foundColony: {
     frontend: interactive(
-      "src/components/board/command/CommandDock.tsx",
+      "src/components/frame/VerbDiscs.tsx",
       "src/components/board/modals/FoundColonyPopover.tsx",
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   upgradeColonyToCity: {
     frontend: interactive(
-      "src/components/board/command/CommandDock.tsx",
+      "src/components/frame/VerbDiscs.tsx",
       "src/components/board/modals/UpgradeCityModal.tsx",
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   buildBuilding: {
     frontend: interactive(
-      "src/components/board/command/CommandDock.tsx",
+      "src/components/frame/VerbDiscs.tsx",
       "src/components/board/map/BuildPopover.tsx",
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   growPop: {
     frontend: interactive(
-      "src/components/board/command/CommandDock.tsx",
+      "src/components/frame/VerbDiscs.tsx",
       "src/components/board/map/GrowPopPopover.tsx",
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   movePops: {
     frontend: interactive(
-      "src/components/board/command/CommandDock.tsx",
+      "src/components/frame/VerbDiscs.tsx",
       "src/components/board/map/MovePopsPopover.tsx",
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
@@ -120,88 +120,106 @@ export const COMMAND_PARITY = {
     frontend: interactive("src/components/board/modals/PendingPlayerEventModal.tsx"),
     simulation: simulated("master-forced-choice", "beamPlan → onePlyLookahead(scoreMaster)"),
   },
+  resolveHunger: {
+    frontend: interactive("src/components/board/modals/HungerModal.tsx"),
+    simulation: simulated("master-forced-choice", "beamPlan → onePlyLookahead(scoreMaster)"),
+  },
   bankSell: {
-    frontend: interactive("src/components/board/ledger/MarketTab.tsx"),
-    simulation: simulated("master-rule", "resolveStochasticByRule bank heuristic"),
+    frontend: interactive(
+      "src/components/frame/discs.ts",
+      "src/components/frame/realm/MarketPage.tsx",
+    ),
+    simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   bankBuy: {
-    frontend: interactive("src/components/board/ledger/MarketTab.tsx"),
-    simulation: simulated("master-rule", "resolveStochasticByRule bank heuristic"),
+    frontend: interactive(
+      "src/components/frame/discs.ts",
+      "src/components/frame/realm/MarketPage.tsx",
+    ),
+    simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
+  },
+  dole: {
+    frontend: interactive("src/components/frame/VerbDiscs.tsx", "src/components/frame/discs.ts"),
+    simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
+  },
+  pickIdea: {
+    frontend: interactive("src/components/board/modals/IdeasModal.tsx"),
+    simulation: simulated("setup-driver", "chooseIdea → scoreMaster"),
+  },
+  buyIdea: {
+    frontend: interactive(
+      "src/components/board/modals/IdeasModal.tsx",
+      "src/components/frame/discs.ts",
+    ),
+    simulation: simulated("master-search", "beamPlan → scoreMaster"),
   },
   civicCalm: {
-    frontend: interactive(
-      "src/components/board/command/CommandDock.tsx",
-      "src/components/board/modals/CalmModal.tsx",
-    ),
+    frontend: interactive("src/components/frame/VerbDiscs.tsx", "src/components/frame/discs.ts"),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   promotePop: {
     frontend: interactive(
-      "src/components/board/command/CommandDock.tsx",
+      "src/components/frame/VerbDiscs.tsx",
       "src/components/board/map/LadderPopover.tsx",
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   demotePop: {
     frontend: interactive(
-      "src/components/board/command/CommandDock.tsx",
+      "src/components/frame/VerbDiscs.tsx",
       "src/components/board/map/LadderPopover.tsx",
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   fundExpedition: {
     frontend: interactive(
-      "src/components/board/command/CommandDock.tsx",
+      "src/components/frame/VerbDiscs.tsx",
       "src/components/board/modals/VentureModal.tsx",
     ),
-    simulation: simulated("master-rule", "resolveStochasticByRule venture heuristic"),
+    simulation: simulated("master-search", "beamPlan → searchOutcomes → ventureOutcomes"),
   },
   buyRiotInsurance: {
     frontend: interactive("src/components/board/modals/RiotModal.tsx"),
-    simulation: simulated("master-rule", "resolveStochasticByRule riot-insurance heuristic"),
+    simulation: simulated("master-rule", "resolveRiotByRule insurance"),
   },
   resolveRiot: {
     frontend: interactive("src/components/board/modals/RiotModal.tsx"),
-    simulation: simulated("master-rule", "resolveStochasticByRule riot fallback"),
+    simulation: simulated("master-rule", "resolveRiotByRule roll"),
   },
   assemblyDraw: {
-    frontend: interactive("src/components/board/assembly/AssemblyColonnade.tsx"),
+    frontend: interactive("src/components/board/assembly/AssemblySitting.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   assemblyDiscardHeld: {
-    frontend: interactive("src/components/board/assembly/AssemblyFloor.tsx"),
+    frontend: interactive("src/components/board/assembly/AssemblySitting.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   assemblyPropose: {
-    frontend: interactive("src/components/board/assembly/AssemblyFloor.tsx"),
+    frontend: interactive("src/components/board/assembly/AssemblySitting.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   assemblyProposeRepeal: {
-    frontend: interactive("src/components/board/assembly/AssemblyFoot.tsx"),
+    frontend: interactive("src/components/board/assembly/AssemblySitting.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   assemblyPass: {
-    frontend: interactive("src/components/board/assembly/AssemblyFoot.tsx"),
+    frontend: interactive("src/components/board/assembly/AssemblySitting.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   assemblyBribe: {
-    frontend: interactive("src/components/board/assembly/AssemblySeats.tsx"),
+    frontend: interactive("src/components/board/assembly/AssemblySitting.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   assemblyVote: {
-    frontend: interactive("src/components/board/assembly/AssemblySeats.tsx"),
-    simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
-  },
-  assemblyVeto: {
-    frontend: interactive("src/components/board/assembly/AssemblySeats.tsx"),
+    frontend: interactive("src/components/board/assembly/AssemblySitting.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   assemblyClose: {
-    frontend: interactive("src/components/board/assembly/AssemblyFoot.tsx"),
+    frontend: interactive("src/components/board/assembly/AssemblySitting.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   endTurn: {
-    frontend: interactive("src/components/board/command/CommandDock.tsx"),
+    frontend: interactive("src/components/frame/EndTurn.tsx"),
     simulation: simulated("turn-control", "beamPlan fallback and forceEndTurn"),
   },
 } satisfies Record<GameCommandType, CommandParityCoverage>;

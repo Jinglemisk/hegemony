@@ -1,7 +1,8 @@
 import { PLAYER_IDS } from "./data";
-import { getPlayerEventCards, getResolutionCards, getSeasonalEventCards } from "./content";
+import { getPlayerEventCards, getResolutionCards, getYearCards } from "./content";
 import type { BallotItem, PoliticianId } from "./assembly/types";
-import type { EventCard, HegemonyState, Pops, Settlement } from "./types";
+import type { HegemonyState, Pops, Settlement } from "./types";
+import { playerPieces } from "./settlement";
 import { COMMAND_SCHEMA_VERSION, STATE_SCHEMA_VERSION } from "./version";
 
 export interface InvariantViolation {
@@ -87,7 +88,34 @@ export function collectInvariantViolations(
     }
   }
 
+  const heldIdeas = PLAYER_IDS.flatMap((id) => G.players[id]?.nationalIdeas ?? []).map((i) => i.id);
+  if (new Set(heldIdeas).size !== heldIdeas.length) {
+    add("ideas.exclusive", "players.*.nationalIdeas", "an Idea is held by one seat only");
+  }
+
   for (const playerID of PLAYER_IDS) {
+    const ideas = G.players[playerID]?.nationalIdeas;
+    if (
+      !Array.isArray(ideas) ||
+      ideas.length > 2 ||
+      new Set(ideas.map((i) => i.id)).size !== ideas.length ||
+      ideas.some(
+        (i) =>
+          !G.definition.content.nationalIdeas.some((d) => d.id === i.id) ||
+          !["setup", "purchase"].includes(i.acquired) ||
+          !Number.isSafeInteger(i.year) ||
+          i.year < 1 ||
+          i.year > G.year,
+      ) ||
+      ideas.filter((i) => i.acquired === "setup").length > 1 ||
+      ideas.filter((i) => i.acquired === "purchase").length > 1
+    ) {
+      add(
+        "ideas.ownership",
+        `players.${playerID}.nationalIdeas`,
+        "requires at most one setup Idea and one distinct purchase from the pinned catalog",
+      );
+    }
     const indexed = G.players[playerID]?.settlements ?? [];
     const boardOwned = G.board.tiles
       .filter((tile) => tile.settlements.some((settlement) => settlement.owner === playerID))
@@ -99,6 +127,52 @@ export function collectInvariantViolations(
         `index [${indexed.join(", ")}] disagrees with board [${boardOwned.join(", ")}]`,
       );
     }
+    // Food is short only inside its owner's own turn: ending the turn settles it
+    // before the riot check, so no debt reaches a rival's turn or the Assembly.
+    const ownTurn =
+      G.phase === "gameplay" && G.currentPlayer === playerID && !G.pendingRiot && !G.assembly;
+    if ((G.players[playerID]?.resources.food ?? 0) < 0 && !ownTurn) {
+      add(
+        "resources.foodDebt",
+        `players.${playerID}.resources.food`,
+        "food cannot be negative outside its owner's turn",
+      );
+    }
+    // Happiness is derived, never held: no stock of it, and a whole count of tokens.
+    if (G.players[playerID] && "happiness" in G.players[playerID].resources) {
+      add(
+        "happiness.stored",
+        `players.${playerID}.resources.happiness`,
+        "happiness is a level read off the board and cannot be stored",
+      );
+    }
+    const tokens = G.players[playerID]?.unrestTokens;
+    if (G.players[playerID] && !(Number.isSafeInteger(tokens) && (tokens ?? -1) >= 0)) {
+      add(
+        "happiness.tokens",
+        `players.${playerID}.unrestTokens`,
+        "must be a non-negative safe integer",
+      );
+    }
+    // Pieces are conserved: nobody stands more colonies or cities than their supply.
+    if (G.players[playerID] && G.ruleset?.pieces) {
+      const pieces = playerPieces(G, playerID);
+      if (pieces.colonies > pieces.colonySupply) {
+        add(
+          "pieces.colonies",
+          `players.${playerID}.settlements`,
+          `${pieces.colonies} colonies stand against a supply of ${pieces.colonySupply}`,
+        );
+      }
+      if (pieces.cities > pieces.citySupply) {
+        add(
+          "pieces.cities",
+          `players.${playerID}.settlements`,
+          `${pieces.cities} cities stand against a supply of ${pieces.citySupply}`,
+        );
+      }
+    }
+
     if (new Set(indexed).size !== indexed.length) {
       add(
         "settlement.indexDuplicate",
@@ -184,7 +258,7 @@ export function collectInvariantViolations(
   }
 
   if (options.strictCardConservation) {
-    validateEventCards(G, "seasonal", getSeasonalEventCards(G.definition.content), add);
+    validateEventCards(G, "year", getYearCards(G.definition.content), add);
     validateEventCards(G, "player", getPlayerEventCards(G.definition.content), add);
     validateResolutionCards(G, add);
   }
@@ -223,21 +297,21 @@ function sameMultiset(left: string[], right: string[]): boolean {
 
 function validateEventCards(
   G: HegemonyState,
-  deck: "seasonal" | "player",
-  definitions: EventCard[],
+  deck: "year" | "player",
+  definitions: Array<{ id: string; count: number }>,
   add: (code: string, path: string, message: string) => void,
 ) {
   const expected = new Map(definitions.map((card) => [card.id, card.count]));
   const actual = new Map<string, number>();
-  const count = (card: EventCard | undefined | null) => {
+  const count = (card: { id: string } | undefined | null) => {
     if (card) actual.set(card.id, (actual.get(card.id) ?? 0) + 1);
   };
 
-  const draw = deck === "seasonal" ? G.seasonalDrawPile : G.playerDrawPile;
-  const discard = deck === "seasonal" ? G.seasonalDiscardPile : G.playerDiscardPile;
+  const draw = deck === "year" ? G.yearDrawPile : G.playerDrawPile;
+  const discard = deck === "year" ? G.yearDiscardPile : G.playerDiscardPile;
   draw.forEach(count);
   discard.forEach(count);
-  if (deck === "seasonal") count(G.activeSeasonEvent?.card);
+  if (deck === "year") count(G.activeYearCard);
   else count(G.pendingPlayerEvent?.card);
 
   for (const [cardId, expectedCount] of expected) {
@@ -274,9 +348,9 @@ function validateResolutionCards(
 
   const session = G.assembly;
   if (session?.phase === "proposal") {
-    countItem(session.houseItem);
     Object.values(session.held).forEach((held) => held && countId(held.card.id));
     Object.values(session.proposals).forEach(countItem);
+    Object.values(session.setAside).forEach((cardId) => cardId && countId(cardId));
   } else if (session?.phase === "voting") {
     session.ballot.slice(session.ballotIndex).forEach(countItem);
   }
@@ -304,8 +378,8 @@ function validateAssembly(
   const session = G.assembly;
   if (!session) return;
 
-  if (session.year < 1 || session.season !== G.season) {
-    add("assembly.calendar", "assembly", "session must belong to the current season");
+  if (session.year < 1 || session.year !== G.year) {
+    add("assembly.calendar", "assembly", "session must belong to the current year");
   }
   if (
     new Set(session.voteOrder).size !== PLAYER_IDS.length ||

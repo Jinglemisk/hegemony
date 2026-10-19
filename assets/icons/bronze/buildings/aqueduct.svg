@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Aqueduct — two tiers of stone arches and a water channel</title>
+<defs>
+<linearGradient id="a-aqueduct-stone" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e1d9c5"/><stop offset="0.48" stop-color="#b9b09a"/><stop offset="1" stop-color="#817a68"/></linearGradient>
+<linearGradient id="a-aqueduct-marble" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#f7ecd2"/><stop offset="1" stop-color="#c9b48c"/></linearGradient>
+<linearGradient id="a-aqueduct-sea" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2e8a9a"/><stop offset="0.48" stop-color="#206e7c"/><stop offset="1" stop-color="#17505c"/></linearGradient>
+</defs>
+<path d="M6 29H58V58H48V45Q48 38 41 38Q34 38 34 45V58H25V45Q25 38 18 38Q11 38 11 45V58H6Z" fill="url(#a-aqueduct-stone)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M51 36H57V57H51V43Q51 38 45 37Z" fill="#817a68"/>
+<path d="M6 17V29H13V24Q13 19 18 19Q23 19 23 24V29H28V24Q28 19 33 19Q38 19 38 24V29H43V24Q43 19 48 19Q53 19 53 24V29H58V17Z" fill="url(#a-aqueduct-marble)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M6 29H58V36H6Z" fill="url(#a-aqueduct-marble)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M6 8H58V17H6Z" fill="url(#a-aqueduct-stone)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M9 9H55V13H9Z" fill="url(#a-aqueduct-sea)"/>
+<path d="M10 10H32" fill="none" stroke="#d9f3ec" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M8 15H55M8 31H55M7 39V53M27 39V53" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M7 33H57V35H7ZM53 18H57V28H54ZM30 42H33V57H30ZM8 54H10V57H7Z" fill="#665f50"/>
+<path d="M9 21H12M25 19V25M40 20V26M17 31V35M43 31V35M7 48H10M27 48H32" fill="none" stroke="#8e826b" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M11 16H16M35 34H39M51 40L53 42" fill="none" stroke="#c5baa1" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

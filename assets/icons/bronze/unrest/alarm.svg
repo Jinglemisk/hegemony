@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Alarm — bronze hand bell with clapper</title>
+<defs>
+<linearGradient id="a-alarm-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+</defs>
+<path d="M24 10Q24 6 32 6Q40 6 40 10V14Q39 18 36 19V25H28V19Q24 18 24 14Z" fill="url(#a-alarm-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M34 8Q39 8 39 12V14L35 18V24H32V17Q36 14 34 8Z" fill="#795025"/>
+<path d="M26 47H38V53Q38 58 32 58Q26 58 26 53Z" fill="url(#a-alarm-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M34 49H37V53Q37 57 32 57L29 55Q35 55 34 49Z" fill="#624123"/>
+<path d="M6 48L13 40L16 26Q18 18 32 18Q46 18 48 26L51 40L58 48V52H6Z" fill="url(#a-alarm-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M36 20Q45 20 47 28L50 41L56 48V51H42L39 44L38 29Z" fill="#795025"/>
+<path d="M46 30L48 40L55 48H47L42 42Z" fill="#624123"/>
+<path d="M6 47Q32 51 58 47V52Q32 57 6 52Z" fill="url(#a-alarm-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M7 51Q33 55 57 51V52Q33 56 7 52Z" fill="#624123"/>
+<path d="M22 25Q26 22 31 22M18 31L16 39M8 49Q19 51 28 51M27 10Q30 8 34 9" fill="none" stroke="#fff0b0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M21 38L20 42M29 27H32M35 43L38 44" fill="none" stroke="#997035" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M20 27L23 25L25 26L22 30Z" fill="#fff8e9"/>
+</svg>

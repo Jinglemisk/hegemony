@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Venture — unrolled sea chart with route and ship</title>
+<defs>
+<linearGradient id="a-venture-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+<linearGradient id="a-venture-sea" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9daf9c"/><stop offset="0.48" stop-color="#718a7d"/><stop offset="1" stop-color="#435f56"/></linearGradient>
+<linearGradient id="a-venture-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+<linearGradient id="a-venture-marble" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#f7ecd2"/><stop offset="1" stop-color="#c9b48c"/></linearGradient>
+</defs>
+<path d="M12 9L52 6Q58 7 58 14L54 49Q53 55 47 56L9 58Q5 57 6 50L9 17Z" fill="url(#a-venture-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M49 10L56 10L52 48Q51 53 46 54L10 57L8 53L46 49Z" fill="#aa9572"/>
+<path d="M12 9L51 6Q46 8 47 14L11 18Q6 18 6 14Q6 10 12 9Z" fill="url(#a-venture-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 13L45 10" fill="none" stroke="#c1ad84" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M15 23L21 21L26 24L22 30L26 34L21 37L17 32L11 34ZM47 32L51 30L49 46L41 50L35 47L36 41L43 40Z" fill="url(#a-venture-sea)"/>
+<path d="M15 24L20 23L23 25M39 44L44 43L47 38" fill="none" stroke="#435f56" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M16 45Q26 48 29 40Q33 32 38 33Q44 34 44 23" fill="none" stroke="#b25a3a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<ellipse cx="16" cy="45" rx="2" ry="2" fill="#b25a3a"/>
+<path d="M29 23Q37 25 47 22L44 28H34Z" fill="url(#a-venture-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M37 15V23H45L43 16Z" fill="url(#a-venture-marble)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M36 14V26" fill="none" stroke="#51351f" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M49 50L52 47L51 51L46 54L12 57L10 54L45 52Z" fill="#806c50"/>
+<path d="M10 12L20 11M9 22L8 41M13 52L30 51" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M28 19L31 18M29 48L31 47" fill="none" stroke="#c1ad84" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

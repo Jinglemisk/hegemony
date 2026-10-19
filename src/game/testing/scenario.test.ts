@@ -19,19 +19,18 @@ describe("scenario builder", () => {
 
   it("stacked player card is the next draw", () => {
     // Stack before opening() so player 0's bootstrap income draws it.
-    const G = scenario().stackPlayerEvent("player-new-citizen").opening().build();
+    const G = scenario().stackPlayerEvent("player-free-settlers").opening().build();
 
-    expect(G.lastPlayerEvent?.id).toBe("player-new-citizen");
-    // An addPops card with capacity available blocks as a pending choice.
-    expect(G.pendingPlayerEvent?.card.id).toBe("player-new-citizen");
+    expect(G.lastPlayerEvent?.id).toBe("player-free-settlers");
+    // A pop card with room available blocks until its settlement is picked.
+    expect(G.pendingPlayerEvent?.card.id).toBe("player-free-settlers");
     expect(G.pendingPlayerEvent?.playerID).toBe("0");
   });
 
-  it("stacked seasonal card is revealed by the opening when it suits the season", () => {
-    // timber-levies is spring-suited, so stacking it wins the opening's spring draw.
-    const G = scenario().stackSeasonalEvent("season-timber-levies").opening().build();
+  it("stacked year card is revealed by the opening", () => {
+    const G = scenario().stackYearCard("year-piracy").opening().build();
 
-    expect(G.activeSeasonEvent?.card.id).toBe("season-timber-levies");
+    expect(G.activeYearCard?.id).toBe("year-piracy");
   });
 
   it("pokes state directly: settlements, pops, resources, happiness", () => {
@@ -39,19 +38,19 @@ describe("scenario builder", () => {
       .withSettlement("2", "0,0", "city", { citizens: 2, freemen: 1, slaves: 0 })
       .setPops("2", "0,0", { citizens: 4, freemen: 0, slaves: 1 })
       .withResources("2", "wealthy")
-      .withHappiness("2", -7)
+      .withHappiness("2", -5)
       .build();
 
     expect(G.players["2"].settlements).toEqual(["0,0"]);
     expect(owned(G, "0,0", "2").pops).toEqual({ citizens: 4, freemen: 0, slaves: 1 });
     expect(G.players["2"].resources.wood).toBe(200);
-    expect(G.players["2"].resources.happiness).toBe(-7);
+    expect(G.players["2"].unrestTokens).toBe(5);
   });
 
   it("applies mode and ruleset patch", () => {
     const G = scenario({ mode: "fastStart", patch: { placementPopCounts: { colony: 2 } } }).build();
 
-    expect(G.players["0"].resources.wood).toBe(40);
+    expect(G.players["0"].resources.wood).toBe(16);
     expect(G.ruleset.placementPopCounts.colony).toBe(2);
     // Untouched values survive the patch.
     expect(G.ruleset.placementPopCounts.city).toBe(3);

@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { produce } from "immer";
 
 import { createLowNumberContent, LOW_NUMBER_RULESET_PATCH } from "../dev/tuningPresets";
-import { getAuthoredGameContent, getBuilding } from "./content";
+import { getAuthoredGameContent } from "./content";
 import {
   canonicalJson,
+  assertStateDefinition,
   createGameDefinition,
   createModeDefinition,
   hydrateGameDefinition,
@@ -48,11 +50,10 @@ describe("game definitions", () => {
     });
     let standardGame = createInitialStateFromDefinition(standard, 41);
     let lowNumberGame = createInitialStateFromDefinition(lowNumber, 41);
-    const standardVillaWood = getBuilding(standard.content, "villa")?.cost.wood;
-    const lowNumberVillaWood = getBuilding(lowNumber.content, "villa")?.cost.wood;
-
+    // The preset differs in economy values; the v2 Laws are shared unchanged.
     expect(standard.identity.id).not.toBe(lowNumber.identity.id);
-    expect(standardVillaWood).not.toBe(lowNumberVillaWood);
+    expect(standard.content.resolutions).toEqual(lowNumber.content.resolutions);
+    expect(standard.ruleset.economy.bank).not.toEqual(lowNumber.ruleset.economy.bank);
 
     // Alternate real engine transitions so neither match can depend on whichever
     // definition another caller resolved most recently.
@@ -71,12 +72,8 @@ describe("game definitions", () => {
 
     expect(standardGame.definitionId).toBe(standard.identity.id);
     expect(lowNumberGame.definitionId).toBe(lowNumber.identity.id);
-    expect(getBuilding(standardGame.definition.content, "villa")?.cost.wood).toBe(
-      standardVillaWood,
-    );
-    expect(getBuilding(lowNumberGame.definition.content, "villa")?.cost.wood).toBe(
-      lowNumberVillaWood,
-    );
+    expect(standardGame.definition.content).toEqual(standard.content);
+    expect(lowNumberGame.definition.content).toEqual(lowNumber.content);
   });
 
   it("rejects a state whose pinned definition identity drifts", () => {
@@ -96,5 +93,14 @@ describe("game definitions", () => {
 
     expect(next.definition).toBe(game.definition);
     expect(next.ruleset).toBe(next.definition.ruleset);
+  });
+
+  it("still rejects a ruleset changed inside an Immer draft", () => {
+    const game = createInitialStateFromDefinition(createModeDefinition("standard"), 17);
+    produce(game, (draft) => {
+      assertStateDefinition(draft);
+      draft.ruleset.victory.minimums.gold += 1;
+      expect(() => assertStateDefinition(draft)).toThrow(/ruleset alias/);
+    });
   });
 });

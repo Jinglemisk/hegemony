@@ -10,8 +10,8 @@
  * targets above the floor, no chrome over the island.
  *
  * Usage:
- *   node docs/reference/design/shell-v2/gates.mjs <candidate-dir | page.html>
- *        [--select "<css>"] [--query "?a=b"] [--out <dir>]
+ *   node docs/reference/design/shell-v2/gates.mjs <candidate-dir | page.html | http URL>
+ *        [--select "<css>"] [--query "?a=b"] [--click "<css>"] [--out <dir>]
  *
  * Writes gates.json and shot-1280.png / shot-1440.png / shot-1920.png next to the
  * page (or into --out) and prints a one-line summary per width.
@@ -52,16 +52,20 @@ if (!target) {
   );
   process.exit(2);
 }
-let page = resolve(target);
-if (existsSync(page) && statSync(page).isDirectory()) page = join(page, "index.html");
-if (!existsSync(page)) {
+// A URL gates the running app (npm run dev); a path gates a static candidate.
+const isUrl = /^https?:\/\//.test(target);
+let page = isUrl ? target : resolve(target);
+if (!isUrl && existsSync(page) && statSync(page).isDirectory()) page = join(page, "index.html");
+if (!isUrl && !existsSync(page)) {
   console.error(`no page at ${page}`);
   process.exit(2);
 }
-const outDir = resolve(opt("--out", dirname(page)));
+const outDir = resolve(opt("--out", isUrl ? ".playwright-mcp/gates" : dirname(page)));
 mkdirSync(outDir, { recursive: true });
 const select = opt("--select", "[data-c]");
 const query = opt("--query", "");
+// A control to press before measuring, e.g. the app's opening dialog.
+const click = opt("--click", "");
 const WIDTHS = [
   [1280, 720],
   [1440, 900],
@@ -398,9 +402,13 @@ try {
     const pg = await ctx.newPage();
     const errors = [];
     pg.on("pageerror", (e) => errors.push(String(e.message || e)));
-    await pg.goto(pathToFileURL(page).href + query, { waitUntil: "load" });
+    await pg.goto((isUrl ? page : pathToFileURL(page).href) + query, { waitUntil: "load" });
     await pg.waitForLoadState("networkidle", { timeout: 8000 }).catch(() => {});
     await pg.evaluate(() => document.fonts && document.fonts.ready);
+    if (click) {
+      await pg.click(click).catch(() => {});
+      await pg.waitForTimeout(600);
+    }
     await pg.waitForTimeout(250);
     const m = await pg.evaluate(measure, { select, listCap: LIST_CAP });
     m.pageErrors = errors;

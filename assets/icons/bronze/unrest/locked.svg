@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Locked — closed bronze padlock</title>
+<defs>
+<linearGradient id="a-locked-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+<linearGradient id="a-locked-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0b0"/><stop offset="0.48" stop-color="#d8b45e"/><stop offset="1" stop-color="#997035"/></linearGradient>
+</defs>
+<path d="M14 32V23C14 11 21 6 32 6C43 6 50 11 50 23V32H41V23Q41 15 32 15Q23 15 23 23V32Z" fill="url(#a-locked-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M36 8Q49 10 49 23V31H44V22Q44 12 36 8Z" fill="#795025"/>
+<path d="M46 18Q49 23 49 31H46ZM16 25H22V31H16Z" fill="#624123"/>
+<path d="M17 24Q16 11 29 9M25 18Q28 16 31 17" fill="none" stroke="#fff0b0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M10 27H54Q58 27 58 31V54Q58 58 54 58H10Q6 58 6 54V31Q6 27 10 27Z" fill="url(#a-locked-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M47 28H54Q57 28 57 32V54Q57 57 53 57H46Z" fill="#795025"/>
+<path d="M53 32H57V54Q57 57 53 57H10L8 54H52Z" fill="#624123"/>
+<path d="M32 35Q38 35 38 41Q38 45 35 46L37 52H27L29 46Q26 45 26 41Q26 35 32 35Z" fill="url(#a-locked-gold)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M32 37Q36 37 36 41Q36 44 33 45L35 50H29L31 45Q28 44 28 41Q28 37 32 37Z" fill="#35251a"/>
+<path d="M9 31H38M9 35V49M12 54H23" fill="none" stroke="#f2d28a" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M15 40H19M42 47L44 45M21 51H24" fill="none" stroke="#997035" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M12 32H17L16 35H12Z" fill="#fff8e9"/>
+</svg>

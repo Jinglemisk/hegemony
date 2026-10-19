@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Demos — five heads in overlapping rows</title>
+<defs>
+<linearGradient id="a-demos-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+<linearGradient id="a-demos-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0b0"/><stop offset="0.48" stop-color="#d8b45e"/><stop offset="1" stop-color="#997035"/></linearGradient>
+</defs>
+<path d="M6 25Q14 20 22 25L26 40H6Z" fill="url(#a-demos-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<ellipse cx="14" cy="18" rx="8" ry="10" fill="url(#a-demos-gold)" stroke="#181210" stroke-width="2.5"/>
+<path d="M17 10Q22 13 21 20Q19 26 14 27L12 24Q19 23 17 10Z" fill="#997035"/>
+<path d="M7 17Q6 8 14 8Q21 8 21 15L15 12L10 15Z" fill="#795025"/>
+<path d="M9 18V21" fill="none" stroke="#fff0b0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M24 25Q32 20 40 25L44 40H20Z" fill="url(#a-demos-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<ellipse cx="32" cy="18" rx="8" ry="10" fill="url(#a-demos-gold)" stroke="#181210" stroke-width="2.5"/>
+<path d="M35 10Q40 13 39 20Q37 26 32 27L30 24Q37 23 35 10Z" fill="#997035"/>
+<path d="M25 17Q24 8 32 8Q39 8 39 15L33 12L28 15Z" fill="#795025"/>
+<path d="M27 18V21" fill="none" stroke="#fff0b0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M42 25Q50 20 58 25L58 40H38Z" fill="url(#a-demos-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<ellipse cx="50" cy="18" rx="8" ry="10" fill="url(#a-demos-gold)" stroke="#181210" stroke-width="2.5"/>
+<path d="M53 10Q58 13 57 20Q55 26 50 27L48 24Q55 23 53 10Z" fill="#997035"/>
+<path d="M43 17Q42 8 50 8Q57 8 57 15L51 12L46 15Z" fill="#795025"/>
+<path d="M45 18V21" fill="none" stroke="#fff0b0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M14 42H28Q35 45 36 58H6Q7 45 14 42Z" fill="url(#a-demos-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M29 45Q34 49 35 57H26L23 48Z" fill="#795025"/>
+<ellipse cx="21" cy="35" rx="10" ry="11" fill="url(#a-demos-gold)" stroke="#181210" stroke-width="2.5"/>
+<path d="M25 27Q31 30 29 38Q27 43 21 45L19 42Q26 40 25 27Z" fill="#997035"/>
+<path d="M12 33Q12 24 21 24Q30 24 30 32L23 29L16 32Z" fill="#795025"/>
+<path d="M17 35H19M24 35H26M21 37V40" fill="none" stroke="#795025" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M15 34V38M11 50L14 47" fill="none" stroke="#fff0b0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M16 49L21 53L26 49" fill="none" stroke="#997035" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M36 42H50Q57 45 58 58H28Q29 45 36 42Z" fill="url(#a-demos-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M51 45Q56 49 57 57H48L45 48Z" fill="#795025"/>
+<ellipse cx="43" cy="35" rx="10" ry="11" fill="url(#a-demos-gold)" stroke="#181210" stroke-width="2.5"/>
+<path d="M47 27Q53 30 51 38Q49 43 43 45L41 42Q48 40 47 27Z" fill="#997035"/>
+<path d="M34 33Q34 24 43 24Q52 24 52 32L45 29L38 32Z" fill="#795025"/>
+<path d="M39 35H41M46 35H48M43 37V40" fill="none" stroke="#795025" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M37 34V38M33 50L36 47" fill="none" stroke="#fff0b0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M38 49L43 53L48 49" fill="none" stroke="#997035" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

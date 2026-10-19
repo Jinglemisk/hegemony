@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Pass — blank grey potsherd lying flat, with a curved glazed rim</title>
+<defs>
+<linearGradient id="a-pass-grey" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a7e6e"/><stop offset="0.48" stop-color="#6b6157"/><stop offset="1" stop-color="#4a423a"/></linearGradient>
+</defs>
+<g stroke-linejoin="round" stroke-linecap="round">
+<path d="M6 25Q26 7 57 18L56 22L53 37L45 34L36 49L25 45L19 51L7 39Z" fill="#b9ac93" stroke="#181210" stroke-width="2.5"/>
+<path d="M6 25Q26 7 57 18L53 33L45 30L36 45L25 41L19 47L7 35Z" fill="url(#a-pass-grey)" stroke="#181210" stroke-width="2.5"/>
+<path d="M7 25Q29 10 56 19L54 25Q28 16 8 30Z" fill="#4a423a"/>
+<path d="M10 25Q30 13 53 20" fill="none" stroke="#a79b88" stroke-width="1.5"/>
+<path d="M8 35L19 47L25 41L36 45L45 30L53 33L56 21L53 37L45 34L36 49L25 45L19 51L7 39Z" fill="#b9ac93"/>
+<path d="M9 37L19 48L25 42L36 46L45 32L52 35" fill="none" stroke="#d1c4ad" stroke-width="1.5"/>
+<path d="M20 50L25 44L36 48L45 33L52 36" fill="none" stroke="#8a7e6e" stroke-width="1.5"/>
+<path d="M13 23L18 21L19 23L14 25Z" fill="#c3b8a3"/>
+</g>
+</svg>

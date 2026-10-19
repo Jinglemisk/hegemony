@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Embassy — tall winged herald staff with two entwined snakes</title>
+<defs>
+<linearGradient id="a-embassy-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+</defs>
+<g stroke-linejoin="round" stroke-linecap="round">
+<path d="M27.5 10Q27.5 6 32 6Q36.5 6 36.5 10V56L34 58H30L27.5 56Z" fill="url(#a-embassy-bronze)" stroke="#181210" stroke-width="2.5"/>
+<path d="M33 9H35V55L33 57H31Z" fill="#795025"/>
+<path d="M29 16C21 16 18 11 18 6Q26 7 30 11ZM35 16C43 16 46 11 46 6Q38 7 34 11Z" fill="url(#a-embassy-bronze)" stroke="#181210" stroke-width="2.5"/>
+<path d="M20 9L27 13M44 9L37 13" fill="none" stroke="#ffe6a0" stroke-width="1.5"/>
+<path d="M25 13L28 14M39 13L36 14" fill="none" stroke="#795025" stroke-width="1.5"/>
+<path d="M28 19C19 13 17 24 29 28C44 32 44 36 32 39L28 42" fill="none" stroke="#181210" stroke-width="9.5"/>
+<path d="M28 19C19 13 17 24 29 28C44 32 44 36 32 39L28 42" fill="none" stroke="url(#a-embassy-bronze)" stroke-width="7"/>
+<path d="M36 19C45 13 47 24 35 28C20 32 20 36 32 39L36 42" fill="none" stroke="#181210" stroke-width="9.5"/>
+<path d="M36 19C45 13 47 24 35 28C20 32 20 36 32 39L36 42" fill="none" stroke="url(#a-embassy-bronze)" stroke-width="7"/>
+<path d="M44 21Q44 25 35 29C24 32 22 34 28 37L36 41M39 33Q43 36 34 38" fill="none" stroke="#795025" stroke-width="1.75"/>
+<path d="M23 18Q21 19 24 22M42 18Q45 22 35 25L29 28M25 33Q23 35 27 36M30 45V53" fill="none" stroke="#ffe6a0" stroke-width="1.5"/>
+<circle cx="27" cy="18" r="1" fill="#3a2a1e"/>
+<circle cx="37" cy="18" r="1" fill="#3a2a1e"/>
+<path d="M32 48V50M40 10L41 9" fill="none" stroke="#a47a36" stroke-width="1.75"/>
+<path d="M21 8L24 9L24 11L21 10ZM30 45H32V48H30Z" fill="#fff8e9"/>
+</g>
+</svg>

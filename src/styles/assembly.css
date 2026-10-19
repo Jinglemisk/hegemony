@@ -1,16 +1,6 @@
 /* ==========================================================================
- * The Assembly's REFERENCE pages — the Agora tab and the Codex's roster.
- *
- * Deliberately NOT the scene's visual language. `assemblyScene.css` owns the
- * house sitting: a full-bleed night takeover with its own register. These two
- * are pages you *consult*, and they read like the ledger's other pages, with
- * aegean used only to mark what is political.
- *
- * This file used to carry the scene's layout as well, with assemblyScene.css
- * restyling it in place — two sheets disagreeing about who owned what, which is
- * how a monument's dashed-clay treatment came to sit on `.tally`, a selector
- * nothing emitted and a name the vote tally also wanted. The scene's rules all
- * moved; what is left here is what the two reference pages actually spend.
+ * The Assembly's chapter in the Codex. The sitting itself is `sitting.css`; the
+ * Agora page is a ledger in frame.css.
  *
  * Known and NOT fixed here: the Codex roster below still sets 8px and 10.5px,
  * which is the illegible register the overhaul exists to remove. Fixing it means
@@ -18,24 +8,6 @@
  * pass, not this sheet's — a size cannot be corrected from here without breaking
  * the rule that type.css owns sizes.
  * ========================================================================== */
-
-/* ── The Agora — the Assembly's standing record, as a right-rail page ─────── */
-
-.agoraPage {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  min-width: 0;
-}
-
-/* Everything else the Agora used to spend is GONE, 2026-08-15. The page was
-   rebuilt on the shared ledger objects — the Voice plaque, `.pol` orator rows and
-   `StandingLaw`'s slab — and nineteen `.agora*` rules for a summary block, a Voice
-   ledger, a politician card and a law list went on sitting here matching nothing.
-   Two of them declared 8px and 7.5px type, i.e. the illegible register the whole
-   overhaul was called to remove, and they would have gone on passing review
-   because no page rendered them. Dead rules at this specificity are how the next
-   person's fix silently fails to apply. */
 
 /* The Codex's Assembly chapter — the politician roster and its card lists. */
 .rulePolitician {

@@ -1,12 +1,21 @@
 import type { ActiveEffectDescriptor, ActiveEffectMechanic } from "../game/activeEffects";
+import { ruleLawText } from "../game/assembly/laws";
 import type { DirectiveEffect, LawEffect } from "../game/assembly/types";
 import { getAuthoredGameContent } from "../game/content";
 import type { GameContent } from "../game/content";
-import type { BuildingEffect, EventEffect, TableEffect } from "../game/types";
+import type {
+  BuildingEffect,
+  EventEffect,
+  TableEffect,
+  YearCard,
+  YearTerm,
+  UnrestTokenChange,
+} from "../game/types";
 import {
   RESOURCE_LABELS,
   buildingName,
   formatNumber,
+  formatResourceCost,
   formatPopLabel,
   formatSignedNumber,
 } from "./formatters";
@@ -35,8 +44,6 @@ export type EffectPresentation = {
   subject?: string;
   /** When or how it lands, demoted beneath the subject. */
   condition?: string;
-  /** How many turns it stands, when it is timed — drives the duration strip. */
-  turns?: number;
 };
 
 /**
@@ -45,12 +52,11 @@ export type EffectPresentation = {
  * By default `text` is the parts joined in order, so the flat sentence is
  * PRODUCED by the split rather than maintained beside it and the two cannot
  * drift. `text` is passed explicitly only where the flat wording and the carved
- * wording genuinely differ — a timed blow says "for 3 turns" in prose and says
- * it with pips in a ceremony, so its condition is the *when*, not the *how long*.
+ * wording differ.
  */
 function carve(
   tone: EffectTone,
-  parts: { magnitude?: string; subject?: string; condition?: string; turns?: number },
+  parts: { magnitude?: string; subject?: string; condition?: string },
   text = [parts.magnitude, parts.subject, parts.condition].filter(Boolean).join(" "),
 ): EffectPresentation {
   return { text, tone, ...parts };
@@ -63,11 +69,8 @@ export type ActiveEffectPresentation = EffectPresentation & {
   accessibleText: string;
 };
 
-export function presentEventEffects(
-  effects: readonly EventEffect[],
-  content: GameContent = getAuthoredGameContent(),
-): EffectPresentation {
-  const presented = effects.map((effect) => presentEventEffect(effect, content));
+export function presentEventEffects(effects: readonly EventEffect[]): EffectPresentation {
+  const presented = effects.map((effect) => presentEventEffect(effect));
 
   // A card that does ONE thing keeps that effect's parts, so the ceremony can
   // carve them. Two effects joined by " / " have no single number to be about,
@@ -127,6 +130,15 @@ export function joinEffectPresentations(
   };
 }
 
+/** The token operation printed on the card. */
+function presentUnrestToken(change: UnrestTokenChange, realm = "your realm"): EffectPresentation {
+  return carve(change === "placeOne" ? "negative" : "positive", {
+    magnitude: change === "clearAll" ? "All" : change === "placeOne" ? "+1" : "-1",
+    subject: change === "clearAll" ? "Unrest tokens" : "Unrest token",
+    condition: change === "placeOne" ? `placed on ${realm}` : `cleared from ${realm}`,
+  });
+}
+
 export function presentTableEffect(effect: TableEffect): EffectPresentation {
   switch (effect.type) {
     case "none":
@@ -153,67 +165,15 @@ export function presentTableEffect(effect: TableEffect): EffectPresentation {
       });
     case "gainPop":
       return carve("positive", { magnitude: "+1", subject: formatPopLabel(effect.pop, 1) });
-    case "yearIncomeModifier":
-      return carve(
-        effect.amount >= 0 ? "positive" : "negative",
-        {
-          magnitude: formatSignedNumber(effect.amount),
-          subject: `${RESOURCE_LABELS[effect.resource]} income`,
-          condition: "all year",
-        },
-        `${formatSignedNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]} income, all year`,
-      );
   }
 }
 
-export function presentEventEffect(
-  effect: EventEffect,
-  content: GameContent = getAuthoredGameContent(),
-): EffectPresentation {
+export function presentEventEffect(effect: EventEffect): EffectPresentation {
   switch (effect.type) {
     case "resourceDelta":
       return signedPresentation(effect.amount, RESOURCE_LABELS[effect.resource]);
-    case "scaledResourceDelta":
-      return carve(signedTone(effect.amountPerPops), {
-        magnitude: formatSignedNumber(effect.amountPerPops),
-        subject: RESOURCE_LABELS[effect.resource],
-        condition: `per ${effect.popStep} pops`,
-      });
-    case "happinessDelta":
-      return signedPresentation(effect.amount, RESOURCE_LABELS.happiness);
-    case "scaledHappinessDelta":
-      return carve(signedTone(effect.amountPerPops), {
-        magnitude: formatSignedNumber(effect.amountPerPops),
-        subject: RESOURCE_LABELS.happiness,
-        condition: `per ${effect.popStep} pops`,
-      });
-    case "timedHappinessDelta":
-      // The one presenter whose two registers genuinely differ. The flat
-      // sentence has to say how long it lasts; a ceremony says that with pips,
-      // so the carved condition is the WHEN and `turns` carries the duration.
-      return carve(
-        signedTone(effect.amountPerTurn),
-        {
-          magnitude: formatSignedNumber(effect.amountPerTurn),
-          subject: RESOURCE_LABELS.happiness,
-          condition: "at each of your upkeeps",
-          turns: effect.turns,
-        },
-        `${formatSignedNumber(effect.amountPerTurn)} ${RESOURCE_LABELS.happiness} per turn for ${effect.turns} turns`,
-      );
-    case "incomeModifier":
-      return carve(signedTone(effect.amount), {
-        magnitude: formatSignedNumber(effect.amount),
-        subject: `${RESOURCE_LABELS[effect.resource]} income`,
-      });
-    case "buildingCostMultiplier":
-      return {
-        text:
-          effect.multiplier > 1
-            ? "Double building costs this season"
-            : "Halve building costs this season",
-        tone: effect.multiplier > 1 ? "negative" : "positive",
-      };
+    case "unrestTokens":
+      return presentUnrestToken(effect.change);
     case "addPops":
       return carve(
         "positive",
@@ -224,40 +184,6 @@ export function presentEventEffect(
         },
         `Add ${effect.amount} ${formatPopLabel(effect.pop, effect.amount)}`,
       );
-    case "actionCostDiscount": {
-      const target = effect.buildingId
-        ? buildingName(effect.buildingId, content)
-        : effect.action === "foundColony"
-          ? "colony"
-          : effect.action === "growPop"
-            ? `${effect.pop ? formatPopLabel(effect.pop, 1) : "pop"} grown`
-            : "building";
-
-      return carve(
-        "positive",
-        {
-          magnitude: `-${formatNumber(effect.amount)}`,
-          subject: RESOURCE_LABELS[effect.resource],
-          condition: `on your next ${target}`,
-        },
-        `Next ${target}: -${formatNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]}`,
-      );
-    }
-    case "resourceExchange":
-      return {
-        text: `Exchange up to ${effect.maxAmount} ${RESOURCE_LABELS[effect.from]} for ${Math.floor(
-          effect.maxAmount * effect.ratio,
-        )} ${RESOURCE_LABELS[effect.to]}`,
-        tone: "neutral",
-      };
-    case "resourceDeltaPerPop":
-      return carve(signedTone(effect.amountPerPop), {
-        magnitude: formatSignedNumber(effect.amountPerPop),
-        subject: RESOURCE_LABELS[effect.resource],
-        condition: `per ${formatPopLabel(effect.pop, 1)}, minimum ${effect.minimum}`,
-      });
-    case "choice":
-      return { text: "Choose one option", tone: "neutral" };
   }
 }
 
@@ -271,62 +197,24 @@ function presentActiveEffectMechanic(
         text: "No income for " + mechanic.turns + " collection" + (mechanic.turns === 1 ? "" : "s"),
         tone: "negative",
       };
-    case "foodDeficitProgress":
+    case "hunger":
       return {
         text:
           formatSignedNumber(mechanic.netFood) +
-          " food income · starvation " +
-          mechanic.current +
-          "/" +
-          mechanic.threshold +
-          (mechanic.graceActive ? " (first-income grace)" : "") +
-          " · -" +
-          mechanic.popLoss +
-          " pop at threshold",
+          " food income, " +
+          (mechanic.stockpile < 0
+            ? -mechanic.stockpile + " short"
+            : mechanic.stockpile + " stored") +
+          " · " +
+          (mechanic.unfed > 0
+            ? mechanic.unfed +
+              (mechanic.unfed === 1 ? " pop leaves" : " pops leave") +
+              " at turn end"
+            : "one pop leaves per food short at turn end"),
         tone: "negative",
       };
-    case "timedHappiness":
-      return {
-        text: formatSignedNumber(mechanic.amountPerTurn) + " happiness per upkeep",
-        tone: signedTone(mechanic.amountPerTurn),
-      };
-    case "resourceIncome":
-      return {
-        text:
-          formatSignedNumber(mechanic.amount) +
-          " " +
-          RESOURCE_LABELS[mechanic.resource] +
-          " income",
-        tone: signedTone(mechanic.amount),
-      };
-    case "buildingCostMultiplier":
-      return {
-        text:
-          "Building costs ×" +
-          formatNumber(mechanic.multiplier) +
-          (mechanic.excludes.length > 0
-            ? " (excludes " + mechanic.excludes.map(actionLabel).join(", ") + ")"
-            : ""),
-        tone: mechanic.multiplier < 1 ? "positive" : mechanic.multiplier > 1 ? "negative" : "muted",
-      };
-    case "actionCostDiscount": {
-      const target = mechanic.buildingId
-        ? buildingName(mechanic.buildingId, content)
-        : mechanic.action === "growPop" && mechanic.pop
-          ? formatPopLabel(mechanic.pop, 1) + " growth"
-          : actionLabel(mechanic.action);
-
-      return {
-        text:
-          "Next " +
-          target +
-          ": -" +
-          formatNumber(mechanic.amount) +
-          " " +
-          RESOURCE_LABELS[mechanic.resource],
-        tone: "positive",
-      };
-    }
+    case "zeroTerm":
+      return { text: YEAR_TERM_LABELS[mechanic.term], tone: "negative" };
     case "standingLaw":
       return presentLawEffect(mechanic.effect, content);
     case "equalVotesNextAssembly":
@@ -343,111 +231,73 @@ export function presentLawEffect(
   content: GameContent = getAuthoredGameContent(),
 ): EffectPresentation {
   switch (effect.type) {
-    case "settlementIncome":
+    case "rule":
+      return { text: ruleLawText(effect.rule, content), tone: "neutral" };
+    case "actionCost":
       return {
         text:
-          formatSignedNumber(effect.amount) +
-          " " +
-          RESOURCE_LABELS[effect.resource] +
-          " per " +
-          settlementScopeLabel(effect.scope) +
-          (effect.step && effect.step > 1 ? " / " + effect.step : ""),
-        tone: signedTone(effect.amount),
+          (effect.buildingIds?.map((id) => buildingName(id, content)).join(" / ") ??
+            {
+              foundColony: "Found a colony",
+              upgradeColonyToCity: "Upgrade a colony",
+              buildBuilding: "Build",
+              growPop: "Grow",
+              promotePop: "Promote",
+              demotePop: "Demote",
+            }[effect.action]) +
+          " costs " +
+          (Object.keys(effect.cost).length ? formatResourceCost(effect.cost) : "nothing") +
+          (effect.pop ? ` (${formatPopLabel(effect.pop, 1)})` : ""),
+        tone: "neutral",
       };
-    case "popIncome":
+    case "realmIncome":
+      return signedPresentation(effect.amount, `${effect.resource} at yearly income`);
+    case "extraSlots":
       return {
-        text:
-          formatSignedNumber(effect.amount) +
-          " " +
-          RESOURCE_LABELS[effect.resource] +
-          " per " +
-          (effect.step && effect.step > 1 ? effect.step + " " : "") +
-          formatPopLabel(effect.pop, effect.step ?? 1),
-        tone: signedTone(effect.amount),
-      };
-    case "popPrimaryIncome":
-      return {
-        text:
-          formatSignedNumber(effect.amount) + " tile resource per " + formatPopLabel(effect.pop, 1),
-        tone: signedTone(effect.amount),
-      };
-    case "flatIncome":
-      return signedPresentation(effect.amount, RESOURCE_LABELS[effect.resource] + " income");
-    case "thresholdHappiness":
-      return {
-        text:
-          formatSignedNumber(effect.atOrAbove) +
-          " happiness at " +
-          effect.threshold +
-          " " +
-          RESOURCE_LABELS[effect.resource] +
-          "; " +
-          formatSignedNumber(effect.below) +
-          " below",
-        tone:
-          signedTone(effect.atOrAbove) === signedTone(effect.below)
-            ? signedTone(effect.atOrAbove)
-            : "neutral",
-      };
-    case "surplusConversion":
-      return {
-        text:
-          formatSignedNumber(effect.amount) +
-          " " +
-          RESOURCE_LABELS[effect.to] +
-          " per " +
-          effect.per +
-          " " +
-          RESOURCE_LABELS[effect.from] +
-          " income above " +
-          effect.above,
-        tone: signedTone(effect.amount),
-      };
-    case "actionCostDelta":
-      return {
-        text:
-          lawActionCostTarget(effect, content) +
-          ": " +
-          formatSignedNumber(effect.amount) +
-          " " +
-          RESOURCE_LABELS[effect.resource] +
-          " cost",
-        tone: signedTone(-effect.amount),
-      };
-    case "actionCostMultiplier":
-      return {
-        text: actionLabel(effect.action) + " costs ×" + formatNumber(effect.multiplier),
-        tone: effect.multiplier < 1 ? "positive" : effect.multiplier > 1 ? "negative" : "muted",
-      };
-    case "bankRateStep":
-      return {
-        text:
-          RESOURCE_LABELS[effect.material] +
-          " bank rate " +
-          formatSignedNumber(effect.steps) +
-          " step" +
-          (Math.abs(effect.steps) === 1 ? "" : "s"),
-        tone: signedTone(effect.steps),
-      };
-    case "yearlyFreeAction":
-      return {
-        text:
-          "First " +
-          actionLabel(effect.action) +
-          " each year: free " +
-          effect.resources.map((resource) => RESOURCE_LABELS[resource]).join(" + "),
+        text: `${effect.scope === "capital" ? "Capital" : "Cities"} gain ${effect.amount} work slot`,
         tone: "positive",
       };
-    case "onFoundColony": {
-      const rewards = [
-        effect.grantPop ? "+1 " + formatPopLabel(effect.grantPop, 1) : null,
-        effect.happiness ? formatSignedNumber(effect.happiness) + " happiness" : null,
-      ].filter(Boolean);
+    case "colonyPieces":
+      return { text: `${effect.amount} extra colony piece`, tone: "positive" };
+    case "acquirePop":
+      return { text: "Add one slave or freeman when taking this Idea", tone: "positive" };
+    case "acquireResource":
+      return signedPresentation(effect.amount, `${effect.resource} when taking this Idea`);
+    case "onUpgradeCity":
       return {
-        text: "On founding a colony: " + rewards.join(" + "),
-        tone: (effect.happiness ?? 0) < 0 && !effect.grantPop ? "negative" : "positive",
+        text: `Upgrading adds one ${formatPopLabel(effect.grantPop, 1)} if there is room`,
+        tone: "positive",
       };
-    }
+    case "dolePrice":
+      return { text: `The Dole costs ${effect.amount} influence`, tone: "positive" };
+    case "slotExempt":
+      return {
+        text: `${buildingName(effect.building, content)} takes no work slot`,
+        tone: "positive",
+      };
+    case "votePurchaseLimit":
+      return { text: `Buy up to ${effect.amount} votes per Assembly`, tone: "positive" };
+    case "calmPayment":
+      return { text: `Gold calm instead costs ${effect.amount} food`, tone: "neutral" };
+    case "colonyCapacity":
+      return { text: `Colonies hold ${effect.amount} pops; existing pops stay`, tone: "negative" };
+    case "buildingFood":
+      return {
+        text: `${buildingName(effect.building, content)} grows ${effect.amount} food`,
+        tone: "positive",
+      };
+    case "happiness":
+      return signedPresentation(effect.amount, "happiness to the realm");
+    case "settlementIncome":
+      return {
+        text: `${formatSignedNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]} per ${effect.scope}`,
+        tone: signedTone(effect.amount),
+      };
+    case "onFoundColony":
+      return {
+        text: `Founding grants ${effect.amount ?? 1} ${formatPopLabel(effect.grantPop, effect.amount ?? 1)} as room allows`,
+        tone: "positive",
+      };
   }
 }
 
@@ -455,11 +305,8 @@ export function presentDirectiveEffect(effect: DirectiveEffect): EffectPresentat
   switch (effect.type) {
     case "resourceDelta":
       return signedPresentation(effect.amount, RESOURCE_LABELS[effect.resource]);
-    case "resourceFraction":
-      return {
-        text: `Lose ${formatNumber(effect.fraction * 100)}% stored ${RESOURCE_LABELS[effect.resource]}`,
-        tone: "negative",
-      };
+    case "unrestTokens":
+      return presentUnrestToken(effect.change, "the target's realm");
     case "losePopFromLargest":
       return {
         text: `-${formatNumber(effect.count)} ${effect.count === 1 ? "pop" : "pops"} from largest settlement`,
@@ -479,43 +326,15 @@ export function presentDirectiveEffect(effect: DirectiveEffect): EffectPresentat
 
 export function presentBuildingEffect(effect: BuildingEffect): EffectPresentation {
   switch (effect.type) {
-    case "freemanGoldBonus":
+    case "classOutput":
       return {
-        text: `+${formatNumber(effect.amount)} Gold per freeman, up to ${effect.supportedPops}`,
-        tone: "positive",
-      };
-    case "citizenInfluenceBonus":
-      return {
-        text: `+${formatNumber(effect.amount)} Influence per citizen, up to ${effect.supportedPops}`,
-        tone: "positive",
-      };
-    case "slavePrimaryResourceBonus":
-      return {
-        text: `+${formatNumber(effect.amount)} tile resource per slave, up to ${effect.supportedPops}`,
+        text: `Each ${formatPopLabel(effect.pop, 1)} here makes ${formatNumber(effect.amount)}`,
         tone: "positive",
       };
     case "income":
       return signedPresentation(effect.amount, RESOURCE_LABELS[effect.resource] + " income");
     case "happiness":
       return signedPresentation(effect.amount, RESOURCE_LABELS.happiness);
-    // "costs -2 Food" has two readings — cheaper by 2, or a price of minus two —
-    // and a discount is exactly the case where the negative numeral is the
-    // ambiguous one. "2 less" is the phrasing the Assembly deck already uses,
-    // and it is a word shorter, which matters in a ~110px effect column.
-    case "growPopFoodDiscount":
-      return {
-        text: `Grow Pop costs ${formatNumber(effect.amount)} less Food here`,
-        tone: "positive",
-      };
-    case "popCapacityBonus":
-      return signedPresentation(effect.amount, "pop capacity");
-    case "tilePrimaryResourceBonus":
-      return signedPresentation(effect.amount, "tile resource income");
-    case "promoteCostReduction":
-      return {
-        text: `Promotions cost ${formatNumber(effect.amount)} less here`,
-        tone: "positive",
-      };
   }
 }
 
@@ -530,74 +349,19 @@ function presentActiveEffectDuration(descriptor: ActiveEffectDescriptor): string
   switch (descriptor.duration.expiry) {
     case "afterIncomeCollections":
       return remaining + " income collection" + (remaining === 1 ? " remaining" : "s remaining");
-    case "afterPlayerUpkeeps":
-      return remaining + " upkeep" + (remaining === 1 ? " remaining" : "s remaining");
-    case "onFoodRecoveryOrStarvation":
-      return remaining + " deficient upkeep" + (remaining === 1 ? "" : "s") + " to threshold";
-    case "atSeasonEnd":
-      return "Until season end";
+    case "whenFed":
+      return remaining === 0
+        ? "Hunger at the next income"
+        : "Food lasts " + remaining + " more income" + (remaining === 1 ? "" : "s");
     case "atYearEnd":
       return "Until year end";
-    case "afterMatchingActionOrTurnEnd":
-      return "Until used or turn end";
-    case "afterMatchingLawActionOrYearEnd":
-      return "Until used or year end";
+    case "permanent":
+      return "For the rest of the game";
     case "whenRepealed":
       return "Until repealed";
     case "atNextAssembly":
       return "At the next Assembly";
   }
-}
-
-function actionLabel(action: string): string {
-  const labels: Record<string, string> = {
-    buildBuilding: "build",
-    foundColony: "found colony",
-    growPop: "grow pop",
-    upgradeColonyToCity: "upgrade colony",
-    promotePop: "promote pop",
-    demotePop: "demote pop",
-  };
-  return labels[action] ?? action;
-}
-
-function lawActionCostTarget(
-  effect: Extract<LawEffect, { type: "actionCostDelta" }>,
-  content: GameContent,
-): string {
-  let target = actionLabel(effect.action);
-
-  if (effect.scope) {
-    target += " in " + settlementScopePlural(effect.scope);
-  }
-
-  if (effect.pop) {
-    target += " (" + formatPopLabel(effect.pop, 1) + " only)";
-  }
-
-  if (effect.buildingIds?.length) {
-    target +=
-      " (" +
-      joinHumanList(effect.buildingIds.map((buildingId) => buildingName(buildingId, content))) +
-      " only)";
-  }
-
-  return target;
-}
-
-function settlementScopePlural(scope: "all" | "city" | "colony"): string {
-  if (scope === "all") return "all settlements";
-  return scope === "city" ? "cities" : "colonies";
-}
-
-function joinHumanList(items: string[]): string {
-  if (items.length < 2) return items[0] ?? "";
-  if (items.length === 2) return items.join(" and ");
-  return items.slice(0, -1).join(", ") + ", and " + items.at(-1);
-}
-
-function settlementScopeLabel(scope: "all" | "city" | "colony"): string {
-  return scope === "all" ? "settlement" : scope;
 }
 
 function signedPresentation(amount: number, label: string): EffectPresentation {
@@ -616,4 +380,25 @@ function combineTones(effects: readonly EffectPresentation[]): EffectTone {
   }
 
   return tones.size === 1 ? [...tones][0] : "neutral";
+}
+
+/** What each zeroed term means, in the words the year cards print. */
+export const YEAR_TERM_LABELS: Record<YearTerm, string> = {
+  plainsFood: "Plains grow no food",
+  forestWood: "Forests yield no wood",
+  mountainStone: "Mountains yield no stone",
+  freemenGold: "Freemen yield no gold",
+  citizenInfluence: "Citizens yield no influence",
+  luxuryHappiness: "Luxuries give no happiness",
+};
+
+/** The clock's compact effect line; the year counter and tooltip give its duration. */
+export function presentYearCard(card: YearCard): EffectPresentation {
+  if (card.effect.type === "zeroTerm") {
+    return { text: YEAR_TERM_LABELS[card.effect.term], tone: "negative" };
+  }
+
+  return card.effect.change === "placeOne"
+    ? { text: "Everyone places an Unrest token", tone: "negative" }
+    : { text: "Everyone clears their Unrest tokens", tone: "positive" };
 }

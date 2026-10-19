@@ -1,10 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { EXPEDITION_TABLES, OMEN_TABLE, RIOT_TABLE } from "./data";
-import { calculateIncomeBreakdown } from "./economy/income";
-import { startNewSeason } from "./season";
+import { EXPEDITION_TABLES, RIOT_TABLE } from "./data";
 import { rollOnTable } from "./tables";
-import { fundExpedition } from "./ventures";
+import { fundExpedition, getFundExpeditionStatus } from "./ventures";
 import { scenario } from "./testing/scenario";
 import type { EventTableDefinition, HegemonyState, TableEffect } from "./types";
 
@@ -129,103 +127,63 @@ describe("ventures (D10/Q16)", () => {
     const G = opening();
     G.players["0"].resources.gold = 10;
 
-    expect(fundExpedition(G, "0", "merchantConvoy", "gold").ok).toBe(true);
+    expect(getFundExpeditionStatus(G, "0", "merchantConvoy").cost).toEqual({ gold: 2 });
+    expect(fundExpedition(G, "0", "merchantConvoy").ok).toBe(true);
 
     expect(G.lastTableRoll?.tableId).toBe("merchantConvoy");
     expect(G.players["0"].ventureUsedThisTurn).toBe(true);
-    expect(fundExpedition(G, "0", "grandEmbassy", "gold").ok).toBe(false);
+    expect(fundExpedition(G, "0", "grandEmbassy").ok).toBe(false);
   });
 
-  it("accepts the wood stake as an alternative", () => {
+  it("refuses a wood-rich player who cannot pay the gold stake", () => {
     const G = opening();
     G.players["0"].resources.gold = 0;
     G.players["0"].resources.wood = 8;
 
-    expect(fundExpedition(G, "0", "colonistsVoyage", "wood").ok).toBe(true);
-    expect(G.players["0"].resources.wood).toBe(0);
+    expect(fundExpedition(G, "0", "colonistsVoyage").ok).toBe(false);
+    expect(G.players["0"].resources.wood).toBe(8);
   });
 
-  it("guards the content's EV: each expedition pays ~-7% of a 5-gold stake in gold-equivalents", () => {
-    // Unit of account: a material ≈ 1 gold (the corridor midpoint between the bank's
-    // sell 3:1 and buy 2g); civic calm implies 1 influence ≈ 1.5 gold; a pop ≈ 8 gold
-    // (a citizen grow costs 9 food + 2 gold). Guards content edits, not exact balance.
-    const goldValue = (effect: TableEffect): number => {
-      if (effect.type !== "gainResource" && effect.type !== "gainPop") return 0;
-      if (effect.type === "gainPop") return 8;
-      const perUnit = { gold: 1, influence: 1.5, food: 1, wood: 1, stone: 1, happiness: 0 }[
-        effect.resource
-      ];
-      return effect.amount * perUnit;
-    };
-
-    for (const table of EXPEDITION_TABLES) {
-      const ev =
-        table.rows.reduce(
-          (sum, row) => sum + row.effects.reduce((rowSum, effect) => rowSum + goldValue(effect), 0),
-          0,
-        ) / 6;
-      // Stake 5 gold: EV of returns should sit near 4.65 (−7%), tolerance ±0.75.
-      expect(ev, table.id).toBeGreaterThan(3.9);
-      expect(ev, table.id).toBeLessThan(5.4);
-    }
+  it("uses the small payouts and a negative gold expectation", () => {
+    const convoy = EXPEDITION_TABLES.find((table) => table.id === "merchantConvoy")!;
+    expect(convoy.rows.map((row) => row.effects)).toEqual([
+      [{ type: "none" }],
+      [{ type: "none" }],
+      ...[2, 2, 2, 4].map((amount) => [{ type: "gainResource", resource: "gold", amount }]),
+    ]);
+    const expectedGold =
+      convoy.rows.reduce(
+        (sum, row) =>
+          sum +
+          row.effects.reduce(
+            (total, effect) => total + (effect.type === "gainResource" ? effect.amount : 0),
+            0,
+          ),
+        0,
+      ) / convoy.rows.length;
+    expect(expectedGold).toBeLessThan(
+      getFundExpeditionStatus(opening(), "0", convoy.id).cost!.gold!,
+    );
+    expect(
+      EXPEDITION_TABLES.find((table) => table.id === "grandEmbassy")!
+        .rows.slice(2)
+        .map((row) => row.effects),
+    ).toEqual(
+      [1, 1, 2, 2].map((amount) => [{ type: "gainResource", resource: "influence", amount }]),
+    );
+    expect(
+      EXPEDITION_TABLES.find((table) => table.id === "colonistsVoyage")!.rows[5].effects,
+    ).toEqual([
+      { type: "gainPop", pop: "freemen", foodFallback: 2 },
+      { type: "gainResource", resource: "food", amount: 2 },
+    ]);
   });
 });
 
-describe("the yearly omen (PROVISIONAL, 2026-07-13)", () => {
-  it("stands from the game's first turn and modifies every player's income", () => {
-    const G = opening();
-
-    expect(G.yearOmen).not.toBeNull();
-    expect(G.yearOmen!.year).toBe(1);
-    expect(G.yearOmen!.record.tableId).toBe("omen");
-
-    const effect = G.yearOmen!.effects[0];
-    expect(effect.type).toBe("yearIncomeModifier");
-
-    // The income projection carries the omen for every player, not just the roller.
-    const omenLine = calculateIncomeBreakdown(G, "1").find(
-      (entry) => entry.detail === "Yearly omen",
-    );
-    expect(omenLine).toBeDefined();
-    if (effect.type === "yearIncomeModifier") {
-      expect(omenLine!.resource).toBe(effect.resource);
-      expect(omenLine!.amount).toBe(effect.amount);
-    }
-  });
-
-  it("a new year replaces the omen; the same year keeps it", () => {
-    const G = opening();
-    const first = G.yearOmen!;
-
-    startNewSeason(G); // summer — same year
-    expect(G.yearOmen).toBe(first);
-
-    startNewSeason(G); // autumn
-    startNewSeason(G); // winter
-    startNewSeason(G); // spring — year 2
-    expect(G.yearOmen).not.toBe(first);
-    expect(G.yearOmen!.year).toBe(2);
-  });
-
-  it("is symmetric on its face: table EV is zero and every row is ±1 of one resource", () => {
-    let ev = 0;
-
-    for (const row of OMEN_TABLE.rows) {
-      expect(row.effects).toHaveLength(1);
-      const effect = row.effects[0];
-      expect(effect.type).toBe("yearIncomeModifier");
-      if (effect.type === "yearIncomeModifier") {
-        expect(Math.abs(effect.amount)).toBe(1);
-        ev += effect.amount;
-      }
-    }
-
-    expect(ev).toBe(0);
-  });
-
+describe("table dice", () => {
   it("die size is table data: a d3 table never rolls above 3", () => {
     const d3: EventTableDefinition = {
-      id: "omen",
+      id: "riot",
       name: "Test d3",
       flavor: "",
       die: 3,

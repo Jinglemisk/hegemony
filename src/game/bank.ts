@@ -1,9 +1,9 @@
+import { playerDole } from "./ideaRules";
 import { addLog, getPlayerName } from "./core/query";
 import { MOVE_OK, invalid } from "./core/results";
 import type { ActionStatus, MoveResult } from "./core/results";
 import type { BankRules } from "./ruleset";
 import type { BankRates, HegemonyState, HexTile, PlayerId, TradableMaterial } from "./types";
-import { applyLawBankRate } from "./assembly/laws";
 
 /**
  * The bank exchange (roadmap-appendix D6/Q14): a gold-mediated static market. Sell
@@ -71,7 +71,7 @@ export function getPlayerBankRate(
   playerID: PlayerId,
   material: TradableMaterial,
 ) {
-  return applyLawBankRate(G, playerID, material, G.bank[material]);
+  return G.bank[material];
 }
 
 export function getBankSellStatus(
@@ -83,7 +83,8 @@ export function getBankSellStatus(
   const rate = getPlayerBankRate(G, playerID, material);
 
   if (G.phase !== "gameplay") reasons.push("The bank opens with gameplay.");
-  if (G.pendingPlayerEvent || G.pendingRiot) reasons.push("Resolve the pending event first.");
+  if (G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger)
+    reasons.push("Resolve the pending event first.");
   if (G.players[playerID].resources[material] < rate.sell) {
     reasons.push(`Selling takes ${rate.sell} ${material} for 1 gold.`);
   }
@@ -100,7 +101,8 @@ export function getBankBuyStatus(
   const rate = getPlayerBankRate(G, playerID, material);
 
   if (G.phase !== "gameplay") reasons.push("The bank opens with gameplay.");
-  if (G.pendingPlayerEvent || G.pendingRiot) reasons.push("Resolve the pending event first.");
+  if (G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger)
+    reasons.push("Resolve the pending event first.");
   if (G.players[playerID].resources.gold < rate.buy) {
     reasons.push(`Buying 1 ${material} costs ${rate.buy} gold.`);
   }
@@ -151,6 +153,40 @@ export function bankBuy(
   addLog(
     G,
     `${getPlayerName(G, playerID)} bought 1 ${material} from the bank for ${rate.buy} gold.`,
+    playerID,
+  );
+  return MOVE_OK;
+}
+
+/** The Dole: influence buys food through the bank, at a worse rate than gold. */
+export function getDoleStatus(G: HegemonyState, playerID: PlayerId): ActionStatus {
+  const reasons: string[] = [];
+  const { influenceCost, food } = playerDole(G, playerID);
+
+  if (G.phase !== "gameplay") reasons.push("The bank opens with gameplay.");
+  if (G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger)
+    reasons.push("Resolve the pending event first.");
+  if (G.players[playerID].resources.influence < influenceCost) {
+    reasons.push(`The Dole takes ${influenceCost} influence for ${food} food.`);
+  }
+
+  return { can: reasons.length === 0, reasons, cost: { influence: influenceCost } };
+}
+
+export function dole(G: HegemonyState, playerID: PlayerId): MoveResult {
+  const status = getDoleStatus(G, playerID);
+
+  if (!status.can) {
+    return invalid(...status.reasons);
+  }
+
+  const { influenceCost, food } = playerDole(G, playerID);
+  const resources = G.players[playerID].resources;
+  resources.influence -= influenceCost;
+  resources.food += food;
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} bought ${food} food with ${influenceCost} influence: the Dole.`,
     playerID,
   );
   return MOVE_OK;

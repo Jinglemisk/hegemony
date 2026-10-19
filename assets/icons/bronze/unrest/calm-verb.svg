@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Calm action — a single leafy olive branch</title>
+<defs>
+<linearGradient id="a-calm-verb-leaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a8b976"/><stop offset="0.48" stop-color="#7d8f51"/><stop offset="1" stop-color="#48542c"/></linearGradient>
+<linearGradient id="a-calm-verb-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+</defs>
+<path d="M10 57L14 49L42 13L48 8L46 17L22 51L16 58Z" fill="url(#a-calm-verb-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M44 16L47 12L44 21L20 54L16 56Z" fill="#624123"/>
+<path d="M39 26C33 14 38 7 53 6C59 17 52 24 39 26Z" fill="url(#a-calm-verb-leaf)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M32 31C18 28 12 17 17 7C31 9 37 20 32 31Z" fill="url(#a-calm-verb-leaf)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M30 36C36 22 47 19 58 24C57 37 46 41 30 36Z" fill="url(#a-calm-verb-leaf)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M23 43C9 42 5 33 6 21C20 21 27 31 23 43Z" fill="url(#a-calm-verb-leaf)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M21 49C29 35 41 35 50 43C46 56 34 58 21 49Z" fill="url(#a-calm-verb-leaf)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M15 53C6 49 5 41 8 33C19 36 23 47 15 53Z" fill="url(#a-calm-verb-leaf)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M47 10Q50 17 41 24Q54 22 54 12ZM19 10Q31 18 31 29L28 26Q27 16 19 10ZM53 27Q48 35 33 35L39 38Q53 38 56 27ZM9 25Q20 30 22 41L18 38Q18 30 9 25ZM43 44Q35 50 24 49L30 53Q43 55 47 44ZM10 37Q17 44 15 51L18 48Q19 42 10 37Z" fill="#48542c"/>
+<path d="M42 22L49 12M29 27L20 12M34 34L51 27M20 38L10 26M26 48L42 44M14 47L10 39" fill="none" stroke="#809352" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<ellipse cx="34" cy="42" rx="4.5" ry="6" fill="#48542c" stroke="#181210" stroke-width="2.5"/>
+<ellipse cx="27" cy="29" rx="4.5" ry="6" fill="#48542c" stroke="#181210" stroke-width="2.5"/>
+<path d="M36 39Q41 46 34 47L32 46Q37 45 36 39ZM29 26Q34 33 27 34L25 33Q30 32 29 26Z" fill="#28331d"/>
+<path d="M32 40L33 38M25 27L26 25" fill="none" stroke="#a8b976" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M40 16Q42 10 49 9M18 11Q17 18 23 23M39 28L48 25M9 27Q10 33 15 36M30 44L37 42M12 53L14 50" fill="none" stroke="#d3dba5" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

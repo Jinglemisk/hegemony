@@ -6,8 +6,7 @@ import type {
   EventEffect,
   EventTableId,
   PopType,
-  Resource,
-  SeasonName,
+  Stat,
   SettlementKind,
   TableEffect,
   Terrain,
@@ -44,7 +43,7 @@ export const RESOURCE_GLYPHS = {
   food: "food",
   influence: "influence",
   happiness: "happiness",
-} as const satisfies Record<Resource, GlyphId>;
+} as const satisfies Record<Stat, GlyphId>;
 
 export const POP_GLYPHS = {
   citizens: "citizens",
@@ -68,13 +67,6 @@ export const TERRAIN_GLYPHS = {
   oracle: "oracle",
 } as const satisfies Record<Terrain, GlyphId>;
 
-export const SEASON_GLYPHS = {
-  spring: "spring",
-  summer: "summer",
-  autumn: "autumn",
-  winter: "winter",
-} as const satisfies Record<SeasonName, GlyphId>;
-
 export const VERB_GLYPHS = {
   grow: "grow",
   move: "move",
@@ -85,20 +77,13 @@ export const VERB_GLYPHS = {
   venture: "venture",
 } as const satisfies Record<VerbId, GlyphId>;
 
-/** Nine rooflines, nine drawings. The sprite atlas these replaced had four painted
- *  building cells and aliased five buildings onto them (forum→marketplace,
- *  aqueduct/villa→granary, odeon/gymnasion→temple) — which is what a family sitting
- *  outside the no-duplicate test looks like from the player's side of the screen. */
+/** Six buildings, six drawings: no two share a picture. */
 export const BUILDING_GLYPHS = {
   marketplace: "marketplace",
-  temple: "temple",
-  workshop: "workshop",
-  granary: "granary",
+  estate: "estate",
   forum: "forum",
-  aqueduct: "aqueduct",
-  odeon: "odeon",
-  villa: "villa",
-  gymnasion: "gymnasion",
+  temple: "temple",
+  granary: "granary",
   port: "port",
 } as const satisfies Record<BuildingId, GlyphId>;
 
@@ -114,7 +99,6 @@ export const EVENT_TABLE_GLYPHS = {
   merchantConvoy: "convoy",
   grandEmbassy: "embassy",
   colonistsVoyage: "venture",
-  omen: "omen",
 } as const satisfies Record<EventTableId, GlyphId>;
 
 /* ── The effect grammar ─────────────────────────────────────────────────────
@@ -124,22 +108,9 @@ export const EVENT_TABLE_GLYPHS = {
    same thing twice in a way colour-blind players cannot read. */
 
 export const EVENT_EFFECT_GLYPHS = {
-  /** Your stores change, now. */
   resourceDelta: "stockpile",
-  /** Scaled by how many people you have — a crowd, not a person. */
-  scaledResourceDelta: "crowd",
-  happinessDelta: "happiness",
-  scaledHappinessDelta: "moodCrowd",
-  /** The distinguishing feature is that it ticks: the hourglass, not the mask. */
-  timedHappinessDelta: "hourglass",
-  incomeModifier: "income",
-  buildingCostMultiplier: "cross",
+  unrestTokens: "happiness",
   addPops: "popGain",
-  actionCostDiscount: "costDown",
-  resourceExchange: "exchange",
-  /** Per single pop, with a floor — one figure and its share. */
-  resourceDeltaPerPop: "perPop",
-  choice: "choice",
 } as const satisfies Record<EventEffect["type"], GlyphId>;
 
 export const TABLE_EFFECT_GLYPHS = {
@@ -149,57 +120,50 @@ export const TABLE_EFFECT_GLYPHS = {
   destroyBuilding: "ruin",
   gainResource: "gain",
   gainPop: "popGain",
-  /** A whole year of it — the year dial, not the plain income cycle. */
-  yearIncomeModifier: "yearCycle",
 } as const satisfies Record<TableEffect["type"], GlyphId>;
 
 export const LAW_EFFECT_GLYPHS = {
+  rule: "law",
+  actionCost: "costDown",
+  calmPayment: "calm",
+  colonyCapacity: "colony",
+  buildingFood: "food",
+  happiness: "happiness",
   settlementIncome: "cityIncome",
-  popIncome: "popIncome",
-  /** What the ground itself gives, per pop working it. */
-  popPrimaryIncome: "tileYield",
-  flatIncome: "income",
-  thresholdHappiness: "threshold",
-  surplusConversion: "convert",
-  actionCostDelta: "costDown",
-  actionCostMultiplier: "cross",
-  /** The bank's scales, which are the forum's scales — one idea. */
-  bankRateStep: "forum",
-  yearlyFreeAction: "freeGrant",
   onFoundColony: "found",
+  realmIncome: "income",
+  extraSlots: "build",
+  colonyPieces: "plus",
+  acquirePop: "popGain",
+  acquireResource: "gold",
+  onUpgradeCity: "upgrade",
+  dolePrice: "treasury",
+  slotExempt: "port",
+  votePurchaseLimit: "bribe",
 } as const satisfies Record<LawEffect["type"], GlyphId>;
 
 export const DIRECTIVE_EFFECT_GLYPHS = {
+  unrestTokens: "happiness",
   resourceDelta: "stockpile",
-  resourceFraction: "fraction",
   losePopFromLargest: "popLoss",
   suppressIncome: "suppress",
   repealNewestTargetLaw: "repeal",
   equalVotesNextAssembly: "equalVotes",
 } as const satisfies Record<DirectiveEffect["type"], GlyphId>;
 
-/** The three class bonuses are the three figures: a building that pays for
- *  freemen shows a freeman, not a coin. Who benefits is the point. */
+/** A class building's effect is its class's output, so it wears the yield mark. */
 export const BUILDING_EFFECT_GLYPHS = {
-  freemanGoldBonus: "freemen",
-  citizenInfluenceBonus: "citizens",
-  slavePrimaryResourceBonus: "slaves",
+  classOutput: "tileYield",
   income: "income",
   happiness: "happiness",
-  growPopFoodDiscount: "costDown",
-  popCapacityBonus: "capacity",
-  tilePrimaryResourceBonus: "tileYield",
-  promoteCostReduction: "promote",
 } as const satisfies Record<BuildingEffect["type"], GlyphId>;
 
 export const ACTIVE_EFFECT_MECHANIC_GLYPHS = {
   suppressIncome: "suppress",
   /** The grain, struck through. The one effect the player must never misread. */
-  foodDeficitProgress: "starvation",
-  timedHappiness: "happiness",
-  resourceIncome: "income",
-  buildingCostMultiplier: "cross",
-  actionCostDiscount: "costDown",
+  hunger: "starvation",
+  /** The year's card strikes a whole term out. */
+  zeroTerm: "cross",
   standingLaw: "law",
   equalVotesNextAssembly: "equalVotes",
 } as const satisfies Record<ActiveEffectMechanic["type"], GlyphId>;
@@ -213,7 +177,6 @@ export const ICON_REGISTRY_FAMILIES = {
   pop: POP_GLYPHS,
   settlement: SETTLEMENT_GLYPHS,
   terrain: TERRAIN_GLYPHS,
-  season: SEASON_GLYPHS,
   verb: VERB_GLYPHS,
   building: BUILDING_GLYPHS,
   politician: POLITICIAN_GLYPHS,
@@ -265,13 +228,8 @@ export type EffectIconTarget =
 export function eventBlowGlyph(effect: EventEffect): GlyphId {
   switch (effect.type) {
     case "resourceDelta":
-    case "scaledResourceDelta":
-    case "resourceDeltaPerPop":
-    case "incomeModifier":
       return RESOURCE_GLYPHS[effect.resource];
-    case "happinessDelta":
-    case "scaledHappinessDelta":
-    case "timedHappinessDelta":
+    case "unrestTokens":
       return RESOURCE_GLYPHS.happiness;
     default:
       return EVENT_EFFECT_GLYPHS[effect.type];

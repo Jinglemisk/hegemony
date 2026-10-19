@@ -1,8 +1,13 @@
 # docs/design — the visual-identity decision record
 
 **Current (2026-09-28):** the chosen in-match layout is [`shell-v2/`](shell-v2/BRIEF.md), the Hybrid
-arc mock, built to the [v2 migration plan](../../plans/v2-migration.md). Everything below is the
+arc mock, built to the [v2 migration plan](../../archive/plans/v2-migration.md). Everything below is the
 July visual-identity record and earlier layouts, kept as history.
+
+**Since 2026-10-17:** icons are [Painted bronze](bronze-icons.md), and the board is headed for
+three.js: [`showcases/living-map.html`](showcases/living-map.html) is the owner-approved target
+(zoom bands, map modes, slot nodes, pop figures, terrain that clears as settlements grow).
+Owner calls in it: turn up to 15° and stays, tilt 20° rising to 45°, raised even island.
 
 Produced 2026-07-13 in a brandbook/architecture working session (multi-agent audit → three
 art directions → adversarial judging → owner rulings → controlled icon A/B test). Everything

@@ -2,12 +2,11 @@ import { EMPTY_RESOURCES } from "../../game/data";
 import { capitalize } from "../../game/core/format";
 import type { Phase } from "../../client/controller";
 import type { ActionStatus } from "../../game/rules";
-import type { Ruleset } from "../../game/ruleset";
 import {
   POP_TYPES,
   claimableLuxuriesAt,
   getLuxuryGood,
-  popIncome,
+  settlementNextClassColumn,
   previewBuildBuilding,
   previewBuildingIncomeDelta,
 } from "../../game/rules";
@@ -50,7 +49,7 @@ export function getOwnedHoldings(G: HegemonyState, playerID: PlayerId): OwnedHol
  * default parameter quietly substituted DEFAULT_RULESET — so under a patched
  * ruleset this tab reported numbers the engine never paid (R7).
  */
-export function calculatePopEconomy(holdings: OwnedHolding[], ruleset: Ruleset): PopEconomy {
+export function calculatePopEconomy(holdings: OwnedHolding[], G: HegemonyState): PopEconomy {
   const economy: PopEconomy = {
     citizens: createEmptyResources(),
     freemen: createEmptyResources(),
@@ -59,10 +58,7 @@ export function calculatePopEconomy(holdings: OwnedHolding[], ruleset: Ruleset):
 
   for (const { tile, settlement } of holdings) {
     for (const pop of POP_TYPES) {
-      addResources(
-        economy[pop],
-        popIncome(pop, settlement.pops[pop], tile.resource?.type ?? null, ruleset),
-      );
+      addResources(economy[pop], settlementNextClassColumn(G, tile, settlement, pop).income);
     }
   }
 
@@ -134,7 +130,7 @@ export function gameplayActionDisabled(
 
 /** One consistent line for every settlement picker: the place's NAME and rank,
  *  the ground it stands on, and whether it shares the tile with a rival (shared
- *  yields are halved, and an upgrade would evict them). */
+ *  slots are split, and an upgrade would evict them). */
 export function settlementPickerLabel(G: HegemonyState, tile: HexTile, ownerID: PlayerId): string {
   const own = tile.settlements.find((candidate) => candidate.owner === ownerID);
   const name = own ? settlementNameOf(G.board.tiles, own.id) : "Open ground";
@@ -144,9 +140,9 @@ export function settlementPickerLabel(G: HegemonyState, tile: HexTile, ownerID: 
     ? ` · shares tile with ${rivals.map((candidate) => G.players[candidate.owner].name).join(", ")}`
     : "";
 
-  const yieldText = tile.resource ? `+${tile.resource.amount} ${tile.resource.type}` : "no yield";
+  const slotText = `${tile.slots} slots${tile.resource ? ` for ${tile.resource.type}` : ""}`;
 
-  return `${name}${kind ? ` · ${kind}` : ""} · ${capitalize(tile.terrain)} ${yieldText}${shared}`;
+  return `${name}${kind ? ` · ${kind}` : ""} · ${capitalize(tile.terrain)}, ${slotText}${shared}`;
 }
 
 export function createEmptyResources(): Resources {

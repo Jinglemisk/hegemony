@@ -1,3 +1,4 @@
+import { standingHappiness } from "../happiness";
 import { TEST_OPENING_SETUP } from "../config";
 import { placeCapital, placeColony } from "../actions";
 import { clonePops } from "../core/pops";
@@ -14,7 +15,7 @@ import type {
   Resources,
   Settlement,
   SettlementKind,
-  Yield,
+  TileResource,
 } from "../types";
 import { allocateEntityId } from "../entity";
 
@@ -44,14 +45,14 @@ export function owned(G: HegemonyState, tileId: string, owner: PlayerId): Settle
   return settlement;
 }
 
-/** A material-resource tile (wood/stone) so tile yield never collides with the
+/** A material-resource tile (wood/stone) so slave output never collides with the
  *  gold/food/influence/happiness columns the pop formulas write to. */
-export function materialTile(G: HegemonyState): HexTile & { resource: Yield } {
+export function materialTile(G: HegemonyState): HexTile & { resource: TileResource } {
   const found = G.board.tiles.find(
     (candidate) => candidate.resource?.type === "wood" || candidate.resource?.type === "stone",
   );
   if (!found?.resource) throw new Error("no material tile on the board");
-  return found as HexTile & { resource: Yield };
+  return found as HexTile & { resource: TileResource };
 }
 
 export type ScenarioOptions = {
@@ -76,7 +77,7 @@ export class ScenarioBuilder {
   /**
    * Replay the scripted 4-player metropolis+colony opening through the real mutators
    * (snake order, driven by the setup machine), landing in gameplay with the opener's
-   * first turn already bootstrapped (upkeep + income + event draw — so a pending event
+   * first turn already bootstrapped (income + hunger + event draw — so a pending event
    * may be waiting). Stack any deck riggings BEFORE calling this if they should
    * influence that first draw.
    */
@@ -89,7 +90,7 @@ export class ScenarioBuilder {
 
     let guard = 0;
 
-    while (G.phase !== "gameplay") {
+    while (G.phase !== "setupIdeas") {
       if (guard++ > 16) {
         throw new Error("scenario opening: setup did not converge");
       }
@@ -112,6 +113,8 @@ export class ScenarioBuilder {
       advanceSetupTurn(G);
     }
 
+    G.phase = "gameplay";
+    G.currentPlayer = G.yearOpener;
     beginGameplayTurn(G);
     return this;
   }
@@ -126,7 +129,6 @@ export class ScenarioBuilder {
         gold: 200,
         food: 200,
         influence: 0,
-        happiness: 0,
       });
     } else {
       Object.assign(target, resources);
@@ -135,8 +137,16 @@ export class ScenarioBuilder {
     return this;
   }
 
-  withHappiness(playerID: PlayerId, happiness: number): this {
-    this.G.players[playerID].resources.happiness = happiness;
+  /** Place the Unrest tokens that bring the player's standing level down to `level`.
+   *  The level is derived, so a test cannot set it higher than the board gives. */
+  withHappiness(playerID: PlayerId, level: number): this {
+    const tokens =
+      standingHappiness(this.G, playerID) + this.G.players[playerID].unrestTokens - level;
+
+    if (tokens < 0) {
+      throw new Error(`the board gives player ${playerID} less than ${level} happiness`);
+    }
+    this.G.players[playerID].unrestTokens = tokens;
     return this;
   }
 
@@ -165,13 +175,9 @@ export class ScenarioBuilder {
     return this;
   }
 
-  /**
-   * Rig the seasonal deck. Note the seasonal draw prefers cards suited to the
-   * current season — a stacked card only jumps the queue if it suits the season
-   * (or carries no season tags).
-   */
-  stackSeasonalEvent(cardId: string): this {
-    moveCardToTop(this.G.seasonalDrawPile, cardId);
+  /** Rig the year deck: the named card is the next one revealed. */
+  stackYearCard(cardId: string): this {
+    moveCardToTop(this.G.yearDrawPile, cardId);
     return this;
   }
 
@@ -186,7 +192,7 @@ export class ScenarioBuilder {
   }
 }
 
-function moveCardToTop(deck: HegemonyState["playerDrawPile"], cardId: string): void {
+function moveCardToTop(deck: Array<{ id: string }>, cardId: string): void {
   const index = deck.findIndex((candidate) => candidate.id === cardId);
   if (index < 0) throw new Error(`no event card ${cardId}`);
   const [card] = deck.splice(index, 1);

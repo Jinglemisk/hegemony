@@ -4,6 +4,7 @@ import type { Policy, PolicyId } from "./policies";
 import { greedyPolicy, randomPolicy } from "./policies";
 import { createSimRng } from "./rng";
 import { playTurn, runGame } from "./runner";
+import { scenario } from "../game/testing/scenario";
 
 // Several full games per test; the policy opening costs ~0.4 s of placement search per
 // game on top of play, so these get a timeout that survives a loaded machine.
@@ -40,8 +41,10 @@ describe("runGame smoke", () => {
 
     const deathmatch = runGame({ seed: 42, mode: "deathmatch", policy: randomPolicy, turns: 8 });
     expect(deathmatch.phase).toBe("gameplay");
+    // Four are placed at setup. A rival's upgrade is cheap enough to happen inside
+    // eight turns, and it evicts a colony sharing the tile, so one may be gone.
     for (const player of Object.values(deathmatch.players)) {
-      expect(player.settlements.length).toBeGreaterThanOrEqual(4);
+      expect(player.settlements.length).toBeGreaterThanOrEqual(3);
     }
   }, 30_000);
 
@@ -115,6 +118,7 @@ describe("runGame smoke", () => {
       mode: "standard",
       policy: greedy, // fallback (unused — every seat is named)
       seatPolicies: { "0": greedy, "1": smart, "2": smart, "3": smart },
+      // Include setup picks and a multi-seat Assembly.
       turns: 8,
     });
 
@@ -128,6 +132,73 @@ describe("runGame smoke", () => {
 });
 
 describe("action cap", () => {
+  it.each([false, true])(
+    "completes exactly one turn when the cap finds a riot (already pending: %s)",
+    (pending) => {
+      const G = scenario().opening().withHappiness("0", -3).build();
+      G.pendingPlayerEvent = null;
+      if (pending) {
+        G.players["0"].unrestTokens = 0;
+        G.pendingRiot = {
+          playerID: "0",
+          boughtInsurance: [],
+          tokensCleared: 0,
+          concessionTileId: null,
+        };
+      }
+      const moves: string[] = [];
+      const forced: number[] = [];
+      const next = playTurn(
+        G,
+        randomPolicy,
+        createSimRng(1),
+        {
+          onMove: (_state, _player, command) => moves.push(command.type),
+          onForceEndTurn: (_state, count) => forced.push(count),
+        },
+        { maxActions: 0 },
+      );
+      expect(next.turn).toBe(G.turn + 1);
+      expect(next.currentPlayer).toBe("1");
+      expect(next.pendingRiot).toBeNull();
+      expect(moves).toEqual(pending ? ["resolveRiot"] : ["endTurn", "resolveRiot"]);
+      expect(forced).toEqual([1]);
+    },
+  );
+
+  it("does not count the riot choices that follow an accepted endTurn", () => {
+    const G = scenario().opening().withHappiness("0", -3).build();
+    G.pendingPlayerEvent = null;
+    Object.assign(G.players["0"].resources, { food: 10, influence: 10 });
+    // Ends at once, then takes every insurance on offer before the roll.
+    const ender: Policy = {
+      name: "random",
+      choose: (_view, moves) =>
+        moves.find((move) => move.type === "endTurn") ??
+        moves.find((move) => move.type === "buyRiotInsurance") ??
+        moves[0],
+    };
+    const moves: string[] = [];
+    let forced = 0;
+    const next = playTurn(
+      G,
+      ender,
+      createSimRng(1),
+      {
+        onMove: (_state, _player, command) => moves.push(command.type),
+        onForceEndTurn: () => (forced += 1),
+      },
+      { maxActions: 1 },
+    );
+
+    // The one counted action was endTurn. The seat still chose its insurance.
+    expect(moves[0]).toBe("endTurn");
+    expect(moves.filter((move) => move === "buyRiotInsurance").length).toBeGreaterThan(0);
+    expect(moves.at(-1)).toBe("resolveRiot");
+    expect(forced).toBe(0);
+    expect(next.turn).toBe(G.turn + 1);
+  });
+
   it("force-ends the turn against a policy that never ends it", () => {
     const stubborn: Policy = {
       name: "random",

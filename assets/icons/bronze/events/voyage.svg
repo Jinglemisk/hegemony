@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Voyage — Greek merchant ship with square sail</title>
+<defs>
+<linearGradient id="a-voyage-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+<linearGradient id="a-voyage-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+<linearGradient id="a-voyage-sea" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9daf9c"/><stop offset="0.48" stop-color="#718a7d"/><stop offset="1" stop-color="#435f56"/></linearGradient>
+</defs>
+<path d="M29 6H36V43H29Z" fill="url(#a-voyage-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M14 15L8 43M49 16L56 42" fill="none" stroke="#51351f" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M12 12H51L48 20Q49 30 53 36H12Q17 25 12 12Z" fill="url(#a-voyage-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M43 14H49L46 20Q47 30 51 34H42Q43 25 39 15Z" fill="#aa9572"/>
+<path d="M23 16Q26 24 23 32M34 16Q37 24 34 32" fill="none" stroke="#c1ad84" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M45 28L49 32L51 35H16L17 32H44Z" fill="#806c50"/>
+<path d="M6 39L13 42H46Q52 42 51 33L56 29Q61 43 53 50Q43 58 23 54Q12 52 6 39Z" fill="url(#a-voyage-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M11 44Q25 49 47 45Q53 43 55 36Q58 46 50 50Q31 59 17 50Z" fill="#8b633b"/>
+<path d="M17 46Q29 51 44 47" fill="none" stroke="#51351f" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M6 53Q12 48 19 53Q26 58 33 53Q40 48 47 53Q53 57 58 52V58H6Z" fill="url(#a-voyage-sea)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M7 57Q14 53 20 56Q27 60 34 56Q40 53 47 56Q53 59 58 55V58H6Z" fill="#435f56"/>
+<path d="M16 15H45M17 19Q20 24 17 30M10 41L15 44M53 35V40M8 53Q13 51 18 54" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M26 52H30M42 49L46 48" fill="none" stroke="#a67b48" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

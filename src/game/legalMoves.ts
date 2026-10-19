@@ -1,3 +1,5 @@
+import { getNationalIdeas, getTakeIdeaStatus, ideaPopTargets, takeNationalIdea } from "./ideas";
+import type { NationalIdeaId, IdeaPopChoice } from "./ideaTypes";
 import {
   buildBuilding,
   foundColony,
@@ -8,7 +10,15 @@ import {
   placeColony,
   upgradeColonyToCity,
 } from "./actions";
-import { TRADABLE_MATERIALS, bankBuy, bankSell, getBankBuyStatus, getBankSellStatus } from "./bank";
+import {
+  TRADABLE_MATERIALS,
+  bankBuy,
+  bankSell,
+  dole,
+  getBankBuyStatus,
+  getBankSellStatus,
+  getDoleStatus,
+} from "./bank";
 import {
   DEMOTE_FROM,
   PROMOTE_FROM,
@@ -20,23 +30,24 @@ import {
   promotePop,
 } from "./civic";
 import type { CivicCalmPayment } from "./civic";
-import { buyRiotInsurance, getBuyRiotInsuranceStatus, resolveRiot } from "./riot";
+import { CONCESSION_FROM, buyRiotInsurance, getBuyRiotInsuranceStatus, resolveRiot } from "./riot";
 import { fundExpedition, getFundExpeditionStatus } from "./ventures";
-import type { VentureStake } from "./ventures";
 import { getAuthoredGameContent, getExpeditionTables, getRiotTable } from "./content";
-import { EMPTY_POPS, POP_TYPES, totalPops } from "./core/pops";
+import { EMPTY_POPS, GROWABLE_POPS, POP_TYPES, totalPops } from "./core/pops";
 import { formatPopName, formatPops } from "./core/format";
-import { getOwnedSettlement } from "./core/query";
+import { getOwnedSettlement, getTile } from "./core/query";
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
-import {
-  getAddPopsEffect,
-  getEventEffectChoices,
-  getEventPopTargetTileIds,
-  resolvePendingPlayerEvent,
-} from "./events";
+import { getAddPopsEffect, getEventPopTargetTileIds, resolvePendingPlayerEvent } from "./events";
+import { hungerLeaveOptions, resolveHunger } from "./hunger";
 import { setupCapitalCount } from "./ruleset";
-import { canPlaceColonyOnTile, isAdjacentToCity } from "./settlement";
+import {
+  canPlaceColonyOnTile,
+  isAdjacentToCity,
+  settlementOpenSlots,
+  settlementSlaveResource,
+  settlementWorkingSlaves,
+} from "./settlement";
 import {
   getBuildBuildingOptions,
   getFoundColonyStatus,
@@ -48,18 +59,19 @@ import { claimableLuxuriesAt } from "./luxury";
 import { advanceSetupTurn, beginGameplayTurn, closeAssembly, endTurn } from "./turn";
 import {
   activeLawIds,
-  availableLawReplacementIds,
+  lawProposalReason,
+  repealableLawIds,
   assemblyBribe,
+  getAssemblyBuyVoteStatus,
+  getAssemblyDrawStatus,
+  getAssemblyRepealStatus,
   assemblyDiscardHeld,
   assemblyDraw,
   assemblyPass,
   assemblyPropose,
   assemblyProposeRepeal,
-  assemblyVeto,
   assemblyVote,
   getResolutionCard,
-  lawNeedsReplacement,
-  nextDrawCost,
   POLITICIANS,
 } from "./assembly";
 import type { PoliticianId } from "./assembly";
@@ -69,6 +81,7 @@ import type {
   BuildingId,
   EventTableId,
   HegemonyState,
+  HungerLeave,
   PlayerId,
   PopType,
   Pops,
@@ -93,9 +106,10 @@ import { assertGameInvariants } from "./invariants";
  * Enumeration reuses the get*Status validators — the same predicates the moves
  * themselves re-check — so an enumerated move always applies cleanly. movePops is
  * enumerated as a bounded set of strategically meaningful bundles per source→target
- * pair (a single pop of each type, the whole stack of each type, and the entire
- * settlement — deduplicated), so a bot can relocate a garrison or seed a colony in
- * one action instead of several. collectIncome is never enumerated (it happens
+ * pair (a single pop of each type, the whole stack of each type, the entire
+ * settlement, and as many slaves as the target has slots open — deduplicated). A seat
+ * has one move a turn, so a bundle is all it can send that turn. collectIncome is never
+ * enumerated (it happens
  * automatically at the start of every gameplay turn).
  */
 
@@ -119,13 +133,19 @@ export type GameCommand =
     }
   | { type: "growPop"; tileId: string; pop: PopType }
   | { type: "movePops"; sourceTileId: string; targetTileId: string; pops: Pops }
-  | { type: "resolveEvent"; choiceIndex: number; targetTileId?: string }
+  | { type: "resolveEvent"; targetTileId?: string }
+  /** Hunger: which freemen or citizens leave, one entry per pop. */
+  | { type: "resolveHunger"; leave: HungerLeave[] }
   | { type: "bankSell"; material: TradableMaterial }
   | { type: "bankBuy"; material: TradableMaterial }
+  /** The Dole: influence for food. */
+  | { type: "dole" }
+  | { type: "pickIdea"; ideaId: NationalIdeaId; target?: IdeaPopChoice }
+  | { type: "buyIdea"; ideaId: NationalIdeaId; target?: IdeaPopChoice }
   | { type: "civicCalm"; payment: CivicCalmPayment }
   | { type: "promotePop"; tileId: string; from: PopType }
   | { type: "demotePop"; tileId: string; from: PopType }
-  | { type: "fundExpedition"; expeditionId: EventTableId; stake: VentureStake }
+  | { type: "fundExpedition"; expeditionId: EventTableId }
   | {
       type: "buyRiotInsurance";
       optionId: RiotInsuranceId;
@@ -137,12 +157,11 @@ export type GameCommand =
   //    off until the house rises.
   | { type: "assemblyDraw"; politician: PoliticianId }
   | { type: "assemblyDiscardHeld" }
-  | { type: "assemblyPropose"; replaces?: string; target?: PlayerId }
+  | { type: "assemblyPropose"; target?: PlayerId }
   | { type: "assemblyProposeRepeal"; cardId: string }
   | { type: "assemblyPass" }
-  | { type: "assemblyBribe" }
+  | { type: "assemblyBribe"; payment: "gold" | "influence" }
   | { type: "assemblyVote"; yea: boolean }
-  | { type: "assemblyVeto" }
   | { type: "assemblyClose" }
   | { type: "endTurn" };
 
@@ -168,6 +187,10 @@ function enumerateDerivedCommands(G: HegemonyState, playerID: PlayerId): Derived
     return [];
   }
 
+  if (G.pendingHunger) {
+    return hungerLeaveOptions(G, playerID).map((leave) => ({ type: "resolveHunger", leave }));
+  }
+
   if (G.pendingPlayerEvent) {
     return G.pendingPlayerEvent.playerID === playerID ? enumerateEventResolutions(G, playerID) : [];
   }
@@ -183,6 +206,8 @@ function enumerateDerivedCommands(G: HegemonyState, playerID: PlayerId): Derived
   }
 
   switch (G.phase) {
+    case "setupIdeas":
+      return enumerateIdeaCommands(G, playerID, "pickIdea");
     case "setupCapital":
       return enumerateCapitalPlacements(G, playerID);
     case "setupCity":
@@ -257,6 +282,14 @@ function applyCommandMutable(G: HegemonyState, playerID: PlayerId, move: GameCom
       }
       return result;
     }
+    case "pickIdea":
+    case "buyIdea": {
+      if ((move.type === "pickIdea") !== (G.phase === "setupIdeas"))
+        return invalid("Wrong Idea action.");
+      const result = takeNationalIdea(G, playerID, move.ideaId, move.target);
+      if (result.ok && move.type === "pickIdea" && G.phase === "gameplay") beginGameplayTurn(G);
+      return result;
+    }
     case "foundColony":
       return foundColony(G, playerID, move.tileId, move.sourceTileId, move.pop);
     case "upgradeColonyToCity":
@@ -268,11 +301,15 @@ function applyCommandMutable(G: HegemonyState, playerID: PlayerId, move: GameCom
     case "movePops":
       return movePops(G, playerID, move.sourceTileId, move.targetTileId, move.pops);
     case "resolveEvent":
-      return resolvePendingPlayerEvent(G, playerID, move.targetTileId, move.choiceIndex);
+      return resolvePendingPlayerEvent(G, playerID, move.targetTileId);
+    case "resolveHunger":
+      return resolveHunger(G, playerID, move.leave);
     case "bankSell":
       return bankSell(G, playerID, move.material);
     case "bankBuy":
       return bankBuy(G, playerID, move.material);
+    case "dole":
+      return dole(G, playerID);
     case "civicCalm":
       return civicCalm(G, playerID, move.payment);
     case "promotePop":
@@ -280,7 +317,7 @@ function applyCommandMutable(G: HegemonyState, playerID: PlayerId, move: GameCom
     case "demotePop":
       return demotePop(G, playerID, move.tileId, move.from);
     case "fundExpedition":
-      return fundExpedition(G, playerID, move.expeditionId, move.stake);
+      return fundExpedition(G, playerID, move.expeditionId);
     case "buyRiotInsurance":
       return buyRiotInsurance(G, playerID, move.optionId, move.demoteTarget);
     case "resolveRiot":
@@ -290,17 +327,15 @@ function applyCommandMutable(G: HegemonyState, playerID: PlayerId, move: GameCom
     case "assemblyDiscardHeld":
       return assemblyDiscardHeld(G, playerID);
     case "assemblyPropose":
-      return assemblyPropose(G, playerID, move.replaces, move.target);
+      return assemblyPropose(G, playerID, move.target);
     case "assemblyProposeRepeal":
       return assemblyProposeRepeal(G, playerID, move.cardId);
     case "assemblyPass":
       return assemblyPass(G, playerID);
     case "assemblyBribe":
-      return assemblyBribe(G, playerID);
+      return assemblyBribe(G, playerID, move.payment);
     case "assemblyVote":
       return assemblyVote(G, playerID, move.yea);
-    case "assemblyVeto":
-      return assemblyVeto(G, playerID);
     case "assemblyClose":
       return closeAssembly(G);
     case "endTurn":
@@ -383,8 +418,6 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
   }
 
   const moves: DerivedCommand[] = [];
-  const rules = G.ruleset.assembly;
-  const influence = G.players[playerID].resources.influence;
 
   if (session.phase === "closing") {
     // Closing is single-actor: only the seat play returns to may dismiss the recap.
@@ -397,16 +430,13 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
       return [];
     }
 
-    if (session.bribesUsed[playerID] < rules.briberyCap && influence >= rules.briberyCost) {
-      moves.push({ type: "assemblyBribe", cost: { influence: rules.briberyCost } });
+    for (const payment of ["gold", "influence"] as const) {
+      const status = getAssemblyBuyVoteStatus(G, playerID, payment);
+      if (status.can) moves.push({ type: "assemblyBribe", payment, cost: status.cost });
     }
 
     moves.push({ type: "assemblyVote", yea: true });
     moves.push({ type: "assemblyVote", yea: false });
-
-    if (session.vetoUsed[playerID] < rules.vetoesPerAssembly && influence >= rules.vetoCost) {
-      moves.push({ type: "assemblyVeto", cost: { influence: rules.vetoCost } });
-    }
 
     return moves;
   }
@@ -424,16 +454,10 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
     const card = held.card;
     const standing = activeLawIds(G);
 
-    if (card.kind === "directive" || !standing.includes(card.id)) {
+    if (card.kind === "directive" || (!standing.includes(card.id) && !lawProposalReason(G, card))) {
       if (card.kind === "directive") {
         for (const target of PLAYER_IDS.filter((rival) => rival !== playerID)) {
           moves.push({ type: "assemblyPropose", target });
-        }
-      } else if (lawNeedsReplacement(G)) {
-        // At the cap a proposal must name its casualty — one move per candidate, so
-        // the choice of what to tear down is itself an enumerated decision.
-        for (const cardId of availableLawReplacementIds(G)) {
-          moves.push({ type: "assemblyPropose", replaces: cardId });
         }
       } else {
         moves.push({ type: "assemblyPropose" });
@@ -442,32 +466,15 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
 
     moves.push({ type: "assemblyDiscardHeld" });
   } else {
-    const drawCost = nextDrawCost(G, playerID);
-
-    if (influence >= drawCost) {
-      for (const politician of POLITICIANS) {
-        if (
-          G.politicianDecks[politician.id].length > 0 ||
-          G.politicianDiscards[politician.id].length > 0
-        ) {
-          moves.push({
-            type: "assemblyDraw",
-            politician: politician.id,
-            cost: { influence: drawCost },
-          });
-        }
-      }
+    for (const politician of POLITICIANS) {
+      const status = getAssemblyDrawStatus(G, playerID, politician.id);
+      if (status.can)
+        moves.push({ type: "assemblyDraw", politician: politician.id, cost: status.cost });
     }
-
-    if (influence >= rules.repealCost) {
-      for (const cardId of activeLawIds(G)) {
-        moves.push({
-          type: "assemblyProposeRepeal",
-          cardId,
-          cost: { influence: rules.repealCost },
-        });
-      }
-    }
+  }
+  for (const cardId of repealableLawIds(G)) {
+    const status = getAssemblyRepealStatus(G, playerID, cardId);
+    if (status.can) moves.push({ type: "assemblyProposeRepeal", cardId, cost: status.cost });
   }
 
   moves.push({ type: "assemblyPass" });
@@ -495,13 +502,20 @@ export function describeCommand(
     case "growPop":
       return `grow 1 ${formatPopName(move.pop, 1)} on ${move.tileId}${formatCost(cost)}`;
     case "movePops":
-      return `move ${formatPops(move.pops)} from ${move.sourceTileId} to ${move.targetTileId}`;
+      return `move ${formatPops(move.pops)} from ${move.sourceTileId} to ${move.targetTileId}${formatCost(cost)}`;
     case "resolveEvent":
-      return `resolve pending event (choice ${move.choiceIndex})${move.targetTileId ? ` targeting ${move.targetTileId}` : ""}`;
+      return `resolve pending event${move.targetTileId ? ` targeting ${move.targetTileId}` : ""}`;
+    case "resolveHunger":
+      return `send away ${move.leave.map((l) => `1 ${formatPopName(l.pop, 1)} from ${l.tileId}`).join(", ")}`;
     case "bankSell":
       return `sell ${Object.values(cost)[0] ?? 1} ${move.material} to the bank for 1 gold`;
     case "bankBuy":
       return `buy 1 ${move.material} from the bank${formatCost(cost)}`;
+    case "pickIdea":
+    case "buyIdea":
+      return `${move.type === "pickIdea" ? "choose" : "buy"} ${content.nationalIdeas.find((i) => i.id === move.ideaId)?.name ?? move.ideaId}${formatCost(cost)}`;
+    case "dole":
+      return `take the Dole${formatCost(cost)}`;
     case "civicCalm":
       return `${move.payment === "influence" ? "stabilize province" : "bread & circuses"}${formatCost(cost)}`;
     case "promotePop":
@@ -509,7 +523,7 @@ export function describeCommand(
     case "demotePop":
       return `demote a ${formatPopName(move.from, 1)} on ${move.tileId}${formatCost(cost)}`;
     case "fundExpedition":
-      return `fund the ${move.expeditionId} staking ${move.stake}${formatCost(cost)}`;
+      return `fund the ${move.expeditionId}${formatCost(cost)}`;
     case "buyRiotInsurance":
       return `declare riot insurance: ${move.optionId}${move.demoteTarget ? ` (demoting a ${formatPopName(move.demoteTarget.from, 1)} on ${move.demoteTarget.tileId})` : ""}`;
     case "resolveRiot":
@@ -519,17 +533,15 @@ export function describeCommand(
     case "assemblyDiscardHeld":
       return "set the drawn resolution aside";
     case "assemblyPropose":
-      return `propose the drawn resolution${move.target ? ` against ${move.target}` : ""}${move.replaces ? ` in place of ${move.replaces}` : ""}`;
+      return `propose the drawn resolution${move.target ? ` against ${move.target}` : ""}`;
     case "assemblyProposeRepeal":
       return `move to repeal ${getResolutionCard(content, move.cardId)?.name ?? move.cardId}${formatCost(cost)}`;
     case "assemblyPass":
       return "hold your peace";
     case "assemblyBribe":
-      return `buy a vote${formatCost(cost)}`;
+      return `buy a vote with ${move.payment}${formatCost(cost)}`;
     case "assemblyVote":
       return `vote ${move.yea ? "yea" : "nay"}`;
-    case "assemblyVeto":
-      return `veto the resolution${formatCost(cost)}`;
     case "assemblyClose":
       return "rise from the Assembly";
     case "endTurn":
@@ -546,7 +558,7 @@ function formatCost(cost: Partial<Resources>): string {
 }
 
 /** The riot's forced menu: each unbought, affordable insurance (the concession once
- *  per legal demote target), and always the roll itself. */
+ *  per settlement with a citizen to demote), and always the roll itself. */
 function enumerateRiotMoves(G: HegemonyState, playerID: PlayerId): DerivedCommand[] {
   const moves: DerivedCommand[] = [];
 
@@ -561,14 +573,12 @@ function enumerateRiotMoves(G: HegemonyState, playerID: PlayerId): DerivedComman
     }
 
     for (const tileId of G.players[playerID].settlements) {
-      for (const from of DEMOTE_FROM) {
-        if (getDemotePopStatus(G, playerID, tileId, from).can) {
-          moves.push({
-            type: "buyRiotInsurance",
-            optionId: option.id,
-            demoteTarget: { tileId, from },
-          });
-        }
+      if (getDemotePopStatus(G, playerID, tileId, CONCESSION_FROM).can) {
+        moves.push({
+          type: "buyRiotInsurance",
+          optionId: option.id,
+          demoteTarget: { tileId, from: CONCESSION_FROM },
+        });
       }
     }
   }
@@ -583,22 +593,12 @@ function enumerateEventResolutions(G: HegemonyState, playerID: PlayerId): Derive
     return [];
   }
 
-  const moves: DerivedCommand[] = [];
-
-  getEventEffectChoices(pending.card).forEach((effects, choiceIndex) => {
-    const popEffect = getAddPopsEffect(effects);
-
-    if (!popEffect) {
-      moves.push({ type: "resolveEvent", choiceIndex });
-      return;
-    }
-
-    for (const targetTileId of getEventPopTargetTileIds(G, playerID, popEffect)) {
-      moves.push({ type: "resolveEvent", choiceIndex, targetTileId });
-    }
-  });
-
-  return moves;
+  const popEffect = getAddPopsEffect(pending.card.effects);
+  if (!popEffect) return [{ type: "resolveEvent" }];
+  return getEventPopTargetTileIds(G, playerID, popEffect).map((targetTileId) => ({
+    type: "resolveEvent",
+    targetTileId,
+  }));
 }
 
 function enumerateCapitalPlacements(G: HegemonyState, playerID: PlayerId): DerivedCommand[] {
@@ -606,7 +606,7 @@ function enumerateCapitalPlacements(G: HegemonyState, playerID: PlayerId): Deriv
     return [];
   }
 
-  const compositions = popCompositions(G.ruleset.placementPopCounts.capital);
+  const compositions = setupPopCompositions(G, "capital");
   const moves: DerivedCommand[] = [];
 
   for (const tile of G.board.tiles) {
@@ -627,7 +627,7 @@ function enumerateCityPlacements(G: HegemonyState, playerID: PlayerId): DerivedC
     return [];
   }
 
-  const compositions = popCompositions(G.ruleset.placementPopCounts.city);
+  const compositions = setupPopCompositions(G, "city");
   const moves: DerivedCommand[] = [];
 
   for (const tile of G.board.tiles) {
@@ -654,7 +654,7 @@ function enumerateColonyPlacements(G: HegemonyState, playerID: PlayerId): Derive
     return [];
   }
 
-  const compositions = popCompositions(G.ruleset.placementPopCounts.colony);
+  const compositions = setupPopCompositions(G, "colony");
   const moves: DerivedCommand[] = [];
 
   for (const tile of G.board.tiles) {
@@ -737,7 +737,7 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
   }
 
   for (const tileId of ownedTileIds) {
-    for (const pop of POP_TYPES) {
+    for (const pop of GROWABLE_POPS) {
       const status = getGrowPopStatus(G, playerID, tileId, pop);
 
       if (status.can) {
@@ -757,9 +757,26 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
         continue;
       }
 
-      for (const pops of movePopsBundles(source.pops)) {
-        if (getMovePopsStatus(G, playerID, sourceTileId, targetTileId, pops).can) {
-          moves.push({ type: "movePops", sourceTileId, targetTileId, pops });
+      const targetTile = getTile(G, targetTileId);
+      const target = getOwnedSettlement(G, targetTileId, playerID);
+      // Slots a slave could take up at the target: open, on working land, and unworked.
+      const openSlots =
+        targetTile && target && settlementSlaveResource(targetTile, G)
+          ? settlementOpenSlots(targetTile, target, G) -
+            settlementWorkingSlaves(targetTile, target, G)
+          : 0;
+
+      for (const pops of movePopsBundles(source.pops, openSlots)) {
+        const status = getMovePopsStatus(G, playerID, sourceTileId, targetTileId, pops);
+
+        if (status.can) {
+          moves.push({
+            type: "movePops",
+            sourceTileId,
+            targetTileId,
+            pops,
+            cost: status.cost ?? {},
+          });
         }
       }
     }
@@ -777,6 +794,11 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
     if (buy.can) {
       moves.push({ type: "bankBuy", material, cost: buy.cost ?? {} });
     }
+  }
+
+  const doleStatus = getDoleStatus(G, playerID);
+  if (doleStatus.can) {
+    moves.push({ type: "dole", cost: doleStatus.cost ?? {} });
   }
 
   for (const payment of ["influence", "gold"] as const) {
@@ -803,19 +825,12 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
   }
 
   for (const table of getExpeditionTables(G.definition.content)) {
-    for (const stake of ["gold", "wood"] as const) {
-      const status = getFundExpeditionStatus(G, playerID, table.id, stake);
-      if (status.can) {
-        moves.push({
-          type: "fundExpedition",
-          expeditionId: table.id,
-          stake,
-          cost: status.cost ?? {},
-        });
-      }
-    }
+    const status = getFundExpeditionStatus(G, playerID, table.id);
+    if (status.can)
+      moves.push({ type: "fundExpedition", expeditionId: table.id, cost: status.cost ?? {} });
   }
 
+  moves.push(...enumerateIdeaCommands(G, playerID, "buyIdea"));
   moves.push({ type: "endTurn" });
   return moves;
 }
@@ -823,11 +838,12 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
 /**
  * The bounded set of movePops selections offered from a source settlement: a single pop
  * of each present type (fine control), the whole stack of each type (relocate one class),
- * and the entire population (seed a colony / abandon). Deduplicated, so a source holding a
- * single pop yields exactly one move. getMovePopsStatus still gates each selection on
- * target capacity, so overflowing bundles are dropped by the caller.
+ * the entire population (seed a colony / abandon), and as many slaves as the target has
+ * slots open for them (two of four slaves to a site with two free slots). Deduplicated,
+ * so a source holding a single pop yields exactly one move. getMovePopsStatus still gates
+ * each selection on target capacity, so overflowing bundles are dropped by the caller.
  */
-function movePopsBundles(sourcePops: Pops): Pops[] {
+function movePopsBundles(sourcePops: Pops, targetOpenSlots: number): Pops[] {
   const bundles: Pops[] = [];
   const seen = new Set<string>();
 
@@ -852,8 +868,18 @@ function movePopsBundles(sourcePops: Pops): Pops[] {
   }
   // The entire settlement — seed a colony or abandon in one action.
   add({ ...sourcePops });
+  // The slaves the target can put to work: any more would sit idle there.
+  add({ ...EMPTY_POPS, slaves: Math.min(sourcePops.slaves, Math.max(0, targetOpenSlots)) });
 
   return bundles;
+}
+
+/** The pop splits one setup placement allows: the ruleset's count for the kind, with
+ *  exactly its citizens. */
+function setupPopCompositions(G: HegemonyState, kind: "capital" | "city" | "colony"): Pops[] {
+  return popCompositions(G.ruleset.placementPopCounts[kind]).filter(
+    (pops) => pops.citizens === G.ruleset.placementCitizens[kind],
+  );
 }
 
 /**
@@ -873,3 +899,22 @@ export function popCompositions(total: number): Pops[] {
   return compositions;
 }
 import { produce } from "immer";
+
+function enumerateIdeaCommands(
+  G: HegemonyState,
+  playerID: PlayerId,
+  type: "pickIdea" | "buyIdea",
+): DerivedCommand[] {
+  if (!getTakeIdeaStatus(G, playerID).can) return [];
+  return getNationalIdeas(G).flatMap((idea) => {
+    const targets = idea.effects.some((e) => e.type === "acquirePop")
+      ? ideaPopTargets(G, playerID)
+      : [undefined];
+    return targets.flatMap((target) => {
+      const status = getTakeIdeaStatus(G, playerID, idea.id, target);
+      return status.can
+        ? [{ type, ideaId: idea.id, ...(target ? { target } : {}), cost: status.cost }]
+        : [];
+    });
+  });
+}

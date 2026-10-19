@@ -1,30 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
-  BASE_VIEW_BOX,
-  HEX_SIZE,
-  WORLD_VIEW_BOX,
-  boardExtent,
-  cameraTransform,
-  clampViewBox,
-  getSideBySidePositions,
-  SHORELINE_RADIUS,
   getHexCorners,
   hexCenter,
-  getNeighborCoordinate,
-  getShorelineEdges,
   hexPoints,
   LUXURY_MARKER_OFFSET,
   luxuryMarkerPosition,
-  seatViewBox,
   vertexCenter,
-  viewBoxesEqual,
-  type WorldInset,
 } from "./hexGeometry";
 import type { AxialCell } from "../game/mapTopology";
 
-const NO_INSET: WorldInset = { top: 0, right: 0, bottom: 0, left: 0 };
-
-/** Geometry only became testable when R6 pulled it out of the 632-line component. */
+/** Tiles are drawn at a hex radius of 45 here; any radius would do. */
+const HEX_SIZE = 45;
 
 describe("hex shape", () => {
   it("draws six corners at hex radius", () => {
@@ -81,180 +67,6 @@ describe("layout agrees with the outline", () => {
 
     expect(rowStep).toBeCloseTo(outlineHeight * 0.75, 6);
     expect(hexCenter(0, 1, HEX_SIZE).x).toBeCloseTo(outlineWidth / 2, 6);
-  });
-
-  it("draws foam outside the tile, not through it", () => {
-    expect(SHORELINE_RADIUS).toBeGreaterThan(HEX_SIZE);
-  });
-});
-
-describe("neighbours", () => {
-  it("are their own inverse across opposite sides", () => {
-    // Side i and side i+3 point opposite ways: stepping both returns home.
-    for (let side = 0; side < 3; side += 1) {
-      const [q, r] = getNeighborCoordinate(0, 0, side);
-      const [backQ, backR] = getNeighborCoordinate(q, r, side + 3);
-
-      expect([backQ, backR]).toEqual([0, 0]);
-    }
-  });
-
-  it("gives six distinct neighbours", () => {
-    const seen = new Set(
-      Array.from({ length: 6 }, (_, side) => getNeighborCoordinate(4, -2, side).join(",")),
-    );
-
-    expect(seen.size).toBe(6);
-  });
-});
-
-describe("shoreline", () => {
-  it("wraps a lone hex on all six sides", () => {
-    const edges = getShorelineEdges([{ q: 0, r: 0, x: 0, y: 0 }], HEX_SIZE);
-
-    expect(edges).toHaveLength(6);
-  });
-
-  it("drops the shared edge between two neighbours", () => {
-    // A hex and one neighbour: 12 sides total, but the touching pair is inland.
-    const centers = [
-      { q: 0, r: 0, x: 0, y: 0 },
-      { q: 1, r: 0, x: HEX_SIZE * 1.5, y: HEX_SIZE * 0.866 },
-    ];
-
-    expect(getShorelineEdges(centers, HEX_SIZE)).toHaveLength(10);
-  });
-
-  it("leaves no shoreline inside a fully enclosed hex", () => {
-    const ring = Array.from({ length: 6 }, (_, side) => {
-      const [q, r] = getNeighborCoordinate(0, 0, side);
-      return { q, r, x: 0, y: 0 };
-    });
-    const centers = [{ q: 0, r: 0, x: 0, y: 0 }, ...ring];
-    const edges = getShorelineEdges(centers, HEX_SIZE);
-
-    // The enclosed centre contributes nothing. Each ring hex touches the centre
-    // plus two ring neighbours, so 3 of its 6 sides face open sea: 6 × 3 = 18.
-    expect(edges.length).toBe(18);
-  });
-});
-
-describe("board extent", () => {
-  it("wraps a lone hex in its own outline, not in the coordinate window", () => {
-    const extent = boardExtent([{ x: 0, y: 0 }]);
-
-    // A pointy-top hex is `size` tall and `size·cos30` wide from its centre, so a
-    // single tile's extent is that box and nothing more. Fitting BASE_VIEW_BOX
-    // instead is what made the board come out a third smaller than its room.
-    expect(extent.height).toBeCloseTo(HEX_SIZE * 2, 6);
-    expect(extent.width).toBeCloseTo(HEX_SIZE * Math.cos(Math.PI / 6) * 2, 6);
-    expect(extent.width).toBeLessThan(BASE_VIEW_BOX.width);
-  });
-
-  it("spans every tile it is given", () => {
-    const extent = boardExtent([
-      { x: -100, y: -50 },
-      { x: 0, y: 0 },
-      { x: 140, y: 90 },
-    ]);
-
-    expect(extent.x).toBeLessThan(-100);
-    expect(extent.y).toBeLessThan(-50);
-    expect(extent.x + extent.width).toBeGreaterThan(140);
-    expect(extent.y + extent.height).toBeGreaterThan(90);
-  });
-
-  it("falls back to the coordinate window when there is no board yet", () => {
-    expect(boardExtent([])).toEqual(BASE_VIEW_BOX);
-  });
-});
-
-describe("board frame", () => {
-  it("never sits past the world edge", () => {
-    const runaway = clampViewBox({
-      x: -99999,
-      y: 99999,
-      width: BASE_VIEW_BOX.width,
-      height: BASE_VIEW_BOX.height,
-    });
-
-    expect(runaway.x).toBeGreaterThanOrEqual(WORLD_VIEW_BOX.x);
-    expect(runaway.y + runaway.height).toBeLessThanOrEqual(
-      WORLD_VIEW_BOX.y + WORLD_VIEW_BOX.height + 0.001,
-    );
-  });
-
-  it("never shows more than the world", () => {
-    const tooWide = clampViewBox({
-      x: 0,
-      y: 0,
-      width: WORLD_VIEW_BOX.width * 4,
-      height: WORLD_VIEW_BOX.height * 4,
-    });
-
-    expect(tooWide.width).toBeLessThanOrEqual(WORLD_VIEW_BOX.width);
-    expect(tooWide.height).toBeLessThanOrEqual(WORLD_VIEW_BOX.height);
-  });
-
-  it("is identity at the base frame", () => {
-    expect(cameraTransform(BASE_VIEW_BOX)).toBe("matrix(1 0 0 1 0 0)");
-  });
-
-  it("treats float noise as no movement", () => {
-    expect(viewBoxesEqual(BASE_VIEW_BOX, { ...BASE_VIEW_BOX, x: BASE_VIEW_BOX.x + 0.0001 })).toBe(
-      true,
-    );
-    expect(viewBoxesEqual(BASE_VIEW_BOX, { ...BASE_VIEW_BOX, x: BASE_VIEW_BOX.x + 1 })).toBe(false);
-  });
-});
-
-describe("live-area seat", () => {
-  it("is a plain world-clamp when no chrome covers the sea", () => {
-    expect(seatViewBox(BASE_VIEW_BOX, NO_INSET)).toEqual(clampViewBox(BASE_VIEW_BOX));
-  });
-
-  it("does not move when the chrome is symmetric", () => {
-    const even: WorldInset = { top: 80, right: 80, bottom: 80, left: 80 };
-
-    expect(seatViewBox(BASE_VIEW_BOX, even)).toEqual(clampViewBox(BASE_VIEW_BOX));
-  });
-
-  it("slides the window left so a left-side panel never hides the board", () => {
-    // The ledger reaches in from the left, so the resting window moves left and
-    // the board shows to its right.
-    const panel: WorldInset = { top: 0, right: 20, bottom: 0, left: 200 };
-    const seated = seatViewBox(BASE_VIEW_BOX, panel);
-
-    expect(seated.x).toBeLessThan(clampViewBox(BASE_VIEW_BOX).x);
-    expect(seated.x).toBeGreaterThanOrEqual(WORLD_VIEW_BOX.x);
-  });
-
-  it("lifts the board above a heavier bottom bar", () => {
-    const bars: WorldInset = { top: 40, right: 0, bottom: 140, left: 0 };
-    const seated = seatViewBox(BASE_VIEW_BOX, bars);
-
-    expect(seated.y).toBeGreaterThan(clampViewBox(BASE_VIEW_BOX).y);
-    expect(seated.y + seated.height).toBeLessThanOrEqual(
-      WORLD_VIEW_BOX.y + WORLD_VIEW_BOX.height + 0.001,
-    );
-  });
-
-  it("never seats past the sea, however deep the chrome reaches", () => {
-    const swallowing: WorldInset = { top: 0, right: 0, bottom: 0, left: 9999 };
-    const seated = seatViewBox(BASE_VIEW_BOX, swallowing);
-
-    expect(seated.x).toBeGreaterThanOrEqual(WORLD_VIEW_BOX.x);
-    expect(seated.x + seated.width).toBeLessThanOrEqual(
-      WORLD_VIEW_BOX.x + WORLD_VIEW_BOX.width + 0.001,
-    );
-  });
-});
-
-describe("side-by-side settlements", () => {
-  it("centres a lone settlement and splits a shared tile", () => {
-    expect(getSideBySidePositions(0)).toEqual([0]);
-    expect(getSideBySidePositions(1)).toEqual([0]);
-    expect(getSideBySidePositions(2)).toEqual([-22, 22]);
   });
 });
 

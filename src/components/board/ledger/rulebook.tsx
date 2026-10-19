@@ -1,3 +1,4 @@
+import { getNationalIdeas, IDEA_PURCHASE_COST } from "../../../game/ideas";
 /* This is the Codex's rules CONTENT module (a chapter registry), not a hot-reloadable
    component file — it deliberately exports data (RULEBOOK) alongside the small inline
    render helpers, so Fast Refresh's one-kind-of-export rule doesn't apply. */
@@ -5,11 +6,10 @@
 import type { ReactNode } from "react";
 import {
   getExpeditionTables,
-  getOmenTable,
   getPlayerEventCards,
   getRiotTable,
   getResolutionCards,
-  getSeasonalEventCards,
+  getYearCards,
 } from "../../../game/content";
 import {
   TRADABLE_MATERIALS,
@@ -18,9 +18,10 @@ import {
   getLuxuryGoods,
   getTerrainDeck,
 } from "../../../game/rules";
-import { POLITICIANS } from "../../../game/assembly";
+import { POLITICIANS, isPriceLaw } from "../../../game/assembly";
 import { VICTORY_CARDS } from "../../../game/victory";
 import type {
+  BuildingDefinition,
   EventCard,
   HegemonyState,
   PopType,
@@ -51,8 +52,10 @@ import { EventTableRows } from "../modals/EventTableModal";
 
 export type RuleChapter = {
   id: string;
-  /** Chapter title — the nav chip + heading. */
+  /** Chapter title — its contents button and the open chapter's heading. */
   title: string;
+  /** Its raster on the Codex contents page. */
+  icon: string;
   /** One-line "what this chapter is", for the search dropdown. */
   blurb: string;
   /** Extra search terms beyond the title/sub-headings (rule nouns a player might type). */
@@ -113,29 +116,32 @@ function popIncomeText(G: HegemonyState, pop: PopType): string {
     }
   }
   if (rule.primaryResource) {
-    parts.push(`+${rule.primaryResource} of the tile's own material per pop`);
+    parts.push(`+${rule.primaryResource} of the tile's resource for each one on an open slot`);
   }
   return parts.join(" · ") || "no income";
 }
 
-/** Aggregate the terrain deck into per-kind ranges — count, yield, slot spread. */
+/** A building's roster line. Its effect list cannot say two things: the Port's effect
+ *  is its claim, and a building that needs a yield never stands on a hill. */
+function buildingRuleText(building: BuildingDefinition): string {
+  if (building.id === "port") {
+    return "Claims one adjacent luxury good; needs the coast";
+  }
+  const text = presentBuildingEffects(building.effects).text;
+  return building.needsYield ? `${text}; not on a hill` : text;
+}
+
+/** Aggregate the terrain deck into per-kind ranges — count and slot spread. */
 function terrainSummary(G: HegemonyState) {
-  const byKind = new Map<
-    Terrain,
-    { count: number; resource: Resource | null; yields: number[]; slots: number[] }
-  >();
+  const byKind = new Map<Terrain, { count: number; resource: Resource | null; slots: number[] }>();
   for (const tile of getTerrainDeck(G.definition.content)) {
     const existing = byKind.get(tile.terrain) ?? {
       count: 0,
       resource: tile.resource ? tile.resource.type : null,
-      yields: [] as number[],
       slots: [] as number[],
     };
     existing.count += 1;
-    existing.slots.push(tile.buildingSlots);
-    if (tile.resource) {
-      existing.yields.push(tile.resource.amount);
-    }
+    existing.slots.push(tile.slots);
     byKind.set(tile.terrain, existing);
   }
   const range = (values: number[]) => {
@@ -153,7 +159,6 @@ function terrainSummary(G: HegemonyState) {
         kind,
         count: data.count,
         resource: data.resource,
-        yield: range(data.yields),
         slots: range(data.slots),
       };
     });
@@ -164,6 +169,7 @@ function terrainSummary(G: HegemonyState) {
 const victory: RuleChapter = {
   id: "victory",
   title: "How to Win",
+  icon: "victory/laurel",
   blurb: "The victory race — the public cards and how to hold them.",
   keywords: ["win", "victory", "cards", "minimum", "race", "endgame", "lead"],
   entries: [
@@ -177,24 +183,19 @@ const victory: RuleChapter = {
     // Polis Builder, Demos and Treasurer, so the rulebook did not name the cards
     // the rules deal out. Names, descriptions and the count all come from the
     // authored deck now, and the minimums from the ruleset beside it.
-    const boardCards = VICTORY_CARDS.filter((card) => card.metric !== "voice");
     return (
       <div className="compendiumStack">
         <Entry id={anchor("victory", "race")} title="The race">
           <Note>
             There are {spell(VICTORY_CARDS.length)} public victory cards, each awarded to the sole
             leader in one measure. Hold <strong>{victory.cardsToWin}</strong> of them at the{" "}
-            <em>start of your own turn</em> and you win at once. Ties award nothing on the{" "}
-            {spell(boardCards.length)} board metrics. Voice instead stays with its first qualifying
-            holder through ties and moves only when strictly exceeded. Those{" "}
-            {spell(boardCards.length)} measure what you have built; Voice measures the agora (see{" "}
-            <AnnotatedText text="Assembly" />
-            ).
+            <em>start of your own turn</em> and you win at once. A tie awards nothing, and every
+            card can be taken back: each reads what stands on the board now.
           </Note>
           <Note>
-            The seasonal deck is the game's clock (see <AnnotatedText text="Seasons" />
+            The year deck is the game's clock (see <AnnotatedText text="Years" />
             ). If it runs out before anyone holds {victory.cardsToWin}, the player holding the most
-            cards wins — happiness then population break a tie.
+            cards wins. Happiness without calm, then population, then seat order break a tie.
           </Note>
         </Entry>
         <Entry id={anchor("victory", "cards")} title="The cards & their minimums">
@@ -218,6 +219,7 @@ const victory: RuleChapter = {
 const board: RuleChapter = {
   id: "board",
   title: "The Board",
+  icon: "terrain/plains",
   blurb: "The island's terrain — what each kind yields and how much it can hold.",
   keywords: [
     "terrain",
@@ -241,9 +243,11 @@ const board: RuleChapter = {
     <div className="compendiumStack">
       <Entry id={anchor("board", "terrain")} title="Terrain">
         <Note>
-          The island is a field of hexes ringed by sea. Each land tile has a single <em>yield</em> —
-          the material a settlement there draws each turn — and a number of <em>building slots</em>.
-          Rich tiles are cramped, poor tiles roomy: yield and slots trade off within every terrain.
+          The island is a field of hexes ringed by sea. A land tile prints its terrain and a number
+          of <em>slots</em>, nothing else. The slots are one pool: each building takes one, and each
+          open slot holds one working slave, who makes 1 of the terrain's resource. Slaves beyond
+          the open slots sit idle. Two colonies on one tile split its slots, and the colony founded
+          first takes the odd one.
         </Note>
         <ul className="compendiumCostList">
           {terrainSummary(G).map((row) => (
@@ -259,10 +263,12 @@ const board: RuleChapter = {
                 {capitalize(row.kind)} <em className="ruleDim">×{row.count}</em>
               </span>
               <span className="compendiumCostValue">
-                {row.resource ? `yield ${row.yield} ${RESOURCE_LABELS[row.resource]}` : "no yield"}
+                {row.resource
+                  ? `slaves make ${RESOURCE_LABELS[row.resource]}`
+                  : "slaves make nothing"}
               </span>
               <span className="compendiumCostNote">
-                {row.slots === "0" ? "unsettleable" : `${row.slots} building slot(s)`}
+                {row.slots === "0" ? "unsettleable" : `${row.slots} slots`}
               </span>
             </li>
           ))}
@@ -270,9 +276,8 @@ const board: RuleChapter = {
       </Entry>
       <Entry id={anchor("board", "special")} title="Hills & the oracle">
         <Note>
-          <strong>Hills</strong> yield nothing but are slot-rich — a place to build, not to earn. A
-          slave on a yield-less tile earns nothing, so hills reward citizens and freemen over
-          slaves.
+          <strong>Hills</strong> have no resource: their slots hold buildings and their slaves make
+          nothing, so a hill city is freemen, citizens and buildings fed from elsewhere.
         </Note>
         <Note>
           The single <strong>oracle</strong> tile is sacred ground: it can never be settled, by
@@ -286,7 +291,8 @@ const board: RuleChapter = {
 const resources: RuleChapter = {
   id: "resources",
   title: "Resources",
-  blurb: "The six resources — the four you spend and the two meters.",
+  icon: "resources/stockpile",
+  blurb: "The five resources: four goods and influence.",
   keywords: [
     "wood",
     "stone",
@@ -298,15 +304,16 @@ const resources: RuleChapter = {
     "stockpile",
     "economy",
   ],
-  entries: [{ id: anchor("resources", "six"), label: "The six" }],
+  entries: [{ id: anchor("resources", "six"), label: "The five" }],
   Body: () => (
     <div className="compendiumStack">
-      <Entry id={anchor("resources", "six")} title="The six">
+      <Entry id={anchor("resources", "six")} title="The five">
         <Note>
-          Four are <em>spendable stock</em> drawn from land and pops: wood, stone, food and gold.
-          Two are <em>meters</em>, not stock — influence (civic weight) and happiness (public mood).
-          Gold is the unit the bank trades in; it comes from pops, trade and events, never from a
-          tile.
+          Four are drawn from land and pops: wood, stone, food and gold. The fifth, influence, is
+          civic weight. Gold is the unit the bank trades in; it comes from pops, trade and events,
+          never from a tile. No stock goes below zero, except food during your own turn: a charge
+          takes what you hold and no more. Happiness is not a stock: it is a level read off the
+          board (see Happiness &amp; Unrest).
         </Note>
         <DefList>
           {RESOURCE_ORDER.map((resource) => (
@@ -320,14 +327,12 @@ const resources: RuleChapter = {
               }
             >
               {resource === "wood" || resource === "stone"
-                ? "A building material, mined from the land by pops."
+                ? "A building material, worked from the land by slaves."
                 : resource === "food"
-                  ? "Feeds pops each turn; a stored surplus also calms, a shortage stirs unrest."
+                  ? "Feeds freemen and citizens at income; end your turn short and one pop leaves for each missing food."
                   : resource === "gold"
                     ? "The coin of trade — earned by pops and events, the bank's only medium."
-                    : resource === "influence"
-                      ? "Civic weight: spent on demotions and calm; its great sink is the Assembly."
-                      : "The public mood; negative happiness brings riots, high happiness wins a card."}
+                    : "Civic weight: spent on demotions, calm, the Dole, riot insurance and a second Idea; its great sink is the Assembly."}
             </DefRow>
           ))}
         </DefList>
@@ -339,6 +344,7 @@ const resources: RuleChapter = {
 const population: RuleChapter = {
   id: "population",
   title: "Population",
+  icon: "pops/crowd",
   blurb: "Citizens, freemen and slaves — what each earns, eats and needs.",
   keywords: [
     "pops",
@@ -370,16 +376,18 @@ const population: RuleChapter = {
           ))}
         </DefList>
         <Note>
-          Citizens make influence and gold, freemen make gold, slaves mine the tile's own material —
-          but only on a tile that yields one. Every pop eats food.
+          One pop, one output. A slave on an open slot makes the tile's resource and eats nothing; a
+          freeman makes gold and a citizen influence, and each eats 1 food. Citizens are never
+          grown: every citizen after setup is a promoted freeman.
         </Note>
       </Entry>
       <Entry id={anchor("population", "capacity")} title="Capacity">
         <Note>
           A settlement holds only so many pops (see <AnnotatedText text="Settlements" />
-          ). Pushing past its capacity costs{" "}
-          <strong>−{G.ruleset.economy.overCapacityHappinessPerPop}</strong> happiness per pop over
-          the line each turn, so an Aqueduct that raises the cap pays for itself in calm.
+          ), and no building raises the cap. Every way to add a pop needs room: growing, moving, a
+          pop card, the Voyage's settlers, and an Idea or Law grant. Growing, moving and Idea or Law
+          grants count pops already on their way. There is no penalty for standing over the cap: a
+          Law that cuts capacity only blocks new pops.
         </Note>
       </Entry>
     </div>
@@ -389,6 +397,7 @@ const population: RuleChapter = {
 const settlements: RuleChapter = {
   id: "settlements",
   title: "Settlements",
+  icon: "settlements/city",
   blurb: "Capitals, cities and colonies — capacities and what each can do.",
   keywords: [
     "capital",
@@ -417,31 +426,38 @@ const settlements: RuleChapter = {
                 <span className="compendiumCostValue">{rule.popCapacity} pop cap</span>
                 <span className="compendiumCostNote">
                   {rule.canBuildBuildings
-                    ? `builds (+${rule.buildingSlotBonus} slots)`
-                    : "no buildings"}
+                    ? "builds on its tile's slots"
+                    : "no buildings but a Port on the coast"}
                 </span>
               </li>
             );
           })}
         </ul>
         <Note>
-          You begin with a capital (a metropolis of {G.ruleset.placementPopCounts.capital} pops) and
-          one founding colony. Only cities and the capital may raise buildings; colonies work the
-          land and grow.
+          You begin with a capital (a metropolis of {G.ruleset.placementPopCounts.capital} pops,{" "}
+          {G.ruleset.placementCitizens.capital} of them a citizen) and one founding colony. Only
+          cities and the capital may raise buildings; in a colony every slot is a work slot, and the
+          one thing it may raise is a Port on the coast.
+        </Note>
+        <Note>
+          Your pieces are {G.ruleset.pieces.colonies} colonies and {G.ruleset.pieces.cities} cities;
+          the capital is its own piece. Upgrading a colony hands its piece back, so once every
+          colony piece stands the way to expand again is to make one of them a city.
         </Note>
       </Entry>
       <Entry id={anchor("settlements", "expansion")} title="Founding & upgrading">
         <DefList>
           <DefRow term="Found a colony">
             <strong>Base cost:</strong>{" "}
-            <AnnotatedText text={formatResourceCost(G.ruleset.actionCosts.foundColony)} /> — beside
-            an owned settlement, or on any coastal tile if you hold a coast (sailing, not
-            teleporting).
+            <AnnotatedText text={formatResourceCost(G.ruleset.actionCosts.foundColony)} /> and a
+            colony piece — beside an owned settlement, or on any coastal tile if you hold a coast
+            (sailing, not teleporting). The pop you send moves free.
           </DefRow>
           <DefRow term="Upgrade colony → city">
             <strong>Base cost:</strong>{" "}
-            <AnnotatedText text={formatResourceCost(G.ruleset.actionCosts.upgradeColonyToCity)} /> —
-            lifts the pop cap and unlocks building.
+            <AnnotatedText text={formatResourceCost(G.ruleset.actionCosts.upgradeColonyToCity)} />{" "}
+            and a city piece — lifts the pop cap, unlocks building, and returns the colony piece.
+            Cities never stand side by side, and the new city drives off a rival colony on its tile.
           </DefRow>
         </DefList>
       </Entry>
@@ -452,6 +468,7 @@ const settlements: RuleChapter = {
 const turn: RuleChapter = {
   id: "turn",
   title: "The Turn",
+  icon: "market/income",
   blurb: "Income, then your actions, then end — and the once-per-turn limits.",
   keywords: [
     "turn",
@@ -475,20 +492,24 @@ const turn: RuleChapter = {
     <div className="compendiumStack">
       <Entry id={anchor("turn", "flow")} title="The flow">
         <Note>
-          A turn resolves in order: <strong>income</strong> (every settlement earns and eats, food
-          and unrest settle), then your <strong>actions</strong>, then <strong>End Turn</strong>. A
-          drawn event or a riot resolves first, before you may act.
+          A turn resolves in order: your pops on the move <strong>arrive</strong>, then{" "}
+          <strong>victory</strong>, then <strong>income</strong> (every settlement earns and eats),
+          your drawn <strong>event</strong>, your
+          <strong> actions</strong>, then <strong>End Turn</strong>. Hunger, then riots and revolts,
+          are checked when you end your turn, before it passes.
         </Note>
         <Note>
-          The verbs are Grow, Move, Found, Upgrade, Build, Calm and Venture. Anything that targets
-          the map — founding, growing, moving, promoting — is a click on the board itself.
+          The verbs are Grow, People (promote, demote, move), Expand (found, upgrade), Build, Civic
+          (calm, the Dole, Ideas, venture) and Exchange (the bank). Anything that targets the map —
+          founding, growing, moving, promoting — is a click on the board itself.
         </Note>
       </Entry>
       <Entry id={anchor("turn", "throttles")} title="Per-turn limits">
         <Note>
           Some actions are throttled so a turn can't do everything at once: one grow per settlement,
-          one ladder move, one civic calm, and one venture per turn. Founding, upgrading and
-          building are limited only by what you can pay.
+          one ladder move, one pop move, one civic calm and one venture per turn. An Idea can be
+          bought once per game. Founding, upgrading and building are limited by what you can pay and
+          by your pieces.
         </Note>
       </Entry>
     </div>
@@ -498,21 +519,13 @@ const turn: RuleChapter = {
 const ladder: RuleChapter = {
   id: "ladder",
   title: "Growing & the Ladder",
-  blurb: "Grow new pops, and promote or demote them up and down the classes.",
-  keywords: [
-    "grow",
-    "promote",
-    "demote",
-    "ladder",
-    "class",
-    "gymnasion",
-    "slave",
-    "freeman",
-    "citizen",
-  ],
+  icon: "pops/promote",
+  blurb: "Grow new pops, promote or demote them, and move them between settlements.",
+  keywords: ["grow", "promote", "demote", "ladder", "class", "move", "slave", "freeman", "citizen"],
   entries: [
     { id: anchor("ladder", "grow"), label: "Growing" },
     { id: anchor("ladder", "ladder"), label: "The ladder" },
+    { id: anchor("ladder", "move"), label: "Moving" },
   ],
   Body: ({ G }) => {
     const promotes = Object.entries(G.ruleset.ladder.promoteCosts) as Array<
@@ -525,8 +538,8 @@ const ladder: RuleChapter = {
       <div className="compendiumStack">
         <Entry id={anchor("ladder", "grow")} title="Growing">
           <Note>
-            Grow adds one new pop to a settlement — once per settlement per turn. These are base
-            costs; the action picker shows the effective cost after local and active discounts.
+            Grow adds one new pop to a settlement with room — once per settlement per turn. These
+            are base costs; the action picker shows the effective cost under standing Laws.
           </Note>
           <DefList>
             {(
@@ -543,9 +556,8 @@ const ladder: RuleChapter = {
         <Entry id={anchor("ladder", "ladder")} title="The ladder">
           <Note>
             One ladder move per turn: promote a pop up a class, or demote it down. Promotion buys
-            civic standing; demotion frees labour but can sting morale (the Gymnasion cheapens
-            promotion in its city). The list below shows base costs; the picker shows each effective
-            cost.
+            civic standing; demotion frees labour. The list below shows base costs; the picker shows
+            each effective cost.
           </Note>
           <DefList>
             {promotes.map(([pop, cost]) => (
@@ -553,19 +565,21 @@ const ladder: RuleChapter = {
                 <AnnotatedText text={formatResourceCost(cost)} />
               </DefRow>
             ))}
-            {demotes.map(([pop, cost]) => {
-              const penalty =
-                G.ruleset.ladder.demoteHappinessPenalty[
-                  pop as keyof typeof G.ruleset.ladder.demoteHappinessPenalty
-                ];
-              return (
-                <DefRow key={`d-${pop}`} term={`Demote ${formatPopLabel(pop, 1)}`}>
-                  <AnnotatedText text={formatResourceCost(cost)} />
-                  {penalty ? ` · −${penalty} happiness` : ""}
-                </DefRow>
-              );
-            })}
+            {demotes.map(([pop, cost]) => (
+              <DefRow key={`d-${pop}`} term={`Demote ${formatPopLabel(pop, 1)}`}>
+                <AnnotatedText text={formatResourceCost(cost)} />
+              </DefRow>
+            ))}
           </DefList>
+        </Entry>
+        <Entry id={anchor("ladder", "move")} title="Moving">
+          <Note>
+            One move per turn carries pops between two of your settlements for{" "}
+            <AnnotatedText text={formatResourceCost(G.ruleset.movePopCost)} /> a pop. The target
+            must have room, and they arrive at the start of your next turn. Pops on the move are
+            still in your realm: their slaves count against your happiness, and all of them count
+            for your titles and your votes.
+          </Note>
         </Entry>
       </div>
     );
@@ -575,29 +589,27 @@ const ladder: RuleChapter = {
 const buildings: RuleChapter = {
   id: "buildings",
   title: "Buildings",
-  blurb: "The building roster — costs, effects and level caps.",
+  icon: "buildings/build",
+  blurb: "The building roster: costs and effects, one of each per settlement.",
   keywords: [
     "building",
     "buildings",
     "marketplace",
     "temple",
-    "workshop",
+    "estate",
     "granary",
     "forum",
-    "aqueduct",
-    "odeon",
-    "villa",
-    "gymnasion",
+    "port",
     "cost",
-    "level",
   ],
   entries: [{ id: anchor("buildings", "roster"), label: "The roster" }],
   Body: ({ G }) => (
     <div className="compendiumStack">
       <Entry id={anchor("buildings", "roster")} title="The roster">
         <Note>
-          Cities and the capital raise buildings into their slots. Every building's effect caps at
-          its max level. Roster prices below are base costs; build controls show effective costs.
+          Cities and the capital raise buildings into their slots, one of each per settlement. Each
+          building takes a slot a slave could work. A colony raises nothing but a Port on the coast.
+          Roster prices below are base costs; build controls show effective costs.
         </Note>
         <ul className="compendiumCostList">
           {getBuildings(G.definition.content).map((building) => (
@@ -607,8 +619,7 @@ const buildings: RuleChapter = {
                 Base cost: <AnnotatedText text={formatResourceCost(building.cost)} />
               </span>
               <span className="compendiumCostNote">
-                <AnnotatedText text={presentBuildingEffects(building.effects).text} />
-                {typeof building.maxLevel === "number" ? ` · max level ${building.maxLevel}` : ""}
+                <AnnotatedText text={buildingRuleText(building)} />
               </span>
             </li>
           ))}
@@ -621,7 +632,8 @@ const buildings: RuleChapter = {
 const luxuries: RuleChapter = {
   id: "luxuries",
   title: "Luxury Goods",
-  blurb: "Six coastal goods, claimed by Ports, that raise your effective happiness.",
+  icon: "resources/luxury",
+  blurb: "Six coastal goods, claimed by Ports, that raise your happiness.",
   keywords: [
     "luxury",
     "luxuries",
@@ -658,18 +670,16 @@ const luxuries: RuleChapter = {
                 (base cost <AnnotatedText text={formatResourceCost(port.cost)} />)
               </>
             ) : null}{" "}
-            raised in a city on either tile claims it — the first Port wins, and a claimed good
-            never leaves its owner except by trade. A Port needs the coast, an unclaimed good
-            adjacent, and room under your active cap.
+            raised in a settlement on either tile claims it — a colony may raise one too. The first
+            Port wins, and the good stays claimed for the rest of the game, even if the Port burns.
+            A Port needs the coast and an unclaimed good adjacent.
           </Note>
         </Entry>
         <Entry id={anchor("luxuries", "offset")} title="The standing offset">
           <Note>
-            Every active good adds +{lux.happinessPerGood} to your EFFECTIVE happiness — a standing
-            floor, never banked. Riot and revolt thresholds and{" "}
-            {lux.countsTowardBeloved ? "the Beloved of the People laurel" : "nothing else"} test the
-            effective number. At most {lux.activeCapPerPlayer} goods are active at once; goods past
-            the cap stay owned but inactive — trade assets, not dead weight.
+            Every good you hold adds +{lux.happinessPerGood} to your happiness for as long as you
+            hold it, and there is no limit on how many count. The riot and revolt lines and the
+            Beloved of the People laurel both read it. A Blockade year counts none of them.
           </Note>
         </Entry>
         <Entry id={anchor("luxuries", "roster")} title="The six goods">
@@ -690,7 +700,8 @@ const luxuries: RuleChapter = {
 const unrest: RuleChapter = {
   id: "unrest",
   title: "Happiness & Unrest",
-  blurb: "Food pressure, the calm you can buy, and the riot table.",
+  icon: "unrest/riot",
+  blurb: "What happiness is made of, the calm you can buy, and the riot table.",
   keywords: [
     "happiness",
     "unrest",
@@ -705,7 +716,7 @@ const unrest: RuleChapter = {
     "bread",
   ],
   entries: [
-    { id: anchor("unrest", "pressure"), label: "Food & mood" },
+    { id: anchor("unrest", "pressure"), label: "The level" },
     { id: anchor("unrest", "calm"), label: "Buying calm" },
     { id: anchor("unrest", "riot"), label: "The riot table" },
   ],
@@ -714,19 +725,32 @@ const unrest: RuleChapter = {
     const calm = G.ruleset.civicCalm;
     return (
       <div className="compendiumStack">
-        <Entry id={anchor("unrest", "pressure")} title="Food & mood">
+        <Entry id={anchor("unrest", "pressure")} title="The level">
           <Note>
-            Stored food calms — every {G.ruleset.economy.foodStockpileHappinessDivisor} in the
-            granary grants +1 happiness at income, up to +
-            {G.ruleset.economy.foodStockpileHappinessCap}. A shortage bites the other way:{" "}
-            {u.foodDeficitTurnsToStarve} straight turns of net food at or below{" "}
-            {u.foodDeficitThreshold} starve {u.foodDeficitStarvePopLoss} pop.
+            Happiness is a level you read off the board, and nothing is saved up. Count +1 for every
+            Temple and +{G.ruleset.economy.luxury.happinessPerGood} for every luxury, then take 1
+            for every {G.ruleset.economy.slavesPerUnhappiness} slaves in your realm, those on the
+            move included, and 1 for every Unrest token. Calm bought this year adds +
+            {calm.happiness}, and a standing Law can add a line of its own (Civic Pride,
+            Manumission). If nothing on the board changes, the level is the same next turn.
+          </Note>
+          <Note>
+            Unrest tokens are the one part that stays. Cards and Directives place them: a happiness
+            loss of any size places one token, and a gain clears one (Festival clears them all).
+            They cannot be bought off. A riot or a revolt clears them all.
+          </Note>
+          <Note>
+            Hunger is separate. Your freemen and citizens eat at income, which can take your food
+            below zero. You have that turn to buy the food back. If you end the turn short, one pop
+            leaves per missing food and food returns to zero, before the riot check. You choose
+            which freemen or citizens leave; the card opens with freemen chosen first.
           </Note>
         </Entry>
         <Entry id={anchor("unrest", "calm")} title="Buying calm">
           <Note>
-            One civic calm per turn, both worth +{calm.happiness} happiness. These are base costs;
-            the payment picker shows effective costs:
+            One civic calm per turn, both worth +{calm.happiness} happiness this year. It expires
+            when the year turns and does not count toward Beloved of the People. These are base
+            costs; the payment picker shows effective costs:
           </Note>
           <DefList>
             <DefRow term="Stabilize Province">
@@ -739,9 +763,11 @@ const unrest: RuleChapter = {
         </Entry>
         <Entry id={anchor("unrest", "riot")} title="The riot table">
           <Note>
-            At EFFECTIVE happiness (stored + the luxury offset) ≤ {u.popLossThreshold} at your turn
-            start, a riot rolls before income — declare insurance first (each once, +1 to the roll).
-            A revolt (≤ {u.severeThreshold}) rolls at {u.severeRollModifier} and doubles pop losses.
+            At a level of {u.riotThreshold} or below when you end your turn, your Unrest tokens
+            clear and a riot rolls before the turn passes. Declare insurance first (each once, +1 to
+            the roll); the concession demotes a citizen. Pop losses take slaves first, then freemen,
+            then citizens. At {u.revoltThreshold} or below it is a revolt instead: half your slaves
+            leave, rounded down, your tokens clear, and nothing is rolled.
           </Note>
           <p className="compendiumFlavor">{getRiotTable(G.definition.content).flavor}</p>
           <EventTableRows table={getRiotTable(G.definition.content)} result={null} />
@@ -751,76 +777,63 @@ const unrest: RuleChapter = {
   },
 };
 
-const seasons: RuleChapter = {
-  id: "seasons",
-  title: "Seasons & Omens",
-  blurb: "The seasonal clock, the yearly omen, and the two event decks.",
-  keywords: [
-    "season",
-    "year",
-    "omen",
-    "clock",
-    "deck",
-    "event",
-    "seasonal",
-    "player deck",
-    "draw",
-    "spring",
-    "winter",
-  ],
+const years: RuleChapter = {
+  id: "years",
+  title: "Years & Cards",
+  icon: "events/die",
+  blurb: "The year deck that is the clock, and the player deck.",
+  keywords: ["year", "clock", "deck", "event", "year card", "player deck", "draw", "drought"],
   entries: [
-    { id: anchor("seasons", "clock"), label: "The clock" },
-    { id: anchor("seasons", "omen"), label: "The yearly omen" },
-    { id: anchor("seasons", "decks"), label: "The decks" },
+    { id: anchor("years", "clock"), label: "The clock" },
+    { id: anchor("years", "decks"), label: "The decks" },
   ],
-  Body: ({ G }) => (
-    <div className="compendiumStack">
-      <Entry id={anchor("seasons", "clock")} title="The clock">
-        <Note>
-          Time runs Spring → Summer → Autumn → Winter, four seasons a year. One seasonal card leaves
-          the deck each season and never returns — when the deck runs dry the age ends, so its
-          length is the game's length.
-        </Note>
-      </Entry>
-      <Entry id={anchor("seasons", "omen")} title="The yearly omen">
-        <p className="compendiumFlavor">{getOmenTable(G.definition.content).flavor}</p>
-        <EventTableRows
-          table={getOmenTable(G.definition.content)}
-          result={G.yearOmen?.record ?? null}
-        />
-        <Note>
-          Rolled publicly by the year's opener each spring; the sign stands over every polis until
-          the year turns.
-          {G.yearOmen ? ` This year's sign: ${G.yearOmen.label}.` : ""}
-        </Note>
-      </Entry>
-      <Entry id={anchor("seasons", "decks")} title="The decks">
-        <Note>
-          The <strong>seasonal deck</strong> (
-          {countCopies(getSeasonalEventCards(G.definition.content))} cards) is the shared clock; the{" "}
-          <strong>player deck</strong> ({countCopies(getPlayerEventCards(G.definition.content))}{" "}
-          cards) deals you a private card each income. Season tags only weight the draw toward
-          suited cards — a tendency, never a guarantee.
-        </Note>
-        <div className="codexCardGallery">
-          {getSeasonalEventCards(G.definition.content).map((card) => (
-            <RulebookCard card={card} key={card.id} showSeasons />
-          ))}
-        </div>
-        <p className="compendiumNote ruleDeckLabel">Player deck</p>
-        <div className="codexCardGallery">
-          {getPlayerEventCards(G.definition.content).map((card) => (
-            <RulebookCard card={card} key={card.id} />
-          ))}
-        </div>
-      </Entry>
-    </div>
-  ),
+  Body: ({ G }) => {
+    const yearCards = getYearCards(G.definition.content);
+
+    return (
+      <div className="compendiumStack">
+        <Entry id={anchor("years", "clock")} title="The clock">
+          <Note>
+            A year is one turn for every seat. As each year opens, the top card of the year deck is
+            turned up and stands for that year; the next card stays hidden. The seat that plays
+            first moves on one place each year.
+          </Note>
+          <Note>
+            The deck holds {countCopies(yearCards)} cards and is never reshuffled. When it runs dry
+            the age ends, so its length is the game's length.
+          </Note>
+        </Entry>
+        <Entry id={anchor("years", "decks")} title="The decks">
+          <Note>
+            Most year cards strike out one term for every realm for the whole year, a class
+            building's raise included. Plague and Festival act once, on everyone, when they are
+            turned up. The <strong>player deck</strong> (
+            {countCopies(getPlayerEventCards(G.definition.content))} cards) deals you a private card
+            each income.
+          </Note>
+          <DefList>
+            {yearCards.map((card) => (
+              <DefRow key={card.id} term={`${card.name} ×${card.count}`}>
+                {card.text}
+              </DefRow>
+            ))}
+          </DefList>
+          <p className="compendiumNote ruleDeckLabel">Player deck</p>
+          <div className="codexCardGallery">
+            {getPlayerEventCards(G.definition.content).map((card) => (
+              <RulebookCard card={card} key={card.id} />
+            ))}
+          </div>
+        </Entry>
+      </div>
+    );
+  },
 };
 
 const bank: RuleChapter = {
   id: "bank",
   title: "The Bank",
+  icon: "resources/gold",
   blurb: "This board's exchange rates and the spread you pay to trade.",
   keywords: ["bank", "trade", "market", "exchange", "rate", "sell", "buy", "gold", "spread"],
   entries: [{ id: anchor("bank", "rates"), label: "Rates" }],
@@ -829,8 +842,12 @@ const bank: RuleChapter = {
       <Entry id={anchor("bank", "rates")} title="Rates">
         <Note>
           Gold is the unit of account — the bank never barters, and every round trip pays the
-          spread. These are the board's base rates; trade controls show each player's effective rate
-          after standing Laws.
+          spread. The rates are set when the game begins and never move: no Law or Idea changes
+          them, and there is no limit on trades per turn.
+        </Note>
+        <Note>
+          The Dole: {G.ruleset.dole.influenceCost} influence buys {G.ruleset.dole.food} food. It is
+          influence's one way to the granary, priced worse than gold on purpose.
         </Note>
         {TRADABLE_MATERIALS.map((material) => {
           const rate = G.bank[material];
@@ -852,6 +869,7 @@ const bank: RuleChapter = {
 const ventures: RuleChapter = {
   id: "ventures",
   title: "Ventures",
+  icon: "events/venture",
   blurb: "The three expeditions, their stakes, and the odds.",
   keywords: [
     "venture",
@@ -869,10 +887,8 @@ const ventures: RuleChapter = {
     <div className="compendiumStack">
       <Entry id={anchor("ventures", "expeditions")} title="Expeditions">
         <Note>
-          One venture per turn: post a base stake —{" "}
-          {formatResourceCost(G.ruleset.ventureStakes.gold)} or{" "}
-          {formatResourceCost(G.ruleset.ventureStakes.wood)} — pick any expedition, and roll. The
-          stake picker shows effective costs; the stake is paid win or lose.
+          One venture per turn: stake {formatResourceCost(G.ruleset.ventureCost)}, pick an
+          expedition, and roll. The stake is paid win or lose.
         </Note>
         {getExpeditionTables(G.definition.content).map((table) => (
           <div key={table.id} className="ruleVenture">
@@ -889,6 +905,7 @@ const ventures: RuleChapter = {
 const assembly: RuleChapter = {
   id: "assembly",
   title: "The Assembly",
+  icon: "assembly/agora",
   blurb: "The agora: politicians, resolutions, voting, and the laws that stand.",
   keywords: [
     "assembly",
@@ -905,7 +922,6 @@ const assembly: RuleChapter = {
     "ballot",
     "bribe",
     "bribery",
-    "veto",
     "repeal",
     "patron",
     "patronage",
@@ -930,28 +946,32 @@ const assembly: RuleChapter = {
     const rules = G.ruleset.assembly;
     const lawmakers = POLITICIANS.filter((politician) => politician.kind === "law");
     const directivemakers = POLITICIANS.filter((politician) => politician.kind !== "law");
+    // The single-price-Law rule reads the cards' own effects, so the list does too.
+    const priceLaws = getResolutionCards(G.definition.content)
+      .filter(isPriceLaw)
+      .map((card) => card.name);
 
     return (
       <div className="compendiumStack">
         <Entry id={anchor("assembly", "when")} title="When it convenes">
           <Note>
-            The Assembly meets every spring from Year <strong>{rules.firstYear}</strong>, before the
-            year's opener takes their turn. Nothing else happens while it sits — the whole table
-            proposes and votes, then play resumes.
+            The Assembly meets every {rules.everyYears === 2 ? "other" : spell(rules.everyYears)}{" "}
+            year from Year <strong>{rules.firstYear}</strong>, before the year's opener takes their
+            turn. Nothing else happens while it sits — the whole table proposes and votes, then play
+            resumes.
           </Note>
           <Note>
             This is what <AnnotatedText text="Influence" /> is for. Everything the Assembly asks of
-            you — drawing, proposing, bribing, vetoing, repealing — is paid in influence, and
-            nothing else in the game spends it at this scale. Participation prices in this reference
-            are base costs; Assembly controls show effective costs.
+            you to draw or repeal is paid in influence. Extra votes take gold or influence.
+            Participation prices in this reference are base costs; Assembly controls show effective
+            costs.
           </Note>
         </Entry>
 
         <Entry id={anchor("assembly", "propose")} title="Proposing">
           <Note>
-            One unauthored house <strong>Law</strong> drops onto the ballot on its own. Directives
-            are never drawn by the house. Every player then decides independently and in secret
-            whether to add one resolution.
+            Every player decides independently and in secret whether to propose one resolution or
+            pass. There is no house resolution.
           </Note>
           <DefList>
             <DefRow term="Draw">
@@ -959,18 +979,17 @@ const assembly: RuleChapter = {
               <em>you choose</em>. The politician is your pick; the card is not. You see it in
               secret.
             </DefRow>
-            <DefRow term="Fish again">
-              Set the card aside and draw another for <strong>{rules.redrawCost}</strong> influence,
-              as often as you can afford.
+            <DefRow term="One draw">
+              You may propose your draw or discard it and pass. No redraw.
             </DefRow>
             <DefRow term="Propose">
               Seal the card for the ballot. A Stratokles Directive must name one rival; both card
               and target are revealed before voting. One proposal per player per Assembly.
             </DefRow>
             <DefRow term="Repeal">
-              For <strong>{rules.repealCost}</strong> influence, move to strike a standing Law
-              instead. It is voted like any other resolution — undoing a law is as political as
-              passing one.
+              For <strong>{rules.repealCost}</strong> influence, move to strike a standing Law whose
+              protection has ended, instead. It is voted like any other resolution — undoing a law
+              is as political as passing one.
             </DefRow>
             <DefRow term="Pass">Say nothing. Always available, whatever your influence.</DefRow>
           </DefList>
@@ -984,21 +1003,15 @@ const assembly: RuleChapter = {
           </Note>
           <DefList>
             <DefRow term="Your votes">
-              One per <AnnotatedText text="citizen" /> you hold. Nothing else on the board grants a
-              vote.
+              One seat vote plus one per <AnnotatedText text="citizen" />. Rural Bloc changes
+              settlement votes. Isonomia fixes its target’s base at one.
             </DefRow>
-            <DefRow term="Majority">
-              More yea than nay carries. {rules.tiesPass ? "A tie carries." : "A tie fails."}
-            </DefRow>
+            <DefRow term="Majority">More yea than nay carries. A tie fails.</DefRow>
             <DefRow term="Bribe">
-              <strong>{rules.briberyCost}</strong> influence buys one extra vote, up to{" "}
-              <strong>{rules.briberyCap}</strong> per player per assembly. The cap is what stops a
-              hoard from simply buying the outcome.
-            </DefRow>
-            <DefRow term="Veto">
-              <strong>{rules.vetoCost}</strong> influence strikes the resolution outright,{" "}
-              {rules.vetoesPerAssembly === 1 ? "once" : `${rules.vetoesPerAssembly} times`} per
-              assembly. It costs you your own vote on it.
+              <strong>{rules.briberyCost}</strong> gold or influence buys one extra vote, up to{" "}
+              <strong>{rules.briberyCap}</strong> per player per assembly, bought on your turn to
+              cast. They count on every ballot left in the sitting. The cap is what stops a hoard
+              from simply buying the outcome.
             </DefRow>
           </DefList>
         </Entry>
@@ -1022,16 +1035,19 @@ const assembly: RuleChapter = {
           </Note>
           <DefList>
             <DefRow term="The cap">
-              <strong>{rules.lawCap}</strong> Laws may stand at once. At the cap, a new Law must
-              name the one it replaces. Stratokles's monuments take no slot — they are not rules.
+              <strong>{rules.lawCap}</strong> Laws may stand at once. At the cap, a passed Law
+              automatically replaces the oldest. A new price Law also replaces the standing price
+              Law; the price Laws are {priceLaws.join(", ")}. Stratokles's monuments take no slot —
+              they are not rules.
             </DefRow>
             <DefRow term="Uniqueness">A Law already standing cannot be enacted again.</DefRow>
             <DefRow term="Removal">
-              Only a repeal, or a replacement at the cap, takes a Law off the board.
+              A new Law is protected through the following sitting, including against replacement
+              and The Stele Is Broken. Capacity or slot cuts keep existing pops and buildings.
             </DefRow>
             <DefRow term="Author prize">
-              A player whose resolution passes immediately receives that politician's prize. House
-              Laws, failed votes, vetoes, and repeal motions pay nothing.
+              A player whose resolution passes immediately receives that politician's prize. Failed
+              votes and repeal motions pay nothing.
             </DefRow>
           </DefList>
         </Entry>
@@ -1044,10 +1060,9 @@ const assembly: RuleChapter = {
           </Note>
           <DefList>
             <DefRow term="Voice of the Assembly">
-              Every player-authored Law or Directive that passes permanently adds one to that
-              player's count. The first to <strong>{G.ruleset.victory.minimums.voice}</strong>{" "}
-              claims Voice; a rival must strictly exceed the holder to take it. Repeal and
-              replacement never reduce progress.
+              Held by whoever authored the most standing Laws, with at least{" "}
+              <strong>{G.ruleset.victory.minimums.voice}</strong>. A tie awards it to nobody. A
+              repeal or a replaced Law takes one off its author, and a Directive never counts.
             </DefRow>
           </DefList>
         </Entry>
@@ -1093,8 +1108,39 @@ const assembly: RuleChapter = {
   },
 };
 
+const ideas: RuleChapter = {
+  id: "ideas",
+  title: "National Ideas",
+  icon: "assembly/stele",
+  blurb: "One setup choice and one influence purchase.",
+  keywords: ["Idea", "setup", "Civic", "asymmetry"],
+  entries: [{ id: anchor("ideas", "roster"), label: "The Ideas" }],
+  Body: ({ G }) => (
+    <div className="ruleChapterBody">
+      <p>
+        After placement, the seats draft one Idea each, in turn, continuing the placement snake.
+        Each pick is public at once, and an Idea belongs to one seat only. Buy a second Idea from
+        the untaken ones during your turn through Civic → Ideas for{" "}
+        {formatResourceCost(IDEA_PURCHASE_COST)}. Ideas cannot be replaced.
+      </p>
+      <Entry id={anchor("ideas", "roster")} title="The Ideas">
+        <dl>
+          {getNationalIdeas(G).map((idea) => (
+            <div key={idea.id}>
+              <dt>
+                <strong>{idea.name}</strong>
+              </dt>
+              <dd>{idea.text}</dd>
+            </div>
+          ))}
+        </dl>
+      </Entry>
+    </div>
+  ),
+};
+
 /** A card in the rulebook's deck gallery: painted face + name + copies + effect. */
-function RulebookCard({ card, showSeasons = false }: { card: EventCard; showSeasons?: boolean }) {
+function RulebookCard({ card }: { card: EventCard }) {
   return (
     <figure className="codexGalleryCard">
       <img alt="" className="codexGalleryArt" loading="lazy" src={eventCardArtUrl(card)} />
@@ -1103,9 +1149,6 @@ function RulebookCard({ card, showSeasons = false }: { card: EventCard; showSeas
           {card.name}
           {card.count > 1 ? <em className="ruleDim"> ×{card.count}</em> : null}
         </strong>
-        {showSeasons && card.seasons && card.seasons.length > 0 ? (
-          <span className="codexGallerySeasons">{card.seasons.map(capitalize).join(" · ")}</span>
-        ) : null}
         <span className="codexGalleryText">
           <AnnotatedText text={card.text} />
         </span>
@@ -1114,12 +1157,12 @@ function RulebookCard({ card, showSeasons = false }: { card: EventCard; showSeas
   );
 }
 
-function countCopies(deck: EventCard[]) {
+function countCopies(deck: Array<{ count: number }>) {
   return deck.reduce((sum, card) => sum + card.count, 0);
 }
 
 /** The rulebook, in learn-order: win-condition first, then the board and its pieces,
- *  then the turn and everything you do in it, then the drama (unrest, seasons, luck). */
+ *  then the turn and everything you do in it, then the drama (unrest, years, luck). */
 export const RULEBOOK: RuleChapter[] = [
   victory,
   board,
@@ -1130,8 +1173,9 @@ export const RULEBOOK: RuleChapter[] = [
   ladder,
   buildings,
   luxuries,
+  ideas,
   unrest,
-  seasons,
+  years,
   bank,
   ventures,
   // Last in learn-order: the Assembly reshapes every rule above it, so it only makes

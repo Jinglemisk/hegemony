@@ -4,11 +4,10 @@ import {
   getAuthoredGameContent,
   getBuildings,
   getExpeditionTables,
-  getOmenTable,
   getPlayerEventCards,
   getRiotTable,
   getResolutionCards,
-  getSeasonalEventCards,
+  getYearCards,
   getTerrainDeck,
 } from "../game/content";
 import { BUILDINGS } from "../game/data";
@@ -18,16 +17,18 @@ import { createLowNumberContent } from "../dev/tuningPresets";
 
 describe("sim content/tune patching", () => {
   it("a buildings.* override changes the roster the engine reads, leaving the constant intact", () => {
-    const villa = BUILDINGS.find((building) => building.id === "villa")!;
-    const bumped = (villa.cost.wood ?? 0) + 50;
+    const estate = BUILDINGS.find((building) => building.id === "estate")!;
+    const bumped = (estate.cost.wood ?? 0) + 50;
 
     const buildings = applyBuildingOverrides(BUILDINGS, {
-      "buildings.villa.cost.wood": bumped,
+      "buildings.estate.cost.wood": bumped,
     })!;
 
-    expect(buildings.find((building) => building.id === "villa")!.cost.wood).toBe(bumped);
+    expect(buildings.find((building) => building.id === "estate")!.cost.wood).toBe(bumped);
     // The authored table is untouched (the override clones).
-    expect(BUILDINGS.find((building) => building.id === "villa")!.cost.wood).toBe(villa.cost.wood);
+    expect(BUILDINGS.find((building) => building.id === "estate")!.cost.wood).toBe(
+      estate.cost.wood,
+    );
   });
 
   it("ruleset.* overrides become a patch that merges with a --ruleset-patch file", () => {
@@ -35,7 +36,7 @@ describe("sim content/tune patching", () => {
       civicCalm: { happiness: 9 },
     });
     // A buildings-only map yields no ruleset patch.
-    expect(rulesetPatchFromOverrides({ "buildings.villa.cost.wood": 1 })).toBeNull();
+    expect(rulesetPatchFromOverrides({ "buildings.estate.cost.wood": 1 })).toBeNull();
 
     const merged = mergeRulesetPatches(
       { startingResources: { wood: 5 } },
@@ -50,11 +51,10 @@ describe("sim content/tune patching", () => {
     const preset = createLowNumberContent(authored);
     expect(getBuildings(preset)).toBe(preset.buildings);
     expect(getTerrainDeck(preset)).toBe(preset.terrain);
-    expect(getSeasonalEventCards(preset)).toBe(preset.seasonalEvents);
+    expect(getYearCards(preset)).toBe(preset.yearCards);
     expect(getPlayerEventCards(preset)).toBe(preset.playerEvents);
     expect(getRiotTable(preset)).toBe(preset.riotTable);
     expect(getExpeditionTables(preset)).toBe(preset.expeditionTables);
-    expect(getOmenTable(preset)).toBe(preset.omenTable);
     expect(getResolutionCards(preset)).toBe(preset.resolutions);
 
     expect(getBuildings(authored)).toBe(authored.buildings);

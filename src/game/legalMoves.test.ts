@@ -4,7 +4,6 @@ import { enumerateLegalCommands, popCompositions, transition } from "./legalMove
 import type { GameCommand } from "./legalMoves";
 import { totalPops } from "./core/pops";
 import { scenario } from "./testing/scenario";
-import { applyUnrestUpkeep } from "./unrest";
 import type { HegemonyState, PlayerId } from "./types";
 
 /** Compatibility helper for legacy scenario tests that advance one mutable fixture. */
@@ -53,13 +52,13 @@ describe("popCompositions", () => {
 });
 
 describe("setup enumeration", () => {
-  it("offers every empty non-city-adjacent tile times 10 compositions for the first capital", () => {
+  it("offers every empty non-city-adjacent tile times its one-citizen splits for the first capital", () => {
     const G = scenario().build();
     const moves = expectSound(G, "0");
 
-    // Empty board: all 36 non-oracle tiles are legal, 15 four-pop splits each
-    // (the oracle at 0,1 can never host a settlement).
-    expect(moves).toHaveLength(540);
+    // Empty board: all 36 non-oracle tiles are legal, and a four-pop capital with
+    // exactly one citizen splits four ways (the oracle at 0,1 can never host a settlement).
+    expect(moves).toHaveLength(144);
     expect(moves.every((move) => move.type === "placeCapital")).toBe(true);
   });
 
@@ -78,11 +77,11 @@ describe("setup enumeration", () => {
       moves.map((move) => (move.type === "placeCapital" ? move.tileId : "")),
     );
 
-    // 0,0 and its 6 neighbors are gone: 30 tiles * 15 compositions.
+    // 0,0 and its 6 neighbors are gone: 30 tiles * 4 compositions.
     expect(offeredTiles.has("0,0")).toBe(false);
     expect(offeredTiles.has("1,0")).toBe(false);
     expect(offeredTiles.has("-1,1")).toBe(false);
-    expect(moves).toHaveLength(450);
+    expect(moves).toHaveLength(120);
   });
 
   it("returns an empty list for off-turn players", () => {
@@ -119,47 +118,44 @@ describe("setup enumeration", () => {
 
 describe("pending-event enumeration", () => {
   it("offers only resolveEvent while an addPops card is pending, one per target tile", () => {
-    const G = scenario().stackPlayerEvent("player-new-citizen").opening().build();
+    const G = scenario().stackPlayerEvent("player-free-settlers").opening().build();
 
-    expect(G.pendingPlayerEvent?.card.id).toBe("player-new-citizen");
+    expect(G.pendingPlayerEvent?.card.id).toBe("player-free-settlers");
     const moves = expectSound(G, "0");
 
-    // Player 0 owns the metropolis (4/10) and founding colony (2/4) — both have capacity.
+    // Player 0's capital and colony both have room.
     expect(moves).toEqual([
-      { type: "resolveEvent", choiceIndex: 0, targetTileId: "-2,0" },
-      { type: "resolveEvent", choiceIndex: 0, targetTileId: "3,0" },
+      { type: "resolveEvent", targetTileId: "-2,0" },
+      { type: "resolveEvent", targetTileId: "3,0" },
     ]);
   });
 
-  it("offers one move per option of a choice card, and blocks endTurn", () => {
-    const G = scenario().stackPlayerEvent("player-emergency-labor").opening().build();
+  it("offers one resolution for a flat card, and blocks endTurn", () => {
+    const G = scenario().stackPlayerEvent("player-good-stores").opening().build();
 
     const moves = expectSound(G, "0");
 
-    expect(moves).toEqual([
-      { type: "resolveEvent", choiceIndex: 0 },
-      { type: "resolveEvent", choiceIndex: 1 },
-    ]);
+    expect(moves).toEqual([{ type: "resolveEvent" }]);
     expect(applyTestCommand(structuredClone(G), "0", { type: "endTurn" }).ok).toBe(false);
   });
 
   it("skips addPops targets that lack capacity", () => {
     const G = scenario()
-      .stackPlayerEvent("player-captured-laborers") // +2 slaves, needs 2 free capacity
+      .stackPlayerEvent("player-captured-laborers") // one slave needs one free place
       .opening()
-      .setPops("0", "3,0", { citizens: 0, freemen: 0, slaves: 3 }) // colony 3/4: only 1 free
+      .setPops("0", "3,0", { citizens: 0, freemen: 0, slaves: 4 }) // colony is full
       .build();
 
     const moves = enumerateLegalCommands(G, "0");
-    expect(moves).toEqual([{ type: "resolveEvent", choiceIndex: 0, targetTileId: "-2,0" }]);
+    expect(moves).toEqual([{ type: "resolveEvent", targetTileId: "-2,0" }]);
   });
 });
 
 describe("gameplay enumeration", () => {
   function openingInGameplay(rig?: { wealthy?: boolean }) {
-    // Stack a no-choice card so player 0's pending "reveal" resolves without a target.
+    // A resource card resolves without a target.
     const G = scenario().stackPlayerEvent("player-good-stores").opening().build();
-    expect(applyTestCommand(G, "0", { type: "resolveEvent", choiceIndex: 0 }).ok).toBe(true);
+    expect(applyTestCommand(G, "0", { type: "resolveEvent" }).ok).toBe(true);
     if (rig?.wealthy) {
       Object.assign(G.players["0"].resources, { wood: 200, stone: 200, gold: 200, food: 200 });
     }
@@ -201,7 +197,7 @@ describe("gameplay enumeration", () => {
       .setPops("0", "-2,0", { citizens: 1, freemen: 0, slaves: 3 }) // metropolis: a 3-slave surplus
       .setPops("0", "3,0", { citizens: 0, freemen: 0, slaves: 1 }) // colony: room for 3 more
       .build();
-    expect(applyTestCommand(G, "0", { type: "resolveEvent", choiceIndex: 0 }).ok).toBe(true);
+    expect(applyTestCommand(G, "0", { type: "resolveEvent" }).ok).toBe(true);
 
     // The whole slave stack (3) is a single enumerated move — previously three actions.
     const bundle = enumerateLegalCommands(G, "0").find(
@@ -215,6 +211,30 @@ describe("gameplay enumeration", () => {
     expect(applyTestCommand(structuredClone(G), "0", bundle!).ok).toBe(true);
   });
 
+  it("offers as many slaves as the target has slots open, beside one and all", () => {
+    // Four idle slaves in a hill city; a plains city working two of its four slots.
+    const G = scenario()
+      .withSettlement("0", "0,-3", "city", { citizens: 1, freemen: 0, slaves: 2 })
+      .withSettlement("0", "-1,0", "city", { citizens: 0, freemen: 0, slaves: 4 })
+      .withResources("0", { food: 4 })
+      .build();
+    G.phase = "gameplay";
+    G.players["0"].collectedThisTurn = true;
+    const slavesSent = (sourceTileId: string) =>
+      enumerateLegalCommands(G, "0")
+        .flatMap((move) =>
+          move.type === "movePops" && move.sourceTileId === sourceTileId ? [move.pops.slaves] : [],
+        )
+        .sort();
+
+    // One, all four, and the two the plains can put to work.
+    expect(slavesSent("-1,0")).toEqual([1, 2, 4]);
+    // A hill has no slot to work, so nothing is added that way: the citizen alone, one
+    // slave, both slaves, everyone.
+    expect(slavesSent("0,-3")).toEqual([0, 1, 2, 2]);
+    expectSound(G, "0");
+  });
+
   it("drops every costed move when the player cannot afford anything", () => {
     const G = openingInGameplay();
     Object.assign(G.players["0"].resources, { wood: 0, stone: 0, gold: 0, food: 0 });
@@ -225,8 +245,8 @@ describe("gameplay enumeration", () => {
     expect(types.has("buildBuilding")).toBe(false);
     expect(types.has("upgradeColonyToCity")).toBe(false);
     expect(types.has("growPop")).toBe(false);
-    // Free actions survive.
-    expect(types.has("movePops")).toBe(true);
+    // A move costs food too; only ending the turn is free.
+    expect(types.has("movePops")).toBe(false);
     expect(types.has("endTurn")).toBe(true);
   });
 
@@ -272,10 +292,11 @@ describe("transition boundary guard", () => {
       .opening()
       .mutate((draft) => {
         draft.pendingPlayerEvent = null;
-        draft.players["0"].resources.happiness = -8;
+        draft.players["0"].unrestTokens = 4;
       })
       .build();
-    applyUnrestUpkeep(G, "0");
+    expect(enumerateLegalCommands(G, "0").some((move) => move.type === "civicCalm")).toBe(true);
+    expect(applyTestCommand(G, "0", { type: "endTurn" }).ok).toBe(true);
     expect(G.pendingRiot?.playerID).toBe("0");
 
     expect(applyTestCommand(structuredClone(G), "0", { type: "endTurn" }).ok).toBe(false);
@@ -283,13 +304,11 @@ describe("transition boundary guard", () => {
   });
 
   it("blocks normal moves during a pending event but allows resolving it", () => {
-    const G = scenario().stackPlayerEvent("player-emergency-labor").opening().build();
+    const G = scenario().stackPlayerEvent("player-good-stores").opening().build();
     expect(G.pendingPlayerEvent?.playerID).toBe("0");
 
     expect(applyTestCommand(structuredClone(G), "0", { type: "endTurn" }).ok).toBe(false);
-    expect(
-      applyTestCommand(structuredClone(G), "0", { type: "resolveEvent", choiceIndex: 0 }).ok,
-    ).toBe(true);
+    expect(applyTestCommand(structuredClone(G), "0", { type: "resolveEvent" }).ok).toBe(true);
   });
 
   it("refuses a gameplay move in setup and a setup move in gameplay", () => {

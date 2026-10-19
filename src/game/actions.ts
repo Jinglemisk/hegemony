@@ -7,7 +7,7 @@ import {
   addPops,
   clonePops,
   hasPops,
-  isExactPopSelection,
+  isSetupPopSelection,
   isPositivePopSelection,
   subtractPops,
 } from "./core/pops";
@@ -19,18 +19,12 @@ import {
   getTile,
   markSettlementGrown,
 } from "./core/query";
-import {
-  applyResourceDeltaWithFloors,
-  cloneResources,
-  diffResources,
-  payCost,
-} from "./core/resources";
+import { applyIncome, cloneResources, diffResources, payCost } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { canPlaceColonyOnTile, isAdjacentToCity } from "./settlement";
 import { setupCapitalCount } from "./ruleset";
 import { calculateIncome } from "./economy/income";
-import { consumeActionCostDiscounts } from "./economy/cost";
 import {
   getBuildBuildingStatus,
   getFoundColonyStatus,
@@ -39,7 +33,9 @@ import {
   getUpgradeColonyToCityStatus,
 } from "./status";
 import { drawPlayerEvent } from "./events";
-import { consumeLawFreeAction, getFoundColonyRiders } from "./assembly/laws";
+import { ideaRoom } from "./ideas";
+import { getStandingEffects } from "./assembly/laws";
+import { getFoundColonyRiders } from "./assembly/laws";
 import { allocateEntityId } from "./entity";
 
 export function placeCapital(
@@ -55,7 +51,11 @@ export function placeCapital(
     !tile ||
     player.settlements.length > 0 ||
     tile.settlements.length > 0 ||
-    !isExactPopSelection(pops, G.ruleset.placementPopCounts.capital)
+    !isSetupPopSelection(
+      pops,
+      G.ruleset.placementPopCounts.capital,
+      G.ruleset.placementCitizens.capital,
+    )
   ) {
     return invalid();
   }
@@ -102,7 +102,7 @@ export function placeCity(
     !tile ||
     !owesCity ||
     tile.settlements.length > 0 ||
-    !isExactPopSelection(pops, G.ruleset.placementPopCounts.city)
+    !isSetupPopSelection(pops, G.ruleset.placementPopCounts.city, G.ruleset.placementCitizens.city)
   ) {
     return invalid();
   }
@@ -153,7 +153,11 @@ export function placeColony(
     !tile ||
     !owesColony ||
     !canPlaceColonyOnTile(G, playerID, tile, "setup").can ||
-    !isExactPopSelection(pops, G.ruleset.placementPopCounts.colony)
+    !isSetupPopSelection(
+      pops,
+      G.ruleset.placementPopCounts.colony,
+      G.ruleset.placementCitizens.colony,
+    )
   ) {
     return invalid();
   }
@@ -196,10 +200,6 @@ export function foundColony(
   }
 
   payCost(G.players[playerID].resources, status.cost ?? G.ruleset.actionCosts.foundColony);
-  consumeActionCostDiscounts(G, playerID, "foundColony");
-  // Spend the year's free-colony coupon (Land Rush) only now the move has committed —
-  // a refused founding must never burn it.
-  consumeLawFreeAction(G, playerID, "foundColony");
   addColony(G, playerID, tile, EMPTY_POPS, colonyId);
   applyFoundColonyRiders(G, playerID, tile);
   addLog(
@@ -210,25 +210,21 @@ export function foundColony(
   return MOVE_OK;
 }
 
-/** Standing Laws that hang a rider on founding (Frontier Spirit: a freeman comes with
- *  the charter, and the city pays for it in happiness). */
+/** Law and Idea riders use room left after the sent pop, which arrives next turn. */
 function applyFoundColonyRiders(G: HegemonyState, playerID: PlayerId, tile: HexTile) {
   for (const rider of getFoundColonyRiders(G, playerID)) {
     if (rider.grantPop) {
       const settlement = getOwnedSettlement(G, tile.id, playerID);
 
       if (settlement) {
-        settlement.pops[rider.grantPop] += 1;
-        addLog(
-          G,
-          `${rider.label}: a ${formatPopName(rider.grantPop, 1)} sails with the colonists.`,
-        );
+        const granted = Math.min(rider.amount, ideaRoom(G, settlement));
+        settlement.pops[rider.grantPop] += granted;
+        if (granted > 0)
+          addLog(
+            G,
+            `${rider.label}: ${granted} ${formatPopName(rider.grantPop, granted)} ${granted === 1 ? "sails" : "sail"} with the colonists.`,
+          );
       }
-    }
-
-    if (rider.happiness) {
-      G.players[playerID].resources.happiness += rider.happiness;
-      addLog(G, `${rider.label}: the parting costs ${Math.abs(rider.happiness)} happiness.`);
     }
   }
 }
@@ -254,6 +250,9 @@ export function upgradeColonyToCity(
     .map((candidate) => candidate.owner);
   tile.settlements = tile.settlements.filter((candidate) => candidate.owner === playerID);
   settlement.kind = "city";
+  for (const effect of getStandingEffects(G, playerID))
+    if (effect.type === "onUpgradeCity" && ideaRoom(G, settlement) > 0)
+      settlement.pops[effect.grantPop] += 1;
 
   for (const displacedPlayer of displacedPlayers) {
     G.players[displacedPlayer].settlements = G.players[displacedPlayer].settlements.filter(
@@ -305,19 +304,17 @@ export function collectIncome(
 ): MoveResult {
   const player = G.players[playerID];
 
-  // A pending riot defers income (the rulebook removes pops before collection) —
-  // resolveRiot calls back in here once the table has spoken.
-  if (player.collectedThisTurn || G.pendingPlayerEvent || G.pendingRiot) {
+  // Income belongs to turn start; a committed turn awaiting its riot cannot collect.
+  if (player.collectedThisTurn || G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger) {
     return invalid();
   }
 
   // Stratokles's General Strike: the work stops. The turn still passes — the strike
   // costs exactly the income, not the tempo — and the counter burns down here rather
-  // than in the upkeep so a deferred (riot-blocked) collection still loses its turn.
+  // than in the turn-end unrest check.
   if (player.incomeSuppressedTurns > 0) {
     player.incomeSuppressedTurns -= 1;
     player.collectedThisTurn = true;
-    player.hasCollectedGameplayIncome = true;
     addLog(G, `${getPlayerName(G, playerID)} collects nothing — the city is on strike.`, playerID);
     drawPlayerEvent(G, playerID);
     return MOVE_OK;
@@ -325,15 +322,16 @@ export function collectIncome(
 
   const income = calculateIncome(G, playerID);
   const beforeIncome = cloneResources(player.resources);
-  applyResourceDeltaWithFloors(player.resources, income, G.ruleset.economy.stockpileFloors);
+  // Food may go below zero here: the seat has its turn to cover it before hunger.
+  applyIncome(player.resources, income, G.ruleset.economy.stockpileFloors);
   const appliedIncome = diffResources(player.resources, beforeIncome);
   player.collectedThisTurn = true;
-  player.hasCollectedGameplayIncome = true;
   addLog(
     G,
     `${getPlayerName(G, playerID)} ${mode === "automatic" ? "automatically collected" : "collected"} income (${formatRuleResourceDelta(appliedIncome)}).`,
     playerID,
   );
+
   drawPlayerEvent(G, playerID);
   return MOVE_OK;
 }
@@ -349,9 +347,7 @@ export function buildBuilding(
   const building = getBuildings(G.definition.content).find(
     (candidate) => candidate.id === buildingId,
   );
-  const settlement = tile?.settlements.find(
-    (candidate) => candidate.owner === playerID && candidate.kind !== "colony",
-  );
+  const settlement = tile?.settlements.find((candidate) => candidate.owner === playerID);
   const status = getBuildBuildingStatus(G, playerID, tileId, buildingId, claimVertexId);
 
   if (!tile || !building || !settlement || !status.can) {
@@ -377,8 +373,6 @@ export function buildBuilding(
   }
 
   payCost(G.players[playerID].resources, status.cost ?? building.cost);
-  consumeActionCostDiscounts(G, playerID, "buildBuilding", building.id);
-  consumeLawFreeAction(G, playerID, "buildBuilding");
   settlement.buildings.push(building.id);
 
   if (claim) {
@@ -417,7 +411,6 @@ export function growPop(
   }
 
   payCost(G.players[playerID].resources, status.cost);
-  consumeActionCostDiscounts(G, playerID, "growPop", undefined, pop);
   settlement.pops[pop] += 1;
   markSettlementGrown(G, playerID, tileId);
   addLog(
@@ -441,7 +434,14 @@ export function movePops(
     return invalid(...status.reasons);
   }
 
-  return schedulePopulationTransfer(G, playerID, sourceTileId, targetTileId, pops);
+  const moved = schedulePopulationTransfer(G, playerID, sourceTileId, targetTileId, pops);
+
+  if (moved.ok) {
+    payCost(G.players[playerID].resources, status.cost ?? {});
+    G.players[playerID].moveUsedThisTurn = true;
+  }
+
+  return moved;
 }
 
 export function resolveArrivingPops(G: HegemonyState, playerID: PlayerId) {

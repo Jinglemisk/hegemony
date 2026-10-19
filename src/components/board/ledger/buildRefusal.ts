@@ -52,11 +52,7 @@ export function shortfallOf(cost: Resources | Partial<Resources>, held: Resource
  * that matches the number it printed, so neither can name a gap against a price
  * the player cannot see.
  *
- * The level cap is counted the way the engine counts it — copies against
- * `maxLevel` — because "this settlement already has one" and "this settlement
- * cannot have another" stopped being the same sentence when buildings gained
- * levels, and a Marketplace at 1 of 2 was being refused as "already raised"
- * while the engine was perfectly willing to raise the second.
+ * One of each per settlement, so a building already standing here is refused.
  */
 export function buildRefusal(
   settlement: Settlement,
@@ -68,10 +64,8 @@ export function buildRefusal(
     return "no slot";
   }
 
-  const copies = settlement.buildings.filter((existing) => existing === building.id).length;
-
-  if (copies >= building.maxLevel) {
-    return building.maxLevel === 1 ? "already raised" : "at max level";
+  if (settlement.buildings.includes(building.id)) {
+    return "already raised";
   }
 
   return shortfall ?? "cannot raise here";

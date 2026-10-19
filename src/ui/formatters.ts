@@ -1,10 +1,9 @@
 import { getAuthoredGameContent, getBuilding } from "../game/content";
 import type { GameContent } from "../game/content";
-import { seasonName, yearOf } from "../game/core/calendar";
 import { formatPopName, formatRuleNumber } from "../game/core/format";
-import type { BuildingId, PopType, Resource, Resources, SeasonName } from "../game/types";
+import type { BuildingId, PopType, Resource, Resources, Stat } from "../game/types";
 
-export const RESOURCE_LABELS: Record<Resource, string> = {
+export const RESOURCE_LABELS: Record<Stat, string> = {
   wood: "Wood",
   stone: "Stone",
   gold: "Gold",
@@ -13,21 +12,9 @@ export const RESOURCE_LABELS: Record<Resource, string> = {
   happiness: "Happiness",
 };
 
-export const SEASON_LABELS: Record<SeasonName, string> = {
-  spring: "Spring",
-  summer: "Summer",
-  autumn: "Autumn",
-  winter: "Winter",
-};
-
-/** "Spring" — the season a given season index falls in. */
-export function seasonLabel(seasonIndex: number) {
-  return SEASON_LABELS[seasonName(seasonIndex)];
-}
-
-/** "Year 1" — the year a given season index falls in. */
-export function yearLabel(seasonIndex: number) {
-  return `Year ${yearOf(seasonIndex)}`;
+/** "Year 1". */
+export function yearLabel(year: number) {
+  return `Year ${toRoman(year)}`;
 }
 
 export function formatResourceCost(cost: Partial<Resources>) {
@@ -80,8 +67,8 @@ export function buildingName(
   return getBuilding(content, buildingId)?.name ?? buildingId;
 }
 
-/** Roman numerals, small-N only — the season clock counts years, and a game runs
- *  to single digits. Anything larger than the table below simply repeats X. */
+/** Roman numerals, small-N only — the year card counts years, and a game runs
+ *  for fourteen years. Anything larger than the table below simply repeats X. */
 const ROMAN: readonly (readonly [number, string])[] = [
   [10, "X"],
   [9, "IX"],
@@ -89,6 +76,10 @@ const ROMAN: readonly (readonly [number, string])[] = [
   [4, "IV"],
   [1, "I"],
 ];
+
+/** "Demos, Civic Elite and Voice". */
+export const listed = (names: string[]) =>
+  names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
 
 export function toRoman(value: number): string {
   let remaining = Math.max(0, Math.floor(value));
@@ -102,4 +93,11 @@ export function toRoman(value: number): string {
   }
 
   return numerals || "—";
+}
+
+/** 1st, 2nd, 3rd, 11th. */
+export function ordinal(count: number): string {
+  const suffix =
+    count % 100 >= 11 && count % 100 <= 13 ? "th" : (["th", "st", "nd", "rd"][count % 10] ?? "th");
+  return `${count}${suffix}`;
 }

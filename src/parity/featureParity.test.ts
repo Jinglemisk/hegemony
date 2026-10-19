@@ -3,20 +3,11 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { createModeDefinition } from "../game/definition";
 import { POLITICIANS, RESOLUTION_CARDS } from "../game/assembly/deck";
-import { getPromotePopStatus } from "../game/civic";
 import { getAuthoredGameContent, getBuildings, getTerrainDeck } from "../game/content";
-import {
-  PLAYER_EVENT_CARDS,
-  SEASONAL_EVENT_CARDS,
-  EXPEDITION_TABLES,
-  OMEN_TABLE,
-  RIOT_TABLE,
-} from "../game/data";
+import { PLAYER_EVENT_CARDS, YEAR_CARDS, EXPEDITION_TABLES, RIOT_TABLE } from "../game/data";
 import { settlementNetYield } from "../game/economy/income";
-import { getGrowPopStatus } from "../game/status";
-import { settlementCapacity } from "../game/settlement";
+import { settlementBuildingHappiness } from "../game/happiness";
 import { materialTile, owned, scenario } from "../game/testing/scenario";
-import type { EventEffect } from "../game/types";
 import { Aggregator } from "../sim/telemetry";
 import {
   presentBuildingEffect,
@@ -24,6 +15,7 @@ import {
   presentEventEffect,
   presentLawEffect,
   presentTableEffect,
+  presentYearCard,
 } from "../ui/effects";
 
 import {
@@ -31,6 +23,7 @@ import {
   BUILDING_CONTENT_IDS,
   BUILDING_EFFECT_PARITY,
   CONTENT_MANIFEST,
+  NATIONAL_IDEA_CONTENT_IDS,
   DIRECTIVE_CONTENT_IDS,
   DIRECTIVE_EFFECT_PARITY,
   EVENT_EFFECT_PARITY,
@@ -43,7 +36,7 @@ import {
   POLITICIAN_CONTENT_IDS,
   RESOLUTION_CONTENT_IDS,
   RIOT_INSURANCE_CONTENT_IDS,
-  SEASONAL_EVENT_CONTENT_IDS,
+  YEAR_CARD_CONTENT_IDS,
   TABLE_EFFECT_PARITY,
   TERRAIN_CONTENT_IDS,
   VICTORY_CARD_CONTENT_IDS,
@@ -58,14 +51,6 @@ function sorted(values: readonly string[]): string[] {
 
 function unique(values: readonly string[]): string[] {
   return sorted([...new Set(values)]);
-}
-
-function flattenEventEffects(effects: readonly EventEffect[]): EventEffect[] {
-  return effects.flatMap((effect) =>
-    effect.type === "choice"
-      ? [effect, ...effect.options.flatMap((option) => flattenEventEffects(option))]
-      : [effect],
-  );
 }
 
 function expectPresentation(presentation: { text: string; tone: string }): void {
@@ -129,7 +114,10 @@ describe("feature and content parity manifests", () => {
   });
 
   it("matches every shipped content id and effect to the manifests", () => {
-    const tables = [RIOT_TABLE, ...EXPEDITION_TABLES, OMEN_TABLE];
+    const tables = [RIOT_TABLE, ...EXPEDITION_TABLES];
+    expect(sorted(AUTHORED_CONTENT.nationalIdeas.map((idea) => idea.id))).toEqual(
+      sorted(NATIONAL_IDEA_CONTENT_IDS),
+    );
 
     expect(sorted(getBuildings(AUTHORED_CONTENT).map((building) => building.id))).toEqual(
       sorted(BUILDING_CONTENT_IDS),
@@ -137,9 +125,7 @@ describe("feature and content parity manifests", () => {
     expect(unique(getTerrainDeck(AUTHORED_CONTENT).map((entry) => entry.terrain))).toEqual(
       sorted(TERRAIN_CONTENT_IDS),
     );
-    expect(sorted(SEASONAL_EVENT_CARDS.map((card) => card.id))).toEqual(
-      sorted(SEASONAL_EVENT_CONTENT_IDS),
-    );
+    expect(sorted(YEAR_CARDS.map((card) => card.id))).toEqual(sorted(YEAR_CARD_CONTENT_IDS));
     expect(sorted(PLAYER_EVENT_CARDS.map((card) => card.id))).toEqual(
       sorted(PLAYER_EVENT_CONTENT_IDS),
     );
@@ -157,9 +143,7 @@ describe("feature and content parity manifests", () => {
       expect(entry.ids).toHaveLength(new Set(entry.ids).size);
     }
 
-    const eventEffects = flattenEventEffects(
-      [...SEASONAL_EVENT_CARDS, ...PLAYER_EVENT_CARDS].flatMap((card) => card.effects),
-    );
+    const eventEffects = PLAYER_EVENT_CARDS.flatMap((card) => card.effects);
     expect(unique(eventEffects.map((effect) => effect.type))).toEqual(
       sorted(Object.keys(EVENT_EFFECT_PARITY)),
     );
@@ -175,9 +159,13 @@ describe("feature and content parity manifests", () => {
     const directives = RESOLUTION_CARDS.filter((card) => card.kind === "directive");
     expect(sorted(laws.map((card) => card.id))).toEqual(sorted(LAW_CONTENT_IDS));
     expect(sorted(directives.map((card) => card.id))).toEqual(sorted(DIRECTIVE_CONTENT_IDS));
-    expect(unique(laws.flatMap((card) => card.effects.map((effect) => effect.type)))).toEqual(
-      sorted(Object.keys(LAW_EFFECT_PARITY)),
-    );
+    expect(
+      unique(
+        [...laws, ...AUTHORED_CONTENT.nationalIdeas].flatMap((card) =>
+          card.effects.map((effect) => effect.type),
+        ),
+      ),
+    ).toEqual(sorted(Object.keys(LAW_EFFECT_PARITY)));
     expect(unique(directives.flatMap((card) => card.effects.map((effect) => effect.type)))).toEqual(
       sorted(Object.keys(DIRECTIVE_EFFECT_PARITY)),
     );
@@ -191,12 +179,11 @@ describe("feature and content parity manifests", () => {
   });
 
   it("projects every authored effect through a non-empty typed frontend presentation", () => {
-    const eventEffects = flattenEventEffects(
-      [...SEASONAL_EVENT_CARDS, ...PLAYER_EVENT_CARDS].flatMap((card) => card.effects),
-    );
+    const eventEffects = PLAYER_EVENT_CARDS.flatMap((card) => card.effects);
     for (const effect of eventEffects) expectPresentation(presentEventEffect(effect));
+    for (const card of YEAR_CARDS) expectPresentation(presentYearCard(card));
 
-    for (const table of [RIOT_TABLE, ...EXPEDITION_TABLES, OMEN_TABLE]) {
+    for (const table of [RIOT_TABLE, ...EXPEDITION_TABLES]) {
       for (const effect of table.rows.flatMap((row) => row.effects)) {
         expectPresentation(presentTableEffect(effect));
       }
@@ -222,12 +209,12 @@ describe("feature and content parity manifests", () => {
         evidence: ["presentLawEffect", "presentDirectiveEffect", "MechanicsDetails"],
       },
       {
-        implementation: "src/components/board/ledger/BuildingChip.tsx",
-        evidence: ["presentBuildingEffect", "MechanicsDetails"],
+        implementation: "src/components/frame/realm/BuildPage.tsx",
+        evidence: ["presentBuildingEffects"],
       },
       {
-        implementation: "src/components/ActiveEffectsList.tsx",
-        evidence: ["presentActiveEffects", "MechanicsDetails"],
+        implementation: "src/components/frame/Alarms.tsx",
+        evidence: ["presentActiveEffect"],
       },
     ];
 
@@ -244,7 +231,9 @@ describe("feature and content parity manifests", () => {
     const G = builder.build();
     const land = materialTile(G);
     builder
-      .withSettlement("0", land.id, "city", { citizens: 2, freemen: 3, slaves: 3 })
+      // Two slaves on a three-slot tile: a building takes the third slot and both
+      // slaves keep working, so each delta below is the building's own.
+      .withSettlement("0", land.id, "city", { citizens: 2, freemen: 3, slaves: 2 })
       .mutate((state) => {
         state.phase = "gameplay";
         state.currentPlayer = "0";
@@ -261,30 +250,17 @@ describe("feature and content parity manifests", () => {
     const base = settlementNetYield(land, settlement, G.ruleset);
     const primary = land.resource.type;
 
-    expect(incomeWith("marketplace").gold - base.gold).toBe(6);
-    const temple = incomeWith("temple");
-    expect(temple.influence - base.influence).toBe(2);
-    expect(temple.happiness - base.happiness).toBe(1);
-    expect(incomeWith("workshop")[primary] - base[primary]).toBe(3);
-    expect(incomeWith("granary").food - base.food).toBe(2);
+    // Three freemen, two citizens, two working slaves: a class building adds one each.
+    expect(incomeWith("marketplace").gold - base.gold).toBe(3);
     expect(incomeWith("forum").influence - base.influence).toBe(2);
-    expect(incomeWith("odeon").happiness - base.happiness).toBe(2);
-    expect(incomeWith("villa")[primary] - base[primary]).toBe(2);
-
-    settlement.buildings = [];
-    const baseCapacity = settlementCapacity(settlement, G.ruleset);
-    settlement.buildings = ["aqueduct"];
-    expect(settlementCapacity(settlement, G.ruleset) - baseCapacity).toBe(4);
-
-    settlement.buildings = [];
-    const baseGrowFood = getGrowPopStatus(G, "0", land.id, "slaves").cost?.food ?? 0;
-    settlement.buildings = ["granary"];
-    expect(getGrowPopStatus(G, "0", land.id, "slaves").cost?.food).toBe(baseGrowFood - 2);
-
-    settlement.buildings = [];
-    const basePromoteFood = getPromotePopStatus(G, "0", land.id, "slaves").cost?.food ?? 0;
-    settlement.buildings = ["gymnasion"];
-    expect(getPromotePopStatus(G, "0", land.id, "slaves").cost?.food).toBe(basePromoteFood - 2);
+    expect(land.slots).toBe(3);
+    expect(incomeWith("estate")[primary] - base[primary]).toBe(2);
+    const temple = incomeWith("temple");
+    expect(temple.influence - base.influence).toBe(0);
+    expect(settlementBuildingHappiness(G, settlement)).toBe(1);
+    expect(incomeWith("granary").food - base.food).toBe(2);
+    // The Port's fact is its claim; it adds nothing to a settlement's income.
+    expect(incomeWith("port")).toEqual(base);
   });
 
   it("zero-fills manifested building and event content in telemetry", () => {
@@ -304,11 +280,11 @@ describe("feature and content parity manifests", () => {
 
     expect(Object.keys(report.buildings)).toEqual([...BUILDING_CONTENT_IDS]);
     expect(Object.keys(report.events.player)).toEqual([...PLAYER_EVENT_CONTENT_IDS]);
-    expect(Object.keys(report.events.seasonal)).toEqual([...SEASONAL_EVENT_CONTENT_IDS]);
+    expect(Object.keys(report.events.year)).toEqual([...YEAR_CARD_CONTENT_IDS]);
     expect(
       Object.values(report.buildings).every((entry) => entry.built === 0 && entry.perGame === 0),
     ).toBe(true);
     expect(Object.values(report.events.player).every((count) => count === 0)).toBe(true);
-    expect(Object.values(report.events.seasonal).every((count) => count === 0)).toBe(true);
+    expect(Object.values(report.events.year).every((count) => count === 0)).toBe(true);
   });
 });

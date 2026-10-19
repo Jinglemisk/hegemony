@@ -53,7 +53,7 @@ export function TileSubject({
         {tile.resource ? (
           <span className="tileSubjectYield">
             <Icon className="miniIcon" glyph={RESOURCE_GLYPHS[tile.resource.type]} size="rail" />
-            <strong className="num">+{tile.resource.amount}</strong>
+            <strong className="num">{tile.slots}</strong>
           </span>
         ) : null}
 

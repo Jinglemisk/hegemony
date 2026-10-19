@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Gymnasion — bronze discus and two crossed javelins</title>
+<defs>
+<linearGradient id="a-gymnasion-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+<linearGradient id="a-gymnasion-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+<linearGradient id="a-gymnasion-iron" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c0b9a4"/><stop offset="0.48" stop-color="#8e8a7a"/><stop offset="1" stop-color="#514e45"/></linearGradient>
+</defs>
+<path d="M8 6L18 11L15 18L57 54L53 58L11 22L6 22Z" fill="url(#a-gymnasion-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M56 6L58 22L53 22L11 58L7 54L49 18L46 11Z" fill="url(#a-gymnasion-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M8 7L17 12L13 19L7 21ZM56 7L57 21L51 19L47 12Z" fill="url(#a-gymnasion-iron)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M9 10L8 17M54 11L55 17" fill="none" stroke="#e1d9c5" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<ellipse cx="32" cy="35" rx="24" ry="23" fill="url(#a-gymnasion-bronze)" stroke="#181210" stroke-width="2.5"/>
+<ellipse cx="31" cy="34" rx="18" ry="17" fill="url(#a-gymnasion-bronze)" stroke="#795025" stroke-width="1.75"/>
+<path d="M50 22Q62 41 45 53Q38 58 28 57L28 54Q52 51 50 22Z" fill="#6b491f"/>
+<path d="M42 24Q51 40 37 47L31 48V45Q43 41 42 24Z" fill="#997035"/>
+<path d="M12 29Q16 17 28 16M16 31Q18 23 26 21" fill="none" stroke="#ffe6a0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M21 47L25 49M42 30L43 34M24 25L27 24" fill="none" stroke="#b18a40" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M18 22L22 19L25 20L20 24Z" fill="#fff8e9"/>
+<path d="M10 53L13 50M51 52L54 55" fill="none" stroke="#ecd3a0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

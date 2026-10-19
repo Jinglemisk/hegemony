@@ -8,6 +8,7 @@ import {
 } from "../../../game/rules";
 import type { Pops } from "../../../game/types";
 import { useGameUi } from "../GameUiContext";
+import { ResourceChips } from "../ResourceChips";
 import { actionRequirementText, gameplayActionDisabled, settlementPickerLabel } from "../helpers";
 import { TileSubject } from "../TileSubject";
 import { PopoverActions } from "../PopoverActions";
@@ -100,7 +101,9 @@ export function MovePopsTargetPopover({
     >
       <TileSubject G={G} playerID={playerID} tile={tile} />
       <p className="placementCostNote">
-        From {settlementPickerLabel(G, sourceTile, playerID)} — they arrive next turn.
+        From {settlementPickerLabel(G, sourceTile, playerID)}. They arrive next turn. Costs{" "}
+        <ResourceChips resources={status.cost ?? {}} variant="cost" empty="nothing" />, one move a
+        turn.
       </p>
 
       <section className="placementSection">

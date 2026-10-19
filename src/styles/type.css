@@ -40,7 +40,7 @@
 
 /* The one step up, for a scene's own head (game over, the Assembly). */
 .display.display-xl {
-  font-size: 2.125rem; /* 34px */
+  font-size: 2.125rem;
 }
 
 .title {
@@ -58,7 +58,7 @@
 }
 
 .verb.verb-lg {
-  font-size: 0.8125rem; /* 13px */
+  font-size: 0.8125rem;
 }
 
 /* The 11px floor. Below this the display face stops being readable at all, and
@@ -79,6 +79,39 @@
   text-transform: none;
 }
 
+/* Step 13's ceremony cards keep the shell's 12px floor as the register scales. */
+.hungerCard .label,
+.lossCard .label,
+.yearCard .label,
+.riotSheet .label,
+.ageEnd .label,
+.yearBack + .deckEcho {
+  font-size: max(12px, 0.6875rem);
+}
+
+.hungerCard .caption,
+.lossCard .caption,
+.yearCard .caption,
+.riotSheet .caption,
+.ageEnd .caption {
+  font-size: max(12px, 0.78125rem);
+}
+
+.ageEnd .verb,
+.riotSheet .verb,
+.lossCard .verb,
+.hungerCard .verb,
+.yearCard .verb {
+  font-size: max(12px, 0.75rem);
+}
+
+.ageEnd .verb.verb-lg,
+.riotSheet .verb.verb-lg,
+.lossCard .verb.verb-lg,
+.yearCard .verb.verb-lg {
+  font-size: max(12px, 0.8125rem);
+}
+
 .body {
   font-size: 0.9375rem; /* 15px */
   font-weight: 400;
@@ -86,7 +119,7 @@
 }
 
 .body.body-sm {
-  font-size: 0.875rem; /* 14px */
+  font-size: 0.875rem;
 }
 
 .body-em {
@@ -122,11 +155,11 @@
 /* The resource spine and the tally numerals — the two places a number IS the
    scene. Anything bigger than this is a ceremony, and gets .display. */
 .stat-lg.stat-xl {
-  font-size: 1.625rem; /* 26px */
+  font-size: 1.625rem;
 }
 
-/* The one number a whole page is ABOUT: the unrest alarm's happiness, the
-   victory heldline's count, a ceremony's carved figure. At most one per page —
+/* The one number a whole page is ABOUT: the unrest alarm's happiness, a
+   ceremony's carved figure. At most one per page —
    a second would mean neither is the answer.
 
    34px is the fate card's own spec (c-event.html). The venture's payoff is drawn
@@ -134,7 +167,7 @@
    scene that owns its whole viewport, not page numerals; giving each its own
    role would make the size table longer than the thing it disciplines. */
 .stat-lg.stat-hero {
-  font-size: 2.125rem; /* 34px */
+  font-size: 2.125rem;
 }
 
 .caption {
