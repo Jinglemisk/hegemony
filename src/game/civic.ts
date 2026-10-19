@@ -5,6 +5,7 @@ import { MOVE_OK, invalid } from "./core/results";
 import type { ActionStatus, MoveResult } from "./core/results";
 import type { HegemonyState, PlayerId, PopType } from "./types";
 import { applyLawActionCost, getStandingEffects } from "./assembly/laws";
+import { pendingDecisionReasons } from "./status";
 
 /**
  * The civic verbs (roadmap-appendix D7/D8): calm the province, or move a pop up and
@@ -44,8 +45,7 @@ export function getCivicCalmStatus(
   const reasons: string[] = [];
 
   if (G.phase !== "gameplay") reasons.push("Calm is a gameplay action.");
-  if (G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger)
-    reasons.push("Resolve the pending event first.");
+  reasons.push(...pendingDecisionReasons(G));
   if (G.players[playerID].civicCalmUsedThisTurn)
     reasons.push("One civic-calm action per turn — calm must not stack.");
   if (!canAfford(G.players[playerID].resources, cost)) {
@@ -95,8 +95,7 @@ export function getPromotePopStatus(
   const reasons: string[] = [];
 
   if (G.phase !== "gameplay") reasons.push("The ladder is a gameplay action.");
-  if (G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger)
-    reasons.push("Resolve the pending event first.");
+  reasons.push(...pendingDecisionReasons(G));
   if (!PROMOTE_FROM.includes(from as "slaves" | "freemen"))
     reasons.push("Only slaves and freemen can rise.");
   if (G.players[playerID].ladderUsedThisTurn) reasons.push("One ladder move per turn.");
@@ -129,8 +128,7 @@ export function getDemotePopStatus(
   const settlement = getOwnedSettlement(G, tileId, playerID);
 
   if (G.phase !== "gameplay") reasons.push("The ladder is a gameplay action.");
-  if (G.pendingPlayerEvent || G.pendingHunger) reasons.push("Resolve the pending event first.");
-  if (G.pendingRiot && !duringOwnRiot) reasons.push("Resolve the pending riot first.");
+  if (!duringOwnRiot) reasons.push(...pendingDecisionReasons(G));
   if (!DEMOTE_FROM.includes(from as "citizens" | "freemen"))
     reasons.push("Only citizens and freemen can fall.");
   if (!duringOwnRiot && G.players[playerID].ladderUsedThisTurn)

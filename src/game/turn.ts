@@ -8,6 +8,7 @@ import {
   createInitialStateFromDefinition,
   revealYearCard,
   placeCapital,
+  pendingDecisionReasons,
   placeColony,
   resolveArrivingPops,
   startNewYear,
@@ -153,13 +154,7 @@ export function beginGameplayTurn(G: HegemonyState) {
  * {@link commitTurn} follows that choice, or runs at once when everyone is fed.
  */
 export function endTurn(G: HegemonyState): MoveResult {
-  if (
-    G.phase !== "gameplay" ||
-    G.pendingPlayerEvent ||
-    G.pendingRiot ||
-    G.pendingHunger ||
-    G.assembly
-  ) {
+  if (pendingDecisionReasons(G).length > 0) {
     return { ok: false, reasons: [] };
   }
 

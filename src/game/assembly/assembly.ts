@@ -324,6 +324,18 @@ export function lawProposalReason(G: HegemonyState, card: ResolutionCard): strin
     return "A Law this would replace is still in its minimum tenure.";
   return null;
 }
+/** Why the seat cannot seal its held card: a Law that cannot stand, or a Directive
+ * not aimed at one rival. */
+export function proposalReason(
+  G: HegemonyState,
+  playerID: PlayerId,
+  card: ResolutionCard,
+  target?: PlayerId,
+): string | null {
+  if (card.kind === "directive" && (!target || target === playerID || !PLAYER_IDS.includes(target)))
+    return "Choose one rival for this Directive.";
+  return lawProposalReason(G, card);
+}
 
 export function assemblyPropose(
   G: HegemonyState,
@@ -338,15 +350,8 @@ export function assemblyPropose(
 
   const card = session!.held[playerID]!.card;
 
-  const reason = lawProposalReason(G, card);
+  const reason = proposalReason(G, playerID, card, target);
   if (reason) return invalid(reason);
-
-  if (
-    card.kind === "directive" &&
-    (!target || target === playerID || !PLAYER_IDS.includes(target))
-  ) {
-    return invalid("Choose one rival for this Directive.");
-  }
 
   session!.proposals[playerID] = {
     kind: "enact",

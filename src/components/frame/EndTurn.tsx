@@ -8,7 +8,7 @@ import { presentUnrestOutcome } from "../../ui/effects";
 import { sign } from "../../ui/frameFormat";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { Tooltip } from "../overlays/Tooltip";
-import { Ico, Price, Tip, TipWarn } from "./parts";
+import { Chips, Ico, Tip, TipWarn } from "./parts";
 
 const HOLD_MS = 620;
 
@@ -265,7 +265,7 @@ function EndTurnConfirm({
             onClick={() => onCalmThenEnd(calm.payment)}
             type="button"
           >
-            Calm, then end <Price amounts={calm.cost} />
+            Calm, then end <Chips amounts={calm.cost} />
           </button>
         ) : null}
         <button autoFocus className="confirm-btn" onClick={onEnd} type="button">

@@ -237,6 +237,7 @@ describe("city upgrade", () => {
     poke(state, "0", "3,0", "colony", slave);
     poke(state, "1", "3,0", "colony", slave);
     wealthy(state, "0");
+    state.phase = "gameplay";
     const before = { ...state.players["0"].resources };
 
     const result = upgradeColonyToCity(state, "0", "3,0");
@@ -268,6 +269,7 @@ describe("city upgrade", () => {
     const composition = { citizens: 0, freemen: 1, slaves: 2 };
     poke(state, "0", "3,0", "colony", composition);
     wealthy(state, "0");
+    state.phase = "gameplay";
 
     const result = upgradeColonyToCity(state, "0", "3,0");
     expect(result.ok).toBe(true);
@@ -282,6 +284,7 @@ describe("buildings", () => {
   it("builds a Marketplace on a city, paying its cost and consuming a slot", () => {
     const state = fresh();
     placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
+    state.phase = "gameplay";
     const before = { ...state.players["0"].resources };
 
     const result = buildBuilding(state, "0", "0,0", "marketplace");
@@ -304,6 +307,7 @@ describe("the Forum", () => {
     const state = fresh();
     placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
     wealthy(state, "0");
+    state.phase = "gameplay";
 
     expect(buildBuilding(state, "0", "0,0", "forum").ok).toBe(true);
 
@@ -320,6 +324,7 @@ describe("grow pop", () => {
   it("grows a slave for food and only once per settlement per turn", () => {
     const state = fresh();
     placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
+    state.phase = "gameplay";
     const beforeFood = state.players["0"].resources.food;
 
     const result = growPop(state, "0", "0,0", "slaves");
@@ -371,6 +376,7 @@ describe("found colony & population transfers", () => {
     const state = fresh();
     placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
     wealthy(state, "0");
+    state.phase = "gameplay";
 
     // Non-contiguous founding is rejected outright (roadmap-appendix D3).
     expect(foundColony(state, "0", "3,0", "0,0", "slaves").ok).toBe(false);

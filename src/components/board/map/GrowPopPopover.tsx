@@ -8,7 +8,7 @@ import { Icon } from "../../../ui/icons/Icon";
 import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { ResourceDeltaList } from "../ResourceDeltaList";
-import { ResourceChips } from "../ResourceChips";
+import { Chips } from "../../frame/parts";
 import { actionRequirementText, gameplayActionDisabled } from "../helpers";
 import { TileSubject } from "../TileSubject";
 import { PopoverActions } from "../PopoverActions";
@@ -95,11 +95,7 @@ export function GrowPopPopover({
                 <Icon glyph={POP_GLYPHS[candidate]} size="rail" className="miniIcon" />
                 <span>{formatPopLabel(candidate, 1)}</span>
                 <strong>
-                  <ResourceChips
-                    resources={candidateStatus.cost ?? {}}
-                    variant="cost"
-                    empty="Free"
-                  />
+                  <Chips amounts={candidateStatus.cost ?? {}} empty="Free" />
                 </strong>
               </button>
             </Tooltip>

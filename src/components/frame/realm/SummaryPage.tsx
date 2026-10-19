@@ -62,7 +62,7 @@ export function SummaryPage({
     <dl className="summary" data-c="summary">
       <dt className="caps">Net / turn</dt>
       <dd>
-        <Chips amounts={income} empty={<span className="cap">nothing moves</span>} />
+        <Chips amounts={income} signed empty={<span className="cap">nothing moves</span>} />
       </dd>
       <dt className="caps">People</dt>
       <dd>

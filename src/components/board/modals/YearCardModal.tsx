@@ -158,6 +158,7 @@ export function YearCardModal({
                   amounts={Object.fromEntries(
                     (Object.entries(loss) as Array<[Resource, number]>).map(([r, n]) => [r, -n]),
                   )}
+                  signed
                   empty={<span className="yearImpact-lv num">0</span>}
                 />
               );

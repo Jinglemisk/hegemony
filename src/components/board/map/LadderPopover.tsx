@@ -9,7 +9,7 @@ import { formatPopLabel } from "../../../ui/formatters";
 import { POP_GLYPHS } from "../../../ui/iconRegistry";
 import { Icon } from "../../../ui/icons/Icon";
 import { useGameUi } from "../GameUiContext";
-import { ResourceChips } from "../ResourceChips";
+import { Chips } from "../../frame/parts";
 import { actionRequirementText, gameplayActionDisabled } from "../helpers";
 import { TileSubject } from "../TileSubject";
 import { PopoverActions } from "../PopoverActions";
@@ -70,7 +70,7 @@ export function LadderPopover({
       <div className="placementCostRow">
         <span className="placementSectionLabel">Cost</span>
         <span>
-          <ResourceChips resources={status.cost ?? {}} variant="cost" empty="Free" />
+          <Chips amounts={status.cost ?? {}} empty="Free" />
         </span>
       </div>
 

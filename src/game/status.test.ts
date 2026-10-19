@@ -6,7 +6,10 @@ import {
   getMovePopsStatus,
   getUpgradeColonyToCityStatus,
 } from "./status";
+import { getCivicCalmStatus, getPromotePopStatus } from "./civic";
+import { getTakeIdeaStatus } from "./ideas";
 import { materialTile, owned, scenario, tile } from "./testing/scenario";
+import { TEST_OPENING_SETUP } from "./config";
 import { PLAYER_EVENT_CARDS } from "./data";
 import type { HegemonyState, Pops } from "./types";
 
@@ -25,7 +28,12 @@ function withPendingEvent(G: HegemonyState): HegemonyState {
   return G;
 }
 
-const PENDING_REASON = "Resolve the pending player event first.";
+const PENDING_REASON = "Finish the pending decision first.";
+
+/** Turn actions belong to gameplay; a bare scenario still sits in setup. */
+const inGameplay = (draft: HegemonyState) => {
+  draft.phase = "gameplay";
+};
 
 describe("getMovePopsStatus", () => {
   const twoSettlements = () =>
@@ -33,6 +41,7 @@ describe("getMovePopsStatus", () => {
       .withResources("0", "wealthy")
       .withSettlement("0", "1,0", "city", pops(2, 2, 2))
       .withSettlement("0", "-1,0", "city", pops(0, 0, 0))
+      .mutate(inGameplay)
       .build();
 
   it("passes a legal move and reports no reasons", () => {
@@ -97,6 +106,7 @@ describe("getGrowPopStatus", () => {
       G: scenario()
         .withResources("0", "wealthy")
         .withSettlement("0", id, "city", settlementPops)
+        .mutate(inGameplay)
         .build(),
       id,
     };
@@ -160,6 +170,7 @@ describe("getBuildBuildingStatus", () => {
     const G = scenario()
       .withResources("0", "wealthy")
       .withSettlement("0", id, "city", pops(1, 1, 1))
+      .mutate(inGameplay)
       .build();
     return { G, id };
   };
@@ -222,6 +233,7 @@ describe("getUpgradeColonyToCityStatus", () => {
     const G = scenario()
       .withResources("0", "wealthy")
       .withSettlement("0", id, "colony", pops(0, 1, 1))
+      .mutate(inGameplay)
       .build();
     const status = getUpgradeColonyToCityStatus(G, "0", id);
     expect(status.can).toBe(true);
@@ -287,5 +299,41 @@ describe("getFoundColonyStatus", () => {
     );
     const status = getFoundColonyStatus(G, "0", tile(G, "0,0").id);
     expect(status.reasons).toContain(PENDING_REASON);
+  });
+});
+
+describe("a pending riot", () => {
+  // No registry maps a command to its status, so the turn actions are listed here.
+  // Demotion is left out: during its own riot the seat may demote for the concession.
+  it("blocks every turn action of the rioting seat with the shared reason", () => {
+    const G = scenario()
+      .opening()
+      .mutate((draft) => {
+        draft.pendingPlayerEvent = null;
+        draft.pendingRiot = {
+          playerID: "0",
+          boughtInsurance: [],
+          tokensCleared: 0,
+          concessionTileId: null,
+        };
+      })
+      .build();
+    const { capital, colony } = TEST_OPENING_SETUP[0];
+    const statuses = [
+      getFoundColonyStatus(G, "0", tile(G, "0,0").id),
+      getUpgradeColonyToCityStatus(G, "0", colony.tileId),
+      getBuildBuildingStatus(G, "0", capital.tileId, "marketplace"),
+      getGrowPopStatus(G, "0", capital.tileId, "freemen"),
+      getMovePopsStatus(G, "0", capital.tileId, colony.tileId, pops(0, 0, 1)),
+      getCivicCalmStatus(G, "0", "influence"),
+      getCivicCalmStatus(G, "0", "gold"),
+      getPromotePopStatus(G, "0", capital.tileId, "slaves"),
+      getTakeIdeaStatus(G, "0"),
+    ];
+
+    for (const status of statuses) {
+      expect(status.can).toBe(false);
+      expect(status.reasons).toContain(PENDING_REASON);
+    }
   });
 });

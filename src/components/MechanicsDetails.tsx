@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { Resources } from "../game/types";
 import type { EffectPresentation } from "../ui/effects";
 import { EffectLine } from "./EffectLine";
-import { ResourceChips } from "./board/ResourceChips";
+import { Chips } from "./frame/parts";
 
 /** Standard slots shared by gameplay explanations in tooltips and popovers. */
 export function MechanicsDetails({
@@ -39,7 +39,7 @@ export function MechanicsDetails({
       {effectiveCost ? (
         <div className="mechanicsSlot mechanicsCost">
           <span>Effective cost</span>
-          <ResourceChips resources={effectiveCost} variant="cost" empty={<b>Free</b>} />
+          <Chips amounts={effectiveCost} empty={<b>Free</b>} />
         </div>
       ) : null}
       {children}

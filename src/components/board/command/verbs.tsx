@@ -269,7 +269,7 @@ export function isVerbEnabled(verb: VerbSpec, context: VerbContext) {
 export function verbTitle(verb: VerbSpec, context: VerbContext) {
   if (context.inAssembly) return IN_ASSEMBLY;
   if (context.hasPendingPlayerEvent) {
-    return "Resolve the pending player event first.";
+    return "Finish the pending decision first.";
   }
 
   const hint = typeof verb.hint === "function" ? verb.hint(context) : verb.hint;
@@ -281,7 +281,7 @@ export function verbTitle(verb: VerbSpec, context: VerbContext) {
 export function turnCommitTitle(gate: TurnGate) {
   if (gate.inAssembly) return IN_ASSEMBLY;
   if (gate.hasPendingPlayerEvent) {
-    return "Resolve the pending player event first.";
+    return "Finish the pending decision first.";
   }
 
   return gate.isActive ? "Press and hold to end the turn." : "Current player's turn only.";

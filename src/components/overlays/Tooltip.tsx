@@ -68,12 +68,16 @@ export function Tooltip({
   }, [open]);
 
   const wrapperIsTrigger = focusable;
-  const describedChild = addDescription(children, wrapperIsTrigger ? undefined : tooltipId);
+  const describedChild = addDescription(
+    children,
+    wrapperIsTrigger || !content ? undefined : tooltipId,
+  );
   const handleBlur = (event: FocusEvent<HTMLElement>) => {
     if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
   };
+  // A first tap opens the tooltip instead of clicking; with nothing to say, it clicks.
   const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
-    if (event.pointerType !== "touch") return;
+    if (event.pointerType !== "touch" || !content) return;
 
     if (open) {
       suppressedTouchPointerRef.current = null;

@@ -58,8 +58,10 @@ keyboard pattern is implemented.
 
 Use the standard slots in this order where present: heading, structured effects,
 effective cost, short explanation, source, duration, and blocked reason. Resource
-amounts use `ResourceChips`, whose accessible text includes both amount and resource.
-Tooltip content is descriptive only; actions and Codex navigation live outside it.
+amounts use the frame's `Chips`, which read each amount in words ("4 Wood"). The holding
+table's net-income grid is the one exception: it shows every resource, a zero as a dash,
+so its columns line up. Tooltip content is descriptive only; actions and Codex
+navigation live outside it.
 
 ## Required decisions and multi-seat workflows
 

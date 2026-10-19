@@ -6,12 +6,12 @@ import {
   settlementCapacity,
   totalPops,
 } from "../game/rules";
-import { RESOURCE_LABELS, formatResourceDelta } from "../ui/formatters";
+import { RESOURCE_LABELS, formatResourceDelta, formatSignedNumber } from "../ui/formatters";
 import { RESOURCE_ORDER, tileCssVars } from "../ui/resourceVisuals";
 import { BUILDING_GLYPHS, POP_GLYPHS, SETTLEMENT_GLYPHS, TERRAIN_GLYPHS } from "../ui/iconRegistry";
 import { TERRAIN_PLACEHOLDERS } from "../ui/icons/placeholders";
 import { Icon } from "../ui/icons/Icon";
-import { ResourceChips } from "./board/ResourceChips";
+import { ResourceIcon } from "./Sprites";
 import { capitalize } from "./board/helpers";
 
 /**
@@ -110,21 +110,35 @@ export function SettlementSummaryCard({
 }
 
 /** Every resource always shown so the columns read as a fixed set — a zero dims to
- *  an icon + dash rather than vanishing (the `yield` variant's whole job). */
+ *  an icon + dash rather than vanishing. A table row, so not the frame's chips. */
 export function HoldingNetYields({ resources }: { resources: Resources }) {
   const hasYield = RESOURCE_ORDER.some((resource) => resources[resource] !== 0);
 
   return (
-    <ResourceChips
-      resources={resources}
-      variant="yield"
+    <span
       className="holdingNetYields"
-      chipClassName="holdingNetYield"
       title={
         hasYield
           ? `Net income: ${formatResourceDelta(resources)}`
           : "No net income from this settlement"
       }
-    />
+    >
+      {RESOURCE_ORDER.map((resource) => {
+        const value = resources[resource];
+        const said = `${RESOURCE_LABELS[resource]}: ${value === 0 ? "no change" : formatSignedNumber(value)}`;
+
+        return (
+          <span
+            className={`holdingNetYield${value === 0 ? " emptyNetYield" : ""}`}
+            key={resource}
+            title={said}
+          >
+            <ResourceIcon resource={resource} className="miniResourceIcon" />
+            <strong aria-hidden="true">{value === 0 ? "–" : formatSignedNumber(value)}</strong>
+            <span className="visuallyHidden">{said}</span>
+          </span>
+        );
+      })}
+    </span>
   );
 }

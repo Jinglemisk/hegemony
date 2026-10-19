@@ -9,7 +9,7 @@ import { Icon } from "../../../ui/icons/Icon";
 import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { PopoverActions } from "../PopoverActions";
-import { ResourceChips } from "../ResourceChips";
+import { Chips } from "../../frame/parts";
 import { actionRequirementText, gameplayActionDisabled, getBuildingBenefitText } from "../helpers";
 import { TilePopover } from "./TilePopover";
 import { TileSubject } from "../TileSubject";
@@ -102,7 +102,7 @@ export function BuildPopover({
                 <Icon glyph={BUILDING_GLYPHS[candidate.id]} size="rail" className="miniIcon" />
                 <span>{candidate.name}</span>
                 <strong>
-                  <ResourceChips resources={effectiveCost} variant="cost" empty="Free" />
+                  <Chips amounts={effectiveCost} empty="Free" />
                 </strong>
               </button>
             </Tooltip>

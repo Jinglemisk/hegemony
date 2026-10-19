@@ -10,12 +10,12 @@ import {
   getAssemblyRepealStatus,
   getResolutionCard,
   lawCanBeRemoved,
-  lawProposalReason,
   lawReplacementIds,
   nextAssemblyYear,
   POLITICIANS,
   POLITICIANS_BY_ID,
   previewDirective,
+  proposalReason,
   voteOutlook,
   voteWeightParts,
 } from "../../../game/assembly";
@@ -33,7 +33,8 @@ import { tieRule } from "../../../ui/effects";
 import { RESOURCE_ICON, numberWord, sign } from "../../../ui/frameFormat";
 import { ordinal, toRoman } from "../../../ui/formatters";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
-import { Chips, Ico, Price, SeatMark } from "../../frame/parts";
+import { ActionButton } from "../../ActionButton";
+import { Chips, Ico, SeatMark } from "../../frame/parts";
 import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { ModalShell } from "../modals/ModalShell";
@@ -241,19 +242,21 @@ function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }
                 <span className="sit-epithet">{politician.epithet}</span>
                 <span className="sit-text">{politician.creed}</span>
                 <span className="sit-prize">
-                  Author’s prize <Chips amounts={G.ruleset.assembly.prizes[politician.id]} /> ·{" "}
-                  {politician.kind === "law" ? "Laws" : "Directives"}
+                  Author’s prize <Chips amounts={G.ruleset.assembly.prizes[politician.id]} signed />{" "}
+                  · {politician.kind === "law" ? "Laws" : "Directives"}
                 </span>
-                <button
+                <ActionButton
                   aria-label={`Draw from ${politician.name}`}
+                  blockedReason={draw.reason}
                   className="sit-btn"
-                  disabled={!draw.can}
+                  effectiveCost={draw.cost}
+                  enabled={draw.can}
+                  heading={`Draw from ${politician.name}`}
                   onClick={() => moves.assemblyDraw(viewerId, politician.id)}
-                  title={draw.reason ?? undefined}
-                  type="button"
+                  triggerClassName="sit-tip"
                 >
-                  Draw <Price amounts={draw.cost} short={influence < draw.price} />
-                </button>
+                  Draw <Chips amounts={draw.cost} short={influence < draw.price} />
+                </ActionButton>
               </div>
             );
           })}
@@ -276,18 +279,20 @@ function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }
           </p>
         ) : (
           <div className="sit-acts">
-            <button
+            <ActionButton
               aria-pressed={repealing}
+              blockedReason={repeal.reason}
               className="sit-btn"
-              disabled={!repeal.can}
+              effectiveCost={repeal.cost}
+              enabled={repeal.can}
+              heading="Repeal a Law"
               onClick={() => setRepealing((on) => !on)}
-              title={repeal.reason ?? undefined}
-              type="button"
+              triggerClassName="sit-tip"
             >
               <Ico path="assembly/repeal" size="ui" />
               {repealing ? "Choose a Law above" : "Repeal a Law"}
-              <Price amounts={repeal.cost} short={influence < repeal.price} />
-            </button>
+              <Chips amounts={repeal.cost} short={influence < repeal.price} />
+            </ActionButton>
             <button className="sit-btn" onClick={() => moves.assemblyPass(viewerId)} type="button">
               <Ico path="assembly/pass" size="ui" />
               Hold your peace
@@ -407,7 +412,7 @@ function Drawn({ G, session }: { G: HegemonyState; session: AssemblySession }) {
   const { moves, viewerId } = useGameUi();
   const card = session.held[viewerId]!.card;
   const [target, setTarget] = useState<PlayerId | null>(null);
-  const blocked = lawProposalReason(G, card);
+  const blocked = proposalReason(G, viewerId, card, target ?? undefined);
   const politician = POLITICIANS_BY_ID[card.politician];
 
   return (
@@ -422,7 +427,7 @@ function Drawn({ G, session }: { G: HegemonyState; session: AssemblySession }) {
           <span className="sit-text">{card.text}</span>
           <span className="sit-note">
             If it passes you take the author’s prize:{" "}
-            <Chips amounts={G.ruleset.assembly.prizes[card.politician]} />
+            <Chips amounts={G.ruleset.assembly.prizes[card.politician]} signed />
           </span>
           <span className="sit-lock">
             <Ico path="unrest/locked" size="chip" />
@@ -457,11 +462,13 @@ function Drawn({ G, session }: { G: HegemonyState; session: AssemblySession }) {
             </>
           )}
           <div className="sit-acts">
-            <button
+            <ActionButton
+              blockedReason={blocked}
               className="sit-btn is-primary"
-              disabled={card.kind === "directive" ? !target : Boolean(blocked)}
+              enabled={!blocked}
+              heading={`Seal ${card.name}`}
               onClick={() => moves.assemblyPropose(viewerId, target ?? undefined)}
-              type="button"
+              triggerClassName="sit-tip"
             >
               <Ico path="assembly/propose" size="ui" />
               {card.kind === "law"
@@ -469,7 +476,7 @@ function Drawn({ G, session }: { G: HegemonyState; session: AssemblySession }) {
                 : target
                   ? `Seal against ${G.players[target].name}`
                   : "Choose a rival"}
-            </button>
+            </ActionButton>
             <button
               className="sit-btn"
               onClick={() => moves.assemblyDiscardHeld(viewerId)}
@@ -641,7 +648,7 @@ function itemSide(G: HegemonyState, item: BallotItem, viewer: PlayerId) {
       </span>
       <span>
         Prize to {seatName(G, item.proposer, viewer)}:{" "}
-        <Chips amounts={G.ruleset.assembly.prizes[item.card.politician]} />
+        <Chips amounts={G.ruleset.assembly.prizes[item.card.politician]} signed />
       </span>
     </>
   );
@@ -709,18 +716,20 @@ function Vote({ G, session }: { G: HegemonyState; session: AssemblySession }) {
                 {(["gold", "influence"] as const).map((payment) => {
                   const status = getAssemblyBuyVoteStatus(G, viewerId, payment);
                   return (
-                    <button
+                    <ActionButton
                       aria-label={`Buy a vote with ${status.price} ${payment}`}
+                      blockedReason={status.reason}
                       className="sit-btn"
-                      disabled={!status.can}
+                      effectiveCost={status.cost as Partial<Resources>}
+                      enabled={status.can}
+                      heading={`Buy a vote with ${payment}`}
                       key={payment}
                       onClick={() => moves.assemblyBribe(viewerId, payment)}
-                      title={status.reason ?? undefined}
-                      type="button"
+                      triggerClassName="sit-tip"
                     >
                       <Ico path="assembly/bribe" size="ui" />
-                      +1 vote <Price amounts={status.cost as Partial<Resources>} />
-                    </button>
+                      +1 vote <Chips amounts={status.cost as Partial<Resources>} />
+                    </ActionButton>
                   );
                 })}
                 <span className="sit-note">
@@ -839,7 +848,7 @@ function Result({
             <span>
               {seatName(G, result.item.proposer, viewerId, true)} take
               {result.item.proposer === viewerId ? "" : "s"} the author’s prize:{" "}
-              <Chips amounts={prize} />
+              <Chips amounts={prize} signed />
             </span>
           ) : null}
           {result.outcome === "blocked" ? <span>{result.summary}</span> : null}
@@ -892,7 +901,10 @@ function Rises({ G, session }: { G: HegemonyState; session: AssemblySession }) {
                   {result.outcome === "carried" && result.item.kind === "enact" ? (
                     <span>
                       {seatName(G, result.item.proposer, viewerId, true)}{" "}
-                      <Chips amounts={G.ruleset.assembly.prizes[result.item.card.politician]} />
+                      <Chips
+                        amounts={G.ruleset.assembly.prizes[result.item.card.politician]}
+                        signed
+                      />
                     </span>
                   ) : null}
                 </span>

@@ -7,6 +7,7 @@ import { totalPops } from "./core/pops";
 import { canAfford, payCost } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
 import { settlementCapacity, popsInTransitTo } from "./settlement";
+import { pendingDecisionReasons } from "./status";
 
 export { NATIONAL_IDEAS } from "./nationalIdeas";
 
@@ -96,8 +97,7 @@ export function getTakeIdeaStatus(
     reasons.push(
       `You may buy ${purchases === 1 ? "one Idea" : `${purchases} Ideas`} after your setup pick.`,
     );
-  if (G.assembly || G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger)
-    reasons.push("Finish the pending decision first.");
+  if (!setup) reasons.push(...pendingDecisionReasons(G));
   if (!canAfford(G.players[playerID].resources, cost))
     reasons.push(`An Idea costs ${influenceCost} influence.`);
   const idea = getNationalIdeas(G).find((idea) => idea.id === ideaId);
