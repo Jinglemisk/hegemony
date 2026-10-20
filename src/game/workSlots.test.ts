@@ -4,7 +4,6 @@ import { buildBuilding, growPop, upgradeColonyToCity } from "./actions";
 import { calculateIncomeBreakdown, settlementNetYield } from "./economy/income";
 import { happinessContributions } from "./happiness";
 import { enumerateLegalCommands } from "./legalMoves";
-import { DEFAULT_RULESET } from "./ruleset";
 import {
   settlementIdleSlaves,
   settlementOpenSlots,
@@ -40,10 +39,10 @@ describe("work slots", () => {
     const city = owned(G, FOREST, "0");
 
     expect(forest.slots).toBe(3);
-    expect(settlementWorkingSlaves(forest, city)).toBe(3);
-    expect(settlementIdleSlaves(forest, city)).toBe(2);
+    expect(settlementWorkingSlaves(forest, city, G)).toBe(3);
+    expect(settlementIdleSlaves(forest, city, G)).toBe(2);
 
-    const income = settlementNetYield(forest, city, DEFAULT_RULESET);
+    const income = settlementNetYield(forest, city, G);
     expect(income.wood).toBe(3);
     // Slaves eat nothing. Their unrest is the realm's line, idle ones included.
     expect(income.food).toBe(0);
@@ -68,11 +67,11 @@ describe("work slots", () => {
     const forest = tile(G, FOREST);
     const city = owned(G, FOREST, "0");
 
-    expect(settlementOpenSlots(forest, city)).toBe(3);
+    expect(settlementOpenSlots(forest, city, G)).toBe(3);
     expect(buildBuilding(G, "0", FOREST, "forum").ok).toBe(true);
-    expect(settlementOpenSlots(forest, city)).toBe(2);
-    expect(settlementWorkingSlaves(forest, city)).toBe(2);
-    expect(settlementNetYield(forest, city, G.ruleset).wood).toBe(2);
+    expect(settlementOpenSlots(forest, city, G)).toBe(2);
+    expect(settlementWorkingSlaves(forest, city, G)).toBe(2);
+    expect(settlementNetYield(forest, city, G).wood).toBe(2);
   });
 
   it("a city, the capital included, builds on its tile's slots and no more", () => {
@@ -90,7 +89,7 @@ describe("work slots", () => {
     expect(getBuildBuildingStatus(G, "0", capitalTile, "estate").reasons).toContain(
       "No slots available.",
     );
-    expect(settlementOpenSlots(land, capital)).toBe(0);
+    expect(settlementOpenSlots(land, capital, G)).toBe(0);
   });
 
   it("a colony cannot build, so every slot is a work slot", () => {
@@ -101,8 +100,8 @@ describe("work slots", () => {
     const colony = owned(G, BREADBASKET, "0");
 
     expect(buildingGround(G, "0", BREADBASKET).slots).toBe(0);
-    expect(settlementWorkingSlaves(land, colony)).toBe(4);
-    expect(settlementNetYield(land, colony, G.ruleset).food).toBe(4);
+    expect(settlementWorkingSlaves(land, colony, G)).toBe(4);
+    expect(settlementNetYield(land, colony, G).food).toBe(4);
   });
 
   it("two colonies split a tile's slots, and the one founded first takes the odd slot", () => {
@@ -115,11 +114,11 @@ describe("work slots", () => {
     const first = owned(G, BREADBASKET, "0");
     const second = owned(G, BREADBASKET, "1");
 
-    expect(settlementSlots(land, first)).toBe(4);
-    expect(settlementSlots(land, second)).toBe(3);
-    expect(settlementNetYield(land, first, G.ruleset).food).toBe(4);
-    expect(settlementNetYield(land, second, G.ruleset).food).toBe(3);
-    expect(settlementIdleSlaves(land, second)).toBe(1);
+    expect(settlementSlots(land, first, G)).toBe(4);
+    expect(settlementSlots(land, second, G)).toBe(3);
+    expect(settlementNetYield(land, first, G).food).toBe(4);
+    expect(settlementNetYield(land, second, G).food).toBe(3);
+    expect(settlementIdleSlaves(land, second, G)).toBe(1);
   });
 
   it("an upgrade evicts the other colony and takes every slot", () => {
@@ -136,7 +135,7 @@ describe("work slots", () => {
 
     expect(upgradeColonyToCity(G, "1", "3,0").ok).toBe(true);
     expect(land.settlements).toHaveLength(1);
-    expect(settlementSlots(land, owned(G, "3,0", "1"))).toBe(land.slots);
+    expect(settlementSlots(land, owned(G, "3,0", "1"), G)).toBe(land.slots);
   });
 
   it("hill slots hold buildings and hill slaves make nothing", () => {
@@ -147,8 +146,8 @@ describe("work slots", () => {
     const city = owned(G, HILL, "0");
 
     expect(buildingGround(G, "0", HILL).slots).toBe(3);
-    expect(settlementWorkingSlaves(hill, city)).toBe(0);
-    expect(settlementIdleSlaves(hill, city)).toBe(3);
+    expect(settlementWorkingSlaves(hill, city, G)).toBe(0);
+    expect(settlementIdleSlaves(hill, city, G)).toBe(3);
   });
 });
 

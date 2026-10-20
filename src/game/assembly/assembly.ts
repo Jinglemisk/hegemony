@@ -3,13 +3,13 @@ import { applyUnrestTokenChange, describeUnrestTokenChange } from "../happiness"
 import { PLAYER_IDS } from "../data";
 import { yearDeckSize } from "../year";
 import type { HegemonyState, PlayerId } from "../types";
-import { addLog, getPlayerName, getTile, popsInTransit } from "../core/query";
+import { addLog, getOwnedSettlement, getPlayerName, getTile, realmPops } from "../core/query";
 import { MOVE_OK, invalid } from "../core/results";
 import type { MoveResult } from "../core/results";
 import { shuffleWithSeed } from "../core/rng";
 import { totalPops } from "../core/pops";
 import { POLITICIANS } from "./deck";
-import { hasLawRule, isPriceLaw } from "./laws";
+import { isPriceLaw, settlementVoteDelta } from "./laws";
 import { getResolutionCard, getResolutionCards } from "../content";
 import { getAuthoredGameContent } from "../content";
 import type { GameContent } from "../content";
@@ -205,7 +205,7 @@ function canAct(G: HegemonyState, playerID: PlayerId): boolean {
 }
 
 /** The once-per-sitting draw price. */
-export function nextDrawCost(G: HegemonyState, _playerID: PlayerId): number {
+export function nextDrawCost(G: HegemonyState): number {
   const session = G.assembly;
 
   if (!session) {
@@ -225,7 +225,7 @@ export function getAssemblyDrawStatus(
   playerID: PlayerId,
   politician: PoliticianId,
 ) {
-  const price = nextDrawCost(G, playerID);
+  const price = nextDrawCost(G);
   const session = G.assembly;
   const reason = !canAct(G, playerID)
     ? "You have already spoken this sitting."
@@ -488,23 +488,18 @@ function beginVoting(G: HegemonyState) {
   syncAssemblyActor(G);
 }
 
-/** What a seat's base vote is made of: the seat, its citizens, and the Rural Bloc's
- *  colonies-minus-cities when that Law stands. Isonomia overrides all of it with one. */
+/** What a seat's base vote is made of: the seat, its citizens, and the votes a standing
+ *  Law gives or takes per settlement (Rural Bloc's colonies-minus-cities). Isonomia
+ *  overrides all of it with one. */
 export function voteWeightParts(G: HegemonyState, playerID: PlayerId) {
   // A citizen on the move still votes.
-  let citizens = popsInTransit(G, playerID).citizens;
+  const { citizens } = realmPops(G, playerID);
   let rural = 0;
-  const bloc = hasLawRule(G, "ruralBloc");
 
   for (const tileId of G.players[playerID].settlements) {
-    const settlement = getTile(G, tileId)?.settlements.find(
-      (candidate) => candidate.owner === playerID,
-    );
+    const settlement = getOwnedSettlement(G, tileId, playerID);
 
-    if (settlement) {
-      citizens += settlement.pops.citizens;
-      if (bloc) rural += settlement.kind === "colony" ? 1 : -1;
-    }
+    if (settlement) rural += settlementVoteDelta(G, playerID, settlement.kind);
   }
 
   return { citizens, rural, isonomia: G.assembly?.isonomiaTarget === playerID };
@@ -562,13 +557,17 @@ export function restCanTurn(G: HegemonyState, yea: number, nay: number, restMost
     : wouldPass(G, yea + restMost, nay);
 }
 
+/** What a bought vote may be paid in. */
+export type VotePayment = "gold" | "influence";
+export const VOTE_PAYMENTS: VotePayment[] = ["gold", "influence"];
+
 /**
  * Buy a vote. Capped per player per assembly so a hoard cannot simply buy any outcome.
  */
 export function getAssemblyBuyVoteStatus(
   G: HegemonyState,
   playerID: PlayerId,
-  payment: "gold" | "influence",
+  payment: VotePayment,
 ) {
   const session = G.assembly;
   const rules = G.ruleset.assembly;
@@ -587,9 +586,9 @@ export function getAssemblyBuyVoteStatus(
 export function assemblyBribe(
   G: HegemonyState,
   playerID: PlayerId,
-  payment: "gold" | "influence",
+  payment: VotePayment,
 ): MoveResult {
-  if (!["gold", "influence"].includes(payment)) return invalid("Choose gold or influence.");
+  if (!VOTE_PAYMENTS.includes(payment)) return invalid("Choose gold or influence.");
   const status = getAssemblyBuyVoteStatus(G, playerID, payment);
   if (!status.can) return invalid(status.reason!);
   const session = G.assembly!;

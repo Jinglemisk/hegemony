@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { createModeDefinition } from "../game/definition";
+import { DEFAULT_RULESET } from "../game/ruleset";
 import { POLITICIANS, RESOLUTION_CARDS } from "../game/assembly/deck";
 import { getAuthoredGameContent, getBuildings, getTerrainDeck } from "../game/content";
 import { PLAYER_EVENT_CARDS, YEAR_CARDS, EXPEDITION_TABLES, RIOT_TABLE } from "../game/data";
@@ -45,6 +46,15 @@ import { VICTORY_CARDS } from "../game/victory";
 
 const AUTHORED_CONTENT = getAuthoredGameContent();
 
+const EFFECT_REGISTRIES = [
+  EVENT_EFFECT_PARITY,
+  TABLE_EFFECT_PARITY,
+  LAW_EFFECT_PARITY,
+  DIRECTIVE_EFFECT_PARITY,
+  BUILDING_EFFECT_PARITY,
+  ACTIVE_EFFECT_MECHANIC_PARITY,
+];
+
 function sorted(values: readonly string[]): string[] {
   return [...values].sort();
 }
@@ -71,14 +81,7 @@ describe("feature and content parity manifests", () => {
       addEvidence(fixture);
     }
 
-    for (const registry of [
-      EVENT_EFFECT_PARITY,
-      TABLE_EFFECT_PARITY,
-      LAW_EFFECT_PARITY,
-      DIRECTIVE_EFFECT_PARITY,
-      BUILDING_EFFECT_PARITY,
-      ACTIVE_EFFECT_MECHANIC_PARITY,
-    ]) {
+    for (const registry of EFFECT_REGISTRIES) {
       for (const coverage of Object.values(registry)) {
         addEvidence(coverage.engine);
         addEvidence(coverage.frontend);
@@ -108,6 +111,18 @@ describe("feature and content parity manifests", () => {
       for (const token of tokens) {
         expect(source, implementation + " must contain manifest evidence: " + token).toContain(
           token,
+        );
+      }
+    }
+  });
+
+  it("names a function its file declares as each effect's valuation", () => {
+    for (const registry of EFFECT_REGISTRIES) {
+      for (const coverage of Object.values(registry)) {
+        const { implementation, evidence } = coverage.simulation.valuation;
+        const source = readFileSync(resolve(process.cwd(), implementation), "utf8");
+        expect(source, implementation + " must declare " + evidence).toMatch(
+          new RegExp(`function ${evidence}\\(`),
         );
       }
     }
@@ -191,7 +206,8 @@ describe("feature and content parity manifests", () => {
 
     for (const card of RESOLUTION_CARDS) {
       if (card.kind === "law") {
-        for (const effect of card.effects) expectPresentation(presentLawEffect(effect));
+        for (const effect of card.effects)
+          expectPresentation(presentLawEffect(effect, DEFAULT_RULESET));
       } else {
         for (const effect of card.effects) expectPresentation(presentDirectiveEffect(effect));
       }
@@ -244,10 +260,10 @@ describe("feature and content parity manifests", () => {
     const settlement = owned(G, land.id, "0");
     const incomeWith = (building: (typeof BUILDING_CONTENT_IDS)[number]) => {
       settlement.buildings = [building];
-      return settlementNetYield(land, settlement, G.ruleset);
+      return settlementNetYield(land, settlement, G);
     };
     settlement.buildings = [];
-    const base = settlementNetYield(land, settlement, G.ruleset);
+    const base = settlementNetYield(land, settlement, G);
     const primary = land.resource.type;
 
     // Three freemen, two citizens, two working slaves: a class building adds one each.

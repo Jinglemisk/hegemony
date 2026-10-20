@@ -50,7 +50,7 @@ describe("save definition hydration", () => {
     }
   });
 
-  it("migrates legacy unversioned settlement state deterministically", () => {
+  it("migrates a v1 save's settlement identities and rejects an unversioned one", () => {
     const directory = mkdtempSync(join(tmpdir(), "hegemony-legacy-save-"));
     const path = join(directory, "game.json");
     try {
@@ -65,9 +65,6 @@ describe("save definition hydration", () => {
       expect(result.ok).toBe(true);
       if (!result.ok) throw new Error("opening placement failed");
       const legacyState = structuredClone(result.state) as unknown as Record<string, unknown>;
-      delete legacyState.engineVersion;
-      delete legacyState.stateSchemaVersion;
-      delete legacyState.commandSchemaVersion;
       delete legacyState.nextEntityId;
       const settlement = (legacyState.board as typeof state.board).tiles.find(
         (tile) => tile.id === command.tileId,
@@ -75,20 +72,22 @@ describe("save definition hydration", () => {
       delete settlement.id;
       delete settlement.tileId;
 
-      writeFileSync(
-        path,
-        JSON.stringify({
-          version: 1,
-          seed: 91,
-          mode: "standard",
-          rulesetPatch: null,
-          definition: result.state.definition,
-          opening: "manual",
-          botRngState: 1,
-          history: [{ player: "0", command }],
-          state: legacyState,
-        }),
-      );
+      const writeLegacy = () =>
+        writeFileSync(
+          path,
+          JSON.stringify({
+            version: 1,
+            seed: 91,
+            mode: "standard",
+            rulesetPatch: null,
+            definition: result.state.definition,
+            opening: "manual",
+            botRngState: 1,
+            history: [{ player: "0", command }],
+            state: legacyState,
+          }),
+        );
+      writeLegacy();
 
       const loaded = loadGame(path);
       const migrated = loaded.state.board.tiles.find((tile) => tile.id === command.tileId)!
@@ -96,6 +95,12 @@ describe("save definition hydration", () => {
       expect(loaded.version).toBe(SAVE_FORMAT_VERSION);
       expect(migrated).toMatchObject({ id: "settlement-1", tileId: command.tileId });
       expect(loaded.state.nextEntityId).toBe(2);
+
+      delete legacyState.engineVersion;
+      delete legacyState.stateSchemaVersion;
+      delete legacyState.commandSchemaVersion;
+      writeLegacy();
+      expect(() => loadGame(path)).toThrow(UnsupportedVersionError);
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

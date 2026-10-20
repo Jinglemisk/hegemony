@@ -1,11 +1,6 @@
 /* ledger — Settlement stats, pop/building grids, population & transfer (move) modals, strategy topbar / status & scoreboard panels, year status
    Split from styles.css (Phase 2e); original source order preserved. */
 
-.overCapacityText,
-.overCapacityText strong {
-  color: #b13a28;
-}
-
 .modalBackdrop {
   position: fixed;
   inset: 0;

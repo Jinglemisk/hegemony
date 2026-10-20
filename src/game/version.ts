@@ -35,7 +35,11 @@ export const ENGINE_VERSION = "0.1.0";
 /** v13 (code health, single sources): the ruleset carries the Idea price and purchase
  *  limit, the revolt's slave share and the Assembly tie rule. Older pinned rulesets
  *  cannot answer them, so older saves are rejected. Commands are unchanged. */
-export const STATE_SCHEMA_VERSION = 13;
+/** v14 (code health, typed Laws): every Law effect is typed data, no Law is a named
+ *  rule flag, a Law card carries no `tradeOff`, and the Port's luxury claim is a
+ *  building flag. Older pinned content holds rule flags nothing reads and no claim
+ *  flag, so older saves are rejected. Commands are unchanged. */
+export const STATE_SCHEMA_VERSION = 14;
 export const COMMAND_SCHEMA_VERSION = 6;
 
 export const SAVE_FORMAT_VERSION = 2;

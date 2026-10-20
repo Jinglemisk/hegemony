@@ -1,4 +1,4 @@
-import type { Politician, PoliticianId, ResolutionCard } from "./types";
+import type { LawEffect, Politician, PoliticianId, ResolutionCard } from "./types";
 
 /** Appendix B, read under section 5.9's global limits. */
 export const RESOLUTION_CARDS: ResolutionCard[] = [
@@ -8,8 +8,10 @@ export const RESOLUTION_CARDS: ResolutionCard[] = [
     id: "land-reform",
     name: "Land Reform",
     text: "Slaves grow food on any terrain, but Estates may not be built.",
-    tradeOff: "Slaves grow food on any terrain, but Estates may not be built.",
-    effects: [{ type: "rule", rule: "landReform" }],
+    effects: [
+      { type: "slaveResource", resource: "food" },
+      { type: "buildingForbidden", building: "estate" },
+    ],
   },
   {
     kind: "law",
@@ -17,7 +19,6 @@ export const RESOLUTION_CARDS: ResolutionCard[] = [
     id: "sacred-fields",
     name: "Sacred Fields",
     text: "Temples also grow 2 food, but cost 6 stone.",
-    tradeOff: "Temples also grow 2 food, but cost 6 stone.",
     effects: [
       { type: "buildingFood", building: "temple", amount: 2 },
       { type: "actionCost", action: "buildBuilding", buildingIds: ["temple"], cost: { stone: 6 } },
@@ -29,10 +30,9 @@ export const RESOLUTION_CARDS: ResolutionCard[] = [
     id: "manumission",
     name: "Manumission",
     text: "Promoting a slave is free, but slaves count three times for unrest.",
-    tradeOff: "Promoting a slave is free, but slaves count three times for unrest.",
     effects: [
-      { type: "rule", rule: "manumission" },
       { type: "actionCost", action: "promotePop", pop: "slaves", cost: {} },
+      { type: "slaveUnrestWeight", amount: 3 },
     ],
   },
   {
@@ -41,7 +41,6 @@ export const RESOLUTION_CARDS: ResolutionCard[] = [
     id: "tenant-rights",
     name: "Tenant Rights",
     text: "Growing a slave costs 2 gold; growing a freeman costs 3 gold.",
-    tradeOff: "Growing a slave costs 2 gold; growing a freeman costs 3 gold.",
     effects: [
       { type: "actionCost", action: "growPop", pop: "slaves", cost: { gold: 2 } },
       { type: "actionCost", action: "growPop", pop: "freemen", cost: { gold: 3 } },
@@ -53,8 +52,10 @@ export const RESOLUTION_CARDS: ResolutionCard[] = [
     id: "grain-levy",
     name: "Grain Levy",
     text: "Freemen eat no food, but Marketplaces do nothing.",
-    tradeOff: "Freemen eat no food, but Marketplaces do nothing.",
-    effects: [{ type: "rule", rule: "grainLevy" }],
+    effects: [
+      { type: "popIncome", pop: "freemen", resource: "food", amount: 0 },
+      { type: "buildingIdle", building: "marketplace" },
+    ],
   },
   {
     kind: "law",
@@ -62,7 +63,6 @@ export const RESOLUTION_CARDS: ResolutionCard[] = [
     id: "festival-calendar",
     name: "Festival Calendar",
     text: "Civic calm costs 2 food or 2 influence.",
-    tradeOff: "Civic calm costs 2 food or 2 influence.",
     effects: [{ type: "calmPayment", resource: "food", amount: 2 }],
   },
   {
@@ -71,8 +71,6 @@ export const RESOLUTION_CARDS: ResolutionCard[] = [
     id: "public-works",
     name: "Public Works",
     text: "Estates and Granaries cost 3 wood; Marketplaces cost 2 wood and 2 gold. Colonies hold 3 pops.",
-    tradeOff:
-      "Estates and Granaries cost 3 wood; Marketplaces cost 2 wood and 2 gold. Colonies hold 3 pops.",
     effects: [
       {
         type: "actionCost",
@@ -95,8 +93,10 @@ export const RESOLUTION_CARDS: ResolutionCard[] = [
     id: "guild-charter",
     name: "Guild Charter",
     text: "Your capital may grow twice per turn, but colonies may not grow.",
-    tradeOff: "Your capital may grow twice per turn, but colonies may not grow.",
-    effects: [{ type: "rule", rule: "guildCharter" }],
+    effects: [
+      { type: "growLimit", scope: "capital", amount: 2 },
+      { type: "growLimit", scope: "colony", amount: 0 },
+    ],
   },
   {
     kind: "law",
@@ -104,8 +104,10 @@ export const RESOLUTION_CARDS: ResolutionCard[] = [
     id: "forum-rites",
     name: "Forum Rites",
     text: "Citizens produce 2 influence everywhere, but freemen produce nothing in colonies.",
-    tradeOff: "Citizens produce 2 influence everywhere, but freemen produce nothing in colonies.",
-    effects: [{ type: "rule", rule: "forumRites" }],
+    effects: [
+      { type: "popIncome", pop: "citizens", resource: "influence", amount: 2 },
+      { type: "popIncome", pop: "freemen", resource: "gold", amount: 0, scope: "colony" },
+    ],
   },
   {
     kind: "law",
@@ -113,7 +115,6 @@ export const RESOLUTION_CARDS: ResolutionCard[] = [
     id: "civic-pride",
     name: "Civic Pride",
     text: "Your realm gains 1 happiness, but each city pays 1 gold a year.",
-    tradeOff: "Your realm gains 1 happiness, but each city pays 1 gold a year.",
     effects: [
       { type: "happiness", amount: 1 },
       { type: "settlementIncome", scope: "city", resource: "gold", amount: -1 },
@@ -125,8 +126,10 @@ export const RESOLUTION_CARDS: ResolutionCard[] = [
     id: "master-builders",
     name: "Master Builders",
     text: "Cities gain one building slot, but you may place one fewer colony piece.",
-    tradeOff: "Cities gain one building slot, but you may place one fewer colony piece.",
-    effects: [{ type: "rule", rule: "masterBuilders" }],
+    effects: [
+      { type: "extraSlots", scope: "city", amount: 1 },
+      { type: "colonyLimit", amount: -1 },
+    ],
   },
   {
     kind: "law",
@@ -134,8 +137,10 @@ export const RESOLUTION_CARDS: ResolutionCard[] = [
     id: "homestead-act",
     name: "Homestead Act",
     text: "Colonies may hold one building, but cities lose one slot.",
-    tradeOff: "Colonies may hold one building, but cities lose one slot.",
-    effects: [{ type: "rule", rule: "homesteadAct" }],
+    effects: [
+      { type: "colonyBuildings", amount: 1 },
+      { type: "extraSlots", scope: "city", amount: -1 },
+    ],
   },
   {
     kind: "law",
@@ -143,7 +148,6 @@ export const RESOLUTION_CARDS: ResolutionCard[] = [
     id: "colonial-charter",
     name: "Colonial Charter",
     text: "Founding a colony costs 1 food and a pop; upgrading one costs 6 stone.",
-    tradeOff: "Founding a colony costs 1 food and a pop; upgrading one costs 6 stone.",
     effects: [
       { type: "actionCost", action: "foundColony", cost: { food: 1 } },
       { type: "actionCost", action: "upgradeColonyToCity", cost: { stone: 6 } },
@@ -155,7 +159,6 @@ export const RESOLUTION_CARDS: ResolutionCard[] = [
     id: "frontier-spirit",
     name: "Frontier Spirit",
     text: "Founding a colony grants a free slave, but colonies hold 3 pops.",
-    tradeOff: "Founding a colony grants a free slave, but colonies hold 3 pops.",
     effects: [
       { type: "onFoundColony", grantPop: "slaves" },
       { type: "colonyCapacity", amount: 3 },
@@ -167,7 +170,6 @@ export const RESOLUTION_CARDS: ResolutionCard[] = [
     id: "harbour-dues",
     name: "Harbour Dues",
     text: "Ports cost 2 stone; Marketplaces cost 3 wood and 4 gold.",
-    tradeOff: "Ports cost 2 stone; Marketplaces cost 3 wood and 4 gold.",
     effects: [
       { type: "actionCost", action: "buildBuilding", buildingIds: ["port"], cost: { stone: 2 } },
       {
@@ -184,8 +186,10 @@ export const RESOLUTION_CARDS: ResolutionCard[] = [
     id: "rural-bloc",
     name: "Rural Bloc",
     text: "Each colony casts one vote, but each city casts one fewer.",
-    tradeOff: "Each colony casts one vote, but each city casts one fewer.",
-    effects: [{ type: "rule", rule: "ruralBloc" }],
+    effects: [
+      { type: "settlementVotes", scope: "colony", amount: 1 },
+      { type: "settlementVotes", scope: "city", amount: -1 },
+    ],
   },
   {
     kind: "directive",
@@ -242,6 +246,12 @@ export const RESOLUTION_CARDS: ResolutionCard[] = [
     effects: [{ type: "equalVotesNextAssembly" }],
   },
 ];
+/** A Law's own effects, so a politician's tendency is the card and cannot go stale. */
+function lawEffects(cardId: string): LawEffect[] {
+  const card = RESOLUTION_CARDS.find((c) => c.id === cardId);
+  if (card?.kind !== "law") throw new Error(`No Law ${cardId}`);
+  return card.effects;
+}
 export const POLITICIANS: Politician[] = [
   {
     id: "demosthenes",
@@ -249,7 +259,7 @@ export const POLITICIANS: Politician[] = [
     epithet: "Agricultural Reformer",
     creed: "Food, labour and the social ladder.",
     kind: "law",
-    tendency: [{ type: "rule", rule: "landReform" }],
+    tendency: lawEffects("land-reform"),
   },
   {
     id: "perdiccas",
@@ -257,7 +267,7 @@ export const POLITICIANS: Politician[] = [
     epithet: "Urban Planner",
     creed: "Capital growth and city buildings.",
     kind: "law",
-    tendency: [{ type: "rule", rule: "guildCharter" }],
+    tendency: lawEffects("guild-charter"),
   },
   {
     id: "kleistophenes",
@@ -265,7 +275,7 @@ export const POLITICIANS: Politician[] = [
     epithet: "Rural Expansionist",
     creed: "Colonies, their buildings and their votes.",
     kind: "law",
-    tendency: [{ type: "rule", rule: "homesteadAct" }],
+    tendency: lawEffects("homestead-act"),
   },
   {
     id: "stratokles",
@@ -280,9 +290,6 @@ export const POLITICIANS_BY_ID = Object.fromEntries(POLITICIANS.map((p) => [p.id
   PoliticianId,
   Politician
 >;
-export const RESOLUTION_DECKS = Object.fromEntries(
-  POLITICIANS.map((p) => [p.id, RESOLUTION_CARDS.filter((c) => c.politician === p.id)]),
-) as Record<PoliticianId, ResolutionCard[]>;
 export function getAuthoredResolutionCard(cardId: string): ResolutionCard | null {
   return RESOLUTION_CARDS.find((c) => c.id === cardId) ?? null;
 }

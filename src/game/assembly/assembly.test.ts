@@ -80,6 +80,28 @@ describe("v2 Assembly", () => {
     expect(G.assembly!.ballot).toEqual([]);
     expect(G.assembly!.phase).toBe("closing");
   });
+  it("rises without a vote when every seat passes", () => {
+    const G = sitting();
+    pass(G);
+    expect(G.assembly!.phase).toBe("closing");
+    expect(G.assembly!.results).toEqual([]);
+    expect(G.log.at(-1)?.message).toBe("The Assembly rises with nothing on the bema.");
+  });
+  it("closes by handing the suspended turn back with its income", () => {
+    const G = sitting();
+    expect(closeAssembly(G).ok).toBe(false);
+    pass(G);
+    G.players["0"].collectedThisTurn = false;
+    const turn = G.turn;
+    expect(closeAssembly(G).ok).toBe(true);
+    expect(G.assembly).toBeNull();
+    expect(G.currentPlayer).toBe("0");
+    expect(G.turn).toBe(turn + 1);
+    expect(G.players["0"].collectedThisTurn).toBe(true);
+    expect(G.log.some((entry) => entry.message.includes("automatically collected income"))).toBe(
+      true,
+    );
+  });
   it("charges one 2-influence draw, permits a secret proposal, and has no redraw", () => {
     const G = sitting();
     const before = G.players["0"].resources.influence;

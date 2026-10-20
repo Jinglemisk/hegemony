@@ -62,3 +62,12 @@ export function subtractPops(target: Pops, pops: Pops) {
     target[pop] -= pops[pop];
   }
 }
+
+/** The holder with the most pops of one class; the earliest on a tie. Riots, revolts
+ *  and hunger take each pop they remove from it. */
+export function fullest<T extends { pops: Pops }>(holders: T[], pop: PopType): T | undefined {
+  return holders.reduce<T | undefined>(
+    (best, holder) => (holder.pops[pop] > (best?.pops[pop] ?? 0) ? holder : best),
+    undefined,
+  );
+}

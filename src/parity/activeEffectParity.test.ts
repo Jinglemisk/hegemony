@@ -216,7 +216,7 @@ describe("frontend active-effect parity", () => {
     expect(alarms).toContain('class="alarms"');
     for (const descriptor of descriptors) {
       if (descriptor.kind === "yearCard" || descriptor.kind === "standingLaw") continue;
-      expect(alarms).toContain(presentActiveEffect(descriptor).accessibleText);
+      expect(alarms).toContain(presentActiveEffect(descriptor, G.ruleset).accessibleText);
     }
   });
 
@@ -224,14 +224,14 @@ describe("frontend active-effect parity", () => {
     const G = stateWithSettlement();
     plantLaw(G, "guild-charter");
     plantLaw(G, "master-builders");
-    const presentations = presentActiveEffects(getActiveEffects(G, "0"));
+    const presentations = presentActiveEffects(getActiveEffects(G, "0"), G.ruleset);
     const guild = presentations.find((effect) => effect.source === "Guild Charter")!;
     const builders = presentations.find((effect) => effect.source === "Master Builders")!;
 
-    expect(guild.text).toContain("capital may grow twice");
-    expect(guild.text).toContain("colonies may not grow");
-    expect(builders.text).toContain("Cities gain one building slot");
-    expect(builders.text).toContain("one fewer colony piece");
+    expect(guild.text).toContain("Your capital may grow 2 times per turn");
+    expect(guild.text).toContain("Colonies may not grow");
+    expect(builders.text).toContain("Cities gain 1 work slot");
+    expect(builders.text).toContain("1 fewer colony piece");
   });
 
   it.each([

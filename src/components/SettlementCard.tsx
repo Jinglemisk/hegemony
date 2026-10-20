@@ -1,11 +1,6 @@
 import { occupiedBuildingSlots } from "../game/ideaRules";
 import type { HegemonyState, HexTile, Resources, Settlement } from "../game/types";
-import {
-  buildingGround,
-  settlementOverCapacity,
-  settlementCapacity,
-  totalPops,
-} from "../game/rules";
+import { buildingGround, settlementCapacity, totalPops } from "../game/rules";
 import { RESOURCE_LABELS, formatResourceDelta, formatSignedNumber } from "../ui/formatters";
 import { RESOURCE_ORDER, tileCssVars } from "../ui/resourceVisuals";
 import { BUILDING_GLYPHS, POP_GLYPHS, SETTLEMENT_GLYPHS, TERRAIN_GLYPHS } from "../ui/iconRegistry";
@@ -35,7 +30,6 @@ export function SettlementSummaryCard({
 }) {
   const popTotal = totalPops(settlement.pops);
   const capacity = settlementCapacity(settlement, G);
-  const overCapacity = settlementOverCapacity(settlement, G);
   const { slots } = buildingGround(G, settlement.owner, tile.id);
 
   return (
@@ -70,10 +64,7 @@ export function SettlementSummaryCard({
             </strong>
           </span>
         </span>
-        <span
-          className={overCapacity > 0 ? "cityMeter overCapacityText" : "cityMeter"}
-          title={`Population ${popTotal} of ${capacity}`}
-        >
+        <span className="cityMeter" title={`Population ${popTotal} of ${capacity}`}>
           <Icon glyph={POP_GLYPHS.citizens} size="rail" className="miniIcon" />
           <span className="cityMeterText">
             <strong>

@@ -1,12 +1,11 @@
 import { produce } from "immer";
-import type { HegemonyState, PlayerId, Settlement } from "./types";
+import type { HegemonyState, PlayerId } from "./types";
 import type { IdeaPopChoice, NationalIdeaId, NationalIdeaOwnership } from "./ideaTypes";
 import { PLAYER_IDS } from "./data";
 import { addLog, getOwnedSettlement, getPlayerName } from "./core/query";
-import { totalPops } from "./core/pops";
 import { canAfford, payCost } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
-import { settlementCapacity, popsInTransitTo } from "./settlement";
+import { settlementRoom } from "./settlement";
 import { pendingDecisionReasons } from "./status";
 
 export { NATIONAL_IDEAS } from "./nationalIdeas";
@@ -23,7 +22,7 @@ export function playerNationalIdeas(G: HegemonyState, playerID: PlayerId) {
 export function ideaPopTargets(G: HegemonyState, playerID: PlayerId): IdeaPopChoice[] {
   return G.players[playerID].settlements.flatMap((tileId) => {
     const s = getOwnedSettlement(G, tileId, playerID);
-    return s && ideaRoom(G, s) > 0
+    return s && settlementRoom(G, s) > 0
       ? (["slaves", "freemen"] as const).map((pop) => ({ tileId, pop }))
       : [];
   });
@@ -161,15 +160,6 @@ function acquireIdea(
     acquired === "purchase" ? { kind: "ideaBought", ideaId } : undefined,
   );
 }
-export function ideaRoom(G: HegemonyState, settlement: Settlement) {
-  return Math.max(
-    0,
-    settlementCapacity(settlement, G) -
-      totalPops(settlement.pops) -
-      popsInTransitTo(G, settlement.id),
-  );
-}
-
 /** Score a legal setup choice without drawing a card. */
 export function ideaForEval(
   G: HegemonyState,

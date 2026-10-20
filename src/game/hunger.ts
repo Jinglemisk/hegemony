@@ -1,18 +1,20 @@
 import { produce } from "immer";
 import { effectiveRuleset } from "./assembly/laws";
 import { formatPopName } from "./core/format";
+import { fullest } from "./core/pops";
 import { addLog, getOwnedSettlement, getPlayerName } from "./core/query";
 import { invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { commitTurn } from "./turn";
 import type { HegemonyState, HungerLeave, HungerPop, PlayerId, Pops } from "./types";
 
+/** The classes that can eat, freemen first: the order a hungry realm loses them. */
+export const HUNGER_POPS: readonly HungerPop[] = ["freemen", "citizens"];
+
 /** The classes that eat under the standing Laws, freemen first. */
 export function hungerMouths(G: HegemonyState): HungerPop[] {
   const rules = effectiveRuleset(G);
-  return (["freemen", "citizens"] as const).filter(
-    (pop) => (rules.popIncome[pop].flat.food ?? 0) < 0,
-  );
+  return HUNGER_POPS.filter((pop) => (rules.popIncome[pop].flat.food ?? 0) < 0);
 }
 
 type Stock = { tileId: string; pops: Pops };
@@ -29,13 +31,10 @@ function stocks(G: HegemonyState, playerID: PlayerId): Stock[] {
 function takeFromFullest(from: Stock[], pop: HungerPop, count: number): HungerLeave[] {
   const leave: HungerLeave[] = [];
   for (let i = 0; i < count; i += 1) {
-    const fullest = from.reduce<Stock | undefined>(
-      (best, stock) => (stock.pops[pop] > (best?.pops[pop] ?? 0) ? stock : best),
-      undefined,
-    );
-    if (!fullest) break;
-    fullest.pops[pop] -= 1;
-    leave.push({ tileId: fullest.tileId, pop });
+    const stock = fullest(from, pop);
+    if (!stock) break;
+    stock.pops[pop] -= 1;
+    leave.push({ tileId: stock.tileId, pop });
   }
   return leave;
 }
@@ -144,8 +143,7 @@ function removeHungerLeave(G: HegemonyState, playerID: PlayerId, leave: readonly
 }
 
 function describeLeave(leave: readonly HungerLeave[]): string {
-  return (["freemen", "citizens"] as const)
-    .map((pop) => [pop, leave.filter((l) => l.pop === pop).length] as const)
+  return HUNGER_POPS.map((pop) => [pop, leave.filter((l) => l.pop === pop).length] as const)
     .filter(([, n]) => n > 0)
     .map(([pop, n]) => `${n} ${formatPopName(pop, n)}`)
     .join(", ");

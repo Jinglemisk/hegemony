@@ -1,7 +1,7 @@
 import { PLAYER_IDS } from "./data";
 import type { HegemonyState, GameOverReason, PlayerId, VictoryMetric } from "./types";
 import { totalPops } from "./core/pops";
-import { addLog, getPlayerName, getTile, popsInTransit } from "./core/query";
+import { addLog, getOwnedSettlement, getPlayerName, realmPops } from "./core/query";
 import { standingHappiness } from "./happiness";
 
 /**
@@ -72,31 +72,15 @@ export function victoryMetricValue(
       // Beloved reads the level without calm, which lasts a year.
       return standingHappiness(G, playerID);
     case "cities":
+      return player.settlements.filter((tileId) => {
+        const settlement = getOwnedSettlement(G, tileId, playerID);
+        return settlement !== undefined && settlement.kind !== "colony";
+      }).length;
+    // A pop on the move is still in its realm: Demos and Civic Elite count it.
     case "pops":
-    case "citizens": {
-      // A pop on the move is still in its realm: Demos and Civic Elite count it.
-      const moving = popsInTransit(G, playerID);
-      let cities = 0;
-      let pops = totalPops(moving);
-      let citizens = moving.citizens;
-
-      for (const tileId of player.settlements) {
-        const tile = getTile(G, tileId);
-        const settlement = tile?.settlements.find((candidate) => candidate.owner === playerID);
-
-        if (!settlement) {
-          continue;
-        }
-
-        if (settlement.kind !== "colony") {
-          cities += 1;
-        }
-        pops += totalPops(settlement.pops);
-        citizens += settlement.pops.citizens;
-      }
-
-      return metric === "cities" ? cities : metric === "pops" ? pops : citizens;
-    }
+      return totalPops(realmPops(G, playerID));
+    case "citizens":
+      return realmPops(G, playerID).citizens;
   }
 }
 

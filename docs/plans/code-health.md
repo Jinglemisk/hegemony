@@ -113,6 +113,9 @@ the shared button.
 | Bot Ideas      | ID checks, an if-chain of unnamed numbers, a manifest pointing at the wrong functions (S5, S6, S7, S11)                                                                                                                             | An exhaustive switch over named values on the typed effects; manifest entries name the real functions             |
 | Room           | Pops on the move counted by growth and Ideas, ignored by event cards (E2, bug 1)                                                                                                                                                    | One room function for growth, Ideas and events; trade slice 3's "no room, no deal" calls it                       |
 
+Kept on purpose: the luxury suppression tick, the seam the [luxury plan](luxury-goods.md) keeps
+for suppression Directives (Q48), and the tests that pin the year and player decks' paper mix.
+
 ### 4. UI cleanup
 
 | Part            | Before                                                                                                                            | After                                                                                             |
@@ -157,8 +160,8 @@ the shared button.
 All to `main`, before player trade slice 1, in this order:
 
 1. **Single sources** (section 1). Merged, #125.
-2. **Decision host and shared primitives** (section 2). Merged.
-3. **Typed Laws, one income, one room** (section 3).
+2. **Decision host and shared primitives** (section 2). Merged, #126.
+3. **Typed Laws, one income, one room** (section 3). Merged.
 4. **UI cleanup** (section 4).
 5. **CSS cleanup** (section 5).
 

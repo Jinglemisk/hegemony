@@ -1,11 +1,6 @@
 import type { GameCommand } from "./legalMoves";
 import type { HegemonyState, PlayerId, Settlement } from "./types";
-import {
-  CURRENT_RECIPE_VERSIONS,
-  COMMAND_SCHEMA_VERSION,
-  STATE_SCHEMA_VERSION,
-  UnsupportedVersionError,
-} from "./version";
+import { assertCurrentRecipeVersions } from "./version";
 
 export interface HistoricalCommandRecord {
   player: PlayerId;
@@ -13,9 +8,10 @@ export interface HistoricalCommandRecord {
 }
 
 /**
- * Upgrade the unversioned state embedded by legacy v1 saves. Settlement identities
- * follow placement-command order, so loading a legacy snapshot and replaying its
- * recipe derive the same deterministic IDs rather than board-array-order accidents.
+ * Give the state embedded by a v1-format save its entity identities. The state must
+ * carry the current schema versions. Settlement identities follow placement-command
+ * order, so loading a legacy snapshot and replaying its recipe derive the same
+ * deterministic IDs rather than board-array-order accidents.
  */
 export function migrateLegacyState(
   serialized: unknown,
@@ -26,24 +22,9 @@ export function migrateLegacyState(
   }
 
   const state = serialized as HegemonyState;
-  if (state.stateSchemaVersion !== undefined && state.stateSchemaVersion !== STATE_SCHEMA_VERSION) {
-    throw new UnsupportedVersionError(
-      "legacy state schema",
-      state.stateSchemaVersion,
-      STATE_SCHEMA_VERSION,
-    );
-  }
-  if (
-    state.commandSchemaVersion !== undefined &&
-    state.commandSchemaVersion !== COMMAND_SCHEMA_VERSION
-  ) {
-    throw new UnsupportedVersionError(
-      "legacy command schema",
-      state.commandSchemaVersion,
-      COMMAND_SCHEMA_VERSION,
-    );
-  }
-  Object.assign(state, CURRENT_RECIPE_VERSIONS);
+  // An unversioned state is older than any schema this engine reads: rejected like
+  // every older save (version.ts), never stamped current.
+  assertCurrentRecipeVersions(state, "legacy");
 
   const settlements: Array<{ tileId: string; settlement: Settlement }> = [];
 

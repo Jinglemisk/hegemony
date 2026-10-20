@@ -87,9 +87,11 @@ describe("low-number economy study invariants", () => {
     for (const card of LOW_NUMBER_CONTENT.playerEvents) {
       expect(presentEventEffects(card.effects).text).not.toBe("");
     }
+    const ruleset = deriveRuleset(DEFAULT_RULESET, LOW_NUMBER_RULESET_PATCH);
     for (const card of LOW_NUMBER_CONTENT.resolutions) {
       if (card.kind === "law") {
-        for (const effect of card.effects) expect(presentLawEffect(effect).text).not.toBe("");
+        for (const effect of card.effects)
+          expect(presentLawEffect(effect, ruleset).text).not.toBe("");
       } else {
         for (const effect of card.effects) expect(presentDirectiveEffect(effect).text).not.toBe("");
       }

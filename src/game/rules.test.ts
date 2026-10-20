@@ -170,7 +170,7 @@ describe("per-settlement income (settlementNetYield)", () => {
     const settlement = owned(state, mat.id, "0");
     settlement.pops = { citizens: 3, freemen: 0, slaves: 0 };
 
-    const income = settlementNetYield(mat, settlement, DEFAULT_RULESET);
+    const income = settlementNetYield(mat, settlement, state);
     expect(income.influence).toBe(3);
     expect(income.gold).toBe(0);
     expect(income.food).toBe(-3);
@@ -185,7 +185,7 @@ describe("per-settlement income (settlementNetYield)", () => {
     const settlement = owned(state, mat.id, "0");
     settlement.pops = { citizens: 0, freemen: 4, slaves: 0 };
 
-    const income = settlementNetYield(mat, settlement, DEFAULT_RULESET);
+    const income = settlementNetYield(mat, settlement, state);
     expect(income.gold).toBe(4);
     expect(income.food).toBe(-4);
   });
@@ -197,7 +197,7 @@ describe("per-settlement income (settlementNetYield)", () => {
     const settlement = owned(state, mat.id, "0");
     settlement.pops = { citizens: 0, freemen: 0, slaves: 2 };
 
-    const income = settlementNetYield(mat, settlement, DEFAULT_RULESET);
+    const income = settlementNetYield(mat, settlement, state);
     expect(income[mat.resource.type]).toBe(2);
     expect(income.food).toBe(0);
   });
@@ -210,7 +210,7 @@ describe("per-settlement income (settlementNetYield)", () => {
     settlement.pops = { citizens: 0, freemen: 5, slaves: 0 };
     settlement.buildings = ["marketplace"];
 
-    expect(settlementNetYield(mat, settlement, DEFAULT_RULESET).gold).toBe(10);
+    expect(settlementNetYield(mat, settlement, state).gold).toBe(10);
   });
 
   it("a Temple adds 1 to the level, is no income, and leaves the citizens' influence alone", () => {
@@ -221,7 +221,7 @@ describe("per-settlement income (settlementNetYield)", () => {
     settlement.pops = { citizens: 3, freemen: 0, slaves: 0 };
     settlement.buildings = ["temple"];
 
-    const income = settlementNetYield(mat, settlement, DEFAULT_RULESET);
+    const income = settlementNetYield(mat, settlement, state);
     expect(income.influence).toBe(3);
     expect(income).not.toHaveProperty("happiness");
     expect(happinessLevel(state, "0")).toBe(1);
@@ -311,11 +311,7 @@ describe("the Forum", () => {
 
     expect(buildBuilding(state, "0", "0,0", "forum").ok).toBe(true);
 
-    const yieldWithForum = settlementNetYield(
-      tile(state, "0,0"),
-      owned(state, "0,0", "0"),
-      state.ruleset,
-    );
+    const yieldWithForum = settlementNetYield(tile(state, "0,0"), owned(state, "0,0", "0"), state);
     expect(yieldWithForum.influence).toBe(2);
   });
 });

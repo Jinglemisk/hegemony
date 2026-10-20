@@ -57,8 +57,8 @@ export interface LuxuryGoodDefinition {
  * one owner, seated at a shared two-tile coastal vertex (Q31/Q45).
  *
  * Whether it is ACTIVE is never stored: activity is derived in one place
- * (`game/luxury.ts`) from ownership, the per-player active cap, and suppression,
- * so no state can say "active but suppressed" (Q48's denial seam, unused today).
+ * (`game/luxury.ts`) from ownership and suppression, so no state can say "active
+ * but suppressed" (Q48's denial seam, unused today).
  */
 export interface LuxuryAsset {
   /** Stable match-local identity (`luxury-N`) — the handle trade and denial use. */
@@ -271,6 +271,9 @@ export interface BuildingDefinition {
   effects: BuildingEffect[];
   /** A coastal colony may raise it. Every other building needs a city. */
   colony?: true;
+  /** Its fact is a claim on one adjacent unclaimed luxury, so it needs the coast and a
+   *  free good, and the build names which good it claims. */
+  claimsLuxury?: true;
   /** Needs a tile whose slaves make something, so it cannot stand on a hill. */
   needsYield?: true;
 }

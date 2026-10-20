@@ -1,12 +1,6 @@
 import { occupiedBuildingSlots } from "../../../game/ideaRules";
 import type { CSSProperties } from "react";
-import {
-  POP_TYPES,
-  settlementCapacity,
-  settlementNextYield,
-  settlementOverCapacity,
-  totalPops,
-} from "../../../game/rules";
+import { POP_TYPES, settlementCapacity, settlementNextYield, totalPops } from "../../../game/rules";
 import type { PopType } from "../../../game/types";
 import { BUILDING_ICON, RESOURCE_ICON, sign, tone } from "../../../ui/frameFormat";
 import { formatPopLabel } from "../../../ui/formatters";
@@ -81,20 +75,12 @@ export function CitiesPage({
         const name = names.get(settlement.id) ?? "POLIS";
         const pops = totalPops(settlement.pops);
         const capacity = settlementCapacity(settlement, G);
-        const over = settlementOverCapacity(settlement, G);
         const { slots, built, open, raisable } = slotsOf(holding, G);
         const room = Math.max(0, capacity - pops);
         const census = POP_TYPES.map(
           (pop) => `${settlement.pops[pop]} ${formatPopLabel(pop, settlement.pops[pop])}`,
         ).join(", ");
-        const state =
-          pops === 0
-            ? "stands empty"
-            : over > 0
-              ? "over its walls"
-              : pops >= capacity
-                ? "at capacity"
-                : null;
+        const state = pops === 0 ? "stands empty" : pops >= capacity ? "at capacity" : null;
         const drawn = holdings.length <= DRAWN || tile.id === openTileId;
 
         return (

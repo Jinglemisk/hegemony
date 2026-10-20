@@ -1,34 +1,29 @@
-import { ideaSlotBonus, occupiedBuildingSlots, colonyPieceBonus } from "./ideaRules";
-import { effectiveRuleset, hasLawRule, type RulesSource } from "./assembly/laws";
+import { standingSlotBonus, occupiedBuildingSlots, colonyPieceBonus } from "./ideaRules";
+import { colonyLimitDelta, effectiveRuleset, lawSlaveResource } from "./assembly/laws";
 import { hexDistance, isCoastalTile } from "./map";
 import type {
   HegemonyState,
   HexTile,
   PlayerId,
   PopType,
+  Pops,
   Settlement,
   MaterialResource,
 } from "./types";
 import { capitalize } from "./core/format";
-import { totalPops } from "./core/pops";
+import { EMPTY_POPS, addPops, clonePops, totalPops } from "./core/pops";
 import { getOwnedSettlement, getTile } from "./core/query";
 import type { ActionStatus } from "./core/results";
 
 /** The kind's capacity, for previews of a settlement that does not exist yet. */
-export function settlementPopCapacity(kind: Settlement["kind"], source: RulesSource) {
-  return effectiveRuleset(source).settlements[kind].popCapacity;
+export function settlementPopCapacity(kind: Settlement["kind"], G: HegemonyState) {
+  return effectiveRuleset(G).settlements[kind].popCapacity;
 }
 
-/** A settlement's pop capacity: its kind's, and nothing raises it. */
-export function settlementCapacity(settlement: Settlement, ruleset: RulesSource) {
-  return settlementPopCapacity(settlement.kind, ruleset);
-}
-
-export function settlementOverCapacity(settlement: Settlement, ruleset: RulesSource) {
-  // A capacity cut blocks new arrivals; it never penalizes existing pops.
-  return "activeLaws" in ruleset
-    ? 0
-    : Math.max(0, totalPops(settlement.pops) - settlementCapacity(settlement, ruleset));
+/** A settlement's pop capacity: its kind's, and nothing raises it. A capacity cut
+ *  blocks new arrivals; it never penalizes existing pops. */
+export function settlementCapacity(settlement: Settlement, G: HegemonyState) {
+  return settlementPopCapacity(settlement.kind, G);
 }
 
 export function playerPopulationTotals(G: HegemonyState, playerID: PlayerId) {
@@ -53,14 +48,10 @@ export function playerPopulationTotals(G: HegemonyState, playerID: PlayerId) {
  * The tile slots this settlement holds. A settlement alone on its tile holds them all;
  * colonies sharing a tile split them, and the colony founded first takes the odd one.
  */
-export function settlementSlots(tile: HexTile, settlement: Settlement, source?: RulesSource) {
-  const cityDelta =
-    settlement.kind === "colony"
-      ? 0
-      : Number(hasLawRule(source, "masterBuilders")) - Number(hasLawRule(source, "homesteadAct"));
+export function settlementSlots(tile: HexTile, settlement: Settlement, G: HegemonyState) {
   const slots = Math.max(
-    occupiedBuildingSlots(source, settlement),
-    tile.slots + cityDelta + ideaSlotBonus(source, settlement),
+    occupiedBuildingSlots(G, settlement),
+    tile.slots + standingSlotBonus(G, settlement),
   );
   const sharers = tile.settlements.length;
 
@@ -75,11 +66,8 @@ export function settlementSlots(tile: HexTile, settlement: Settlement, source?: 
 }
 
 /** Slots left for slaves to work: every building takes one. */
-export function settlementOpenSlots(tile: HexTile, settlement: Settlement, source?: RulesSource) {
-  return Math.max(
-    0,
-    settlementSlots(tile, settlement, source) - occupiedBuildingSlots(source, settlement),
-  );
+export function settlementOpenSlots(tile: HexTile, settlement: Settlement, G: HegemonyState) {
+  return Math.max(0, settlementSlots(tile, settlement, G) - occupiedBuildingSlots(G, settlement));
 }
 
 /**
@@ -88,25 +76,18 @@ export function settlementOpenSlots(tile: HexTile, settlement: Settlement, sourc
  * resource (hills) no slave works.
  */
 /** The actual resource of the working-slave column, after standing rules. */
-export function settlementSlaveResource(
-  tile: HexTile,
-  source?: RulesSource,
-): MaterialResource | null {
-  return hasLawRule(source, "landReform") ? "food" : (tile.resource?.type ?? null);
+export function settlementSlaveResource(tile: HexTile, G: HegemonyState): MaterialResource | null {
+  return lawSlaveResource(G) ?? tile.resource?.type ?? null;
 }
 
-export function settlementWorkingSlaves(
-  tile: HexTile,
-  settlement: Settlement,
-  source?: RulesSource,
-) {
-  return settlementSlaveResource(tile, source)
-    ? Math.min(settlement.pops.slaves, settlementOpenSlots(tile, settlement, source))
+export function settlementWorkingSlaves(tile: HexTile, settlement: Settlement, G: HegemonyState) {
+  return settlementSlaveResource(tile, G)
+    ? Math.min(settlement.pops.slaves, settlementOpenSlots(tile, settlement, G))
     : 0;
 }
 
-export function settlementIdleSlaves(tile: HexTile, settlement: Settlement, source?: RulesSource) {
-  return settlement.pops.slaves - settlementWorkingSlaves(tile, settlement, source);
+export function settlementIdleSlaves(tile: HexTile, settlement: Settlement, G: HegemonyState) {
+  return settlement.pops.slaves - settlementWorkingSlaves(tile, settlement, G);
 }
 
 export function settlementIncomeSource(tile: HexTile, settlement: Settlement) {
@@ -126,25 +107,35 @@ export function playerPieces(G: HegemonyState, playerID: PlayerId) {
   const cities = Math.max(0, kinds.length - colonies - setupCities);
 
   const colonySupply = G.ruleset.pieces.colonies + colonyPieceBonus(G, playerID);
+  const colonyLimit = Math.max(0, colonySupply + colonyLimitDelta(G, playerID));
   return {
     colonies,
     cities,
     colonySupply,
-    colonyLimit: Math.max(0, colonySupply - Number(hasLawRule(G, "masterBuilders"))),
-    coloniesRemaining: Math.max(
-      0,
-      colonySupply - Number(hasLawRule(G, "masterBuilders")) - colonies,
-    ),
+    colonyLimit,
+    coloniesRemaining: Math.max(0, colonyLimit - colonies),
     citySupply: G.ruleset.pieces.cities,
     citiesRemaining: Math.max(0, G.ruleset.pieces.cities - cities),
   };
 }
 
-/** Pops on their way to a settlement: they hold room there until they arrive. */
-export function popsInTransitTo(G: HegemonyState, settlementId: string) {
-  return G.transfers
-    .filter((transfer) => transfer.toSettlementId === settlementId)
-    .reduce((sum, transfer) => sum + totalPops(transfer.pops), 0);
+/** Pops on their way to a settlement, by class: they hold room there until they arrive. */
+export function popsInTransitTo(G: HegemonyState, settlementId: string): Pops {
+  const pops = clonePops(EMPTY_POPS);
+  for (const transfer of G.transfers) {
+    if (transfer.toSettlementId === settlementId) addPops(pops, transfer.pops);
+  }
+  return pops;
+}
+
+/** Room for more pops: capacity less the pops there and those on their way. */
+export function settlementRoom(G: HegemonyState, settlement: Settlement) {
+  return Math.max(
+    0,
+    settlementCapacity(settlement, G) -
+      totalPops(settlement.pops) -
+      totalPops(popsInTransitTo(G, settlement.id)),
+  );
 }
 
 export function isAdjacentToCity(G: HegemonyState, tile: HexTile) {

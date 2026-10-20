@@ -1,5 +1,5 @@
 import { getBuildings } from "./content";
-import { POP_TYPES, totalPops } from "./core/pops";
+import { POP_TYPES, fullest, totalPops } from "./core/pops";
 import { settlementCapacity } from "./settlement";
 import { formatPopName } from "./core/format";
 import { addLog, getOwnedSettlement, getPlayerName } from "./core/query";
@@ -238,14 +238,6 @@ export function removePops(
   }
 
   return summary;
-}
-
-/** The settlement holding the most pops of one class; the earliest founded on a tie. */
-function fullest(settlements: Settlement[], pop: PopType): Settlement | undefined {
-  return settlements.reduce<Settlement | undefined>(
-    (best, settlement) => (settlement.pops[pop] > (best?.pops[pop] ?? 0) ? settlement : best),
-    undefined,
-  );
 }
 
 /** "2 slaves, 1 freeman" — nonzero pop types in a stable order, using the shared pop labels. */

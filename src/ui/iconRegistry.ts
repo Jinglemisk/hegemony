@@ -123,7 +123,6 @@ export const TABLE_EFFECT_GLYPHS = {
 } as const satisfies Record<TableEffect["type"], GlyphId>;
 
 export const LAW_EFFECT_GLYPHS = {
-  rule: "law",
   actionCost: "costDown",
   calmPayment: "calm",
   colonyCapacity: "colony",
@@ -140,6 +139,15 @@ export const LAW_EFFECT_GLYPHS = {
   dolePrice: "treasury",
   slotExempt: "port",
   votePurchaseLimit: "bribe",
+  popIncome: "crowd",
+  slaveResource: "slaves",
+  slaveUnrestWeight: "unhappiness",
+  buildingForbidden: "cross",
+  buildingIdle: "suppress",
+  colonyBuildings: "city",
+  colonyLimit: "minus",
+  growLimit: "grow",
+  settlementVotes: "ostrakon",
 } as const satisfies Record<LawEffect["type"], GlyphId>;
 
 export const DIRECTIVE_EFFECT_GLYPHS = {
