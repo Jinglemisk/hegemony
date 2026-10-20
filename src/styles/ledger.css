@@ -4,18 +4,12 @@
 .modalBackdrop {
   position: fixed;
   inset: 0;
-  z-index: 20;
+  z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
   background: rgb(24 18 16 / 66%);
-}
-
-.logModal {
-  width: min(100%, 620px);
-  max-width: 620px;
-  padding: 16px;
 }
 
 .modalHeader {
@@ -39,9 +33,15 @@
 .populationModal {
   display: grid;
   gap: 12px;
-  width: min(100%, 680px);
+  width: min(100%, 620px);
   max-height: calc(100vh - 48px);
   overflow: auto;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgb(255 248 231 / 7%), rgb(255 248 231 / 3%)), var(--panel);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
 }
 
 .populationStepper {
@@ -70,7 +70,7 @@
 
 .popStepperLabel strong {
   color: var(--fg);
-  font-family: var(--font-display);
+  font-family: var(--f-name);
   font-size: 0.86rem;
   text-transform: uppercase;
 }
@@ -105,7 +105,7 @@
   color: var(--fg);
   background: rgb(255 248 231 / 92%);
   font: inherit;
-  font-family: var(--font-display);
+  font-family: var(--f-name);
   font-weight: 700;
 }
 
@@ -164,12 +164,4 @@
 
 .modalActions button {
   min-width: 118px;
-}
-
-/* ---- game over ---- */
-
-.gameOverReason {
-  color: var(--fg);
-  font-size: 0.82rem;
-  margin: 10px 0 14px;
 }

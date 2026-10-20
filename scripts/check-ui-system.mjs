@@ -3,7 +3,10 @@
  *
  * Three habits made the pre-overhaul UI what it was: 47 ad-hoc font sizes, raw
  * hexes sprinkled anywhere a colour was needed, and mechanics explained in
- * printed chrome via `title=` sentences. All three are counted here.
+ * printed chrome via `title=` sentences. All three are counted here, with the
+ * forms that slipped past the first count: sizes inside the `font:` shorthand or
+ * a name's `--name-size`, and `rgb()`/`hsl()` colours. A fourth rule counts
+ * z-index numbers off the `--z-*` scale.
  *
  * This is a RATCHET, not a gate. Every existing violation is grandfathered by
  * COUNT in `budgets` below; the run fails when a count RISES, and prints the new
@@ -27,8 +30,11 @@ const listMode = process.argv.includes("--list");
  * A count that comes in UNDER budget is reported so the number can be tightened.
  */
 const budgets = {
-  "font-size": 76,
-  "raw-hex": 34,
+  "font-size": 65,
+  "font-shorthand": 86,
+  "raw-hex": 33,
+  "raw-rgb-hsl": 109,
+  "raw-z-index": 2,
   "printed-mechanics": 0,
 };
 
@@ -40,8 +46,9 @@ const FONT_SIZE_EXEMPT = new Set([
   "src/dev/tunePanel.css",
 ]);
 
-/** base.css is where colour is DEFINED; every other sheet must spend a token. */
-const RAW_HEX_EXEMPT = new Set(["src/styles/base.css", "src/dev/tunePanel.css"]);
+/** The token table is where colour is DEFINED; every other sheet must spend a
+ *  token. */
+const RAW_COLOUR_EXEMPT = new Set(["src/styles/frame/tokens.css", "src/dev/tunePanel.css"]);
 
 /**
  * Surfaces whose whole job IS explaining. The tooltip ladder is where a mechanic
@@ -103,7 +110,7 @@ function stripComments(source) {
     );
 }
 
-const violations = { "font-size": [], "raw-hex": [], "printed-mechanics": [] };
+const violations = Object.fromEntries(Object.keys(budgets).map((rule) => [rule, []]));
 
 function record(rule, file, lineNumber, line) {
   violations[rule].push(`${relative(file)}:${lineNumber}  ${line.trim()}`);
@@ -132,14 +139,40 @@ for (const file of files) {
       record("font-size", file, lineNumber, line);
     }
 
-    // (b) a colour spelled out instead of spent from the token table. Data-URI
-    //     SVGs carry %23-escaped hexes; those are inline art, counted the same,
-    //     because art that hard-codes clay drifts from clay just as easily.
-    if (!RAW_HEX_EXEMPT.has(name)) {
+    //     A name's size and leading travel in --name-size/--name-lh; anything but
+    //     a type token there is a size declared outside the role sheet too.
+    if (
+      extension === ".css" &&
+      !FONT_SIZE_EXEMPT.has(name) &&
+      /--name-(?:size|lh)\s*:(?!\s*var\(--(?:t|l|lh)-[\w-]+\)\s*;)/.test(line)
+    ) {
+      record("font-size", file, lineNumber, line);
+    }
+
+    //     The shorthand always carries a size, unless it only resets the font.
+    if (
+      extension === ".css" &&
+      !FONT_SIZE_EXEMPT.has(name) &&
+      /(?:^|[^-\w])font\s*:(?!\s*(?:inherit|initial|unset|revert)\s*;)/.test(line)
+    ) {
+      record("font-shorthand", file, lineNumber, line);
+    }
+
+    // (b) a colour spelled out — a hex, an rgb() or an hsl() — instead of spent
+    //     from the token table. Data-URI SVGs carry %23-escaped hexes; those are
+    //     inline art, counted the same, because art that hard-codes clay drifts
+    //     from clay just as easily.
+    if (!RAW_COLOUR_EXEMPT.has(name)) {
       const hexes = line.match(/(?:#|%23)[0-9a-fA-F]{3,8}\b/g);
 
       for (let count = 0; count < (hexes?.length ?? 0); count += 1) {
         record("raw-hex", file, lineNumber, line);
+      }
+
+      const functions = line.match(/\b(?:rgba?|hsla?)\(/g);
+
+      for (let count = 0; count < (functions?.length ?? 0); count += 1) {
+        record("raw-rgb-hsl", file, lineNumber, line);
       }
     }
 
@@ -161,6 +194,11 @@ for (const file of files) {
       if (title && isSentence(title[1] ?? title[2] ?? "")) {
         record("printed-mechanics", file, lineNumber, line);
       }
+    }
+
+    // (d) a layer stacked by a number instead of by its place on the `--z-*` scale.
+    if (extension === ".css" && /\bz-index\s*:(?!\s*var\(--z-)/.test(line)) {
+      record("raw-z-index", file, lineNumber, line);
     }
   });
 }

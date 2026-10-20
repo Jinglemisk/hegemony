@@ -1,0 +1,223 @@
+/* ============================================================================
+   The verb discs: six on the realm sheet's edge, each opening a fan
+   ========================================================================== */
+/* The verbs layer overlays the sheet; only discs and fans take the pointer.
+   Each disc rides --edge at its own arc length. */
+.verbs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.verb-group {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--verb-d);
+  height: var(--verb-d);
+  offset-path: var(--edge);
+  offset-distance: calc(var(--verb-inset) + var(--i) * var(--verb-pitch));
+  offset-rotate: 0deg;
+  pointer-events: auto;
+}
+.verb-group.is-open {
+  z-index: 1;
+}
+.verb-btn {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--r-round);
+}
+.verb-disc {
+  position: relative;
+  width: var(--verb-d);
+  height: var(--verb-d);
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-round);
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 var(--rule-2) var(--ink);
+}
+.verb-btn:hover .verb-disc,
+.verb-btn:focus-visible .verb-disc,
+.verb-group.is-open .verb-disc {
+  background: var(--bone);
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+.verb-group.is-short .verb-disc .ico {
+  opacity: var(--dim);
+}
+/* hotkey bottom-right, pieces left top-right: badges on the disc's rim */
+.verb-key,
+.verb-count {
+  position: absolute;
+  right: 0;
+  min-width: var(--badge);
+  height: var(--badge);
+  padding: 0 var(--s-1);
+  border-radius: calc(var(--badge) / 2);
+  font: 700 var(--t-12) / var(--badge) var(--f-sans);
+  text-align: center;
+}
+.verb-key {
+  bottom: 0;
+  background: var(--bone);
+  color: var(--ink-66);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+}
+.verb-count {
+  top: 0;
+  background: var(--ink);
+  color: var(--ivory);
+}
+
+/* The group's name under its disc, on raised paper so it reads the same on the
+   sheet and over the sea. While the fan is open it says what a click does; the
+   hint is laid out but hidden while the fan is shut, so the fan can measure it
+   and keep clear of the plate it becomes. */
+.verb-name {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + var(--s-1));
+  min-width: var(--verb-name-w);
+  width: max-content;
+  padding: 0 var(--s-2);
+  display: flex;
+  justify-content: center;
+  font: 500 var(--t-body) / var(--name-h) var(--f-sans);
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+.verb-group.is-short .verb-name-k {
+  color: var(--ink-66);
+}
+.verb-name-p {
+  position: absolute;
+  visibility: hidden;
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  height: var(--name-h);
+}
+.verb-group.is-open .verb-name-k {
+  display: none;
+}
+.verb-group.is-open .verb-name-p {
+  position: static;
+  visibility: visible;
+}
+
+/* The fan: every option of the group, the click's own included, as circles on
+   an arc toward the island. The script sets each circle's offset (--fx, --fy)
+   from the disc centre when it opens; --k staggers the opening. An option that
+   holds a second fan (Build's classes, Exchange's goods) nests one, ringed
+   around that option's circle and opening outward by the same rules. */
+.fan {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.fan-item {
+  position: absolute;
+  left: var(--fx, 0);
+  top: var(--fy, 0);
+  width: var(--fan-w);
+  margin-left: calc(var(--fan-w) / -2);
+  margin-top: calc(var(--fan-d) / -2);
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(calc(-1 * var(--fx, 0px)), calc(-1 * var(--fy, 0px))) scale(var(--fan-from));
+  transition:
+    transform var(--t-fan) var(--ease-out),
+    opacity var(--t-fan) var(--ease-out),
+    visibility 0s linear var(--t-fan);
+  pointer-events: auto;
+}
+.is-open > .fan > .fan-item {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: calc(var(--k) * var(--t-stagger));
+}
+.fan-item > .fan {
+  top: calc(var(--fan-d) / 2);
+}
+.fan-item.is-open {
+  z-index: 1;
+}
+.fan-btn {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-1);
+  text-align: center;
+}
+/* an option is s-hybrid's small disc: bone on a hairline, clay when taken up */
+.fan-disc {
+  position: relative;
+  width: var(--fan-d);
+  height: var(--fan-d);
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-round);
+  background: var(--bone);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+}
+.fan-btn:hover .fan-disc,
+.fan-item.is-open > .fan-btn .fan-disc {
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+.fan-btn:focus-visible {
+  outline: none;
+}
+.fan-btn:focus-visible .fan-disc {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: var(--rule-2);
+}
+.fan-label {
+  padding: 0 var(--s-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  white-space: nowrap;
+}
+.fan-k {
+  font: 500 var(--t-body) / var(--l-body) var(--f-sans);
+}
+.fan-p {
+  height: var(--l-cap);
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
+  color: var(--ink-66);
+}
+.fan-p b {
+  color: var(--ink);
+}
+.fan-item.is-short .fan-disc .ico,
+.fan-item.is-built .fan-disc .ico {
+  opacity: var(--dim);
+}
+.fan-item.is-built .fan-p {
+  color: var(--olive);
+}
+.fan-item.is-short .fan-btn,
+.fan-item.is-built .fan-btn {
+  cursor: default;
+}
+
+.verb-group.is-armed .verb-disc {
+  background: var(--bone);
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+.verb-name-p .price-alt,
+.fan-p .price-alt {
+  display: inline-flex;
+  align-items: center;
+}

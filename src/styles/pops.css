@@ -35,16 +35,6 @@
   color: var(--subtle);
 }
 
-@keyframes detailTooltipIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
 .miniResourceIcon {
   width: 18px;
   height: 18px;

@@ -84,7 +84,7 @@ export function TilePage({ tile, onFound }: { tile: HexTile; onFound: (tileId: s
       <div className="act-line">
         <ActionButton
           blockedReason={reason}
-          className="act-btn"
+          className="btn kicker act-btn"
           effectiveCost={found.cost}
           enabled={can}
           heading="Found a colony here"

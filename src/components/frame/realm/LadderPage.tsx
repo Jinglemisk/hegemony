@@ -65,7 +65,7 @@ export function LadderPage({
       <ActionButton
         aria-label={`${what}.`}
         blockedReason={turnBlocked ?? statuses[0].reasons.join(" ")}
-        className="rung-btn"
+        className="btn rung-btn"
         effectiveCost={cost}
         enabled={enabled}
         explanation={
@@ -79,7 +79,7 @@ export function LadderPage({
         onClick={() => onLadderRequest({ kind, from })}
       >
         <Ico path={kind === "promote" ? "pops/promote" : "pops/demote"} size="chip" />
-        <span className="rung-v">{verb}</span>
+        <span className="kicker rung-v">{verb}</span>
         <span className="rung-t">
           {formatPopLabel(from, 1)} {kind === "promote" ? "↑" : "↓"}
         </span>

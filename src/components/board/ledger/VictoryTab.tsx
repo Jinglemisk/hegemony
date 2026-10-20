@@ -18,7 +18,7 @@ export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: Player
   const held = standings.filter(({ holder }) => holder === playerID).length;
 
   return (
-    <div className="victoryPage roster" data-c="victory">
+    <div className="victoryPage" data-c="victory">
       <p className="v-held caps">
         You hold {held} of {cardsToWin} · {numberWord(cardsToWin)} at your turn’s start win
       </p>
@@ -45,7 +45,7 @@ export function TitleRow({ G, standing }: { G: HegemonyState; standing: VictoryC
       <div className="r-grid v-grid r-a">
         <span className="r-place">
           <Ico path={`victory/${card.id}`} size="chip" />
-          <b className="v-name">{card.name}</b>
+          <b className="name v-name">{card.name}</b>
         </span>
         {PLAYER_IDS.map((id) => (
           <span

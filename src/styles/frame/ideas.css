@@ -1,0 +1,286 @@
+/* ============================================================================
+   National Ideas: the setup draft and the in-play purchase
+   ========================================================================== */
+/* Setup owns the viewport, like the map frame: the open draft is one paper page
+   with its order strip beside the rows, no sea well or dialog plate. The in-play
+   purchase keeps a scrim. */
+.modalBackdrop.ideas-backdrop {
+  z-index: var(--z-takeover);
+  align-items: center;
+  padding: var(--s-6);
+}
+/* Top-aligned: a centred page lands its edges off the 4px grid at some heights. */
+.modalBackdrop.ideas-setup {
+  align-items: flex-start;
+  background: var(--bone);
+}
+.ideas-modal {
+  width: 100%;
+  max-width: var(--ideas-w);
+  min-height: 0;
+  padding: var(--s-6);
+  max-height: 100%;
+  overflow-y: auto;
+  background: var(--ivory);
+}
+.ideas-setup .ideas-modal {
+  max-width: calc(var(--ideas-w) + var(--s-8) + var(--draft-w));
+  padding: 0;
+  background: none;
+}
+.draft {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--draft-w);
+  gap: var(--s-8);
+}
+.ideas-heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  margin-bottom: var(--s-4);
+}
+.ideas-heading h2,
+.ideas-title h2 {
+  --name-size: var(--t-24);
+  --name-lh: var(--lh-32);
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin: 0;
+}
+.ideas-heading p,
+.ideas-title p {
+  margin: 0;
+  color: var(--ink-66);
+  font-size: var(--t-16);
+  line-height: var(--lh-24);
+}
+.ideas-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  margin-bottom: var(--s-4);
+}
+.ideas-title {
+  flex: 1;
+  min-width: 0;
+}
+.ideas-close {
+  min-height: var(--hit);
+  padding: 0 var(--s-4);
+  font-size: var(--t-16);
+}
+.ideas-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(var(--idea-row-h), auto);
+  column-gap: var(--s-6);
+}
+/* A row in its tooltip trigger still fills its cell. */
+.idea-tip > .idea-choice {
+  flex: 1;
+}
+.idea-choice {
+  display: grid;
+  grid-template-columns: var(--ic-tile) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-1) var(--s-3);
+  min-height: var(--idea-row-h);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: inset 0 calc(-1 * var(--rule)) var(--line);
+  text-align: left;
+  white-space: normal;
+}
+.idea-words {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+}
+.idea-words strong {
+  font-size: var(--t-20);
+  line-height: var(--lh-24);
+}
+.idea-words span {
+  font-size: var(--t-14);
+  line-height: var(--lh-20);
+}
+.idea-hold {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s-2);
+}
+.idea-mark {
+  white-space: nowrap;
+}
+.idea-mark.is-taken {
+  color: var(--ink-63);
+}
+/* Yours: the words in ink; your glaze is on the seat disc above them. */
+.idea-mark.is-own {
+  color: var(--ink);
+}
+/* A taken Idea keeps its holder's mark at full strength; the rest of it dims. */
+.idea-choice.is-taken[aria-disabled="true"] {
+  opacity: 1;
+}
+.idea-choice.is-taken .idea-icon,
+.idea-choice.is-taken .idea-words {
+  opacity: var(--dim);
+}
+.idea-choice[aria-pressed="true"],
+.idea-choice.is-fresh {
+  background: var(--bone);
+  box-shadow:
+    inset var(--s-1) 0 var(--clay),
+    inset 0 calc(-1 * var(--rule)) var(--line);
+}
+.ideas-setup .idea-choice[aria-pressed="true"],
+.ideas-setup .idea-choice.is-fresh {
+  background: var(--ivory);
+}
+.idea-choice:hover:not([aria-disabled="true"]) {
+  color: var(--clay-ink);
+}
+.idea-choice[aria-disabled="true"] {
+  opacity: var(--dim);
+}
+/* Read back with no controls (a rival choosing, the finished draft), an untaken
+   Idea is not unavailable: only the taken ones dim. */
+.idea-choice.is-fresh[aria-disabled="true"],
+.idea-choice.is-own[aria-disabled="true"],
+.ideas-list.is-view .idea-choice[aria-disabled="true"] {
+  opacity: 1;
+}
+.idea-choice:focus-visible {
+  outline: var(--rule-2) solid var(--clay);
+  outline-offset: calc(-1 * var(--rule-2));
+}
+/* A seat's mark: its glaze and blazon. A bought Idea's mark carries the year. */
+.idea-seat {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--ic-ui);
+  height: var(--ic-ui);
+  border-radius: var(--r-round);
+  color: var(--ivory);
+  background: var(--owner);
+  box-shadow:
+    inset 0 0 0 var(--rule) var(--ivory-70),
+    0 0 0 var(--rule) var(--ink-66);
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-name);
+}
+.idea-seat[data-year]::after {
+  content: attr(data-year);
+  position: absolute;
+  right: calc(-1 * var(--s-2));
+  bottom: calc(-1 * var(--s-1));
+  padding: 0 var(--s-1);
+  border-radius: var(--r-4);
+  color: var(--ivory);
+  background: var(--ink);
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+}
+.idea-target {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: var(--s-4);
+  font-size: var(--t-16);
+}
+.idea-target select {
+  min-width: 0;
+  min-height: var(--hit);
+  font: inherit;
+}
+.ideas-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--s-4);
+  margin-top: var(--s-4);
+}
+.ideas-legend {
+  flex: 1;
+  min-width: 0;
+  color: var(--ink-66);
+  font-size: var(--t-14);
+  line-height: var(--lh-20);
+}
+/* The footer's confirm: the primary in the name face, a row tall. It takes no
+   ring under the pointer; its clay deepening is the whole answer. */
+.ideas-footer .btn {
+  --name-size: var(--t-16);
+  display: flex;
+  gap: var(--s-3);
+  min-height: var(--row-h);
+  padding: 0 var(--s-4);
+}
+.ideas-footer .btn:hover {
+  box-shadow: none;
+}
+/* The draft order: who took what, who is choosing, who is next. */
+.draft-order {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding-top: var(--s-2);
+}
+.draft-order ol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.draft-seat {
+  display: grid;
+  grid-template-columns: var(--s-4) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-12);
+}
+.draft-seat.is-now {
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+.draft-n {
+  color: var(--ink-63);
+  font: 700 var(--t-16) / var(--lh-20) var(--f-name);
+}
+.draft-who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.draft-what {
+  color: var(--ink-63);
+  font: 700 var(--t-14) / var(--lh-20) var(--f-sans);
+}
+.draft-what.is-picked {
+  color: var(--pos);
+}
+.draft-what.is-choosing {
+  color: var(--clay-ink);
+}
+@media (max-width: 760px) {
+  .draft,
+  .ideas-list {
+    grid-template-columns: 1fr;
+  }
+  .idea-target {
+    flex-basis: 100%;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+  }
+}

@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "post-v2"
-updated: 2026-10-19
+updated: 2026-10-20
 ---
 
 # Code health after v2
@@ -143,6 +143,12 @@ means lifting that state into the board. They now read the dev settings passed i
 | Main stylesheet | 2.8k lines ordered by history; dead classes and keyframes (C8, C9)                                                                        | Split by component, island styles left for the living map; dead rules deleted             |
 | UI check script | Counts `font-size:` and hex only (C12)                                                                                                    | Also counts `font:` sizes, `rgb()`/`hsl()` and literal z-index                            |
 
+Kept on purpose: two type scales, because type.css's rem roles shrink with `--ui-scale` and the
+frame's px sizes do not; `.sit-btn` as its own button (its fill differs, and C11 decides the
+sitting's boxes); copies of the caps label in the island tip and the Exchange, which are
+non-goals. Tooltips now draw over popovers so a popover's own tips show; the map's tile tip
+stays under them on its own rung.
+
 ### 6. In trade slice 2
 
 | Part      | Before                                                                             | After                                                                                                          |
@@ -166,8 +172,8 @@ All to `main`, before player trade slice 1, in this order:
 1. **Single sources** (section 1). Merged, #125.
 2. **Decision host and shared primitives** (section 2). Merged, #126.
 3. **Typed Laws, one income, one room** (section 3). Merged, #127.
-4. **UI cleanup** (section 4). Merged.
-5. **CSS cleanup** (section 5).
+4. **UI cleanup** (section 4). Merged, #128.
+5. **CSS cleanup** (section 5). Merged.
 
 Then trade slice 2 carries section 6, and deck slices 1 and 2 carry section 7.
 

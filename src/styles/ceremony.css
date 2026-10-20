@@ -88,6 +88,12 @@
   --mood-shade: var(--clay-shade);
 }
 
+/* A dealt card's edge: an ink hairline, then the mood's ring. Set on the
+   ceremony, beside its mood, so the ring resolves there. */
+.ceremony {
+  --card-edge: 0 0 0 var(--rule) rgb(36 25 16 / 55%), 0 0 0 5px var(--mood-ring);
+}
+
 /* ── The fate: a dealt card ──────────────────────────────────────────────── */
 
 .fateCard {
@@ -98,10 +104,9 @@
   text-align: center;
   background: linear-gradient(180deg, var(--ivory-lit), var(--ivory) 50%, var(--ivory-settled));
   box-shadow:
-    0 0 0 1px rgb(36 25 16 / 55%),
-    0 0 0 5px var(--mood-ring),
+    var(--card-edge),
     0 0 0 6.5px rgb(36 25 16 / 60%),
-    0 42px 110px rgb(0 0 0 / 75%),
+    var(--shadow-deal),
     0 0 120px var(--mood-glow);
 }
 
@@ -119,8 +124,10 @@
 
 /* The painting dissolves into the card it is printed on. The terminal stop is
    TRANSLUCENT and it is the card's own ivory, so the art ghosts through the last
-   few percent instead of hitting an opaque line in a slightly different cream. */
-.fateArt::after {
+   few percent instead of hitting an opaque line in a slightly different cream.
+   The year card's painting dissolves the same way. */
+.fateArt::after,
+.yearArt::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -137,12 +144,12 @@
 /* The seat that drew it, on a lacquer tag over the art. */
 .fateSeat {
   position: absolute;
-  z-index: 2;
+  z-index: var(--z-lift);
   top: 14px;
   left: 14px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-2);
   padding: 5px 13px 5px 6px;
   border-radius: 20px;
   color: var(--ivory);
@@ -166,7 +173,7 @@
    empty ivory gap — a card with a hole in the middle of it. */
 .fateBody {
   position: relative;
-  z-index: 2;
+  z-index: var(--z-lift);
   margin-top: -26px;
   padding: 0 34px 26px;
 }
@@ -178,7 +185,7 @@
 }
 
 .fateCard h2 {
-  margin: 4px 0 2px;
+  margin: var(--s-1) 0 var(--rule-2);
 }
 
 .fateVoice {
@@ -194,7 +201,7 @@
 
 .fateWait {
   display: block;
-  margin: 0 0 12px;
+  margin: 0 0 var(--s-3);
   color: var(--neg);
 }
 
@@ -230,7 +237,7 @@
   max-height: 172px;
   padding: 0;
   border: 0;
-  border-top: 1px solid var(--ink-12);
+  border-top: var(--rule) solid var(--ink-12);
   border-radius: 0;
   background: none;
 }
@@ -239,7 +246,7 @@
   gap: 10px;
   padding: 9px 34px;
   border: 0;
-  border-bottom: 1px solid var(--ink-12);
+  border-bottom: var(--rule) solid var(--ink-12);
   border-radius: 0;
   background: none;
 }
@@ -260,23 +267,23 @@
    round toggle; the marked ones take the wound's band and ring. */
 .hungerCard,
 .lossCard {
-  width: min(560px, calc(100vw - 32px));
-  padding: 24px 32px;
+  width: min(560px, calc(100vw - var(--s-8)));
+  padding: var(--s-6) var(--s-8);
 }
 
 .hungerHead h2 {
-  margin: 4px 0 2px;
+  margin: var(--s-1) 0 var(--rule-2);
 }
 
 .hungerCard > .blowBand,
 .lossCard > .blowBand {
-  margin: 16px -32px 0;
-  padding: 12px 32px;
+  margin: var(--s-4) calc(-1 * var(--s-8)) 0;
+  padding: var(--s-3) var(--s-8);
 }
 
 .hungerPick {
   display: grid;
-  margin: 0 -32px;
+  margin: 0 calc(-1 * var(--s-8));
   text-align: left;
 }
 
@@ -284,9 +291,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 8px 32px;
-  border-bottom: 1px solid var(--ink-12);
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-8);
+  border-bottom: var(--rule) solid var(--ink-12);
 }
 
 .hungerPlace {
@@ -297,7 +304,7 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 4px;
+  gap: var(--s-1);
 }
 
 .hungerPop {
@@ -309,7 +316,7 @@
   border: 0;
   border-radius: 50%;
   background: transparent;
-  box-shadow: inset 0 0 0 1px var(--ink-30);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
 }
 
 .hungerPop:not(:disabled):hover {
@@ -318,7 +325,7 @@
 
 .hungerPop[aria-pressed="true"] {
   background: var(--mood-band);
-  box-shadow: inset 0 0 0 2px var(--mood-ink);
+  box-shadow: inset 0 0 0 var(--rule-2) var(--mood-ink);
 }
 
 .hungerPop[aria-pressed="true"] .ico {
@@ -328,9 +335,9 @@
 .hungerCount {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--s-3);
   margin: 0;
-  padding: 8px 32px 0;
+  padding: var(--s-2) var(--s-8) 0;
   color: var(--ink-63);
 }
 
@@ -346,15 +353,15 @@
 .hungerFoot {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
-  margin: 16px 0 12px;
+  gap: var(--s-3);
+  margin: var(--s-4) 0 var(--s-3);
   color: var(--ink-63);
 }
 
 /* Go back beside the commit: the way out to buy food takes its own width. */
 .hungerActs {
   display: flex;
-  gap: 12px;
+  gap: var(--s-3);
 }
 
 .hungerActs .ceremonyCommit {
@@ -365,7 +372,7 @@
    The hunger card's frame with no picker: one line per thing it cost. */
 .lossLines {
   display: grid;
-  gap: 8px;
+  gap: var(--s-2);
   margin: 0;
   padding: 14px 0 0;
   list-style: none;
@@ -399,7 +406,7 @@
   height: 400px;
   padding: 0;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--r-8);
   color: var(--bone);
   background:
     radial-gradient(
@@ -409,15 +416,12 @@
       transparent 100px
     ),
     linear-gradient(160deg, var(--clay-deep), var(--vase-black));
-  box-shadow:
-    0 0 0 1px rgb(36 25 16 / 55%),
-    0 0 0 5px var(--mood-ring),
-    0 42px 110px rgb(0 0 0 / 75%);
+  box-shadow: var(--card-edge), var(--shadow-deal);
   animation: yearTurn 400ms ease-out both;
 }
 
 .yearBack-n {
-  font: 700 72px / 1 var(--f-name);
+  font: 700 var(--t-72) / 1 var(--f-name);
   letter-spacing: 0.06em;
 }
 
@@ -435,25 +439,11 @@
   background-size: cover;
 }
 
-.yearArt::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    rgb(36 25 16 / 22%),
-    transparent 30%,
-    transparent 62%,
-    rgb(255 248 231 / 94%) 96%
-  );
-}
-
 .yearImpact {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 4px;
-  margin: 0 0 8px;
+  gap: var(--s-1);
+  margin: 0 0 var(--s-2);
   padding: 6px 0 0;
   list-style: none;
 }
@@ -461,8 +451,8 @@
 .yearImpact li {
   display: grid;
   justify-items: center;
-  gap: 2px;
-  padding: 4px 0;
+  gap: var(--rule-2);
+  padding: var(--s-1) 0;
   border-radius: 6px;
 }
 
@@ -487,8 +477,8 @@
 .yearFoot {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
-  margin: 4px 0 12px;
+  gap: var(--s-3);
+  margin: var(--s-1) 0 var(--s-3);
   color: var(--ink-63);
 }
 
@@ -496,7 +486,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--s-2);
   background: linear-gradient(180deg, var(--lacquer-lit), var(--vase-black));
 }
 
@@ -505,24 +495,21 @@
    rows it puts out of reach, so the trade reads as rows, not arithmetic. */
 .riotSheet {
   display: grid;
-  width: min(960px, calc(100vw - 32px));
-  max-height: calc(100vh - 32px);
+  width: min(960px, calc(100vw - var(--s-8)));
+  max-height: calc(100vh - var(--s-8));
   overflow-y: auto;
-  border-radius: 8px;
+  border-radius: var(--r-8);
   background: var(--ivory);
-  box-shadow:
-    0 0 0 1px rgb(36 25 16 / 55%),
-    0 0 0 5px var(--mood-ring),
-    0 42px 110px rgb(0 0 0 / 75%);
+  box-shadow: var(--card-edge), var(--shadow-deal);
   text-align: left;
 }
 
 .sheetHead {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--ink-12);
+  gap: var(--s-4);
+  padding: var(--s-4) var(--s-6);
+  border-bottom: var(--rule) solid var(--ink-12);
   background: var(--bone);
 }
 
@@ -533,19 +520,19 @@
 .sheetBody {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
-  padding: 16px 24px;
+  gap: var(--s-6);
+  padding: var(--s-4) var(--s-6);
 }
 
 .sheetSec {
   display: block;
-  margin: 0 0 8px;
+  margin: 0 0 var(--s-2);
   color: var(--ink-63);
   letter-spacing: 0.2em;
 }
 
 .sheetNote {
-  margin: 8px 0 0;
+  margin: var(--s-2) 0 0;
   color: var(--ink-63);
 }
 
@@ -553,9 +540,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 12px 24px 16px;
-  border-top: 1px solid var(--ink-12);
+  gap: var(--s-4);
+  padding: var(--s-3) var(--s-6) var(--s-4);
+  border-top: var(--rule) solid var(--ink-12);
   color: var(--ink-63);
 }
 
@@ -563,9 +550,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--s-2);
   width: auto;
-  padding: 12px 24px;
+  padding: var(--s-3) var(--s-6);
 }
 
 .sheetCol .oddsRows {
@@ -574,8 +561,8 @@
 
 /* The sheet's glyphs use the shell's physical sizes at every viewport. */
 .riotSheet .icon-inline {
-  width: 16px;
-  height: 16px;
+  width: var(--ic-16);
+  height: var(--ic-16);
 }
 
 .oddsRowOut {
@@ -588,7 +575,7 @@
 
 .insRows {
   display: grid;
-  gap: 8px;
+  gap: var(--s-2);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -598,15 +585,15 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-3);
   border-radius: 6px;
-  box-shadow: inset 0 0 0 1px var(--ink-30);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
 }
 
 .insRow.is-on {
   background: rgb(94 110 58 / 10%);
-  box-shadow: inset 0 0 0 2px var(--olive);
+  box-shadow: inset 0 0 0 var(--rule-2) var(--olive);
 }
 
 .insRow.is-off {
@@ -626,13 +613,13 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-2);
 }
 
 .insPick select {
-  min-height: 32px;
-  border: 1px solid var(--ink-30);
-  border-radius: 4px;
+  min-height: var(--hit);
+  border: var(--rule) solid var(--ink-30);
+  border-radius: var(--r-4);
   color: var(--ink);
   background: var(--ivory);
   font: 700 var(--t-14) / var(--lh-20) var(--f-sans);
@@ -645,15 +632,15 @@
   height: 40px;
   padding: 0;
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--r-4);
   color: var(--ivory);
   background: var(--ivory);
-  box-shadow: inset 0 0 0 2px var(--ink-30);
+  box-shadow: inset 0 0 0 var(--rule-2) var(--ink-30);
   font: 700 var(--t-20) / 1 var(--f-sans);
 }
 
 .insCheck:not(:disabled):hover {
-  box-shadow: inset 0 0 0 2px var(--olive);
+  box-shadow: inset 0 0 0 var(--rule-2) var(--olive);
 }
 
 .insCheck[aria-pressed="true"] {
@@ -664,14 +651,14 @@
 .insCleared {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-2);
 }
 
 .riotRoll {
   display: grid;
   place-content: center;
   justify-items: center;
-  gap: 16px;
+  gap: var(--s-4);
 }
 
 .riotSum {
@@ -694,7 +681,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: var(--s-3);
   text-align: left;
 }
 
@@ -710,8 +697,8 @@
 .blowBand {
   margin: 0 -34px 6px;
   padding: 13px 34px;
-  border-top: 1px solid var(--mood-rule);
-  border-bottom: 1px solid var(--mood-rule);
+  border-top: var(--rule) solid var(--mood-rule);
+  border-bottom: var(--rule) solid var(--mood-rule);
   background: var(--mood-band);
 }
 
@@ -771,12 +758,12 @@
   width: 100%;
   padding: 15px 0;
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--r-4);
   color: var(--ivory);
   background: linear-gradient(180deg, var(--mood-lit), var(--mood-ink) 60%, var(--mood-shade));
   box-shadow:
-    inset 0 1px 0 rgb(255 248 231 / 30%),
-    0 3px 12px rgb(0 0 0 / 50%);
+    inset 0 var(--rule) 0 rgb(255 248 231 / 30%),
+    var(--shadow-commit);
   letter-spacing: 0.2em;
 }
 
@@ -786,13 +773,13 @@
 
 .ceremonyCommit:not(:disabled):hover {
   box-shadow:
-    inset 0 1px 0 rgb(255 248 231 / 42%),
-    0 5px 16px rgb(0 0 0 / 55%);
+    inset 0 var(--rule) 0 rgb(255 248 231 / 42%),
+    var(--shadow-commit-lift);
 }
 
 .ghostVerb {
   padding: 15px 20px;
-  border-radius: 4px;
+  border-radius: var(--r-4);
   color: var(--ink-63);
 }
 
@@ -816,7 +803,7 @@
   clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%, 0 16px);
   background: linear-gradient(180deg, var(--stele-face), var(--bone) 55%);
   box-shadow: inset 0 -4px 0 var(--stele-shade);
-  filter: drop-shadow(0 24px 44px rgb(0 0 0 / 70%));
+  filter: var(--shadow-tablet);
   scrollbar-color: var(--clay) transparent;
 }
 
@@ -835,7 +822,7 @@
 }
 
 .tabletVoice {
-  margin: 0 0 16px;
+  margin: 0 0 var(--s-4);
   color: var(--ink-66);
 }
 
@@ -902,8 +889,8 @@
   border-radius: 12px;
   background: linear-gradient(160deg, var(--lacquer-lit), var(--vase-black) 70%);
   box-shadow:
-    inset 0 1px 0 rgb(255 248 231 / 20%),
-    0 10px 26px rgb(0 0 0 / 50%),
+    inset 0 var(--rule) 0 rgb(255 248 231 / 20%),
+    var(--shadow-die),
     0 0 46px rgb(217 138 53 / 40%);
 }
 
@@ -919,7 +906,7 @@
   height: 14px;
   border-radius: 50%;
   background: var(--ivory);
-  box-shadow: inset 0 -2px 3px rgb(0 0 0 / 40%);
+  box-shadow: var(--pip-dent);
 }
 
 .pipOff {
@@ -941,13 +928,13 @@
 .oddsRow {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) auto;
-  border-top: 1px solid var(--ink-12);
+  border-top: var(--rule) solid var(--ink-12);
 }
 
 .oddsRow > * {
   display: flex;
   align-items: center;
-  padding: 8px 10px;
+  padding: var(--s-2) 10px;
 }
 
 .oddsFace {
@@ -957,7 +944,7 @@
 
 .oddsEffects {
   flex-wrap: wrap;
-  gap: 4px 10px;
+  gap: var(--s-1) 10px;
   justify-content: flex-end;
   white-space: nowrap;
 }
@@ -1055,7 +1042,7 @@
   margin: 0 -34px 20px;
   padding: 0;
   list-style: none;
-  border-top: 1px solid var(--ink-12);
+  border-top: var(--rule) solid var(--ink-12);
   text-align: left;
 }
 
@@ -1063,9 +1050,9 @@
   display: grid;
   grid-template-columns: 26px 27px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
+  gap: var(--s-3);
   padding: 11px 34px;
-  border-bottom: 1px solid var(--ink-12);
+  border-bottom: var(--rule) solid var(--ink-12);
 }
 
 .ageRank {
@@ -1075,7 +1062,7 @@
 
 .ageWho {
   display: grid;
-  gap: 1px;
+  gap: var(--rule);
   min-width: 0;
   line-height: 1.15;
 }
@@ -1087,32 +1074,32 @@
 .ageTitles {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 12px;
+  gap: var(--s-1) var(--s-3);
 }
 
 .ageTitle {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--s-1);
 }
 
 .ageTiebreak {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  margin: 0 0 16px;
+  gap: var(--s-2);
+  margin: 0 0 var(--s-4);
 }
 
 .tabletFoot.ageActs {
   display: flex;
   justify-content: center;
-  gap: 12px;
+  gap: var(--s-3);
 }
 
 .ageActs .ceremonyCommit {
   width: auto;
-  padding: 15px 32px;
+  padding: 15px var(--s-8);
 }
 
 .ageCards {
@@ -1152,7 +1139,7 @@
    card's own footnote at 16px and can never meet it. */
 .modalBackdrop.scrimNoted {
   flex-direction: column;
-  gap: 16px;
+  gap: var(--s-4);
 }
 
 .deckEcho {

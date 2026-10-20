@@ -9,7 +9,7 @@
 .resourceDelta {
   justify-self: end;
   color: var(--subtle);
-  font-family: var(--font-display);
+  font-family: var(--f-name);
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
@@ -26,54 +26,10 @@
   color: var(--subtle);
 }
 
-@keyframes resourceFlashIncrease {
-  0%,
-  38% {
-    background: rgb(47 125 70 / 26%);
-    box-shadow:
-      inset 0 0 0 2px rgb(47 125 70 / 42%),
-      0 2px 5px rgb(47 125 70 / 26%);
-  }
-  100% {
-    background: linear-gradient(180deg, var(--ivory), var(--bone));
-    box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 55%),
-      inset 0 -1px 0 rgb(143 46 19 / 12%),
-      0 2px 4px rgb(72 42 21 / 16%);
-  }
-}
-
-@keyframes resourceFlashDecrease {
-  0%,
-  38% {
-    background: rgb(177 58 40 / 26%);
-    box-shadow:
-      inset 0 0 0 2px rgb(177 58 40 / 42%),
-      0 2px 5px rgb(177 58 40 / 26%);
-  }
-  100% {
-    background: linear-gradient(180deg, var(--ivory), var(--bone));
-    box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 55%),
-      inset 0 -1px 0 rgb(143 46 19 / 12%),
-      0 2px 4px rgb(72 42 21 / 16%);
-  }
-}
-
 .positive {
   color: #2f7d46;
 }
 
 .negative {
   color: #b13a28;
-}
-
-.primaryButton {
-  color: var(--ivory);
-  border-color: rgb(192 70 28 / 76%);
-}
-
-.primaryButton::before {
-  background-position: 50% 0%;
-  opacity: 0.95;
 }

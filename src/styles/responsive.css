@@ -2,7 +2,7 @@
    Split from styles.css (Phase 2e); original source order preserved. */
 
 /* Swept for the uniform-scale pass (two-panel.md, 2026-07-18). The KYKLOS chrome now
-   scales DOWN proportionally as the viewport narrows (one --ui-scale dial in base.css)
+   scales DOWN proportionally as the viewport narrows (one --ui-scale dial in frame/tokens.css)
    — identical layout, only smaller. The old docked-layout breakpoints REFLOWED the
    shell/workbench/topbar to single-column at ≤1120px, which contradicts that, so they
    are gone. What remains is narrow-screen content niceties (tooltip placement, mobile

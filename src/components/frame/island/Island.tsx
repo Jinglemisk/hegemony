@@ -415,7 +415,7 @@ function BoardTip({ anchor, children }: { anchor: DOMRect; children: ReactNode }
 
   return createPortal(
     <div
-      className="sharedTooltip"
+      className="sharedTooltip map-tip"
       ref={ref}
       role="tooltip"
       style={at ? { left: at.left, top: at.top, opacity: 1 } : { left: 0, top: 0, opacity: 0 }}

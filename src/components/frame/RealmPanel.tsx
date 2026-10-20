@@ -169,7 +169,7 @@ export function RealmPanel({
           </span>
           <h1 className="realm-title" data-c="realm-title">
             <span className="caps">Realm of</span>
-            <b>{glaze.name}</b>
+            <b className="name">{glaze.name}</b>
           </h1>
           <p className="realm-counts" data-c="realm-counts">
             <span className="meta-i" title={`${cities} cities`}>
@@ -227,7 +227,7 @@ export function RealmPanel({
             type="button"
           >
             <Ico path={subjectTab.icon} size="ui" />
-            <span className="realm-tab-name">{subjectTab.label}</span>
+            <span className="name realm-tab-name">{subjectTab.label}</span>
           </button>
         </nav>
         <section className="realm-page" data-c="realm-page" id="realm-page" role="tabpanel">

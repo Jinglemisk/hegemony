@@ -7,23 +7,15 @@
   z-index: var(--z-takeover);
   align-items: flex-start;
   padding: calc(var(--bar-h) + var(--hit) + var(--s-4)) var(--s-16) var(--s-4);
-  background: rgb(24 18 16 / 38%);
 }
 
-.sitting.logModal {
+.sitting {
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: calc(var(--u) * 290);
   max-height: 100%;
-  padding: 0;
   overflow-y: auto;
-  border: 0;
-  border-radius: var(--s-2);
-  color: var(--ink);
-  background: var(--ivory);
-  box-shadow: 0 var(--s-6) var(--s-16) rgb(0 0 0 / 45%);
-  backdrop-filter: none;
   text-align: left;
 }
 
@@ -51,24 +43,10 @@
   flex-direction: column;
   min-width: 0;
 }
-.sit-kicker,
-.sit-sec,
-.sit-epithet,
-.sit-rail li,
-.sit-btn,
-.sit-verdict,
-.sit-by {
-  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
-  letter-spacing: var(--track-caps);
-  text-transform: uppercase;
-}
-.sit-kicker,
-.sit-epithet {
-  color: var(--clay-ink);
-}
 .sit-title h2 {
+  --name-size: var(--t-24);
+  --name-lh: var(--lh-32);
   margin: 0;
-  font: 700 var(--t-24) / var(--lh-32) var(--f-name);
   letter-spacing: var(--track-name);
 }
 .sit-sub {
@@ -84,7 +62,7 @@
 }
 .sit-rail li {
   padding: var(--s-1) var(--s-3);
-  border-radius: var(--s-4);
+  border-radius: var(--r-16);
   color: var(--ink-63);
 }
 .sit-rail li.is-done {
@@ -106,7 +84,7 @@
   min-height: var(--hit);
   padding: 0 var(--s-4);
   border: var(--rule) solid var(--ink-45);
-  border-radius: var(--s-1);
+  border-radius: var(--r-4);
   color: var(--ink);
   background: var(--ivory);
   white-space: nowrap;
@@ -170,7 +148,7 @@
   color: var(--ink-63);
 }
 .sit-name {
-  font: 700 var(--t-16) / var(--lh-20) var(--f-name);
+  --name-size: var(--t-16);
 }
 .sit-text {
   margin: 0;
@@ -210,7 +188,7 @@
   flex-direction: column;
   gap: var(--s-1);
   padding: var(--s-3);
-  border-radius: var(--s-1);
+  border-radius: var(--r-4);
 }
 .sit-pol {
   box-shadow: inset 0 0 0 var(--rule) var(--line);
@@ -277,19 +255,21 @@
   flex-direction: column;
   gap: var(--s-2);
   padding: var(--s-4);
-  border-radius: var(--s-1);
+  border-radius: var(--r-4);
   box-shadow: inset 0 0 0 var(--rule) var(--line);
 }
 .sit-card-name {
-  font: 700 var(--t-24) / var(--lh-32) var(--f-name);
+  --name-size: var(--t-24);
+  --name-lh: var(--lh-32);
 }
+/* "Only you can see this card": in ink, since a light glaze fails as text. */
 .sit-lock {
   display: flex;
   align-items: center;
   gap: var(--s-2);
   padding: var(--s-1) var(--s-3);
-  border-radius: var(--s-4);
-  color: var(--porphyra);
+  border-radius: var(--r-16);
+  color: var(--ink);
   background: var(--bone);
   font: var(--t-12) / var(--lh-16) var(--f-sans);
 }
@@ -300,12 +280,12 @@
   gap: var(--s-3);
   min-height: var(--s-12);
   padding: var(--s-2) var(--s-3);
-  border-radius: var(--s-1);
+  border-radius: var(--r-4);
   box-shadow: inset 0 0 0 var(--rule) var(--line);
   text-align: left;
 }
 .sit-pick b {
-  font: 700 var(--t-16) / var(--lh-20) var(--f-name);
+  --name-size: var(--t-16);
 }
 .sit-pick[aria-pressed="true"] {
   background: var(--bone);
@@ -343,7 +323,7 @@
   align-items: center;
   gap: var(--s-3);
   padding: var(--s-2) var(--s-4);
-  border-radius: var(--s-1);
+  border-radius: var(--r-4);
   box-shadow: inset 0 0 0 var(--rule) var(--line);
 }
 .sit-item.is-quiet {
@@ -411,7 +391,7 @@
   width: 100%;
   height: var(--s-3);
   overflow: hidden;
-  border-radius: var(--s-2);
+  border-radius: var(--r-8);
   background: var(--ink-12);
 }
 .sit-beam i {
@@ -437,7 +417,7 @@
   align-items: center;
   column-gap: var(--s-2);
   padding: var(--s-2) var(--s-3);
-  border-radius: var(--s-1);
+  border-radius: var(--r-4);
   box-shadow: inset 0 0 0 var(--rule) var(--line);
 }
 .sit-order li .idea-seat {
@@ -445,9 +425,6 @@
 }
 .sit-order li.is-now {
   box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
-}
-.sit-order b {
-  font: 700 var(--t-14) / var(--lh-20) var(--f-name);
 }
 .sit-order-v {
   color: var(--ink-66);
@@ -469,7 +446,7 @@
   align-items: center;
   gap: var(--s-6);
   padding: var(--s-4);
-  border-radius: var(--s-1);
+  border-radius: var(--r-4);
   background: var(--bone);
 }
 .sit-mine-n {
@@ -482,7 +459,7 @@
 .sit-what {
   margin: 0;
   padding: var(--s-2) var(--s-3);
-  border-radius: var(--s-1);
+  border-radius: var(--r-4);
   background: var(--ivory);
   box-shadow: inset 0 0 0 var(--rule) var(--ink-12);
   font: var(--t-14) / var(--lh-20) var(--f-body);
@@ -497,7 +474,7 @@
 .sit-verdict {
   display: inline-flex;
   padding: var(--s-1) var(--s-3);
-  border-radius: var(--s-1);
+  border-radius: var(--r-4);
   color: var(--ivory);
 }
 .sit-verdict.is-yea {
@@ -507,8 +484,9 @@
   background: var(--clay-ink);
 }
 .sit-headline {
+  --name-size: var(--t-28);
+  --name-lh: var(--lh-32);
   margin: 0;
-  font: 700 var(--t-28) / var(--lh-32) var(--f-name);
 }
 .sit-result .sit-law {
   width: calc(var(--u) * 80);
@@ -535,19 +513,21 @@
   align-items: center;
   gap: var(--s-2);
   padding: var(--s-1) var(--s-3) var(--s-1) var(--s-1);
-  border-radius: var(--s-6);
+  border-radius: var(--r-24);
   background: var(--ivory);
   box-shadow: inset 0 0 0 var(--rule) var(--line);
 }
+/* Your seat, ringed in your own glaze (the row sets --owner to it). */
 .sit-seats li.is-you {
-  box-shadow: inset 0 0 0 var(--rule-2) var(--porphyra);
+  box-shadow: inset 0 0 0 var(--rule-2) var(--owner);
 }
 .sit-seats li > span {
   display: flex;
   flex-direction: column;
 }
 .sit-seats b {
-  font: 700 var(--t-12) / var(--lh-16) var(--f-name);
+  --name-size: var(--t-12);
+  --name-lh: var(--lh-16);
 }
 .sit-seats li > span > span {
   color: var(--ink-66);
@@ -569,7 +549,7 @@
   gap: var(--s-2) var(--s-3);
   width: var(--ticker-w);
   padding: var(--s-3) var(--s-4);
-  border-radius: var(--s-2);
+  border-radius: var(--r-8);
   color: var(--ivory);
   background: var(--ink);
   text-align: left;
@@ -582,9 +562,6 @@
   grid-area: words;
   flex-direction: column;
   min-width: 0;
-}
-.sit-dock-words b {
-  font: 700 var(--t-14) / var(--lh-20) var(--f-name);
 }
 .sit-dock-words span {
   color: var(--ivory-70);
@@ -604,11 +581,9 @@
 .sit-dock-back {
   grid-area: back;
   padding: var(--s-1) var(--s-3);
-  border-radius: var(--s-1);
+  border-radius: var(--r-4);
+  color: inherit;
   background: var(--clay-ink);
-  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
-  letter-spacing: var(--track-caps);
-  text-transform: uppercase;
 }
 .sit-dock:hover .sit-dock-back {
   background: var(--clay);

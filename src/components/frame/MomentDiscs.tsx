@@ -113,8 +113,8 @@ export function ThreatAlarm({
                     {glaze.blazon}
                   </span>
                   <span className="threat-words">
-                    <span className="toast-kicker">{capitalize(toWin)} titles</span>
-                    <b className="threat-title">{headline(threat.seat)}</b>
+                    <span className="kicker toast-kicker">{capitalize(toWin)} titles</span>
+                    <b className="name threat-title">{headline(threat.seat)}</b>
                     <span className="caption">
                       {threat.seat === viewerId
                         ? `if you still hold them · after ${listed(before)}`
@@ -130,7 +130,7 @@ export function ThreatAlarm({
                       <li className={yours ? "is-yours" : undefined} key={card.id}>
                         <Ico path={`victory/${card.id}`} size="tile" />
                         <span className="threat-row-words">
-                          <b>{card.name}</b>
+                          <b className="name">{card.name}</b>
                           <span className="caption">
                             {G.players[threat.seat].name} {titleValue(card.metric, value)}
                             {runnerUp

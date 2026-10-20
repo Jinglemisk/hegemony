@@ -21,7 +21,7 @@ export function ToastLane({ toast, onDismiss }: { toast: Toast | null; onDismiss
           {glaze.blazon}
         </span>
         <span className="toast-words">
-          <span className="toast-kicker">{toast.kicker}</span>
+          <span className="kicker toast-kicker">{toast.kicker}</span>
           <span className="toast-body">{toast.body}</span>
         </span>
         <Ico path={toast.icon} size="tile" />

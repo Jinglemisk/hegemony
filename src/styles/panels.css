@@ -8,79 +8,8 @@
  * Every page also obeys the same three rules as the board:
  *   · an icon carries identity, a signed coloured numeral carries judgment
  *   · owner glaze and status colour never share a pixel class
- *   · exactly ONE surface per page is allowed to raise its voice (the alarm)
+ *   · exactly ONE surface per page is allowed to raise its voice
  */
-
-/* ── The alarm ───────────────────────────────────────────────────────────
-   The ledger's one raised voice. Two of these would be none. */
-
-.alarm {
-  margin: 12px 0;
-  padding: 12px 14px 11px;
-  border-radius: 5px;
-  color: var(--ivory);
-  background: linear-gradient(180deg, var(--neg), var(--oxblood-deep));
-  box-shadow:
-    inset 0 1px 0 rgb(255 248 231 / 25%),
-    0 3px 10px rgb(143 46 19 / 40%);
-}
-
-/* Band 3 — the ground. A socket is a place, not a denominator: filled tiles
-   first, then the dashed outlines of what still stands open. */
-.sockets {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-/* Band 4 — the take. Only what moved: the old strip printed all six resources
-   on every settlement and dimmed four of them to dashes. */
-.cityIncome {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 13px;
-  margin: 9px 0 0;
-  color: var(--ink-63);
-}
-
-.cityIncome span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-weight: 800;
-}
-
-/* ── The Ladder ───────────────────────────────────────────────────────────
-   Tiers with the rungs between them, because that is what a ladder is. */
-
-.victoryPage,
-.agoraPage {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.tier {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 4px;
-  border-bottom: 1px solid var(--ink-12);
-}
-
-/* A rung is centred BETWEEN two tiers, which is the whole point — it is a step,
-   not a property of either end. Both directions share the gap as two equal
-   halves: sized by their own labels they ran past the page edge, and the half you
-   cannot read is the half you cannot take. */
-.gap {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  padding: 4px 0;
-}
 
 /* ── Chronicle ────────────────────────────────────────────────────────────
    Newest first, with the years as quiet rules between them. The page has no

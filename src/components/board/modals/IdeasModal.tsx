@@ -159,7 +159,7 @@ export function IdeasModal({
                 />
               ) : null}
               {mark ? (
-                <span className={`idea-mark${own ? " is-own" : holder ? " is-taken" : ""}`}>
+                <span className={`kicker idea-mark${own ? " is-own" : holder ? " is-taken" : ""}`}>
                   {mark}
                 </span>
               ) : null}
@@ -208,10 +208,12 @@ export function IdeasModal({
         <header className="ideas-head">
           <Ico path="assembly/national-idea" size="disc" />
           <div className="ideas-title">
-            <span className="ideas-kicker">
+            <span className="kicker">
               {purchases === 1 ? "Once" : `${formatNumber(purchases)} times`} per game
             </span>
-            <h2 id="ideas-heading">Buy a National Idea</h2>
+            <h2 className="name" id="ideas-heading">
+              Buy a National Idea
+            </h2>
             <p>
               {formatNumber(influenceCost)} influence · you hold {formatNumber(influence)} ·{" "}
               {numberWord(left)} {left === 1 ? "Idea" : "Ideas"} left
@@ -230,7 +232,7 @@ export function IdeasModal({
           )}
           <ActionButton
             blockedReason={takeReason}
-            className="primaryButton"
+            className="btn name is-primary"
             data-idea-confirm
             effectiveCost={take.cost}
             enabled={Boolean(choice)}
@@ -256,11 +258,11 @@ export function IdeasModal({
       <div className="draft">
         <div className="draft-main">
           <header className="ideas-heading" data-c="ideas-heading">
-            <span className="ideas-kicker">
+            <span className="kicker">
               Setup · the draft · pick {Math.min(picked + (draftDone ? 0 : 1), draft.length)} of{" "}
               {draft.length}
             </span>
-            <h2 id="ideas-heading">
+            <h2 className="name" id="ideas-heading">
               {acting ? <SeatMark playerID={acting} /> : null}
               {draftDone
                 ? `${acting ? G.players[acting].name : "The last seat"} took ${ideas.find((i) => i.id === fresh)?.name ?? "an Idea"}`
@@ -277,7 +279,7 @@ export function IdeasModal({
             {draftDone ? (
               <>
                 <span className="ideas-legend">Year I&rsquo;s card comes next.</span>
-                <button className="primaryButton" onClick={onClose} type="button">
+                <button className="btn name is-primary" onClick={onClose} type="button">
                   Turn the first year
                 </button>
               </>
@@ -291,7 +293,7 @@ export function IdeasModal({
                   ) : null)}
                 <ActionButton
                   blockedReason={takeReason}
-                  className="primaryButton"
+                  className="btn name is-primary"
                   data-idea-confirm
                   enabled={Boolean(choice)}
                   heading={selectedIdea ? `Take ${selectedIdea.name}` : "Take an Idea"}
@@ -316,7 +318,7 @@ function DraftOrder({ G, draftDone }: { G: HegemonyState; draftDone: boolean }) 
   const nextIndex = draft.findIndex((seat) => seat.state === "choosing") + 1;
   return (
     <section aria-labelledby="draft-order-heading" className="draft-order" data-c="draft-order">
-      <h3 className="ideas-kicker" id="draft-order-heading">
+      <h3 className="kicker" id="draft-order-heading">
         Draft order
       </h3>
       <ol>
@@ -339,7 +341,7 @@ function DraftOrder({ G, draftDone }: { G: HegemonyState; draftDone: boolean }) 
               <span className="draft-n">{index + 1}</span>
               <SeatMark playerID={seat.playerID} />
               <span className="draft-who">
-                <b>{G.players[seat.playerID].name}</b>
+                <b className="name">{G.players[seat.playerID].name}</b>
                 <span className={`draft-what is-${idea ? "picked" : seat.state}`}>{status}</span>
               </span>
             </li>
