@@ -173,7 +173,7 @@ All to `main`, before player trade slice 1, in this order:
 2. **Decision host and shared primitives** (section 2). Merged, #126.
 3. **Typed Laws, one income, one room** (section 3). Merged, #127.
 4. **UI cleanup** (section 4). Merged, #128.
-5. **CSS cleanup** (section 5). Merged.
+5. **CSS cleanup** (section 5). Merged, #129.
 
 Then trade slice 2 carries section 6, and deck slices 1 and 2 carry section 7.
 

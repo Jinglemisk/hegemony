@@ -59,6 +59,11 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
   });
   const [draft, setDraft] = useState<OverrideMap>(() => loadOverrides());
   const [startAtAssembly, setStartAtAssembly] = useState<boolean>(() => loadStartAtAssembly());
+  const [manualSetup, setManualSetup] = useState<boolean>(
+    () =>
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("setup") === "manual",
+  );
   const [presetId, setPresetId] = useState<TuningPresetId | null>(() => loadTuningPresetId());
   const [fabSpot, setFabSpot] = useState<FabSpot | null>(() => loadFabSpot());
   // A press that moves more than a few pixels is a drag, and its click must not open.
@@ -137,6 +142,16 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
     const next = !startAtAssembly;
     saveStartAtAssembly(next);
     setStartAtAssembly(next);
+    resetGame();
+  };
+  // `?setup=manual` lives in the address, so a reload keeps it; the controller reads it there.
+  const toggleManualSetup = () => {
+    const next = !manualSetup;
+    const url = new URL(window.location.href);
+    if (next) url.searchParams.set("setup", "manual");
+    else url.searchParams.delete("setup");
+    window.history.replaceState(null, "", url);
+    setManualSetup(next);
     resetGame();
   };
   const toggleLowNumbers = () => {
@@ -263,6 +278,23 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
         Sticky dev flag (survives reloads). When on, each new game auto-plays sixteen seed-driven
         turns and drops you straight into the first Assembly — same board, so it&apos;s a clean A/B
         against a Year-1 opening.
+      </p>
+
+      <div className="tune-actions">
+        <button
+          className={`tune-btn${manualSetup ? " primary" : ""}`}
+          onClick={toggleManualSetup}
+          title="Start a new game at the opening placement: place every seat's towns by hand."
+        >
+          {manualSetup ? "✓ " : ""}Manual Setup
+        </button>
+        <span className={`tune-badge${manualSetup ? " on" : ""}`}>
+          {manualSetup ? "place by hand" : "auto-placed"}
+        </span>
+      </div>
+      <p className="tune-hint">
+        Adds ?setup=manual to the address, so reloads keep it. Each seat places its opening towns
+        and picks their pops in the setup picker. It overrides Start at Assembly and the dev scenes.
       </p>
 
       <Section title="Terrain" subtitle="read-only aggregates">
