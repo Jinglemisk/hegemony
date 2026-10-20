@@ -1,0 +1,90 @@
+/* ============================================================================
+   Tooltip (one layer, placed by script)
+   ========================================================================== */
+/* The one tooltip layer (components/overlays/Tooltip places it). */
+.sharedTooltip {
+  position: fixed;
+  z-index: var(--z-tooltip);
+  width: max-content;
+  max-width: var(--tip-w);
+  max-height: min(440px, calc(100vh - 20px));
+  overflow: auto;
+  padding: var(--s-2) var(--s-3);
+  display: grid;
+  gap: var(--s-1);
+  color: var(--ink);
+  font: var(--t-body) / var(--l-body) var(--f-body);
+  box-shadow: var(--paper-edge), var(--shadow-hud);
+  pointer-events: none;
+  animation: sharedOverlayIn 120ms ease-out;
+}
+/* The island's own tip stays under a popover opened from its tile. */
+.sharedTooltip.map-tip {
+  z-index: var(--z-map-tip);
+}
+@keyframes sharedOverlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.tip-row {
+  display: contents;
+}
+.tip-fix {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font: 400 var(--t-body) / var(--l-body) var(--f-body);
+}
+.tip-body {
+  font: 400 var(--t-body) / var(--l-body) var(--f-body);
+}
+.tip-title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  font: 700 var(--t-body) / var(--l-body) var(--f-name);
+  letter-spacing: var(--track-name);
+}
+/* A caps label free to wrap keeps its own copy (`.caps` never wraps), as the
+   Codex's entry heads do; the island's tips share this one. */
+.tip-sub {
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--ink-66);
+}
+.tip-ledger {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  font: 400 var(--t-body) / var(--l-body) var(--f-sans);
+}
+.tip-ledger b {
+  padding-left: var(--s-4);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.tip-k {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.tip-ledger .is-total {
+  box-shadow: inset 0 var(--rule) 0 var(--ink-30);
+  padding-top: var(--s-1);
+}
+.tip-warn {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--clay-ink);
+  font: 500 var(--t-body) / var(--l-body) var(--f-sans);
+}
+.tip-act {
+  margin-top: var(--s-1);
+  color: var(--clay-ink);
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+}

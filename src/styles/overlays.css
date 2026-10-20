@@ -10,41 +10,9 @@
   outline-offset: 2px;
 }
 
-.sharedTooltip {
-  position: fixed;
-  z-index: 1000;
-  display: grid;
-  gap: 7px;
-  width: min(300px, calc(100vw - 20px));
-  max-height: min(440px, calc(100vh - 20px));
-  overflow: auto;
-  padding: 10px 12px;
-  border: 1px solid rgb(36 25 16 / 42%);
-  border-radius: 8px;
-  color: var(--fg);
-  background: rgb(255 248 231 / 99%);
-  box-shadow: 0 18px 38px rgb(36 25 16 / 28%);
-  pointer-events: none;
-  transform: none;
-  animation: sharedOverlayIn 120ms ease-out;
-}
-
-.sharedTooltip.placement-above {
-  transform: none;
-}
-
-@keyframes sharedOverlayIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
 .sharedPopover {
   position: fixed;
-  z-index: 950;
+  z-index: var(--z-popover);
 }
 
 .sharedPopover.placement-below .sharedPopoverArrow {
@@ -67,7 +35,7 @@
 
 .mechanicsHeading {
   color: var(--clay-deep);
-  font-family: var(--font-display);
+  font-family: var(--f-name);
   font-size: 0.82rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -129,18 +97,6 @@
   font-size: 0.56rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-.detailTooltipRows {
-  display: grid;
-  gap: 5px;
-}
-
-.detailTooltipRows em {
-  color: var(--muted);
-  font-size: 0.74rem;
-  font-style: normal;
-  line-height: 1.25;
 }
 
 .popoverActionTooltipTrigger,

@@ -28,7 +28,7 @@ export function AgoraTab({ G, playerID }: { G: HegemonyState; playerID: PlayerId
   const empty = lawCap - laws.length;
 
   return (
-    <div className="agoraPage roster" data-c="agora">
+    <div className="agoraPage" data-c="agora">
       <p className="a-next caps">
         {G.assembly
           ? "The Assembly sits now"
@@ -49,7 +49,7 @@ export function AgoraTab({ G, playerID }: { G: HegemonyState; playerID: PlayerId
               <Tooltip
                 content={<StandingLawDetails G={G} card={card} law={law} />}
                 focusable
-                triggerClassName="v-name"
+                triggerClassName="name v-name"
               >
                 {card.name}
               </Tooltip>
@@ -93,7 +93,7 @@ export function AgoraTab({ G, playerID }: { G: HegemonyState; playerID: PlayerId
                   </Tip>
                 }
                 focusable
-                triggerClassName="v-name"
+                triggerClassName="name v-name"
               >
                 {standing.politician.name}
               </Tooltip>

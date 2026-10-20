@@ -90,7 +90,7 @@ export function BuildPage({
             role="radio"
             type="button"
           >
-            <span className="target-name">{names.get(holding.settlement.id)}</span>
+            <span className="name target-name">{names.get(holding.settlement.id)}</span>
             <span className="cap">
               {open > 0 ? `${open} open` : raisable > 0 ? "site available" : "full"}
             </span>
@@ -169,7 +169,10 @@ export function BuildPage({
               <Ico path={BUILDING_RASTERS[building.id]} size="ui" />
               <span className="bn">{building.name}</span>
               <Chips amounts={cost} short={!canPay(store, cost)} />
-              <span className={`bx${refused ? " is-refused" : ""}`}>
+              <span
+                className={`bx${refused ? " is-refused" : ""}`}
+                data-truncates={refused ? "summary" : undefined}
+              >
                 <AnnotatedText links={false} text={line} />
               </span>
             </ActionButton>

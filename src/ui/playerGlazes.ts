@@ -22,7 +22,7 @@ export type PlayerGlaze = {
   name: string;
   /** The glaze's own name — these are real ceramic colours, and the UI says them. */
   glaze: string;
-  /** The fired colour. Mirrors --p1…--p4 in base.css; that table is the contract. */
+  /** The fired colour. This table is its only source; CSS gets it through --owner. */
   color: string;
   /** The seat's blazon: the Greek initial of the PLAYER's name, not the glaze's —
    *  two glazes start with kappa, and the blazon has to stay unique. */

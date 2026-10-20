@@ -1,0 +1,344 @@
+/* ============================================================================
+   Top bar: the clock, the purse, the rivals, and the two tabs that hang from
+   its ends (the ticker and the consult strip, with the sheet it drops)
+   ========================================================================== */
+.topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--bar-h);
+  background: var(--bone);
+}
+.clock,
+.purse,
+.court {
+  position: absolute;
+  top: calc((var(--bar-h) - var(--hit)) / 2);
+  height: var(--hit);
+  display: flex;
+  align-items: center;
+}
+.clock {
+  left: var(--s-4);
+  width: var(--clock-w);
+  gap: var(--s-4);
+}
+.purse {
+  left: calc(50% - var(--purse-w) / 2);
+  width: var(--purse-w);
+}
+.court {
+  right: var(--s-4);
+  gap: var(--s-4);
+}
+/* Bar controls are flat until hovered: the bar is one control tall. */
+.res:hover,
+.level:hover,
+.year:hover {
+  background: var(--ivory);
+}
+
+.year {
+  flex: none;
+  height: var(--hit);
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  white-space: nowrap;
+}
+.year-n {
+  font: 700 var(--t-num) / var(--l-num) var(--f-name);
+  letter-spacing: var(--track-name);
+}
+.year-left {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  margin-left: var(--s-2);
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+  color: var(--ink-66);
+}
+.rivals::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--s-2) * -1);
+  top: var(--s-1);
+  bottom: var(--s-1);
+  width: var(--rule);
+  background: var(--ink-30);
+}
+
+.res,
+.level {
+  height: var(--hit);
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+.res {
+  width: var(--res-w);
+}
+.res-val {
+  font-size: var(--t-num);
+  line-height: var(--l-num);
+}
+.res-delta {
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+  font-variant-numeric: tabular-nums;
+}
+/* Danger reads at a glance: a store that goes below zero next year, a level at riot. */
+.res.is-short,
+.level.is-riot {
+  box-shadow: inset 0 calc(var(--rule-2) * -1) 0 var(--clay);
+}
+.res.is-short .res-val,
+.level.is-riot .res-val {
+  color: var(--clay-ink);
+}
+.level {
+  width: var(--level-w);
+  margin-left: var(--s-4);
+}
+/* The happiness gauge: its ends are the display's floor and ceiling; revolt is clay,
+   the riot band ochre, calm above. --g-revolt, --g-riot and --g-value are fractions
+   of its width (the data it carries). */
+.gauge {
+  position: relative;
+  width: var(--gauge-w);
+  height: var(--gauge-h);
+  margin-left: var(--s-1);
+  background: linear-gradient(
+    to right,
+    var(--clay) 0 calc(var(--g-revolt) * 100% + var(--rule)),
+    var(--ochre) calc(var(--g-revolt) * 100% + var(--rule)) calc(var(--g-riot) * 100%),
+    var(--ink-12) calc(var(--g-riot) * 100%)
+  );
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+}
+/* One clay pip per Unrest token, above the gauge. */
+.gauge-tokens {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + var(--s-1) + var(--rule));
+  display: flex;
+  gap: var(--rule-2);
+}
+.gauge-token {
+  width: var(--u);
+  height: var(--u);
+  background: var(--clay);
+}
+.gauge::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--s-1) * -1);
+  bottom: calc(var(--s-1) * -1);
+  left: calc(var(--g-value) * 100% - var(--rule));
+  width: var(--rule-2);
+  background: var(--ink);
+}
+
+.rivals {
+  display: flex;
+  gap: var(--s-1);
+  position: relative;
+}
+.consult-btn .ico {
+  filter: var(--at-rest);
+}
+.consult-btn:hover .ico,
+.consult-btn.is-on .ico {
+  filter: none;
+}
+
+/* A ruler: a glaze disc inside a full-height hit box. The outer ring says who is
+   acting (ink) or who is one condition from winning (clay). */
+.rival {
+  --ring: transparent;
+  position: relative;
+  width: var(--hit);
+  height: var(--hit);
+  display: grid;
+  place-items: center;
+}
+.rival.is-acting {
+  --ring: var(--ink);
+}
+.rival.is-threat {
+  --ring: var(--clay);
+}
+.rival-disc {
+  width: var(--rival-d);
+  height: var(--rival-d);
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-round);
+  background: var(--owner);
+  color: var(--owner-ink);
+  font: 700 var(--t-body) / var(--l-body) var(--f-name);
+  box-shadow:
+    inset 0 0 0 var(--rule-2) var(--ivory-45),
+    0 0 0 var(--rule-2) var(--ring);
+}
+.rival:hover .rival-disc,
+.rival.is-viewing .rival-disc {
+  box-shadow:
+    inset 0 0 0 var(--rule-2) var(--ivory),
+    0 0 0 var(--rule-2) var(--ring);
+}
+.rival-disc.ink-dark {
+  color: var(--ink);
+}
+
+/* ---- ticker: the last Chronicle line, a tab hanging from the bar's left end --- */
+.ticker {
+  position: absolute;
+  top: var(--bar-h);
+  left: 0;
+  width: var(--ticker-w);
+  height: var(--hit);
+  background: var(--bone);
+  border-bottom-right-radius: var(--fillet);
+}
+/* the concave join of tab and bar */
+.ticker::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 100%;
+  width: var(--fillet);
+  height: var(--fillet);
+  background: radial-gradient(
+    circle at 100% 100%,
+    transparent calc(var(--fillet) - var(--rule)),
+    var(--bone) var(--fillet)
+  );
+}
+.ticker-head {
+  width: 100%;
+  height: 100%;
+  padding: 0 var(--s-4);
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font: inherit;
+  text-align: left;
+}
+/* the whole Chronicle waits below: a down-caret at the tab's right end */
+.ticker-head::after {
+  content: "";
+  flex: none;
+  margin-left: auto;
+  width: var(--caret);
+  height: var(--caret);
+  background: var(--ink-66);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+.ticker.is-open .ticker-head::after {
+  transform: rotate(180deg);
+}
+/* Inline icons in the bar's text take the chip size. */
+.hud .richIcon {
+  width: var(--ic-chip);
+  height: var(--ic-chip);
+}
+.ticker-line {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The Chronicle drops out of the tab itself: the same paper and width, one hairline
+   under the current line, and the tab's rounded corner moves down to the bottom of
+   the log. It stops short of the realm sheet and scrolls inside. */
+.ticker-more {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: calc(100vh - var(--bar-h) - var(--hit) - var(--area-h) - var(--s-6));
+  padding: 0 var(--s-4) var(--s-3);
+  display: flex;
+  flex-direction: column;
+  background: var(--bone);
+  box-shadow: inset 0 var(--rule) 0 var(--ink-12);
+  border-bottom-right-radius: var(--fillet);
+}
+.ticker.is-open {
+  border-bottom-right-radius: 0;
+}
+
+/* ---- consult strip: the ticker's mirror, a tab hanging from the bar's right end - */
+.consult-strip {
+  position: absolute;
+  top: var(--bar-h);
+  right: 0;
+  width: var(--ticker-w);
+  height: var(--hit);
+  padding: 0 var(--s-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bone);
+  border-bottom-left-radius: var(--fillet);
+}
+.consult-strip::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 100%;
+  width: var(--fillet);
+  height: var(--fillet);
+  background: radial-gradient(
+    circle at 0 100%,
+    transparent calc(var(--fillet) - var(--rule)),
+    var(--bone) var(--fillet)
+  );
+}
+.consult-strip.is-open {
+  border-bottom-left-radius: 0;
+}
+/* Words, like the realm's page tabs: the open page's name underlined in clay. */
+.consult-btn {
+  height: var(--hit);
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  font: 500 var(--t-body) / var(--l-body) var(--f-sans);
+  color: var(--ink-66);
+}
+.consult-btn:hover,
+.consult-btn.is-on {
+  color: var(--ink);
+}
+.consult-btn.is-on {
+  box-shadow: inset 0 calc(var(--rule-2) * -1) 0 var(--clay);
+}
+
+/* The consult page, dropped out of the right strip: the same paper and width, one
+   hairline under the strip, the strip's rounded corner moved down to its foot. It
+   sits outside the HUD, so it carries the HUD's shadow itself, clipped at the top
+   where it joins the strip. As tall as its page, down to the end-turn disc at most;
+   the Codex always takes the full drop, so turning a chapter never moves its foot. */
+.consult-sheet {
+  --drop: calc(100vh - var(--bar-h) - var(--hit) - var(--endturn-h) - var(--s-2));
+  position: fixed;
+  z-index: var(--z-bar);
+  top: calc(var(--bar-h) + var(--hit));
+  right: 0;
+  width: var(--ticker-w);
+  max-height: var(--drop);
+  padding: var(--s-2) var(--s-4) var(--s-4);
+  display: flex;
+  flex-direction: column;
+  background: var(--bone);
+  box-shadow: inset 0 var(--rule) 0 var(--ink-12);
+  border-bottom-left-radius: var(--fillet);
+  filter: var(--shadow-chrome);
+  clip-path: inset(0 calc(-1 * var(--s-6)) calc(-1 * var(--s-6)) calc(-1 * var(--s-6)));
+}
+.consult-sheet[data-tab="codex"] {
+  height: var(--drop);
+}

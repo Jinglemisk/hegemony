@@ -2,7 +2,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 
 type ModalShellProps = {
   children: ReactNode;
-  /** Extra classes on the dialog surface. `logModal` is the default width/padding. */
+  /** Classes on the dialog surface: each dialog brings its own card. */
   className?: string;
   /** Extra classes on the backdrop — e.g. `eventModalBackdrop` for the ceremony register. */
   backdropClassName?: string;
@@ -167,10 +167,9 @@ export function ModalShell({
         aria-label={label}
         aria-labelledby={labelledBy}
         aria-modal="true"
-        // A ceremony is NOT a log modal. It used to wear both, and every rule in
-        // `ceremony.css` then opened by undoing the plate, the blur and the
-        // border it had just inherited — the seam this overhaul removes.
-        className={[ceremony ? `ceremony ceremony-${ceremony}` : "logModal", className]
+        // No shared plate under the card: the old `logModal` one was undone by
+        // every ceremony, the sitting, the Idea draft and the turn notice.
+        className={[ceremony && `ceremony ceremony-${ceremony}`, className]
           .filter(Boolean)
           .join(" ")}
         ref={surfaceRef}

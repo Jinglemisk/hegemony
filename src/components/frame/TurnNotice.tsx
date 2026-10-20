@@ -26,8 +26,8 @@ export function TurnNotice({
 
   return (
     <ModalShell
-      backdropClassName="turn-scrim"
-      className="turn-notice"
+      backdropClassName="modal-scrim turn-scrim"
+      className="modal-card turn-notice"
       labelledBy="turn-notice-title"
       onDismiss={onBegin}
     >
@@ -37,11 +37,11 @@ export function TurnNotice({
       >
         {glaze.blazon}
       </span>
-      <span className="turn-kicker">Pass the screen</span>
-      <h2 className="turn-title" id="turn-notice-title">
+      <span className="kicker">Pass the screen</span>
+      <h2 className="name turn-title" id="turn-notice-title">
         {glaze.name}’s {proposal ? "proposal" : "turn"}
       </h2>
-      <button className="confirm-btn is-primary" onClick={onBegin} type="button">
+      <button className="btn kicker confirm-btn is-primary" onClick={onBegin} type="button">
         Begin
       </button>
     </ModalShell>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import {
   assemblySittings,
   ballotItemName,
@@ -31,6 +31,7 @@ import { tieRule } from "../../../ui/effects";
 import { sign } from "../../../ui/frameFormat";
 import { RESOURCE_RASTERS } from "../../../ui/iconRegistry";
 import { numberWord, ordinal, seatName, toRoman } from "../../../ui/formatters";
+import { glazeOf } from "../../../ui/playerGlazes";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
 import { ActionButton } from "../../ActionButton";
 import { Chips, Ico, SeatMark } from "../../frame/parts";
@@ -67,8 +68,8 @@ export function AssemblySitting({ sitting }: { sitting: Sitting }) {
 
   return (
     <ModalShell
-      backdropClassName="sitting-scrim"
-      className="sitting"
+      backdropClassName="modal-scrim sitting-scrim"
+      className="modal-card sitting"
       labelledBy="sitting-title"
       dismissOnBackdrop={false}
       onDismiss={stage === "rises" ? undefined : () => sitting.setMinimised(true)}
@@ -140,17 +141,19 @@ function SittingHead({ G, sitting }: { G: HegemonyState; sitting: Sitting }) {
     <header className="sit-head">
       <Ico path="assembly/agora" size="disc" />
       <div className="sit-title">
-        <span className="sit-kicker" lang={head.kicker === "ΕΚΚΛΗΣΙΑ" ? "el" : undefined}>
+        <span className="kicker" lang={head.kicker === "ΕΚΚΛΗΣΙΑ" ? "el" : undefined}>
           {head.kicker}
         </span>
-        <h2 id="sitting-title">{head.title}</h2>
+        <h2 className="name" id="sitting-title">
+          {head.title}
+        </h2>
         <span className="sit-sub">{head.sub}</span>
       </div>
       <ol aria-label="The sitting" className="sit-rail">
         {RAIL.map((step, index) => (
           <li
             aria-current={index === at ? "step" : undefined}
-            className={index < at ? "is-done" : index === at ? "is-now" : undefined}
+            className={`kicker${index < at ? " is-done" : index === at ? " is-now" : ""}`}
             key={step.label}
           >
             {step.label}
@@ -159,7 +162,7 @@ function SittingHead({ G, sitting }: { G: HegemonyState; sitting: Sitting }) {
         ))}
       </ol>
       {stage === "rises" ? null : (
-        <button className="sit-btn" onClick={() => sitting.setMinimised(true)} type="button">
+        <button className="kicker sit-btn" onClick={() => sitting.setMinimised(true)} type="button">
           ▾ Minimise
         </button>
       )}
@@ -195,7 +198,7 @@ export function AssemblyDock({ sitting }: { sitting: Sitting }) {
     >
       <Ico path="assembly/agora" size="ui" />
       <span className="sit-dock-words">
-        <b>Assembly · Year {toRoman(session.year)}</b>
+        <b className="name">Assembly · Year {toRoman(session.year)}</b>
         <span>{where}</span>
       </span>
       <span className="sit-dock-seats">
@@ -206,7 +209,7 @@ export function AssemblyDock({ sitting }: { sitting: Sitting }) {
           </span>
         ))}
       </span>
-      <span className="sit-dock-back">Return</span>
+      <span className="kicker sit-dock-back">Return</span>
     </button>
   );
 }
@@ -224,7 +227,7 @@ function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }
   return (
     <>
       <div className="sit-body">
-        <h3 className="sit-sec">
+        <h3 className="kicker sit-sec">
           <Ico path="assembly/politician" size="chip" />
           Draw from a politician · {nextDrawCost(G)}
           <Ico path={RESOURCE_RASTERS.influence} size="chip" />· you hold {influence}
@@ -234,8 +237,8 @@ function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }
             const draw = getAssemblyDrawStatus(G, viewerId, politician.id);
             return (
               <div className="sit-pol" key={politician.id}>
-                <b className="sit-name">{politician.name}</b>
-                <span className="sit-epithet">{politician.epithet}</span>
+                <b className="name sit-name">{politician.name}</b>
+                <span className="kicker">{politician.epithet}</span>
                 <span className="sit-text">{politician.creed}</span>
                 <span className="sit-prize">
                   Author’s prize <Chips amounts={G.ruleset.assembly.prizes[politician.id]} signed />{" "}
@@ -244,7 +247,7 @@ function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }
                 <ActionButton
                   aria-label={`Draw from ${politician.name}`}
                   blockedReason={draw.reason}
-                  className="sit-btn"
+                  className="kicker sit-btn"
                   effectiveCost={draw.cost}
                   enabled={draw.can}
                   heading={`Draw from ${politician.name}`}
@@ -278,7 +281,7 @@ function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }
             <ActionButton
               aria-pressed={repealing}
               blockedReason={repeal.reason}
-              className="sit-btn"
+              className="kicker sit-btn"
               effectiveCost={repeal.cost}
               enabled={repeal.can}
               heading="Repeal a Law"
@@ -289,7 +292,11 @@ function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }
               {repealing ? "Choose a Law above" : "Repeal a Law"}
               <Chips amounts={repeal.cost} short={influence < repeal.price} />
             </ActionButton>
-            <button className="sit-btn" onClick={() => moves.assemblyPass(viewerId)} type="button">
+            <button
+              className="kicker sit-btn"
+              onClick={() => moves.assemblyPass(viewerId)}
+              type="button"
+            >
               <Ico path="assembly/pass" size="ui" />
               Hold your peace
             </button>
@@ -320,7 +327,7 @@ function Laws({
 
   return (
     <>
-      <h3 className="sit-sec">
+      <h3 className="kicker sit-sec">
         <Ico path="assembly/stele" size="chip" />
         Standing Laws · {laws.length} of {lawCap}
       </h3>
@@ -331,9 +338,9 @@ function Laws({
           const fresh = law.enactedYear === year && G.assembly?.phase === "closing";
           const body = (
             <>
-              <b className="sit-name">{card?.name ?? law.cardId}</b>
+              <b className="name sit-name">{card?.name ?? law.cardId}</b>
               <span className="sit-text">{card?.text}</span>
-              <span className="sit-by">
+              <span className="kicker sit-by">
                 <SeatMark playerID={law.author} />
                 {seatName(G, law.author, viewerId)} · Year {toRoman(law.enactedYear)}
                 {fresh ? " · new" : protectedNow ? " · protected" : ""}
@@ -386,7 +393,7 @@ function Drawn({ G, session }: { G: HegemonyState; session: AssemblySession }) {
     <>
       <div className="sit-body sit-drawn">
         <div className="sit-card">
-          <span className="sit-sec">
+          <span className="kicker sit-sec">
             <Ico path={kindIcon(card)} size="ui" />
             {cardSource(card)}
           </span>
@@ -396,7 +403,7 @@ function Drawn({ G, session }: { G: HegemonyState; session: AssemblySession }) {
             }
             focusable
           >
-            <b className="sit-card-name">{card.name}</b>
+            <b className="name sit-card-name">{card.name}</b>
           </Tooltip>
           <span className="sit-text">{card.text}</span>
           <span className="sit-note">
@@ -411,7 +418,7 @@ function Drawn({ G, session }: { G: HegemonyState; session: AssemblySession }) {
         <div className="sit-col">
           {card.kind === "directive" ? (
             <>
-              <h3 className="sit-sec">Aim it at one rival</h3>
+              <h3 className="kicker sit-sec">Aim it at one rival</h3>
               {session.voteOrder
                 .filter((id) => id !== viewerId)
                 .map((id) => (
@@ -423,14 +430,14 @@ function Drawn({ G, session }: { G: HegemonyState; session: AssemblySession }) {
                     type="button"
                   >
                     <SeatMark playerID={id} />
-                    <b>{G.players[id].name}</b>
+                    <b className="name">{G.players[id].name}</b>
                     <span className="sit-pick-fx">{directiveFx(G, card, id)}</span>
                   </button>
                 ))}
             </>
           ) : (
             <>
-              <h3 className="sit-sec">If it passes</h3>
+              <h3 className="kicker sit-sec">If it passes</h3>
               <p className="sit-text">{lawSlotWords(G, card)}</p>
               {blocked ? <p className="sit-warn">{blocked}</p> : null}
             </>
@@ -438,7 +445,7 @@ function Drawn({ G, session }: { G: HegemonyState; session: AssemblySession }) {
           <div className="sit-acts">
             <ActionButton
               blockedReason={blocked}
-              className="sit-btn is-primary"
+              className="kicker sit-btn is-primary"
               enabled={!blocked}
               heading={`Seal ${card.name}`}
               onClick={() => moves.assemblyPropose(viewerId, target ?? undefined)}
@@ -452,7 +459,7 @@ function Drawn({ G, session }: { G: HegemonyState; session: AssemblySession }) {
                   : "Choose a rival"}
             </ActionButton>
             <button
-              className="sit-btn"
+              className="kicker sit-btn"
               onClick={() => moves.assemblyDiscardHeld(viewerId)}
               type="button"
             >
@@ -550,7 +557,7 @@ function Ballot({
                       }
                       focusable
                     >
-                      <b className="sit-name">{ballotItemName(G, item)}</b>
+                      <b className="name sit-name">{ballotItemName(G, item)}</b>
                     </Tooltip>
                     <span className="sit-note">{itemKind(G, item)}</span>
                   </span>
@@ -566,7 +573,7 @@ function Ballot({
               <li className="sit-item is-quiet" key={id}>
                 <span className="sit-no">–</span>
                 <SeatMark playerID={id} />
-                <b className="sit-name">
+                <b className="name sit-name">
                   {id === viewerId
                     ? "You held your peace"
                     : `${G.players[id].name} held their peace`}
@@ -575,7 +582,7 @@ function Ballot({
             ))}
         </ol>
         <div className="sit-acts is-end">
-          <button className="sit-btn is-primary" onClick={onOpen} type="button">
+          <button className="kicker sit-btn is-primary" onClick={onOpen} type="button">
             Open the vote · item 1
           </button>
         </div>
@@ -648,7 +655,7 @@ function Vote({ G, session }: { G: HegemonyState; session: AssemblySession }) {
       <div className="sit-body">
         <div className="sit-tally">
           <span className="sit-side is-yea">
-            <span className="sit-sec">Yea · {words[0]}</span>
+            <span className="kicker sit-sec">Yea · {words[0]}</span>
             <b>{outlook.yea}</b>
           </span>
           <span className="sit-beam-col">
@@ -662,7 +669,7 @@ function Vote({ G, session }: { G: HegemonyState; session: AssemblySession }) {
             </span>
           </span>
           <span className="sit-side is-nay">
-            <span className="sit-sec">Nay · {words[1]}</span>
+            <span className="kicker sit-sec">Nay · {words[1]}</span>
             <b>{outlook.nay}</b>
           </span>
         </div>
@@ -670,7 +677,7 @@ function Vote({ G, session }: { G: HegemonyState; session: AssemblySession }) {
           {session.voteOrder.map((id) => (
             <li className={id === caster ? "is-now" : undefined} key={id}>
               <SeatMark playerID={id} />
-              <b>{seatName(G, id, viewerId, true)}</b>
+              <b className="name">{seatName(G, id, viewerId, true)}</b>
               <span className="sit-order-v">{orderWords(session, outlook, id)}</span>
             </li>
           ))}
@@ -678,7 +685,7 @@ function Vote({ G, session }: { G: HegemonyState; session: AssemblySession }) {
         {casting ? (
           <div className="sit-mine">
             <span className="sit-mine-n">
-              <span className="sit-sec">Your votes</span>
+              <span className="kicker sit-sec">Your votes</span>
               <b>{currentVoteWeight(G, viewerId)}</b>
               <span className="sit-note">
                 {weightParts(G, viewerId)}
@@ -693,7 +700,7 @@ function Vote({ G, session }: { G: HegemonyState; session: AssemblySession }) {
                     <ActionButton
                       aria-label={`Buy a vote with ${status.price} ${payment}`}
                       blockedReason={status.reason}
-                      className="sit-btn"
+                      className="kicker sit-btn"
                       effectiveCost={status.cost as Partial<Resources>}
                       enabled={status.can}
                       heading={`Buy a vote with ${payment}`}
@@ -716,7 +723,7 @@ function Vote({ G, session }: { G: HegemonyState; session: AssemblySession }) {
             </span>
             <span className="sit-col">
               <button
-                className="sit-btn is-yea"
+                className="kicker sit-btn is-yea"
                 onClick={() => moves.assemblyVote(viewerId, true)}
                 type="button"
               >
@@ -724,7 +731,7 @@ function Vote({ G, session }: { G: HegemonyState; session: AssemblySession }) {
                 Yea
               </button>
               <button
-                className="sit-btn is-nay"
+                className="kicker sit-btn is-nay"
                 onClick={() => moves.assemblyVote(viewerId, false)}
                 type="button"
               >
@@ -784,13 +791,13 @@ function Result({
   return (
     <>
       <div className="sit-body sit-result">
-        <span className={`sit-verdict ${words.tone}`}>{words.verdict}</span>
-        <b className="sit-headline">{words.headline}</b>
+        <span className={`kicker sit-verdict ${words.tone}`}>{words.verdict}</span>
+        <b className="name sit-headline">{words.headline}</b>
         <ol className="sit-order is-row">
           {result.votes.map((vote) => (
             <li key={vote.playerID}>
               <SeatMark playerID={vote.playerID} />
-              <b>{seatName(G, vote.playerID, viewerId, true)}</b>
+              <b className="name">{seatName(G, vote.playerID, viewerId, true)}</b>
               <span className={`sit-order-v ${vote.yea ? "is-yea" : "is-nay"}`}>
                 {vote.yea ? "Yea" : "Nay"} · {vote.weight}
               </span>
@@ -806,7 +813,7 @@ function Result({
             triggerAs="div"
           >
             <div className={`sit-law ${result.item.kind === "repeal" ? "is-gone" : "is-new"}`}>
-              <b className="sit-name">{card.name}</b>
+              <b className="name sit-name">{card.name}</b>
               <span className="sit-text">{card.text}</span>
             </div>
           </Tooltip>
@@ -832,7 +839,7 @@ function Result({
                 : `${seatName(G, voiceBefore!, viewerId, true)} lose${voiceBefore === viewerId ? "" : "s"} it; nobody holds it now.`}
           </span>
         </div>
-        <button className="sit-btn is-primary" onClick={onNext} type="button">
+        <button className="kicker sit-btn is-primary" onClick={onNext} type="button">
           {next ? `Next: ${ballotItemName(G, next)}` : "The house rises"}
         </button>
       </div>
@@ -851,7 +858,7 @@ function Rises({ G, session }: { G: HegemonyState; session: AssemblySession }) {
   return (
     <div className="sit-body">
       {session.results.length === 0 ? (
-        <p className="sit-headline">The Assembly rises with nothing on the bema.</p>
+        <p className="name sit-headline">The Assembly rises with nothing on the bema.</p>
       ) : (
         <ol className="sit-items">
           {session.results.map((result, index) => {
@@ -861,11 +868,11 @@ function Rises({ G, session }: { G: HegemonyState; session: AssemblySession }) {
                 <span className="sit-no">{index + 1}</span>
                 <SeatMark playerID={result.item.proposer} />
                 <span className="sit-item-words">
-                  <b className="sit-name">{ballotItemName(G, result.item)}</b>
+                  <b className="name sit-name">{ballotItemName(G, result.item)}</b>
                   <span className="sit-text">{words.line}</span>
                 </span>
                 <span className="sit-item-side">
-                  <span className={`sit-verdict ${words.tone}`}>{words.short}</span>
+                  <span className={`kicker sit-verdict ${words.tone}`}>{words.short}</span>
                   {result.outcome === "carried" && result.item.kind === "enact" ? (
                     <span>
                       {seatName(G, result.item.proposer, viewerId, true)}{" "}
@@ -894,7 +901,11 @@ function Rises({ G, session }: { G: HegemonyState; session: AssemblySession }) {
             </>
           )}
         </span>
-        <button className="sit-btn is-primary" onClick={() => moves.assemblyClose()} type="button">
+        <button
+          className="kicker sit-btn is-primary"
+          onClick={() => moves.assemblyClose()}
+          type="button"
+        >
           Return to Year {toRoman(session.year)} ·{" "}
           {opener === viewerId ? "you open" : `${G.players[opener].name} opens`}
         </button>
@@ -933,10 +944,14 @@ function SeatStrip({
                   : "your choice"
                 : "deciding…";
           return (
-            <li className={you ? "is-you" : undefined} key={id}>
+            <li
+              className={you ? "is-you" : undefined}
+              key={id}
+              style={you ? ({ "--owner": glazeOf(id) } as CSSProperties) : undefined}
+            >
               <SeatMark playerID={id} />
               <span>
-                <b>
+                <b className="name">
                   {G.players[id].name}
                   {you ? " · you" : ""}
                 </b>

@@ -1,0 +1,51 @@
+/* ============================================================================
+   Toasts: one moment another seat had, under the ticker, then gone
+   ========================================================================== */
+.toast-lane {
+  position: absolute;
+  top: calc(var(--bar-h) + var(--hit) + var(--s-4));
+  left: var(--s-4);
+  width: var(--ticker-w);
+}
+.toast {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  padding: var(--s-3) var(--s-4);
+  border: 0;
+  border-radius: var(--r-8);
+  color: var(--ink);
+  background: var(--ivory);
+  text-align: left;
+  animation: toastIn 240ms var(--ease-out) both;
+}
+.toast .idea-seat {
+  width: var(--ic-tile);
+  height: var(--ic-tile);
+}
+.toast-words {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: var(--t-14);
+  line-height: var(--lh-20);
+}
+.toast-words b {
+  font-family: var(--f-name);
+}
+.toast-kicker {
+  color: var(--ink-63);
+}
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--s-2)));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}

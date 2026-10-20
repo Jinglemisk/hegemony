@@ -1,0 +1,187 @@
+/* ============================================================================
+   Base: the sea, and the primitives every surface of the frame spends
+   ========================================================================== */
+/* ---- base: the frame is the sea; everything else floats over it ---------- */
+.frame {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  color: var(--ink);
+  background: var(--sea)
+    radial-gradient(ellipse at 60% 40%, var(--sea-lit) 0%, var(--sea) 50%, var(--sea-deep) 100%);
+  font: var(--t-body) / var(--l-body) var(--f-body);
+}
+/* The frame's own controls take their colour from where they sit. */
+.verb-btn,
+.fan-btn,
+.consult-btn,
+.rival,
+.endturn {
+  color: inherit;
+  transition: none;
+}
+.hud ol,
+.hud ul,
+.hud p,
+.sharedTooltip p,
+.threat-panel ul,
+.endturn-confirm p {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.frame :focus-visible,
+.endturn-confirm :focus-visible {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: var(--rule-2);
+}
+
+.ico {
+  display: block;
+  flex: none;
+  object-fit: contain;
+}
+.ico-chip {
+  width: var(--ic-chip);
+  height: var(--ic-chip);
+}
+.ico-ui {
+  width: var(--ic-ui);
+  height: var(--ic-ui);
+}
+.ico-tile {
+  width: var(--ic-tile);
+  height: var(--ic-tile);
+}
+.ico-disc {
+  width: var(--ic-disc);
+  height: var(--ic-disc);
+}
+
+/* A price: number-and-icon pairs, alternatives joined by a dot. No words. */
+.price {
+  display: inline-flex;
+  align-items: center;
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+}
+.price-or {
+  margin: 0 var(--s-1);
+  color: var(--ink-45);
+}
+.price.is-short {
+  color: var(--clay-ink);
+}
+.price-part {
+  display: inline-flex;
+  align-items: center;
+}
+.price-part + .price-part {
+  margin-left: var(--s-1);
+}
+
+/* Raised paper: an ivory face on a hairline, for buttons, badges and the labels
+   that sit across the sheet's edge (disc names, fan labels). The tooltip, the map
+   caption and the threat panel are the same paper, lifted: each adds its drop to
+   --paper-edge. */
+.btn,
+.alarm-badge,
+.sock.is-built,
+.sharedTooltip,
+.map-caption,
+.threat-panel,
+.verb-name,
+.fan-label {
+  background: var(--ivory);
+  box-shadow: var(--paper-edge);
+}
+/* A caps label: pop classes, the glaze, "open". A kicker is its bold cut in clay,
+   over a title or naming a mark; on a button, a verdict or a step it takes that
+   place's ink instead. */
+.caps,
+.kicker {
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+.caps {
+  color: var(--ink-66);
+  white-space: nowrap;
+}
+.kicker {
+  margin: 0;
+  color: var(--clay-ink);
+  font-weight: 700;
+}
+/* A proper name in the name face. It reads at body size unless its place sets
+   --name-size and --name-lh. */
+.name {
+  --name-size: var(--t-body);
+  --name-lh: var(--l-body);
+  font: 700 var(--name-size) / var(--name-lh) var(--f-name);
+}
+/* A button: raised paper, ink words, a clay ring under the pointer. Words in one
+   face take `.kicker` beside it; a ladder rung sets two faces inside instead. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 0 var(--s-3);
+  color: var(--ink);
+}
+.btn:hover:not([aria-disabled="true"]) {
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+.btn[aria-disabled="true"] {
+  color: var(--ink-66);
+  cursor: default;
+}
+/* The primary: ivory words on clay, no paper edge, the clay deepening under the
+   pointer. Disabled, it keeps its ink and dims whole. */
+.btn.is-primary {
+  color: var(--ivory);
+  background: var(--clay);
+  box-shadow: none;
+}
+.btn.is-primary:hover:not([aria-disabled="true"]) {
+  background: var(--clay-deep);
+}
+.btn.is-primary[aria-disabled="true"] {
+  opacity: var(--dim);
+}
+/* A card over a light scrim: the map still reads behind it. */
+.modalBackdrop.modal-scrim {
+  background: var(--scrim-light);
+}
+.modal-card {
+  border-radius: var(--r-8);
+  color: var(--ink);
+  background: var(--ivory);
+  box-shadow: var(--shadow-modal);
+}
+
+/* The HUD layers: one shadow and one hairline around each paper mass. */
+.hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  filter: var(--shadow-chrome);
+  z-index: var(--z-bar);
+}
+.hud > * {
+  pointer-events: auto;
+}
+
+/* What the board is asking, on raised paper under the ticker, over open sea. */
+.map-caption {
+  position: fixed;
+  z-index: var(--z-over-sea);
+  top: calc(var(--bar-h) + var(--hit) + var(--s-2));
+  left: var(--s-4);
+  padding: var(--s-1) var(--s-3);
+  box-shadow: var(--paper-edge), var(--shadow-hud);
+  font: 500 var(--t-body) / var(--l-body) var(--f-sans);
+  white-space: nowrap;
+  pointer-events: none;
+}

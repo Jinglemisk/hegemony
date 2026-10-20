@@ -115,7 +115,7 @@ export function EndTurn({
         <span className="endturn-disc" data-c="disc">
           <span className="endturn-blazon">{acting.blazon}</span>
         </span>
-        <span className="endturn-label" data-c="chip">
+        <span className="kicker endturn-label" data-c="chip">
           {waitingLabel ?? acting.name}
         </span>
       </div>
@@ -161,7 +161,7 @@ export function EndTurn({
           <span className="endturn-disc" data-c="disc">
             <Ico path="events/end-turn" size="disc" />
           </span>
-          <span className="endturn-label" data-c="chip">
+          <span className="kicker endturn-label" data-c="chip">
             End turn
           </span>
           {warning ? <span className="endturn-warning">{warning.label}</span> : null}
@@ -218,10 +218,10 @@ function EndTurnConfirm({
       onDismiss={onClose}
       preferredPlacement="above"
     >
-      <span className="confirm-kicker">
+      <span className="kicker">
         Happiness {sign(unrest.level)} · {line}
       </span>
-      <h2 className="confirm-title">{title}</h2>
+      <h2 className="name confirm-title">{title}</h2>
       <p className="confirm-body">
         {revolt ? (
           unrest.slaves ? (
@@ -252,14 +252,14 @@ function EndTurnConfirm({
       <div className="confirm-acts">
         {calm ? (
           <button
-            className="confirm-btn is-primary"
+            className="btn kicker confirm-btn is-primary"
             onClick={() => onCalmThenEnd(calm.payment)}
             type="button"
           >
             Calm, then end <Chips amounts={calm.cost} />
           </button>
         ) : null}
-        <button autoFocus className="confirm-btn" onClick={onEnd} type="button">
+        <button autoFocus className="btn kicker confirm-btn" onClick={onEnd} type="button">
           {revolt ? "Revolt" : "Face the riot"}
         </button>
       </div>

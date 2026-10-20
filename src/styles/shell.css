@@ -11,48 +11,7 @@
  * chrome feel like a control panel bolted over a game.
  */
 
-/* A stockpile that just changed flashes the NUMERAL, not a box behind it. The
-   old flash filled the pill with a green or red plate for a second and a half,
-   which on a bar of six numbers read as an alarm every single turn. Colour on the
-   figure itself says the same thing and then gets out of the way. */
-
-@keyframes spineFlashUp {
-  0%,
-  30% {
-    color: var(--pos);
-  }
-
-  100% {
-    color: var(--ink);
-  }
-}
-
-@keyframes spineFlashDown {
-  0%,
-  30% {
-    color: var(--neg);
-  }
-
-  100% {
-    color: var(--ink);
-  }
-}
-
 /* ── The roster ───────────────────────────────────────────────────────────── */
-
-.seat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 0;
-  opacity: 0.55;
-  transition: opacity 140ms ease;
-}
-
-.seat:hover {
-  opacity: 1;
-}
 
 /* Every glaze carries an ivory keyline and an ink halo, because a disc has to
    survive on bone here and on open sea when the same mark lands on the board. */

@@ -27,7 +27,7 @@
 .title,
 .verb,
 .label {
-  font-family: var(--disp);
+  font-family: var(--f-name);
   text-transform: uppercase;
 }
 
@@ -75,18 +75,21 @@
 .stat,
 .stat-lg,
 .caption {
-  font-family: var(--body);
+  font-family: var(--f-body);
   text-transform: none;
 }
 
-/* Step 13's ceremony cards keep the shell's 12px floor as the register scales. */
+/* Step 13's ceremony cards keep the frame's 12px floor (--t-12) as the register
+   scales. A label and a verb never reach it from below (11px and 12px at full
+   size), so on these cards they sit at the floor; captions and the large verb
+   only touch it at narrow widths. */
 .hungerCard .label,
 .lossCard .label,
 .yearCard .label,
 .riotSheet .label,
 .ageEnd .label,
 .yearBack + .deckEcho {
-  font-size: max(12px, 0.6875rem);
+  font-size: var(--t-12);
 }
 
 .hungerCard .caption,
@@ -94,7 +97,7 @@
 .yearCard .caption,
 .riotSheet .caption,
 .ageEnd .caption {
-  font-size: max(12px, 0.78125rem);
+  font-size: max(var(--t-12), 0.78125rem);
 }
 
 .ageEnd .verb,
@@ -102,14 +105,14 @@
 .lossCard .verb,
 .hungerCard .verb,
 .yearCard .verb {
-  font-size: max(12px, 0.75rem);
+  font-size: var(--t-12);
 }
 
 .ageEnd .verb.verb-lg,
 .riotSheet .verb.verb-lg,
 .lossCard .verb.verb-lg,
 .yearCard .verb.verb-lg {
-  font-size: max(12px, 0.8125rem);
+  font-size: max(var(--t-12), 0.8125rem);
 }
 
 .body {
@@ -152,12 +155,6 @@
   line-height: 1;
 }
 
-/* The resource spine and the tally numerals — the two places a number IS the
-   scene. Anything bigger than this is a ceremony, and gets .display. */
-.stat-lg.stat-xl {
-  font-size: 1.625rem;
-}
-
 /* The one number a whole page is ABOUT: the unrest alarm's happiness, a
    ceremony's carved figure. At most one per page —
    a second would mean neither is the answer.
@@ -176,6 +173,12 @@
   line-height: 1.35;
 }
 
+/* A number set in the frame's numeral face, after the roles so it wins over them. */
+.num {
+  font-family: var(--f-sans);
+  font-weight: 700;
+}
+
 /* Judgment, never identity. A status colour appears only on text and only next
    to a sign — the icon beside it carries what the number is about, so colour
    never has to. Owner glaze and status colour never share a pixel class. */
@@ -183,24 +186,8 @@
   color: var(--pos);
 }
 
+/* Text ink, one step lighter than --neg: --neg is the fired value the ceremonies
+   spend, --clay-ink the clay that reads at AA on bone. */
 .neg {
-  color: var(--neg);
-}
-
-.warn {
-  color: var(--warn);
-}
-
-/* On lacquer objects (the seal, ostraka, tooltips) the same three at reading
-   contrast — the dark-ground twins, not different meanings. */
-.onDark .pos {
-  color: var(--pos-lit);
-}
-
-.onDark .neg {
-  color: var(--neg-lit);
-}
-
-.onDark .warn {
-  color: var(--warn-lit);
+  color: var(--clay-ink);
 }

@@ -1,0 +1,361 @@
+/* ============================================================================
+   The token table: every colour, length, type size, layer and motion the UI
+   spends. Only this sheet spells a value out; every other sheet spends a token
+   (scripts/check-ui-system.mjs counts a colour written anywhere else). On :root,
+   so anything portalled out of the frame (overlays, the dev tune panel) keeps it.
+
+   Region sizes are multiples of the 4px grid unit; gaps and insets use the one
+   spacing scale, in one rhythm: 4 inside an item (icon to number), 8 between
+   items of a group, 16 between groups. Components size themselves from role
+   tokens (--t-body, --ic-ui, --ic-disc …), so a tier is a token swap: at 1680
+   and wider the realm, its discs and the end turn step up together; the bar
+   stays one control tall.
+   ========================================================================== */
+
+:root {
+  /* ---- responsive uniform-scale (two-panel.md, piece 3) -------------------
+     One dial: the whole KYKLOS chrome shrinks PROPORTIONALLY as the viewport
+     narrows — identical layout, only smaller — so 600px of left+right chrome stays
+     in proportion and never reflows (the board is covered, never reshaped). Full
+     size at ≥1440px, floored at 0.82 by ≤1024px, linear between. rem text rides
+     this one factor through the scaled root font-size (base.css). The map is SVG
+     in its own viewBox, so it is untouched. Per-element minimums are a later pass. */
+  --ui-scale: clamp(0.82, calc(0.82 + (100vw - 1024px) * 0.18 / 416px), 1);
+
+  /* ---- gate contract ---------------------------------------------------- */
+  --gate-space: "0 4 8 12 16 24 32 48 64";
+  --gate-grid: 4;
+  --gate-icons: "16 24 32 48";
+  --gate-hit: 32;
+  --gate-text: 12;
+
+  /* ---- grid unit and the one spacing scale ------------------------------ */
+  --u: 4px;
+  --s-1: calc(var(--u) * 1); /*  4 */
+  --s-2: calc(var(--u) * 2); /*  8 */
+  --s-3: calc(var(--u) * 3); /* 12 */
+  --s-4: calc(var(--u) * 4); /* 16 */
+  --s-6: calc(var(--u) * 6); /* 24 */
+  --s-8: calc(var(--u) * 8); /* 32 */
+  --s-12: calc(var(--u) * 12); /* 48 */
+  --s-16: calc(var(--u) * 16); /* 64 */
+
+  /* ---- type scale --------------------------------------------------------- */
+  --f-name: "Cinzel", Copperplate, Georgia, serif; /* proper names, titles only */
+  --f-body: "Alegreya", "Iowan Old Style", Palatino, Georgia, serif;
+  --f-sans: "Alegreya Sans", "Gill Sans", Helvetica, Arial, sans-serif;
+  --t-12: 12px;
+  --t-14: 14px;
+  --t-16: 16px;
+  --t-20: 20px;
+  --t-24: 24px;
+  --t-28: 28px;
+  --t-72: 72px; /* the year's numeral on its card's back */
+  --lh-16: 16px;
+  --lh-20: 20px;
+  --lh-24: 24px;
+  --lh-28: 28px;
+  --lh-32: 32px;
+  --track-caps: 0.08em;
+  --track-name: 0.04em;
+  /* roles */
+  --t-cap: var(--t-12);
+  --l-cap: var(--lh-16); /* the floor: chips, caps labels, deltas */
+  --t-body: var(--t-14);
+  --l-body: var(--lh-20); /* panel body */
+  --t-num: var(--t-16);
+  --l-num: var(--lh-20); /* bar numbers */
+  --t-lead: var(--t-16);
+  --l-lead: var(--lh-20); /* the ruler's name */
+  --t-count: var(--t-24);
+  --l-count: var(--lh-28); /* pop counts */
+
+  /* ---- icons --------------------------------------------------------------- */
+  --ic-16: 16px;
+  --ic-24: 24px;
+  --ic-32: 32px;
+  --ic-48: 48px;
+  /* roles */
+  --ic-chip: var(--ic-16); /* inside price chips */
+  --ic-ui: var(--ic-24); /* bar, tabs, header, yields, buttons */
+  --ic-tile: var(--ic-32); /* fan options, pop columns */
+  --ic-disc: var(--ic-32); /* verb discs, the hourglass */
+
+  /* ---- controls and regions (grid multiples) ----------------------------- */
+  --hit: calc(var(--u) * 8); /* 32: every control's short edge */
+  --bar-h: var(--hit); /* 32: the bar is one control tall */
+  --row-h: calc(var(--u) * 10); /* 40: realm tabs */
+  --chip-h: calc(var(--u) * 5); /* 20: the end-turn label */
+  --name-h: var(--lh-20); /* 20: a verb's name under its disc */
+  --price-h: var(--ic-16); /* 16: the end-turn label's lift off the bottom, less one step */
+  --badge: calc(var(--u) * 4); /* 16: the advisory count */
+  --caret: var(--s-2); /*  8: "opens more" mark */
+  --rival-d: calc(var(--u) * 7); /* 28: a ruler's disc; the ring brings it to --hit */
+  --verb-d: calc(var(--u) * 12); /* 48: verb disc */
+  --disc-end: calc(var(--u) * 16); /* 64: the hourglass */
+  --fan-d: calc(var(--u) * 10); /* 40: a fan's option, first or second level */
+  --fan-w: calc(var(--u) * 24); /* 96: an option's slot: its name and price */
+  --endturn-w: calc(var(--u) * 24); /* 96: the end-turn column, flush to the right edge */
+  --endturn-h: calc(var(--u) * 24); /* 96 */
+  --res-w: calc(var(--u) * 18); /* 72 */
+  --level-w: calc(var(--u) * 32); /* 128 */
+  --purse-w: calc(var(--res-w) * 5 + var(--s-4) + var(--level-w)); /* 504 */
+  --clock-w: calc(var(--u) * 89); /* 356: 16 short of the purse at 1280 */
+  --ticker-w: calc(var(--u) * 90); /* 360 */
+  --gauge-floor: 6; /* the gauge runs −6 … +6, one unit per step */
+  --gauge-w: calc(var(--u) * var(--gauge-floor) * 2); /* 48 */
+  --gauge-h: calc(var(--u) * 2); /* 8 */
+  --tip-w: calc(var(--u) * 72); /* 288 */
+  --fillet: var(--s-4); /* the concave join of the ticker tab and the bar */
+  --board-gap: 8px; /* = --s-2; clearance between the island and the chrome, read by the fit */
+  --ideas-w: calc(var(--u) * 256); /* 1024: two columns of printed rules */
+  --idea-row-h: calc(var(--u) * 20); /* 80: name and two rule lines */
+  --draft-w: calc(var(--u) * 60); /* 240: the draft order beside the Idea rows */
+
+  /* The realm sheet: a fixed box whose top-right corner is one large
+     quarter-circle. Its edge is one path from the screen's left edge to the
+     screen's bottom: the straight top run, the quarter-circle (--area-curve),
+     then the straight right side. Six discs sit on it at equal arc lengths
+     (--verb-pitch), the first and last the same --verb-inset from the path's two
+     ends, so Grow stands as far from the left edge as Exchange from the bottom.
+     --body-top clears the discs and their names; --body-right clears the discs
+     that ride the curve and the side. */
+  --area-w: calc(var(--u) * 124); /* 496 */
+  --area-h: calc(var(--u) * 92); /* 368 */
+  --area-curve: calc(var(--u) * 64); /* 256 */
+  --verb-n: 6;
+  --verb-inset: calc(var(--u) * 14); /* 56: a disc and its name clear of the edge */
+  --edge: shape(
+    from 0 0,
+    hline to calc(var(--area-w) - var(--area-curve)),
+    arc to var(--area-w) var(--area-curve) of var(--area-curve) cw,
+    vline to var(--area-h)
+  );
+  --edge-len: calc(
+    var(--area-w) + var(--area-h) - 2 * var(--area-curve) + var(--area-curve) * pi / 2
+  );
+  --verb-pitch: calc((var(--edge-len) - 2 * var(--verb-inset)) / (var(--verb-n) - 1));
+  --verb-name-w: calc(var(--verb-d) + var(--s-6));
+  --body-top: calc(var(--verb-d) / 2 + var(--s-1) + var(--name-h) + var(--s-3));
+  --body-right: calc(var(--u) * 16); /* 64 */
+
+  /* ---- the palette ---------------------------------------------------------- */
+  --vase-black: #181210;
+  --clay: #c0461c;
+  /* Clay has to do two jobs and cannot do both at one value. As a FILL — the
+     armed verb, the seal, a keyline — #c0461c is the identity and stays. As INK
+     it reads 4.11:1 on bone, so every glossary term, kicker and epithet drawn in
+     it was under AA. --clay-ink is the same hue five points darker, the least
+     that clears 4.5:1 (4.92:1 on bone, 5.74:1 on ivory). The ramp is therefore
+     fill → ink → deep, and --clay-deep stays what a clay link does on hover. */
+  --clay-ink: #ad3d18;
+  --clay-deep: #8f2e13;
+  --ochre: #d98a35;
+  --bone: #f4e6c8;
+  --ivory: #fff8e7;
+  --olive: #5e6e3a;
+  --aegean: #1f6977;
+  --terrain-neutral: #d8c8a8;
+  --terrain-neutral-shade: #9f8e70;
+  --terrain-neutral-line: #5f4a35;
+  --accent: var(--clay);
+  --accent-2: var(--aegean);
+
+  /* ---- status: judgment, never identity --------------------------------------
+     Two colours, and they mean good / bad, always beside a sign or an icon —
+     never as the sole carrier of meaning, never on an owner mark. --neg is the
+     fired value the ceremonies spend; `.neg` text on a page takes --clay-ink,
+     one step lighter (type.css). */
+  --pos: #5e6e3a;
+  --neg: #8f2e13;
+
+  --fg: #241910;
+  /* The older names for the two quiet ink steps; aliases now, so the pair cannot
+     drift apart the way --subtle and the old --ink-48 quietly had. */
+  --muted: var(--ink-66);
+  --subtle: var(--ink-63);
+  --panel: rgb(255 248 231 / 78%);
+  --panel-soft: rgb(192 70 28 / 10%);
+  /* 13%, per the mock's table — the app had drifted to 18%, which is why every
+     keyline and rule reads heavier here than in DECIDED-UI-LAYOUT.html. */
+  --line: rgb(36 25 16 / 13%);
+  --line-strong: rgb(192 70 28 / 48%);
+  --button-bg: rgb(255 248 231 / 86%);
+  --button-line: rgb(36 25 16 / 24%);
+  --shadow: 0 20px 46px rgb(72 42 21 / 20%);
+  --lift-shadow: 0 12px 24px rgb(72 42 21 / 18%);
+  --float: 0 10px 30px rgb(24 18 16 / 26%);
+
+  /* ---- the ink ramp ------------------------------------------------------------
+     Every text weight in the UI comes off this one hue. Steps are named for
+     their alpha, and the QUIET step is 63% rather than the mock's 48% because 48%
+     inks 2.98:1 on bone: every section head, capacity denominator and settlement
+     subtitle in the app was below AA. 63% is the floor that clears 4.5:1 on the
+     darkest ground this ramp lands on (bone, 4.61:1) — not a wholesale contrast
+     raise, the minimum that reads. Anything below --ink-63 is a keyline or a
+     wash, never text. */
+  --ink: #241910;
+  --ink-66: rgb(36 25 16 / 66%);
+  --ink-63: rgb(36 25 16 / 63%);
+  --ink-45: rgb(36 25 16 / 45%);
+  --ink-30: rgb(36 25 16 / 30%);
+  --ink-12: rgb(36 25 16 / 12%);
+  --ink-07: rgb(36 25 16 / 7%);
+  --ivory-70: rgb(255 248 231 / 70%);
+  --ivory-45: rgb(255 248 231 / 45%);
+
+  /* a disc's keyline, and the drop under anything floating over the table */
+  --ring: rgb(36 25 16 / 22%);
+  --shadow-float: 0 18px 56px rgb(24 18 16 / 50%);
+  /* the light scrim: a card over it leaves the map readable behind */
+  --scrim-light: rgb(24 18 16 / 38%);
+
+  /* ---- terrain ramp --------------------------------------------------------------
+     Deliberately near-identical values. Terrain KIND is carried by the engraved
+     emblem, never by hue; the ramp only says "this ground is a little harder". */
+  --t-plains: #e2d4b6;
+  --t-hill: #d5c5a4;
+  --t-forest: #cabb97;
+  --t-mountain: #bfae8c;
+  --t-oracle: #ede4cd;
+  --tile-rule: var(--terrain-neutral-line);
+
+  /* ---- the sea -------------------------------------------------------------------
+     --sea is the water; --sea-lit and --sea-deep are the same water nearer and
+     further from the light; --sea-shade is the shadow chrome casts on it. */
+  --sea: #206e7c;
+  --sea-lit: #2e8a9a;
+  --sea-deep: #17505c;
+  --sea-shade: rgb(10 34 41 / 35%);
+
+  /* ---- fired artwork values --------------------------------------------------- */
+  /* The seal's fired gradient names a curved clay surface, not a state. */
+  --clay-lit: #cd5124;
+  --clay-shade: #a93c17;
+  /* The ceremony card's fired ivory, lit at the top and settling to bone, and the
+     lacquer's own highlight. Three artwork values that only ceremony.css spends. */
+  --ivory-lit: #fffaf0;
+  --ivory-settled: #f3e7cb;
+  --lacquer-lit: #2d221a;
+  /* The Assembly's own fired values: the stele's lit face and its laid shadow,
+     and the two vote glazes (a yea shard and a nay shard are OBJECTS, so they get
+     a gradient rather than the flat --pos/--neg text colours). */
+  --stele-face: #f7ecd2;
+  --stele-shade: #c9b48c;
+  --yea-lit: #7d8f51;
+  --yea-shade: #48542c;
+  --nay-lit: #a83a1c;
+  --nay-shade: #6e2410;
+  --ledger-rule: rgb(36 25 16 / 14%);
+  --ledger-accent: rgb(192 70 28 / 70%);
+
+  /* ---- the z ladder ------------------------------------------------------------
+     Named rungs replacing 21 ad-hoc values (34, 95, 180, 950 among them).
+     The rule is that everything on a rung is a KIND of thing, so a new element
+     never has to guess a number: it names what it is. The frame is a fixed box,
+     so its own stacking context: the rungs up to --z-ceremony order things
+     inside it; the dev sheets and the portalled layers sit outside it. */
+  --z-sea: 0; /* the full-bleed map stage */
+  --z-over-sea: 20; /* captions lying on the sea, over the board */
+  --z-bar: 40; /* top and bottom ceramic bars */
+  --z-takeover: 80; /* a page that replaces the table — the Idea draft, over all chrome */
+  --z-modal: 85; /* a plain dialog and its scrim — the setup pop picker, a placement card */
+  --z-fab: 90; /* the dev tune button, outside the frame: over all of it, under the portals */
+  --z-ceremony: 100; /* scrim + modal: a rite covers the whole table */
+  --z-map-tip: 140; /* the map's tile tip: under a popover opened from that tile */
+  --z-popover: 150; /* anchored popovers, portalled over the table */
+  --z-tooltip: 200; /* over everything, a popover included: its tips open inside it */
+  --z-dev: 300; /* the dev tune sheet, outside the frame: over everything */
+  /* Inside one component, against its own siblings: a layer set under the
+     surface, or lifted over its neighbours. */
+  --z-under: -1;
+  --z-lift: 1;
+
+  /* ---- rules, radii, shadows, states -------------------------------------- */
+  --rule: 1px;
+  --rule-2: 2px;
+  --r-4: 4px; /* buttons, rows, tags */
+  --r-8: 8px; /* cards, panels, toasts */
+  --r-16: 16px; /* a pill one line tall */
+  --r-24: 24px; /* a pill around a seat's disc */
+  --r-round: 50%;
+  --paper-edge: inset 0 0 0 var(--rule) var(--ink-30); /* raised paper's hairline */
+  --shadow-chrome: drop-shadow(0 0 var(--rule) var(--ink-66))
+    drop-shadow(0 var(--s-1) var(--s-3) var(--sea-shade));
+  --shadow-hud: 0 var(--s-2) var(--s-6) var(--sea-shade);
+  --shadow-modal: 0 var(--s-6) var(--s-16) rgb(0 0 0 / 45%); /* a card over the light scrim */
+  --shadow-deal: 0 42px 110px rgb(0 0 0 / 75%); /* a dealt ceremony card's long drop */
+  --shadow-commit: 0 3px 12px rgb(0 0 0 / 50%); /* a ceremony's commit button */
+  --shadow-commit-lift: 0 5px 16px rgb(0 0 0 / 55%); /* … lifted under the pointer */
+  --shadow-die: 0 10px 26px rgb(0 0 0 / 50%); /* the lacquer die on the table */
+  --shadow-tablet: drop-shadow(0 24px 44px rgb(0 0 0 / 70%)); /* a chamfered ceremony tablet */
+  --pip-dent: inset 0 -2px 3px rgb(0 0 0 / 40%); /* a die's pip, pressed in */
+  --shadow-placement: 0 28px 70px rgb(0 0 0 / 48%); /* the v1 placement card */
+  --shadow-placement-pop: 0 22px 50px rgb(0 0 0 / 42%); /* the v1 found-colony popover */
+  --at-rest: opacity(0.85); /* an unselected icon tab */
+  --dim: 0.45; /* an empty tile's emblem, an unaffordable verb */
+
+  /* ---- motion: the verb fans ------------------------------------------------ */
+  --fan-dwell: 500ms; /* hover this long before a fan opens */
+  --fan-linger: 250ms; /* a fan stays this long after the pointer leaves */
+  --t-fan: 160ms;
+  --t-stagger: 40ms;
+  --fan-from: 0.4; /* a sub-circle grows out of its disc from this scale */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* ---- board (SVG user units: one hex is 100 from centre to corner) -------- */
+  --b-rule: 1.2;
+  --b-own: 5;
+  --b-sel: 6;
+  --b-pip: 1.4;
+  --b-glyph: 1.6;
+  --b-seal: 3;
+  --b-ring: 5;
+  --b-ring-cap: 8;
+  --b-plate: 18px;
+  --b-pops: 16px;
+  --b-moor: 16px;
+  /* the fit publishes --b-scale (screen px per user unit); board text never drops below the floor */
+  --b-floor: var(--t-12);
+
+  color-scheme: light;
+}
+
+/* 1920-class viewports: the realm and end turn step up a tier */
+@media (min-width: 1680px) {
+  :root {
+    --area-w: calc(var(--u) * 156); /* 624 */
+    --area-h: calc(var(--u) * 112); /* 448 */
+    --area-curve: calc(var(--u) * 80); /* 320 */
+    --verb-inset: calc(var(--u) * 16); /* 64: the disc edge 32 from the screen edge */
+    --body-right: calc(var(--u) * 20); /* 80 */
+    --verb-d: calc(var(--u) * 16); /* 64 */
+    --name-h: var(--lh-24);
+    --fan-d: calc(var(--u) * 12); /* 48 */
+    --fan-w: calc(var(--u) * 28); /* 112 */
+    --clock-w: calc(var(--u) * 100); /* 400 */
+    --disc-end: calc(var(--u) * 20); /* 80 */
+    --endturn-w: calc(var(--u) * 28); /* 112 */
+    --endturn-h: calc(var(--u) * 30); /* 120 */
+    --chip-h: calc(var(--u) * 6); /* 24 */
+    --price-h: var(--ic-24);
+    --ic-disc: var(--ic-48);
+  }
+  .realm,
+  .endturn {
+    --t-cap: var(--t-14);
+    --l-cap: var(--lh-20);
+    --ic-chip: var(--ic-24);
+  }
+  .realm {
+    --t-body: var(--t-16);
+    --l-body: var(--lh-24);
+    --t-lead: var(--t-20);
+    --l-lead: var(--lh-24);
+    --t-count: var(--t-28);
+    --l-count: var(--lh-28);
+    --ic-ui: var(--ic-32);
+    --hit: calc(var(--u) * 10); /* 40 */
+    --row-h: calc(var(--u) * 12); /* 48 */
+  }
+}

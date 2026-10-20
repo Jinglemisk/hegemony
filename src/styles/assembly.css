@@ -1,6 +1,6 @@
 /* ==========================================================================
  * The Assembly's chapter in the Codex. The sitting itself is `sitting.css`; the
- * Agora page is a ledger in frame.css.
+ * Agora page is a ledger in frame/pages.css.
  *
  * Known and NOT fixed here: the Codex roster below still sets 8px and 10.5px,
  * which is the illegible register the overhaul exists to remove. Fixing it means
@@ -30,7 +30,7 @@
 
 .rulePolitician h3 em {
   color: var(--aegean);
-  font-family: var(--disp);
+  font-family: var(--f-name);
   font-size: 8px;
   font-style: normal;
   letter-spacing: 0.12em;
@@ -58,7 +58,7 @@
 
 .ruleCardList li strong {
   color: var(--ink);
-  font-family: var(--disp);
+  font-family: var(--f-name);
   font-size: 10.5px;
 }
 

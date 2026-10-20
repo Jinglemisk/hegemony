@@ -123,7 +123,7 @@ export function SummaryPage({
         {holdings.length === 0 ? <span className="cap">none yet</span> : null}
         {holdings.map(({ tile, settlement }) => (
           <button
-            className="place-link"
+            className="name place-link"
             key={settlement.id}
             onClick={() => onOpen(tile.id)}
             type="button"

@@ -87,7 +87,7 @@ export function CitiesPage({
             <div className="r-grid r-a" style={grid}>
               <span className="r-place">
                 <PlaceSeal kind={settlement.kind} owner={settlement.owner} />
-                <button className="r-name" onClick={() => onOpen(tile.id)} type="button">
+                <button className="name r-name" onClick={() => onOpen(tile.id)} type="button">
                   {name}
                 </button>
                 <Ico path={`terrain/${tile.terrain}`} size="chip" />

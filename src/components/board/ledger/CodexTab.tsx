@@ -311,7 +311,7 @@ export function CodexTab({
               >
                 <Ico path={candidate.icon} size="tile" />
                 <span className="codexShelfWords">
-                  <span className="codexShelfNum">{toRoman(index + 1)}</span>
+                  <span className="caps codexShelfNum">{toRoman(index + 1)}</span>
                   <b>{candidate.title}</b>
                 </span>
               </button>
@@ -329,7 +329,7 @@ export function CodexTab({
     <>
       <div className="codexNav" ref={navRef}>
         <div className="codexChapterHead">
-          <button className="codexBack" onClick={goBack} ref={backRef} type="button">
+          <button className="caps codexBack" onClick={goBack} ref={backRef} type="button">
             <Icon className="codexBackCaret" glyph="chevronRight" />
             Contents
           </button>

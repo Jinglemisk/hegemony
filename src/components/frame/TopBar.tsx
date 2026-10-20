@@ -49,7 +49,7 @@ function Clock({ G }: { G: HegemonyState }) {
         triggerClassName="year"
       >
         <span className="year-n">Year {toRoman(year)}</span>
-        <span className="year-of">of {toRoman(totalYears)}</span>
+        <span className="caps">of {toRoman(totalYears)}</span>
         <span className="year-left">
           <Ico path="events/year" size="chip" />
           {left} left
