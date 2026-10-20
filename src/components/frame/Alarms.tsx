@@ -183,7 +183,7 @@ function EffectDisc({
       </li>
     );
   }
-  const effect = presentActiveEffect(descriptor, G.definition.content);
+  const effect = presentActiveEffect(descriptor, G.ruleset, G.definition.content);
   return (
     <li>
       <Tooltip

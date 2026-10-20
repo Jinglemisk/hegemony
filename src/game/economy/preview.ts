@@ -13,12 +13,7 @@ import { totalPops } from "../core/pops";
 import { getOwnedSettlement, getTile } from "../core/query";
 import { applyIncome, cloneResources, diffResources } from "../core/resources";
 import type { MoveResult } from "../core/results";
-import {
-  playerPopulationTotals,
-  settlementIncomeSource,
-  settlementOverCapacity,
-  settlementCapacity,
-} from "../settlement";
+import { playerPopulationTotals, settlementIncomeSource, settlementCapacity } from "../settlement";
 import {
   calculateIncomeBreakdown,
   getHungerStatus,
@@ -43,7 +38,6 @@ export type SettlementEconomyProjection = {
   income: Resources;
   pops: number;
   capacity: number;
-  overCapacity: number;
   inTransitIn: number;
   inTransitOut: number;
 };
@@ -52,7 +46,6 @@ export type SettlementEconomyPreview = SettlementEconomyProjection & {
   incomeDelta: Resources;
   popsDelta: number;
   capacityDelta: number;
-  overCapacityDelta: number;
   inTransitInDelta: number;
   inTransitOutDelta: number;
 };
@@ -66,7 +59,6 @@ export type EconomyProjection = {
   population: {
     pops: number;
     capacity: number;
-    overCapacity: number;
     inTransit: number;
   };
   settlements: SettlementEconomyProjection[];
@@ -82,7 +74,6 @@ export type EconomyPreview = {
   populationDelta: {
     pops: number;
     capacity: number;
-    overCapacity: number;
     inTransit: number;
   };
   settlements: SettlementEconomyPreview[];
@@ -114,11 +105,7 @@ export function calculateEconomyProjection(
     breakdown,
     projectedResources,
     food: getHungerStatus(incomeState, playerID, income.food),
-    population: {
-      ...population,
-      overCapacity: settlements.reduce((sum, place) => sum + place.overCapacity, 0),
-      inTransit,
-    },
+    population: { ...population, inTransit },
     settlements,
   };
 }
@@ -169,7 +156,7 @@ export function previewFoundedSettlement(
         state: draft,
         tile,
         settlement,
-        income: settlementNetYield(tile, settlement, draft, draft.definition.content),
+        income: settlementNetYield(tile, settlement, draft),
       }
     : null;
 }
@@ -237,7 +224,6 @@ function previewEconomyAction(
     populationDelta: {
       pops: after.population.pops - before.population.pops,
       capacity: after.population.capacity - before.population.capacity,
-      overCapacity: after.population.overCapacity - before.population.overCapacity,
       inTransit: after.population.inTransit - before.population.inTransit,
     },
     settlements: createSettlementEconomyPreview(before.settlements, after.settlements),
@@ -279,7 +265,6 @@ function createSettlementEconomyProjections(
         income: summarizeIncome(settlementBreakdown),
         pops: totalPops(settlement.pops),
         capacity: settlementCapacity(settlement, incomeState),
-        overCapacity: settlementOverCapacity(settlement, incomeState),
         inTransitIn,
         inTransitOut,
       };
@@ -310,7 +295,6 @@ function createSettlementEconomyPreview(
       income: next?.income ?? { ...EMPTY_RESOURCES },
       pops: next?.pops ?? 0,
       capacity: next?.capacity ?? 0,
-      overCapacity: next?.overCapacity ?? 0,
       inTransitIn: next?.inTransitIn ?? 0,
       inTransitOut: next?.inTransitOut ?? 0,
       incomeDelta: diffResources(
@@ -319,7 +303,6 @@ function createSettlementEconomyPreview(
       ),
       popsDelta: (next?.pops ?? 0) - (previous?.pops ?? 0),
       capacityDelta: (next?.capacity ?? 0) - (previous?.capacity ?? 0),
-      overCapacityDelta: (next?.overCapacity ?? 0) - (previous?.overCapacity ?? 0),
       inTransitInDelta: (next?.inTransitIn ?? 0) - (previous?.inTransitIn ?? 0),
       inTransitOutDelta: (next?.inTransitOut ?? 0) - (previous?.inTransitOut ?? 0),
     };

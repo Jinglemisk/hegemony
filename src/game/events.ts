@@ -2,12 +2,12 @@ import type { EventCard, EventEffect, HegemonyState, PlayerId, Resource, Resourc
 import { formatPopName, formatRuleResourceDelta, formatTileLabel } from "./core/format";
 import { totalPops } from "./core/pops";
 import { addLog, getOwnedSettlement, getPlayerName } from "./core/query";
-import { applyResourceDeltaWithFloors, createResourceDelta } from "./core/resources";
+import { applyResourceDelta, createResourceDelta } from "./core/resources";
 import { applyUnrestTokenChange, describeUnrestTokenChange } from "./happiness";
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { shuffleWithSeed } from "./core/rng";
-import { settlementCapacity } from "./settlement";
+import { settlementCapacity, settlementRoom } from "./settlement";
 
 export function drawPlayerEvent(G: HegemonyState, playerID: PlayerId) {
   if (G.playerDrawPile.length === 0 && G.playerDiscardPile.length > 0) {
@@ -59,7 +59,7 @@ export function getAddPopsEffect(effects: readonly EventEffect[]) {
   );
 }
 
-/** The same capacity projection feeds the picker and legal commands. */
+/** The same room projection feeds the picker and legal commands; pops on the move hold room. */
 export function getEventPopTargets(
   G: HegemonyState,
   playerID: PlayerId,
@@ -70,7 +70,7 @@ export function getEventPopTargets(
     if (!settlement) return [];
     const capacity = settlementCapacity(settlement, G);
     const filled = totalPops(settlement.pops);
-    const room = Math.max(0, capacity - filled);
+    const room = settlementRoom(G, settlement);
     return room >= effect.amount ? [{ tileId, capacity, filled, room }] : [];
   });
 }
@@ -131,13 +131,14 @@ function applyEventResourceDelta(
   source: string,
 ) {
   const resources = G.players[playerID].resources;
+  // A charge takes what the seat holds above the floor, so the log names what it took.
   for (const [resource, amount] of Object.entries(delta) as Array<[Resource, number]>) {
     if (amount < 0) {
       const floor = G.ruleset.economy.stockpileFloors[resource] ?? 0;
       delta[resource] = -Math.min(-amount, Math.max(0, resources[resource] - floor));
     }
   }
-  applyResourceDeltaWithFloors(resources, delta, G.ruleset.economy.stockpileFloors);
+  applyResourceDelta(resources, delta);
   addLog(
     G,
     `${getPlayerName(G, playerID)} resolved ${source}: ${formatRuleResourceDelta(delta)}.`,

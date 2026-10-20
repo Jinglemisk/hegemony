@@ -105,8 +105,9 @@ export interface EconomyRules {
   unrest: UnrestRules;
   /** Bank exchange rates & derivation (D6/Q14). */
   bank: BankRules;
-  /** Lower bounds applied by authoritative income/event/table resource mutations.
-   *  Costs remain affordability-gated and are never rescued by clamping. */
+  /** Lower bounds a charge from an event or a table stops at, and income for every
+   *  stock but food: income takes food below its floor (`applyIncome`). Costs remain
+   *  affordability-gated and are never rescued by clamping. */
   stockpileFloors: Partial<Record<Resource, number>>;
   /** Phase 4 luxury goods (docs/plans/luxury-goods.md). Slice 1 seats the coastal
    *  vertex markers; the Port, claims, and the happiness offset land in slice 2. */
@@ -266,8 +267,8 @@ export const DEFAULT_RULESET: Ruleset = {
       abundant: { sell: 4, buy: 2 },
       scarce: { sell: 2, buy: 3 },
     },
-    // No stock goes below zero: a charge takes what the seat holds and no more. Food
-    // is the one exception. Income may take it below zero during its owner's turn
+    // No stock goes below zero: a charge takes what the seat holds and no more. Income
+    // alone passes the food floor: it may take food below zero during its owner's turn
     // (core/resources `applyIncome`), and turn end settles the shortfall as hunger.
     stockpileFloors: { food: 0, wood: 0, stone: 0, gold: 0, influence: 0 },
     luxury: {

@@ -1,5 +1,6 @@
 import type {
   BuildingId,
+  MaterialResource,
   PlayerId,
   PopType,
   Resource,
@@ -40,19 +41,8 @@ export type SettlementScope = "all" | "city" | "colony";
 export type LawCostedAction =
   "foundColony" | "upgradeColonyToCity" | "buildBuilding" | "growPop" | "promotePop" | "demotePop";
 
-export type LawRule =
-  | "landReform"
-  | "manumission"
-  | "grainLevy"
-  | "guildCharter"
-  | "forumRites"
-  | "masterBuilders"
-  | "homesteadAct"
-  | "ruralBloc";
-
-/** Standing rule patches. Prices state a whole resulting cost, never a delta. */
+/** Standing rule patches. Prices and yields state a whole resulting value, never a delta. */
 export type LawEffect =
-  | { type: "rule"; rule: LawRule }
   | {
       type: "actionCost";
       action: LawCostedAction;
@@ -74,7 +64,31 @@ export type LawEffect =
   | { type: "onUpgradeCity"; grantPop: PopType }
   | { type: "dolePrice"; amount: number }
   | { type: "slotExempt"; building: BuildingId }
-  | { type: "votePurchaseLimit"; amount: number };
+  | { type: "votePurchaseLimit"; amount: number }
+  /** What one pop of the class makes of a fixed resource; everywhere unless scoped. */
+  | {
+      type: "popIncome";
+      pop: PopType;
+      resource: Resource;
+      amount: number;
+      scope?: "city" | "colony";
+    }
+  /** Working slaves make this on any terrain, instead of their tile's resource. */
+  | { type: "slaveResource"; resource: MaterialResource }
+  /** How many times each slave counts for unrest. */
+  | { type: "slaveUnrestWeight"; amount: number }
+  /** No new one may be built; those standing stay. */
+  | { type: "buildingForbidden"; building: BuildingId }
+  /** It stands and does nothing. */
+  | { type: "buildingIdle"; building: BuildingId }
+  /** A colony may raise buildings, up to this many. */
+  | { type: "colonyBuildings"; amount: number }
+  /** Moves how many colony pieces may stand; the supply itself is unchanged. */
+  | { type: "colonyLimit"; amount: number }
+  /** How many times one settlement may grow per turn, where it is otherwise once. */
+  | { type: "growLimit"; scope: "capital" | "colony"; amount: number }
+  /** Votes added to (or taken from) the base for each settlement of the scope. */
+  | { type: "settlementVotes"; scope: "city" | "colony"; amount: number };
 
 /** Stratokles's one-time vocabulary. Every Directive is aimed at one rival chosen by
  * the author before the proposal is sealed; the target travels with the ballot item. */
@@ -101,8 +115,6 @@ interface ResolutionCardBase {
 
 export interface LawCard extends ResolutionCardBase {
   kind: "law";
-  /** The axis this Law trades on — its political framing, shown beneath the effect. */
-  tradeOff: string;
   effects: LawEffect[];
 }
 

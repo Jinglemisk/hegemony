@@ -43,9 +43,7 @@ export function UpgradeCityModal({
   const [tileId, setTileId] = useState(() => candidates[0]?.tile.id ?? "");
   const selected = candidates.find((entry) => entry.tile.id === tileId) ?? candidates[0];
 
-  const colonyYield = selected
-    ? settlementNetYield(selected.tile, selected.settlement, G, G.definition.content)
-    : null;
+  const colonyYield = selected ? settlementNetYield(selected.tile, selected.settlement, G) : null;
   const preview = selected ? previewUpgradeColonyToCity(G, playerID, selected.tile.id) : null;
   // Live ruleset, not the ACTION_COSTS default — see FoundColonyPopover (R7).
   const cost =

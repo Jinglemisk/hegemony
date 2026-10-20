@@ -22,7 +22,7 @@ import {
 import { applyIncome, cloneResources, diffResources, payCost } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
-import { canPlaceColonyOnTile, isAdjacentToCity } from "./settlement";
+import { canPlaceColonyOnTile, isAdjacentToCity, settlementRoom } from "./settlement";
 import { setupCapitalCount } from "./ruleset";
 import { calculateIncome } from "./economy/income";
 import {
@@ -34,7 +34,6 @@ import {
   pendingDecisionReasons,
 } from "./status";
 import { drawPlayerEvent } from "./events";
-import { ideaRoom } from "./ideas";
 import { getStandingEffects } from "./assembly/laws";
 import { getFoundColonyRiders } from "./assembly/laws";
 import { allocateEntityId } from "./entity";
@@ -218,7 +217,7 @@ function applyFoundColonyRiders(G: HegemonyState, playerID: PlayerId, tile: HexT
       const settlement = getOwnedSettlement(G, tile.id, playerID);
 
       if (settlement) {
-        const granted = Math.min(rider.amount, ideaRoom(G, settlement));
+        const granted = Math.min(rider.amount, settlementRoom(G, settlement));
         settlement.pops[rider.grantPop] += granted;
         if (granted > 0)
           addLog(
@@ -252,7 +251,7 @@ export function upgradeColonyToCity(
   tile.settlements = tile.settlements.filter((candidate) => candidate.owner === playerID);
   settlement.kind = "city";
   for (const effect of getStandingEffects(G, playerID))
-    if (effect.type === "onUpgradeCity" && ideaRoom(G, settlement) > 0)
+    if (effect.type === "onUpgradeCity" && settlementRoom(G, settlement) > 0)
       settlement.pops[effect.grantPop] += 1;
 
   for (const displacedPlayer of displacedPlayers) {
@@ -359,7 +358,7 @@ export function buildBuilding(
   // before paying anything: with two reachable, the choice is the player's — a
   // typed command field, never a default the engine guesses.
   let claim = null;
-  if (building.id === "port") {
+  if (building.claimsLuxury) {
     const claimable = claimableLuxuriesAt(G, tileId);
     claim =
       claimVertexId === undefined

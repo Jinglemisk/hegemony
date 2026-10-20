@@ -100,9 +100,6 @@ export function renderProjection(G: HegemonyState, playerID: PlayerId): string {
     `  population: ${projection.population.pops}/${projection.population.capacity}` +
       (projection.population.inTransit > 0
         ? ` (+${projection.population.inTransit} in transit)`
-        : "") +
-      (projection.population.overCapacity > 0
-        ? ` — ${projection.population.overCapacity} OVER capacity`
         : ""),
   );
 
@@ -116,6 +113,7 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
   const projection = calculateEconomyProjection(G, playerID);
   const activeEffects = presentActiveEffects(
     getActiveEffects(G, playerID, { income: projection.income }),
+    G.ruleset,
     G.definition.content,
   );
   const marker = G.currentPlayer === playerID ? " ◀ current" : "";
@@ -193,7 +191,7 @@ export function renderPreview(preview: EconomyPreview): string {
     `  income: ${formatResourceDelta(preview.incomeDelta)}`,
     `  projected next-income resources: ${formatResourceDelta(preview.projectedResourceDelta)}`,
     `  population: pops ${formatDelta(preview.populationDelta.pops)}, capacity ${formatDelta(preview.populationDelta.capacity)}, ` +
-      `over-capacity ${formatDelta(preview.populationDelta.overCapacity)}, in transit ${formatDelta(preview.populationDelta.inTransit)}`,
+      `in transit ${formatDelta(preview.populationDelta.inTransit)}`,
   ];
 
   for (const settlement of preview.settlements) {

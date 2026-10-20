@@ -46,10 +46,10 @@ describe("class buildings", () => {
     const forest = tile(G, FOREST);
     const city = owned(G, FOREST, "0");
 
-    expect(settlementNetYield(forest, city, G.ruleset).wood).toBe(3);
+    expect(settlementNetYield(forest, city, G).wood).toBe(3);
     expect(buildBuilding(G, "0", FOREST, "estate").ok).toBe(true);
     // Three slots, one under the Estate: two slaves work and make 2 each; one is idle.
-    expect(settlementNetYield(forest, city, G.ruleset).wood).toBe(4);
+    expect(settlementNetYield(forest, city, G).wood).toBe(4);
   });
 
   it("an Estate cannot stand on a hill, where slaves make nothing", () => {

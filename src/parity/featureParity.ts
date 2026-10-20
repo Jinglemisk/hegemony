@@ -52,6 +52,26 @@ export const PARITY_BEHAVIOR_FIXTURES = {
     implementation: "src/game/assembly/laws.test.ts",
     evidence: "Frontier Spirit grants a slave on the real founding path",
   },
+  lawColumns: {
+    implementation: "src/game/assembly/laws.test.ts",
+    evidence: "change columns before the year card without stacking Forums or Marketplaces",
+  },
+  lawLandReform: {
+    implementation: "src/game/assembly/laws.test.ts",
+    evidence: "Land Reform changes working slaves to food on hills too",
+  },
+  lawLimits: {
+    implementation: "src/game/assembly/laws.test.ts",
+    evidence: "capacity, slots and piece cuts block new additions",
+  },
+  lawGrowth: {
+    implementation: "src/game/assembly/laws.test.ts",
+    evidence: "Guild Charter grants a second capital growth and forbids colony growth",
+  },
+  lawVotes: {
+    implementation: "src/game/assembly/laws.test.ts",
+    evidence: "Rural Bloc adds colony votes and subtracts city votes",
+  },
   directiveResources: {
     implementation: "src/game/assembly/assembly.test.ts",
     evidence: "Grain Riot takes 3 food only from its target",
@@ -171,23 +191,27 @@ export const EVENT_EFFECT_PARITY = {
   addPops: event("eventPops"),
 } as const satisfies Record<EventEffect["type"], EffectParityCoverage>;
 
-const tableArgs = [
-  { implementation: "src/game/tables.ts", evidence: "applyTableEffect" },
-  { implementation: "src/ui/effects.ts", evidence: "presentTableEffect" },
-  { implementation: "src/game/types.ts", evidence: "lastTableRoll" },
-  { implementation: "src/sim/policies.ts", evidence: "onePlyLookahead" },
-  { implementation: "src/sim/telemetry.ts", evidence: "movesByType" },
-] as const;
-const table = (...fixtures: NonEmptyList<ParityBehaviorFixtureId>) =>
-  coverage(...tableArgs, ...fixtures);
+// The riot table's effects are priced by the forecast's expected riot; the ventures'
+// by their outcomes, each played through the engine.
+const riotValuation = { implementation: "src/sim/policies.ts", evidence: "expectedRiot" };
+const ventureValuation = { implementation: "src/sim/chance.ts", evidence: "ventureOutcomes" };
+const table = (valuation: ParityEvidence, ...fixtures: NonEmptyList<ParityBehaviorFixtureId>) =>
+  coverage(
+    { implementation: "src/game/tables.ts", evidence: "applyTableEffect" },
+    { implementation: "src/ui/effects.ts", evidence: "presentTableEffect" },
+    { implementation: "src/game/types.ts", evidence: "lastTableRoll" },
+    valuation,
+    { implementation: "src/sim/telemetry.ts", evidence: "movesByType" },
+    ...fixtures,
+  );
 
 export const TABLE_EFFECT_PARITY = {
-  none: table("tableResolution"),
-  losePops: table("tableResolution"),
-  loseResource: table("tableResolution", "tableFallbacks"),
-  destroyBuilding: table("tableFallbacks"),
-  gainResource: table("tableResolution"),
-  gainPop: table("tableResolution", "tableFallbacks"),
+  none: table(riotValuation, "tableResolution"),
+  losePops: table(riotValuation, "tableResolution"),
+  loseResource: table(riotValuation, "tableResolution", "tableFallbacks"),
+  destroyBuilding: table(riotValuation, "tableFallbacks"),
+  gainResource: table(ventureValuation, "tableResolution"),
+  gainPop: table(ventureValuation, "tableResolution", "tableFallbacks"),
 } as const satisfies Record<TableEffect["type"], EffectParityCoverage>;
 
 // `deltaIfEnacted` is the route every Law and Directive is scored through, on a clone
@@ -203,29 +227,31 @@ const lawArgs = [
 const law = (...fixtures: NonEmptyList<ParityBehaviorFixtureId>) =>
   coverage(...lawArgs, ...fixtures);
 
-/** `valuation` names what prices the effect in the bots' score. An effect the
- *  projection or the real post-pick state already carries has no opportunity term. */
-const idea = (valuation = "ideaOpportunityValue") =>
+/** `valuation` names the function that prices the effect in the bots' score. An effect
+ *  the projection or the real post-pick state already carries has no opportunity term. */
+const idea = (valuation: string, implementation = "src/sim/policies.ts") =>
   coverage(
     { implementation: "src/game/ideaRules.ts", evidence: "getStandingEffects" },
     { implementation: "src/components/board/modals/IdeasModal.tsx", evidence: "getNationalIdeas" },
     { implementation: "src/game/ideas.ts", evidence: "ideaHolder" },
-    { implementation: "src/sim/policies.ts", evidence: valuation },
+    { implementation, evidence: valuation },
     { implementation: "src/sim/telemetry.ts", evidence: "nationalIdeas" },
     "ideaRules",
     "ideaPolicy",
   );
 export const LAW_EFFECT_PARITY = {
   realmIncome: idea("projectPolicyHorizon"),
+  // Two effects ride both a Law and an Idea, and each entry names one route: a Law's
+  // extraSlots is priced through deltaIfEnacted, an Idea's onFoundColony in
+  // foundingGrantValue.
   extraSlots: idea("projectPolicyHorizon"),
-  colonyPieces: idea(),
-  acquirePop: idea("ideaForEval"),
-  acquireResource: idea("ideaForEval"),
-  onUpgradeCity: idea(),
-  dolePrice: idea(),
-  slotExempt: idea(),
-  votePurchaseLimit: idea(),
-  rule: law("lawIncome", "lawCost", "policyAssembly"),
+  colonyPieces: idea("colonyPiecesValue"),
+  acquirePop: idea("ideaForEval", "src/game/ideas.ts"),
+  acquireResource: idea("ideaForEval", "src/game/ideas.ts"),
+  onUpgradeCity: idea("upgradeGrantValue"),
+  dolePrice: idea("dolePriceValue"),
+  slotExempt: idea("slotExemptValue"),
+  votePurchaseLimit: idea("voteLimitValue"),
   actionCost: law("lawCost", "policyAssembly"),
   calmPayment: law("lawCost", "policyAssembly"),
   colonyCapacity: law("lawCost", "policyAssembly"),
@@ -233,6 +259,15 @@ export const LAW_EFFECT_PARITY = {
   happiness: law("lawIncome", "policyAssembly"),
   settlementIncome: law("lawIncome", "policyAssembly"),
   onFoundColony: law("lawFounding", "policyAssembly"),
+  popIncome: law("lawColumns", "policyAssembly"),
+  slaveResource: law("lawLandReform", "policyAssembly"),
+  slaveUnrestWeight: law("lawIncome", "policyAssembly"),
+  buildingForbidden: law("lawLandReform", "policyAssembly"),
+  buildingIdle: law("lawColumns", "policyAssembly"),
+  colonyBuildings: law("lawLimits", "policyAssembly"),
+  colonyLimit: law("lawLimits", "policyAssembly"),
+  growLimit: law("lawGrowth", "policyAssembly"),
+  settlementVotes: law("lawVotes", "policyAssembly"),
 } as const satisfies Record<LawEffect["type"], EffectParityCoverage>;
 
 const directiveArgs = [

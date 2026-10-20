@@ -1,3 +1,9 @@
+import { VOTE_PAYMENTS } from "../game/assembly";
+import { TRADABLE_MATERIALS } from "../game/bank";
+import { CIVIC_CALM_PAYMENTS, DEMOTE_FROM, PROMOTE_FROM } from "../game/civic";
+import { getAuthoredGameContent, getExpeditionTables } from "../game/content";
+import { GROWABLE_POPS } from "../game/core/pops";
+import { HUNGER_POPS } from "../game/hunger";
 import type { GameCommand } from "../game/legalMoves";
 import type { HegemonyState, PlayerId } from "../game/types";
 import { GAME_COMMAND_TYPES } from "../parity/commandParity";
@@ -8,7 +14,6 @@ import {
   LAW_CONTENT_IDS,
   DIRECTIVE_CONTENT_IDS,
   NATIONAL_IDEA_CONTENT_IDS,
-  EVENT_TABLE_CONTENT_IDS,
   RIOT_INSURANCE_CONTENT_IDS,
   POLITICIAN_CONTENT_IDS,
 } from "../parity/featureParity";
@@ -19,25 +24,20 @@ export const REACH_IDS = [
   ...BUILDING_CONTENT_IDS.map((id) => `building:${id}`),
   ...PLAYER_EVENT_CONTENT_IDS.flatMap((id) => [`playerDraw:${id}`, `playerResolve:${id}`]),
   ...YEAR_CARD_CONTENT_IDS.map((id) => `year:${id}`),
-  ...EVENT_TABLE_CONTENT_IDS.filter((id) => id !== "riot").map((id) => `venture:${id}`),
+  ...getExpeditionTables(getAuthoredGameContent()).map((table) => `venture:${table.id}`),
   ...LAW_CONTENT_IDS.flatMap((id) => [`lawProposed:${id}`, `law:${id}`]),
   ...DIRECTIVE_CONTENT_IDS.flatMap((id) => [`directiveProposed:${id}`, `directive:${id}`]),
   ...NATIONAL_IDEA_CONTENT_IDS.flatMap((id) => [`ideaSetup:${id}`, `ideaBought:${id}`]),
   ...["bankBuy", "bankSell"].flatMap((verb) =>
-    ["wood", "stone", "food"].map((resource) => `${verb}:${resource}`),
+    TRADABLE_MATERIALS.map((material) => `${verb}:${material}`),
   ),
-  ...["gold", "influence"].map((id) => `calm:${id}`),
-  "promote:slaves",
-  "promote:freemen",
-  "demote:citizens",
-  "demote:freemen",
-  "grow:slaves",
-  "grow:freemen",
+  ...CIVIC_CALM_PAYMENTS.map((payment) => `calm:${payment}`),
+  ...PROMOTE_FROM.map((pop) => `promote:${pop}`),
+  ...DEMOTE_FROM.map((pop) => `demote:${pop}`),
+  ...GROWABLE_POPS.map((pop) => `grow:${pop}`),
   // One count for each pop a hunger pick sends away, by its class.
-  "hunger:freemen",
-  "hunger:citizens",
-  "votes:gold",
-  "votes:influence",
+  ...HUNGER_POPS.map((pop) => `hunger:${pop}`),
+  ...VOTE_PAYMENTS.map((payment) => `votes:${payment}`),
   ...RIOT_INSURANCE_CONTENT_IDS.map((id) => `insurance:${id}`),
   ...POLITICIAN_CONTENT_IDS.map((id) => `politician:${id}`),
 ];

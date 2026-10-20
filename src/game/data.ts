@@ -264,6 +264,7 @@ export const BUILDINGS: BuildingDefinition[] = [
     cost: { gold: 4, stone: 2 },
     effects: [],
     colony: true,
+    claimsLuxury: true,
   },
 ];
 

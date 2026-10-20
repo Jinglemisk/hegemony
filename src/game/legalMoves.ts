@@ -1,3 +1,4 @@
+import { produce } from "immer";
 import { getNationalIdeas, getTakeIdeaStatus, ideaPopTargets, takeNationalIdea } from "./ideas";
 import type { NationalIdeaId, IdeaPopChoice } from "./ideaTypes";
 import {
@@ -20,6 +21,7 @@ import {
   getDoleStatus,
 } from "./bank";
 import {
+  CIVIC_CALM_PAYMENTS,
   DEMOTE_FROM,
   PROMOTE_FROM,
   civicCalm,
@@ -73,8 +75,9 @@ import {
   assemblyVote,
   getResolutionCard,
   POLITICIANS,
+  VOTE_PAYMENTS,
 } from "./assembly";
-import type { PoliticianId } from "./assembly";
+import type { PoliticianId, VotePayment } from "./assembly";
 import { PLAYER_IDS } from "./data";
 import { commandActorEligibility, eligibleActors } from "./actors";
 import type {
@@ -160,7 +163,7 @@ export type GameCommand =
   | { type: "assemblyPropose"; target?: PlayerId }
   | { type: "assemblyProposeRepeal"; cardId: string }
   | { type: "assemblyPass" }
-  | { type: "assemblyBribe"; payment: "gold" | "influence" }
+  | { type: "assemblyBribe"; payment: VotePayment }
   | { type: "assemblyVote"; yea: boolean }
   | { type: "assemblyClose" }
   | { type: "endTurn" };
@@ -430,7 +433,7 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
       return [];
     }
 
-    for (const payment of ["gold", "influence"] as const) {
+    for (const payment of VOTE_PAYMENTS) {
       const status = getAssemblyBuyVoteStatus(G, playerID, payment);
       if (status.can) moves.push({ type: "assemblyBribe", payment, cost: status.cost });
     }
@@ -714,7 +717,7 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
 
       // A Port is enumerated once per claimable good, claim explicit, so a bot's
       // choice between two reachable luxuries is a command, not a coin flip.
-      if (building.id === "port") {
+      if (building.claimsLuxury) {
         for (const asset of claimableLuxuriesAt(G, tileId)) {
           moves.push({
             type: "buildBuilding",
@@ -801,7 +804,7 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
     moves.push({ type: "dole", cost: doleStatus.cost ?? {} });
   }
 
-  for (const payment of ["influence", "gold"] as const) {
+  for (const payment of CIVIC_CALM_PAYMENTS) {
     const status = getCivicCalmStatus(G, playerID, payment);
     if (status.can) {
       moves.push({ type: "civicCalm", payment, cost: status.cost ?? {} });
@@ -898,7 +901,6 @@ export function popCompositions(total: number): Pops[] {
 
   return compositions;
 }
-import { produce } from "immer";
 
 function enumerateIdeaCommands(
   G: HegemonyState,

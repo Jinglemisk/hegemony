@@ -381,6 +381,7 @@ function Laws({
                     duration={
                       protectedNow ? "Protected through the next sitting" : "Until repealed"
                     }
+                    ruleset={G.ruleset}
                     source={G.players[law.author].name}
                   />
                 ) : null

@@ -15,7 +15,7 @@ import { MOVE_OK, invalid } from "./core/results";
  *
  * The load-bearing rule: an asset stores ownership and suppression, NEVER whether
  * it is active. {@link activeClaims} derives activity in one stable ordering from
- * ownership, the per-player cap, and suppression, so no state can contradict it.
+ * ownership and suppression, so no state can contradict it.
  */
 
 /** Seat the authored goods on the board's selected moorings at match creation.

@@ -44,6 +44,11 @@ export function formatRuleResourceDelta(resources: Resources) {
     .join(", ");
 }
 
+/** A content name in the plural: "Temples", "Granaries". */
+export function pluralName(name: string) {
+  return name.endsWith("y") ? `${name.slice(0, -1)}ies` : `${name}s`;
+}
+
 export function capitalize(value: string) {
   return `${value.slice(0, 1).toUpperCase()}${value.slice(1)}`;
 }

@@ -22,7 +22,14 @@ import { playerPieces, settlementCapacity, settlementSlots } from "../settlement
 import { applyHunger } from "../hunger";
 import { calculateEconomyProjection, previewFoundedSettlement } from "../economy/preview";
 import { baseVoteWeight } from "./assembly";
-import { getLawHappinessContributions, getStandingEffects, getStandingEffectSources } from "./laws";
+import { getAuthoredResolutionCard } from "./deck";
+import {
+  getLawEffects,
+  getLawHappinessContributions,
+  getStandingEffects,
+  getStandingEffectSources,
+} from "./laws";
+import type { LawEffect } from "./types";
 import type { HegemonyState } from "../types";
 function opening() {
   return scenario()
@@ -38,6 +45,7 @@ function law(G: HegemonyState, cardId: string) {
 }
 const cap = "-2,0",
   colony = "3,0";
+const levy: LawEffect = { type: "buildingIdle", building: "marketplace" };
 
 describe("standing Laws", () => {
   it("keeps cached Laws and Ideas seat-specific, caller-owned and current inside drafts", () => {
@@ -45,7 +53,7 @@ describe("standing Laws", () => {
       law(draft, "grain-levy");
       draft.players["1"].nationalIdeas.push({ id: "civic-tradition", acquired: "setup", year: 1 });
     });
-    expect(getStandingEffects(G, "0")).toContainEqual({ type: "rule", rule: "grainLevy" });
+    expect(getStandingEffects(G, "0")).toContainEqual(levy);
     expect(getStandingEffects(G, "1")).toContainEqual({
       type: "realmIncome",
       resource: "influence",
@@ -62,12 +70,26 @@ describe("standing Laws", () => {
     produce(G, (draft) => {
       draft.activeLaws[0].cardId = "forum-rites";
       draft.players["1"].nationalIdeas = [];
-      expect(getStandingEffects(draft, "0")).toContainEqual({ type: "rule", rule: "forumRites" });
+      expect(getStandingEffects(draft, "0")).toContainEqual({
+        type: "popIncome",
+        pop: "citizens",
+        resource: "influence",
+        amount: 2,
+      });
       expect(getStandingEffects(draft, "1")).toEqual(getStandingEffects(draft, "0"));
     });
-    expect(getStandingEffects(G, "0")).toContainEqual({ type: "rule", rule: "grainLevy" });
+    expect(getStandingEffects(G, "0")).toContainEqual(levy);
   });
-  it("rule Laws change columns before the year card without stacking Forums or Marketplaces", () => {
+  it("asks table-wide questions of the Laws alone, never of a seat's Ideas", () => {
+    const G = opening();
+    law(G, "grain-levy");
+    G.players["0"].nationalIdeas.push({ id: "civic-tradition", acquired: "setup", year: 1 });
+    expect(getStandingEffects(G, "0")).toContainEqual(
+      expect.objectContaining({ type: "realmIncome" }),
+    );
+    expect(getLawEffects(G)).toEqual(getAuthoredResolutionCard("grain-levy")!.effects);
+  });
+  it("Forum Rites and Grain Levy change columns before the year card without stacking Forums or Marketplaces", () => {
     const G = opening();
     const city = owned(G, cap, "0"),
       farm = owned(G, colony, "0");
@@ -206,9 +228,6 @@ describe("standing Laws", () => {
     expect(settlementCapacity(farm, G)).toBe(3);
     expect(getGrowPopStatus(G, "0", colony, "slaves").can).toBe(false);
     expect(farm.pops.slaves).toBe(4);
-    const projection = calculateEconomyProjection(G, "0");
-    expect(projection.population.overCapacity).toBe(0);
-    expect(projection.settlements.every((place) => place.overCapacity === 0)).toBe(true);
     G.activeLaws = [];
     law(G, "homestead-act");
     const city = owned(G, cap, "0");

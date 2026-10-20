@@ -5,7 +5,6 @@ import { settlementNetYield } from "./economy/income";
 import { settlementIdleSlaves, settlementWorkingSlaves } from "./settlement";
 import { enumerateLegalCommands } from "./legalMoves";
 import { createInitialState } from "./state";
-import { DEFAULT_RULESET } from "./ruleset";
 import type { HegemonyState, HexTile, Settlement } from "./types";
 
 // Phase 2 "The land repriced" — terrain-economy.md. The land yields wood/stone/food
@@ -58,10 +57,10 @@ describe("yield-less hills (Phase 2)", () => {
     expect(hill.resource).toBeNull();
 
     const settlement = city({ citizens: 0, freemen: 0, slaves: 3 });
-    expect(settlementWorkingSlaves(hill, settlement)).toBe(0);
-    expect(settlementIdleSlaves(hill, settlement)).toBe(3);
+    expect(settlementWorkingSlaves(hill, settlement, G)).toBe(0);
+    expect(settlementIdleSlaves(hill, settlement, G)).toBe(3);
 
-    const income = settlementNetYield(hill, settlement, DEFAULT_RULESET);
+    const income = settlementNetYield(hill, settlement, G);
     // Slaves make nothing on the hill and eat nothing.
     expect(income.wood + income.stone + income.food + income.gold).toBe(0);
   });
@@ -70,11 +69,7 @@ describe("yield-less hills (Phase 2)", () => {
     const G = createInitialState(SEED);
     const hill = findTile(G, (tile) => tile.terrain === "hill");
 
-    const income = settlementNetYield(
-      hill,
-      city({ citizens: 1, freemen: 1, slaves: 0 }),
-      DEFAULT_RULESET,
-    );
+    const income = settlementNetYield(hill, city({ citizens: 1, freemen: 1, slaves: 0 }), G);
     // Citizen: +1 influence, −1 food. Freeman: +1 gold, −1 food.
     expect(income.influence).toBe(1);
     expect(income.gold).toBe(1);

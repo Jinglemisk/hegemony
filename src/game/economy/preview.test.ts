@@ -46,6 +46,16 @@ describe("income previews come from the engine", () => {
     expect(previewGrowPopIncomeDelta(G, "0", FIRST_CITY, "freemen").gold).toBe(4);
   });
 
+  it("pays a flat yield the breakdown never hand-coded", () => {
+    // The breakdown once wrote its seven lines out, so a freeman's tuned wood printed
+    // on the settlement but never reached income.
+    const G = scenario({ patch: { popIncome: { freemen: { flat: { wood: 1 } } } } })
+      .opening()
+      .build();
+
+    expect(previewGrowPopIncomeDelta(G, "0", FIRST_CITY, "freemen").wood).toBe(1);
+  });
+
   it("a building's preview equals the income it actually produces", () => {
     const G = scenario().opening().build();
     const before = calculateEconomyProjection(G, "0", { resolveTransfers: true }).income;

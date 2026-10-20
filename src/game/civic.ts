@@ -14,6 +14,7 @@ import { pendingDecisionReasons } from "./status";
  */
 
 export type CivicCalmPayment = "influence" | "gold";
+export const CIVIC_CALM_PAYMENTS: CivicCalmPayment[] = ["influence", "gold"];
 
 /** slaves→freemen and freemen→citizens climb; citizens→freemen and freemen→slaves fall. */
 export const PROMOTE_FROM: Array<Extract<PopType, "slaves" | "freemen">> = ["slaves", "freemen"];

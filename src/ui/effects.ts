@@ -1,8 +1,9 @@
 import type { ActiveEffectDescriptor, ActiveEffectMechanic } from "../game/activeEffects";
-import { ruleLawText } from "../game/assembly/laws";
+import { GROWS_PER_TURN, SLAVE_UNREST_WEIGHT } from "../game/assembly/laws";
 import type { DirectiveEffect, LawEffect } from "../game/assembly/types";
 import { getAuthoredGameContent } from "../game/content";
 import type { GameContent } from "../game/content";
+import { capitalize, pluralName } from "../game/core/format";
 import type { Ruleset } from "../game/ruleset";
 import type { UnrestOutcome } from "../game/unrest";
 import type {
@@ -90,10 +91,11 @@ export function presentEventEffects(effects: readonly EventEffect[]): EffectPres
 /** One frontend projection for board, ledger, tooltip, and accessible status text. */
 export function presentActiveEffect(
   descriptor: ActiveEffectDescriptor,
+  ruleset: Ruleset,
   content: GameContent = getAuthoredGameContent(),
 ): ActiveEffectPresentation {
   const presented = descriptor.mechanics.map((mechanic) =>
-    presentActiveEffectMechanic(mechanic, content),
+    presentActiveEffectMechanic(mechanic, ruleset, content),
   );
   const effect = joinEffectPresentations(presented);
   const duration = presentActiveEffectDuration(descriptor);
@@ -113,9 +115,10 @@ export function presentActiveEffect(
 
 export function presentActiveEffects(
   descriptors: readonly ActiveEffectDescriptor[],
+  ruleset: Ruleset,
   content: GameContent = getAuthoredGameContent(),
 ): ActiveEffectPresentation[] {
-  return descriptors.map((descriptor) => presentActiveEffect(descriptor, content));
+  return descriptors.map((descriptor) => presentActiveEffect(descriptor, ruleset, content));
 }
 
 export function joinEffectPresentations(
@@ -191,6 +194,7 @@ export function presentEventEffect(effect: EventEffect): EffectPresentation {
 
 function presentActiveEffectMechanic(
   mechanic: ActiveEffectMechanic,
+  ruleset: Ruleset,
   content: GameContent,
 ): EffectPresentation {
   switch (mechanic.type) {
@@ -218,7 +222,7 @@ function presentActiveEffectMechanic(
     case "zeroTerm":
       return { text: YEAR_TERM_LABELS[mechanic.term], tone: "negative" };
     case "standingLaw":
-      return presentLawEffect(mechanic.effect, content);
+      return presentLawEffect(mechanic.effect, ruleset, content);
     case "equalVotesNextAssembly":
       return {
         text:
@@ -230,11 +234,10 @@ function presentActiveEffectMechanic(
 
 export function presentLawEffect(
   effect: LawEffect,
+  ruleset: Ruleset,
   content: GameContent = getAuthoredGameContent(),
 ): EffectPresentation {
   switch (effect.type) {
-    case "rule":
-      return { text: ruleLawText(effect.rule, content), tone: "neutral" };
     case "actionCost":
       return {
         text:
@@ -256,8 +259,8 @@ export function presentLawEffect(
       return signedPresentation(effect.amount, `${effect.resource} at yearly income`);
     case "extraSlots":
       return {
-        text: `${effect.scope === "capital" ? "Capital" : "Cities"} gain ${effect.amount} work slot`,
-        tone: "positive",
+        text: `${effect.scope === "capital" ? "Capital" : "Cities"} ${effect.amount < 0 ? "lose" : "gain"} ${Math.abs(effect.amount)} work slot`,
+        tone: signedTone(effect.amount),
       };
     case "colonyPieces":
       return { text: `${effect.amount} extra colony piece`, tone: "positive" };
@@ -299,6 +302,62 @@ export function presentLawEffect(
       return {
         text: `Founding grants ${effect.amount ?? 1} ${formatPopLabel(effect.grantPop, effect.amount ?? 1)} as room allows`,
         tone: "positive",
+      };
+    case "popIncome": {
+      // A whole yield: its tone is which way it moves the ruleset's own figure.
+      const base = ruleset.popIncome[effect.pop].flat[effect.resource] ?? 0;
+      const pops = capitalize(effect.pop);
+      const where = effect.scope ? ` in ${effect.scope === "colony" ? "colonies" : "cities"}` : "";
+      return {
+        text:
+          (effect.resource === "food" && effect.amount <= 0
+            ? `${pops} eat ${effect.amount === 0 ? "no" : -effect.amount} food`
+            : `${pops} produce ${effect.amount === 0 ? "no" : effect.amount} ${effect.resource}`) +
+          where,
+        tone: signedTone(effect.amount - base),
+      };
+    }
+    case "slaveResource":
+      return { text: `Slaves grow ${effect.resource} on any terrain`, tone: "positive" };
+    case "slaveUnrestWeight":
+      return {
+        text: `Slaves count ${effect.amount} times for unrest`,
+        tone: signedTone(SLAVE_UNREST_WEIGHT - effect.amount),
+      };
+    case "buildingForbidden":
+      return {
+        text: `No new ${pluralName(buildingName(effect.building, content))} may be built`,
+        tone: "negative",
+      };
+    case "buildingIdle":
+      return {
+        text: `${pluralName(buildingName(effect.building, content))} do nothing`,
+        tone: "negative",
+      };
+    case "colonyBuildings":
+      return {
+        text: `Colonies may hold ${effect.amount} building${effect.amount === 1 ? "" : "s"}`,
+        tone: "positive",
+      };
+    case "colonyLimit":
+      return {
+        text: `You may place ${Math.abs(effect.amount)} ${effect.amount < 0 ? "fewer" : "more"} colony piece${Math.abs(effect.amount) === 1 ? "" : "s"}`,
+        tone: signedTone(effect.amount),
+      };
+    case "growLimit": {
+      const who = effect.scope === "capital" ? "Your capital" : "Colonies";
+      return {
+        text:
+          effect.amount === 0
+            ? `${who} may not grow`
+            : `${who} may grow ${effect.amount} times per turn`,
+        tone: signedTone(effect.amount - GROWS_PER_TURN),
+      };
+    }
+    case "settlementVotes":
+      return {
+        text: `${formatSignedNumber(effect.amount)} vote${Math.abs(effect.amount) === 1 ? "" : "s"} per ${effect.scope}`,
+        tone: signedTone(effect.amount),
       };
   }
 }

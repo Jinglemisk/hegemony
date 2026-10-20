@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { PLAYER_EVENT_CARDS, YEAR_CARDS } from "./data";
 import { drawPlayerEvent, getEventPopTargets, resolvePendingPlayerEvent } from "./events";
+import { totalPops } from "./core/pops";
 import { happinessLevel } from "./happiness";
 import { enactForEval } from "./assembly";
 import { getAuthoredResolutionCard } from "./assembly/deck";
 import { enumerateLegalCommands, transition } from "./legalMoves";
+import { settlementCapacity } from "./settlement";
 import { revealYearCard } from "./year";
 import { owned, scenario } from "./testing/scenario";
 import type { EventCard } from "./types";
@@ -138,6 +140,31 @@ describe("v2 player deck", () => {
     expect(G.lastPlayerEvent?.id).toBe("player-free-settlers");
     expect(G.playerDiscardPile).toEqual([card("free-settlers")]);
     expect(G.yearDrawPile).toEqual(years);
+  });
+
+  it("skips a settlement whose last room is held by a pop on the move", () => {
+    const G = game();
+    const capital = owned(G, "0,0", "0");
+    const effect = card("free-settlers").effects[0];
+    if (effect.type !== "addPops") throw new Error("not a pop card");
+    // The capital holds just the card's room.
+    capital.pops.freemen +=
+      settlementCapacity(capital, G) - totalPops(capital.pops) - effect.amount;
+    expect(getEventPopTargets(G, "0", effect).map((target) => target.tileId)).toEqual(["0,0"]);
+    G.transfers.push({
+      id: "on-the-move",
+      owner: "0",
+      fromSettlementId: owned(G, "3,0", "0").id,
+      toSettlementId: capital.id,
+      fromTileId: "3,0",
+      toTileId: "0,0",
+      pops: { citizens: 0, freemen: 0, slaves: 1 },
+    });
+    expect(getEventPopTargets(G, "0", effect)).toEqual([]);
+    G.playerDrawPile = [card("free-settlers")];
+    drawPlayerEvent(G, "0");
+    expect(G.pendingPlayerEvent).toBeNull();
+    expect(G.playerDiscardPile).toEqual([card("free-settlers")]);
   });
 
   it("token cards place one, clear one and clear all through their real paths", () => {

@@ -1,33 +1,25 @@
-import { getStandingEffects, type RulesSource } from "./assembly/laws";
+import { getStandingEffects } from "./assembly/laws";
 import { isCapital } from "./core/query";
 import type { BuildingId, HegemonyState, PlayerId, Settlement } from "./types";
 
-export function ideaSlotBonus(source: RulesSource | undefined, settlement: Settlement) {
-  if (!source || !("players" in source) || settlement.kind === "colony") return 0;
-  const capital = isCapital(source, settlement.owner, settlement.tileId);
-  return getStandingEffects(source, settlement.owner).reduce(
+/** A city's slots gained or lost to standing Laws and its owner's Ideas. */
+export function standingSlotBonus(G: HegemonyState, settlement: Settlement) {
+  if (settlement.kind === "colony") return 0;
+  const capital = isCapital(G, settlement.owner, settlement.tileId);
+  return getStandingEffects(G, settlement.owner).reduce(
     (n, e) => n + (e.type === "extraSlots" && (e.scope === "city" || capital) ? e.amount : 0),
     0,
   );
 }
-export function buildingSlotCost(
-  source: RulesSource | undefined,
-  owner: PlayerId,
-  building: BuildingId,
-) {
-  return source &&
-    "players" in source &&
-    getStandingEffects(source, owner).some(
-      (e) => e.type === "slotExempt" && e.building === building,
-    )
+export function buildingSlotCost(G: HegemonyState, owner: PlayerId, building: BuildingId) {
+  return getStandingEffects(G, owner).some(
+    (e) => e.type === "slotExempt" && e.building === building,
+  )
     ? 0
     : 1;
 }
-export function occupiedBuildingSlots(source: RulesSource | undefined, settlement: Settlement) {
-  return settlement.buildings.reduce(
-    (n, b) => n + buildingSlotCost(source, settlement.owner, b),
-    0,
-  );
+export function occupiedBuildingSlots(G: HegemonyState, settlement: Settlement) {
+  return settlement.buildings.reduce((n, b) => n + buildingSlotCost(G, settlement.owner, b), 0);
 }
 export function colonyPieceBonus(G: HegemonyState, playerID: PlayerId) {
   return getStandingEffects(G, playerID).reduce(

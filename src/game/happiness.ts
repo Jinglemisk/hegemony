@@ -1,5 +1,6 @@
-import { getBuilding } from "./content";
-import { getOwnedSettlement, popsInTransit, zeroedYearTerm } from "./core/query";
+import { getBuilding, getBuildings } from "./content";
+import { pluralName } from "./core/format";
+import { getOwnedSettlement, popsInTransit, realmPops, zeroedYearTerm } from "./core/query";
 import { getLawHappinessContributions } from "./assembly/laws";
 import { activeClaims, luxuryHappinessBonus } from "./luxury";
 import type { HegemonyState, PlayerId, Settlement, UnrestTokenChange } from "./types";
@@ -61,12 +62,17 @@ export function happinessContributions(
   );
   // A slave on the move is still in the realm, so a move cannot take it off the count.
   const moving = popsInTransit(G, playerID).slaves;
-  const slaves = settlements.reduce((sum, settlement) => sum + settlement.pops.slaves, 0) + moving;
+  const { slaves } = realmPops(G, playerID);
+  // The term is named for the buildings that state happiness: "Temples".
+  const happinessBuildings = getBuildings(G.definition.content)
+    .filter((building) => building.effects.some((effect) => effect.type === "happiness"))
+    .map((building) => pluralName(building.name))
+    .join(", ");
   const goods = activeClaims(G, playerID).length;
   const blockade = zeroedYearTerm(G) === "luxuryHappiness" ? G.activeYearCard?.name : null;
 
   return [
-    { id: "temples", amount: temples, detail: "Temples" },
+    { id: "temples", amount: temples, detail: happinessBuildings },
     {
       id: "luxuries",
       amount: luxuryHappinessBonus(G, playerID),
