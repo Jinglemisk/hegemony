@@ -1,19 +1,10 @@
-import type { NationalIdeaId } from "../game/ideaTypes";
-import type { Resource, Resources, Stat, VictoryMetric, YearCard, YearTerm } from "../game/types";
+import type { Resource, Resources, VictoryMetric } from "../game/types";
+import { formatSignedNumber } from "./formatters";
 
-/** The frame's number and icon vocabulary, shared by its components. */
-
-export const RESOURCE_ICON: Record<Stat, string> = {
-  wood: "resources/wood",
-  stone: "resources/stone",
-  food: "resources/food",
-  gold: "resources/gold",
-  influence: "resources/influence",
-  happiness: "resources/happiness",
-};
+/** The frame's number vocabulary, shared by its components. Per-ID icons are in `iconRegistry`. */
 
 /** −3, 0, +2 — with a true minus sign. */
-export const sign = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : "0");
+export const sign = formatSignedNumber;
 export const tone = (n: number) => (n > 0 ? "pos" : n < 0 ? "neg" : "");
 
 /** The consult pages the right strip opens, in order. The Chronicle is the ticker's. */
@@ -23,37 +14,19 @@ export const CONSULT: Array<{ tab: "codex" | "victory" | "agora"; label: string;
   { tab: "agora", label: "Agora", icon: "assembly/agora" },
 ];
 
-/** Each building's raster; the Port is the voyage until it has its own. */
-export const BUILDING_ICON: Record<string, string> = {
-  marketplace: "buildings/marketplace",
-  temple: "buildings/temple",
-  granary: "buildings/granary",
-  forum: "buildings/forum",
-  estate: "buildings/villa",
-  port: "events/voyage",
-};
-
-/** Each National Idea's raster: the thing it gives. */
-export const IDEA_ICON: Record<NationalIdeaId, string> = {
-  "good-harvest": "resources/food",
-  "public-dole": "resources/influence",
-  "urban-planning": "settlements/city",
-  "capital-works": "settlements/capital",
-  "civic-tradition": "resources/influence",
-  "frontier-charter": "settlements/colony",
-  "new-settlers": "pops/freemen",
-  "city-pioneers": "settlements/upgrade",
-  "slave-colonies": "pops/slaves",
-  "harbour-planning": "resources/luxury",
-  "treasury-grant": "resources/gold",
-  "assembly-brokers": "assembly/bribe",
-};
-
 /** Whether a store covers a price: a price is short only when it cannot be paid. */
 export function canPay(store: Resources, amounts: Partial<Resources>) {
   return (Object.entries(amounts) as Array<[Resource, number]>).every(
     ([resource, n]) => store[resource] >= n,
   );
+}
+
+const units = (cost: Partial<Resources>) =>
+  Object.values(cost).reduce((sum: number, n) => sum + (n ?? 0), 0);
+
+/** The cheapest of an act's prices where it depends on the settlement: the fewest units. */
+export function cheapestCost(costs: Array<Partial<Resources>>): Partial<Resources> {
+  return costs.reduce((best, cost) => (units(cost) < units(best) ? cost : best), costs[0] ?? {});
 }
 
 /** A title's number as its toast and panel read it: "31 gold", "happiness +4". */
@@ -73,32 +46,3 @@ export function titleValue(metric: VictoryMetric, value: number): string {
       return `${value} gold`;
   }
 }
-
-/** A title's short name, for rows that list several. */
-export const TITLE_SHORT: Record<string, string> = {
-  "polis-builder": "Polis Builder",
-  demos: "Demos",
-  "civic-elite": "Civic Elite",
-  treasurer: "Treasurer",
-  beloved: "Beloved",
-  voice: "Voice",
-};
-
-const TERM_ICON: Record<YearTerm, string> = {
-  plainsFood: "terrain/plains",
-  forestWood: "terrain/forest",
-  mountainStone: "terrain/mountain",
-  freemenGold: "pops/freemen",
-  citizenInfluence: "pops/citizens",
-  luxuryHappiness: "resources/luxury",
-};
-
-/** What a year card strikes, as the badge on its alarm disc and its blow's icon. */
-export function yearCardIcon(card: YearCard): string {
-  if (card.effect.type === "zeroTerm") return TERM_ICON[card.effect.term];
-  return card.effect.change === "placeOne" ? "unrest/unrest" : "unrest/calm";
-}
-
-const NUMBER_WORD = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
-/** Small counts as words, larger ones as numerals. */
-export const numberWord = (n: number) => NUMBER_WORD[n] ?? String(n);

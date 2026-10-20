@@ -4,7 +4,7 @@ import { useHegemonyGame } from "./client/controller";
 import { TunePanel } from "./dev/TunePanel";
 
 export function App() {
-  const { game, playerID, setPlayerID, moves, events, resetGame, isActive, hotseat } =
+  const { game, playerID, setPlayerID, moves, events, resetGame, devShell, isActive, hotseat } =
     useHegemonyGame();
 
   // A remount key for the board. `resetGame` re-rolls the SAME seed with new params for a
@@ -24,6 +24,7 @@ export function App() {
         key={resetKey}
         G={game.G}
         ctx={game.ctx}
+        dev={devShell}
         events={events}
         hotseat={hotseat}
         isActive={isActive}

@@ -27,7 +27,8 @@ import type {
   Resources,
   TradableMaterial,
 } from "../../game/types";
-import { BUILDING_ICON, RESOURCE_ICON } from "../../ui/frameFormat";
+import { cheapestCost } from "../../ui/frameFormat";
+import { BUILDING_RASTERS, POP_RASTERS, RESOURCE_RASTERS } from "../../ui/iconRegistry";
 import { formatPopLabel } from "../../ui/formatters";
 import { VERBS, isTurnOpen, isVerbEnabled, verbTitle } from "../board/command/verbs";
 import type { VerbContext, VerbHandlers, VerbId } from "../board/command/verbs";
@@ -100,18 +101,12 @@ const VERB_ICON: Partial<Record<VerbId, string>> = {
   venture: "events/venture",
 };
 
-const POP_ICON: Record<PopType, string> = {
-  slaves: "pops/slaves",
-  freemen: "pops/freemen",
-  citizens: "pops/citizens",
-};
-
 /** The class a building's column belongs to; a building with no column is Civic. */
 const CIVIC_CLASS = { id: "civic", label: "Civic", icon: "settlements/capital" };
 const POP_CLASS: Record<PopType, { id: string; label: string; icon: string }> = {
-  slaves: { id: "slaves", label: "Slaves", icon: POP_ICON.slaves },
-  freemen: { id: "freemen", label: "Freemen", icon: POP_ICON.freemen },
-  citizens: { id: "citizens", label: "Citizens", icon: POP_ICON.citizens },
+  slaves: { id: "slaves", label: "Slaves", icon: POP_RASTERS.slaves },
+  freemen: { id: "freemen", label: "Freemen", icon: POP_RASTERS.freemen },
+  citizens: { id: "citizens", label: "Citizens", icon: POP_RASTERS.citizens },
 };
 const BUILD_CLASS_ORDER = [POP_CLASS.slaves, POP_CLASS.freemen, POP_CLASS.citizens, CIVIC_CLASS];
 
@@ -121,15 +116,13 @@ function buildClassOf(building: BuildingDefinition) {
 }
 
 const cap = (text: string) => text[0].toUpperCase() + text.slice(1);
-const units = (cost: Partial<Resources>) =>
-  Object.values(cost).reduce((sum: number, n) => sum + (n ?? 0), 0);
 const same = (a: Partial<Resources>, b: Partial<Resources>) =>
   JSON.stringify(a) === JSON.stringify(b);
 
 /** One quote for a price that varies by settlement: exact, or the cheapest "from". */
 function quote(costs: Array<Partial<Resources>>): Pick<DiscOption, "prices" | "from"> {
   if (costs.length === 0) return { prices: [] };
-  const cheapest = costs.reduce((best, cost) => (units(cost) < units(best) ? cost : best));
+  const cheapest = cheapestCost(costs);
   return { prices: [cheapest], from: costs.some((cost) => !same(cost, cheapest)) };
 }
 
@@ -204,7 +197,7 @@ export function discGroups(
       {
         id: `grow-${pop}`,
         label: cap(formatPopLabel(pop, 1)),
-        icon: POP_ICON[pop],
+        icon: POP_RASTERS[pop],
         prices: [getGrowPopCost(G, playerID, pop)],
         hint: `Choose a settlement to grow a ${formatPopLabel(pop, 1)}.`,
       },
@@ -221,7 +214,7 @@ export function discGroups(
       {
         id: `${kind}-${from}`,
         label: `${cap(formatPopLabel(from, 1))} to ${formatPopLabel(to, 1)}`,
-        icon: POP_ICON[from],
+        icon: POP_RASTERS[from],
         ...quote(statuses.map((s) => s.cost ?? {})),
         hint: `Choose a settlement to ${kind} a ${formatPopLabel(from, 1)}.`,
       },
@@ -237,7 +230,7 @@ export function discGroups(
       {
         id: `build-${id}`,
         label: definition.name,
-        icon: BUILDING_ICON[id] ?? "buildings/build",
+        icon: BUILDING_RASTERS[id],
         prices: [getAdjustedActionCost(G, playerID, "buildBuilding", definition.cost, id)],
         hint: `Choose a settlement to raise a ${definition.name}.`,
       },
@@ -263,7 +256,11 @@ export function discGroups(
         label: buildClass.label,
         icon: buildClass.icon,
         text: `${buildings.length} buildings`,
-        hint: `The ${buildClass.label.toLowerCase()}' buildings.`,
+        // A class's buildings are its own ("the slaves' buildings"); Civic names no one.
+        hint:
+          buildClass === CIVIC_CLASS
+            ? "The civic buildings."
+            : `The ${buildClass.label.toLowerCase()}' buildings.`,
         options: buildings,
       }),
     ];
@@ -331,7 +328,7 @@ export function discGroups(
     return holder({
       id: `exchange-${material}`,
       label: cap(material),
-      icon: RESOURCE_ICON[material],
+      icon: RESOURCE_RASTERS[material],
       text: `${store[material]} in store`,
       hint: `Trade ${material} at the bank.`,
       options: [

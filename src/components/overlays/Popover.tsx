@@ -1,27 +1,38 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useEffectEvent, useRef, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
-import type { VerticalPlacement } from "../../ui/anchoring";
-import { useAnchoredOverlay } from "./useAnchoredOverlay";
+import type { AnchoringOptions, VerticalPlacement } from "../../ui/anchoring";
+import { isElementRef, useAnchoredOverlay } from "./useAnchoredOverlay";
 
 export function Popover({
+  align,
   anchor,
   ariaLabel,
   children,
   className,
+  dismissOnOutside = false,
   measureKey,
   onDismiss,
   preferredPlacement = "below",
 }: {
-  anchor: DOMRect;
+  align?: AnchoringOptions["align"];
+  /** A spot on the map, or the control that opens the popover. */
+  anchor: DOMRect | RefObject<HTMLElement | null>;
   ariaLabel: string;
   children: ReactNode;
   className?: string;
+  /** A press outside the popover and its control closes it. */
+  dismissOnOutside?: boolean;
   measureKey?: unknown;
   onDismiss: () => void;
   preferredPlacement?: VerticalPlacement;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
-  const position = useAnchoredOverlay(anchor, ref, { preferredPlacement, gap: 12 }, measureKey);
+  const position = useAnchoredOverlay(
+    anchor,
+    ref,
+    { align, preferredPlacement, gap: 12 },
+    measureKey,
+  );
   const returnFocusRef = useRef<FocusableElement | null>(activeFocusableElement());
 
   useEffect(() => {
@@ -29,7 +40,8 @@ export function Popover({
     const returnTarget = returnFocusRef.current;
     if (!element) return;
 
-    element.focus({ preventScroll: true });
+    // A child that took focus on mount (`autoFocus`) keeps it.
+    if (!element.contains(document.activeElement)) element.focus({ preventScroll: true });
 
     return () => {
       if (returnTarget?.isConnected) {
@@ -37,6 +49,18 @@ export function Popover({
       }
     };
   }, []);
+
+  const dismiss = useEffectEvent(onDismiss);
+  useEffect(() => {
+    if (!dismissOnOutside) return;
+    const away = (event: PointerEvent) => {
+      const target = event.target as Node;
+      const control = isElementRef(anchor) ? anchor.current : null;
+      if (!ref.current?.contains(target) && !control?.contains(target)) dismiss();
+    };
+    document.addEventListener("pointerdown", away);
+    return () => document.removeEventListener("pointerdown", away);
+  }, [anchor, dismissOnOutside]);
 
   if (typeof document === "undefined") return null;
 
@@ -58,11 +82,13 @@ export function Popover({
       style={
         position
           ? { left: position.left, top: position.top, opacity: 1 }
-          : {
-              left: anchor.left,
-              top: preferredPlacement === "below" ? anchor.bottom + 12 : anchor.top - 12,
-              opacity: 0,
-            }
+          : isElementRef(anchor)
+            ? { opacity: 0 }
+            : {
+                left: anchor.left,
+                top: preferredPlacement === "below" ? anchor.bottom + 12 : anchor.top - 12,
+                opacity: 0,
+              }
       }
       tabIndex={-1}
     >

@@ -1,4 +1,4 @@
-import type { PoliticianId } from "../game/assembly";
+import type { PoliticianId, VotePayment } from "../game/assembly";
 import { transition } from "../game/legalMoves";
 import type { GameCommand } from "../game/legalMoves";
 import type { CivicCalmPayment } from "../game/rules";
@@ -46,7 +46,7 @@ export type GameMoves = {
   assemblyPropose: (playerID: PlayerId, target?: PlayerId) => void;
   assemblyProposeRepeal: (playerID: PlayerId, cardId: string) => void;
   assemblyPass: (playerID: PlayerId) => void;
-  assemblyBribe: (playerID: PlayerId, payment: "gold" | "influence") => void;
+  assemblyBribe: (playerID: PlayerId, payment: VotePayment) => void;
   assemblyVote: (playerID: PlayerId, yea: boolean) => void;
   assemblyClose: () => void;
 };

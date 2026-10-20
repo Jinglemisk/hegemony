@@ -16,7 +16,8 @@ import type {
   TableInsuranceOption,
 } from "../../../game/types";
 import { presentTableEffect } from "../../../ui/effects";
-import { RESOURCE_ICON, sign } from "../../../ui/frameFormat";
+import { sign } from "../../../ui/frameFormat";
+import { RESOURCE_RASTERS } from "../../../ui/iconRegistry";
 import { placeName } from "../../frame/moments";
 import { Ico } from "../../frame/parts";
 import { useGameUi } from "../GameUiContext";
@@ -44,7 +45,7 @@ function blowIconOf(effect: TableEffect | undefined): string {
     case "losePops":
       return "pops/pop-loss";
     case "loseResource":
-      return RESOURCE_ICON[effect.resource];
+      return RESOURCE_RASTERS[effect.resource];
     case "destroyBuilding":
       return "buildings/ruin";
     default:
@@ -110,7 +111,7 @@ export function RiotModal({
         ];
       return (Object.entries(option.cost) as Array<[Resource, number]>).map(([resource, n]) => ({
         key: `${id}-${resource}`,
-        icon: RESOURCE_ICON[resource],
+        icon: RESOURCE_RASTERS[resource],
         text: `${n} ${resource} paid for ${option.label.toLowerCase()}.`,
       }));
     });

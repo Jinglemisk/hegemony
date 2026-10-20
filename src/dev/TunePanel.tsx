@@ -3,6 +3,7 @@ import "./tunePanel.css";
 import { getBuildings, getTerrainDeck } from "../game/content";
 import type { HegemonyState } from "../game/types";
 import { CHROME_PLACEHOLDERS } from "../ui/icons/placeholders";
+import { isTyping } from "../ui/keys";
 import { buildingSummary, describeBuildingEffect, terrainStats } from "./aggregates";
 import {
   defaultValueAt,
@@ -84,9 +85,7 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
   // Backtick toggles the panel.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      const typing = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA");
-      if (event.key === "`" && !typing) {
+      if (event.key === "`" && !isTyping(event.target)) {
         event.preventDefault();
         setOpen((value) => !value);
       }

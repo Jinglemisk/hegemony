@@ -1,13 +1,18 @@
 import { occupiedBuildingSlots } from "../../../game/ideaRules";
 import type { CSSProperties } from "react";
-import { POP_TYPES, settlementCapacity, settlementNextYield, totalPops } from "../../../game/rules";
-import type { PopType } from "../../../game/types";
-import { BUILDING_ICON, RESOURCE_ICON, sign, tone } from "../../../ui/frameFormat";
-import { formatPopLabel } from "../../../ui/formatters";
+import {
+  buildingGround,
+  POP_TYPES,
+  settlementCapacity,
+  settlementNextYield,
+  totalPops,
+} from "../../../game/rules";
+import { sign, tone } from "../../../ui/frameFormat";
+import { BUILDING_RASTERS, POP_RASTERS, RESOURCE_RASTERS } from "../../../ui/iconRegistry";
+import { buildingName, formatPopLabel } from "../../../ui/formatters";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
 import { settlementNames } from "../../../ui/settlementNames";
 import { useGameUi } from "../../board/GameUiContext";
-import { slotsOf } from "../../board/ledger/slots";
 import type { OwnedHolding } from "../../board/types";
 import { Tooltip } from "../../overlays/Tooltip";
 import { Ico, Tip } from "../parts";
@@ -15,12 +20,6 @@ import { PlaceSeal } from "./PlaceSeal";
 
 /** Up to this many places, every place gets its drawing line; past it, only the open one. */
 const DRAWN = 3;
-
-const POP_ICON: Record<PopType, string> = {
-  citizens: "pops/citizens",
-  freemen: "pops/freemen",
-  slaves: "pops/slaves",
-};
 
 /**
  * Cities: a ledger, one numbers line per place (pops, ground, and what it nets
@@ -66,7 +65,7 @@ export function CitiesPage({
         </span>
         {moved.map((resource) => (
           <span key={resource} title={`${resource} per turn`}>
-            <Ico path={RESOURCE_ICON[resource]} size="chip" />
+            <Ico path={RESOURCE_RASTERS[resource]} size="chip" />
           </span>
         ))}
       </div>
@@ -75,7 +74,7 @@ export function CitiesPage({
         const name = names.get(settlement.id) ?? "POLIS";
         const pops = totalPops(settlement.pops);
         const capacity = settlementCapacity(settlement, G);
-        const { slots, built, open, raisable } = slotsOf(holding, G);
+        const { slots, built, open, raisable } = buildingGround(G, settlement.owner, tile.id);
         const room = Math.max(0, capacity - pops);
         const census = POP_TYPES.map(
           (pop) => `${settlement.pops[pop]} ${formatPopLabel(pop, settlement.pops[pop])}`,
@@ -118,7 +117,12 @@ export function CitiesPage({
                 <span aria-label={census} className="beads" role="img">
                   {POP_TYPES.flatMap((pop) =>
                     Array.from({ length: settlement.pops[pop] }, (_, i) => (
-                      <Ico className="bead" key={`${pop}-${i}`} path={POP_ICON[pop]} size="chip" />
+                      <Ico
+                        className="bead"
+                        key={`${pop}-${i}`}
+                        path={POP_RASTERS[pop]}
+                        size="chip"
+                      />
                     )),
                   )}
                   {Array.from({ length: room }, (_, i) => (
@@ -138,7 +142,9 @@ export function CitiesPage({
                         >
                           <p className="tip-body">
                             {settlement.buildings.length > 0
-                              ? settlement.buildings.join(", ")
+                              ? settlement.buildings
+                                  .map((id) => buildingName(id, G.definition.content))
+                                  .join(", ")
                               : "Nothing raised yet."}
                           </p>
                         </Tip>
@@ -147,7 +153,7 @@ export function CitiesPage({
                     >
                       {settlement.buildings.map((id, i) => (
                         <span className="sock is-built" key={`${id}-${i}`}>
-                          <Ico path={BUILDING_ICON[id] ?? "buildings/build"} size="chip" />
+                          <Ico path={BUILDING_RASTERS[id]} size="chip" />
                         </span>
                       ))}
                       {Array.from({ length: Math.max(0, open) }, (_, i) => (

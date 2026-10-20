@@ -27,11 +27,20 @@ export type PlayerGlaze = {
   /** The seat's blazon: the Greek initial of the PLAYER's name, not the glaze's —
    *  two glazes start with kappa, and the blazon has to stay unique. */
   blazon: string;
+  /** The glaze is light enough that its blazon reads in dark ink. */
+  inkDark?: true;
 };
 
 export const PLAYER_GLAZES: Record<PlayerId, PlayerGlaze> = {
   "0": { id: "0", name: PLAYER_NAMES["0"], glaze: "Kyanos", color: "#2f5d9e", blazon: "Δ" },
-  "1": { id: "1", name: PLAYER_NAMES["1"], glaze: "Melichron", color: "#dfa437", blazon: "Ν" },
+  "1": {
+    id: "1",
+    name: PLAYER_NAMES["1"],
+    glaze: "Melichron",
+    color: "#dfa437",
+    blazon: "Ν",
+    inkDark: true,
+  },
   "2": { id: "2", name: PLAYER_NAMES["2"], glaze: "Porphyra", color: "#7c4d79", blazon: "Θ" },
   "3": { id: "3", name: PLAYER_NAMES["3"], glaze: "Kinnabari", color: "#a83226", blazon: "Κ" },
 };

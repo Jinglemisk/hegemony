@@ -7,8 +7,13 @@ import {
   LAW_EFFECT_PARITY,
   TABLE_EFFECT_PARITY,
 } from "../parity/featureParity";
-import { EFFECT_REGISTRY_FAMILIES, ICON_REGISTRY_FAMILIES } from "./iconRegistry";
+import {
+  EFFECT_REGISTRY_FAMILIES,
+  ICON_REGISTRY_FAMILIES,
+  RASTER_REGISTRY_FAMILIES,
+} from "./iconRegistry";
 import { GLYPHS, type GlyphId } from "./icons/glyphs";
+import { rasterIcon } from "./icons/placeholders";
 
 /**
  * The icon system's own parity suite, in the same spirit as
@@ -64,6 +69,25 @@ describe("no family shows two things the same picture", () => {
       // Sharing across families is intended (a tree is a tree); sharing WITHIN
       // one is the shrug-icon failure the plan exists to prevent.
       expect(duplicates).toEqual([]);
+    });
+  }
+});
+
+/** The frame's raster families keep the same two promises: one picture per member,
+ *  and a file behind every path. */
+describe("the frame's raster families", () => {
+  for (const [family, registry] of Object.entries(RASTER_REGISTRY_FAMILIES)) {
+    it(`${family}: gives each member its OWN raster`, () => {
+      const paths: string[] = Object.values(registry);
+      const duplicates = paths.filter((path, index) => paths.indexOf(path) !== index);
+
+      expect(duplicates).toEqual([]);
+    });
+
+    it(`${family}: names a raster that exists`, () => {
+      for (const [key, path] of Object.entries(registry)) {
+        expect(rasterIcon(path), `${family}.${key} → ${path}`).toBeDefined();
+      }
     });
   }
 });

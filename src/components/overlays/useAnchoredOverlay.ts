@@ -12,7 +12,7 @@ export function useAnchoredOverlay(
   measureKey?: unknown,
 ) {
   const [position, setPosition] = useState<FloatingPosition | null>(null);
-  const { arrowInset, gap, margin, preferredPlacement } = options;
+  const { align, arrowInset, gap, margin, preferredPlacement } = options;
 
   const updatePosition = useCallback(() => {
     const overlay = overlayRef.current;
@@ -26,10 +26,10 @@ export function useAnchoredOverlay(
         anchorRect,
         { width, height },
         { width: window.innerWidth, height: window.innerHeight },
-        { arrowInset, gap, margin, preferredPlacement },
+        { align, arrowInset, gap, margin, preferredPlacement },
       ),
     );
-  }, [anchor, arrowInset, gap, margin, overlayRef, preferredPlacement]);
+  }, [align, anchor, arrowInset, gap, margin, overlayRef, preferredPlacement]);
 
   useLayoutEffect(() => {
     const anchorElement = isElementRef(anchor) ? anchor.current : anchor;
@@ -54,7 +54,7 @@ export function useAnchoredOverlay(
   return position;
 }
 
-function isElementRef(
+export function isElementRef(
   value: DOMRect | RefObject<HTMLElement | null> | null,
 ): value is RefObject<HTMLElement | null> {
   return Boolean(value && "current" in value);

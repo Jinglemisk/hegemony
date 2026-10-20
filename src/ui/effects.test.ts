@@ -15,9 +15,9 @@ import { presentDirectiveEffect, presentEventEffect, presentTableEffect } from "
  */
 describe("the flat sentence survives the split", () => {
   const eventCases: Array<[EventEffect, string]> = [
-    [{ type: "resourceDelta", resource: "gold", amount: -2 }, "-2 Gold"],
+    [{ type: "resourceDelta", resource: "gold", amount: -2 }, "−2 Gold"],
     [{ type: "unrestTokens", change: "placeOne" }, "+1 Unrest token placed on your realm"],
-    [{ type: "unrestTokens", change: "clearOne" }, "-1 Unrest token cleared from your realm"],
+    [{ type: "unrestTokens", change: "clearOne" }, "−1 Unrest token cleared from your realm"],
     [{ type: "unrestTokens", change: "clearAll" }, "All Unrest tokens cleared from your realm"],
     [
       { type: "addPops", pop: "freemen", amount: 1, target: "ownedSettlementWithCapacity" },
@@ -27,14 +27,14 @@ describe("the flat sentence survives the split", () => {
 
   const tableCases: Array<[TableEffect, string]> = [
     [{ type: "none" }, "—"],
-    [{ type: "losePops", count: 1 }, "-1 pop"],
-    [{ type: "losePops", count: 2 }, "-2 pops"],
-    [{ type: "loseResource", resource: "gold", amount: 3 }, "-3 Gold"],
+    [{ type: "losePops", count: 1 }, "−1 pop"],
+    [{ type: "losePops", count: 2 }, "−2 pops"],
+    [{ type: "loseResource", resource: "gold", amount: 3 }, "−3 Gold"],
     [
       { type: "loseResource", resource: "food", amount: 4, popLossIfShort: 1 },
-      "-4 Food (short: -1 pop)",
+      "−4 Food (short: −1 pop)",
     ],
-    [{ type: "destroyBuilding", popLossFallback: 1 }, "-1 building"],
+    [{ type: "destroyBuilding", popLossFallback: 1 }, "−1 building"],
     [{ type: "gainResource", resource: "gold", amount: 9 }, "+9 Gold"],
     [{ type: "gainPop", pop: "slaves", foodFallback: 2 }, "+1 slave"],
   ];
@@ -73,7 +73,7 @@ describe("the carved parts are drawn from that same sentence", () => {
 
     for (const effect of presented) {
       if (effect.magnitude) {
-        expect(effect.text, effect.text).toContain(effect.magnitude.replace(/^[+-]/, ""));
+        expect(effect.text, effect.text).toContain(effect.magnitude.replace(/^[+−-]/, ""));
       }
       if (effect.subject) {
         expect(effect.text, effect.text).toContain(effect.subject);

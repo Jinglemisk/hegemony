@@ -1,11 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { seatsBefore } from "../../game/turn";
 import type { VictoryThreat } from "../../game/victory";
 import type { HegemonyState, PlayerId, VictoryMetric } from "../../game/types";
-import { listed, toRoman } from "../../ui/formatters";
-import { numberWord, titleValue, yearCardIcon } from "../../ui/frameFormat";
+import { capitalize } from "../../game/core/format";
+import { listed, numberWord, seatName, toRoman } from "../../ui/formatters";
+import { titleValue } from "../../ui/frameFormat";
+import { yearCardIcon } from "../../ui/iconRegistry";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
+import { Popover } from "../overlays/Popover";
 import { Tooltip } from "../overlays/Tooltip";
 import { Ico, Tip } from "./parts";
 
@@ -66,26 +69,9 @@ export function ThreatAlarm({
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
-  const ref = useRef<HTMLLIElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const away = (event: PointerEvent) => {
-      if (!ref.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("pointerdown", away);
-    document.addEventListener("keydown", escape);
-    return () => {
-      document.removeEventListener("pointerdown", away);
-      document.removeEventListener("keydown", escape);
-    };
-  }, [open]);
+  const disc = useRef<HTMLButtonElement>(null);
 
   if (threats.length === 0) return null;
-  const who = (seat: PlayerId) => (seat === viewerId ? "you" : G.players[seat].name);
   const toWin = numberWord(G.ruleset.victory.cardsToWin);
   const headline = (seat: PlayerId) =>
     seat === viewerId
@@ -93,26 +79,29 @@ export function ThreatAlarm({
       : `${G.players[seat].name} wins when their turn starts`;
 
   return (
-    <li className="threat" ref={ref}>
+    <li className="threat">
       <button
         aria-expanded={open}
-        aria-label={`${capital(toWin)} titles: ${threats.map((threat) => headline(threat.seat)).join("; ")}.`}
+        aria-label={`${capitalize(toWin)} titles: ${threats.map((threat) => headline(threat.seat)).join("; ")}.`}
         className="alarm-disc is-down is-loud"
         data-c="threat"
         onClick={() => setOpen((value) => !value)}
+        ref={disc}
         type="button"
       >
         <Ico path="unrest/threshold" size="ui" />
       </button>
       {open ? (
-        <div
-          aria-label={`${capital(toWin)} titles`}
+        <Popover
+          align="start"
+          anchor={disc}
+          ariaLabel={`${capitalize(toWin)} titles`}
           className="threat-panel"
-          data-c="threat-panel"
-          role="dialog"
+          dismissOnOutside
+          onDismiss={() => setOpen(false)}
         >
           {threats.map((threat) => {
-            const before = seatsBefore(G, threat.seat).map(who);
+            const before = seatsBefore(G, threat.seat).map((seat) => seatName(G, seat, viewerId));
             const glaze = PLAYER_GLAZES[threat.seat];
             return (
               <section className="threat-seat" key={threat.seat}>
@@ -124,7 +113,7 @@ export function ThreatAlarm({
                     {glaze.blazon}
                   </span>
                   <span className="threat-words">
-                    <span className="toast-kicker">{capital(toWin)} titles</span>
+                    <span className="toast-kicker">{capitalize(toWin)} titles</span>
                     <b className="threat-title">{headline(threat.seat)}</b>
                     <span className="caption">
                       {threat.seat === viewerId
@@ -144,13 +133,15 @@ export function ThreatAlarm({
                           <b>{card.name}</b>
                           <span className="caption">
                             {G.players[threat.seat].name} {titleValue(card.metric, value)}
-                            {runnerUp ? ` · next best ${who(runnerUp.seat)} ${runnerUp.value}` : ""}
+                            {runnerUp
+                              ? ` · next best ${seatName(G, runnerUp.seat, viewerId)} ${runnerUp.value}`
+                              : ""}
                           </span>
                         </span>
                         <span className="threat-gap caption">
                           {gap === null
                             ? "no challenger"
-                            : `${capital(yours ? "you are" : `${who(runnerUp!.seat)} is`)} ${shortBy(card.metric, gap)} short of a tie`}
+                            : `${capitalize(yours ? "you are" : `${seatName(G, runnerUp!.seat, viewerId)} is`)} ${shortBy(card.metric, gap)} short of a tie`}
                         </span>
                       </li>
                     );
@@ -159,10 +150,8 @@ export function ThreatAlarm({
               </section>
             );
           })}
-        </div>
+        </Popover>
       ) : null}
     </li>
   );
 }
-
-const capital = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);

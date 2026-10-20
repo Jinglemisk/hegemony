@@ -1,20 +1,14 @@
 import { useState } from "react";
+import { capitalize } from "../../../game/core/format";
 import { defaultHungerLeave, hungerMouths } from "../../../game/hunger";
 import { getOwnedSettlement } from "../../../game/rules";
 import type { HungerLeave, HungerPop } from "../../../game/types";
-import { formatNumber } from "../../../ui/formatters";
+import { formatNumber, formatPopLabel, numberWord } from "../../../ui/formatters";
 import { settlementNameOf } from "../../../ui/settlementNames";
 import { Ico } from "../../frame/parts";
 import { useGameUi } from "../GameUiContext";
 import { CeremonyBlow } from "./CeremonyBlow";
 import { ModalShell } from "./ModalShell";
-
-const POP_WORD: Record<HungerPop, [string, string]> = {
-  freemen: ["Freeman", "freemen"],
-  citizens: ["Citizen", "citizens"],
-};
-const NUMBER_WORD = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
-const words = (n: number) => NUMBER_WORD[n] ?? formatNumber(n);
 
 type Counts = Record<string, number>;
 const key = (tileId: string, pop: HungerPop) => `${tileId}:${pop}`;
@@ -85,7 +79,7 @@ export function HungerModal({
           Hunger
         </h2>
         <p className="fateVoice body-em">
-          The granary is short. {words(unfed)[0].toUpperCase() + words(unfed).slice(1)}{" "}
+          The granary is short. {capitalize(numberWord(unfed))}{" "}
           {unfed === 1 ? "household" : "households"} must leave before the next harvest.
         </p>
       </header>
@@ -98,7 +92,7 @@ export function HungerModal({
           tone: "negative",
           magnitude: `−${formatNumber(unfed)}`,
           subject: unfed === 1 ? "Pop" : "Pops",
-          condition: `choose ${words(unfed)} ${unfed === 1 ? "mouth" : "mouths"} to send away`,
+          condition: `choose ${numberWord(unfed)} ${unfed === 1 ? "mouth" : "mouths"} to send away`,
         }}
       />
 
@@ -112,7 +106,7 @@ export function HungerModal({
                   const leaves = index < (counts[key(row.tileId, pop)] ?? 0);
                   return (
                     <button
-                      aria-label={`${POP_WORD[pop][0]} ${index + 1} of ${row.name}${leaves ? ", leaves" : ""}`}
+                      aria-label={`${capitalize(formatPopLabel(pop, 1))} ${index + 1} of ${row.name}${leaves ? ", leaves" : ""}`}
                       aria-pressed={leaves}
                       className="hungerPop"
                       disabled={!isActive}

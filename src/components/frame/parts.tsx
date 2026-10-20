@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { PlayerId, Resources } from "../../game/types";
-import { RESOURCE_ICON, sign, tone } from "../../ui/frameFormat";
+import { sign, tone } from "../../ui/frameFormat";
+import { RESOURCE_RASTERS } from "../../ui/iconRegistry";
 import { RESOURCE_LABELS, formatNumber, formatSignedNumber } from "../../ui/formatters";
 import { RESOURCE_ORDER } from "../../ui/resourceVisuals";
 import { rasterIcon } from "../../ui/icons/placeholders";
@@ -75,7 +76,7 @@ export function Chips({
         return (
           <span className={signed ? `chip ${tone(n)}` : "price-part"} key={resource}>
             <span aria-hidden="true">{signed ? sign(n) : n}</span>
-            <Ico path={RESOURCE_ICON[resource]} size="chip" />
+            <Ico path={RESOURCE_RASTERS[resource]} size="chip" />
             <span className="visuallyHidden">
               {`${signed ? formatSignedNumber(n) : formatNumber(n)} ${RESOURCE_LABELS[resource]}`}
             </span>

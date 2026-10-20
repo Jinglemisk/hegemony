@@ -114,7 +114,8 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   },
   unrestResolution: {
     implementation: "src/game/unrest.test.ts",
-    evidence: "at −6 revolts: half the slaves leave, the tokens clear, nothing is rolled",
+    evidence:
+      "at the revolt line: the ruleset's share of the slaves leave, the tokens clear, nothing is rolled",
   },
   victoryResolution: {
     implementation: "src/game/victory.test.ts",

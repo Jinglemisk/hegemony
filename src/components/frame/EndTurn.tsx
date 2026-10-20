@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, RefObject } from "react";
 import type { CivicCalmPayment } from "../../game/civic";
 import type { PlayerId } from "../../game/types";
 import type { Ruleset } from "../../game/ruleset";
@@ -7,6 +7,7 @@ import type { TurnEndUnrest } from "../../game/unrest";
 import { presentUnrestOutcome } from "../../ui/effects";
 import { sign } from "../../ui/frameFormat";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
+import { Popover } from "../overlays/Popover";
 import { Tooltip } from "../overlays/Tooltip";
 import { Chips, Ico, Tip, TipWarn } from "./parts";
 
@@ -99,6 +100,7 @@ export function EndTurn({
     canEndTurn,
   );
   const acting = PLAYER_GLAZES[actingId];
+  const button = useRef<HTMLButtonElement>(null);
 
   if (!canEndTurn) {
     return (
@@ -122,22 +124,6 @@ export function EndTurn({
 
   return (
     <>
-      {confirming && unrest ? (
-        <EndTurnConfirm
-          onCalmThenEnd={(payment) => {
-            setConfirming(false);
-            onCalm(payment);
-            onEndTurn();
-          }}
-          onClose={() => setConfirming(false)}
-          onEnd={() => {
-            setConfirming(false);
-            onEndTurn();
-          }}
-          ruleset={ruleset}
-          unrest={unrest}
-        />
-      ) : null}
       <Tooltip
         content={
           <Tip title="End turn">
@@ -168,6 +154,7 @@ export function EndTurn({
             begin();
           }}
           onPointerUp={cancel}
+          ref={button}
           style={{ "--hold": progress } as CSSProperties}
           type="button"
         >
@@ -180,18 +167,37 @@ export function EndTurn({
           {warning ? <span className="endturn-warning">{warning.label}</span> : null}
         </button>
       </Tooltip>
+      {confirming && unrest ? (
+        <EndTurnConfirm
+          anchor={button}
+          onCalmThenEnd={(payment) => {
+            setConfirming(false);
+            onCalm(payment);
+            onEndTurn();
+          }}
+          onClose={() => setConfirming(false)}
+          onEnd={() => {
+            setConfirming(false);
+            onEndTurn();
+          }}
+          ruleset={ruleset}
+          unrest={unrest}
+        />
+      ) : null}
     </>
   );
 }
 
 /** The confirm over the hourglass at the riot or revolt line. */
 function EndTurnConfirm({
+  anchor,
   unrest,
   ruleset,
   onCalmThenEnd,
   onEnd,
   onClose,
 }: {
+  anchor: RefObject<HTMLButtonElement | null>;
   unrest: TurnEndUnrest;
   ruleset: Ruleset;
   onCalmThenEnd: (payment: CivicCalmPayment) => void;
@@ -201,36 +207,21 @@ function EndTurnConfirm({
   const revolt = unrest.tier === "revolt";
   const { calm } = unrest;
   const { line, share } = presentUnrestOutcome(ruleset, unrest.tier);
-  const ref = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const away = (event: PointerEvent) => {
-      if (!ref.current?.contains(event.target as Node)) onClose();
-    };
-    const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    document.addEventListener("pointerdown", away);
-    document.addEventListener("keydown", escape);
-    return () => {
-      document.removeEventListener("pointerdown", away);
-      document.removeEventListener("keydown", escape);
-    };
-  }, [onClose]);
+  const title = revolt ? "Ending your turn now means revolt" : "Ending your turn starts a riot";
 
   return (
-    <section
-      aria-labelledby="endturn-confirm-title"
+    <Popover
+      anchor={anchor}
+      ariaLabel={title}
       className={`endturn-confirm${revolt ? " is-revolt" : ""}`}
-      ref={ref}
-      role="dialog"
+      dismissOnOutside
+      onDismiss={onClose}
+      preferredPlacement="above"
     >
       <span className="confirm-kicker">
         Happiness {sign(unrest.level)} · {line}
       </span>
-      <h2 className="confirm-title" id="endturn-confirm-title">
-        {revolt ? "Ending your turn now means revolt" : "Ending your turn starts a riot"}
-      </h2>
+      <h2 className="confirm-title">{title}</h2>
       <p className="confirm-body">
         {revolt ? (
           unrest.slaves ? (
@@ -272,6 +263,6 @@ function EndTurnConfirm({
           {revolt ? "Revolt" : "Face the riot"}
         </button>
       </div>
-    </section>
+    </Popover>
   );
 }

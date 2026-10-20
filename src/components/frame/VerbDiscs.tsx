@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, MouseEvent } from "react";
 import type { Resources } from "../../game/types";
 import { canPay } from "../../ui/frameFormat";
+import { isTyping } from "../../ui/keys";
 import type { DiscGroup, DiscOption } from "./discs";
 import { Chips, Ico } from "./parts";
 
@@ -245,10 +246,6 @@ function placeFan(host: HTMLElement, fanAt: WeakMap<Element, [number, number]>) 
     fanAt.set(items[k], [cx + fx, cy + fy]);
   });
 }
-
-const isTyping = (target: EventTarget | null) =>
-  target instanceof HTMLElement &&
-  (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
 
 /**
  * The verb discs on the sheet's edge and their fans.
@@ -521,7 +518,7 @@ export function VerbDiscs({
                 name: {
                   "data-gate-hover": "fan-2",
                   "data-gate-hover-wait": 800,
-                  "data-gate-hover-next": '[data-option="build-slaves"]',
+                  "data-gate-hover-next": '[data-option="build-civic"]',
                 },
               }
             : group.id === "exchange"

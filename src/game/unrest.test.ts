@@ -128,7 +128,7 @@ describe("turn-end unrest", () => {
     expect(happinessLevel(G, "0")).toBe(0);
   });
 
-  it("at −6 revolts: half the slaves leave, the tokens clear, nothing is rolled", () => {
+  it("at the revolt line: the ruleset's share of the slaves leave, the tokens clear, nothing is rolled", () => {
     const G = preloadedGame(SEED);
     setPops(G, "0", { citizens: 1, freemen: 1, slaves: 5 }, { citizens: 0, freemen: 0, slaves: 4 });
     G.players["0"].unrestTokens = 2;

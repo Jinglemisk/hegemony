@@ -4,19 +4,17 @@ import type { Phase } from "../../../client/controller";
 import { getCivicCalmStatus } from "../../../game/civic";
 import { getBuildings } from "../../../game/content";
 import { getAdjustedActionCost, getGrowPopPriceSpans } from "../../../game/economy/cost";
-import { getFoundColonyStatus, getUpgradeColonyToCityStatus } from "../../../game/rules";
+import {
+  getFoundColonyStatus,
+  getUpgradeColonyToCityStatus,
+  pendingDecisionReasons,
+} from "../../../game/rules";
 import type { HegemonyState, PlayerId, Resource, Resources } from "../../../game/types";
 import type { MapSelectionMode } from "../map/mapSelection";
 
 /**
- * The action verbs as data (ladder rung R3). Every verb was a hand-written
- * <button> that repeated the same disabled expression, the same title ladder and
- * the same icon/label/cost body — so adding a verb meant copying forty lines, and
- * moving the bar meant moving all of them.
- *
- * Now: a verb is a row in VERBS, <CommandVerb> renders it, and the bar's *home* is
- * whatever component maps over the array. That is what makes the Q17 relocation
- * (side panel → bottom command bar) a layout change rather than a rewrite.
+ * The action verbs as data: a verb is a row in VERBS with its gate, title and
+ * price in one place, and the disc menu (`discs.ts`) maps over the rows.
  */
 
 /** Everything a verb needs to decide whether it is available and what it costs. */
@@ -25,9 +23,8 @@ export type VerbContext = {
   playerID: PlayerId;
   phase: Phase;
   isActive: boolean;
-  hasPendingPlayerEvent: boolean;
-  /** The Assembly sits: the shell reads, and nothing acts until it rises. */
-  inAssembly?: boolean;
+  /** What the table waits on instead of the turn ({@link turnPending}), or null. */
+  pending: string | null;
   canGrowPops: boolean;
   canMovePops: boolean;
   canFoundColony: boolean;
@@ -239,27 +236,29 @@ export const VERBS: VerbSpec[] = [
   },
 ];
 
-/**
- * Whether the viewer may act on their turn at all — the part of the gate that is
- * about the seat and the moment rather than about any one verb.
- *
- * Named separately because the turn dial lives in the top bar and needs exactly
- * this and nothing else: it has no board facts to hand, and building a whole
- * VerbContext to ask "is it my move?" was how the same three conditions came to
- * be written twice.
- */
-export type TurnGate = Pick<
-  VerbContext,
-  "isActive" | "phase" | "hasPendingPlayerEvent" | "inAssembly"
->;
-
-export function isTurnOpen(gate: TurnGate) {
-  return (
-    gate.isActive && gate.phase === "gameplay" && !gate.hasPendingPlayerEvent && !gate.inAssembly
-  );
-}
+/** The part of a VerbContext the turn gate ({@link turnBlocked}) reads. */
+export type TurnGate = Pick<VerbContext, "isActive" | "phase" | "pending">;
 
 const IN_ASSEMBLY = "The Assembly is sitting: return to it to act.";
+
+/** What the table waits on instead of the turn: the Assembly, which the shell only
+ *  reads until it rises, or the engine's pending decision (`pendingDecisionReasons`). */
+export function turnPending(G: HegemonyState): string | null {
+  if (G.assembly) return IN_ASSEMBLY;
+  return G.phase === "gameplay" ? (pendingDecisionReasons(G)[0] ?? null) : null;
+}
+
+/** Why the viewer may not take a turn action now, or null when they may: what the
+ *  table waits on first, then the seat, then the phase. */
+export function turnBlocked(gate: TurnGate): string | null {
+  if (gate.pending) return gate.pending;
+  if (!gate.isActive) return "Current player's turn only.";
+  return gate.phase === "gameplay" ? null : "Gameplay only.";
+}
+
+export function isTurnOpen(gate: TurnGate) {
+  return turnBlocked(gate) === null;
+}
 
 /** The shared gate every verb sits behind, in one place. */
 export function isVerbEnabled(verb: VerbSpec, context: VerbContext) {
@@ -267,10 +266,7 @@ export function isVerbEnabled(verb: VerbSpec, context: VerbContext) {
 }
 
 export function verbTitle(verb: VerbSpec, context: VerbContext) {
-  if (context.inAssembly) return IN_ASSEMBLY;
-  if (context.hasPendingPlayerEvent) {
-    return "Finish the pending decision first.";
-  }
+  if (context.pending) return context.pending;
 
   const hint = typeof verb.hint === "function" ? verb.hint(context) : verb.hint;
 
@@ -279,14 +275,5 @@ export function verbTitle(verb: VerbSpec, context: VerbContext) {
 
 /** The end-turn explanation, blocked or not, without a VerbContext to build. */
 export function turnCommitTitle(gate: TurnGate) {
-  if (gate.inAssembly) return IN_ASSEMBLY;
-  if (gate.hasPendingPlayerEvent) {
-    return "Finish the pending decision first.";
-  }
-
-  return gate.isActive ? "Press and hold to end the turn." : "Current player's turn only.";
+  return turnBlocked(gate) ?? "Press and hold to end the turn.";
 }
-
-// The verb COMPONENTS (CommandVerb, VerbCostSlot) live in CommandVerb.tsx
-// so this module exports only data + types — a file that mixes data and component exports
-// can't Fast Refresh, and this data is imported by the always-live command dock.

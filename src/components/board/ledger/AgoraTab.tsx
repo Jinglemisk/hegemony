@@ -3,10 +3,11 @@ import { getResolutionCard, nextAssemblyYear, politicianStandings } from "../../
 import type { PoliticianStanding } from "../../../game/assembly";
 import { victoryStandings } from "../../../game/victory";
 import type { HegemonyState, PlayerId } from "../../../game/types";
-import { yearLabel } from "../../../ui/formatters";
+import { numberWord, yearLabel } from "../../../ui/formatters";
 import { AnnotatedText } from "../../AnnotatedText";
 import { Ico, SeatMark, Tip } from "../../frame/parts";
 import { Tooltip } from "../../overlays/Tooltip";
+import { StandingLawDetails } from "../assembly/AssemblyPresentation";
 import { TitleRow } from "./VictoryTab";
 
 /**
@@ -17,14 +18,6 @@ import { TitleRow } from "./VictoryTab";
  * title those Laws decide. Every figure comes from the same engine standings the
  * Assembly and the win check read, so the pages cannot disagree.
  */
-
-/** The empty stelae are counted in words, the way the floor announces them; past
- *  the words the numeral does the job. Only the law cap's range ever lands here. */
-const SPELLED = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight"];
-
-function spell(count: number): string {
-  return SPELLED[count] ?? String(count);
-}
 
 export function AgoraTab({ G, playerID }: { G: HegemonyState; playerID: PlayerId }) {
   const standings = politicianStandings(G);
@@ -53,7 +46,13 @@ export function AgoraTab({ G, playerID }: { G: HegemonyState; playerID: PlayerId
           <div className="a-law" key={`${law.cardId}-${law.order}`}>
             <span className="r-place">
               <Ico path="assembly/law" size="chip" />
-              <b className="v-name">{card.name}</b>
+              <Tooltip
+                content={<StandingLawDetails G={G} card={card} law={law} />}
+                focusable
+                triggerClassName="v-name"
+              >
+                {card.name}
+              </Tooltip>
             </span>
             <p className="a-law-text">
               <AnnotatedText linkContext={card.name} text={card.text} />
@@ -66,7 +65,7 @@ export function AgoraTab({ G, playerID }: { G: HegemonyState; playerID: PlayerId
       })}
       {empty > 0 ? (
         <p className="a-empty page-empty">
-          {spell(empty)} {empty === 1 ? "stele stands" : "stelae stand"} empty
+          {numberWord(empty)} {empty === 1 ? "stele stands" : "stelae stand"} empty
         </p>
       ) : null}
 
@@ -120,12 +119,14 @@ export function AgoraTab({ G, playerID }: { G: HegemonyState; playerID: PlayerId
   );
 }
 
-/** Stratokles counts monuments, which never come down; the others count standing Laws. */
+/** The Directive politician counts monuments, which never come down; the others count
+ *  standing Laws. */
 function oratorLine({ politician, patron, power }: PoliticianStanding) {
   const epithet = politician.epithet.toLowerCase();
+  const monuments = politician.kind === "directive";
   if (power === 0) {
-    return `${epithet} · ${politician.id === "stratokles" ? "no monument yet" : "no stele"}`;
+    return `${epithet} · ${monuments ? "no monument yet" : "no stele"}`;
   }
   const standing = patron ? `patron ${PLAYER_NAMES[patron]}` : "split, no patron";
-  return `${epithet} · ${politician.id === "stratokles" ? "monuments, " : ""}${standing}`;
+  return `${epithet} · ${monuments ? "monuments, " : ""}${standing}`;
 }

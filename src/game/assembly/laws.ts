@@ -134,6 +134,13 @@ export function isPriceLaw(card: ResolutionCard): boolean {
     card.effects.some((effect) => ["actionCost", "calmPayment"].includes(effect.type))
   );
 }
+/** An effect that adds a line of its own to the happiness level. */
+function addsHappinessLine(effect: LawEffect): boolean {
+  return effect.type === "happiness" || effect.type === "slaveUnrestWeight";
+}
+export function isHappinessLaw(card: ResolutionCard): boolean {
+  return card.kind === "law" && card.effects.some(addsHappinessLine);
+}
 export function applyLawActionCost(
   G: HegemonyState,
   playerID: PlayerId,
@@ -269,18 +276,12 @@ export function getLawHappinessContributions(
   const { slaves } = realmPops(G, playerID);
   return getStandingEffectSources(G, playerID).flatMap((source) => {
     let amount = 0;
-    let namesHappiness = false;
     for (const effect of source.effects) {
-      if (effect.type === "happiness") {
-        amount += effect.amount;
-        namesHappiness = true;
-      }
-      if (effect.type === "slaveUnrestWeight") {
+      if (effect.type === "happiness") amount += effect.amount;
+      if (effect.type === "slaveUnrestWeight")
         amount -= slaveUnhappiness(G, effect.amount * slaves) - slaveUnhappiness(G, slaves);
-        namesHappiness = true;
-      }
     }
-    return namesHappiness ? [{ amount, label: source.label }] : [];
+    return source.effects.some(addsHappinessLine) ? [{ amount, label: source.label }] : [];
   });
 }
 export function getFoundColonyRiders(G: HegemonyState, playerID: PlayerId) {

@@ -1,17 +1,28 @@
 import { useState } from "react";
-import { getNationalIdeas, getTakeIdeaStatus, ideaDraft, ideaHolders } from "../../../game/ideas";
-import type { NationalIdeaId, IdeaPopChoice } from "../../../game/ideaTypes";
+import {
+  getNationalIdeas,
+  getTakeIdeaStatus,
+  ideaDraft,
+  ideaHolders,
+  ideaPopTargets,
+  ideaTakesPop,
+} from "../../../game/ideas";
+import type {
+  IdeaPopChoice,
+  NationalIdeaDefinition,
+  NationalIdeaId,
+} from "../../../game/ideaTypes";
 import { enumerateLegalOptions } from "../../../game/legalMoves";
 import type { HegemonyState } from "../../../game/types";
-import { IDEA_ICON } from "../../../ui/frameFormat";
-import { formatNumber } from "../../../ui/formatters";
+import { presentLawEffect } from "../../../ui/effects";
+import { IDEA_RASTERS } from "../../../ui/iconRegistry";
+import { formatNumber, numberWord } from "../../../ui/formatters";
 import { settlementNames } from "../../../ui/settlementNames";
 import { ActionButton } from "../../ActionButton";
+import { EffectLine } from "../../EffectLine";
 import { useGameUi } from "../GameUiContext";
 import { Chips, Ico, SeatMark } from "../../frame/parts";
 import { ModalShell } from "./ModalShell";
-
-const COUNT = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
 
 /**
  * The National Idea list, three ways: the seat choosing in the open draft (in
@@ -70,6 +81,23 @@ export function IdeasModal({
   const take = getTakeIdeaStatus(G, viewerId, selected ?? undefined, target);
   // The engine's reasons; with none, the button only waits for a pick.
   const takeReason = take.reasons.join(" ") || "Choose an Idea.";
+  // Why a row is shut, asked with a settler where the Idea takes one, so the prompt to
+  // pick that settler is not read as the row's reason.
+  const rowReason = (idea: NationalIdeaDefinition) =>
+    getTakeIdeaStatus(
+      G,
+      viewerId,
+      idea.id,
+      ideaTakesPop(idea) ? ideaPopTargets(G, viewerId)[0] : undefined,
+    ).reasons.join(" ");
+  const effectLines = (idea: NationalIdeaDefinition) =>
+    idea.effects.map((effect, index) => (
+      <EffectLine
+        effect={presentLawEffect(effect, G.ruleset, G.definition.content)}
+        key={index}
+        links={false}
+      />
+    ));
 
   const commit = () => {
     if (!choice || (choice.command.type !== "pickIdea" && choice.command.type !== "buyIdea"))
@@ -106,11 +134,7 @@ export function IdeasModal({
         return (
           <ActionButton
             aria-pressed={selected === idea.id}
-            blockedReason={
-              legal(idea.id) || draftDone
-                ? undefined
-                : getTakeIdeaStatus(G, viewerId, idea.id).reasons.join(" ")
-            }
+            blockedReason={legal(idea.id) || draftDone ? undefined : rowReason(idea)}
             className={`idea-choice${taken ? " is-taken" : ""}${own ? " is-own" : ""}${idea.id === fresh ? " is-fresh" : ""}`}
             {...gate("idea-choice")}
             enabled={legal(idea.id) && !draftDone}
@@ -122,10 +146,10 @@ export function IdeasModal({
             }}
             triggerClassName="idea-tip"
           >
-            <Ico className="idea-icon" path={IDEA_ICON[idea.id]} size="tile" />
+            <Ico className="idea-icon" path={IDEA_RASTERS[idea.id]} size="tile" />
             <span className="idea-words">
               <strong>{idea.name}</strong>
-              <span>{idea.text}</span>
+              {effectLines(idea)}
             </span>
             <span className="idea-hold">
               {holder ? (
@@ -190,7 +214,7 @@ export function IdeasModal({
             <h2 id="ideas-heading">Buy a National Idea</h2>
             <p>
               {formatNumber(influenceCost)} influence · you hold {formatNumber(influence)} ·{" "}
-              {COUNT[left] ?? formatNumber(left)} {left === 1 ? "Idea" : "Ideas"} left
+              {numberWord(left)} {left === 1 ? "Idea" : "Ideas"} left
             </p>
           </div>
           <button className="ideas-close" onClick={onClose} type="button">
@@ -262,7 +286,7 @@ export function IdeasModal({
                 {settlerPicker ??
                   (selectedIdea ? (
                     <span className="ideas-legend">
-                      {selectedIdea.name} · {selectedIdea.text}
+                      {selectedIdea.name} · {effectLines(selectedIdea)}
                     </span>
                   ) : null)}
                 <ActionButton

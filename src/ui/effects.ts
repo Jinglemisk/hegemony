@@ -41,7 +41,7 @@ export type EffectTone = "positive" | "negative" | "muted" | "neutral";
 export type EffectPresentation = {
   text: string;
   tone: EffectTone;
-  /** The carved numeral, signed — "+9", "-2". */
+  /** The carved numeral, signed — "+9", "−2". */
   magnitude?: string;
   /** What the number is about, set in display caps — "Happiness", "Gold". */
   subject?: string;
@@ -138,7 +138,7 @@ export function joinEffectPresentations(
 /** The token operation printed on the card. */
 function presentUnrestToken(change: UnrestTokenChange, realm = "your realm"): EffectPresentation {
   return carve(change === "placeOne" ? "negative" : "positive", {
-    magnitude: change === "clearAll" ? "All" : change === "placeOne" ? "+1" : "-1",
+    magnitude: change === "clearAll" ? "All" : change === "placeOne" ? "+1" : "−1",
     subject: change === "clearAll" ? "Unrest tokens" : "Unrest token",
     condition: change === "placeOne" ? `placed on ${realm}` : `cleared from ${realm}`,
   });
@@ -150,19 +150,19 @@ export function presentTableEffect(effect: TableEffect): EffectPresentation {
       return { text: "—", tone: "muted" };
     case "losePops":
       return carve("negative", {
-        magnitude: `-${formatNumber(effect.count)}`,
+        magnitude: `−${formatNumber(effect.count)}`,
         subject: effect.count === 1 ? "pop" : "pops",
       });
     case "loseResource":
       return carve("negative", {
-        magnitude: `-${formatNumber(effect.amount)}`,
+        magnitude: `−${formatNumber(effect.amount)}`,
         subject: RESOURCE_LABELS[effect.resource],
         condition: effect.popLossIfShort
-          ? `(short: -${formatNumber(effect.popLossIfShort)} pop)`
+          ? `(short: −${formatNumber(effect.popLossIfShort)} pop)`
           : undefined,
       });
     case "destroyBuilding":
-      return carve("negative", { magnitude: "-1", subject: "building" });
+      return carve("negative", { magnitude: "−1", subject: "building" });
     case "gainResource":
       return carve("positive", {
         magnitude: `+${formatNumber(effect.amount)}`,
@@ -370,7 +370,7 @@ export function presentDirectiveEffect(effect: DirectiveEffect): EffectPresentat
       return presentUnrestToken(effect.change, "the target's realm");
     case "losePopFromLargest":
       return {
-        text: `-${formatNumber(effect.count)} ${effect.count === 1 ? "pop" : "pops"} from largest settlement`,
+        text: `−${formatNumber(effect.count)} ${effect.count === 1 ? "pop" : "pops"} from largest settlement`,
         tone: "negative",
       };
     case "suppressIncome":
@@ -453,15 +453,38 @@ export const YEAR_TERM_LABELS: Record<YearTerm, string> = {
   luxuryHappiness: "Luxuries give no happiness",
 };
 
-/** The clock's compact effect line; the year counter and tooltip give its duration. */
+/** What each zeroed term strikes, carved as the year card's subject. */
+const YEAR_TERM_NOUNS: Record<YearTerm, string> = {
+  plainsFood: "Plains food",
+  forestWood: "Forest wood",
+  mountainStone: "Mountain stone",
+  freemenGold: "Freemen gold",
+  citizenInfluence: "Citizen influence",
+  luxuryHappiness: "Luxury happiness",
+};
+
+/** The year card's rule: its flat line, and the three ranks the ceremony carves. */
 export function presentYearCard(card: YearCard): EffectPresentation {
   if (card.effect.type === "zeroTerm") {
-    return { text: YEAR_TERM_LABELS[card.effect.term], tone: "negative" };
+    const { term } = card.effect;
+    return carve(
+      "negative",
+      { magnitude: "0", subject: YEAR_TERM_NOUNS[term], condition: "for the whole year" },
+      YEAR_TERM_LABELS[term],
+    );
   }
 
   return card.effect.change === "placeOne"
-    ? { text: "Everyone places an Unrest token", tone: "negative" }
-    : { text: "Everyone clears their Unrest tokens", tone: "positive" };
+    ? carve(
+        "negative",
+        { magnitude: "+1", subject: "Unrest token", condition: "on every realm, now" },
+        "Everyone places an Unrest token",
+      )
+    : carve(
+        "positive",
+        { magnitude: "0", subject: "Unrest tokens", condition: "every realm clears them" },
+        "Everyone clears their Unrest tokens",
+      );
 }
 
 /** The riot and revolt in words, from the engine's outcome (`unrestOutcome`) and the

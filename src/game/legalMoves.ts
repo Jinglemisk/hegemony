@@ -1,5 +1,11 @@
 import { produce } from "immer";
-import { getNationalIdeas, getTakeIdeaStatus, ideaPopTargets, takeNationalIdea } from "./ideas";
+import {
+  getNationalIdeas,
+  getTakeIdeaStatus,
+  ideaPopTargets,
+  ideaTakesPop,
+  takeNationalIdea,
+} from "./ideas";
 import type { NationalIdeaId, IdeaPopChoice } from "./ideaTypes";
 import {
   buildBuilding,
@@ -909,9 +915,7 @@ function enumerateIdeaCommands(
 ): DerivedCommand[] {
   if (!getTakeIdeaStatus(G, playerID).can) return [];
   return getNationalIdeas(G).flatMap((idea) => {
-    const targets = idea.effects.some((e) => e.type === "acquirePop")
-      ? ideaPopTargets(G, playerID)
-      : [undefined];
+    const targets = ideaTakesPop(idea) ? ideaPopTargets(G, playerID) : [undefined];
     return targets.flatMap((target) => {
       const status = getTakeIdeaStatus(G, playerID, idea.id, target);
       return status.can

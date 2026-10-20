@@ -11,7 +11,8 @@ import {
 } from "../../game/settlement";
 import { buildingGround } from "../../game/status";
 import type { HegemonyState, HexTile, PopType, Resource, Settlement } from "../../game/types";
-import { BUILDING_ICON, RESOURCE_ICON, sign } from "../../ui/frameFormat";
+import { sign } from "../../ui/frameFormat";
+import { BUILDING_RASTERS, POP_RASTERS, RESOURCE_RASTERS } from "../../ui/iconRegistry";
 import { getLuxuryGood } from "../../game/content";
 import { presentBuildingEffects } from "../../ui/effects";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
@@ -19,9 +20,9 @@ import { Ico } from "./parts";
 import { PlaceSeal } from "./realm/PlaceSeal";
 
 const COLUMNS: Array<{ pop: PopType; label: string; icon: string }> = [
-  { pop: "slaves", label: "Slaves", icon: "pops/slaves" },
-  { pop: "freemen", label: "Freemen", icon: "pops/freemen" },
-  { pop: "citizens", label: "Citizens", icon: "pops/citizens" },
+  { pop: "slaves", label: "Slaves", icon: POP_RASTERS.slaves },
+  { pop: "freemen", label: "Freemen", icon: POP_RASTERS.freemen },
+  { pop: "citizens", label: "Citizens", icon: POP_RASTERS.citizens },
 ];
 
 const nonZero = (income: Record<Resource, number>) =>
@@ -118,7 +119,7 @@ export function SettlementPage({
                   made.map(([resource, n]) => (
                     <span className="col-yield-i" key={resource}>
                       <b>{sign(n)}</b>
-                      <Ico path={RESOURCE_ICON[resource]} size="chip" />
+                      <Ico path={RESOURCE_RASTERS[resource]} size="chip" />
                     </span>
                   ))
                 )}
@@ -140,17 +141,16 @@ export function SettlementPage({
             .filter((asset) => asset.claimedAtSettlementId === settlement.id)
             .map((asset) => getLuxuryGood(G.definition.content, asset.goodId)?.name ?? asset.goodId)
             .join(", ");
-          const fact =
-            id === "port"
+          const fact = !building
+            ? ""
+            : building.claimsLuxury
               ? claimed
                 ? `Claims ${claimed}`
                 : "Its claim is gone"
-              : building
-                ? presentBuildingEffects(building.effects).text
-                : "";
+              : presentBuildingEffects(building.effects).text;
           return (
             <li className="g-line" data-c="settle-line" key={`${id}-${index}`}>
-              <Ico path={BUILDING_ICON[id] ?? "buildings/build"} size="ui" />
+              <Ico path={BUILDING_RASTERS[id]} size="ui" />
               {building?.name ?? id}
               {fact ? <span>{fact}</span> : null}
             </li>
