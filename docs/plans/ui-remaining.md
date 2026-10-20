@@ -2,7 +2,7 @@
 title: UI — what is genuinely left
 status: active
 phase: "—"
-updated: 2026-10-19
+updated: 2026-10-20
 ---
 
 # UI — what is genuinely left
@@ -34,16 +34,26 @@ resource chips, two token tables) are scheduled in the
 
 ## The list
 
-| ID       | needs      | what                                          |
-| -------- | ---------- | --------------------------------------------- |
-| `TYPE-1` | a decision | Two type sizes sit under spec, on purpose     |
-| `DUP-1`  | nothing    | Four repeated glossary words, judged and left |
-| `V2-3`   | nothing    | A shared tile's second seal has no name plate |
+| ID        | needs      | what                                               |
+| --------- | ---------- | -------------------------------------------------- |
+| `TYPE-1`  | a decision | Two type sizes sit under spec, on purpose          |
+| `DUP-1`   | nothing    | Four repeated glossary words, judged and left      |
+| `V2-3`    | nothing    | A shared tile's second seal has no name plate      |
+| `DELTA-1` | a build    | A change from x to y shows its direction in colour |
 
 ### v2 frame carry-overs (Steps 1–2, 2026-09-30 to 10-01)
 
 - **`V2-3`.** A rival colony sharing a tile draws as a small seal on the tile's
   shoulder; its name is in the tile tooltip. Two plates side by side do not fit a hex.
+
+### Owner note (2026-10-20)
+
+- **`DELTA-1` · a change shows its direction in colour.** Wherever the UI shows a value
+  changing from x to y, x stays in normal ink and y turns green when the change helps the
+  player, red when it hurts. Which way helps comes from the rule, not the sign: a pop's price
+  going down is green, happiness going down is red. Surfaces today: effective costs against
+  the printed price, the Assembly's directive effects, the year card's happiness line, the
+  upgrade card's pop cap, the Ladder popover and the riot loss lines.
 
 ### Shipped or closed
 
