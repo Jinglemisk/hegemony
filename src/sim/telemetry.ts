@@ -545,7 +545,8 @@ export type BatchReport = {
    *  on it, and the same counts year by year, so a report can cut the late game. */
   riots: {
     perGame: number;
-    /** Revolts per game: the lower line, where half the slaves leave with no roll. */
+    /** Revolts per game: the lower line, where the ruleset's share of the slaves leave
+     *  with no roll. */
     revoltsPerGame: number;
     turnShare: number;
     byYear: RiotYearRow[];

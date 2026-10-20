@@ -14,7 +14,8 @@ import { presentUnrestOutcome } from "../../ui/effects";
 import { RESOURCE_LABELS, toRoman } from "../../ui/formatters";
 import { gaugeStops, publicCensus } from "../../ui/frameSelectors";
 import type { HappinessDisplay } from "../../ui/frameSelectors";
-import { RESOURCE_ICON, sign, tone } from "../../ui/frameFormat";
+import { sign, tone } from "../../ui/frameFormat";
+import { POP_RASTERS, RESOURCE_RASTERS } from "../../ui/iconRegistry";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { settlementNames } from "../../ui/settlementNames";
 import { Tooltip } from "../overlays/Tooltip";
@@ -103,7 +104,7 @@ function ResourceCell({
       focusable
       triggerClassName={`res${short ? " is-short" : ""}`}
     >
-      <Ico path={RESOURCE_ICON[resource]} size="ui" />
+      <Ico path={RESOURCE_RASTERS[resource]} size="ui" />
       <span className="res-val num">{owed ? sign(value) : value}</span>
       <span className={`res-delta ${tone(delta)}`}>{sign(delta)}</span>
     </Tooltip>
@@ -157,7 +158,7 @@ export function HappinessGauge({
       focusable
       triggerClassName={`level${atRiot ? " is-riot" : ""}`}
     >
-      <Ico path={RESOURCE_ICON.happiness} size="ui" />
+      <Ico path={RESOURCE_RASTERS.happiness} size="ui" />
       <span className={`res-val num ${tone(display.value)}`}>{sign(display.value)}</span>
       <span
         className="gauge"
@@ -209,16 +210,16 @@ function Rival({
         <Tip sub={`${glaze.glaze}${status ? ` · ${status}` : ""}`} title={glaze.name}>
           <TipLedger
             rows={[
-              { key: "s", label: "Slaves", value: census.slaves, icon: "pops/slaves" },
-              { key: "f", label: "Freemen", value: census.freemen, icon: "pops/freemen" },
-              { key: "c", label: "Citizens", value: census.citizens, icon: "pops/citizens" },
+              { key: "s", label: "Slaves", value: census.slaves, icon: POP_RASTERS.slaves },
+              { key: "f", label: "Freemen", value: census.freemen, icon: POP_RASTERS.freemen },
+              { key: "c", label: "Citizens", value: census.citizens, icon: POP_RASTERS.citizens },
               { key: "ci", label: "Cities", value: census.cities, icon: "settlements/city" },
               { key: "co", label: "Colonies", value: census.colonies, icon: "settlements/colony" },
               {
                 key: "hap",
                 label: "Happiness",
                 value: happinessLevel(G, id),
-                icon: "resources/happiness",
+                icon: RESOURCE_RASTERS.happiness,
               },
               {
                 key: "laws",
@@ -247,7 +248,7 @@ function Rival({
         style={{ "--owner": glaze.color } as CSSProperties}
         type="button"
       >
-        <span className={`rival-disc${id === "1" ? " ink-dark" : ""}`}>{glaze.blazon}</span>
+        <span className={`rival-disc${glaze.inkDark ? " ink-dark" : ""}`}>{glaze.blazon}</span>
       </button>
     </Tooltip>
   );

@@ -1,6 +1,5 @@
 import { EMPTY_RESOURCES } from "../../game/data";
 import { capitalize } from "../../game/core/format";
-import type { Phase } from "../../client/controller";
 import type { ActionStatus } from "../../game/rules";
 import {
   POP_TYPES,
@@ -105,27 +104,15 @@ export function getBuildingBenefitText(
   return deltaText === "none" ? presentBuildingEffects(building.effects).text : deltaText;
 }
 
-export function actionRequirementText(status: ActionStatus | null, phase?: Phase, isActive = true) {
-  if (!isActive) {
-    return "Current player's turn only.";
-  }
-
-  if (phase !== "gameplay") {
-    return "Gameplay only.";
-  }
-
-  return status?.reasons.length ? status.reasons.join(" ") : "Available.";
+/** A map popover's reason: the turn gate's (`turnBlocked`) first, then the engine's. */
+export function actionRequirementText(status: ActionStatus | null, blocked: string | null) {
+  return blocked ?? (status?.reasons.length ? status.reasons.join(" ") : "Available.");
 }
 
 /** The shared "can this act fire right now" gate for the map popovers' confirm buttons:
- *  the action is legal, it is the viewer's turn, and we are in gameplay. Was restated
- *  verbatim at four call sites (post-sprint-debt §5.4). */
-export function gameplayActionDisabled(
-  status: ActionStatus | null,
-  phase?: Phase,
-  isActive = true,
-) {
-  return !status?.can || !isActive || phase !== "gameplay";
+ *  the action is legal and the turn gate (`turnBlocked`) is open. */
+export function gameplayActionDisabled(status: ActionStatus | null, blocked: string | null) {
+  return !status?.can || blocked !== null;
 }
 
 /** One consistent line for every settlement picker: the place's NAME and rank,
@@ -145,7 +132,7 @@ export function settlementPickerLabel(G: HegemonyState, tile: HexTile, ownerID: 
   return `${name}${kind ? ` · ${kind}` : ""} · ${capitalize(tile.terrain)}, ${slotText}${shared}`;
 }
 
-export function createEmptyResources(): Resources {
+function createEmptyResources(): Resources {
   return { ...EMPTY_RESOURCES };
 }
 

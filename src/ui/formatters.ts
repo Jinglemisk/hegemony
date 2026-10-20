@@ -1,7 +1,15 @@
 import { getAuthoredGameContent, getBuilding } from "../game/content";
 import type { GameContent } from "../game/content";
 import { formatPopName, formatRuleNumber } from "../game/core/format";
-import type { BuildingId, PopType, Resource, Resources, Stat } from "../game/types";
+import type {
+  BuildingId,
+  HegemonyState,
+  PlayerId,
+  PopType,
+  Resource,
+  Resources,
+  Stat,
+} from "../game/types";
 
 export const RESOURCE_LABELS: Record<Stat, string> = {
   wood: "Wood",
@@ -45,8 +53,10 @@ export function formatResourceDelta(resources: Resources) {
     .join(", ");
 }
 
+/** "+3", "−2": the minus is U+2212. */
 export function formatSignedNumber(amount: number) {
-  return amount > 0 ? `+${formatNumber(amount)}` : formatNumber(amount);
+  const value = formatNumber(amount).replace("-", "−");
+  return amount > 0 ? `+${value}` : value;
 }
 
 /** UI-facing alias for the engine's numeric formatter — one rounding/trim rule for the
@@ -77,9 +87,31 @@ const ROMAN: readonly (readonly [number, string])[] = [
   [1, "I"],
 ];
 
+const NUMBER_WORD = [
+  "no",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+];
+/** Small counts as words, larger ones as numerals. */
+export const numberWord = (n: number) => NUMBER_WORD[n] ?? formatNumber(n);
+
 /** "Demos, Civic Elite and Voice". */
 export const listed = (names: string[]) =>
   names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
+
+/** A seat as the viewer reads it: "you" for their own ("You" to open a sentence),
+ *  otherwise the seat's name. */
+export function seatName(G: HegemonyState, id: PlayerId, viewer: PlayerId, capital = false) {
+  return id === viewer ? (capital ? "You" : "you") : G.players[id].name;
+}
 
 export function toRoman(value: number): string {
   let remaining = Math.max(0, Math.floor(value));

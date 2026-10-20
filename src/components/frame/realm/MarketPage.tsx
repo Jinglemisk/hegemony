@@ -1,6 +1,6 @@
 import { TRADABLE_MATERIALS, getBankBuyStatus, getBankSellStatus } from "../../../game/rules";
 import type { TradableMaterial } from "../../../game/types";
-import { RESOURCE_ICON } from "../../../ui/frameFormat";
+import { RESOURCE_RASTERS } from "../../../ui/iconRegistry";
 import { useGameUi } from "../../board/GameUiContext";
 import { Tooltip } from "../../overlays/Tooltip";
 import { Ico, Tip } from "../parts";
@@ -28,9 +28,9 @@ export function MarketPage({
   onBankSell: (material: TradableMaterial) => void;
   onBankBuy: (material: TradableMaterial) => void;
 }) {
-  const { G, viewerId: playerID, phase, isActive } = useGameUi();
+  const { G, viewerId: playerID, turnBlocked } = useGameUi();
   const store = G.players[playerID].resources;
-  const open = isActive && phase === "gameplay";
+  const open = turnBlocked === null;
 
   return (
     <>
@@ -38,7 +38,7 @@ export function MarketPage({
         <span className="caps">The bank&rsquo;s standing rates</span>
         <span className="treasury">
           <span className="caps">Treasury</span>
-          <Ico path={RESOURCE_ICON.gold} size="chip" />
+          <Ico path={RESOURCE_RASTERS.gold} size="chip" />
           <b className="num">{store.gold}</b>
         </span>
       </div>
@@ -55,7 +55,7 @@ export function MarketPage({
 
           return (
             <div className={`mk-row${deficit ? " is-deficit" : ""}`} key={material}>
-              <Ico path={RESOURCE_ICON[material]} size="ui" />
+              <Ico path={RESOURCE_RASTERS[material]} size="ui" />
               <span className="held">
                 <b className="num">{held}</b>
                 <span className="caps">{deficit ? "deficit" : "held"}</span>
@@ -66,7 +66,9 @@ export function MarketPage({
                     <p className="tip-body">
                       The bank pays 1 gold for {sellAmount} {material}.
                     </p>
-                    {canSell ? null : <p className="tip-body">{sell.reasons.join(" ")}</p>}
+                    {canSell ? null : (
+                      <p className="tip-body">{turnBlocked ?? sell.reasons.join(" ")}</p>
+                    )}
                   </Tip>
                 }
                 triggerClassName="trade-trigger"
@@ -83,9 +85,9 @@ export function MarketPage({
                     sell
                   </span>
                   <Rate
-                    getIcon={RESOURCE_ICON.gold}
+                    getIcon={RESOURCE_RASTERS.gold}
                     give={sellAmount}
-                    giveIcon={RESOURCE_ICON[material]}
+                    giveIcon={RESOURCE_RASTERS[material]}
                   />
                 </button>
               </Tooltip>
@@ -95,7 +97,9 @@ export function MarketPage({
                     <p className="tip-body">
                       The bank asks {buyAmount} gold for 1 {material}.
                     </p>
-                    {canBuy ? null : <p className="tip-body">{buy.reasons.join(" ")}</p>}
+                    {canBuy ? null : (
+                      <p className="tip-body">{turnBlocked ?? buy.reasons.join(" ")}</p>
+                    )}
                   </Tip>
                 }
                 triggerClassName="trade-trigger"
@@ -112,9 +116,9 @@ export function MarketPage({
                     buy
                   </span>
                   <Rate
-                    getIcon={RESOURCE_ICON[material]}
+                    getIcon={RESOURCE_RASTERS[material]}
                     give={buyAmount}
-                    giveIcon={RESOURCE_ICON.gold}
+                    giveIcon={RESOURCE_RASTERS.gold}
                   />
                 </button>
               </Tooltip>

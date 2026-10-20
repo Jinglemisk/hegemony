@@ -54,7 +54,7 @@ describe("verb fans", () => {
       playerID: "0",
       phase: "gameplay",
       isActive: true,
-      hasPendingPlayerEvent: false,
+      pending: null,
       canGrowPops: has("growPop"),
       canMovePops: has("movePops"),
       canFoundColony: has("foundColony"),

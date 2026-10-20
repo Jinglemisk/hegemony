@@ -5,6 +5,7 @@ import {
   getLuxuryGood,
   luxuryHappinessBonus,
   ownedClaims,
+  realmPops,
   settlementCapacity,
   totalPops,
 } from "../../game/rules";
@@ -20,6 +21,7 @@ import type {
   TradableMaterial,
 } from "../../game/types";
 import { victoryCardsHeld } from "../../game/victory";
+import { LUXURY_RASTER } from "../../ui/iconRegistry";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { settlementNames } from "../../ui/settlementNames";
 import { useGameUi } from "../board/GameUiContext";
@@ -67,8 +69,8 @@ export type RealmTab = LedgerTab | "subject";
 
 const TABS: Array<{ tab: LedgerTab; label: string }> = [
   { tab: "cities", label: "Cities" },
-  { tab: "pops", label: "Ladder" },
-  { tab: "buildings", label: "Build" },
+  { tab: "ladder", label: "Ladder" },
+  { tab: "build", label: "Build" },
   { tab: "market", label: "Market" },
 ];
 
@@ -115,7 +117,7 @@ export function RealmPanel({
   const glaze = PLAYER_GLAZES[viewerId];
   const holdings = getOwnedHoldings(G, viewerId);
   const cities = holdings.filter(({ settlement }) => settlement.kind !== "colony").length;
-  const pops = holdings.reduce((sum, { settlement }) => sum + totalPops(settlement.pops), 0);
+  const pops = totalPops(realmPops(G, viewerId));
   const capacity = holdings.reduce(
     (sum, { settlement }) => sum + settlementCapacity(settlement, G),
     0,
@@ -133,7 +135,7 @@ export function RealmPanel({
   };
   const raise = (tileId: string) => {
     setBuildTarget(tileId);
-    onTab("buildings");
+    onTab("build");
   };
   const subjectTab =
     view.kind === "realm"
@@ -148,7 +150,7 @@ export function RealmPanel({
           : view.kind === "land"
             ? { icon: `terrain/${view.tile.terrain}`, label: capitalize(view.tile.terrain) }
             : {
-                icon: "events/voyage",
+                icon: LUXURY_RASTER,
                 label: getLuxuryGood(G.definition.content, view.asset.goodId)?.name ?? "Good",
               };
 
@@ -194,7 +196,7 @@ export function RealmPanel({
                 className="meta-i"
                 title={`${active.length} of ${claims.length} luxury goods active, +${luxuryHappinessBonus(G, viewerId)} happiness`}
               >
-                <Ico path="events/voyage" size="chip" />
+                <Ico path={LUXURY_RASTER} size="chip" />
                 <b className="num">{active.length}</b>/{claims.length}
               </span>
             ) : null}
@@ -247,10 +249,10 @@ export function RealmPanel({
           {tab === "cities" ? (
             <CitiesPage holdings={holdings} onOpen={open} onRaise={raise} openTileId={openTileId} />
           ) : null}
-          {tab === "pops" ? (
+          {tab === "ladder" ? (
             <LadderPage holdings={holdings} income={income} onLadderRequest={onLadderRequest} />
           ) : null}
-          {tab === "buildings" ? (
+          {tab === "build" ? (
             <BuildPage
               holdings={holdings}
               onBuildBuildingRequest={onBuildBuildingRequest}

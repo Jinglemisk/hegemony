@@ -248,7 +248,6 @@ describe("frontend active-effect parity", () => {
         warning: endTurnWarning(G, "0"),
         unrest: turnEndUnrest(G, "0"),
         ruleset: G.ruleset,
-        confirmOpen: true,
         onEndTurn: () => {},
         onCalm: () => {},
       }),
@@ -256,9 +255,6 @@ describe("frontend active-effect parity", () => {
     expect(html).toContain(`Starts ${consequence}`);
     expect(html).toContain(`Ending now starts a ${consequence} at −${-level}.`);
     expect(html).toContain("is-danger");
-    // The hold opens the confirm at the line, with the plain choice to face it.
-    expect(html).toContain(`the ${consequence} line`);
-    expect(html).toContain(consequence === "riot" ? "Face the riot" : "Revolt");
   });
 
   it("keeps the riot result with its owner after the next turn opens", () => {
@@ -280,7 +276,7 @@ describe("frontend active-effect parity", () => {
             activeEffects: [],
             phase: G.phase,
             isActive: false,
-            hasPendingPlayerEvent: true,
+            turnBlocked: "Current player's turn only.",
             moves: createCommandMoves(dispatch),
             events: createCommandEvents(dispatch),
           },

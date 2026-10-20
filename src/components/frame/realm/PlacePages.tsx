@@ -6,12 +6,11 @@ import {
 } from "../../../game/rules";
 import { isCoastalTile } from "../../../game/map";
 import type { HexTile, LuxuryAsset } from "../../../game/types";
-import { RESOURCE_ICON } from "../../../ui/frameFormat";
+import { BUILDING_RASTERS, LUXURY_RASTER, RESOURCE_RASTERS } from "../../../ui/iconRegistry";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { settlementNames } from "../../../ui/settlementNames";
 import { ActionButton } from "../../ActionButton";
 import { useGameUi } from "../../board/GameUiContext";
-import { actionRequirementText } from "../../board/helpers";
 import { Chips, Ico } from "../parts";
 
 /** A tile as a place: its settlement's name if it has one, else its ground. */
@@ -25,13 +24,14 @@ function placeName(tile: HexTile, names: Map<string, string>) {
  * moored off it, and the act of founding a colony on it.
  */
 export function TilePage({ tile, onFound }: { tile: HexTile; onFound: (tileId: string) => void }) {
-  const { G, viewerId, phase, isActive } = useGameUi();
+  const { G, viewerId, turnBlocked } = useGameUi();
   const capacity = settlementPopCapacity("colony", G);
   const column = tileSlaveColumn(G, tile);
   const coastal = isCoastalTile(tile, G.board.tiles);
   const goods = G.board.luxuries.filter((asset) => asset.tileIds.includes(tile.id));
   const found = getFoundColonyStatus(G, viewerId, tile.id);
-  const can = found.can && isActive && phase === "gameplay";
+  const can = found.can && turnBlocked === null;
+  const reason = turnBlocked ?? found.reasons.join(" ");
 
   return (
     <>
@@ -70,7 +70,7 @@ export function TilePage({ tile, onFound }: { tile: HexTile; onFound: (tileId: s
           </span>
         </li>
         <li className="g-line">
-          <Ico path="events/voyage" size="ui" />
+          <Ico path={LUXURY_RASTER} size="ui" />
           Goods
           <span>
             {goods.length > 0
@@ -83,7 +83,7 @@ export function TilePage({ tile, onFound }: { tile: HexTile; onFound: (tileId: s
       </ul>
       <div className="act-line">
         <ActionButton
-          blockedReason={actionRequirementText(found, phase, isActive)}
+          blockedReason={reason}
           className="act-btn"
           effectiveCost={found.cost}
           enabled={can}
@@ -94,11 +94,7 @@ export function TilePage({ tile, onFound }: { tile: HexTile; onFound: (tileId: s
           Found a colony here
           {found.cost ? <Chips amounts={found.cost} /> : null}
         </ActionButton>
-        {can ? null : (
-          <span className="cap">
-            {!isActive ? "not your turn" : (found.reasons[0] ?? "not in this phase")}
-          </span>
-        )}
+        {can ? null : <span className="cap">{reason}</span>}
       </div>
     </>
   );
@@ -139,7 +135,7 @@ export function LuxuryPage({ asset }: { asset: LuxuryAsset }) {
     <>
       <p className="settle-meta caps">
         <span className="meta-i">
-          <Ico path="events/voyage" size="chip" />
+          <Ico path={LUXURY_RASTER} size="chip" />
           luxury good
         </span>
         <span className="meta-i">{holder ? `held by ${holder.name}` : "unclaimed"}</span>
@@ -147,14 +143,14 @@ export function LuxuryPage({ asset }: { asset: LuxuryAsset }) {
       <p className="lore">{good ? `${good.name}: ${good.flavour}.` : "A luxury good."}</p>
       <ul className="ground">
         <li className="g-line is-wide">
-          <Ico path={RESOURCE_ICON.happiness} size="ui" />
+          <Ico path={RESOURCE_RASTERS.happiness} size="ui" />
           Worth
           <span>
             <b>+{rules.happinessPerGood}</b> happiness while active
           </span>
         </li>
         <li className="g-line is-wide">
-          <Ico path="events/voyage" size="ui" />
+          <Ico path={BUILDING_RASTERS.port} size="ui" />
           Won by
           <span>a Port at {shores.join(" or ")}</span>
         </li>

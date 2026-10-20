@@ -20,6 +20,8 @@ import { standingHappiness } from "./happiness";
 export interface VictoryCardDefinition {
   id: string;
   name: string;
+  /** The name in rows that list several titles, where `name` runs long. */
+  shortName?: string;
   metric: VictoryMetric;
   /** Player-facing summary; the minimum is appended from the ruleset at display time. */
   description: string;
@@ -43,12 +45,14 @@ export const VICTORY_CARDS: VictoryCardDefinition[] = [
   {
     id: "beloved",
     name: "Beloved of the People",
+    shortName: "Beloved",
     metric: "happiness",
     description: "Highest happiness",
   },
   {
     id: "voice",
     name: "Voice of the Assembly",
+    shortName: "Voice",
     metric: "voice",
     description: "Most standing Laws authored",
   },

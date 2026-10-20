@@ -18,7 +18,8 @@ import {
   getLuxuryGoods,
   getTerrainDeck,
 } from "../../../game/rules";
-import { POLITICIANS, isPriceLaw } from "../../../game/assembly";
+import { POLITICIANS, isHappinessLaw, isPriceLaw } from "../../../game/assembly";
+import { DEFAULT_RULESET } from "../../../game/ruleset";
 import { VICTORY_CARDS } from "../../../game/victory";
 import type {
   BuildingDefinition,
@@ -29,10 +30,23 @@ import type {
   SettlementKind,
   Terrain,
 } from "../../../game/types";
-import { presentBuildingEffects, presentUnrestOutcome, tieRule } from "../../../ui/effects";
-import { RESOURCE_LABELS, formatPopLabel, formatResourceCost } from "../../../ui/formatters";
+import {
+  presentBuildingEffects,
+  presentLawEffect,
+  presentUnrestOutcome,
+  tieRule,
+} from "../../../ui/effects";
+import {
+  RESOURCE_LABELS,
+  formatPopLabel,
+  formatResourceCost,
+  formatSignedNumber,
+  listed,
+  numberWord,
+} from "../../../ui/formatters";
 import { RESOURCE_ORDER, resourceCssVars } from "../../../ui/resourceVisuals";
 import { AnnotatedText } from "../../AnnotatedText";
+import { EffectLine } from "../../EffectLine";
 import { ResourceIcon } from "../../Sprites";
 import { eventCardArtUrl } from "../events";
 import { capitalize } from "../helpers";
@@ -66,14 +80,6 @@ export type RuleChapter = {
 };
 
 const anchor = (chapter: string, sub: string) => `codex-${chapter}-${sub}`;
-
-/** Prose counts a roster rather than quoting it: "six public victory cards" was a
- *  hand-typed six sitting next to a table of cards that could grow or shrink. */
-const SPELLED = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
-
-function spell(count: number): string {
-  return SPELLED[count] ?? String(count);
-}
 
 // ── shared render helpers ────────────────────────────────────────────────────
 
@@ -187,8 +193,8 @@ const victory: RuleChapter = {
       <div className="compendiumStack">
         <Entry id={anchor("victory", "race")} title="The race">
           <Note>
-            There are {spell(VICTORY_CARDS.length)} public victory cards, each awarded to the sole
-            leader in one measure. Hold <strong>{victory.cardsToWin}</strong> of them at the{" "}
+            There are {numberWord(VICTORY_CARDS.length)} public victory cards, each awarded to the
+            sole leader in one measure. Hold <strong>{victory.cardsToWin}</strong> of them at the{" "}
             <em>start of your own turn</em> and you win at once. A tie awards nothing, and every
             card can be taken back: each reads what stands on the board now.
           </Note>
@@ -245,9 +251,9 @@ const board: RuleChapter = {
         <Note>
           The island is a field of hexes ringed by sea. A land tile prints its terrain and a number
           of <em>slots</em>, nothing else. The slots are one pool: each building takes one, and each
-          open slot holds one working slave, who makes 1 of the terrain's resource. Slaves beyond
-          the open slots sit idle. Two colonies on one tile split its slots, and the colony founded
-          first takes the odd one.
+          open slot holds one working slave, who makes {G.ruleset.popIncome.slaves.primaryResource}{" "}
+          of the terrain's resource. Slaves beyond the open slots sit idle. Two colonies on one tile
+          split its slots, and the colony founded first takes the odd one.
         </Note>
         <ul className="compendiumCostList">
           {terrainSummary(G).map((row) => (
@@ -377,8 +383,9 @@ const population: RuleChapter = {
         </DefList>
         <Note>
           One pop, one output. A slave on an open slot makes the tile's resource and eats nothing; a
-          freeman makes gold and a citizen influence, and each eats 1 food. Citizens are never
-          grown: every citizen after setup is a promoted freeman.
+          freeman makes gold and eats {-(G.ruleset.popIncome.freemen.flat.food ?? 0)} food, a
+          citizen makes influence and eats {-(G.ruleset.popIncome.citizens.flat.food ?? 0)} food.
+          Citizens are never grown: every citizen after setup is a promoted freeman.
         </Note>
       </Entry>
       <Entry id={anchor("population", "capacity")} title="Capacity">
@@ -725,21 +732,42 @@ const unrest: RuleChapter = {
   Body: ({ G }) => {
     const u = G.ruleset.economy.unrest;
     const calm = G.ruleset.civicCalm;
+    const content = G.definition.content;
+    // The level's terms named from the content: the buildings that state happiness, the
+    // Laws that add a line of their own, and the year cards that clear every token.
+    const buildingTerms = getBuildings(content).flatMap((building) =>
+      building.effects.flatMap((effect) =>
+        effect.type === "happiness"
+          ? [`${formatSignedNumber(effect.amount)} for every ${building.name}`]
+          : [],
+      ),
+    );
+    const happinessLaws = getResolutionCards(content)
+      .filter(isHappinessLaw)
+      .map((card) => card.name)
+      .sort();
+    const clearAll = getYearCards(content)
+      .filter((card) => card.effect.type === "unrestTokens" && card.effect.change === "clearAll")
+      .map((card) => card.name);
     return (
       <div className="compendiumStack">
         <Entry id={anchor("unrest", "pressure")} title="The level">
           <Note>
-            Happiness is a level you read off the board, and nothing is saved up. Count +1 for every
-            Temple and +{G.ruleset.economy.luxury.happinessPerGood} for every luxury, then take 1
-            for every {G.ruleset.economy.slavesPerUnhappiness} slaves in your realm, those on the
-            move included, and 1 for every Unrest token. Calm bought this year adds +
-            {calm.happiness}, and a standing Law can add a line of its own (Civic Pride,
-            Manumission). If nothing on the board changes, the level is the same next turn.
+            Happiness is a level you read off the board, and nothing is saved up. Count{" "}
+            {listed([
+              ...buildingTerms,
+              `+${G.ruleset.economy.luxury.happinessPerGood} for every luxury`,
+            ])}
+            , then take 1 for every {G.ruleset.economy.slavesPerUnhappiness} slaves in your realm,
+            those on the move included, and 1 for every Unrest token. Calm bought this year adds +
+            {calm.happiness}, and a standing Law can add a line of its own (
+            {happinessLaws.join(", ")}). If nothing on the board changes, the level is the same next
+            turn.
           </Note>
           <Note>
             Unrest tokens are the one part that stays. Cards and Directives place them: a happiness
-            loss of any size places one token, and a gain clears one (Festival clears them all).
-            They cannot be bought off. A riot or a revolt clears them all.
+            loss of any size places one token, and a gain clears one ({listed(clearAll)} clears them
+            all). They cannot be bought off. A riot or a revolt clears them all.
           </Note>
           <Note>
             Hunger is separate. Your freemen and citizens eat at income, which can take your food
@@ -809,8 +837,13 @@ const years: RuleChapter = {
         <Entry id={anchor("years", "decks")} title="The decks">
           <Note>
             Most year cards strike out one term for every realm for the whole year, a class
-            building's raise included. Plague and Festival act once, on everyone, when they are
-            turned up. The <strong>player deck</strong> (
+            building's raise included.{" "}
+            {listed(
+              yearCards
+                .filter((card) => card.effect.type === "unrestTokens")
+                .map((card) => card.name),
+            )}{" "}
+            act once, on everyone, when they are turned up. The <strong>player deck</strong> (
             {countCopies(getPlayerEventCards(G.definition.content))} cards) deals you a private card
             each income.
           </Note>
@@ -942,7 +975,7 @@ const assembly: RuleChapter = {
     { id: anchor("assembly", "power"), label: "Power & patrons" },
     {
       id: anchor("assembly", "politicians"),
-      label: `The ${spell(POLITICIANS.length)} politicians`,
+      label: `The ${numberWord(POLITICIANS.length)} politicians`,
     },
   ],
   Body: ({ G }) => {
@@ -958,10 +991,10 @@ const assembly: RuleChapter = {
       <div className="compendiumStack">
         <Entry id={anchor("assembly", "when")} title="When it convenes">
           <Note>
-            The Assembly meets every {rules.everyYears === 2 ? "other" : spell(rules.everyYears)}{" "}
-            year from Year <strong>{rules.firstYear}</strong>, before the year's opener takes their
-            turn. Nothing else happens while it sits — the whole table proposes and votes, then play
-            resumes.
+            The Assembly meets every{" "}
+            {rules.everyYears === 2 ? "other" : numberWord(rules.everyYears)} year from Year{" "}
+            <strong>{rules.firstYear}</strong>, before the year's opener takes their turn. Nothing
+            else happens while it sits — the whole table proposes and votes, then play resumes.
           </Note>
           <Note>
             This is what <AnnotatedText text="Influence" /> is for. Everything the Assembly asks of
@@ -1027,9 +1060,9 @@ const assembly: RuleChapter = {
               Stratokles by hand. */}
           <Note>
             A resolution is not a one-year buff — it changes how the game is played.{" "}
-            {capitalize(spell(lawmakers.length))} of the {spell(POLITICIANS.length)} politicians
-            deal in <strong>Laws</strong>: table-wide rules that stand until repealed, each carrying
-            a trade-off, so a vote is a referendum on which strategy the table backs.
+            {capitalize(numberWord(lawmakers.length))} of the {numberWord(POLITICIANS.length)}{" "}
+            politicians deal in <strong>Laws</strong>: table-wide rules that stand until repealed,
+            each carrying a trade-off, so a vote is a referendum on which strategy the table backs.
           </Note>
           <Note>
             {directivemakers.length === 1 ? "The other, " : "The others, "}
@@ -1074,7 +1107,7 @@ const assembly: RuleChapter = {
 
         <Entry
           id={anchor("assembly", "politicians")}
-          title={`The ${spell(POLITICIANS.length)} politicians`}
+          title={`The ${numberWord(POLITICIANS.length)} politicians`}
         >
           <div className="ruleDefList">
             {POLITICIANS.map((politician) => {
@@ -1117,7 +1150,8 @@ const ideas: RuleChapter = {
   id: "ideas",
   title: "National Ideas",
   icon: "assembly/stele",
-  blurb: "One setup choice and one influence purchase.",
+  // The search index is built once, before any game, so the blurb reads the default ruleset.
+  blurb: `One setup choice and ${numberWord(DEFAULT_RULESET.ideas.purchases)} influence ${DEFAULT_RULESET.ideas.purchases === 1 ? "purchase" : "purchases"}.`,
   keywords: ["Idea", "setup", "Civic", "asymmetry"],
   entries: [{ id: anchor("ideas", "roster"), label: "The Ideas" }],
   Body: ({ G }) => (
@@ -1139,7 +1173,14 @@ const ideas: RuleChapter = {
               <dt>
                 <strong>{idea.name}</strong>
               </dt>
-              <dd>{idea.text}</dd>
+              <dd>
+                {idea.effects.map((effect, index) => (
+                  <EffectLine
+                    effect={presentLawEffect(effect, G.ruleset, G.definition.content)}
+                    key={index}
+                  />
+                ))}
+              </dd>
             </div>
           ))}
         </dl>

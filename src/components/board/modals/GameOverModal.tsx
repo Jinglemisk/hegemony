@@ -1,8 +1,9 @@
 import { PLAYER_IDS } from "../../../game/data";
 import { ageEndRanking, victoryCardsHeld, victoryStandings } from "../../../game/victory";
 import type { HegemonyState, PlayerId } from "../../../game/types";
-import { toRoman } from "../../../ui/formatters";
-import { TITLE_SHORT, numberWord, sign } from "../../../ui/frameFormat";
+import { numberWord, toRoman } from "../../../ui/formatters";
+import { sign } from "../../../ui/frameFormat";
+import { TIEBREAK_RASTERS } from "../../../ui/iconRegistry";
 import { PLAYER_GLAZES, glazeOf } from "../../../ui/playerGlazes";
 import { Ico } from "../../frame/parts";
 import { ModalShell } from "./ModalShell";
@@ -87,7 +88,7 @@ export function GameOverModal({
                     ? held.map(({ card }) => (
                         <span className="ageTitle" key={card.id}>
                           <Ico path={`victory/${card.id}`} size="ui" />
-                          {TITLE_SHORT[card.id] ?? card.name}
+                          {card.shortName ?? card.name}
                         </span>
                       ))
                     : "no titles held"}
@@ -101,7 +102,7 @@ export function GameOverModal({
 
       {tally && tally.decidedBy !== "titles" ? (
         <p className="ageTiebreak body">
-          <Ico path={TIEBREAK_ICON[tally.decidedBy]} size="ui" />
+          <Ico path={TIEBREAK_RASTERS[tally.decidedBy]} size="ui" />
           {tiebreakLine(tally, viewerId, name)}
         </p>
       ) : null}
@@ -121,13 +122,6 @@ export function GameOverModal({
     </ModalShell>
   );
 }
-
-const TIEBREAK_ICON = {
-  titles: "victory/laurel",
-  happiness: "resources/happiness",
-  pops: "pops/crowd",
-  seat: "victory/laurel",
-} as const;
 
 /** "Tied on two titles. You win on happiness: +4 to Damon's +1." */
 function tiebreakLine(

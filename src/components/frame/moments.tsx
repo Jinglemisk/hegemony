@@ -12,6 +12,7 @@ import { getOwnedSettlement } from "../../game/core/query";
 import { titleChanges, titleHolders } from "../../game/victory";
 import type { TitleChange, TitleHolders } from "../../game/victory";
 import { presentUnrestOutcome } from "../../ui/effects";
+import { formatPopLabel, seatName } from "../../ui/formatters";
 import { settlementNameOf } from "../../ui/settlementNames";
 import { titleValue } from "../../ui/frameFormat";
 
@@ -37,12 +38,6 @@ export type Toast = {
   kicker: string;
   body: ReactNode;
   icon: string;
-};
-
-const POP_WORD: Record<PopType, [string, string]> = {
-  slaves: ["slave", "slaves"],
-  freemen: ["freeman", "freemen"],
-  citizens: ["citizen", "citizens"],
 };
 
 /** "a freeman left Argos, 2 slaves left Korone": one part per settlement and class. */
@@ -72,8 +67,7 @@ function leaveSentence(
   return joined(
     leaveParts(G, owner, leave).map(({ key, n, pop, where }, i) => (
       <span key={key}>
-        {n === 1 ? (opens && i === 0 ? "A" : "a") : n} {POP_WORD[pop][n === 1 ? 0 : 1]} left{" "}
-        <b>{where}</b>
+        {n === 1 ? (opens && i === 0 ? "A" : "a") : n} {formatPopLabel(pop, n)} left <b>{where}</b>
       </span>
     )),
   );
@@ -155,13 +149,12 @@ function presentMoment(
 
 /** A title changing hands, worded for the viewer: "You hold" for theirs. */
 function presentTitle(G: HegemonyState, viewerId: PlayerId, change: TitleChange): Toast {
-  const who = (seat: PlayerId) => (seat === viewerId ? "you" : G.players[seat].name);
   const id = `title-${change.card.id}-${change.to ?? "none"}-${G.log.length}`;
   if (!change.to) {
     return {
       id,
       about: change.from!,
-      kicker: change.from === viewerId ? "You lost a title" : `${who(change.from!)} lost a title`,
+      kicker: `${seatName(G, change.from!, viewerId, true)} lost a title`,
       icon: `victory/${change.card.id}`,
       body: (
         <>
@@ -175,7 +168,7 @@ function presentTitle(G: HegemonyState, viewerId: PlayerId, change: TitleChange)
   return {
     id,
     about: change.to,
-    kicker: change.from ? `Title taken from ${who(change.from)}` : "Title taken",
+    kicker: change.from ? `Title taken from ${seatName(G, change.from, viewerId)}` : "Title taken",
     icon: `victory/${change.card.id}`,
     body: (
       <>
@@ -197,8 +190,8 @@ function presentTitle(G: HegemonyState, viewerId: PlayerId, change: TitleChange)
 export function useMomentToasts(
   G: HegemonyState,
   viewerId: PlayerId,
-  replayFrom: number | null = null,
-  titlesFrom: HegemonyState | null = null,
+  replayFrom?: number,
+  titlesFrom?: HegemonyState,
 ) {
   const start = useRef(replayFrom ?? G.log.length);
   const cursors = useRef<Partial<Record<PlayerId, number>>>({});
@@ -250,7 +243,7 @@ export function useOwnMoment<K extends LogMoment["kind"]>(
   viewerId: PlayerId,
   kind: K,
   enabled: boolean,
-  from: number | null = null,
+  from?: number,
 ) {
   const seen = useRef(from ?? G.log.length);
   const [entry, setEntry] = useState<

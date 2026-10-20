@@ -159,7 +159,7 @@ function commandContext(G: HegemonyState): VerbContext {
     playerID: "0",
     phase: "gameplay",
     isActive: true,
-    hasPendingPlayerEvent: false,
+    pending: null,
     canGrowPops: true,
     canMovePops: true,
     canFoundColony: true,

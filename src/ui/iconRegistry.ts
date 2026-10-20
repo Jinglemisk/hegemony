@@ -1,5 +1,6 @@
 import type { ActiveEffectMechanic } from "../game/activeEffects";
 import type { DirectiveEffect, LawEffect, PoliticianId } from "../game/assembly/types";
+import type { NationalIdeaId } from "../game/ideaTypes";
 import type {
   BuildingEffect,
   BuildingId,
@@ -10,7 +11,11 @@ import type {
   SettlementKind,
   TableEffect,
   Terrain,
+  YearCard,
+  YearTerm,
 } from "../game/types";
+import type { UnrestStatus } from "../game/unrest";
+import type { ageEndRanking } from "../game/victory";
 import type { VerbId } from "../components/board/command/verbs";
 import type { GlyphId } from "./icons/glyphs";
 
@@ -259,4 +264,109 @@ export function effectGlyph(target: EffectIconTarget): GlyphId {
     case "activeMechanic":
       return ACTIVE_EFFECT_MECHANIC_GLYPHS[target.effect.type];
   }
+}
+
+/* ── The frame's rasters ─────────────────────────────────────────────────────
+   The v2 frame names its icons by `family/name` raster path (`rasterIcon`, the
+   mock's vocabulary) rather than by glyph. Its per-ID families live here, total
+   over the same unions, so a building or an Idea without a picture fails to
+   compile instead of falling back to a stand-in. `iconRegistry.test.ts` holds
+   them to the glyph families' rules: one picture per member, and a file behind
+   every path. */
+
+export const RESOURCE_RASTERS = {
+  wood: "resources/wood",
+  stone: "resources/stone",
+  food: "resources/food",
+  gold: "resources/gold",
+  influence: "resources/influence",
+  happiness: "resources/happiness",
+} as const satisfies Record<Stat, string>;
+
+/** Every luxury good wears the one picture. */
+export const LUXURY_RASTER = "resources/luxury";
+
+/** The unrest disc's tier; a calm realm shows none. */
+export const UNREST_TIER_RASTERS = {
+  discontent: "unrest/discontent",
+  unrest: "unrest/unrest",
+  revolt: "unrest/revolt",
+} as const satisfies Record<Exclude<UnrestStatus["tier"], "calm">, string>;
+
+export const POP_RASTERS = {
+  slaves: "pops/slaves",
+  freemen: "pops/freemen",
+  citizens: "pops/citizens",
+} as const satisfies Record<PopType, string>;
+
+export const BUILDING_RASTERS = {
+  marketplace: "buildings/marketplace",
+  temple: "buildings/temple",
+  granary: "buildings/granary",
+  forum: "buildings/forum",
+  estate: "buildings/estate",
+  port: "buildings/port",
+} as const satisfies Record<BuildingId, string>;
+
+/** Each National Idea's raster: the thing it gives. */
+export const IDEA_RASTERS = {
+  "good-harvest": "resources/food",
+  "public-dole": "unrest/bread-dole",
+  "urban-planning": "settlements/city",
+  "capital-works": "settlements/capital",
+  "civic-tradition": "resources/influence",
+  "frontier-charter": "settlements/colony",
+  "new-settlers": "pops/freemen",
+  "city-pioneers": "settlements/upgrade",
+  "slave-colonies": "pops/slaves",
+  "harbour-planning": "resources/luxury",
+  "treasury-grant": "resources/gold",
+  "assembly-brokers": "assembly/bribe",
+} as const satisfies Record<NationalIdeaId, string>;
+
+/** The term a year card strikes out: the land or the class that yields it. */
+export const YEAR_TERM_RASTERS = {
+  plainsFood: "terrain/plains",
+  forestWood: "terrain/forest",
+  mountainStone: "terrain/mountain",
+  freemenGold: "pops/freemen",
+  citizenInfluence: "pops/citizens",
+  luxuryHappiness: "resources/luxury",
+} as const satisfies Record<YearTerm, string>;
+
+/** What broke an age-end tie; a win on titles needs no tiebreak line. */
+export const TIEBREAK_RASTERS = {
+  happiness: "resources/happiness",
+  pops: "pops/crowd",
+  seat: "victory/laurel",
+} as const satisfies Record<
+  Exclude<ReturnType<typeof ageEndRanking>["decidedBy"], "titles">,
+  string
+>;
+
+/** An active effect's alarm disc: what the mechanic moves. */
+export const ACTIVE_EFFECT_MECHANIC_RASTERS = {
+  suppressIncome: "market/income-suppressed",
+  hunger: "resources/food",
+  zeroTerm: "events/year",
+  standingLaw: "assembly/law",
+  equalVotesNextAssembly: "assembly/vote",
+} as const satisfies Record<ActiveEffectMechanic["type"], string>;
+
+export const RASTER_REGISTRY_FAMILIES = {
+  resource: RESOURCE_RASTERS,
+  luxury: { good: LUXURY_RASTER },
+  unrestTier: UNREST_TIER_RASTERS,
+  pop: POP_RASTERS,
+  building: BUILDING_RASTERS,
+  idea: IDEA_RASTERS,
+  yearTerm: YEAR_TERM_RASTERS,
+  tiebreak: TIEBREAK_RASTERS,
+  activeEffectMechanic: ACTIVE_EFFECT_MECHANIC_RASTERS,
+} as const satisfies Record<string, Readonly<Record<string, string>>>;
+
+/** What a year card strikes, as the badge on its alarm disc and its blow's icon. */
+export function yearCardIcon(card: YearCard): string {
+  if (card.effect.type === "zeroTerm") return YEAR_TERM_RASTERS[card.effect.term];
+  return card.effect.change === "placeOne" ? "unrest/unrest" : "unrest/calm";
 }

@@ -129,6 +129,10 @@ for suppression Directives (Q48), and the tests that pin the year and player dec
 | Dev fixtures    | ~25 scenario builders and a mutable global in the controller, ungated (F9)                                                        | A dev-only module behind `import.meta.env.DEV`, passed in once                                    |
 | Leftovers       | v1 scaffolding (B14)                                                                                                              | Deleted                                                                                           |
 
+Kept on purpose: the seven dev-only props that seed a component's own state (`confirmOpen`,
+`threatOpen`, `defaultOpen`, `holdBack`, `replayFrom`, `titlesFrom`, `momentsFrom`). Removing them
+means lifting that state into the board. They now read the dev settings passed in once.
+
 ### 5. CSS cleanup
 
 | Part            | Before                                                                                                                                    | After                                                                                     |
@@ -161,8 +165,8 @@ All to `main`, before player trade slice 1, in this order:
 
 1. **Single sources** (section 1). Merged, #125.
 2. **Decision host and shared primitives** (section 2). Merged, #126.
-3. **Typed Laws, one income, one room** (section 3). Merged.
-4. **UI cleanup** (section 4).
+3. **Typed Laws, one income, one room** (section 3). Merged, #127.
+4. **UI cleanup** (section 4). Merged.
 5. **CSS cleanup** (section 5).
 
 Then trade slice 2 carries section 6, and deck slices 1 and 2 carry section 7.

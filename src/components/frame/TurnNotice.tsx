@@ -32,7 +32,7 @@ export function TurnNotice({
       onDismiss={onBegin}
     >
       <span
-        className={`turn-disc${seat === "1" ? " ink-dark" : ""}`}
+        className={`turn-disc${glaze.inkDark ? " ink-dark" : ""}`}
         style={{ "--owner": glaze.color } as CSSProperties}
       >
         {glaze.blazon}

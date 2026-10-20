@@ -30,8 +30,9 @@ export type GameUi = {
   phase: Phase;
   /** Whether the viewer may act right now. Already folds in the seat check. */
   isActive: boolean;
-  /** A drawn event blocks every verb until it is resolved. */
-  hasPendingPlayerEvent: boolean;
+  /** The turn gate (`turnBlocked`): why the viewer may not take a turn action now, or
+   *  null when they may. Every action surface reads it, so the shell gives one reason. */
+  turnBlocked: string | null;
   moves: GameMoves;
   events: GameEvents;
 };

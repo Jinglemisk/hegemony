@@ -108,9 +108,10 @@ stages: the proposal choice, the drawn card, the ballot read, the vote, an item'
 and the house rising. The ballot read and each result are shell beats the engine does
 not wait for. Minimise (or Escape) folds any stage to the dock under the ticker, where
 rivals' toasts sit otherwise; the dock or Escape restores the same stage. While the
-Assembly sits the shell only reads: the board's turn gate carries `inAssembly`, so the
-verb discs wear a lock, end turn reads "In Assembly" and the realm pages' actions are
-off.
+Assembly sits the shell only reads: the sitting is the turn gate's pending reason
+(`turnPending`, read through `turnBlocked` on the context), so the verb discs wear a lock,
+end turn reads "In Assembly" and the realm pages' and map popovers' actions show that
+reason.
 
 Every figure comes from the engine: draw, repeal and purchase status, the Law a draw
 would replace (`lawReplacementIds`), a Directive's effect on each rival

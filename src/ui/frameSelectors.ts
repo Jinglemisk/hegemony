@@ -2,9 +2,11 @@ import {
   getActiveEffects,
   getBankBuyStatus,
   happinessContributions,
-  popsInTransit,
+  happinessLevel,
+  realmPops,
   unrestOutcome,
 } from "../game/rules";
+import { capitalize } from "../game/core/format";
 import { playerDole } from "../game/ideaRules";
 import { presentUnrestOutcome } from "./effects";
 import { sign } from "./frameFormat";
@@ -79,23 +81,21 @@ export type HappinessDisplay = {
   ceiling: number;
   /** At or below this, the riot table is rolled. */
   riotAt: number;
-  /** At or below this, the realm revolts: half its slaves leave. */
+  /** At or below this, the realm revolts: the ruleset's share of its slaves leave. */
   revoltAt: number;
   /** Unrest tokens on the realm, each worth −1 until a riot or a card clears them. */
   tokens: number;
   lines: Array<{ label: string; amount: number }>;
 };
 
-const capitalized = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
-
 function termLabel(G: HegemonyState, term: HappinessContribution): string {
   switch (term.id) {
     case "slaves":
-      return `${capitalized(term.detail)}, 1 per ${G.ruleset.economy.slavesPerUnhappiness}`;
+      return `${capitalize(term.detail)}, 1 per ${G.ruleset.economy.slavesPerUnhappiness}`;
     case "calm":
       return "Calm, until year end";
     default:
-      return capitalized(term.detail);
+      return capitalize(term.detail);
   }
 }
 
@@ -114,7 +114,7 @@ export function happinessDisplay(G: HegemonyState, playerID: PlayerId): Happines
   ];
 
   return {
-    value: terms.reduce((sum, term) => sum + term.amount, 0),
+    value: happinessLevel(G, playerID),
     floor: revoltThreshold,
     ceiling: -revoltThreshold,
     riotAt: riotThreshold,
@@ -145,17 +145,13 @@ export type Census = {
 /** A seat's public position: what anyone at the table can count on the board. Pops
  *  on the move are counted: they are still in the realm. */
 export function publicCensus(G: HegemonyState, playerID: PlayerId): Census {
-  const census: Census = { ...popsInTransit(G, playerID), cities: 0, colonies: 0 };
+  const census: Census = { ...realmPops(G, playerID), cities: 0, colonies: 0 };
 
   for (const tile of G.board.tiles) {
     for (const settlement of tile.settlements) {
       if (settlement.owner !== playerID) {
         continue;
       }
-
-      census.slaves += settlement.pops.slaves;
-      census.freemen += settlement.pops.freemen;
-      census.citizens += settlement.pops.citizens;
 
       if (settlement.kind === "colony") {
         census.colonies += 1;

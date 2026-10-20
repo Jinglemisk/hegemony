@@ -1,12 +1,13 @@
-import type { ActiveEffectDescriptor, ActiveEffectMechanic } from "../../game/activeEffects";
+import type { ActiveEffectDescriptor } from "../../game/activeEffects";
 import type { RealmAlarm } from "../../game/alarms";
+import { VOTE_PAYMENTS } from "../../game/assembly";
 import { getLuxuryGood } from "../../game/content";
 import type { UnrestStatus } from "../../game/rules";
 import type { HegemonyState, PlayerId } from "../../game/types";
 import type { VictoryThreat } from "../../game/victory";
 import { presentActiveEffect, presentUnrestOutcome } from "../../ui/effects";
 import type { EffectTone } from "../../ui/effects";
-import { RESOURCE_ICON } from "../../ui/frameFormat";
+import { ACTIVE_EFFECT_MECHANIC_RASTERS, UNREST_TIER_RASTERS } from "../../ui/iconRegistry";
 import {
   formatNumber,
   formatResourceCost,
@@ -28,31 +29,11 @@ import { Ico, Tip } from "./parts";
  * what it is and how long it lasts.
  */
 
-const UNREST_ICON: Record<Exclude<UnrestStatus["tier"], "calm">, string> = {
-  discontent: "unrest/discontent",
-  unrest: "unrest/unrest",
-  revolt: "unrest/revolt",
-};
-
 const UNREST_WORD: Record<Exclude<UnrestStatus["tier"], "calm">, string> = {
   discontent: "Discontent",
   unrest: "Unrest",
   revolt: "Revolt",
 };
-
-/** The resource a mechanic moves, as the disc's picture. */
-function iconOf(mechanic: ActiveEffectMechanic | undefined): string {
-  switch (mechanic?.type) {
-    case "suppressIncome":
-      return "market/income-suppressed";
-    case "hunger":
-      return RESOURCE_ICON.food;
-    case "equalVotesNextAssembly":
-      return "assembly/vote";
-    default:
-      return "assembly/law";
-  }
-}
 
 const TONE: Record<EffectTone, string> = {
   positive: "is-up",
@@ -143,7 +124,7 @@ function UnrestDisc({ G, unrest }: { G: HegemonyState; unrest: UnrestStatus }) {
         focusable
         triggerClassName="alarm-disc is-down is-loud"
       >
-        <Ico path={UNREST_ICON[tier]} size="ui" />
+        <Ico path={UNREST_TIER_RASTERS[tier]} size="ui" />
       </Tooltip>
     </li>
   );
@@ -198,7 +179,10 @@ function EffectDisc({
         focusable
         triggerClassName={`alarm-disc ${TONE[effect.tone]}`}
       >
-        <Ico path={iconOf(descriptor.mechanics[0])} size="ui" />
+        <Ico
+          path={ACTIVE_EFFECT_MECHANIC_RASTERS[descriptor.mechanics[0]?.type ?? "standingLaw"]}
+          size="ui"
+        />
       </Tooltip>
     </li>
   );
@@ -236,7 +220,7 @@ function OneTitleShortDisc({ G, seats }: { G: HegemonyState; seats: VictoryThrea
 
 function AssemblyDisc({ G, year }: { G: HegemonyState; year: number }) {
   const { drawCost, repealCost, briberyCost } = G.ruleset.assembly;
-  const save = `Save influence for it: a draw costs ${drawCost}, a repeal ${repealCost}, a bought vote ${briberyCost}.`;
+  const save = `Save influence for it: a draw costs ${drawCost} influence, a repeal ${repealCost} influence, a bought vote ${briberyCost} ${VOTE_PAYMENTS.join(" or ")}.`;
   return (
     <li>
       <Tooltip

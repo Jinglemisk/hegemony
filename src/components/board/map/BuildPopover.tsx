@@ -29,7 +29,7 @@ export function BuildPopover({
   onCancel: () => void;
   onConfirm: (tileId: string, buildingId: BuildingId, claimVertexId?: string) => void;
 }) {
-  const { G, viewerId: playerID, phase, isActive } = useGameUi();
+  const { G, viewerId: playerID, turnBlocked } = useGameUi();
   const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
   const options = getBuildBuildingOptions(G, playerID, tileId);
   const [buildingId, setBuildingId] = useState<BuildingId>(
@@ -72,8 +72,8 @@ export function BuildPopover({
       >
         {options.map(({ building: candidate, status: candidateStatus }) => {
           const candidateBenefit = getBuildingBenefitText(G, playerID, tile, candidate);
-          const reason = actionRequirementText(candidateStatus, phase, isActive);
-          const disabled = !candidateStatus.can || !isActive || phase !== "gameplay";
+          const reason = actionRequirementText(candidateStatus, turnBlocked);
+          const disabled = gameplayActionDisabled(candidateStatus, turnBlocked);
           const effectiveCost = candidateStatus.cost ?? candidate.cost;
 
           return (
@@ -143,8 +143,8 @@ export function BuildPopover({
 
       <PopoverActions
         confirmLabel={`Build ${building.name}`}
-        disabled={gameplayActionDisabled(status, phase, isActive)}
-        title={actionRequirementText(status, phase, isActive)}
+        disabled={gameplayActionDisabled(status, turnBlocked)}
+        title={actionRequirementText(status, turnBlocked)}
         onCancel={onCancel}
         onConfirm={() =>
           onConfirm(tileId, buildingId, building.id === "port" ? claimVertexId : undefined)

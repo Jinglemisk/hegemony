@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { PLAYER_IDS } from "../../../game/data";
 import { assemblySittings, nextAssemblyYear } from "../../../game/assembly";
+import { YEAR_TERM_COLUMNS } from "../../../game/economy/income";
 import { unrestOutcome } from "../../../game/unrest";
 import { yearDeckSize } from "../../../game/year";
-import type { LogMoment, Resource, YearCard, YearTerm } from "../../../game/types";
+import type { LogMoment, Resource, YearCard } from "../../../game/types";
 import { presentUnrestOutcome, presentYearCard } from "../../../ui/effects";
-import type { EffectPresentation } from "../../../ui/effects";
-import { ordinal, toRoman } from "../../../ui/formatters";
-import { sign, yearCardIcon } from "../../../ui/frameFormat";
+import { ordinal, seatName, toRoman } from "../../../ui/formatters";
+import { sign } from "../../../ui/frameFormat";
+import { yearCardIcon } from "../../../ui/iconRegistry";
 import { Chips, Ico, SeatMark } from "../../frame/parts";
 import { yearCardArtUrl } from "../events";
 import { useGameUi } from "../GameUiContext";
@@ -17,40 +18,10 @@ import { ModalShell } from "./ModalShell";
 
 const FLIP_MS = 1000;
 
-const TERM_NOUN: Record<YearTerm, string> = {
-  plainsFood: "Plains food",
-  forestWood: "Forest wood",
-  mountainStone: "Mountain stone",
-  freemenGold: "Freemen gold",
-  citizenInfluence: "Citizen influence",
-  luxuryHappiness: "Luxury happiness",
-};
-
-/** The card's rule in the fate card's three ranks: what it strikes, the figure, where. */
-function blowOf(card: YearCard): EffectPresentation {
-  const { text, tone } = presentYearCard(card);
-  if (card.effect.type === "zeroTerm")
-    return {
-      text,
-      tone,
-      magnitude: "0",
-      subject: TERM_NOUN[card.effect.term],
-      condition: "for the whole year",
-    };
-  return card.effect.change === "placeOne"
-    ? { text, tone, magnitude: "+1", subject: "Unrest token", condition: "on every realm, now" }
-    : {
-        text,
-        tone,
-        magnitude: "0",
-        subject: "Unrest tokens",
-        condition: "every realm clears them",
-      };
-}
-
-/** Whether the card moves the happiness level (tokens, Blockade) rather than income. */
+/** Whether the card moves the happiness level (tokens, or a term with no income column,
+ *  such as Blockade's) rather than income. */
 const movesLevel = (card: YearCard) =>
-  card.effect.type === "unrestTokens" || card.effect.term === "luxuryHappiness";
+  card.effect.type === "unrestTokens" || !(card.effect.term in YEAR_TERM_COLUMNS);
 
 /**
  * The year card at the turn of the year: its back with the year's numeral, then its
@@ -111,7 +82,7 @@ export function YearCardModal({
       (entry): entry is typeof entry & { moment: Extract<LogMoment, { kind: "yearCard" }> } =>
         entry.moment?.kind === "yearCard" && entry.moment.cardId === card.id,
     )?.moment.impact;
-  const blow = blowOf(card);
+  const blow = presentYearCard(card);
   const final = G.year >= years;
   const opener = G.yearOpener === viewerId ? "You open" : `${G.players[G.yearOpener].name} opens`;
   const sits = G.assembly && G.assembly.year === G.year;
@@ -171,7 +142,7 @@ export function YearCardModal({
                   <SeatMark playerID={seat} />
                   {line}
                   <span className={warn ? "yearImpact-warn caption" : "caption"}>
-                    {warn ?? (seat === viewerId ? "you" : G.players[seat].name)}
+                    {warn ?? seatName(G, seat, viewerId)}
                   </span>
                 </li>
               );

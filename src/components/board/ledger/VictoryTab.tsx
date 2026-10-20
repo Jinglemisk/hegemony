@@ -2,8 +2,7 @@ import { PLAYER_IDS } from "../../../game/data";
 import { victoryStandings } from "../../../game/victory";
 import type { VictoryCardStanding } from "../../../game/victory";
 import type { HegemonyState, PlayerId } from "../../../game/types";
-import { numberWord } from "../../../ui/frameFormat";
-import { formatNumber } from "../../../ui/formatters";
+import { formatNumber, numberWord } from "../../../ui/formatters";
 import { Ico, SeatMark } from "../../frame/parts";
 
 /**

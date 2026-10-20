@@ -76,7 +76,7 @@ export function MovePopsTargetPopover({
   onCancel: () => void;
   onConfirm: (sourceTileId: string, targetTileId: string, pops: Pops) => void;
 }) {
-  const { G, viewerId: playerID, phase, isActive } = useGameUi();
+  const { G, viewerId: playerID, turnBlocked } = useGameUi();
   const [pops, setPops] = useState<Pops>(() => clonePops(EMPTY_POPS));
 
   const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
@@ -112,8 +112,8 @@ export function MovePopsTargetPopover({
 
       <PopoverActions
         confirmLabel={`Send ${totalPops(pops) > 0 ? formatPops(pops) : "Pops"}`}
-        disabled={gameplayActionDisabled(status, phase, isActive) || totalPops(pops) === 0}
-        title={actionRequirementText(status, phase, isActive)}
+        disabled={gameplayActionDisabled(status, turnBlocked) || totalPops(pops) === 0}
+        title={actionRequirementText(status, turnBlocked)}
         onCancel={onCancel}
         onConfirm={() => onConfirm(sourceTileId, tileId, clonePops(pops))}
       />

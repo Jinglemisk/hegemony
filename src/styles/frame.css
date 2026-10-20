@@ -233,12 +233,15 @@
 .hud ol,
 .hud ul,
 .hud p,
-.sharedTooltip p {
+.sharedTooltip p,
+.threat-panel ul,
+.endturn-confirm p {
   list-style: none;
   margin: 0;
   padding: 0;
 }
-.frame :focus-visible {
+.frame :focus-visible,
+.endturn-confirm :focus-visible {
   outline: var(--rule-2) solid var(--ochre);
   outline-offset: var(--rule-2);
 }
@@ -2601,9 +2604,6 @@ button.link {
   height: var(--ic-48);
 }
 .threat-panel {
-  position: absolute;
-  top: calc(var(--hit) * 2 + var(--s-2));
-  left: 0;
   width: calc(var(--u) * 150); /* 600 */
   border-radius: var(--s-2);
   background: var(--ivory);
@@ -2674,9 +2674,6 @@ button.link {
 
 /* ---- End turn's confirm at the riot and revolt lines ----------------------- */
 .endturn-confirm {
-  position: absolute;
-  right: var(--s-4);
-  bottom: calc(var(--endturn-h) + var(--s-4));
   width: calc(var(--u) * 96); /* 384 */
   display: grid;
   gap: var(--s-2);
@@ -2686,6 +2683,10 @@ button.link {
   box-shadow:
     inset 0 0 0 var(--rule-2) var(--clay),
     var(--shadow-float);
+}
+.threat-panel .sharedPopoverArrow,
+.endturn-confirm .sharedPopoverArrow {
+  display: none;
 }
 .endturn-confirm.is-revolt {
   box-shadow:

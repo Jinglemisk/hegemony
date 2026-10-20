@@ -6,30 +6,19 @@ import {
   activeClaims,
   getLuxuryGood,
   ownedClaims,
+  realmPops,
   settlementCapacity,
   unrestStatus,
 } from "../../../game/rules";
-import type { PopType, Resources } from "../../../game/types";
+import type { Resources } from "../../../game/types";
 import { victoryStandings } from "../../../game/victory";
 import { formatNumber, formatPopLabel } from "../../../ui/formatters";
+import { POP_RASTERS } from "../../../ui/iconRegistry";
 import { settlementNames } from "../../../ui/settlementNames";
 import { useGameUi } from "../../board/GameUiContext";
 import type { OwnedHolding } from "../../board/types";
 import { Chips, Ico } from "../parts";
 import { PlaceSeal } from "./PlaceSeal";
-
-const POP_ICON: Record<PopType, string> = {
-  citizens: "pops/citizens",
-  freemen: "pops/freemen",
-  slaves: "pops/slaves",
-};
-
-const MOOD: Record<string, string> = {
-  calm: "calm",
-  discontent: "discontent",
-  unrest: "unrest",
-  revolt: "revolt",
-};
 
 /**
  * The realm at a glance, when the map's empty sea is picked: what it nets a
@@ -47,8 +36,8 @@ export function SummaryPage({
 }) {
   const { G, viewerId } = useGameUi();
   const names = settlementNames(G.board.tiles);
-  const people = (pop: PopType) =>
-    holdings.reduce((sum, { settlement }) => sum + settlement.pops[pop], 0);
+  // The realm's people, those on the move included: they are still in the realm.
+  const people = realmPops(G, viewerId);
   const capacity = holdings.reduce(
     (sum, { settlement }) => sum + settlementCapacity(settlement, G),
     0,
@@ -68,8 +57,8 @@ export function SummaryPage({
       <dd>
         {POP_TYPES.map((pop) => (
           <span className="meta-i" key={pop} title={formatPopLabel(pop, 2)}>
-            <Ico path={POP_ICON[pop]} size="chip" />
-            <b className="num">{people(pop)}</b>
+            <Ico path={POP_RASTERS[pop]} size="chip" />
+            <b className="num">{people[pop]}</b>
           </span>
         ))}
         <span className="cap">of {capacity} room</span>
@@ -80,7 +69,7 @@ export function SummaryPage({
           {formatNumber(mood.happiness)}
         </span>
         <span className="cap">
-          happiness, {MOOD[mood.tier]}
+          happiness, {mood.tier}
           {mood.outcome.tokens !== 0
             ? ` · ${formatNumber(mood.outcome.tokens)} Unrest ${mood.outcome.tokens === 1 ? "token" : "tokens"}`
             : ""}

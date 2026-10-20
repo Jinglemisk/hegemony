@@ -1,22 +1,18 @@
 import { Fragment } from "react";
-import { POP_TYPES, getDemotePopStatus, getPromotePopStatus } from "../../../game/rules";
-import type { HegemonyState, PlayerId, PopType, Resources } from "../../../game/types";
+import { POP_TYPES, getDemotePopStatus, getPromotePopStatus, realmPops } from "../../../game/rules";
+import type { PopType, Resources } from "../../../game/types";
+import { cheapestCost } from "../../../ui/frameFormat";
+import { POP_RASTERS } from "../../../ui/iconRegistry";
 import { formatPopLabel } from "../../../ui/formatters";
 import { settlementNames } from "../../../ui/settlementNames";
 import { ActionButton } from "../../ActionButton";
 import { useGameUi } from "../../board/GameUiContext";
-import { actionRequirementText, calculatePopEconomy, capitalize } from "../../board/helpers";
+import { calculatePopEconomy, capitalize } from "../../board/helpers";
 import type { OwnedHolding } from "../../board/types";
 import { CodexTermLink } from "../../codexLink";
 import { Tooltip } from "../../overlays/Tooltip";
 import { Chips, Ico, Tip } from "../parts";
 import { PlaceSeal } from "./PlaceSeal";
-
-const POP_ICON: Record<PopType, string> = {
-  citizens: "pops/citizens",
-  freemen: "pops/freemen",
-  slaves: "pops/slaves",
-};
 
 /** The two gaps in the ladder, top to bottom; each is a step either way. */
 const GAPS: Array<{ upper: PopType; lower: PopType }> = [
@@ -33,26 +29,6 @@ const RUNG_VERBS: Record<"promote" | "demote", Partial<Record<PopType, string>>>
 /** Past this many places, "Live in" counts heads instead of drawing them. */
 const DRAWN = 3;
 
-const units = (cost: Partial<Resources>) =>
-  Object.values(cost).reduce((sum: number, n) => sum + (n ?? 0), 0);
-
-/** The cheapest settlement's price for a step: the number that decides whether you press. */
-function bestCost(
-  G: HegemonyState,
-  playerID: PlayerId,
-  holdings: OwnedHolding[],
-  kind: "promote" | "demote",
-  from: PopType,
-): Partial<Resources> {
-  const status = kind === "promote" ? getPromotePopStatus : getDemotePopStatus;
-  const costs = holdings.map(({ tile }) => status(G, playerID, tile.id, from).cost ?? {});
-  const fallback =
-    kind === "promote"
-      ? (G.ruleset.ladder.promoteCosts[from as "slaves" | "freemen"] ?? {})
-      : (G.ruleset.ladder.demoteCosts[from as "citizens" | "freemen"] ?? {});
-  return costs.reduce((best, cost) => (units(cost) < units(best) ? cost : best), fallback);
-}
-
 /**
  * The Ladder: three tiers, top to bottom, with each gap's two steps drawn on
  * the rung between them; then where the people live and the net per turn.
@@ -66,26 +42,29 @@ export function LadderPage({
   income: Resources;
   onLadderRequest: (request: { kind: "promote" | "demote"; from: PopType }) => void;
 }) {
-  const { G, viewerId: playerID, phase, isActive } = useGameUi();
+  const { G, viewerId: playerID, turnBlocked } = useGameUi();
   const player = G.players[playerID];
   const economy = calculatePopEconomy(holdings, G);
   const names = settlementNames(G.board.tiles);
-  const count = (pop: PopType) =>
-    holdings.reduce((total, { settlement }) => total + settlement.pops[pop], 0);
+  // Each tier's count, those on the move included: they are still in the realm.
+  const count = realmPops(G, playerID);
   const history = `${player.grownSettlementsThisTurn.length} grown this turn · ${player.popsGainedFromEvents} gained from events · ${player.popsLostToUnrest} lost to riots · ${player.popsLostToHunger} to hunger`;
 
   const step = (kind: "promote" | "demote", from: PopType, to: PopType) => {
     const status = kind === "promote" ? getPromotePopStatus : getDemotePopStatus;
-    const statuses = holdings.map(({ tile }) => status(G, playerID, tile.id, from));
-    const enabled = isActive && phase === "gameplay" && statuses.some((each) => each.can);
+    // Each settlement's status; with none, the engine's refusal and price for no place.
+    const tileIds = holdings.length > 0 ? holdings.map(({ tile }) => tile.id) : [""];
+    const statuses = tileIds.map((tileId) => status(G, playerID, tileId, from));
+    const enabled = turnBlocked === null && statuses.some((each) => each.can);
     const verb = RUNG_VERBS[kind][from] ?? capitalize(kind);
-    const cost = bestCost(G, playerID, holdings, kind, from);
+    // The cheapest settlement's price: the number that decides whether you press.
+    const cost = cheapestCost(statuses.map((each) => each.cost ?? {}));
     const what = `${verb} a ${formatPopLabel(from, 1)} to ${formatPopLabel(to, 1)}`;
 
     return (
       <ActionButton
         aria-label={`${what}.`}
-        blockedReason={actionRequirementText(statuses[0] ?? null, phase, isActive)}
+        blockedReason={turnBlocked ?? statuses[0].reasons.join(" ")}
         className="rung-btn"
         effectiveCost={cost}
         enabled={enabled}
@@ -125,13 +104,13 @@ export function LadderPage({
                 triggerAs="div"
                 triggerClassName="tier-row"
               >
-                <Ico path={POP_ICON[pop]} size="ui" />
+                <Ico path={POP_RASTERS[pop]} size="ui" />
                 <span className="tier-name">
                   <CodexTermLink chapter="population">
                     {capitalize(formatPopLabel(pop, 2))}
                   </CodexTermLink>
                 </span>
-                <b className="tier-count num">{count(pop)}</b>
+                <b className="tier-count num">{count[pop]}</b>
                 <span className="tier-makes">
                   <Chips
                     amounts={economy[pop]}
@@ -170,7 +149,7 @@ export function LadderPage({
                         <Ico
                           className="bead"
                           key={`${pop}-${i}`}
-                          path={POP_ICON[pop]}
+                          path={POP_RASTERS[pop]}
                           size="chip"
                         />
                       )),

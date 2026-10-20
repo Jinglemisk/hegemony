@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import type { ComponentProps } from "react";
-import { DEV_SHELL, privateMoment } from "../client/controller";
+import { privateMoment } from "../client/controller";
 import type { GameEvents, GameMoves, LocalContext } from "../client/controller";
 import {
   EMPTY_POPS,
@@ -23,6 +23,7 @@ import {
 import { requiredDecision } from "../game/actors";
 import { realmAlarms } from "../game/alarms";
 import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
+import type { DevShell } from "../dev/scenes";
 import { BuildPopover } from "./board/map/BuildPopover";
 import { IdeasModal } from "./board/modals/IdeasModal";
 import { HungerModal } from "./board/modals/HungerModal";
@@ -34,7 +35,7 @@ import { LadderPopover } from "./board/map/LadderPopover";
 import { MovePopsSourcePopover, MovePopsTargetPopover } from "./board/map/MovePopsPopover";
 import { selectionCaption, type MapSelectionMode } from "./board/map/mapSelection";
 import { useMapSelection } from "./board/map/useMapSelection";
-import { armedVerbOf, isTurnOpen, turnCommitTitle } from "./board/command/verbs";
+import { armedVerbOf, turnBlocked, turnCommitTitle, turnPending } from "./board/command/verbs";
 import type { VerbContext } from "./board/command/verbs";
 import { GameOverModal } from "./board/modals/GameOverModal";
 import { ConsultPanel } from "./board/ledger/ConsultPanel";
@@ -51,6 +52,7 @@ import type { GameUi } from "./board/GameUiContext";
 import { CodexLinkProvider } from "./codexLink";
 import { getOwnedHoldings } from "./board/helpers";
 import { endTurnWarning, happinessDisplay, hungerShortfall } from "../ui/frameSelectors";
+import { isTyping } from "../ui/keys";
 import { Island } from "./frame/island/Island";
 import { TopBar } from "./frame/TopBar";
 import { ConsultStrip } from "./frame/ConsultStrip";
@@ -73,6 +75,8 @@ type BoardProps = {
   isActive: boolean;
   /** People share this screen, seat by seat; false only when bots play alone. */
   hotseat: boolean;
+  /** What a `?dev=` scene shows on the first render (the dev server only). */
+  dev?: DevShell;
 };
 
 type SetupPlacement = "capital" | "city" | "colony";
@@ -126,18 +130,19 @@ export function HegemonyBoard({
   onPlayerIDChange,
   isActive: seatActive,
   hotseat,
+  dev = {},
 }: BoardProps) {
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
   // `?dev=ideas` opens on the purchase list.
   const [activeModal, setActiveModal] = useState<ActiveModal | null>(
-    DEV_SHELL.ideasOpen ? { kind: "ideas" } : null,
+    dev.ideasOpen ? { kind: "ideas" } : null,
   );
   const [held, setHeld] = useState<Held | null>(
-    DEV_SHELL.riotResult
+    dev.riotResult
       ? "riotResult"
-      : DEV_SHELL.draftSummary
+      : dev.draftSummary
         ? "draftRead"
-        : DEV_SHELL.hungerAsk
+        : dev.hungerAsk
           ? "hungerAsk"
           : null,
   );
@@ -148,12 +153,12 @@ export function HegemonyBoard({
   // mid-turn starts begun. `gameOver`: the end was put aside to inspect the board.
   const [seen, setSeen] = useState(() => ({
     year:
-      (G.phase !== "gameplay" && G.phase !== "gameOver") || DEV_SHELL.draftSummary
+      (G.phase !== "gameplay" && G.phase !== "gameOver") || dev.draftSummary
         ? 0
-        : DEV_SHELL.yearReveal
+        : dev.yearReveal
           ? G.year - 1
           : G.year,
-    moment: DEV_SHELL.turnNotice || DEV_SHELL.viewer ? null : privateMoment(G),
+    moment: dev.turnNotice || dev.viewer ? null : privateMoment(G),
     gameOver: false,
   }));
   // The draft is read back once its last pick lands, until the opener turns the year.
@@ -185,18 +190,18 @@ export function HegemonyBoard({
   const sitting = useSitting(G, viewerId);
   const inAssembly = Boolean(G.assembly);
   const isActive = seatActive && !inAssembly;
-  // Hunger waiting on its choice blocks the turn exactly as a drawn fate card does.
-  const hasPendingPlayerEvent = Boolean(G.pendingPlayerEvent || G.pendingHunger);
   // Food short now: End turn opens the hunger card first, with a way back to buy food.
   const shortfall = hungerShortfall(G, viewerId);
-  // The one gate the turn dial needs. It is the same gate every verb sits behind
-  // (verbs.tsx), asked without a board fact in sight.
-  const turnGate = { isActive, phase: ctx.phase, hasPendingPlayerEvent, inAssembly };
-  const turnOpen = isTurnOpen(turnGate);
+  // The one turn gate: the seat, the phase, and any decision the engine waits on (a
+  // fate card, hunger, a riot, the Assembly). The verbs, the turn dial and every realm
+  // page read it (verbs.tsx), asked without a board fact in sight.
+  const turnGate = { isActive, phase: ctx.phase, pending: turnPending(G) };
+  const blocked = turnBlocked(turnGate);
+  const turnOpen = blocked === null;
   const activeEffects = useMemo(() => getActiveEffects(G, viewerId), [G, viewerId]);
-  const toasts = useMomentToasts(G, viewerId, DEV_SHELL.toastReplayFrom, DEV_SHELL.titlesFrom);
+  const toasts = useMomentToasts(G, viewerId, dev.toastReplayFrom, dev.titlesFrom);
   // A revolt is the seat's own card in hotseat; against bots it is only a toast.
-  const revolt = useOwnMoment(G, viewerId, "revolt", hotseat, DEV_SHELL.momentsFrom);
+  const revolt = useOwnMoment(G, viewerId, "revolt", hotseat, dev.momentsFrom);
   const threats = useMemo(() => victoryThreats(G), [G]);
   const alarms = useMemo(() => realmAlarms(G, viewerId), [G, viewerId]);
 
@@ -234,7 +239,7 @@ export function HegemonyBoard({
       currentPlayerId,
       phase: ctx.phase,
       isActive,
-      hasPendingPlayerEvent,
+      turnBlocked: blocked,
       moves,
       events,
     }),
@@ -246,7 +251,7 @@ export function HegemonyBoard({
       currentPlayerId,
       ctx.phase,
       isActive,
-      hasPendingPlayerEvent,
+      blocked,
       moves,
       events,
     ],
@@ -360,23 +365,22 @@ export function HegemonyBoard({
     setActiveModal(null);
   }, [G.pendingPlayerEvent, clearMapSelection]);
 
+  // Escape is ModalShell's job — every dialog gets it from the one place. With no
+  // dialog up, it returns a folded sitting.
+  const restoreSitting = useEffectEvent(() => {
+    if (sitting?.minimised && !moment && !activeModal) sitting.setMinimised(false);
+  });
+
   // `?` toggles the codex from anywhere: the same act as pressing its consult icon.
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-
-      if (
-        target &&
-        (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT")
-      ) {
-        return;
-      }
+      if (event.key === "Escape") restoreSitting();
+      if (isTyping(event.target)) return;
 
       if (event.key === "?") {
         setCodexTarget(null);
         setConsultTab((open) => (open === "codex" ? null : "codex"));
       }
-      // Escape is ModalShell's job — every dialog gets it from the one place.
     };
 
     window.addEventListener("keydown", handleKey);
@@ -431,12 +435,7 @@ export function HegemonyBoard({
     (tileId: string, buildingId: BuildingId, claimVertexId?: string) => {
       setSelectedTileId(tileId);
 
-      if (
-        ctx.phase === "gameplay" &&
-        isActive &&
-        !hasPendingPlayerEvent &&
-        getBuildBuildingStatus(G, viewerId, tileId, buildingId, claimVertexId).can
-      ) {
+      if (turnOpen && getBuildBuildingStatus(G, viewerId, tileId, buildingId, claimVertexId).can) {
         // A Port needs to know WHICH good it claims. The map popover asks the
         // player and passes it; the ledger paths don't, so name the first
         // claimable in stable order — the only one, everywhere the shipping even
@@ -448,7 +447,7 @@ export function HegemonyBoard({
         moves.buildBuilding(tileId, buildingId, resolvedClaim);
       }
     },
-    [ctx.phase, isActive, hasPendingPlayerEvent, G, viewerId, moves],
+    [turnOpen, G, viewerId, moves],
   );
 
   const verbContext: VerbContext = {
@@ -456,8 +455,7 @@ export function HegemonyBoard({
     playerID: viewerId,
     phase: ctx.phase,
     isActive,
-    hasPendingPlayerEvent,
-    inAssembly,
+    pending: turnGate.pending,
     canGrowPops,
     canMovePops,
     canFoundColony,
@@ -535,7 +533,7 @@ export function HegemonyBoard({
                   G={G}
                   hunger={shortfall}
                   onOpenYear={() => setHeld("yearFace")}
-                  threatOpen={Boolean(DEV_SHELL.titlesFrom)}
+                  threatOpen={Boolean(dev.titlesFrom)}
                   viewerId={viewerId}
                 />
               </div>
@@ -588,7 +586,7 @@ export function HegemonyBoard({
                 <EndTurn
                   actingId={currentPlayerId}
                   canEndTurn={turnOpen}
-                  confirmOpen={DEV_SHELL.endTurnConfirm}
+                  confirmOpen={dev.endTurnConfirm}
                   onCalm={moves.civicCalm}
                   onEndTurn={() => (shortfall ? setHeld("hungerAsk") : events.endTurn())}
                   ruleset={G.ruleset}
@@ -775,7 +773,7 @@ export function HegemonyBoard({
               case "yearCard":
                 return moment.reveal ? (
                   <YearCardModal
-                    holdBack={DEV_SHELL.yearBack}
+                    holdBack={dev.yearBack}
                     onClose={() => setSeen((current) => ({ ...current, year: G.year }))}
                     reveal
                   />

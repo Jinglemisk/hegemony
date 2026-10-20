@@ -1,9 +1,26 @@
 import { useState } from "react";
-import { getResolutionCard, restCanTurn, voteOutlook, wouldPass } from "../../../game/assembly";
-import type { AssemblyResult, AssemblySession } from "../../../game/assembly";
+import {
+  baseVoteWeight,
+  getResolutionCard,
+  lawReplacementIds,
+  POLITICIANS_BY_ID,
+  restCanTurn,
+  voteOutlook,
+  voteWeightParts,
+  wouldPass,
+} from "../../../game/assembly";
+import type {
+  AssemblyResult,
+  AssemblySession,
+  BallotItem,
+  ResolutionCard,
+} from "../../../game/assembly";
+import { capitalize } from "../../../game/core/format";
 import { voiceHolder } from "../../../game/victory";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { tieRule } from "../../../ui/effects";
+import { listed, numberWord, seatName, toRoman } from "../../../ui/formatters";
+import { sign } from "../../../ui/frameFormat";
 
 /**
  * The Assembly sitting as the shell walks it. The engine has three phases; the modal
@@ -92,12 +109,6 @@ export function useSitting(G: HegemonyState, viewer: PlayerId): Sitting | null {
   };
 }
 
-/** A seat as the viewer reads it: "you" for their own ("You" to open a sentence),
- *  otherwise the seat's name. */
-export function seatName(G: HegemonyState, id: PlayerId, viewer: PlayerId, capital = false) {
-  return id === viewer ? (capital ? "You" : "you") : G.players[id].name;
-}
-
 /**
  * A ballot item's result in words, from the engine's outcome kind: the verdict with its
  * tally, the recap's short verdict, their tone, the headline, and the recap's line.
@@ -142,9 +153,6 @@ export function presentResult(G: HegemonyState, result: AssemblyResult, viewer: 
   };
 }
 
-const list = (names: string[]) =>
-  names.length < 2 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
-
 /**
  * "What your vote does": both choices as a tally, and whether the seats still to cast
  * can turn it. Public numbers only. `you` phrases it for the caster; otherwise it
@@ -181,7 +189,7 @@ export function voteLine(
 
   const now = rest.reduce((sum, seat) => sum + seat.weight, 0);
   const most = rest.reduce((sum, seat) => sum + seat.most, 0);
-  const who = list(rest.map((seat) => seatName(G, seat.playerID, viewer)));
+  const who = listed(rest.map((seat) => seatName(G, seat.playerID, viewer)));
   const after =
     rest.length === 1
       ? `${who} casts last with ${now}${most > now ? `, up to ${most} with bought votes` : ""}`
@@ -196,4 +204,71 @@ export function voteLine(
         ? "nothing after can change it"
         : `${they} can still turn a ${turnYea ? "yea" : "nay"}, not a ${turnYea ? "nay" : "yea"}`;
   return { lead, rest: `${after}: ${verdict}.` };
+}
+
+/** "Demosthenes · Law": the politician a card comes from, and its kind. */
+export function cardSource(card: ResolutionCard) {
+  return `${POLITICIANS_BY_ID[card.politician].name} · ${card.kind === "law" ? "Law" : "Directive"}`;
+}
+
+/** The head's line under a ballot item: who moved it, and what it is or strikes. */
+export function movedBy(G: HegemonyState, item: BallotItem, viewer: PlayerId) {
+  const by = `Moved by ${seatName(G, item.proposer, viewer)}`;
+  if (item.kind === "enact") return `${by} · ${cardSource(item.card)}`;
+  const law = G.activeLaws.find((standing) => standing.cardId === item.cardId);
+  return law
+    ? `${by} · authored by ${seatName(G, law.author, viewer)}, Year ${toRoman(law.enactedYear)}`
+    : by;
+}
+
+export function itemKind(G: HegemonyState, item: BallotItem) {
+  return item.kind === "repeal"
+    ? `repeal · paid ${G.ruleset.assembly.repealCost} influence`
+    : cardSource(item.card);
+}
+
+export function dockMark(session: AssemblySession, stage: SittingStage, id: PlayerId) {
+  if (stage === "proposal" || stage === "drawn") return session.proposalDone[id] ? "✓" : "…";
+  if (stage === "vote") return session.votes.some((vote) => vote.playerID === id) ? "✓" : "…";
+  return null;
+}
+
+export function waitingWords(session: AssemblySession) {
+  const left = session.voteOrder.filter((id) => !session.proposalDone[id]).length;
+  return `${capitalize(numberWord(left))} seat${left === 1 ? "" : "s"} still to decide.`;
+}
+
+/** "4 (1 + 3 citizens)": the base vote by its parts, read off the engine. */
+export function votesWords(G: HegemonyState, id: PlayerId) {
+  return `${baseVoteWeight(G, id)} (${weightParts(G, id)})`;
+}
+
+export function weightParts(G: HegemonyState, id: PlayerId) {
+  const { citizens, rural, isonomia } = voteWeightParts(G, id);
+  if (isonomia) return "1 under Isonomia";
+  const base = `1 + ${citizens} citizen${citizens === 1 ? "" : "s"}`;
+  return rural ? `${base} ${sign(rural)} Rural Bloc` : base;
+}
+
+export function lawSlotWords(G: HegemonyState, card: ResolutionCard) {
+  const replaced = lawReplacementIds(G, card).map(
+    (id) => getResolutionCard(G.definition.content, id)?.name ?? id,
+  );
+  return replaced.length
+    ? `It replaces ${listed(replaced)}.`
+    : "It fills an empty stele and replaces nothing.";
+}
+
+export function orderWords(
+  session: AssemblySession,
+  outlook: NonNullable<ReturnType<typeof voteOutlook>>,
+  id: PlayerId,
+) {
+  const vote = session.votes.find((cast) => cast.playerID === id);
+  if (vote)
+    return `${vote.yea ? "Yea" : "Nay"} · ${vote.weight}${vote.bribed ? ` (${vote.bribed} bought)` : ""}`;
+  if (id === outlook.caster.playerID) return "casting now";
+  const seat = outlook.rest.find((waiting) => waiting.playerID === id)!;
+  const place = id === session.voteOrder.at(-1) ? "last" : "to cast";
+  return `${place} · ${seat.weight}${seat.most > seat.weight ? `, up to ${seat.most}` : ""}`;
 }

@@ -1,6 +1,11 @@
 import { produce } from "immer";
 import type { HegemonyState, PlayerId } from "./types";
-import type { IdeaPopChoice, NationalIdeaId, NationalIdeaOwnership } from "./ideaTypes";
+import type {
+  IdeaPopChoice,
+  NationalIdeaDefinition,
+  NationalIdeaId,
+  NationalIdeaOwnership,
+} from "./ideaTypes";
 import { PLAYER_IDS } from "./data";
 import { addLog, getOwnedSettlement, getPlayerName } from "./core/query";
 import { canAfford, payCost } from "./core/resources";
@@ -26,6 +31,10 @@ export function ideaPopTargets(G: HegemonyState, playerID: PlayerId): IdeaPopCho
       ? (["slaves", "freemen"] as const).map((pop) => ({ tileId, pop }))
       : [];
   });
+}
+/** Whether taking the Idea asks which pop it grants, and where (`ideaPopTargets`). */
+export function ideaTakesPop(idea: NationalIdeaDefinition) {
+  return idea.effects.some((effect) => effect.type === "acquirePop");
 }
 /**
  * The setup draft's seat order. Placement runs a snake, one round per setup
@@ -108,7 +117,7 @@ export function getTakeIdeaStatus(
         ? "You already hold this Idea."
         : `${getPlayerName(G, holder)} holds this Idea.`,
     );
-  if (idea?.effects.some((e) => e.type === "acquirePop")) {
+  if (idea && ideaTakesPop(idea)) {
     const targets = ideaPopTargets(G, playerID);
     if (!target || !targets.some((t) => t.tileId === target.tileId && t.pop === target.pop))
       reasons.push("Choose a slave or freeman and a settlement with room.");

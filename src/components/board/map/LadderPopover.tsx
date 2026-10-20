@@ -37,7 +37,7 @@ export function LadderPopover({
   onCancel: () => void;
   onConfirm: (tileId: string, from: PopType, kind: "promote" | "demote") => void;
 }) {
-  const { G, viewerId: playerID, phase, isActive } = useGameUi();
+  const { G, viewerId: playerID, turnBlocked } = useGameUi();
   const { kind, from } = request;
   const status =
     kind === "promote"
@@ -76,8 +76,8 @@ export function LadderPopover({
 
       <PopoverActions
         confirmLabel={kind === "promote" ? "Promote" : "Demote"}
-        disabled={gameplayActionDisabled(status, phase, isActive)}
-        title={actionRequirementText(status, phase, isActive)}
+        disabled={gameplayActionDisabled(status, turnBlocked)}
+        title={actionRequirementText(status, turnBlocked)}
         onCancel={onCancel}
         onConfirm={() => onConfirm(tileId, from, kind)}
       />

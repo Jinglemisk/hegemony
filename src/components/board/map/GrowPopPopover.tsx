@@ -34,7 +34,7 @@ export function GrowPopPopover({
   onCancel: () => void;
   onConfirm: (tileId: string, pop: PopType) => void;
 }) {
-  const { G, viewerId: playerID, phase, isActive } = useGameUi();
+  const { G, viewerId: playerID, turnBlocked } = useGameUi();
   const [pop, setPop] = useState<PopType>(initialPop);
 
   const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
@@ -69,8 +69,8 @@ export function GrowPopPopover({
       >
         {GROWABLE_POPS.map((candidate) => {
           const candidateStatus = getGrowPopStatus(G, playerID, tileId, candidate);
-          const reason = actionRequirementText(candidateStatus, phase, isActive);
-          const blocked = gameplayActionDisabled(candidateStatus, phase, isActive);
+          const reason = actionRequirementText(candidateStatus, turnBlocked);
+          const blocked = gameplayActionDisabled(candidateStatus, turnBlocked);
           const label = `Grow ${formatPopLabel(candidate, 1)}`;
 
           return (
@@ -112,8 +112,8 @@ export function GrowPopPopover({
 
       <PopoverActions
         confirmLabel={`Grow ${formatPopLabel(pop, 1)}`}
-        disabled={gameplayActionDisabled(status, phase, isActive)}
-        title={actionRequirementText(status, phase, isActive)}
+        disabled={gameplayActionDisabled(status, turnBlocked)}
+        title={actionRequirementText(status, turnBlocked)}
         onCancel={onCancel}
         onConfirm={() => onConfirm(tileId, pop)}
       />
