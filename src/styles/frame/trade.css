@@ -1,0 +1,487 @@
+/* ============================================================================
+   Trade: an open offer's disc on the alarms row, and the compact offer card
+   (docs/reference/design/showcases/trade-screens)
+   ========================================================================== */
+/* ---- the offer disc: a ring in the owner's glaze, a segment per answer ---- */
+.offer-alarm {
+  position: relative;
+}
+.offer-disc {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+  cursor: pointer;
+}
+.offer-ring {
+  position: absolute;
+  inset: calc(-1 * var(--s-1));
+  border-radius: var(--r-round);
+  background: var(--ring);
+  /* Only the band shows: a ring, not a disc. */
+  mask: radial-gradient(farthest-side, transparent calc(100% - 5px), black calc(100% - 4.5px));
+}
+.offer-disc:hover,
+.offer-disc[aria-expanded="true"] {
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+.offer-badge,
+.offer-mark {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-round);
+  --name-size: var(--t-14);
+  --name-lh: var(--lh-16);
+}
+.offer-badge {
+  right: calc(-1 * var(--s-2));
+  bottom: calc(-1 * var(--s-2));
+  width: var(--s-6);
+  height: var(--s-6);
+  color: var(--ivory);
+  background: var(--owner);
+  box-shadow:
+    inset 0 0 0 var(--rule) var(--ivory-70),
+    0 0 0 var(--rule-2) var(--ivory);
+}
+.offer-badge.ink-dark,
+.trade-glaze.ink-dark,
+.trade-seat.ink-dark {
+  color: var(--ink);
+}
+.offer-mark {
+  left: calc(-1 * var(--s-2));
+  top: calc(-1 * var(--s-2));
+  width: var(--s-6);
+  height: var(--s-6);
+  color: var(--ivory);
+  background: var(--ink);
+  box-shadow: 0 0 0 var(--rule-2) var(--ivory);
+}
+
+/* ---- the card: paper over the table, never a dialog ------------------------- */
+.trade-pop .trade-card {
+  width: calc(var(--u) * 112); /* 448 */
+  max-width: calc(100vw - 2 * var(--s-4));
+  border-radius: var(--r-8);
+  color: var(--ink);
+  background: var(--ivory);
+  box-shadow: var(--paper-edge), var(--shadow-float);
+}
+.trade-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-3) var(--s-2) var(--s-4);
+  border-radius: var(--r-8) var(--r-8) 0 0;
+  background: var(--bone);
+}
+.trade-glaze,
+.trade-seat {
+  display: grid;
+  flex: none;
+  place-items: center;
+  border-radius: var(--r-round);
+  color: var(--ivory);
+  background: var(--owner);
+  box-shadow:
+    inset 0 0 0 var(--rule) var(--ivory-70),
+    0 0 0 var(--rule) var(--ink-66);
+  --name-size: var(--t-14);
+  --name-lh: var(--lh-16);
+}
+.trade-glaze.is-lg {
+  width: var(--s-8);
+  height: var(--s-8);
+  margin-top: 2px;
+}
+.trade-glaze.is-sm {
+  width: var(--s-6);
+  height: var(--s-6);
+}
+.trade-words {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.trade-title {
+  --name-size: var(--t-16);
+  --name-lh: var(--lh-24);
+  letter-spacing: var(--track-name);
+}
+.trade-caption {
+  color: var(--ink-66);
+}
+.trade-x {
+  flex: none;
+  width: var(--s-8);
+  height: var(--s-8);
+  border: 0;
+  border-radius: var(--r-4);
+  color: var(--ink-66);
+  background: transparent;
+  --name-size: var(--t-20);
+  --name-lh: var(--lh-24);
+  cursor: pointer;
+}
+.trade-x:hover {
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+
+/* The to-row: rival seats; lit ones answer, none lit is the table. */
+.trade-to {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+}
+.trade-seat {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  transition: opacity 150ms;
+}
+.trade-seat.is-on {
+  box-shadow:
+    inset 0 0 0 var(--rule) var(--ivory-70),
+    0 0 0 var(--rule-2) var(--bone),
+    0 0 0 4px var(--ink);
+}
+.trade-seat.is-off {
+  opacity: 0.3;
+}
+.trade-seat.is-off:hover {
+  opacity: 0.7;
+}
+
+/* The two columns and the arrows between: red out, green in. */
+.trade-xchg {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+}
+.trade-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+}
+.trade-label {
+  color: var(--ink);
+  font-weight: 700;
+}
+.trade-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 27px;
+  padding: 0 var(--s-1);
+}
+.trade-arrow {
+  position: relative;
+  display: block;
+  width: 40px;
+  height: 12px;
+}
+.trade-arrow::before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  right: 3px;
+  left: 3px;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
+}
+.trade-arrow::after {
+  content: "";
+  position: absolute;
+  top: 1.5px;
+  width: 7px;
+  height: 7px;
+  border-top: 3px solid currentColor;
+  border-right: 3px solid currentColor;
+  border-radius: 1px;
+}
+.trade-arrow.is-out {
+  color: var(--clay-ink);
+}
+.trade-arrow.is-out::after {
+  right: 3px;
+  transform: rotate(45deg);
+}
+.trade-arrow.is-in {
+  color: var(--olive);
+}
+.trade-arrow.is-in::after {
+  left: 3px;
+  transform: rotate(-135deg);
+}
+.trade-chips {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+}
+.trade-chip {
+  display: inline-flex;
+  align-items: center;
+  height: var(--s-8);
+  padding: 0 2px 0 var(--s-1);
+  border-radius: var(--s-4);
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+}
+.trade-chip.is-changed {
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+.trade-chip.is-zero .trade-n {
+  opacity: 0.55;
+}
+.trade-n {
+  min-width: 10px;
+  padding: 0 2px;
+  text-align: center;
+}
+.trade-was {
+  padding: 0 var(--s-1);
+  color: var(--clay-ink);
+}
+.trade-was s {
+  color: var(--ink-63);
+}
+.trade-step {
+  width: 18px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-4);
+  color: var(--ink);
+  background: transparent;
+  --name-size: var(--t-16);
+  --name-lh: var(--lh-20);
+  cursor: pointer;
+}
+.trade-step:hover:not([aria-disabled="true"]) {
+  background: var(--ink-07);
+}
+.trade-step[aria-disabled="true"] {
+  opacity: 0.3;
+  cursor: default;
+}
+.trade-add {
+  width: var(--s-8);
+  height: var(--s-8);
+  border: 1.5px dashed var(--ink-45);
+  border-radius: var(--r-round);
+  color: var(--ink-66);
+  background: transparent;
+  --name-size: var(--t-20);
+  --name-lh: var(--lh-24);
+  cursor: pointer;
+}
+.trade-add:hover,
+.trade-add.is-open {
+  border: var(--rule-2) solid var(--clay);
+  color: var(--clay);
+}
+.trade-picker {
+  position: absolute;
+  z-index: var(--z-lift);
+  top: 42px;
+  left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  max-width: calc(var(--u) * 64);
+  padding: 6px;
+  border-radius: var(--r-8);
+  background: var(--ivory);
+  box-shadow: var(--paper-edge), var(--shadow-float);
+}
+.trade-pick {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-4);
+  background: transparent;
+  cursor: pointer;
+}
+.trade-pick:hover:not([aria-disabled="true"]) {
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+.trade-pick[aria-disabled="true"] {
+  opacity: 0.3;
+  cursor: default;
+}
+.trade-held {
+  position: absolute;
+  right: 1px;
+  bottom: 0;
+  color: var(--ink-66);
+  font-weight: 700;
+}
+
+/* The answering seat, its pops' settlements, and the footer. */
+.trade-answer {
+  border-top: var(--rule) solid var(--ink-12);
+}
+.trade-next {
+  display: block;
+  padding: var(--s-3) var(--s-4) 0;
+}
+.trade-places {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-4);
+  padding: 0 var(--s-4) var(--s-2);
+}
+.trade-place {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.trade-place select {
+  height: 28px;
+  border: 0;
+  border-radius: var(--r-4);
+  color: var(--ink);
+  background: var(--ivory);
+  box-shadow: var(--paper-edge);
+}
+.trade-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+  padding: 10px var(--s-3) 10px var(--s-4);
+  border-top: var(--rule) solid var(--ink-12);
+}
+.trade-foot .btn {
+  height: 36px;
+  border: 0;
+  border-radius: var(--r-4);
+  cursor: pointer;
+}
+.trade-grow {
+  flex: 1;
+}
+.trade-reason {
+  color: var(--clay-ink);
+}
+.trade-after {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-3);
+}
+.trade-delta {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+.trade-arr {
+  color: var(--ink-45);
+}
+.trade-delta .is-up {
+  color: var(--pos);
+}
+.trade-delta .is-down {
+  color: var(--clay-ink);
+}
+
+/* The offering seat's answers. */
+.trade-answers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4) 0;
+  border-top: var(--rule) solid var(--ink-12);
+}
+.trade-answers > .trade-foot {
+  margin: 0 calc(-1 * var(--s-4));
+}
+.trade-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 48px;
+  padding: 6px var(--s-2);
+  border-radius: var(--r-4);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-12);
+}
+.trade-row-words {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  color: var(--ink-66);
+}
+.trade-row-words .name {
+  --name-size: var(--t-14);
+  --name-lh: var(--lh-20);
+  color: var(--ink);
+  letter-spacing: var(--track-name);
+}
+.trade-row-words .trade-places {
+  padding: var(--s-1) 0 0;
+}
+.trade-row .btn {
+  height: var(--s-8);
+  border: 0;
+  border-radius: var(--r-4);
+  cursor: pointer;
+}
+.trade-row.is-accept .trade-row-words > span {
+  color: var(--pos);
+  font-weight: 700;
+}
+.trade-row.is-counter {
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+.trade-row.is-counter .trade-row-words > span {
+  color: var(--ink);
+}
+.trade-row.is-decline,
+.trade-row.is-cantPay {
+  opacity: 0.6;
+}
+.trade-row.is-pending .trade-row-words > span {
+  font-style: italic;
+}
+
+/* The Assembly's preparation: its offers and the Offer button. */
+.sit-trade {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-4);
+  min-height: calc(var(--hit) * 2);
+}
+.sit-offers {
+  display: flex;
+  gap: var(--s-4);
+  margin: 0;
+  padding: var(--s-2);
+  list-style: none;
+}
+.sit-offer-as {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}

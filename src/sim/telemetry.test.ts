@@ -729,6 +729,7 @@ describe("the Step 11 report fields", () => {
     const game = drive(G);
     game.take("0", { type: "assemblyProposeRepeal", cardId: "guild-charter" });
     for (const id of ["1", "2", "3"] as const) game.take(id, { type: "assemblyPass" });
+    for (const id of ["0", "1", "2", "3"] as const) game.take(id, { type: "assemblyReady" });
     // Only its mover votes for the repeal.
     while (game.G.assembly?.phase === "voting") {
       const voter = game.G.assembly.activePlayer;

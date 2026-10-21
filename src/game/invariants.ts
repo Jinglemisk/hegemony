@@ -1,7 +1,7 @@
 import { PLAYER_IDS } from "./data";
 import { getPlayerEventCards, getResolutionCards, getYearCards } from "./content";
 import type { BallotItem, PoliticianId } from "./assembly/types";
-import type { HegemonyState, Pops, Settlement } from "./types";
+import type { HegemonyState, PlayerId, Pops, Settlement } from "./types";
 import { playerPieces } from "./settlement";
 import { COMMAND_SCHEMA_VERSION, STATE_SCHEMA_VERSION } from "./version";
 
@@ -196,19 +196,25 @@ export function collectInvariantViolations(
     if (!transfer.fromSettlementId || !transfer.toSettlementId) {
       add("transfer.reference", path, "requires stable source and target settlement ids");
     }
-    for (const [field, settlementId] of [
-      ["fromSettlementId", transfer.fromSettlementId],
-      ["toSettlementId", transfer.toSettlementId],
+    if (transfer.giver !== undefined && !PLAYER_IDS.includes(transfer.giver)) {
+      add("transfer.giver", `${path}.giver`, `unknown player ${transfer.giver}`);
+    }
+    for (const [field, settlementId, owner] of [
+      ["fromSettlementId", transfer.fromSettlementId, transfer.giver ?? transfer.owner],
+      ["toSettlementId", transfer.toSettlementId, transfer.owner],
     ] as const) {
       const settlement = settlementById.get(settlementId);
       // A destination can disappear while pops are travelling; arrival then returns
-      // them to the stable source. Existing endpoints must always retain ownership.
-      if (settlement && settlement.owner !== transfer.owner) {
+      // them to the stable source. Existing endpoints must always retain ownership:
+      // the source is the giver's when the pops were traded.
+      if (settlement && settlement.owner !== owner) {
         add("transfer.ownership", `${path}.${field}`, "endpoint belongs to another player");
       }
     }
     validatePops(transfer.pops, `${path}.pops`, add, true);
   }
+
+  validateOffers(G, add);
 
   // Luxury goods (luxury-goods.md §3.4/§3.5): unique physical objects with at most
   // one owner, a real claim origin, and non-negative suppression. Activity is never
@@ -372,6 +378,41 @@ function validateResolutionCards(
   }
 }
 
+/** Offers stay inside a trading window: the turn, or the Assembly's preparation. */
+function validateOffers(
+  G: HegemonyState,
+  add: (code: string, path: string, message: string) => void,
+) {
+  const ids = new Set<string>();
+  const window = G.phase === "gameplay" && (!G.assembly || G.assembly.phase === "proposal");
+  if (G.offers.length > 0 && (!window || !G.ruleset.trade.enabled)) {
+    add("offer.window", "offers", "offers are open outside a trading window");
+  }
+  for (const [index, offer] of G.offers.entries()) {
+    const path = `offers[${index}]`;
+    if (!offer.id || ids.has(offer.id)) {
+      add("offer.identity", `${path}.id`, "offer id is missing or duplicated");
+    }
+    ids.add(offer.id);
+    if (!G.assembly && offer.from !== G.currentPlayer) {
+      add("offer.owner", `${path}.from`, "a turn's offers belong to its seat");
+    }
+    if (
+      offer.to.length === 0 ||
+      offer.to.includes(offer.from) ||
+      new Set(offer.to).size !== offer.to.length ||
+      !offer.to.every((seat) => PLAYER_IDS.includes(seat))
+    ) {
+      add("offer.recipients", `${path}.to`, "must name distinct rivals");
+    }
+    for (const seat of Object.keys(offer.answers) as PlayerId[]) {
+      if (!offer.to.includes(seat)) {
+        add("offer.answer", `${path}.answers.${seat}`, "only a recipient answers");
+      }
+    }
+  }
+}
+
 function validateAssembly(
   G: HegemonyState,
   add: (code: string, path: string, message: string) => void,
@@ -392,6 +433,9 @@ function validateAssembly(
   for (const playerID of PLAYER_IDS) {
     if (session.held[playerID] && session.proposals[playerID]) {
       add("assembly.cardState", `assembly.held.${playerID}`, "held and proposed cards overlap");
+    }
+    if (session.ready[playerID] && !session.proposalDone[playerID]) {
+      add("assembly.readyState", `assembly.ready.${playerID}`, "Ready before sealing");
     }
     if (session.proposalDone[playerID] && session.held[playerID]) {
       add(
@@ -414,8 +458,8 @@ function validateAssembly(
     if (session.ballot.length !== 0 || session.ballotIndex !== 0 || session.voteIndex !== 0) {
       add("assembly.phase", "assembly", "proposal phase cannot have an active ballot");
     }
-    if (session.proposalDone[session.activePlayer]) {
-      add("assembly.actor", "assembly.activePlayer", "proposal actor has already finalized");
+    if (session.ready[session.activePlayer]) {
+      add("assembly.actor", "assembly.activePlayer", "proposal actor is already Ready");
     }
   } else if (session.phase === "voting") {
     if (

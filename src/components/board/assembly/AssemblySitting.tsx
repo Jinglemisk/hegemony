@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import {
   assemblySittings,
@@ -31,7 +31,11 @@ import { tieRule } from "../../../ui/effects";
 import { sign } from "../../../ui/frameFormat";
 import { RESOURCE_RASTERS } from "../../../ui/iconRegistry";
 import { numberWord, ordinal, seatName, toRoman } from "../../../ui/formatters";
-import { glazeOf } from "../../../ui/playerGlazes";
+import { glazeOf, PLAYER_GLAZES } from "../../../ui/playerGlazes";
+import { offerWindowReason } from "../../../game/trade";
+import { Popover } from "../../overlays/Popover";
+import { ComposeCard } from "../../frame/trade/OfferCard";
+import { OfferDisc } from "../../frame/trade/OfferDisc";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
 import { ActionButton } from "../../ActionButton";
 import { Chips, Ico, SeatMark } from "../../frame/parts";
@@ -303,8 +307,74 @@ function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }
             <span className="sit-note">Your votes this sitting: {votesWords(G, viewerId)}</span>
           </div>
         )}
+        {G.ruleset.trade.enabled && session.voteOrder.every((id) => session.proposalDone[id]) ? (
+          <Trade G={G} session={session} />
+        ) : null}
       </div>
       <SeatStrip G={G} session={session} />
+    </>
+  );
+}
+
+/**
+ * Trade in the preparation, on the sheet every seat shares once all have sealed: the
+ * open offers, each answered on its card, and an Offer button for each seat not yet
+ * Ready, which picks the seat that offers.
+ */
+function Trade({ G, session }: { G: HegemonyState; session: AssemblySession }) {
+  const offerers = session.voteOrder.filter((id) => offerWindowReason(G, id) === null);
+  const [seat, setSeat] = useState<PlayerId | null>(null);
+  const anchor = useRef<HTMLDivElement>(null);
+
+  return (
+    <>
+      <h3 className="kicker sit-sec">
+        <Ico path="market/handshake" size="chip" />
+        Trade before the ballots · offers close when every seat is Ready
+      </h3>
+      <div className="sit-trade" ref={anchor}>
+        {G.offers.length ? (
+          <ul aria-label="Open offers" className="sit-offers">
+            {G.offers.map((offer) => (
+              <OfferDisc key={offer.id} offer={offer} />
+            ))}
+          </ul>
+        ) : (
+          <span className="sit-note">No offers open.</span>
+        )}
+        <span className="sit-offer-as">
+          {offerers.length === 0 ? (
+            <span className="sit-note">Every seat that could offer is Ready.</span>
+          ) : (
+            <>
+              <span className="caps">Offer as</span>
+              {offerers.map((id) => (
+                <button
+                  aria-label={`Offer a trade as ${G.players[id].name}`}
+                  className="kicker sit-btn sit-offer"
+                  key={id}
+                  onClick={() => setSeat(id)}
+                  type="button"
+                >
+                  <SeatMark playerID={id} />
+                  {PLAYER_GLAZES[id].name}
+                </button>
+              ))}
+            </>
+          )}
+        </span>
+      </div>
+      {seat ? (
+        <Popover
+          anchor={anchor}
+          ariaLabel="Offer a trade"
+          className="trade-pop"
+          dismissOnOutside
+          onDismiss={() => setSeat(null)}
+        >
+          <ComposeCard onClose={() => setSeat(null)} seat={seat} />
+        </Popover>
+      ) : null}
     </>
   );
 }
@@ -927,7 +997,9 @@ function SeatStrip({
   session: AssemblySession;
   votes?: boolean;
 }) {
-  const { viewerId } = useGameUi();
+  const { viewerId, moves } = useGameUi();
+  // Once every seat has sealed the sheet is shared: each seat presses Ready on it.
+  const shared = !votes && session.voteOrder.every((id) => session.proposalDone[id]);
 
   return (
     <footer className="sit-foot">
@@ -936,13 +1008,15 @@ function SeatStrip({
           const you = id === viewerId;
           const state = votes
             ? `${currentVoteWeight(G, id)} vote${currentVoteWeight(G, id) === 1 ? "" : "s"}`
-            : session.proposalDone[id]
-              ? "sealed"
-              : you
-                ? session.held[id]
-                  ? "holding a card"
-                  : "your choice"
-                : "deciding…";
+            : session.ready[id]
+              ? "✓ Ready"
+              : session.proposalDone[id]
+                ? "sealed"
+                : you
+                  ? session.held[id]
+                    ? "holding a card"
+                    : "your choice"
+                  : "deciding…";
           return (
             <li
               className={you ? "is-you" : undefined}
@@ -957,11 +1031,27 @@ function SeatStrip({
                 </b>
                 <span>{state}</span>
               </span>
+              {shared && !session.ready[id] ? (
+                <button
+                  aria-label={`${G.players[id].name} is Ready for the ballots`}
+                  className="kicker sit-btn sit-ready"
+                  onClick={() => moves.assemblyReady(id)}
+                  type="button"
+                >
+                  Ready
+                </button>
+              ) : null}
             </li>
           );
         })}
       </ol>
-      {votes ? null : <span className="sit-note">Each seat decides in secret, in turn order.</span>}
+      {votes ? null : (
+        <span className="sit-note">
+          {shared
+            ? "Trade, then press Ready. The ballots open when every seat is Ready."
+            : "Each seat decides in secret, in turn order."}
+        </span>
+      )}
     </footer>
   );
 }

@@ -15,6 +15,7 @@ import {
   assemblyPass,
   assemblyPropose,
   assemblyProposeRepeal,
+  assemblyReady,
   assemblyVote,
   baseVoteWeight,
   enactForEval,
@@ -48,8 +49,13 @@ function propose(G: HegemonyState, id: string, by: PlayerId = "0", target?: Play
   expect(assemblyDraw(G, by, card.politician).ok).toBe(true);
   expect(assemblyPropose(G, by, target).ok).toBe(true);
 }
+/** Every seat still to seal passes, and every seat presses Ready. */
 function pass(G: HegemonyState) {
-  while (G.assembly!.phase === "proposal") expect(assemblyPass(G, G.currentPlayer).ok).toBe(true);
+  while (G.assembly!.phase === "proposal") {
+    const seat = G.currentPlayer;
+    const done = G.assembly!.proposalDone[seat];
+    expect((done ? assemblyReady : assemblyPass)(G, seat).ok).toBe(true);
+  }
 }
 function vote(G: HegemonyState, yea = true) {
   while (G.assembly!.phase === "voting")

@@ -64,6 +64,8 @@ import { RealmPanel, type RealmSubject, type RealmTab } from "./frame/RealmPanel
 import { Alarms } from "./frame/Alarms";
 import { EndTurn } from "./frame/EndTurn";
 import { discGroups } from "./frame/discs";
+import { ComposeCard } from "./frame/trade/OfferCard";
+import { Popover } from "./overlays/Popover";
 
 type BoardProps = {
   G: HegemonyState;
@@ -174,6 +176,9 @@ export function HegemonyBoard({
   // realm itself), a tile, or a luxury good's mooring.
   const [subject, setSubject] = useState<RealmSubject>({ kind: "realm" });
   const [consultTab, setConsultTab] = useState<ConsultTab | null>(null);
+  // The offer card, composing from the Trade disc: it floats by the disc and holds up
+  // no one, so it is not a dialog.
+  const [composing, setComposing] = useState<{ seat: PlayerId; anchor: DOMRect } | null>(null);
   // Deep-links (two-panel.md piece 4): a Codex-term click opens the consult panel's
   // rulebook at a chapter. The nonce lets the same term re-navigate the codex even if
   // the target chapter is unchanged (you clicked away and clicked the link again).
@@ -350,6 +355,7 @@ export function HegemonyBoard({
     if (handoff.current.phase === ctx.phase && handoff.current.player === ctx.currentPlayer) return;
     handoff.current = { phase: ctx.phase, player: ctx.currentPlayer };
     setActiveModal(null);
+    setComposing(null);
     clearMapSelection();
   }, [ctx.phase, ctx.currentPlayer, clearMapSelection]);
 
@@ -566,6 +572,11 @@ export function HegemonyBoard({
                       onIdeasRequest: () => setActiveModal({ kind: "ideas" }),
                       onBankBuy: moves.bankBuy,
                       onBankSell: moves.bankSell,
+                      onTrade: () => {
+                        const disc = document.querySelector('[data-group="trade"] .verb-disc');
+                        if (disc)
+                          setComposing({ seat: viewerId, anchor: disc.getBoundingClientRect() });
+                      },
                     },
                     mapSelection.selection?.mode ?? null,
                   )}
@@ -616,6 +627,18 @@ export function HegemonyBoard({
             </>
           ) : null}
 
+          {composing ? (
+            <Popover
+              anchor={composing.anchor}
+              ariaLabel="Offer a trade"
+              className="trade-pop"
+              dismissOnOutside
+              onDismiss={() => setComposing(null)}
+              preferredPlacement="above"
+            >
+              <ComposeCard onClose={() => setComposing(null)} seat={composing.seat} />
+            </Popover>
+          ) : null}
           {activeModal?.kind === "ideas" && !drafting ? <IdeasModal onClose={closeModal} /> : null}
           {activeModal?.kind === "populationPrompt" ? (
             <PopulationPickerModal

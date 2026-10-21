@@ -137,14 +137,17 @@ const HOTSEAT =
 
 /**
  * The private moment the screen is about to belong to, as a key that changes with each
- * one: a seat's turn, or a seat's Assembly proposal. Null in a public phase (setup, the
- * Idea draft, the vote, the house rising, the game's end). In hotseat each new key
- * waits behind the turn notice until its seat begins.
+ * one: a seat's turn, or a seat's Assembly proposal until it seals. Null in a public
+ * phase (setup, the Idea draft, the preparation once every seat has sealed, the vote,
+ * the house rising, the game's end). In hotseat each new key waits behind the turn
+ * notice until its seat begins.
  */
 export function privateMoment(G: HegemonyState): string | null {
   if (G.phase !== "gameplay") return null;
   if (!G.assembly) return `turn:${G.turn}`;
-  return G.assembly.phase === "proposal" ? `proposal:${G.assembly.year}:${G.currentPlayer}` : null;
+  return G.assembly.phase === "proposal" && !G.assembly.proposalDone[G.currentPlayer]
+    ? `proposal:${G.assembly.year}:${G.currentPlayer}`
+    : null;
 }
 
 /** Next seed from the dev rotation — a localStorage cursor advances it once per page

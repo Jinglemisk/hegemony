@@ -190,6 +190,8 @@ before income. On your turn:
      Port in a coastal colony.
    - **Trade at the bank** — sell materials for gold or buy them with gold, as
      often as you like (see The bank).
+   - **Trade with the other seats** — offer goods on the Trade disc, to the table or
+     to the seats you pick, as often as you like (see Trade).
    - **The Dole** — **3 influence buys 1 food**, as often as you can pay.
    - **Civic calm** (once per turn) — **Stabilize Province** for 2 influence, or
      stage **Bread & Circuses** for 2 gold. Either way: **+2 happiness this year**, expiring when the year turns. One calm action per
@@ -218,7 +220,7 @@ click it to read it again. The **first player moves on one seat** each year. The
 lasts at most **fourteen years**; the next year card stays hidden.
 
 **The alarms row.** A row of discs beside the Chronicle lists what bears on your realm
-now: a seat holding three titles, a rival one title short, the year's card, your
+now: a seat holding three titles, a rival one title short, each open trade offer, the year's card, your
 happiness while it is below zero, hunger, a General Strike or Isonomia aimed at you, an
 Assembly sitting next year, and a free luxury one of your settlements could claim with
 a Port. Each disc's tooltip says what it is and how long it lasts.
@@ -240,11 +242,43 @@ it in the realm's **Market** page and under the Exchange verb.
 - **No limit** on trades per turn — but every round trip pays the spread, so
   trading always shrinks your total stockpile (Treasurer counts only your gold).
 
-The bank is a corridor, not a merchant — its fixed rates are the walls that
-player-to-player trade (a later phase) will negotiate inside.
+The bank is a corridor, not a merchant: its fixed rates are the walls that trade
+between the seats (see Trade) negotiates inside.
 
 **The Dole** runs through the same corridor: **3 influence buys 1 food**. It is the
 one way influence reaches the granary, and it is priced worse than gold on purpose.
+
+## Trade
+
+On your turn, once your event card is resolved, you may offer a trade to the other
+seats. Press **Trade** on the realm sheet and fill the offer card: what you receive on
+the left, what they receive on the right, each with − and + to set the number. Pick
+seats at the top of the card to offer only to them; pick none and the offer goes to
+the table. Every seat sees every offer.
+
+- **What trades:** wood, stone, food, gold, influence, claimed luxury goods and pops of
+  every class. Votes, Ideas, Laws, settlements, buildings and Unrest tokens never trade.
+- **No gifts:** each side gives at least one thing, at any ratio. You give only what you
+  hold, so a seat short of food gives no food, though it may take food.
+- **Answers:** the offer waits as a disc on the alarms row, in your glaze, its ring
+  filling as seats answer. Each seat it names accepts, declines or counters by changing
+  the numbers on the card; a changed line shows what it was. When several people share
+  the screen the card names the seat that answers next, in seat order. There is no
+  clock.
+- **Settling:** you trade with one seat that accepted, take one counter, or withdraw.
+  Everything moves at once, and both sides are checked again at that moment: if goods
+  you offered went in an earlier trade, the offer can no longer settle.
+- You may have several offers open and offer again after a refusal. Your open offers
+  close when your turn ends.
+- **Luxury goods** carry their +2 happiness to whoever holds them; the Port that claimed
+  one stays where it stands.
+- **Pops** leave at once and travel like a move. Each side names its own settlements:
+  the one the pops it gives leave from, and the one that receives the pops it gets,
+  which needs room, counting pops already on their way. From the trade on they belong
+  to their new owner: their slaves count against its happiness, its titles and votes
+  count them, and it feeds them. They arrive at the start of its next turn.
+
+A settled trade writes a line in the Chronicle and is toasted to every seat.
 
 ## Ventures — Fund an Expedition
 
@@ -440,6 +474,14 @@ the sitting ends on a recap of the verdicts, the standing Laws and Voice. Minimi
 the sheet to read the map, your realm or the consult pages; nothing can be done
 until you return to it.
 
+**Trade in the preparation.** Until every seat is Ready, any seat may make and answer
+offers, as on a turn. A seat that has sealed or passed presses **Ready** when it is done;
+a Ready seat makes no new offers but still answers, and settles its own. When the last
+seat is Ready, open offers close and the ballots begin; nothing trades from then until
+the recap. A citizen traded in the preparation votes for its new owner. On screen each
+seat seals behind its own notice, then the sheet is shared: it shows the open offers, an
+Offer button that first asks which seat offers, and a Ready button for each seat.
+
 At most **four Laws** stand. A new Law at the cap replaces the oldest automatically.
 A Law survives its own sitting and the following one: a Law passed in Year 2 can
 first leave in Year 6. This protects it from repeal, replacement and The Stele Is
@@ -529,5 +571,6 @@ shows the year and cards remaining.
 `?dev=bots` runs the shared master policy in all browser seats. Headless sims can
 seat `slaver`, `civic` and `trader` by name: they favour slaves and Estates,
 citizens and the Assembly, or freemen and coastal trade. They use the same legal
-commands and search Idea purchases, bank trades and ventures. See the
+commands and search Idea purchases, bank trades and ventures. They do not trade with
+other seats yet: in the Assembly they press Ready as soon as they seal. See the
 [simulation reference](docs/reference/simulation.md) for mixed and rotated batches.

@@ -20,6 +20,10 @@ describe("behavioral command-consumer parity", () => {
     const moves = createCommandMoves(dispatch);
     const events = createCommandEvents(dispatch);
     const pops = { citizens: 1, freemen: 2, slaves: 3 };
+    const terms = {
+      give: { resources: { wood: 2 }, goods: [], pops },
+      get: { resources: { food: 1 }, goods: ["luxury-1"], pops: { ...pops, slaves: 0 } },
+    };
 
     moves.placeCapital("tile-a", pops);
     moves.placeCity("tile-b", pops);
@@ -50,6 +54,11 @@ describe("behavioral command-consumer parity", () => {
     moves.assemblyBribe("1", "gold");
     moves.assemblyVote("1", true);
     moves.assemblyClose();
+    moves.assemblyReady("2");
+    moves.tradeOffer("0", ["1", "3"], terms);
+    moves.tradeAnswer("1", "offer-9", { kind: "counter", terms, places: { from: "tile-b" } });
+    moves.tradeSettle("0", "offer-9", "1", { to: "tile-a" });
+    moves.tradeWithdraw("0", "offer-9");
     events.endTurn();
 
     expect(calls).toEqual([
@@ -121,6 +130,26 @@ describe("behavioral command-consumer parity", () => {
       { command: { type: "assemblyBribe", payment: "gold" }, actor: "1" },
       { command: { type: "assemblyVote", yea: true }, actor: "1" },
       { command: { type: "assemblyClose" }, actor: undefined },
+      { command: { type: "assemblyReady" }, actor: "2" },
+      { command: { type: "tradeOffer", to: ["1", "3"], terms }, actor: "0" },
+      {
+        command: {
+          type: "tradeAnswer",
+          offerId: "offer-9",
+          answer: { kind: "counter", terms, places: { from: "tile-b" } },
+        },
+        actor: "1",
+      },
+      {
+        command: {
+          type: "tradeSettle",
+          offerId: "offer-9",
+          partner: "1",
+          places: { to: "tile-a" },
+        },
+        actor: "0",
+      },
+      { command: { type: "tradeWithdraw", offerId: "offer-9" }, actor: "0" },
       { command: { type: "endTurn" }, actor: undefined },
     ]);
     expect(calls.map(({ command }) => command.type)).toEqual(GAME_COMMAND_TYPES);

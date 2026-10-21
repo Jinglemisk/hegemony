@@ -78,14 +78,28 @@ import {
   assemblyPass,
   assemblyPropose,
   assemblyProposeRepeal,
+  assemblyReady,
   assemblyVote,
+  getAssemblyReadyStatus,
   getResolutionCard,
   POLITICIANS,
   VOTE_PAYMENTS,
 } from "./assembly";
 import type { PoliticianId, VotePayment } from "./assembly";
 import { PLAYER_IDS } from "./data";
-import { commandActorEligibility, eligibleActors } from "./actors";
+import { commandActorEligibility, eligibleActors, outOfTurnActors } from "./actors";
+import {
+  answeredTerms,
+  getTradeAnswerStatus,
+  getTradeSettleStatus,
+  getTradeWithdrawStatus,
+  tradeAnswer,
+  tradeOffer,
+  tradePopSources,
+  tradePopTargets,
+  tradeSettle,
+  tradeWithdraw,
+} from "./trade";
 import type {
   BuildingId,
   EventTableId,
@@ -97,6 +111,10 @@ import type {
   Resources,
   RiotInsuranceId,
   TradableMaterial,
+  TradeAnswer,
+  TradeBundle,
+  TradePlaces,
+  TradeTerms,
 } from "./types";
 import { assertStateDefinition } from "./definition";
 import type { GameDefinition } from "./definition";
@@ -172,6 +190,14 @@ export type GameCommand =
   | { type: "assemblyBribe"; payment: VotePayment }
   | { type: "assemblyVote"; yea: boolean }
   | { type: "assemblyClose" }
+  /** Done preparing: the seat has sealed, and makes no new offers. */
+  | { type: "assemblyReady" }
+  // ── Trade. Offers name rivals, or none for the table; terms read from the offering
+  //    seat. Places name the acting seat's own settlements for traded pops.
+  | { type: "tradeOffer"; to: PlayerId[]; terms: TradeTerms }
+  | { type: "tradeAnswer"; offerId: string; answer: TradeAnswer }
+  | { type: "tradeSettle"; offerId: string; partner: PlayerId; places: TradePlaces }
+  | { type: "tradeWithdraw"; offerId: string }
   | { type: "endTurn" };
 
 /** Engine-derived presentation for one currently legal command. */
@@ -193,7 +219,9 @@ type DerivedCommand = GameCommand & { cost?: Partial<Resources> };
 function enumerateDerivedCommands(G: HegemonyState, playerID: PlayerId): DerivedCommand[] {
   assertStateDefinition(G);
   if (!eligibleActors(G).includes(playerID)) {
-    return [];
+    return outOfTurnActors(G).some((actor) => actor.seat === playerID)
+      ? enumerateTradeCommands(G, playerID)
+      : [];
   }
 
   if (G.pendingHunger) {
@@ -347,6 +375,16 @@ function applyCommandMutable(G: HegemonyState, playerID: PlayerId, move: GameCom
       return assemblyVote(G, playerID, move.yea);
     case "assemblyClose":
       return closeAssembly(G);
+    case "assemblyReady":
+      return assemblyReady(G, playerID);
+    case "tradeOffer":
+      return tradeOffer(G, playerID, move.to, move.terms);
+    case "tradeAnswer":
+      return tradeAnswer(G, playerID, move.offerId, move.answer);
+    case "tradeSettle":
+      return tradeSettle(G, playerID, move.offerId, move.partner, move.places);
+    case "tradeWithdraw":
+      return tradeWithdraw(G, playerID, move.offerId);
     case "endTurn":
       return endTurn(G);
   }
@@ -450,11 +488,15 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
     return moves;
   }
 
-  // Proposal is ASYNC: any seat that has not yet finalized has moves. (A headless
-  // driver only ever calls this for `currentPlayer`, which syncAssemblyActor parks on
-  // the first undecided seat, so the sim still steps one seat at a time.)
+  // Proposal is ASYNC: any seat not yet Ready has moves. (A headless driver only ever
+  // calls this for `currentPlayer`, which syncAssemblyActor parks on the first seat not
+  // Ready, so the sim still steps one seat at a time.) A sealed seat trades or presses
+  // Ready; offers are composed, never listed.
   if (session.proposalDone[playerID]) {
-    return [];
+    return [
+      ...enumerateTradeCommands(G, playerID),
+      ...(getAssemblyReadyStatus(G, playerID).can ? [{ type: "assemblyReady" as const }] : []),
+    ];
   }
 
   const held = session.held[playerID];
@@ -486,8 +528,57 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
     if (status.can) moves.push({ type: "assemblyProposeRepeal", cardId, cost: status.cost });
   }
 
+  moves.push(...enumerateTradeCommands(G, playerID));
   moves.push({ type: "assemblyPass" });
   return moves;
+}
+
+/**
+ * The trade answers, settlements and withdrawals open to a seat, with every pair of
+ * its own settlements the traded pops could leave and reach. Offers and counters carry
+ * terms the seat composes, so they are never listed.
+ */
+function enumerateTradeCommands(G: HegemonyState, playerID: PlayerId): DerivedCommand[] {
+  const moves: DerivedCommand[] = [];
+  for (const offer of G.offers) {
+    if (offer.to.includes(playerID) && !offer.answers[playerID]) {
+      for (const places of tradePlaceChoices(G, playerID, offer.terms.get, offer.terms.give)) {
+        const answer: TradeAnswer = { kind: "accept", places };
+        if (getTradeAnswerStatus(G, playerID, offer.id, answer).can) {
+          moves.push({ type: "tradeAnswer", offerId: offer.id, answer });
+        }
+      }
+      moves.push({ type: "tradeAnswer", offerId: offer.id, answer: { kind: "decline" } });
+    }
+    if (offer.from !== playerID) continue;
+    for (const partner of offer.to) {
+      const terms = answeredTerms(offer, partner);
+      if (!terms) continue;
+      for (const places of tradePlaceChoices(G, playerID, terms.give, terms.get)) {
+        if (getTradeSettleStatus(G, playerID, offer.id, partner, places).can) {
+          moves.push({ type: "tradeSettle", offerId: offer.id, partner, places });
+        }
+      }
+    }
+    if (getTradeWithdrawStatus(G, playerID, offer.id).can) {
+      moves.push({ type: "tradeWithdraw", offerId: offer.id });
+    }
+  }
+  return moves;
+}
+
+/** Each way to name a seat's settlements for the pops it gives and gets. */
+function tradePlaceChoices(
+  G: HegemonyState,
+  playerID: PlayerId,
+  gives: TradeBundle,
+  gets: TradeBundle,
+): TradePlaces[] {
+  const froms = totalPops(gives.pops) > 0 ? tradePopSources(G, playerID, gives.pops) : [undefined];
+  const tos = totalPops(gets.pops) > 0 ? tradePopTargets(G, playerID, gets.pops) : [undefined];
+  return froms.flatMap((from) =>
+    tos.map((to) => ({ ...(from ? { from } : {}), ...(to ? { to } : {}) })),
+  );
 }
 
 export function describeCommand(
@@ -553,9 +644,33 @@ export function describeCommand(
       return `vote ${move.yea ? "yea" : "nay"}`;
     case "assemblyClose":
       return "rise from the Assembly";
+    case "assemblyReady":
+      return "ready for the ballots";
+    case "tradeOffer":
+      return `offer ${move.to.length === 0 ? "the table" : `seats ${move.to.join(", ")}`} ${describeTermsPlain(move.terms.give)} for ${describeTermsPlain(move.terms.get)}`;
+    case "tradeAnswer":
+      return move.answer.kind === "counter"
+        ? `counter ${move.offerId}: ${describeTermsPlain(move.answer.terms.get)} for ${describeTermsPlain(move.answer.terms.give)}`
+        : `${move.answer.kind} ${move.offerId}`;
+    case "tradeSettle":
+      return `settle ${move.offerId} with seat ${move.partner}`;
+    case "tradeWithdraw":
+      return `withdraw ${move.offerId}`;
     case "endTurn":
       return "end turn";
   }
+}
+
+/** A bundle in a line, goods by asset id: the CLI has no state to name them. */
+function describeTermsPlain(bundle: TradeBundle): string {
+  const lines = [
+    ...Object.entries(bundle.resources)
+      .filter(([, amount]) => (amount ?? 0) > 0)
+      .map(([resource, amount]) => `${amount} ${resource}`),
+    ...bundle.goods,
+    ...(totalPops(bundle.pops) > 0 ? [formatPops(bundle.pops)] : []),
+  ];
+  return lines.length === 0 ? "nothing" : lines.join(", ");
 }
 
 function formatCost(cost: Partial<Resources>): string {
@@ -840,6 +955,7 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
   }
 
   moves.push(...enumerateIdeaCommands(G, playerID, "buyIdea"));
+  moves.push(...enumerateTradeCommands(G, playerID));
   moves.push({ type: "endTurn" });
   return moves;
 }

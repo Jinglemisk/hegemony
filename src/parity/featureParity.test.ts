@@ -30,6 +30,7 @@ import {
   EVENT_EFFECT_PARITY,
   EVENT_TABLE_CONTENT_IDS,
   FEATURE_PARITY,
+  TRADE_WORKFLOW_PARITY,
   LAW_CONTENT_IDS,
   LAW_EFFECT_PARITY,
   PARITY_BEHAVIOR_FIXTURES,
@@ -95,7 +96,11 @@ describe("feature and content parity manifests", () => {
       }
     }
 
-    for (const entry of [...Object.values(CONTENT_MANIFEST), ...Object.values(FEATURE_PARITY)]) {
+    for (const entry of [
+      ...Object.values(CONTENT_MANIFEST),
+      ...Object.values(FEATURE_PARITY),
+      ...Object.values(TRADE_WORKFLOW_PARITY),
+    ]) {
       addEvidence(entry.engine);
       addEvidence(entry.frontend);
       addEvidence(entry.simulation);

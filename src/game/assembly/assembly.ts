@@ -76,14 +76,23 @@ function turnOrder(G: HegemonyState): PlayerId[] {
   return PLAYER_IDS.map((_, index) => PLAYER_IDS[(start + index) % PLAYER_IDS.length]);
 }
 
-/** The first seat still to finalize its proposal, in turn order; null when all are done. */
-function firstUndecided(G: HegemonyState): PlayerId | null {
+/** The seat the preparation waits on, in turn order: the first still to seal, then
+ *  the first not yet Ready; null when all are Ready. */
+function preparationActor(G: HegemonyState): PlayerId | null {
   const session = G.assembly!;
-  return turnOrder(G).find((seat) => !session.proposalDone[seat]) ?? null;
+  const order = turnOrder(G);
+  return (
+    order.find((seat) => !session.proposalDone[seat]) ??
+    order.find((seat) => !session.ready[seat]) ??
+    null
+  );
 }
 
 /**
  * Keep `G.currentPlayer` pointed at whoever the Assembly is waiting on.
+ *
+ * In PROPOSAL that is the first seat still to seal, then the first not yet Ready, so
+ * each seat seals in turn behind its own notice and the Ready presses follow.
  *
  * In VOTING and CLOSING there is one such seat, and moving `currentPlayer` onto it
  * means every existing turn gate — the enumerator, the dispatcher, the UI's
@@ -105,7 +114,7 @@ function syncAssemblyActor(G: HegemonyState) {
 
   session.activePlayer =
     session.phase === "proposal"
-      ? (firstUndecided(G) ?? session.resumePlayer)
+      ? (preparationActor(G) ?? session.resumePlayer)
       : session.phase === "voting"
         ? session.voteOrder[session.voteIndex]
         : session.resumePlayer;
@@ -129,6 +138,7 @@ export function openAssembly(G: HegemonyState, resumePlayer: PlayerId) {
     draws: perSeat(0),
     proposals: perSeat<BallotItem | null>(null),
     proposalDone: perSeat(false),
+    ready: perSeat(false),
     setAside: perSeat<string | null>(null),
     ballot: [],
     ballotIndex: 0,
@@ -432,17 +442,59 @@ export function assemblyPass(G: HegemonyState, playerID: PlayerId): MoveResult {
   return MOVE_OK;
 }
 
-/** Mark a seat done. When the last seat finalizes, the round closes and voting opens. */
+/** Mark a seat sealed. With trade off, sealing is Ready; with trade on, the seat may
+ *  still trade and presses Ready when it is done. */
 function finalizeProposal(G: HegemonyState, playerID: PlayerId) {
   const session = G.assembly!;
   session.proposalDone[playerID] = true;
 
-  if (turnOrder(G).every((seat) => session.proposalDone[seat])) {
+  if (!G.ruleset.trade.enabled) {
+    markReady(G, playerID);
+    return;
+  }
+
+  syncAssemblyActor(G);
+}
+
+/** When the last seat is Ready, the preparation ends: open offers close, and nothing
+ *  trades from the ballots to the recap. */
+function markReady(G: HegemonyState, playerID: PlayerId) {
+  const session = G.assembly!;
+  session.ready[playerID] = true;
+
+  if (turnOrder(G).every((seat) => session.ready[seat])) {
+    if (G.offers.length > 0) {
+      G.offers = [];
+      addLog(G, "The open offers close as the ballots begin.");
+    }
     beginVoting(G);
     return;
   }
 
   syncAssemblyActor(G);
+}
+
+export function getAssemblyReadyStatus(G: HegemonyState, playerID: PlayerId) {
+  const session = G.assembly;
+  const reason =
+    session?.phase !== "proposal"
+      ? "The Assembly is not preparing."
+      : !session.proposalDone[playerID]
+        ? "Seal a proposal or pass first."
+        : session.ready[playerID]
+          ? "Already Ready."
+          : null;
+  return { can: reason === null, reason };
+}
+
+/** Done preparing: the seat makes no new offers, though it still answers them. */
+export function assemblyReady(G: HegemonyState, playerID: PlayerId): MoveResult {
+  const status = getAssemblyReadyStatus(G, playerID);
+  if (!status.can) return invalid(status.reason!);
+
+  addLog(G, `${getPlayerName(G, playerID)} is ready for the ballots.`, playerID);
+  markReady(G, playerID);
+  return MOVE_OK;
 }
 
 // ── Voting phase ──────────────────────────────────────────────────────────────────

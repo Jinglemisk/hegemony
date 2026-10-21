@@ -11,6 +11,7 @@ import type {
 import { getOwnedSettlement } from "../../game/core/query";
 import { titleChanges, titleHolders } from "../../game/victory";
 import type { TitleChange, TitleHolders } from "../../game/victory";
+import { describeBundle } from "../../game/trade";
 import { presentUnrestOutcome } from "../../ui/effects";
 import { formatPopLabel, seatName } from "../../ui/formatters";
 import { settlementNameOf } from "../../ui/settlementNames";
@@ -142,6 +143,19 @@ function presentMoment(
         ),
       };
     }
+    case "trade": {
+      const partner = G.players[moment.partner].name;
+      return {
+        kicker: `Trade · ${name} and ${partner}`,
+        icon: "market/handshake",
+        body: (
+          <>
+            {name} gave <b>{describeBundle(G, moment.terms.give)}</b>; {partner} gave{" "}
+            <b>{describeBundle(G, moment.terms.get)}</b>.
+          </>
+        ),
+      };
+    }
     case "yearCard":
       return null;
   }
@@ -204,8 +218,13 @@ export function useMomentToasts(
     const from = cursors.current[viewerId] ?? start.current;
     const moments = G.log
       .slice(from)
+      // A trade toasts every seat, its own included.
       .filter((entry): entry is LogEntry & { moment: LogMoment; about: PlayerId } =>
-        Boolean(entry.moment && entry.about && entry.about !== viewerId),
+        Boolean(
+          entry.moment &&
+          entry.about &&
+          (entry.about !== viewerId || entry.moment.kind === "trade"),
+        ),
       )
       .flatMap((entry) => {
         const toast = presentMoment(G, entry.about, entry.moment);

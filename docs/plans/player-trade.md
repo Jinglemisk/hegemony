@@ -1,5 +1,5 @@
 ---
-status: ready
+status: active
 phase: "post-v2"
 updated: 2026-10-21
 ---
@@ -239,7 +239,8 @@ linear influence pile passed, and no card could meet the draw rule.
 
 ## PRs
 
-Two, both to `main`; the [code-health plan](code-health.md)'s five cleanup PRs are merged.
+Two, both to `main`; the [code-health plan](code-health.md)'s five cleanup PRs are merged. The
+first is built on `feat/player-trade` (2026-10-21).
 
 1. **Trade.** Trade between human seats in hotseat, with the bank still in place. Offers on a
    turn and in the Assembly's preparation, to the table or named seats, in materials, gold,
@@ -254,6 +255,13 @@ Two, both to `main`; the [code-health plan](code-health.md)'s five cleanup PRs a
    ballots begin; a citizen traded in the preparation votes for its new owner), command parity,
    one browser test of an offer countered and settled on a turn, and one bot run with no illegal
    moves. Then the owner tries the screens in hotseat.
+   - As built: trade is on in the default ruleset, and `trade.enabled: false` takes it and the
+     Ready step out. A recipient names its own settlements for traded pops when it answers, the
+     offering seat when it settles. In the preparation `currentPlayer` walks the seats still to
+     seal, then the seats not yet Ready; once every seat has sealed the sheet is shared, with an
+     Offer button that picks the offering seat and a Ready button per seat. The trade commands'
+     simulation route in the parity maps names PR 2. `?dev=trade` and `?dev=assembly-trade` open
+     the two screens.
 2. **Bots trade; the bank goes.** Bots answer, counter and offer, on their turn and in the
    Assembly, with partner choice and pacing, and the sim routes each answer to its seat. A dev
    setting in the TUNE panel makes each seat human or a bot of a chosen personality (D4). The

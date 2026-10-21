@@ -12,6 +12,9 @@ import type {
   Pops,
   RiotInsuranceId,
   TradableMaterial,
+  TradeAnswer,
+  TradePlaces,
+  TradeTerms,
 } from "../game/types";
 
 import type { NationalIdeaId, IdeaPopChoice } from "../game/ideaTypes";
@@ -49,6 +52,16 @@ export type GameMoves = {
   assemblyBribe: (playerID: PlayerId, payment: VotePayment) => void;
   assemblyVote: (playerID: PlayerId, yea: boolean) => void;
   assemblyClose: () => void;
+  assemblyReady: (playerID: PlayerId) => void;
+  tradeOffer: (playerID: PlayerId, to: PlayerId[], terms: TradeTerms) => void;
+  tradeAnswer: (playerID: PlayerId, offerId: string, answer: TradeAnswer) => void;
+  tradeSettle: (
+    playerID: PlayerId,
+    offerId: string,
+    partner: PlayerId,
+    places: TradePlaces,
+  ) => void;
+  tradeWithdraw: (playerID: PlayerId, offerId: string) => void;
 };
 
 export type DispatchGameCommand = (command: GameCommand, actor?: PlayerId) => void;
@@ -108,6 +121,13 @@ export function createCommandMoves(dispatch: DispatchGameCommand): GameMoves {
     assemblyBribe: (playerID, payment) => dispatch({ type: "assemblyBribe", payment }, playerID),
     assemblyVote: (playerID, yea) => dispatch({ type: "assemblyVote", yea }, playerID),
     assemblyClose: () => dispatch({ type: "assemblyClose" }),
+    assemblyReady: (playerID) => dispatch({ type: "assemblyReady" }, playerID),
+    tradeOffer: (playerID, to, terms) => dispatch({ type: "tradeOffer", to, terms }, playerID),
+    tradeAnswer: (playerID, offerId, answer) =>
+      dispatch({ type: "tradeAnswer", offerId, answer }, playerID),
+    tradeSettle: (playerID, offerId, partner, places) =>
+      dispatch({ type: "tradeSettle", offerId, partner, places }, playerID),
+    tradeWithdraw: (playerID, offerId) => dispatch({ type: "tradeWithdraw", offerId }, playerID),
   };
 }
 

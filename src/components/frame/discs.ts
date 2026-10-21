@@ -20,6 +20,7 @@ import {
   promotionTarget,
 } from "../../game/rules";
 import type { CivicCalmPayment } from "../../game/rules";
+import { offerWindowReason } from "../../game/trade";
 import type {
   BuildingDefinition,
   BuildingId,
@@ -38,7 +39,7 @@ import { getOwnedHoldings } from "../board/helpers";
 /**
  * The verb discs on the realm sheet's edge, as data: a disc is a group of
  * options, in the order the owner picked (Grow, People, Expand, Build, Civic,
- * Exchange). The count is not fixed anywhere else — the sheet lays out however
+ * Exchange), and Trade beside Exchange until the bank goes. The count is not fixed anywhere else — the sheet lays out however
  * many groups this returns, and the hotkeys follow the order.
  *
  * An option either runs (a command, or arming the map for one) or holds a
@@ -70,7 +71,7 @@ export type DiscOption = {
 };
 
 export type DiscGroup = {
-  id: "grow" | "people" | "expand" | "build" | "civic" | "exchange";
+  id: "grow" | "people" | "expand" | "build" | "civic" | "exchange" | "trade";
   label: string;
   icon: string;
   /** What the open disc's name tab reads when a click has no option of its own. */
@@ -92,6 +93,8 @@ export type DiscHandlers = Pick<
   onIdeasRequest?: () => void;
   onBankBuy: (material: TradableMaterial) => void;
   onBankSell: (material: TradableMaterial) => void;
+  /** Open the offer card to compose an offer. */
+  onTrade: () => void;
 };
 
 const VERB_ICON: Partial<Record<VerbId, string>> = {
@@ -418,6 +421,25 @@ export function discGroups(
       icon: "market/bank",
       hint: "Pick a good",
       options: exchange,
+    },
+    {
+      id: "trade",
+      label: "Trade",
+      icon: "market/handshake",
+      hint: "Offer a trade",
+      primary: "offer",
+      options: [
+        {
+          id: "offer",
+          label: "Offer",
+          icon: "market/handshake",
+          prices: [],
+          text: "to the table or chosen seats",
+          enabled: open && offerWindowReason(G, playerID) === null,
+          hint: "Offer goods to the other seats. They answer on the alarms row.",
+          run: handlers.onTrade,
+        },
+      ],
     },
   ];
 }

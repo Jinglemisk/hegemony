@@ -150,6 +150,30 @@ export const PARITY_BEHAVIOR_FIXTURES = {
     implementation: "src/game/luxury.test.ts",
     evidence: "counts every good a player holds: there is no cap",
   },
+  tradeSettlement: {
+    implementation: "src/game/trade.test.ts",
+    evidence: "settles atomically: exactly the named stocks move and every table total holds",
+  },
+  tradeRecheck: {
+    implementation: "src/game/trade.test.ts",
+    evidence: "rechecks at settlement when two open offers spend the same goods",
+  },
+  tradeAnswerers: {
+    implementation: "src/game/trade.test.ts",
+    evidence: "lets only the named seats answer, out of turn and only with an answer",
+  },
+  tradeCounter: {
+    implementation: "src/game/trade.test.ts",
+    evidence: "settles a counter on the counter's terms",
+  },
+  tradeClose: {
+    implementation: "src/game/trade.test.ts",
+    evidence: "closes a turn's open offers when it ends",
+  },
+  tradeAssembly: {
+    implementation: "src/game/trade.test.ts",
+    evidence: "lets any seat offer until it is Ready, then closes open offers as the ballots begin",
+  },
 } as const satisfies Record<string, ParityEvidence>;
 
 export type ParityBehaviorFixtureId = keyof typeof PARITY_BEHAVIOR_FIXTURES;
@@ -323,6 +347,61 @@ export const ACTIVE_EFFECT_MECHANIC_PARITY = {
   standingLaw: active("activeEffectLifecycle", "policyAssembly"),
   equalVotesNextAssembly: active("activeEffectLifecycle", "policyAssembly"),
 } as const satisfies Record<ActiveEffectMechanic["type"], EffectParityCoverage>;
+
+/** One step of a trade, from the offer to its close. */
+export type TradeWorkflowStep = "offer" | "answer" | "counter" | "settle" | "withdraw" | "close";
+
+/**
+ * Player trade's workflow, step by step (docs/plans/player-trade.md). The engine and
+ * the screens cover every step now; the bots learn to trade in the plan's second PR,
+ * so a step's simulation route names that PR until it lands. Telemetry counts each
+ * step's command by type.
+ */
+export type TradeWorkflowCoverage = {
+  engine: ParityEvidence;
+  frontend: ParityEvidence;
+  simulation: ParityEvidence;
+  telemetry: ParityEvidence;
+  behaviorFixtures: NonEmptyList<ParityBehaviorFixtureId>;
+};
+
+const tradeStep = (
+  engine: string,
+  frontend: ParityEvidence,
+  simulation: string,
+  ...behaviorFixtures: NonEmptyList<ParityBehaviorFixtureId>
+): TradeWorkflowCoverage => ({
+  engine: { implementation: "src/game/trade.ts", evidence: engine },
+  frontend,
+  simulation: { implementation: "docs/plans/player-trade.md", evidence: simulation },
+  telemetry: { implementation: "src/sim/telemetry.ts", evidence: "movesByType" },
+  behaviorFixtures,
+});
+const card = (evidence: string) => ({
+  implementation: "src/components/frame/trade/OfferCard.tsx",
+  evidence,
+});
+
+export const TRADE_WORKFLOW_PARITY = {
+  offer: tradeStep("tradeOffer", card("ComposeCard"), "Offering on its turn", "tradeSettlement"),
+  answer: tradeStep("tradeAnswer", card("Answer"), "Answering", "tradeAnswerers"),
+  counter: tradeStep("tradeAnswer", card("sameSides"), "counter once", "tradeCounter"),
+  settle: tradeStep(
+    "tradeSettle",
+    card("Answers"),
+    "settles with the acceptor",
+    "tradeSettlement",
+    "tradeRecheck",
+  ),
+  withdraw: tradeStep("tradeWithdraw", card("tradeWithdraw"), "Pacing", "tradeRecheck"),
+  close: tradeStep(
+    "closeTurnOffers",
+    { implementation: "src/components/frame/trade/OfferDisc.tsx", evidence: "OfferDisc" },
+    "Offering in the Assembly",
+    "tradeClose",
+    "tradeAssembly",
+  ),
+} as const satisfies Record<TradeWorkflowStep, TradeWorkflowCoverage>;
 
 export const BUILDING_CONTENT_IDS = [
   "marketplace",

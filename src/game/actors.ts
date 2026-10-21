@@ -19,12 +19,18 @@ export type ActorEligibility = {
   reasons: string[];
 };
 
+/** Trade's commands. Offering is the turn's, or the preparation's; the rest also go
+ *  out of turn. */
+const TRADE_COMMANDS = ["tradeOffer", "tradeAnswer", "tradeSettle", "tradeWithdraw"] as const;
+
 const ASSEMBLY_PROPOSAL_COMMANDS: ReadonlySet<GameCommand["type"]> = new Set([
   "assemblyDraw",
   "assemblyDiscardHeld",
   "assemblyPropose",
   "assemblyProposeRepeal",
   "assemblyPass",
+  "assemblyReady",
+  ...TRADE_COMMANDS,
 ]);
 
 const ASSEMBLY_VOTE_COMMANDS: ReadonlySet<GameCommand["type"]> = new Set([
@@ -57,7 +63,7 @@ export function eligibleActors(G: HegemonyState): PlayerId[] {
     case "riotDecision":
       return G.pendingRiot ? [G.pendingRiot.playerID] : [];
     case "assemblyProposal":
-      return PLAYER_IDS.filter((playerID) => !G.assembly?.proposalDone[playerID]);
+      return PLAYER_IDS.filter((playerID) => !G.assembly?.ready[playerID]);
     case "assemblyVote": {
       const actor = G.assembly?.voteOrder[G.assembly.voteIndex];
       return actor ? [actor] : [];
@@ -68,6 +74,37 @@ export function eligibleActors(G: HegemonyState): PlayerId[] {
     case "turn":
       return [G.currentPlayer];
   }
+}
+
+/** A seat outside the workflow's actors that may still send some commands, and which. */
+export type OutOfTurnActor = { seat: PlayerId; commands: GameCommand["type"][] };
+
+/**
+ * The seats that may act out of turn, in seat order. A workflow names them and the
+ * commands each may send. Trade is the first: on a turn, the seats an open offer names
+ * answer it; in the Assembly's preparation, a Ready seat still answers, and settles or
+ * withdraws its own offers.
+ */
+export function outOfTurnActors(G: HegemonyState): OutOfTurnActor[] {
+  const workflow = currentWorkflow(G);
+  if (workflow !== "turn" && workflow !== "assemblyProposal") return [];
+  const actors = eligibleActors(G);
+  const commands = new Map<PlayerId, Set<GameCommand["type"]>>();
+  const allow = (seat: PlayerId, ...types: GameCommand["type"][]) => {
+    if (actors.includes(seat)) return;
+    const set = commands.get(seat) ?? new Set();
+    for (const type of types) set.add(type);
+    commands.set(seat, set);
+  };
+
+  for (const offer of G.offers) {
+    for (const seat of offer.to) if (!offer.answers[seat]) allow(seat, "tradeAnswer");
+    allow(offer.from, "tradeSettle", "tradeWithdraw");
+  }
+  return PLAYER_IDS.filter((seat) => commands.has(seat)).map((seat) => ({
+    seat,
+    commands: [...commands.get(seat)!],
+  }));
 }
 
 /**
@@ -110,7 +147,10 @@ export function commandActorEligibility(
 ): ActorEligibility {
   const workflow = currentWorkflow(G);
   if (!eligibleActors(G).includes(actor)) {
-    return { eligible: false, workflow, reasons: ["This player is not an eligible actor."] };
+    const outOfTurn = outOfTurnActors(G).find((entry) => entry.seat === actor);
+    return outOfTurn?.commands.includes(command.type)
+      ? { eligible: true, workflow, reasons: [] }
+      : { eligible: false, workflow, reasons: ["This player is not an eligible actor."] };
   }
 
   const allowed = commandMatchesWorkflow(G, workflow, command.type);
@@ -149,6 +189,7 @@ function commandMatchesWorkflow(
     case "turn":
       return (
         !type.startsWith("assembly") &&
+        type !== "tradeAnswer" &&
         type !== "resolveEvent" &&
         type !== "resolveHunger" &&
         type !== "buyRiotInsurance" &&

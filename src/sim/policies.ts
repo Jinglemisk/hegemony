@@ -1661,7 +1661,11 @@ function resolveAssemblyByHeuristic(
     return chooseVote(G, session, moves, me, score);
   }
 
-  // Proposal (async): fish/repeal/pass while empty-handed, then propose or discard.
+  // Proposal (async): fish/repeal/pass while empty-handed, then propose or discard,
+  // then Ready. Bots make no offers yet.
+  if (session.proposalDone[me]) {
+    return moves.find((move) => move.type === "assemblyReady") ?? moves[0];
+  }
   const held = session.held[me];
   if (held) {
     return chooseProposeOrDiscard(G, held.card, moves, me, score);

@@ -41,7 +41,8 @@ The [trade plan](../../../../plans/player-trade.md) carries these as D11, D12 an
   the canvas, publish them as `project/<name>` to a Design canvas, upload the icons again,
   and swap in the new `/_blob/` ids.
 - `icons/` holds the three new icons, drawn in the [Painted bronze](../../bronze-icons.md)
-  style. They are not in `assets/icons/` yet.
+  style. The handshake is the game's `market/handshake` since trade's first PR; the curia and
+  the amphitheatre wait for the owner's pick of an Assembly icon.
 
 | Canvas asset                              | File                                     |
 | ----------------------------------------- | ---------------------------------------- |

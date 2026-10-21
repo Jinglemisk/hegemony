@@ -17,6 +17,7 @@ import type { MoveResult } from "./rules";
 import { unfedAtTurnEnd } from "./economy/income";
 import { checkVictoryAtTurnStart } from "./victory";
 import { tickLuxurySuppression } from "./luxury";
+import { closeTurnOffers } from "./trade";
 import { openAssembly, shouldOpenAssembly } from "./assembly/assembly";
 import { GAME_MODES } from "./ruleset";
 import type { Ruleset } from "./ruleset";
@@ -158,6 +159,7 @@ export function endTurn(G: HegemonyState): MoveResult {
     return { ok: false, reasons: [] };
   }
 
+  closeTurnOffers(G);
   const unfed = unfedAtTurnEnd(G, G.currentPlayer);
   if (unfed > 0) {
     G.pendingHunger = { playerID: G.currentPlayer, unfed };

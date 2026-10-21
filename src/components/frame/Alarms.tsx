@@ -20,6 +20,7 @@ import { EffectLine } from "../EffectLine";
 import { Tooltip } from "../overlays/Tooltip";
 import type { HungerShortfall } from "../../ui/frameSelectors";
 import { ThreatAlarm, YearDisc } from "./MomentDiscs";
+import { OfferDisc } from "./trade/OfferDisc";
 import { Ico, Tip } from "./parts";
 
 /**
@@ -75,6 +76,8 @@ export function Alarms({
             );
           case "oneTitleShort":
             return <OneTitleShortDisc G={G} key="short" seats={alarm.seats} />;
+          case "offer":
+            return <OfferDisc key={alarm.offer.id} offer={alarm.offer} />;
           case "yearCard":
             return <YearDisc G={G} key="year" onOpen={onOpenYear} />;
           case "unrest":

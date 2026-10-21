@@ -2,7 +2,7 @@ import { getActiveEffects } from "./activeEffects";
 import type { ActiveEffectDescriptor } from "./activeEffects";
 import { nextAssemblyYear } from "./assembly/assembly";
 import { portClaimSites } from "./status";
-import type { HegemonyState, PlayerId, YearCard } from "./types";
+import type { HegemonyState, PlayerId, TradeOffer, YearCard } from "./types";
 import { unrestStatus } from "./unrest";
 import type { UnrestStatus } from "./unrest";
 import { oneTitleShort, victoryThreats } from "./victory";
@@ -18,6 +18,8 @@ export type RealmAlarm =
   | { kind: "victoryThreat"; threats: VictoryThreat[] }
   /** Rivals one title short of that. */
   | { kind: "oneTitleShort"; seats: VictoryThreat[] }
+  /** An open trade offer: every seat sees it, the seats it names answer it. */
+  | { kind: "offer"; offer: TradeOffer }
   | { kind: "yearCard"; card: YearCard }
   /** The realm's happiness below zero. */
   | { kind: "unrest"; status: UnrestStatus }
@@ -38,6 +40,7 @@ export function realmAlarms(G: HegemonyState, playerID: PlayerId): RealmAlarm[] 
   if (threats.length) alarms.push({ kind: "victoryThreat", threats });
   const short = oneTitleShort(G).filter((holding) => holding.seat !== playerID);
   if (short.length) alarms.push({ kind: "oneTitleShort", seats: short });
+  for (const offer of G.offers) alarms.push({ kind: "offer", offer });
   if (G.activeYearCard) alarms.push({ kind: "yearCard", card: G.activeYearCard });
 
   const unrest = unrestStatus(G, playerID);

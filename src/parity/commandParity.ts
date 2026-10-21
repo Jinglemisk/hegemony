@@ -16,13 +16,16 @@ export type SimulationPolicyPath =
   | "master-rule"
   | "master-forced-choice"
   | "master-assembly"
-  | "turn-control";
+  | "turn-control"
+  /** No bot sends it yet; the plan names the PR that teaches them. */
+  | "not-yet";
 
 export type SimulationMoveCoverage = {
   /** The code path responsible for choosing this move in a headless game. */
   policyPath: SimulationPolicyPath;
   /** Existing file that implements this policy route. */
-  implementation: "src/sim/setup.ts" | "src/sim/policies.ts" | "src/sim/runner.ts";
+  implementation:
+    "src/sim/setup.ts" | "src/sim/policies.ts" | "src/sim/runner.ts" | "docs/plans/player-trade.md";
   /** Concrete implementation seam; strategic quality still needs behavior tests. */
   evidence: string;
 };
@@ -42,7 +45,9 @@ function simulated(policyPath: SimulationPolicyPath, evidence: string): Simulati
       ? "src/sim/setup.ts"
       : policyPath === "turn-control"
         ? "src/sim/runner.ts"
-        : "src/sim/policies.ts";
+        : policyPath === "not-yet"
+          ? "docs/plans/player-trade.md"
+          : "src/sim/policies.ts";
 
   return { policyPath, implementation, evidence };
 }
@@ -217,6 +222,36 @@ export const COMMAND_PARITY = {
   assemblyClose: {
     frontend: interactive("src/components/board/assembly/AssemblySitting.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
+  },
+  assemblyReady: {
+    frontend: interactive("src/components/board/assembly/AssemblySitting.tsx"),
+    simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
+  },
+  tradeOffer: {
+    frontend: interactive(
+      "src/components/frame/discs.ts",
+      "src/components/frame/trade/OfferCard.tsx",
+      "src/components/board/assembly/AssemblySitting.tsx",
+    ),
+    simulation: simulated("not-yet", "PR 2: bots offer on their turn and in the Assembly"),
+  },
+  tradeAnswer: {
+    frontend: interactive(
+      "src/components/frame/trade/OfferDisc.tsx",
+      "src/components/frame/trade/OfferCard.tsx",
+    ),
+    simulation: simulated("not-yet", "PR 2: bots answer and counter"),
+  },
+  tradeSettle: {
+    frontend: interactive(
+      "src/components/frame/trade/OfferDisc.tsx",
+      "src/components/frame/trade/OfferCard.tsx",
+    ),
+    simulation: simulated("not-yet", "PR 2: bots settle with an acceptor"),
+  },
+  tradeWithdraw: {
+    frontend: interactive("src/components/frame/trade/OfferCard.tsx"),
+    simulation: simulated("not-yet", "PR 2: bots withdraw what no seat takes"),
   },
   endTurn: {
     frontend: interactive("src/components/frame/EndTurn.tsx"),
