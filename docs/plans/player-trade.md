@@ -249,7 +249,7 @@ linear influence pile passed, and no card could meet the draw rule.
 ## PRs
 
 Two, both to `main`; the [code-health plan](code-health.md)'s five cleanup PRs are merged. The
-first is built on `feat/player-trade` (2026-10-21).
+first merged as #131 (2026-10-21); the second is next.
 
 1. **Trade.** Trade between human seats in hotseat, with the bank still in place. Offers on a
    turn and in the Assembly's preparation, to the table or named seats, in materials, gold,
