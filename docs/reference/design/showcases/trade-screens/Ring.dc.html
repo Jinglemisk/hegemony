@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Countdown ring, reused</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700&amp;family=Cinzel:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#17505c}
+.row-title{margin:0;font:700 24px/28px Cinzel,Georgia,serif;letter-spacing:.04em;color:#fff8e7}
+.row-sub{margin:4px 0 0;font:400 16px/22px "Alegreya Sans",sans-serif;color:rgba(255,248,231,.85)}
+.item{display:flex;flex-direction:column;align-items:center;gap:12px;width:200px}
+.slot{position:relative;width:96px;height:108px;display:grid;place-items:start center}
+.ad{position:relative;width:64px;height:64px;border-radius:50%;display:grid;place-items:center;border:0;padding:0}
+.ad img{width:48px;height:48px}
+.rd{position:relative;width:64px;height:64px;margin-top:8px}
+.rd .bed{position:absolute;inset:-8px;border-radius:50%;background:#fff8e7;box-shadow:0 0 0 1px rgba(36,25,16,.3),0 8px 24px rgba(10,34,41,.45)}
+.rd .ring{position:absolute;inset:-6px;border-radius:50%;-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4.5px));mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4.5px))}
+.rd .face{background:#fff8e7;box-shadow:inset 0 0 0 1px rgba(36,25,16,.3)}
+.badge{position:absolute;right:-10px;bottom:-10px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:700 14px/1 Cinzel,Georgia,serif;box-shadow:inset 0 0 0 1px rgba(255,248,231,.7),0 0 0 2px #fff8e7,0 0 0 3px rgba(36,25,16,.4)}
+.mark{position:absolute;left:-10px;top:-8px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#241910;color:#fff8e7;font:700 13px/1 "Alegreya Sans",sans-serif;box-shadow:0 0 0 2px #fff8e7}
+.chip{position:absolute;top:78px;left:50%;transform:translateX(-50%);height:20px;padding:0 8px;border-radius:10px;background:#fff8e7;box-shadow:inset 0 0 0 1px rgba(36,25,16,.3);font:700 12px/20px "Alegreya Sans",sans-serif;white-space:nowrap;font-variant-numeric:tabular-nums}
+.chip.low{color:#fff8e7;background:#8f2e13;box-shadow:none}
+.pips{position:absolute;top:78px;left:50%;transform:translateX(-50%);display:flex;gap:4px}
+.pip{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font:700 11px/1 Cinzel,Georgia,serif}
+@keyframes nudge{0%,24%,100%{transform:rotate(0)}3%{transform:rotate(-11deg) translateX(-2px)}7%{transform:rotate(10deg) translateX(2px)}11%{transform:rotate(-8deg)}15%{transform:rotate(6deg)}19%{transform:rotate(-3deg)}}
+.rd.is-low{animation:nudge 2s ease-in-out infinite}
+.rd.is-urgent{animation:nudge .9s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.rd{animation:none!important}}
+.name{font:700 15px/20px Cinzel,Georgia,serif;letter-spacing:.04em;color:#fff8e7;text-align:center}
+.says{font:400 14px/20px "Alegreya Sans",sans-serif;color:rgba(255,248,231,.85);text-align:center}
+.legend{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;padding:20px 24px;border-radius:8px;background:#fff8e7;box-shadow:inset 0 0 0 1px rgba(36,25,16,.3)}
+.legend b{display:block;font:700 12px/16px "Alegreya Sans",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#ad3d18}
+.legend span{font:400 14px/20px "Alegreya Sans",sans-serif;color:#241910}
+</style>
+</helmet>
+<div style="width: 1440px; height: 720px; box-sizing: border-box; padding: 48px; display: flex; flex-direction: column; gap: 36px; background: radial-gradient(110% 90% at 50% 40%, #2e8a9a 0%, #206e7c 50%, #17505c 100%)">
+<sc-for list="{{ rows }}" as="row" hint-placeholder-count="2">
+<div style="display: flex; align-items: flex-start; gap: 32px">
+<div style="width: 240px; flex: none">
+<h2 class="row-title">{{ row.title }}</h2>
+<p class="row-sub">{{ row.sub }}</p>
+</div>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<sc-for list="{{ row.items }}" as="it" hint-placeholder-count="4">
+<div class="item">
+<span class="slot">
+<span class="rd {{ it.cls }}">
+<span class="bed"></span>
+<span class="ring" style="background: {{ it.ring }}"></span>
+<span class="ad face"><img src="{{ it.icon }}" alt=""></span>
+<sc-if value="{{ it.hasBadge }}" hint-placeholder-val="{{ true }}"><span class="badge" style="background: {{ it.color }}; color: {{ it.ink }}">{{ it.blazon }}</span></sc-if>
+<sc-if value="{{ it.hasMark }}" hint-placeholder-val="{{ false }}"><span class="mark">{{ it.mark }}</span></sc-if>
+<sc-if value="{{ it.hasChip }}" hint-placeholder-val="{{ true }}"><span class="chip {{ it.chipCls }}">{{ it.chip }}</span></sc-if>
+<sc-if value="{{ it.hasPips }}" hint-placeholder-val="{{ false }}">
+<span class="pips"><sc-for list="{{ it.pips }}" as="p" hint-placeholder-count="3"><span class="pip" style="background: {{ p.bg }}; color: {{ p.fg }}; box-shadow: inset 0 0 0 2px {{ p.ring }}">{{ p.glyph }}</span></sc-for></span>
+</sc-if>
+</span>
+</span>
+<span class="name">{{ it.name }}</span>
+<span class="says">{{ it.says }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-for>
+<div class="legend">
+<div><b>Ring</b><span>What is left. Time drains as a sweep; turns as segments.</span></div>
+<div><b>Colour</b><span>The owner’s glaze when a seat owns it, else the alarm’s tone: clay bad, olive good, ink neutral.</span></div>
+<div><b>Badge · mark</b><span>Badge: whose it is. Mark, top left: how you answered.</span></div>
+<div><b>Shake</b><span>Only when it waits on you and under six seconds. Off under reduced motion.</span></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":720}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { now: Date.now() };
+  }
+  componentDidMount() { this.iv = setInterval(() => this.setState({ now: Date.now() }), 100); }
+  componentWillUnmount() { clearInterval(this.iv); }
+
+  sweep(frac, color) {
+    const y = Math.round((1 - frac) * 3600) / 10;
+    return 'conic-gradient(rgba(36,25,16,.12) 0deg ' + y + 'deg, ' + color + ' ' + y + 'deg 360deg)';
+  }
+
+  steps(n, left, color) {
+    const seg = 360 / n, gap = n > 1 ? 8 : 0, parts = [];
+    for (let i = 0; i < n; i++) {
+      const a = i * seg + gap / 2, b = (i + 1) * seg - gap / 2;
+      const c = i < n - left ? 'rgba(36,25,16,.12)' : color;
+      parts.push('transparent ' + (i * seg) + 'deg ' + a + 'deg', c + ' ' + a + 'deg ' + b + 'deg', 'transparent ' + b + 'deg ' + ((i + 1) * seg) + 'deg');
+    }
+    return 'conic-gradient(' + parts.join(', ') + ')';
+  }
+
+  clock(ms) { const s = Math.max(0, Math.ceil(ms / 1000)); return '0:' + String(s).padStart(2, '0'); }
+
+  renderVals() {
+    const now = this.state.now, B = '/_blob/';
+    const trade = B + '896825a4a3655d98c5f8e677f2379303';
+    const blue = '#2f5d9e', purple = '#7c4d79', clay = '#c0461c', ink = 'rgba(36,25,16,.66)', olive = '#5e6e3a';
+    const loop = 14000, t = (now % loop) / loop, left = loop * (1 - t);
+    const mineT = ((now + 5000) % 30000) / 30000;
+    const answered = Math.floor(mineT * 30000 / 1200);
+    const pip = (color, inkC, blazon, k) => answered > k
+      ? (k === 2 ? { bg: '#d9cfbd', fg: 'rgba(36,25,16,.66)', ring: 'rgba(36,25,16,.3)', glyph: '×' } : { bg: color, fg: inkC, ring: color, glyph: k === 0 ? '✓' : '⇄' })
+      : { bg: '#fff8e7', fg: color === '#dfa437' ? '#8a5d10' : color, ring: color, glyph: blazon };
+    return {
+      rows: [
+        {
+          title: 'Counts time', sub: 'A trade offer: seconds to answer.',
+          items: [
+            {
+              name: 'Your offer', says: 'Your glaze. A dot per seat fills as it answers.', icon: trade, cls: '',
+              ring: this.sweep(1 - mineT, blue), hasBadge: true, color: blue, ink: '#fff8e7', blazon: 'Δ',
+              hasMark: false, hasChip: false, hasPips: true,
+              pips: [pip('#dfa437', '#241910', 'Ν', 0), pip(purple, '#fff8e7', 'Θ', 1), pip('#a83226', '#fff8e7', 'Κ', 2)]
+            },
+            {
+              name: 'Offer to you', says: 'Theron’s glaze and badge. Shakes under six seconds, faster under three.', icon: trade,
+              cls: left < 3000 ? 'is-urgent' : left < 6000 ? 'is-low' : '',
+              ring: this.sweep(1 - t, purple), hasBadge: true, color: purple, ink: '#fff8e7', blazon: 'Θ',
+              hasMark: false, hasChip: true, chip: this.clock(left), chipCls: left < 6000 ? 'low' : '', hasPips: false, pips: []
+            },
+            {
+              name: 'You answered', says: 'Still Theron’s. The mark says you countered; it stops asking.', icon: trade, cls: '',
+              ring: this.sweep(0.45, purple), hasBadge: true, color: purple, ink: '#fff8e7', blazon: 'Θ',
+              hasMark: true, mark: '⇄', hasChip: true, chip: '0:09', chipCls: '', hasPips: false, pips: []
+            }
+          ]
+        },
+        {
+          title: 'Counts turns', sub: 'Today’s alarms that already have a duration.',
+          items: [
+            {
+              name: 'Pops on the move', says: '3 pops arrive at Nemea at the start of your next turn.', icon: B + 'c0ac25dfe93de637f2a2c5b8a84dc6d8', cls: '',
+              ring: this.steps(1, 1, blue), hasBadge: true, color: blue, ink: '#fff8e7', blazon: 'Δ',
+              hasMark: false, hasChip: true, chip: 'next turn', chipCls: '', hasPips: false, pips: []
+            },
+            {
+              name: 'Income suppressed', says: '2 income collections remaining.', icon: B + '30e9169d2b2e046f7347d95df831d95a', cls: '',
+              ring: this.steps(3, 2, clay), hasBadge: false, hasMark: false, hasChip: true, chip: '2 incomes', chipCls: '', hasPips: false, pips: []
+            },
+            {
+              name: 'Food runs out', says: 'Food lasts 1 more income.', icon: B + '19696f7b5431e66d5fbf5836a8e8e57e', cls: '',
+              ring: this.steps(2, 1, clay), hasBadge: false, hasMark: false, hasChip: true, chip: '1 income', chipCls: '', hasPips: false, pips: []
+            },
+            {
+              name: 'The Assembly', says: 'Sits next year: three turns to go.', icon: B + 'cc83ee838dc5ca3f1e1e4057d15b2622', cls: '',
+              ring: this.steps(4, 3, ink), hasBadge: false, hasMark: false, hasChip: true, chip: '3 turns', chipCls: '', hasPips: false, pips: []
+            },
+            {
+              name: 'A two-turn build', says: 'Example only: no rule takes two turns today.', icon: B + '2b37720b6ce75a2b62d2eb9fa223205f', cls: '',
+              ring: this.steps(2, 2, blue), hasBadge: true, color: blue, ink: '#fff8e7', blazon: 'Δ',
+              hasMark: false, hasChip: true, chip: '2 turns', chipCls: '', hasPips: false, pips: []
+            }
+          ]
+        }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

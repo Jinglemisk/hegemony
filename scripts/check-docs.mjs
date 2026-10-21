@@ -97,7 +97,8 @@ async function validateLinks(file) {
     }
   }
 
-  if (file.endsWith(".html")) {
+  // A Design-canvas source (.dc.html) loads ./support.js from the canvas host, not the repo.
+  if (file.endsWith(".html") && !file.endsWith(".dc.html")) {
     const htmlLinks = contents.matchAll(/(?:href|src)=["']([^"']+)["']/gi);
     for (const match of htmlLinks) {
       validateLocalTarget(file, match[1]);

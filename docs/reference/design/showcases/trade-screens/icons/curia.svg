@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Assembly — the Curia seen from the front corner: gabled hall, three arched windows, statues, colonnade</title>
+<defs>
+<linearGradient id="a-cu-front" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6e6bd"/><stop offset="0.5" stop-color="#dcc28a"/><stop offset="1" stop-color="#b39660"/></linearGradient>
+<linearGradient id="a-cu-side" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d6bb82"/><stop offset="0.5" stop-color="#b89a62"/><stop offset="1" stop-color="#8c6f42"/></linearGradient>
+<linearGradient id="a-cu-roof" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e98a5c"/><stop offset="0.5" stop-color="#c0461c"/><stop offset="1" stop-color="#8f2e13"/></linearGradient>
+<linearGradient id="a-cu-stone" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+</defs>
+<g transform="translate(7 0)">
+<path d="M30 30L46 22V44L30 52Z" fill="url(#a-cu-side)" stroke="#181210" stroke-width="2" stroke-linejoin="round"/>
+<path d="M12 41V21L21 18L30 30V52Z" fill="url(#a-cu-front)" stroke="#181210" stroke-width="2" stroke-linejoin="round"/>
+<path d="M12.5 21.5L29.5 30" fill="none" stroke="#8f2e13" stroke-width="1.5"/>
+<path d="M15.2 31.6L17.8 32.9V27.4Q16.6 24.3 15.2 26.1ZM19.7 33.9L22.3 35.2V29.7Q21.1 26.6 19.7 28.4ZM24.2 36.1L26.8 37.4V31.9Q25.6 28.8 24.2 30.6Z" fill="#3b2a1c" stroke="#181210" stroke-width="1" stroke-linejoin="round"/>
+<path d="M10.5 21.6L21 16.9L37 8.9L47.6 22.6L30.4 31.2L21 18.5Z" fill="url(#a-cu-roof)" stroke="#181210" stroke-width="2" stroke-linejoin="round"/>
+<path d="M23 18.2L36.4 11.4" fill="none" stroke="#f4b48e" stroke-width="1.25" stroke-linecap="round"/>
+<path d="M19.7 17.4L20.4 13.6H21.6L22.3 17.2ZM10.7 21.4L11.4 17.6H12.6L13.3 21.2ZM28.7 30.3L29.4 26.5H30.6L31.3 30.1Z" fill="#d9572a" stroke="#181210" stroke-width="1" stroke-linejoin="round"/>
+<ellipse cx="21" cy="12.4" rx="1.2" ry="1.2" fill="#d9572a" stroke="#181210" stroke-width="0.9"/>
+<ellipse cx="12" cy="16.4" rx="1.2" ry="1.2" fill="#d9572a" stroke="#181210" stroke-width="0.9"/>
+<ellipse cx="30" cy="25.3" rx="1.2" ry="1.2" fill="#d9572a" stroke="#181210" stroke-width="0.9"/>
+<path d="M20.2 14.2L18.6 11.6M21.8 14.2L23.4 11.6M11.2 18.2L9.6 15.6M12.8 18.2L14.4 15.6M29.2 27.1L27.6 24.5M30.8 27.1L32.4 24.5" fill="none" stroke="#d9572a" stroke-width="1.1" stroke-linecap="round"/>
+<path d="M2 44.5L8 41.5L36 55.5L30 58.5Z" fill="url(#a-cu-stone)" stroke="#181210" stroke-width="1.75" stroke-linejoin="round"/>
+<path d="M2 44.5L30 58.5V61.5L2 47.5Z" fill="#c9b48c" stroke="#181210" stroke-width="1.75" stroke-linejoin="round"/>
+<path d="M30 58.5L36 55.5V58.5L30 61.5Z" fill="#9f8a64" stroke="#181210" stroke-width="1.75" stroke-linejoin="round"/>
+<path d="M3 36.5L28 49V56L3 43.5Z" fill="#4a3424"/>
+<path d="M28 49L34 46V53L28 56Z" fill="#3b2a1c"/>
+<path d="M4 37.2H6.2V44.6H4ZM8.6 39.4H10.8V46.9H8.6ZM13.2 41.7H15.4V49.2H13.2ZM17.8 44H20V51.5H17.8ZM22.4 46.3H24.6V53.8H22.4ZM26.4 48.3H28.6V55.8H26.4ZM31.6 45.8H33.6V53.2H31.6Z" fill="url(#a-cu-stone)"/>
+<path d="M1.5 35.6L28 48.9L34.8 45.5L8.3 32.2Z" fill="url(#a-cu-roof)" stroke="#181210" stroke-width="1.75" stroke-linejoin="round"/>
+<path d="M1.5 35.6L28 48.9V50.5L1.5 37.2Z" fill="#e3d4ad" stroke="#181210" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M28 48.9L34.8 45.5V47.1L28 50.5Z" fill="#aa9572" stroke="#181210" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M4.5 34.6L27.5 46.1" fill="none" stroke="#f4b48e" stroke-width="1" stroke-linecap="round"/>
+<path d="M14 24V38M44 24.5V42" fill="none" stroke="#fff8e9" stroke-width="1" stroke-linecap="round" opacity="0.7"/>
+</g>
+</svg>
