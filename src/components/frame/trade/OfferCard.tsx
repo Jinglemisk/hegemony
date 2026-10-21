@@ -44,7 +44,7 @@ import { useTradePick } from "./tradePick";
 /**
  * The compact offer card (docs/reference/design/showcases/trade-screens). One card
  * composes an offer and answers it; nothing takes over the screen. Its two columns are
- * what the acting seat receives and what the other side receives; a counter edits them
+ * what the acting seat wants and what it gives; a counter edits them
  * in place, each changed line showing what it was. Every "can I?" is the engine's
  * status for the command the button sends.
  */
@@ -58,11 +58,6 @@ const sameSides = (a: Sides, b: Sides) =>
   (["gives", "gets"] as const).every((side) =>
     itemsOf(a[side]).every((item) => itemCount(a[side], item) === itemCount(b[side], item)),
   );
-
-/** "You receive", "Nikos receives", "They receive". */
-function receives(name: string) {
-  return name === "You" || name === "They" ? `${name} receive` : `${name} receives`;
-}
 
 function Glaze({ seat, size = "lg" }: { seat: PlayerId; size?: "lg" | "sm" }) {
   const glaze = PLAYER_GLAZES[seat];
@@ -163,7 +158,7 @@ function Column({
         {edit && edit.picks.length > 0 ? (
           <button
             aria-expanded={picking}
-            aria-label={`Add to ${label.toLowerCase()}`}
+            aria-label={`Add to ${label}`}
             className={`name trade-add${picking ? " is-open" : ""}`}
             onClick={() => setPicking((open) => !open)}
             type="button"
@@ -202,12 +197,13 @@ function Column({
   );
 }
 
-/** The two columns, from the acting seat's view: what it receives on the left, what
- *  the other side receives on the right, with the arrows between. */
+/** The two columns, from the acting seat's view: what it wants on the left, what it
+ *  gives on the right, with the arrows between. The seat composing or countering speaks
+ *  as "I"; an open offer's terms are read in the offering seat's name. */
 function Exchange({
   G,
   actor,
-  other,
+  named = false,
   others,
   sides,
   was,
@@ -215,15 +211,15 @@ function Exchange({
 }: {
   G: HegemonyState;
   actor: PlayerId;
-  /** The other side's name: a seat, or "They" for the table. */
-  other: string;
+  /** Label the columns with the seat's name rather than "I". */
+  named?: boolean;
   /** The seats across the table, whose goods may be asked for. */
   others: readonly PlayerId[];
   sides: Sides;
   was?: Sides;
   onChange?: (sides: Sides) => void;
 }) {
-  const { viewerId } = useGameUi();
+  const name = G.players[actor].name;
   const edit = (side: keyof Sides) =>
     onChange && {
       cap: (item: TradeItem) => (side === "gives" ? heldOf(G, actor, item) : ASK_CAP),
@@ -237,7 +233,7 @@ function Exchange({
         G={G}
         bundle={sides.gets}
         edit={edit("gets")}
-        label={receives(seatName(G, actor, viewerId, true))}
+        label={named ? `${name} wants` : "I want"}
         was={was?.gets}
       />
       <span aria-hidden="true" className="trade-flow">
@@ -248,7 +244,7 @@ function Exchange({
         G={G}
         bundle={sides.gives}
         edit={edit("gives")}
-        label={receives(other)}
+        label={named ? `${name} gives` : "I give"}
         was={was?.gives}
       />
     </div>
@@ -370,7 +366,6 @@ export function ComposeCard({ seat, onClose }: { seat: PlayerId; onClose: () => 
         G={G}
         actor={seat}
         onChange={setSides}
-        other={to.length === 1 ? names[0] : "They"}
         others={to.length ? to : rivals}
         sides={sides}
       />
@@ -442,7 +437,6 @@ function Counter({
         G={G}
         actor={seat}
         onChange={setDraft}
-        other={G.players[offer.from].name}
         others={[offer.from]}
         sides={draft}
         was={base}
@@ -629,7 +623,6 @@ export function OfferCard({ offer, onClose }: { offer: TradeOffer; onClose: () =
   const answered = offer.to.filter((seat) => offer.answers[seat]).length;
   const counterSeat =
     countering && offer.to.includes(countering) && !offer.answers[countering] ? countering : null;
-  const only = offer.toTable || offer.to.length > 1 ? "They" : G.players[offer.to[0]].name;
 
   return (
     <section aria-label={offerTitle(G, offer)} className="trade-card">
@@ -652,7 +645,7 @@ export function OfferCard({ offer, onClose }: { offer: TradeOffer; onClose: () =
           <Exchange
             G={G}
             actor={offer.from}
-            other={only}
+            named
             others={offer.to}
             sides={{ gives: offer.terms.give, gets: offer.terms.get }}
           />

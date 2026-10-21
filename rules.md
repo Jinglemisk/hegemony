@@ -251,8 +251,8 @@ one way influence reaches the granary, and it is priced worse than gold on purpo
 ## Trade
 
 On your turn, once your event card is resolved, you may offer a trade to the other
-seats. Press **Trade** on the realm sheet and fill the offer card: what you receive on
-the left, what they receive on the right, each with − and + to set the number. Pick
+seats. Press **Trade** on the realm sheet and fill the offer card: what you want on the
+left, what you give on the right, each with − and + to set the number. Pick
 seats at the top of the card to offer only to them; pick none and the offer goes to
 the table. Every seat sees every offer.
 

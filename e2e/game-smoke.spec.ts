@@ -106,10 +106,10 @@ test("an offer to the table is countered, then the first accept trades", async (
   // The Trade disc opens the offer card: 2 wood for 1 stone, to the table.
   await page.getByRole("button", { name: /^Trade: Offer/ }).click();
   const compose = page.getByRole("region", { name: "Offer a trade" });
-  await compose.getByRole("button", { name: "Add to they receive" }).click();
+  await compose.getByRole("button", { name: "Add to I give" }).click();
   await compose.getByRole("button", { name: "wood, you hold 8" }).click();
   await compose.getByRole("button", { name: "One more wood" }).click();
-  await compose.getByRole("button", { name: "Add to you receive" }).click();
+  await compose.getByRole("button", { name: "Add to I want" }).click();
   await compose.getByRole("button", { name: "stone", exact: true }).click();
   await compose.getByRole("button", { name: "Offer to the table" }).click();
 
