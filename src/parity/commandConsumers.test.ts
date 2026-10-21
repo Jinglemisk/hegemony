@@ -11,7 +11,7 @@ import { scenario } from "../game/testing/scenario";
 import type { PlayerId } from "../game/types";
 import { applySimCommand } from "../sim/runner";
 import { applyReplayCommand } from "../sim/script";
-import { GAME_COMMAND_TYPES } from "./commandParity";
+import { COMMAND_PARITY, GAME_COMMAND_TYPES } from "./commandParity";
 
 describe("behavioral command-consumer parity", () => {
   it("constructs every browser command as real player intent", () => {
@@ -35,8 +35,6 @@ describe("behavioral command-consumer parity", () => {
     moves.movePops("tile-a", "tile-b", pops);
     moves.resolvePendingPlayerEvent("tile-a");
     moves.resolveHunger([{ tileId: "tile-a", pop: "freemen" }]);
-    moves.bankSell("wood");
-    moves.bankBuy("stone");
     moves.dole();
     moves.pickIdea("2", "good-harvest");
     moves.buyIdea("treasury-grant");
@@ -92,8 +90,6 @@ describe("behavioral command-consumer parity", () => {
         command: { type: "resolveHunger", leave: [{ tileId: "tile-a", pop: "freemen" }] },
         actor: undefined,
       },
-      { command: { type: "bankSell", material: "wood" }, actor: undefined },
-      { command: { type: "bankBuy", material: "stone" }, actor: undefined },
       { command: { type: "dole" }, actor: undefined },
       { command: { type: "pickIdea", ideaId: "good-harvest" }, actor: "2" },
       { command: { type: "buyIdea", ideaId: "treasury-grant" }, actor: undefined },
@@ -155,7 +151,10 @@ describe("behavioral command-consumer parity", () => {
       { command: { type: "tradeWithdraw", offerId: "offer-9" }, actor: "0" },
       { command: { type: "endTurn" }, actor: undefined },
     ]);
-    expect(calls.map(({ command }) => command.type)).toEqual(GAME_COMMAND_TYPES);
+    // Every command a screen offers; a batch-only one has no browser move.
+    expect(calls.map(({ command }) => command.type)).toEqual(
+      GAME_COMMAND_TYPES.filter((type) => COMMAND_PARITY[type].frontend.kind === "interactive"),
+    );
   });
 
   it("publishes byte-identical state through browser, simulator, replay, and engine seams", () => {

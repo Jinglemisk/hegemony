@@ -19,7 +19,7 @@ export const SIZES = [
 
 // ── surfaces ─────────────────────────────────────────────────────────────────
 // The realm sheet's pages (tabs) and the bar's consult pages (toggle buttons).
-const LEFT = ["Cities", "Ladder", "Build", "Market"];
+const LEFT = ["Cities", "Ladder", "Build"];
 const RIGHT = ["Codex", "Victory", "Agora"];
 
 const dismissDialogs = async (p) => {
@@ -195,17 +195,6 @@ export const SURFACES = [
     name: "fan-build-slaves",
     go: async (p) => {
       await pressVerb(p, "Build", ["Slaves"]);
-    },
-    after: async (p) => {
-      await p.keyboard.press("Escape");
-      await p.keyboard.press("Escape");
-      await p.waitForTimeout(300);
-    },
-  },
-  {
-    name: "fan-exchange-wood",
-    go: async (p) => {
-      await pressVerb(p, "Exchange", ["Wood"]);
     },
     after: async (p) => {
       await p.keyboard.press("Escape");

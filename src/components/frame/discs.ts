@@ -1,10 +1,7 @@
 import {
   PROMOTE_FROM,
   DEMOTE_FROM,
-  TRADABLE_MATERIALS,
   getAdjustedActionCost,
-  getBankBuyStatus,
-  getBankSellStatus,
   getBuildBuildingStatus,
   getBuildings,
   getCivicCalmStatus,
@@ -21,15 +18,9 @@ import {
 } from "../../game/rules";
 import type { CivicCalmPayment } from "../../game/rules";
 import { offerWindowReason } from "../../game/trade";
-import type {
-  BuildingDefinition,
-  BuildingId,
-  PopType,
-  Resources,
-  TradableMaterial,
-} from "../../game/types";
+import type { BuildingDefinition, BuildingId, PopType, Resources } from "../../game/types";
 import { cheapestCost } from "../../ui/frameFormat";
-import { BUILDING_RASTERS, POP_RASTERS, RESOURCE_RASTERS } from "../../ui/iconRegistry";
+import { BUILDING_RASTERS, POP_RASTERS } from "../../ui/iconRegistry";
 import { formatPopLabel } from "../../ui/formatters";
 import { VERBS, isTurnOpen, isVerbEnabled, verbTitle } from "../board/command/verbs";
 import type { VerbContext, VerbHandlers, VerbId } from "../board/command/verbs";
@@ -39,11 +30,11 @@ import { getOwnedHoldings } from "../board/helpers";
 /**
  * The verb discs on the realm sheet's edge, as data: a disc is a group of
  * options, in the order the owner picked (Grow, People, Expand, Build, Civic,
- * Exchange), and Trade beside Exchange until the bank goes. The count is not fixed anywhere else — the sheet lays out however
+ * Trade). The count is not fixed anywhere else — the sheet lays out however
  * many groups this returns, and the hotkeys follow the order.
  *
  * An option either runs (a command, or arming the map for one) or holds a
- * second fan of its own (Build's classes, Exchange's goods, the ladder's rungs).
+ * second fan of its own (Build's classes, the ladder's rungs).
  * Every price and every "can I?" is the engine's own status for that command,
  * so a fan never quotes a price the press does not charge.
  */
@@ -71,7 +62,7 @@ export type DiscOption = {
 };
 
 export type DiscGroup = {
-  id: "grow" | "people" | "expand" | "build" | "civic" | "exchange" | "trade";
+  id: "grow" | "people" | "expand" | "build" | "civic" | "trade";
   label: string;
   icon: string;
   /** What the open disc's name tab reads when a click has no option of its own. */
@@ -91,8 +82,6 @@ export type DiscHandlers = Pick<
   onCalm: (payment: CivicCalmPayment) => void;
   onDole: () => void;
   onIdeasRequest?: () => void;
-  onBankBuy: (material: TradableMaterial) => void;
-  onBankSell: (material: TradableMaterial) => void;
   /** Open the offer card to compose an offer. */
   onTrade: () => void;
 };
@@ -176,7 +165,6 @@ export function discGroups(
   const { G, playerID } = context;
   const open = isTurnOpen(context);
   const holdings = getOwnedHoldings(G, playerID);
-  const store = G.players[playerID].resources;
 
   /** An option that arms the map for one exact command. */
   const arming = (
@@ -325,40 +313,6 @@ export function discGroups(
     run: handlers.onIdeasRequest,
   };
 
-  const exchange = TRADABLE_MATERIALS.map((material) => {
-    const buy = getBankBuyStatus(G, playerID, material);
-    const sell = getBankSellStatus(G, playerID, material);
-    return holder({
-      id: `exchange-${material}`,
-      label: cap(material),
-      icon: RESOURCE_RASTERS[material],
-      text: `${store[material]} in store`,
-      hint: `Trade ${material} at the bank.`,
-      options: [
-        {
-          id: `buy-${material}`,
-          label: "Buy 1",
-          icon: `market/buy-${material}`,
-          prices: [buy.cost ?? {}],
-          gets: { [material]: 1 },
-          enabled: open && buy.can,
-          hint: `Buy 1 ${material}.`,
-          run: () => handlers.onBankBuy(material),
-        },
-        {
-          id: `sell-${material}`,
-          label: `Sell ${sell.cost?.[material] ?? ""}`.trim(),
-          icon: `market/sell-${material}`,
-          prices: [sell.cost ?? {}],
-          gets: { gold: 1 },
-          enabled: open && sell.can,
-          hint: `Sell ${material} for 1 gold.`,
-          run: () => handlers.onBankSell(material),
-        },
-      ],
-    });
-  });
-
   return [
     {
       id: "grow",
@@ -414,13 +368,6 @@ export function discGroups(
         ideas,
         verbOption("venture", context, handlers),
       ],
-    },
-    {
-      id: "exchange",
-      label: "Exchange",
-      icon: "market/bank",
-      hint: "Pick a good",
-      options: exchange,
     },
     {
       id: "trade",

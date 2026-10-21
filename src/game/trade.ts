@@ -93,6 +93,20 @@ export function tradePopTargets(G: HegemonyState, seat: PlayerId, pops: Pops): s
   });
 }
 
+/** Each way to name a seat's settlements for the pops it gives and gets. */
+export function tradePlaceChoices(
+  G: HegemonyState,
+  seat: PlayerId,
+  gives: TradeBundle,
+  gets: TradeBundle,
+): TradePlaces[] {
+  const froms = totalPops(gives.pops) > 0 ? tradePopSources(G, seat, gives.pops) : [undefined];
+  const tos = totalPops(gets.pops) > 0 ? tradePopTargets(G, seat, gets.pops) : [undefined];
+  return froms.flatMap((from) =>
+    tos.map((to) => ({ ...(from ? { from } : {}), ...(to ? { to } : {}) })),
+  );
+}
+
 /**
  * What a seat lacks to hand over `bundle`, one line each. Its pops must stand together
  * in `from`, or in any one settlement while it is unnamed. The composer's preview, the
@@ -224,6 +238,7 @@ export function tradeOffer(
     answers: {},
   };
   G.offers.push(offer);
+  G.offersMade[seat] = (G.offersMade[seat] ?? 0) + 1;
   addLog(
     G,
     `${getPlayerName(G, seat)} offers ${describeBundle(G, terms.give)} for ${describeBundle(G, terms.get)}${offer.toTable ? " to the table" : ` to ${offer.to.map((id) => getPlayerName(G, id)).join(" and ")}`}.`,
@@ -387,6 +402,25 @@ function settle(
   );
 }
 
+/**
+ * The match as it would stand had `from` traded `terms` with `partner`, for a bot
+ * weighing a deal it has not made: both sides hand over as at settlement, with no
+ * offer closed and no line written. Holdings and room are the caller's to check.
+ */
+export function tradeForEval(
+  G: HegemonyState,
+  from: PlayerId,
+  partner: PlayerId,
+  terms: TradeTerms,
+  fromPlaces: TradePlaces = {},
+  partnerPlaces: TradePlaces = {},
+): HegemonyState {
+  return produce(G, (draft) => {
+    handOver(draft, from, partner, terms.give, fromPlaces.from, partnerPlaces.to);
+    handOver(draft, partner, from, terms.get, partnerPlaces.from, fromPlaces.to);
+  });
+}
+
 /** The offering seat takes a counter. */
 export function tradeSettle(
   G: HegemonyState,
@@ -463,9 +497,10 @@ export function tradePreview(
   return { resources: after.players[seat].resources, happiness: standingHappiness(after, seat) };
 }
 
-/** The turn's open offers close when it ends. */
-export function closeTurnOffers(G: HegemonyState) {
+/** The trading window closes: a turn ends, or the Assembly's preparation does. */
+export function closeOffers(G: HegemonyState) {
   G.offers = [];
+  G.offersMade = {};
 }
 
 /** "2 wood, 1 gold, Pearls and 1 slave", or "nothing". */

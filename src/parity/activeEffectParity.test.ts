@@ -18,7 +18,7 @@ import { YEAR_CARDS } from "../game/data";
 import { calculateIncomeBreakdown } from "../game/economy/income";
 import { projectForPlayer } from "../game/projection";
 import { revealYearCard, startNewYear, yearDeckSize } from "../game/year";
-import { materialTile, scenario } from "../game/testing/scenario";
+import { BEFORE_TRADE, materialTile, scenario } from "../game/testing/scenario";
 import type { HegemonyState, Pops, YearCard } from "../game/types";
 import { PLAYER_IDS } from "../game/data";
 import { turnEndUnrest } from "../game/unrest";
@@ -37,8 +37,8 @@ import { resolveRiot } from "../game/riot";
 
 const EMPTY_POPS: Pops = { citizens: 0, freemen: 0, slaves: 0 };
 
-function stateWithSettlement(pops: Pops = EMPTY_POPS): HegemonyState {
-  const G = scenario().build();
+function stateWithSettlement(pops: Pops = EMPTY_POPS, economy = scenario()): HegemonyState {
+  const G = economy.build();
   const target = materialTile(G);
   target.settlements.push({
     id: allocateEntityId(G, "settlement"),
@@ -277,6 +277,7 @@ describe("frontend active-effect parity", () => {
             phase: G.phase,
             isActive: false,
             turnBlocked: "Current player's turn only.",
+            humans: ["0", "1", "2", "3"],
             moves: createCommandMoves(dispatch),
             events: createCommandEvents(dispatch),
           },
@@ -354,7 +355,11 @@ describe("simulation and AI active-effect parity", () => {
   });
 
   it("recalculates food after projected hunger and matches the engine on the review case", () => {
-    const G = stateWithSettlement({ citizens: 0, freemen: 3, slaves: 0 });
+    // The economy before trade, where gold bought food from the bank.
+    const G = stateWithSettlement(
+      { citizens: 0, freemen: 3, slaves: 0 },
+      scenario({ patch: BEFORE_TRADE }),
+    );
     // Nothing in store: three freemen earn 3 gold a year, and 2 gold buys one food.
     Object.assign(G.players["0"].resources, { food: 0, gold: 0, influence: 0 });
     const engine = structuredClone(G);

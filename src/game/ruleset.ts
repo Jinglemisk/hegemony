@@ -22,9 +22,11 @@ export interface BankRatePair {
   buy: number;
 }
 
-/** Bank exchange tunables (roadmap-appendix D6/Q14). Rates are PROVISIONAL and
- *  expected to move with playtest/sim — that is why they live here, not in code. */
+/** Bank exchange tunables (roadmap-appendix D6/Q14). The game has no bank since player
+ *  trade (D9): `enabled` brings it back only so a batch can play the economy before
+ *  trade beside the one after it, and no screen offers it. */
 export interface BankRules {
+  enabled: boolean;
   /** How per-material rates are derived from the board at game creation.
    *  `uniform` prices everything at baseline; `scarcity` classes materials by tile
    *  count (strictly rarest = scarce, strictly most common = abundant). The default
@@ -70,7 +72,7 @@ export interface TradeRules {
   enabled: boolean;
 }
 
-/** The Dole: influence buys food through the bank, at a worse rate than gold. */
+/** The Dole: influence buys food. With no bank, it is the one conversion trade is not. */
 export interface DoleRules {
   influenceCost: number;
   food: number;
@@ -111,6 +113,9 @@ export interface EconomyRules {
   unrest: UnrestRules;
   /** Bank exchange rates & derivation (D6/Q14). */
   bank: BankRules;
+  /** Food every settlement makes at income on its own, before upkeep (D10). 0 is the
+   *  economy before trade, where only slaves on plains grew food. */
+  baseFood: number;
   /** Lower bounds a charge from an event or a table stops at, and income for every
    *  stock but food: income takes food below its floor (`applyIncome`). Costs remain
    *  affordability-gated and are never rescued by clamping. */
@@ -267,6 +272,7 @@ export const DEFAULT_RULESET: Ruleset = {
     slavesPerUnhappiness: 2,
     unrest: { riotThreshold: -3, revoltThreshold: -6, revoltSlaveShare: 0.5 },
     bank: {
+      enabled: false,
       // One price per verb: every material sells 3 for 1 gold and costs 2 gold. The
       // scarcity classes stay as a knob for sims.
       derivation: "uniform",
@@ -274,6 +280,7 @@ export const DEFAULT_RULESET: Ruleset = {
       abundant: { sell: 4, buy: 2 },
       scarce: { sell: 2, buy: 3 },
     },
+    baseFood: 1,
     // No stock goes below zero: a charge takes what the seat holds and no more. Income
     // alone passes the food floor: it may take food below zero during its owner's turn
     // (core/resources `applyIncome`), and turn end settles the shortfall as hunger.

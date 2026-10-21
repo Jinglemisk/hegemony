@@ -11,13 +11,7 @@ import {
   getResolutionCards,
   getYearCards,
 } from "../../../game/content";
-import {
-  TRADABLE_MATERIALS,
-  getBuilding,
-  getBuildings,
-  getLuxuryGoods,
-  getTerrainDeck,
-} from "../../../game/rules";
+import { getBuilding, getBuildings, getLuxuryGoods, getTerrainDeck } from "../../../game/rules";
 import { POLITICIANS, isHappinessLaw, isPriceLaw } from "../../../game/assembly";
 import { DEFAULT_RULESET } from "../../../game/ruleset";
 import { VICTORY_CARDS } from "../../../game/victory";
@@ -316,10 +310,9 @@ const resources: RuleChapter = {
       <Entry id={anchor("resources", "six")} title="The five">
         <Note>
           Four are drawn from land and pops: wood, stone, food and gold. The fifth, influence, is
-          civic weight. Gold is the unit the bank trades in; it comes from pops, trade and events,
-          never from a tile. No stock goes below zero, except food during your own turn: a charge
-          takes what you hold and no more. Happiness is not a stock: it is a level read off the
-          board (see Happiness &amp; Unrest).
+          civic weight. Gold comes from pops, trade and events, never from a tile. No stock goes
+          below zero, except food during your own turn: a charge takes what you hold and no more.
+          Happiness is not a stock: it is a level read off the board (see Happiness &amp; Unrest).
         </Note>
         <DefList>
           {RESOURCE_ORDER.map((resource) => (
@@ -335,9 +328,9 @@ const resources: RuleChapter = {
               {resource === "wood" || resource === "stone"
                 ? "A building material, worked from the land by slaves."
                 : resource === "food"
-                  ? "Feeds freemen and citizens at income; end your turn short and one pop leaves for each missing food."
+                  ? `Every settlement grows ${G.ruleset.economy.baseFood} of its own at income, and slaves on plains grow more. It feeds freemen and citizens; end your turn short and one pop leaves for each missing food.`
                   : resource === "gold"
-                    ? "The coin of trade — earned by pops and events, the bank's only medium."
+                    ? "Earned by freemen and events, and the stock Treasurer counts."
                     : `Civic weight: spent on demotions, calm, the Dole, riot insurance and ${G.ruleset.ideas.purchases === 1 ? "a second Idea" : "more Ideas"}; its great sink is the Assembly.`}
             </DefRow>
           ))}
@@ -507,8 +500,8 @@ const turn: RuleChapter = {
         </Note>
         <Note>
           The verbs are Grow, People (promote, demote, move), Expand (found, upgrade), Build, Civic
-          (calm, the Dole, Ideas, venture) and Exchange (the bank). Anything that targets the map —
-          founding, growing, moving, promoting — is a click on the board itself.
+          (calm, the Dole, Ideas, venture) and Trade (offers to the other seats). Anything that
+          targets the map — founding, growing, moving, promoting — is a click on the board itself.
         </Note>
       </Entry>
       <Entry id={anchor("turn", "throttles")} title="Per-turn limits">
@@ -866,51 +859,28 @@ const years: RuleChapter = {
   },
 };
 
-const bank: RuleChapter = {
-  id: "bank",
-  title: "The Bank",
-  icon: "resources/gold",
-  blurb: "This board's exchange rates and the spread you pay to trade.",
-  keywords: ["bank", "trade", "market", "exchange", "rate", "sell", "buy", "gold", "spread"],
-  entries: [{ id: anchor("bank", "rates"), label: "Rates" }],
-  Body: ({ G }) => (
-    <div className="compendiumStack">
-      <Entry id={anchor("bank", "rates")} title="Rates">
-        <Note>
-          Gold is the unit of account — the bank never barters, and every round trip pays the
-          spread. The rates are set when the game begins and never move: no Law or Idea changes
-          them, and there is no limit on trades per turn.
-        </Note>
-        <Note>
-          The Dole: {G.ruleset.dole.influenceCost} influence buys {G.ruleset.dole.food} food. It is
-          influence's one way to the granary, priced worse than gold on purpose.
-        </Note>
-        {TRADABLE_MATERIALS.map((material) => {
-          const rate = G.bank[material];
-          return (
-            <div className="compendiumBankRow" key={material} style={resourceCssVars(material)}>
-              <ResourceIcon resource={material} className="marketRowIcon" />
-              <strong>{capitalize(material)}</strong>
-              <span>
-                sell {rate.sell} → 1 Gold · buy 1 for {rate.buy} Gold
-              </span>
-            </div>
-          );
-        })}
-      </Entry>
-    </div>
-  ),
-};
-
 const trade: RuleChapter = {
   id: "trade",
   title: "Trade",
   icon: "market/handshake",
   blurb: "Offers between the seats: what trades, who answers, and how a deal settles.",
-  keywords: ["trade", "offer", "counter", "accept", "decline", "settle", "withdraw", "ready"],
+  keywords: [
+    "trade",
+    "offer",
+    "counter",
+    "accept",
+    "decline",
+    "settle",
+    "withdraw",
+    "ready",
+    "bank",
+    "dole",
+    "price",
+  ],
   entries: [
     { id: anchor("trade", "offers"), label: "Offers" },
     { id: anchor("trade", "settling"), label: "Settling" },
+    { id: anchor("trade", "prices"), label: "No bank" },
     { id: anchor("trade", "assembly"), label: "In the Assembly" },
   ],
   Body: ({ G }) => (
@@ -938,6 +908,13 @@ const trade: RuleChapter = {
           new holder. Pops leave at once, travel like a move to a settlement with room picked on the
           map, and arrive at the start of their new owner&rsquo;s next turn; from the trade on they
           are its pops.
+        </Note>
+      </Entry>
+      <Entry id={anchor("trade", "prices")} title="No bank">
+        <Note>
+          There is no bank. Trade is the only way to turn one stock into another, apart from the
+          Dole, where {G.ruleset.dole.influenceCost} influence buys {G.ruleset.dole.food} food.
+          Nothing anchors a price: a deal is whatever two seats agree.
         </Note>
       </Entry>
       <Entry id={anchor("trade", "assembly")} title="In the Assembly">
@@ -1274,7 +1251,6 @@ export const RULEBOOK: RuleChapter[] = [
   ideas,
   unrest,
   years,
-  bank,
   trade,
   ventures,
   // Last in learn-order: the Assembly reshapes every rule above it, so it only makes

@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { createModeDefinition } from "../game/definition";
 
+import { DEFAULT_RULESET } from "../game/ruleset";
 import { scenario } from "../game/testing/scenario";
 import { Aggregator } from "../sim/telemetry";
 import { COMMAND_PARITY, GAME_COMMAND_TYPES } from "./commandParity";
@@ -15,9 +16,19 @@ describe("three-axis move parity gate", () => {
     for (const moveType of GAME_COMMAND_TYPES) {
       const coverage = COMMAND_PARITY[moveType];
 
-      expect(coverage.frontend.surfaces.length, `${moveType}: frontend surface`).toBeGreaterThan(0);
-      for (const surface of coverage.frontend.surfaces) {
-        expect(existsSync(surface), `${moveType}: missing frontend evidence ${surface}`).toBe(true);
+      const { frontend } = coverage;
+      if (frontend.kind === "batch-only") {
+        // Off in the game people play, so no screen owes it a surface.
+        const value = frontend.ruleset
+          .split(".")
+          .reduce<unknown>((at, key) => (at as Record<string, unknown>)?.[key], DEFAULT_RULESET);
+        expect(value, `${moveType}: ${frontend.ruleset}`).toBe(false);
+      } else {
+        for (const surface of frontend.surfaces) {
+          expect(existsSync(surface), `${moveType}: missing frontend evidence ${surface}`).toBe(
+            true,
+          );
+        }
       }
       expect(
         existsSync(coverage.simulation.implementation),

@@ -521,15 +521,7 @@ export function VerbDiscs({
                   "data-gate-hover-next": '[data-option="build-civic"]',
                 },
               }
-            : group.id === "exchange"
-              ? {
-                  name: {
-                    "data-gate-hover": "exchange",
-                    "data-gate-hover-wait": 800,
-                    "data-gate-hover-next": '[data-option="exchange-wood"]',
-                  },
-                }
-              : {};
+            : {};
 
         return (
           <li

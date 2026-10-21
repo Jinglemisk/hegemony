@@ -11,6 +11,7 @@ import type { Policy } from "./policies";
 import { createSimRng, deriveBotSeed } from "./rng";
 import type { SimRng } from "./rng";
 import { buildNewGame } from "./setup";
+import { PLAYER_IDS } from "../game/data";
 
 /**
  * The bot turn loop. One `playTurn` call advances the game by exactly one turn
@@ -59,7 +60,28 @@ export type PlayTurnOptions = {
   maxActions?: number;
   /** Select the acting seat on every action, including inside an Assembly. */
   seatPolicies?: Partial<Record<PlayerId, Policy>>;
+  /** Seats people play: the turn stops, unchanged from there, when one must act. */
+  humans?: ReadonlySet<PlayerId>;
 };
+
+/**
+ * The seat the table waits on: a seat an open offer names and that has not answered it
+ * answers first, in seat order, a bot before any person, as a bot answers at once;
+ * otherwise the workflow's seat. A server routes the same way, by who may act, not by
+ * whose turn it is.
+ */
+export function nextActor(G: HegemonyState, humans: ReadonlySet<PlayerId> = new Set()): PlayerId {
+  const answering = PLAYER_IDS.filter((seat) =>
+    G.offers.some((offer) => offer.to.includes(seat) && !offer.answers[seat]),
+  );
+  return answering.find((seat) => !humans.has(seat)) ?? answering[0] ?? G.currentPlayer;
+}
+
+/** Whether people at the table must act before the bots can go on: a human seat is
+ *  next, or the sitting's recap waits for someone to read it. */
+function waitsOnHumans(G: HegemonyState, humans: ReadonlySet<PlayerId>): boolean {
+  return humans.has(nextActor(G, humans)) || (humans.size > 0 && G.assembly?.phase === "closing");
+}
 
 /** Simulator seam for the canonical command transition; exported for parity proof. */
 export function applySimCommand(
@@ -89,14 +111,17 @@ export function playTurn(
   // seat's gameplay turn — give it room rather than force-ending (which is illegal mid-assembly).
   // The same room covers what follows an accepted endTurn: the hunger pick and the riot
   // choices are the engine's and bounded, and the seat keeps them. A forced end is a
-  // turn that would not end by itself.
+  // turn that would not end by itself. An answer to an offer is the answering seat's,
+  // not the turn's: it counts against no cap but the agora's.
   let ended = false;
-  for (
-    let action = 0;
-    action < (ended || G.assembly ? MAX_ACTIONS_PER_ASSEMBLY : maxActions);
-    action += 1
-  ) {
-    const player = G.currentPlayer;
+  let actions = 0;
+  let answers = 0;
+  const cap = () => (ended || G.assembly ? MAX_ACTIONS_PER_ASSEMBLY : maxActions);
+  while (actions < cap() && answers < MAX_ACTIONS_PER_ASSEMBLY) {
+    if (options.humans && waitsOnHumans(G, options.humans)) return G;
+    const player = nextActor(G, options.humans);
+    if (player === G.currentPlayer) actions += 1;
+    else answers += 1;
     const commands = enumerateLegalCommands(G, player);
 
     if (commands.length === 0) {

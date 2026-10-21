@@ -213,22 +213,20 @@ describe("scores setup Ideas and in-play purchases", () => {
       generatedAt: "test",
     });
     expect(Object.keys(report.nationalIdeas)).toHaveLength(12);
-    expect(report.nationalIdeas["good-harvest"]).toEqual({
-      setupPicks: 2,
-      purchases: 0,
-      holders: 2,
-      wins: 1,
-      winRate: 0.5,
-      perPolicy: { master: { holders: 2, wins: 1, winRate: 0.5 } },
+    const goodHarvest = { setupPicks: 2, purchases: 0, holders: 2, wins: 1, winRate: 0.5 };
+    expect(report.nationalIdeas["good-harvest"].total).toEqual(goodHarvest);
+    expect(report.nationalIdeas["good-harvest"].perPolicy).toEqual({ master: goodHarvest });
+    expect(report.nationalIdeas["good-harvest"].perSeat["1"]).toMatchObject({
+      holders: 1,
+      wins: 0,
     });
-    expect(report.nationalIdeas["treasury-grant"]).toEqual({
+    expect(report.nationalIdeas["treasury-grant"].total).toEqual({
       setupPicks: 0,
       purchases: 1,
       holders: 1,
       wins: 1,
       winRate: 1,
-      perPolicy: { master: { holders: 1, wins: 1, winRate: 1 } },
     });
-    expect(report.nationalIdeas["capital-works"].winRate).toBe(0);
+    expect(report.nationalIdeas["capital-works"].total.winRate).toBe(0);
   });
 });

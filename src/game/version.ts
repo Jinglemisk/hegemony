@@ -42,7 +42,11 @@ export const ENGINE_VERSION = "0.1.0";
 /** v15 (player trade, PR 1): open trade offers on the state, a Ready step in the
  *  Assembly's preparation, and traded pops on the move that name their giver. Command v7
  *  adds the trade commands and Ready. Older saves are rejected. */
-export const STATE_SCHEMA_VERSION = 15;
+/** v16 (player trade, PR 2): the bank is a ruleset switch, off by default, every
+ *  settlement makes base food, and the state counts each seat's offers in the trading
+ *  window. Older pinned rulesets cannot answer the switches, so older saves are
+ *  rejected. Commands are unchanged. */
+export const STATE_SCHEMA_VERSION = 16;
 export const COMMAND_SCHEMA_VERSION = 7;
 
 export const SAVE_FORMAT_VERSION = 2;

@@ -7,13 +7,12 @@ import type { BankRates, HegemonyState, HexTile, PlayerId, TradableMaterial } fr
 
 /**
  * The bank exchange (roadmap-appendix D6/Q14): a gold-mediated static market. Sell
- * `sell` of a material for 1 gold; buy 1 of a material for `buy` gold. Never direct
- * barter — gold is the unit of account. Rates are derived ONCE from the board at game
- * creation and never move: the bank is the corridor wall that player trade (Phase 4)
- * will price inside, not a market that drifts.
+ * `sell` of a material for 1 gold; buy 1 of a material for `buy` gold. Rates are
+ * derived ONCE from the board at game creation and never move.
  *
- * No cap on trades per turn — the round-trip spread is the tax, and every trade
- * shrinks the trader's Treasurer stockpile (both directions destroy net value).
+ * Player trade replaced it (D9): the bank is off unless a ruleset turns it on, which
+ * only a batch does, to play the economy before trade beside the one after it. The
+ * Dole lives here too, and stays.
  */
 
 export const TRADABLE_MATERIALS: TradableMaterial[] = ["wood", "stone", "food"];
@@ -82,7 +81,8 @@ export function getBankSellStatus(
   const reasons: string[] = [];
   const rate = getPlayerBankRate(G, playerID, material);
 
-  if (G.phase !== "gameplay") reasons.push("The bank opens with gameplay.");
+  if (!G.ruleset.economy.bank.enabled) reasons.push("There is no bank in this game.");
+  else if (G.phase !== "gameplay") reasons.push("The bank opens with gameplay.");
   if (G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger)
     reasons.push("Resolve the pending event first.");
   if (G.players[playerID].resources[material] < rate.sell) {
@@ -100,7 +100,8 @@ export function getBankBuyStatus(
   const reasons: string[] = [];
   const rate = getPlayerBankRate(G, playerID, material);
 
-  if (G.phase !== "gameplay") reasons.push("The bank opens with gameplay.");
+  if (!G.ruleset.economy.bank.enabled) reasons.push("There is no bank in this game.");
+  else if (G.phase !== "gameplay") reasons.push("The bank opens with gameplay.");
   if (G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger)
     reasons.push("Resolve the pending event first.");
   if (G.players[playerID].resources.gold < rate.buy) {
@@ -158,12 +159,12 @@ export function bankBuy(
   return MOVE_OK;
 }
 
-/** The Dole: influence buys food through the bank, at a worse rate than gold. */
+/** The Dole: influence buys food. */
 export function getDoleStatus(G: HegemonyState, playerID: PlayerId): ActionStatus {
   const reasons: string[] = [];
   const { influenceCost, food } = playerDole(G, playerID);
 
-  if (G.phase !== "gameplay") reasons.push("The bank opens with gameplay.");
+  if (G.phase !== "gameplay") reasons.push("The Dole opens with gameplay.");
   if (G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger)
     reasons.push("Resolve the pending event first.");
   if (G.players[playerID].resources.influence < influenceCost) {

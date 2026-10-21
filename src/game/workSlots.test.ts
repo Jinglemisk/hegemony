@@ -44,16 +44,21 @@ describe("work slots", () => {
 
     const income = settlementNetYield(forest, city, G);
     expect(income.wood).toBe(3);
-    // Slaves eat nothing. Their unrest is the realm's line, idle ones included.
-    expect(income.food).toBe(0);
+    // Slaves eat nothing, and the city grows its own 1 food. Their unrest is the
+    // realm's line, idle ones included.
+    expect(income.food).toBe(1);
     expect(happinessContributions(G, "0").find((term) => term.id === "slaves")?.amount).toBe(-2);
   });
 
-  it("prints no yield on the tile: an empty settlement makes nothing", () => {
+  it("prints no yield on the tile: an empty settlement makes only its own food", () => {
     const G = scenario().withSettlement("0", BREADBASKET, "city", NONE).build();
 
     expect(tile(G, BREADBASKET).slots).toBe(7);
-    expect(calculateIncomeBreakdown(G, "0").filter((line) => line.resource === "food")).toEqual([]);
+    expect(
+      calculateIncomeBreakdown(G, "0")
+        .filter((line) => line.resource === "food")
+        .map((line) => [line.amount, line.detail]),
+    ).toEqual([[1, "its own fields"]]);
   });
 
   it("a building takes a slot from the slaves", () => {
@@ -101,7 +106,7 @@ describe("work slots", () => {
 
     expect(buildingGround(G, "0", BREADBASKET).slots).toBe(0);
     expect(settlementWorkingSlaves(land, colony, G)).toBe(4);
-    expect(settlementNetYield(land, colony, G).food).toBe(4);
+    expect(settlementNetYield(land, colony, G).food).toBe(5);
   });
 
   it("two colonies split a tile's slots, and the one founded first takes the odd slot", () => {
@@ -116,8 +121,8 @@ describe("work slots", () => {
 
     expect(settlementSlots(land, first, G)).toBe(4);
     expect(settlementSlots(land, second, G)).toBe(3);
-    expect(settlementNetYield(land, first, G).food).toBe(4);
-    expect(settlementNetYield(land, second, G).food).toBe(3);
+    expect(settlementNetYield(land, first, G).food).toBe(5);
+    expect(settlementNetYield(land, second, G).food).toBe(4);
     expect(settlementIdleSlaves(land, second, G)).toBe(1);
   });
 

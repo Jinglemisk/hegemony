@@ -33,6 +33,8 @@ export type GameUi = {
   /** The turn gate (`turnBlocked`): why the viewer may not take a turn action now, or
    *  null when they may. Every action surface reads it, so the shell gives one reason. */
   turnBlocked: string | null;
+  /** The seats people play; a bot's seat acts on its own and offers no buttons. */
+  humans: readonly PlayerId[];
   moves: GameMoves;
   events: GameEvents;
 };

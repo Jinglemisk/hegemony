@@ -74,7 +74,7 @@ describe("class buildings", () => {
     expect(getBuildBuildingStatus(G, "0", BREADBASKET, "granary").reasons).toContain(
       "Granary is already built here.",
     );
-    expect(calculateIncome(G, "0").food).toBe(2);
+    expect(calculateIncome(G, "0").food).toBe(3);
   });
 });
 

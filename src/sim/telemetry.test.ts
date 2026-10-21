@@ -3,14 +3,16 @@ import { describe, expect, it } from "vitest";
 
 import { ACTIVE_EFFECT_KINDS } from "../game/activeEffects";
 import { openAssembly } from "../game/assembly";
+import { TEST_OPENING_SETUP } from "../game/config";
 import { createModeDefinition } from "../game/definition";
 import { PLAYER_IDS } from "../game/data";
 import { transition, type GameCommand } from "../game/legalMoves";
 import { resolveRiot } from "../game/riot";
 import { beginTurnFor, endTurn } from "../game/turn";
 import { yearDeckSize } from "../game/year";
-import { owned, scenario } from "../game/testing/scenario";
-import type { HegemonyState, PlayerId } from "../game/types";
+import { BEFORE_TRADE, owned, scenario } from "../game/testing/scenario";
+import type { HegemonyState, PlayerId, TradeBundle } from "../game/types";
+import { renderBatchReport } from "./format";
 import { randomPolicy } from "./policies";
 import { runGame } from "./runner";
 import { Aggregator, percentiles, snapshotTurn, snapshotsToCsv } from "./telemetry";
@@ -176,9 +178,9 @@ describe("Aggregator", () => {
       generatedAt: "test",
     });
     expect(aggregator.allSnapshots()).toHaveLength(1);
-    expect(report.hunger["0"].hungerTurnsPerGame).toBe(1);
+    expect(report.hunger.perSeat["0"].hungerTurns.perGame).toBe(1);
     expect(Object.values(report.events.player).reduce((sum, count) => sum + count, 0)).toBe(1);
-    expect(report.riots.byYear).toEqual([
+    expect(report.riots.total.byYear).toEqual([
       { year: yearDeckSize(G), riots: 1, playerTurns: 1, revolts: 0 },
     ]);
   });
@@ -212,7 +214,7 @@ describe("Aggregator", () => {
       definition: G.definition.identity,
       generatedAt: "test",
     });
-    expect(report.riots.byYear).toEqual([
+    expect(report.riots.total.byYear).toEqual([
       { year: 1, riots: 1, playerTurns: 1, revolts: 0 },
       { year: 2, riots: 0, playerTurns: 1, revolts: 0 },
     ]);
@@ -241,12 +243,10 @@ describe("Aggregator", () => {
     expect(report.perGame[0].termination).toBe("turnCap");
     expect(report.perGame[0].winner).toBeNull();
     expect(PLAYER_IDS).toContain(report.perGame[0].leaderAtCap);
-    const totalWinRate = Object.values(report.perSeat).reduce((sum, seat) => sum + seat.winRate, 0);
+    const seats = Object.values(report.results.perSeat);
+    const totalWinRate = seats.reduce((sum, seat) => sum + seat.winRate, 0);
     expect(totalWinRate).toBe(0);
-    const totalCapLeaderRate = Object.values(report.perSeat).reduce(
-      (sum, seat) => sum + seat.capLeaderRate,
-      0,
-    );
+    const totalCapLeaderRate = seats.reduce((sum, seat) => sum + seat.capLeaderRate, 0);
     expect(totalCapLeaderRate).toBeCloseTo(1);
 
     // Year rows pool both games once a year completed in both.
@@ -264,14 +264,14 @@ describe("Aggregator", () => {
       expect(report.activeEffects[kind].playerTurnShare).toBeLessThanOrEqual(1);
     }
 
-    expect(report.assembly.authoredPassed.count).toBeGreaterThanOrEqual(0);
-    expect(report.assembly.voiceClaims.count).toBeGreaterThanOrEqual(0);
+    expect(report.assembly.seats.total.authoredPasses.count).toBeGreaterThanOrEqual(0);
+    expect(report.assembly.seats.total.voiceClaims.count).toBeGreaterThanOrEqual(0);
     expect(report.assembly.voiceTransfers.count).toBeGreaterThanOrEqual(0);
     expect(report.assembly.voiceHoldersAtEnd.perGame).toBeGreaterThanOrEqual(0);
     expect(report.assembly.voiceHoldersAtEnd.perGame).toBeLessThanOrEqual(1);
     expect(report.assembly.authoredPassLeaderShare.mean).toBeGreaterThanOrEqual(0);
     expect(report.assembly.authoredPassLeaderShare.mean).toBeLessThanOrEqual(1);
-    expect(Object.keys(report.assembly.directiveTargets)).toEqual(PLAYER_IDS);
+    expect(Object.keys(report.assembly.seats.perSeat)).toEqual(PLAYER_IDS);
     expect(report.assembly.prizesGranted).toEqual(
       expect.objectContaining({
         wood: expect.any(Number),
@@ -280,6 +280,8 @@ describe("Aggregator", () => {
         gold: expect.any(Number),
       }),
     );
+    // No seat offered, so the printed report has no trade section.
+    expect(renderBatchReport(report, 14)).not.toContain("Trade");
   });
 
   it("counts a finished game as a real win, never as a cap leader", () => {
@@ -323,24 +325,26 @@ describe("Aggregator", () => {
     expect(report.perGame[0].termination).toBe("victoryRace");
     expect(report.perGame[0].winner).toBe("0");
     expect(report.perGame[0].decidedBy).toBe("race");
-    expect(report.perPolicy.random.winsDecidedBy).toMatchObject({ race: 1, titles: 0 });
+    expect(report.results.perPolicy.random.winsDecidedBy).toMatchObject({ race: 1, titles: 0 });
     expect(report.perGame[0].leaderAtCap).toBeNull();
     expect(aggregator.allSnapshots()).toHaveLength(1);
     expect(Object.values(report.events.year).reduce((sum, count) => sum + count, 0)).toBe(2);
     expect(report.perGame[0].yearCards).toEqual([played.activeYearCard!.id, G.activeYearCard.id]);
     expect(report.perGame[0].voiceHolder).toBe("0");
-    expect(report.perGame[0].finalAuthoredPasses).toEqual({ "0": 4, "1": 2, "2": 1, "3": 0 });
+    expect(PLAYER_IDS.map((id) => report.perGame[0].seats[id].authoredPasses)).toEqual([
+      4, 2, 1, 0,
+    ]);
     expect(report.terminations).toEqual({ victoryRace: 1, deckExhausted: 0, turnCap: 0 });
-    expect(report.perSeat["0"].winRate).toBe(1);
-    expect(report.perSeat["1"].winRate).toBe(0);
-    expect(report.perSeat["0"].capLeaderRate).toBe(0);
+    expect(report.results.perSeat["0"].winRate).toBe(1);
+    expect(report.results.perSeat["1"].winRate).toBe(0);
+    expect(report.results.perSeat["0"].capLeaderRate).toBe(0);
     expect(report.assembly.voiceHoldersAtEnd).toEqual({ count: 1, perGame: 1 });
     expect(report.assembly.voiceHolderWins).toEqual({ count: 1, finishedGames: 1, rate: 1 });
     expect(report.assembly.authoredPassLeadMargin.mean).toBe(2);
     expect(report.assembly.authoredPassLeaderShare.mean).toBeCloseTo(4 / 7);
   });
 
-  it("credits a finished game's win to the winning seat's policy (winsByPolicy)", () => {
+  it("credits a finished game's win to the winning seat's policy", () => {
     const aggregator = new Aggregator();
     const seed = 900;
     const played = runGame({ seed, mode: "standard", policy: randomPolicy, turns: 6 });
@@ -369,8 +373,16 @@ describe("Aggregator", () => {
     });
 
     // greedy held one seat and won it; smart held three seats and won none.
-    expect(report.winsByPolicy.greedy).toEqual({ games: 1, wins: 1, winRate: 1 });
-    expect(report.winsByPolicy.smart).toEqual({ games: 3, wins: 0, winRate: 0 });
+    expect(report.results.perPolicy.greedy).toMatchObject({
+      finishedSeatGames: 1,
+      wins: 1,
+      winRate: 1,
+    });
+    expect(report.results.perPolicy.smart).toMatchObject({
+      finishedSeatGames: 3,
+      wins: 0,
+      winRate: 0,
+    });
   });
 
   it("keeps turnsPlayed equal to the snapshot count through a natural end (no duplicate turns)", () => {
@@ -518,7 +530,7 @@ describe("the Step 11 report fields", () => {
     // Counting only pops in settlements, seat 3's seven led the capped game.
     expect(report.perGame[0]).toMatchObject({ leaderAtCap: "0", decidedBy: null });
     expect(report.perGame[1]).toMatchObject({ winner: "0", decidedBy: "pops" });
-    expect(report.perPolicy.civic.winsDecidedBy).toEqual({
+    expect(report.results.perPolicy.civic.winsDecidedBy).toEqual({
       race: 0,
       titles: 0,
       happiness: 0,
@@ -535,7 +547,7 @@ describe("the Step 11 report fields", () => {
     aggregator.endGame(G);
 
     expect(G.activeYearCard?.id).toBe("year-blockade");
-    expect(aggregator.buildReport(META).perGame[0].luxuries["0"]).toEqual({
+    expect(aggregator.buildReport(META).perGame[0].seats["0"].luxuries).toEqual({
       goodsHeld: 1,
       goodsActive: 1,
       luxuryHappiness: G.ruleset.economy.luxury.happinessPerGood,
@@ -585,7 +597,8 @@ describe("the Step 11 report fields", () => {
 
   it("splits influence and food bought by sink, by the stock's state and by personality", () => {
     const game = drive(
-      scenario()
+      // The economy before trade, where the bank sold food.
+      scenario({ patch: BEFORE_TRADE })
         .opening()
         .withResources("0", { food: -2, gold: 10, influence: 9 })
         .mutate((G) => {
@@ -607,11 +620,11 @@ describe("the Step 11 report fields", () => {
     expect(report.foodPurchases.perPolicy.civic).toEqual(report.foodPurchases.total);
     expect(report.foodPurchases.perPolicy.slaver.turnsBegunShort).toBe(0);
     expect(report.influenceSpent.total.dole).toEqual({ count: 6, perGame: 6 });
-    expect(report.influenceSpent.perPolicy.civic.dole).toEqual({ count: 6, perSeatGame: 6 });
+    expect(report.influenceSpent.perPolicy.civic.dole).toEqual({ count: 6, perGame: 6 });
     expect(report.influenceSpent.perPolicy.slaver.dole.count).toBe(0);
     // The year row is the snapshot taken before any of it was spent.
-    expect(report.perYear[0].influence.max).toBe(9);
-    expect(report.perYear[0].influenceByPolicy.civic.median).toBe(9);
+    expect(report.perYear[0].influence.total.max).toBe(9);
+    expect(report.perYear[0].influence.perPolicy.civic.median).toBe(9);
   });
 
   it("counts a revolt in its year, to the personality that had it", () => {
@@ -628,10 +641,11 @@ describe("the Step 11 report fields", () => {
     const report = game.report();
 
     expect(game.G.players["0"].revolts).toBe(1);
-    expect(report.riots.byYear).toEqual([{ year: 1, riots: 0, playerTurns: 2, revolts: 1 }]);
+    expect(report.riots.total.byYear).toEqual([{ year: 1, riots: 0, playerTurns: 2, revolts: 1 }]);
     expect(report.riots.perPolicy.civic).toEqual({
-      riotsPerSeatGame: 0,
-      revoltsPerSeatGame: 1,
+      riots: { count: 0, perGame: 0 },
+      revolts: { count: 1, perGame: 1 },
+      turnShare: 0,
       byYear: [{ year: 1, riots: 0, playerTurns: 1, revolts: 1 }],
     });
     expect(report.riots.perPolicy.slaver.byYear).toEqual([
@@ -653,13 +667,13 @@ describe("the Step 11 report fields", () => {
     game.take("0", { type: "resolveHunger", leave: defaultHungerLeave(game.G, "0", 1) });
     const report = game.report();
 
-    expect(report.hungerPerPolicy.civic).toMatchObject({
-      hungerTurnsPerSeatGame: 1,
-      popsLostPerSeatGame: 1,
+    expect(report.hunger.perPolicy.civic).toMatchObject({
+      hungerTurns: { count: 1, perGame: 1 },
+      popsLost: { count: 1, perGame: 1 },
     });
-    expect(report.hungerPerPolicy.slaver.hungerTurnsPerSeatGame).toBe(0);
+    expect(report.hunger.perPolicy.slaver.hungerTurns.perGame).toBe(0);
     expect(report.reach.perPolicy.civic.counts["hunger:freemen"]).toBe(1);
-    expect(report.reach.total["hunger:citizens"]).toBe(0);
+    expect(report.reach.total.counts["hunger:citizens"]).toBe(0);
   });
 
   it("measures a draw against the income the seat collected, and counts a pop card", () => {
@@ -737,17 +751,165 @@ describe("the Step 11 report fields", () => {
     }
     const report = game.report();
 
-    expect(report.assembly.repeals).toEqual({
-      proposed: { count: 1, perGame: 1 },
-      passed: { count: 0, perGame: 0 },
-      failed: { count: 1, perGame: 1 },
+    expect(report.assembly.seats.total).toMatchObject({
+      repealsProposed: { count: 1, perGame: 1 },
+      repealsPassed: { count: 0, perGame: 0 },
+      repealsFailed: { count: 1, perGame: 1 },
     });
-    expect(report.assembly.perPolicy.civic.count).toMatchObject({
-      repealsProposed: 1,
-      repealsPassed: 0,
-      repealsFailed: 1,
+    expect(report.assembly.seats.perPolicy.civic).toMatchObject({
+      repealsProposed: { count: 1 },
+      repealsPassed: { count: 0 },
+      repealsFailed: { count: 1 },
     });
-    expect(report.assembly.perPolicy.slaver.perSeatGame.repealsProposed).toBe(0);
+    expect(report.assembly.seats.perPolicy.slaver.repealsProposed.perGame).toBe(0);
     expect(report.influenceSpent.total.repeals).toEqual({ count: 3, perGame: 3 });
+  });
+});
+
+describe("trade telemetry", () => {
+  const side = (resources: TradeBundle["resources"], goods: string[] = []): TradeBundle => ({
+    resources,
+    goods,
+    pops: { citizens: 0, freemen: 0, slaves: 0 },
+  });
+  function offer(
+    game: ReturnType<typeof drive>,
+    seat: PlayerId,
+    give: TradeBundle,
+    get: TradeBundle,
+    to: PlayerId[] = [],
+  ) {
+    game.take(seat, { type: "tradeOffer", to, terms: { give, get }, places: {} });
+    return game.G.offers.at(-1)!.id;
+  }
+  const accept = (offerId: string): GameCommand => ({
+    type: "tradeAnswer",
+    offerId,
+    answer: { kind: "accept", places: {} },
+  });
+
+  it("counts how each offer ended, the answers, the units, the prices and who exported", () => {
+    // In the scripted opening only seat 2's land cuts wood, and seats 0 and 3 quarry stone.
+    const game = drive(
+      scenario()
+        .opening()
+        .withResources("2", { wood: 4 })
+        .mutate((G) => {
+          G.pendingPlayerEvent = null;
+        })
+        .build(),
+    );
+    const sold = offer(game, "0", side({ wood: 2 }), side({ gold: 1 }));
+    game.take("1", accept(sold));
+    // Seat 2 wants two wood for the stone, not one; seat 0 takes the counter.
+    const countered = offer(game, "0", side({ stone: 1 }), side({ wood: 1 }), ["2", "3"]);
+    game.take("2", {
+      type: "tradeAnswer",
+      offerId: countered,
+      answer: {
+        kind: "counter",
+        terms: { give: side({ stone: 1 }), get: side({ wood: 2 }) },
+        places: {},
+      },
+    });
+    game.take("3", { type: "tradeAnswer", offerId: countered, answer: { kind: "decline" } });
+    game.take("0", { type: "tradeSettle", offerId: countered, partner: "2", places: {} });
+    const withdrawn = offer(game, "0", side({ food: 1 }), side({ influence: 1 }), ["3"]);
+    game.take("0", { type: "tradeWithdraw", offerId: withdrawn });
+    offer(game, "0", side({ food: 1 }), side({ gold: 1 }));
+    game.take("0", { type: "endTurn" });
+    const { trade } = game.report();
+
+    expect(trade.total.offers).toEqual({
+      settled: { count: 2, perGame: 2 },
+      withdrawn: { count: 1, perGame: 1 },
+      closed: { count: 1, perGame: 1 },
+    });
+    expect(trade.perPolicy.civic.offers.settled.count).toBe(2);
+    expect(trade.perPolicy.slaver.offers.settled.count).toBe(0);
+    expect(trade.total.settledInSitting.count).toBe(0);
+    expect(trade.total.titleChanges.count).toBe(0);
+    expect(trade.perSeat["1"].answers.accept.count).toBe(1);
+    expect(trade.perSeat["2"].answers.counter.count).toBe(1);
+    expect(trade.perSeat["3"].answers.decline.count).toBe(1);
+    expect(trade.perSeat["0"].given).toMatchObject({ wood: { count: 2 }, stone: { count: 1 } });
+    expect(trade.perSeat["0"].received).toMatchObject({ gold: { count: 1 }, wood: { count: 2 } });
+    expect(trade.total.given).toMatchObject({
+      wood: { count: 4 },
+      stone: { count: 1 },
+      gold: { count: 1 },
+    });
+
+    // Each price is set by the seat that sold the material.
+    const once = (price: number) => ({ trades: 1, price: percentiles([price]) });
+    expect(trade.total.prices).toEqual({
+      wood: { gold: once(0.5), stone: once(0.5) },
+      stone: { wood: once(2) },
+    });
+    expect(trade.perPolicy.trader.prices).toEqual({ wood: { stone: once(0.5) } });
+
+    // Seat 2 alone cuts wood and sold two; seat 0, the first that cuts none, sold two
+    // and bought two. Seat 0 out-quarries seat 1 and sold its stone.
+    expect(trade.total.exports.wood).toEqual({
+      most: { games: 1, netSent: 2 },
+      least: { games: 1, netSent: 0 },
+    });
+    expect(trade.total.exports.stone).toEqual({
+      most: { games: 1, netSent: 1 },
+      least: { games: 1, netSent: 0 },
+    });
+    expect(trade.perPolicy.trader.exports.wood.most).toEqual({ games: 1, netSent: 2 });
+    expect(trade.perPolicy.civic.exports.wood.most.games).toBe(0);
+  });
+
+  it("counts a trade in the Assembly's sitting that moves a title, and offers closed with it", () => {
+    const G = scenario()
+      .opening()
+      .withResources("1", { gold: 5 })
+      .mutate((draft) => {
+        draft.pendingPlayerEvent = null;
+        draft.year = 2;
+      })
+      .build();
+    // Three goods make seat 0 Beloved.
+    const goods = G.board.luxuries.slice(0, 3);
+    for (const good of goods) {
+      good.owner = "0";
+      good.claimedAtSettlementId = owned(G, TEST_OPENING_SETUP[0].capital.tileId, "0").id;
+    }
+    openAssembly(G, "0");
+    const game = drive(G);
+    const sold = offer(
+      game,
+      "0",
+      side(
+        {},
+        goods.map((good) => good.id),
+      ),
+      side({ gold: 5 }),
+      ["1"],
+    );
+    game.take("1", accept(sold));
+    offer(game, "2", side({ wood: 1 }), side({ stone: 1 }));
+    for (const seat of PLAYER_IDS) game.take(seat, { type: "assemblyPass" });
+    for (const seat of PLAYER_IDS) game.take(seat, { type: "assemblyReady" });
+    const report = game.report();
+    const { trade } = report;
+
+    expect(game.G.assembly?.phase).not.toBe("proposal");
+    expect(trade.total.offers).toMatchObject({
+      settled: { count: 1 },
+      withdrawn: { count: 0 },
+      closed: { count: 1 },
+    });
+    expect(trade.perSeat["0"].settledInSitting.count).toBe(1);
+    expect(trade.perSeat["0"].titleChanges.count).toBe(1);
+    expect(trade.perSeat["2"].offers.closed.count).toBe(1);
+    expect(trade.perSeat["0"].given.goods.count).toBe(3);
+    expect(trade.perSeat["1"].received.goods.count).toBe(3);
+    expect(trade.perSeat["1"].given.gold.count).toBe(5);
+    // Goods are not a stock, so the trade sets no price.
+    expect(trade.total.prices).toEqual({});
+    expect(renderBatchReport(report, 14)).toContain("Trade (per game): 1 settled (1 in a sitting)");
   });
 });

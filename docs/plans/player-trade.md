@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "post-v2"
-updated: 2026-10-21
+updated: 2026-10-22
 ---
 
 # Player trade
@@ -249,7 +249,8 @@ linear influence pile passed, and no card could meet the draw rule.
 ## PRs
 
 Two, both to `main`; the [code-health plan](code-health.md)'s five cleanup PRs are merged. The
-first merged as #131 (2026-10-21); the second is next.
+first merged as #131 (2026-10-21); the second is open, and its paired batches wait for the
+owner's word.
 
 1. **Trade.** Trade between human seats in hotseat, with the bank still in place. Offers on a
    turn and in the Assembly's preparation, to the table or named seats, in materials, gold,
@@ -283,6 +284,19 @@ first merged as #131 (2026-10-21); the second is next.
    refuses a deal worse than its best turn without it, and one that hands its partner
    Treasurer. Ends with the paired batches and a dated report; then the owner plays trade
    against bots, and Q80 and Step 11 follow.
+   - As built: the bank stays in the engine behind `economy.bank.enabled`, off by default,
+     so the batches can play the economy before trade; no screen offers it, and the
+     command parity map classes its commands `batch-only`. Base food is
+     `economy.baseFood`, an income line on every settlement that no year card zeroes.
+     The pacing reads the engine's count of each seat's offers in the trading window
+     (`offersMade`), since a stateless bot cannot remember them. A bot offers only to
+     rivals who hold its price, and also withdraws an offer every seat has answered, so
+     the disc leaves a person's alarms row. The forecast's food and calm run the engine's
+     Dole, bank and calm on its copy. The runner and the browser route by `nextActor`: an
+     open offer's recipients answer first, bots before people. In the browser a bot's
+     offer that names a person waits for their answer, and the sitting's recap waits for
+     a person to close it. The fixtures set on the bank keep running on the economy before
+     trade (`BEFORE_TRADE` in the test scenarios).
 
 ## Acceptance and validation
 

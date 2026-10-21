@@ -127,16 +127,17 @@ Works from any phase — bots will finish a manual setup too. Policies:
 - `smart` — same one-ply search, but the score weights pops BY TIER (a citizen is
   worth far more than a slave), materials by role, and each open work slot as the slave
   who could work it. So it climbs the social ladder, raises the class buildings, and
-  keeps plains slots for the slaves that feed it. Bank and Dole moves enter search;
-  each food the seat is short of now has a price, so it buys what it lacks and
-  holds none ahead. Its forecast buys the food later years lack from its gold and
-  influence, so a seat that can pay for imports grows past what its land feeds.
+  keeps plains slots for the slaves that feed it. Dole moves (and bank moves, where a
+  ruleset keeps the bank) enter search; each food the seat is short of now has a
+  price, so it buys what it lacks and holds none ahead. Its forecast buys the food
+  later years lack by the Dole, so a seat that can pay for imports grows past what
+  its land feeds.
   Deterministic.
 - `beam` — a within-turn **beam search** over the same `smart` score, so it values the
-  within-turn sequences one-ply misses (build-then-promote and bank chains). It does
+  within-turn sequences one-ply misses (build-then-promote chains). It does
   not search through `endTurn`, so the six-turn income projection is state evaluation,
   not income-to-future-action planning.
-  Searches bank moves and evaluates ventures as chance leaves using every public
+  Evaluates ventures as chance leaves using every public
   outcome, independently of the live die/deck stream. A riot on the table has one
   shared handler: it buys the insurance that saves more than it costs and then
   rolls. Record→replay remains deterministic. A `smart`-vs-`beam` A/B
@@ -160,6 +161,12 @@ Works from any phase — bots will finish a manual setup too. Policies:
   different weights. Those weights apply to placement, Idea picks and purchases,
   economic moves and Assembly choices. See the [weight table](ai.md).
 
+Every search policy answers the offers that name its seat, and the master family
+offers on its turn and in a sitting (see [AI](ai.md#trade)). The runner routes by who
+may act: a seat an open offer names answers before the turn goes on, and an answer
+does not count toward the turn's 30 actions. `--seats` gives each seat its own
+answers.
+
 The economic policies project up to six remaining incomes one step at a time through the
 canonical active-effect descriptors. Pops on the move arrive before the first of them.
 Each step burns suppressed
@@ -168,9 +175,9 @@ income after projected pop loss. Hunger draws no dice: the projection applies th
 (freemen before citizens, from the fullest settlement), the same choice the hunger
 card opens with, and never reads or advances future game RNG. At the table the
 hungry seat chooses; bots score the legal splits (see [AI](ai.md#hunger)).
-Before anyone leaves, a later step buys the missing food from the seat's projected
-gold and influence at its own bank and Dole prices, and the stocks fall by what
-was paid. The current turn and setup are not bought for. A projected riot is
+Before anyone leaves, a later step buys the missing food through the engine's Dole
+(and bank, where a ruleset keeps one) on the projected copy, and the stocks fall by
+what was paid. The current turn and setup are not bought for. A projected riot is
 charged the riot table's expected loss at the seat's weights, and the pops it is
 expected to take leave the projected board once they add up to a whole one.
 
@@ -217,10 +224,10 @@ node docs/reference/design/shell-v2/gates.mjs http://127.0.0.1:5199 --query '?de
 
 Look for forty finishes by the title race or Year-14 deck end, no action caps or
 illegal commands, four setup picks per game, and at most one Idea purchase per seat.
-In `perPolicy`, compare wins, all six final titles and final-card distributions.
+In `results.perPolicy`, compare wins, all six final titles and final-card distributions.
 Check whether slaves/Estates, citizens/Forums/Laws and freemen/Marketplaces/Ports
 appear in their builds (the trader raised 12 Marketplaces in the 40 games of Step 17's
-batch), that bank moves fund useful actions, and that hunger falls
+batch), that trades and Doles fund useful actions, and that hunger falls
 when a seat can pay for food. Venture counts need not be even: bots now choose
 expected value, rather than cycling tables. Under the owner ruling of 2026-10-03,
 calm covers the buyer's current turn-end check and still cannot take Beloved.
@@ -248,7 +255,7 @@ For Step 11's minimum sixty rotated games per condition, use `--games 15 --rotat
 with the same four named seats and baseline seeds. `--games` counts base seeds;
 rotation multiplies the actual games by four and records that total in `meta.games`.
 Rotation is cyclic, not all 24 permutations. Repeating a personality in two seats
-counts two finished seat-games per game; `perPolicy.winRate` uses that denominator.
+counts two finished seat-games per game; `results.perPolicy[name].winRate` uses that denominator.
 A neutral `master` fourth seat gives each personality equal exposure.
 
 A rotation that repeats a seating already played is the same game again, so it is
@@ -331,87 +338,98 @@ The report contains:
 - `meta.rotations` — seatings played per seed: 1 without `--rotate`, otherwise the
   distinct cyclic rotations. `meta.seatPolicies` is the base seating only; with
   rotation every per-seat figure mixes personalities, and the summary says so
-- `perGame` — seed, `termination` (victoryRace|deckExhausted|turnCap), `winner`
-  (null for turn-capped games), `leaderAtCap`, final cards + pops lost per player,
-  and the seat→policy map for mixed runs. `leaderAtCap` is the first seat of the
-  engine's own age-end tally, so pops on the move count in its tiebreak.
-  `decidedBy` says how a finished game was decided: `race` (the title race), or at
-  the deck's end `titles`, `happiness`, `pops` or `seat`, the first key that
-  separated the top two seats; null for a capped game. `yearCards` lists the year
-  cards in the order they turned. `luxuries[seat].luxuryHappiness` is what the active
-  goods are worth in a year that counts them, also when the last card is Blockade.
-  `seatCounts[seat]` holds that seat's counts for the game, from which the batch
-  totals and the per-personality figures are summed: `hungerTurns`, `riotYears` and
-  `revoltYears` (one year per riot or revolt), `directivesAimedAt`, `cardsDrawn`,
-  `cardsDiscarded`, `influenceSpent` by sink and `foodBought` in its two states
-- `perYear` — victory-card/pops/food/happiness/gold/influence percentiles (mean,
-  p10, median, p90) pooled across games and seats, plus unrest-tier and active-effect
-  shares. Each row is every game's last snapshot of that year: the start of the year's
-  last turn, when its seat has collected and not yet acted, so one seat in four carries
-  an unspent income. `influenceByPolicy` gives the influence percentiles for each
-  personality's seats. Step 11's influence rule reads `influence.median` for years 10
-  to 14; the Assembly sits in even years only, so the steps alternate
-- `perSeat` — real `winRate` (finished games only), `capLeaderRate` (turn-capped
-  games), and mean final cards per seat (first-player advantage check)
-- `riots` — riots resolved per game, revolts per game (`revoltsPerGame`), the share of
-  player-turns that ended on the riot table, and the same counts year by year
-  (`byYear`), so a report can cut the late game. Each `byYear` row has `riots`,
-  `revolts` and `playerTurns`; a revolt rolls nothing, so it is not in `riots`.
-  `perPolicy` gives riots and revolts per seat-game and the same rows per personality,
-  where `playerTurns` are the turns its own seats took that year. The CSV carries the
-  level as `happiness` and the `unrestTokens` count per row
-- `hunger` — food under work slots, per seat: turns that ended short of food per
-  game, pops lost to hunger per game, mean idle slaves and their share of all slaves.
-  The CSV carries `slaves`, `idleSlaves` and the running `popsLostToHunger` per row
-- `hungerPerPolicy` — the same four figures per personality, per seat-game. Use it
-  for a rotated batch, where a seat is every personality in turn. Which class left at
-  the hunger picks is in `reach` as `hunger:freemen` and `hunger:citizens`, one count
-  per pop
-- `foodPurchases` — pooled (`total`) and per personality: `turnsBegunShort` (turns
-  the acting seat began with food below zero, after income) and the food bought from
-  the bank and the Dole in two states. `coveringShortfall` is bought while the stock
-  is below zero; `buyingAhead` is bought at zero or above. Each has `bankBuys`,
-  `doles`, the `food` gained and the `gold` and `influence` paid
-- `beloved` — Step 11's luxury rule, pooled and by the holder's personality:
-  `turnsHeld` (turn snapshots with a Beloved holder) and how often the holder was the
-  luxury leader, both ways of counting a tie. `soleLuxuryLeader` needs more active
-  goods than every other seat. `luxuryLeaderOrTied` needs at least one good and no
-  seat with more. Goods are counted in a Blockade year too, when they add nothing
-- `influenceSpent` — influence paid by sink, pooled per game and per personality per
-  seat-game: `dole`, `ideas`, `calm`, `votes` (bought votes), `patronage` (riot
-  insurance), `draws` (the Assembly draw, the price of proposing), `repeals` and
-  `demotions`. Each amount is what the seat's stock fell by at the purchase, so a
-  price changed by an Idea or a Law is counted as paid
-- `terminations` — how games ended (the winRate denominator context)
-- `forced` — action-cap hits / forced resolutions (events, hunger picks and riots) /
-  forced end-turns (previously hidden).
+
+**Cuts.** Every per-seat and per-personality figure has one shape, a cut:
+`{ total, perSeat, perPolicy }`, the same figure over the table, over each seat and over
+each personality, whichever seat it sat in. A count is `{ count, perGame }`, where
+`perGame` is per game for the total and per seat-game for a seat or a personality. Each
+fact is counted once, where the engine records it: commands, buildings and draws from
+the reach counts, revolts and authored passes from the engine's counters, Assembly
+spending from the stock change.
+
+- `perGame` — one row a game: seed, `termination` (victoryRace|deckExhausted|turnCap),
+  `winner` (null for turn-capped games), `leaderAtCap`, `decidedBy`, `winningTitles`,
+  `voiceHolder`, `assembliesHeld`, `yearCards` in the order they turned, the game's own
+  counts (`voiceTransfers`, `prizesGranted`, `actionCapHits`, `forcedResolutions`), the
+  seat→policy map for mixed runs, and `seats[seat]`: everything the seat did that game,
+  counted once as it played, and where it stood at the end (final cards and titles, pops
+  lost, luxuries, gold, Ideas). `leaderAtCap` is the first seat of the engine's own
+  age-end tally, so pops on the move count in its tiebreak. `decidedBy` is `race` (the
+  title race), or at the deck's end `titles`, `happiness`, `pops` or `seat`, the first
+  key that separated the top two seats; null for a capped game
+- `terminations` — how games ended (the win rate's denominator context)
+- `results` (cut) — finished and capped seat-games, wins and `winRate` (finished games
+  only), cap leads and `capLeaderRate`, `winsDecidedBy`, `finalCards` percentiles over
+  finished seat-games and zero-filled `finalTitles`. `results.perSeat` is the
+  first-player check
+- `perYear` — victory-card/pops/food/happiness/gold percentiles (mean, p10, median, p90)
+  pooled across games and seats, `influence` as a cut of percentiles, and unrest-tier
+  and active-effect shares. Each row is every game's last snapshot of that year: the
+  start of the year's last turn, when its seat has collected and not yet acted, so one
+  seat in four carries an unspent income. Step 11's influence rule reads
+  `influence.total.median` for years 10 to 14; the Assembly sits in even years only, so
+  the steps alternate
+- `riots` (cut) — `riots` resolved and `revolts`, `turnShare` (the group's own turns
+  that ended on the riot table) and `byYear` rows of `riots`, `revolts` and
+  `playerTurns`, so a report can cut the late game. A revolt rolls nothing, so it is not
+  in `riots`. The CSV carries the level as `happiness` and the `unrestTokens` count per
+  row
+- `hunger` (cut) — `hungerTurns` (turns that ended short of food), `popsLost`, and the
+  mean idle slaves and their share of all slaves. Which class left at the hunger picks
+  is in `reach` as `hunger:freemen` and `hunger:citizens`, one count per pop. The CSV
+  carries `slaves`, `idleSlaves` and the running `popsLostToHunger` per row
+- `foodPurchases` (cut) — `turnsBegunShort` (turns the acting seat began with food below
+  zero, after income) and the food bought in two states: `coveringShortfall` while the
+  stock is below zero, `buyingAhead` at zero or above. Each has `bankBuys` (only where a
+  ruleset keeps the bank), `doles`, the `food` gained and the `gold` and `influence` paid
+- `beloved` (cut) — Step 11's luxury rule, by the holder's personality: `turnsHeld` and
+  how often the holder was the luxury leader, both ways of counting a tie.
+  `soleLuxuryLeader` needs more active goods than every other seat;
+  `luxuryLeaderOrTied` needs at least one good and no seat with more. Goods are counted
+  in a Blockade year too, when they add nothing
+- `influenceSpent` (cut) — influence paid by sink: `dole`, `ideas`, `calm`, `votes`
+  (bought votes), `patronage` (riot insurance), `draws` (the Assembly draw, the price of
+  proposing), `repeals` and `demotions`. Each amount is what the seat's stock fell by at
+  the purchase, so a price changed by an Idea or a Law is counted as paid
+- `trade` (cut) — player trade. Offers and the trades they settled belong to the
+  offering seat, answers to the answering seat, units to whichever side moved them.
+  `offers` by how they closed: `settled` (accepted, or a counter taken; a settled offer
+  is a trade), `withdrawn`, or `closed` with the window (the turn or the preparation
+  ended with it open). `settledInSitting`; `answers` by kind (accept, counter, decline);
+  `given` and `received` by unit (wood, stone, food, gold, influence, goods, and pops by
+  class); `titleChanges` (trades after which a title changed holder); `prices`, what one
+  unit of a material fetched where one side was that material alone and the other one
+  other stock, by material and then that stock, priced by the seat that sold it; and
+  `exports`, the headline: per material, the games in which a seat of the group was the
+  one whose land made the most of it (or the least), by its income summed over the
+  game's snapshots, and the units that seat sent out a game, given less received. Trade
+  works when the most-making seat's figure is positive and the least-making seat's
+  negative. The summary prints the trade section only when the batch had offers
+- `forced` — action-cap hits and forced resolutions (events, hunger picks and riots).
   The cap counts a seat's actions up to its `endTurn`; the hunger pick and riot choices
-  that follow are the seat's own and are not counted
-- `winsByPolicy` — wins credited to each policy over finished games, including
-  uniform CLI batches
+  that follow are the seat's own and are not counted, and neither is an answer to
+  another seat's offer
 - `movesByType` — zero-filled total and per-game counts for every typed legal move;
   this universal table makes missing or unexercised action paths visible
 - `activeEffects` — zero-filled observations, per-player-turn counts, and player-turn
-  prevalence for every canonical active-effect kind (suppression, hunger, the
-  year card, Laws, Ideas, and pending Directives). The shares are over every seat in
-  every snapshot, not over acting seats. `hunger` is the food warning (food income or
-  stock below zero), not a hunger turn: the summary prints it as "food warning", and
-  hunger turns are in `hunger` and `hungerPerPolicy`
-- `nationalIdeas` — setup picks, in-play purchases, finished holder seat-games, wins
-  and holder win rate per Idea, including zeroes. Each game records ownership and
-  acquisition route; capped games count acquisitions but never holder wins.
-  `perPolicy` splits holders and wins by the holder's personality: a personality
-  drafts the same Idea most games, so the pooled rate is mostly that personality's
-- `reach` — zero-filled use counts for every command, building, player card,
-  year card, venture, Law and Directive (proposed and passed), Idea (setup and
-  bought), calm payment, bank trade per material, ladder rung, growth, bought vote,
-  riot insurance and politician draw, in total and per policy with per-seat-game
-  rates. A hunger pick adds one count per pop sent away, by class
-  (`hunger:freemen`, `hunger:citizens`). The summary prints every item under 0.2 a
-  game as "Low reach". A zero is a
-  bot that cannot see the move, a weak move, or a move that does nothing; the
-  [reach audit](../reports/simulation/2026-10-04-v2-ai-reach-audit.md) shows how to tell.
-- `classes` — slave, freeman and citizen percentiles per policy over all snapshots
+  prevalence for every canonical active-effect kind (suppression, hunger, the year
+  card, Laws, Ideas, and pending Directives). The shares are over every seat in every
+  snapshot, not over acting seats. `hunger` is the food warning (food income or stock
+  below zero), not a hunger turn: the summary prints it as "food warning", and hunger
+  turns are in `hunger`
+- `nationalIdeas[id]` (cut) — setup picks, in-play purchases, finished holder
+  seat-games, wins and holder win rate per Idea, including zeroes. Capped games count
+  acquisitions but never holder wins. A personality drafts the same Idea most games, so
+  read `perPolicy` beside the pooled rate
+- `reach` (cut) — zero-filled use counts for every command, building, player card, year
+  card, venture, Law and Directive (proposed and passed), Idea (setup and bought), calm
+  payment, bank trade per material, ladder rung, growth, bought vote, riot insurance and
+  politician draw, with per-seat-game rates. A hunger pick adds one count per pop sent
+  away, by class. The summary prints every item under 0.2 a game as "Low reach". A zero
+  is a bot that cannot see the move, a weak move, or a move that does nothing; the
+  [reach audit](../reports/simulation/2026-10-04-v2-ai-reach-audit.md) shows how to tell
+- `classes` (cut) — slave, freeman and citizen percentiles over every turn snapshot of
+  the group's seats
 - `drawSwings` — each resolved player card's immediate change in resources, pops and
   Unrest tokens, against that seat's projected income at the draw (`ratio`). That
   income is the next one printed, with food upkeep counted as a gain. `collected` is
@@ -419,55 +437,53 @@ The report contains:
   `collectedMagnitude` sums its gains only; `collectedRatio` is the card's resource
   change over it. Both are empty for a game's opening turn when the setup was not
   observed
-- `drawSwingSummary` — the spread, pooled and per personality: `draws` and those
-  `discarded` for no room; `resourceCards` with the percentiles of their
-  `collectedRatio`; `popCards` and `popsMoved`; `tokenCards` and `tokensMoved`; and
-  `unchanged` (a loss with nothing to take, or no token to clear). Pop and token
-  cards are counted in their own units: nothing here prices a pop or a token in
-  resources
-- `buildings` — build counts and per-game rates
-- `events` — draw counts by the twelve player-card kinds and eight year-card kinds;
-  retired card IDs and choice-pick telemetry are gone
-- `perPolicy` — finished/capped seat-game counts, wins and win rate, final victory
-  card percentiles and zero-filled final title counts per policy/personality.
-  `winsDecidedBy` splits the wins by `race`, `titles`, `happiness`, `pops` and `seat`;
-  the last three are tiebreak wins at the deck's end.
-  Includes uniform batches. Capped seats contribute only to the cap count.
-  `perGame.finalTitles` names the engine-derived title IDs held by every seat at
-  the end; this includes deck finishes and caps for inspection.
-- `finalCardsDistribution`
-- `assembly` — agora engagement: assemblies held/game, Laws enacted / removed / standing,
-  Directives and their target distribution, authored passes, prize resources, Voice claims
-  and transfers, final Voice ownership/win correlation, authored-pass lead margin and
-  concentration, gold and influence spent/game, votes bought and a per-verb breakdown.
-  `assembly.perSeat` gives counts and per-game rates for Laws proposed and passed,
-  authored Laws standing at game end, passed Directives, votes bought, Voice claims
-  and table-turn observations of Voice held, and repeals filed, passed and failed.
-  `assembly.perPolicy` gives the same figures per personality, as counts and per
-  seat-game. `assembly.repeals` totals repeals filed, passed and failed.
-  `assembly.directiveTargets` counts passed Directives by the seat they hit, and
-  `assembly.directiveTargetsPerPolicy` by the personality. `assembly.influenceSpent`
-  is the draw, the repeal and votes bought with influence at their base prices;
-  `influenceSpent` above has every sink. CSV snapshots include standing
-  authorship and whether each seat holds Voice.
-- `currencyVerbs` — per-verb currency-move counts (bank / Dole / calm / ladder / venture / riot)
-- `upgrades` — colony→city upgrades per game
+- `drawSwingSummary` (cut) — `draws` and those `discarded` for no room;
+  `resourceCards` with the percentiles of their `collectedRatio`; `popCards` and
+  `popsMoved`; `tokenCards` and `tokensMoved`; and `unchanged` (a loss with nothing to
+  take, or no token to clear). Pop and token cards are counted in their own units
+- `buildings`, `upgrades`, `currencyVerbs` (bank, Dole, calm, ladder, venture, riot)
+  and `events` (draws by the twelve player-card kinds and eight year-card kinds) are
+  read off the reach counts
+- `luxuries` — goods claimed and active a game, their mean standing happiness per seat,
+  and the end-of-game gold distribution
+- `assembly` — `seats` (cut): Laws proposed, authored passes split into Laws and
+  Directives, authored Laws standing at the end, votes bought and their gold, Voice
+  claims and table-turns held, repeals filed, passed and failed, and passed Directives
+  aimed at the seat. Beside it: sittings `held`, `prizesGranted`, `voiceTransfers`,
+  `voiceHoldersAtEnd`, `voiceHolderWins`, the authored-pass lead margin and leader
+  share, `lawsRemoved` (passed less still standing), the influence spent on votes,
+  draws and repeals, and a per-verb breakdown. CSV snapshots include standing
+  authorship and whether each seat holds Voice
 
 Step 11's rules read from one rotated report, with no second script:
 
-- Riots after year 7: `riots.byYear` rows for years 8 to 14, `riots` over
+- Riots after year 7: `riots.total.byYear` rows for years 8 to 14, `riots` over
   `playerTurns`; `riots.perPolicy` for whose riots they are. Revolts sit beside them.
-- Influence: `perYear[].influence.median` for years 10 to 14, `influenceByPolicy` for
-  the build behind it, and `influenceSpent` for where it goes.
-- Win rates: `perPolicy[name].winRate`, with `winsDecidedBy` for how many are
+- Influence: `perYear[].influence.total.median` for years 10 to 14,
+  `perYear[].influence.perPolicy` for the build behind it, and `influenceSpent` for
+  where it goes.
+- Win rates: `results.perPolicy[name].winRate`, with `winsDecidedBy` for how many are
   tiebreak wins.
 - Beloved and luxuries: `beloved.total`, under either reading of a tie.
 - Draws: `drawSwingSummary`.
 - Length and endings: `terminations`, and `perGame[].finalYear`, `turnsPlayed` and
   `decidedBy`.
+- Trade: `trade.total.exports`, and the trade commands in `reach`.
 
 The summary prints each of these. The runaway-leader rule is not covered: its terms
-wait for an owner answer (Q80).
+wait for an owner answer (Q80). Reports written before player trade's second PR used
+older names: `perSeat`, `perPolicy` and `winsByPolicy` are now `results`;
+`hungerPerPolicy` is `hunger.perPolicy`; `influenceByPolicy` is
+`perYear[].influence.perPolicy`; `assembly.lawsEnacted` is
+`assembly.seats.total.lawsPassed`.
+
+**Economy switches.** Three ruleset values turn player trade's economy on piece by
+piece, so the same seeds can play the game before it beside the game after it:
+`trade.enabled` (offers and the Assembly's Ready step), `economy.bank.enabled` (the
+bank's buy and sell, off by default; no screen offers it) and `economy.baseFood` (the
+food each settlement grows on its own, 1 by default). The economy before trade is
+`{"economy":{"bank":{"enabled":true},"baseFood":0},"trade":{"enabled":false}}`, passed
+with `--ruleset-patch`.
 
 Identical inputs produce byte-identical reports (minus `meta.generatedAt`), and
 the same CSV, whatever `--jobs` is. Compare two patches by running two batches with

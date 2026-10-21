@@ -321,7 +321,11 @@ function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }
  * offers wait on the alarms row above the sheet, where they are answered.
  */
 function Trade({ G, session }: { G: HegemonyState; session: AssemblySession }) {
-  const offerers = session.voteOrder.filter((id) => offerWindowReason(G, id) === null);
+  const { humans } = useGameUi();
+  // A bot's seat makes its own offers.
+  const offerers = session.voteOrder.filter(
+    (id) => humans.includes(id) && offerWindowReason(G, id) === null,
+  );
   const [seat, setSeat] = useState<PlayerId | null>(null);
   const anchor = useRef<HTMLDivElement>(null);
 
@@ -988,8 +992,9 @@ function SeatStrip({
   session: AssemblySession;
   votes?: boolean;
 }) {
-  const { viewerId, moves } = useGameUi();
-  // Once every seat has sealed the sheet is shared: each seat presses Ready on it.
+  const { viewerId, moves, humans } = useGameUi();
+  // Once every seat has sealed the sheet is shared: each seat presses Ready on it, a
+  // bot's seat on its own.
   const shared = !votes && session.voteOrder.every((id) => session.proposalDone[id]);
 
   return (
@@ -1022,7 +1027,7 @@ function SeatStrip({
                 </b>
                 <span>{state}</span>
               </span>
-              {shared && !session.ready[id] ? (
+              {shared && !session.ready[id] && humans.includes(id) ? (
                 <button
                   aria-label={`${G.players[id].name} is Ready for the ballots`}
                   className="kicker sit-btn sit-ready"

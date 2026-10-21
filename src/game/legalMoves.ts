@@ -95,8 +95,7 @@ import {
   getTradeWithdrawStatus,
   tradeAnswer,
   tradeOffer,
-  tradePopSources,
-  tradePopTargets,
+  tradePlaceChoices,
   tradeSettle,
   tradeWithdraw,
 } from "./trade";
@@ -565,20 +564,6 @@ function enumerateTradeCommands(G: HegemonyState, playerID: PlayerId): DerivedCo
     }
   }
   return moves;
-}
-
-/** Each way to name a seat's settlements for the pops it gives and gets. */
-function tradePlaceChoices(
-  G: HegemonyState,
-  playerID: PlayerId,
-  gives: TradeBundle,
-  gets: TradeBundle,
-): TradePlaces[] {
-  const froms = totalPops(gives.pops) > 0 ? tradePopSources(G, playerID, gives.pops) : [undefined];
-  const tos = totalPops(gets.pops) > 0 ? tradePopTargets(G, playerID, gets.pops) : [undefined];
-  return froms.flatMap((from) =>
-    tos.map((to) => ({ ...(from ? { from } : {}), ...(to ? { to } : {}) })),
-  );
 }
 
 export function describeCommand(

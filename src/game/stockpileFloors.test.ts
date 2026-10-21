@@ -24,9 +24,9 @@ describe("configured stockpile floors", () => {
       });
 
     expect(collectIncome(G, "0").ok).toBe(true);
-    expect(G.players["0"].resources.food).toBe(-4);
+    expect(G.players["0"].resources.food).toBe(-3);
     expect(G.log.find((entry) => entry.message.includes("collected income"))?.message).toContain(
-      "-5 food",
+      "-4 food",
     );
   });
 

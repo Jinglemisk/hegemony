@@ -586,19 +586,6 @@
   line-height: 1.45;
 }
 
-.compendiumBankRow {
-  display: grid;
-  grid-template-columns: 22px auto minmax(0, 1fr);
-  gap: 9px;
-  align-items: center;
-  padding-block: var(--s-1);
-  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
-}
-
-.compendiumBankRow span {
-  color: var(--muted);
-}
-
 .compendiumCostList {
   display: grid;
   margin: 0;

@@ -8,6 +8,7 @@ import { MOVE_OK, invalid } from "../core/results";
 import type { MoveResult } from "../core/results";
 import { shuffleWithSeed } from "../core/rng";
 import { totalPops } from "../core/pops";
+import { closeOffers } from "../trade";
 import { POLITICIANS } from "./deck";
 import { isPriceLaw, settlementVoteDelta } from "./laws";
 import { getResolutionCard, getResolutionCards } from "../content";
@@ -463,10 +464,8 @@ function markReady(G: HegemonyState, playerID: PlayerId) {
   session.ready[playerID] = true;
 
   if (turnOrder(G).every((seat) => session.ready[seat])) {
-    if (G.offers.length > 0) {
-      G.offers = [];
-      addLog(G, "The open offers close as the ballots begin.");
-    }
+    if (G.offers.length > 0) addLog(G, "The open offers close as the ballots begin.");
+    closeOffers(G);
     beginVoting(G);
     return;
   }

@@ -178,6 +178,19 @@ export const PARITY_BEHAVIOR_FIXTURES = {
     implementation: "src/game/trade.test.ts",
     evidence: "lets any seat offer until it is Ready, then closes open offers as the ballots begin",
   },
+  botTradesFood: {
+    implementation: "src/sim/tradePolicy.test.ts",
+    evidence:
+      "a forest seat short of food buys it with wood from a plains seat that wants a Granary",
+  },
+  botRefusesWorseDeal: {
+    implementation: "src/sim/tradePolicy.test.ts",
+    evidence: "refuses a deal worse than no deal, and takes one that pays",
+  },
+  botRefusesTitle: {
+    implementation: "src/sim/tradePolicy.test.ts",
+    evidence: "refuses a deal that hands its partner Treasurer",
+  },
 } as const satisfies Record<string, ParityEvidence>;
 
 export type ParityBehaviorFixtureId = keyof typeof PARITY_BEHAVIOR_FIXTURES;
@@ -251,7 +264,7 @@ const lawArgs = [
   { implementation: "src/ui/effects.ts", evidence: "presentLawEffect" },
   { implementation: "src/game/activeEffects.ts", evidence: "standingLaw" },
   { implementation: "src/sim/policies.ts", evidence: "deltaIfEnacted" },
-  { implementation: "src/sim/telemetry.ts", evidence: "lawsEnacted" },
+  { implementation: "src/sim/telemetry.ts", evidence: "lawsPassed" },
 ] as const;
 const law = (...fixtures: NonEmptyList<ParityBehaviorFixtureId>) =>
   coverage(...lawArgs, ...fixtures);
@@ -356,10 +369,8 @@ export const ACTIVE_EFFECT_MECHANIC_PARITY = {
 export type TradeWorkflowStep = "offer" | "answer" | "counter" | "settle" | "withdraw" | "close";
 
 /**
- * Player trade's workflow, step by step (docs/plans/player-trade.md). The engine and
- * the screens cover every step now; the bots learn to trade in the plan's second PR,
- * so a step's simulation route names that PR until it lands. Telemetry counts each
- * step's command by type.
+ * Player trade's workflow, step by step (docs/plans/player-trade.md): the engine, the
+ * offer card, the bots' rule for the step and the trade figures in telemetry.
  */
 export type TradeWorkflowCoverage = {
   engine: ParityEvidence;
@@ -377,8 +388,8 @@ const tradeStep = (
 ): TradeWorkflowCoverage => ({
   engine: { implementation: "src/game/trade.ts", evidence: engine },
   frontend,
-  simulation: { implementation: "docs/plans/player-trade.md", evidence: simulation },
-  telemetry: { implementation: "src/sim/telemetry.ts", evidence: "movesByType" },
+  simulation: { implementation: "src/sim/policies.ts", evidence: simulation },
+  telemetry: { implementation: "src/sim/telemetry.ts", evidence: "TradeFigures" },
   behaviorFixtures,
 });
 const card = (evidence: string) => ({
@@ -387,28 +398,37 @@ const card = (evidence: string) => ({
 });
 
 export const TRADE_WORKFLOW_PARITY = {
-  offer: tradeStep("tradeOffer", card("ComposeCard"), "Offering on its turn", "tradeSettlement"),
+  offer: tradeStep(
+    "tradeOffer",
+    card("ComposeCard"),
+    "turnOffer",
+    "tradeSettlement",
+    "botTradesFood",
+    "botRefusesTitle",
+  ),
   answer: tradeStep(
     "tradeAnswer",
     card("Answers"),
-    "Answering",
+    "answerOffer",
     "tradeAnswerers",
     "tradeFirstAccept",
+    "botRefusesWorseDeal",
+    "botRefusesTitle",
   ),
-  counter: tradeStep("tradeAnswer", card("Counter"), "counter once", "tradeCounter"),
+  counter: tradeStep("tradeAnswer", card("Counter"), "counterTerms", "tradeCounter"),
   settle: tradeStep(
     "settle",
     card("Take counter"),
-    "the first to accept trades",
+    "takeCounter",
     "tradeSettlement",
     "tradeRecheck",
     "tradeCounter",
   ),
-  withdraw: tradeStep("tradeWithdraw", card("tradeWithdraw"), "Pacing", "tradeRecheck"),
+  withdraw: tradeStep("tradeWithdraw", card("tradeWithdraw"), "withdrawAnswered", "tradeRecheck"),
   close: tradeStep(
-    "closeTurnOffers",
+    "closeOffers",
     { implementation: "src/components/frame/trade/OfferDisc.tsx", evidence: "OfferDisc" },
-    "Offering in the Assembly",
+    "offersMade",
     "tradeClose",
     "tradeAssembly",
   ),
@@ -724,7 +744,7 @@ export const FEATURE_PARITY = {
   assemblyLaws: {
     ...CONTENT_MANIFEST.resolutions,
     ids: LAW_CONTENT_IDS,
-    telemetry: { implementation: "src/sim/telemetry.ts", evidence: "lawsEnacted" },
+    telemetry: { implementation: "src/sim/telemetry.ts", evidence: "lawsPassed" },
     behaviorFixtures: ["lawIncome", "lawCost", "policyAssembly"],
   },
   assemblyDirectives: {

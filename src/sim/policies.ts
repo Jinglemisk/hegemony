@@ -1,6 +1,7 @@
 import { ideaForEval, playerNationalIdeas } from "../game/ideas";
-import { playerDole } from "../game/ideaRules";
-import { getPlayerBankRate } from "../game/bank";
+import { playerDole, votePurchaseLimit } from "../game/ideaRules";
+import { PLAYER_IDS } from "../game/data";
+import { bankBuy, dole, getBankBuyStatus, getDoleStatus } from "../game/bank";
 import { playerPieces } from "../game/settlement";
 import { YEAR_TERM_COLUMNS, calculateIncome, unfedAtTurnEnd } from "../game/economy/income";
 import { applyHunger, hungerForEval, hungerMouths } from "../game/hunger";
@@ -10,8 +11,10 @@ import { insuranceRollBonus } from "../game/riot";
 import { getAdjustedActionCost } from "../game/economy/cost";
 import { ventureOutcomes } from "./chance";
 import { getActiveEffects } from "../game/activeEffects";
-import { applyIncome, canAfford, payCost } from "../game/core/resources";
-import { getCivicCalmStatus } from "../game/civic";
+import { applyIncome } from "../game/core/resources";
+import type { MoveResult } from "../game/core/results";
+import { CIVIC_CALM_PAYMENTS, civicCalm, getCivicCalmStatus } from "../game/civic";
+import type { CivicCalmPayment } from "../game/civic";
 import { getBuilding, getResolutionCard, getResolutionCards, getRiotTable } from "../game/content";
 import { totalPops } from "../game/core/pops";
 import { getOwnedSettlement, getTile, popsInTransit, realmPops } from "../game/core/query";
@@ -29,6 +32,7 @@ import {
   settlementSlaveResource,
 } from "../game/settlement";
 import {
+  currentVoteWeight,
   enactForEval,
   lawProposalReason,
   nextDrawCost,
@@ -48,7 +52,27 @@ import {
   getUpgradeColonyToCityStatus,
   upgradeSiteReasons,
 } from "../game/status";
-import { victoryCardsHeld, victoryMetricValue, voiceHolder } from "../game/victory";
+import {
+  TRADE_RESOURCES,
+  counterOf,
+  emptyBundle,
+  getOffer,
+  getTradeAnswerStatus,
+  getTradeOfferStatus,
+  isEmptyBundle,
+  offerWindowReason,
+  tradeForEval,
+  tradePlaceChoices,
+  tradeShortfalls,
+} from "../game/trade";
+import {
+  titleChanges,
+  titleHolders,
+  victoryCardsHeld,
+  victoryMetricValue,
+  voiceHolder,
+} from "../game/victory";
+import type { TitleHolders } from "../game/victory";
 import type {
   BuildingId,
   HegemonyState,
@@ -57,6 +81,10 @@ import type {
   PopType,
   Resource,
   Resources,
+  TradeBundle,
+  TradeOffer,
+  TradePlaces,
+  TradeTerms,
 } from "../game/types";
 import type { PlayerView } from "../game/projection";
 import type { SimRng } from "./rng";
@@ -197,11 +225,23 @@ function shedsLastCitizen(G: HegemonyState, move: GameCommand): boolean {
   return false;
 }
 
-/** The moves search may weigh: no riot moves, no endTurn, and none that sheds the last
- *  citizen while another choice remains. */
+/** Trade is played by rule (see the Trade section): the search never weighs an offer's
+ *  answers, and an offer is composed, never listed. */
+const TRADE_MOVE_TYPES: ReadonlySet<GameCommand["type"]> = new Set([
+  "tradeOffer",
+  "tradeAnswer",
+  "tradeSettle",
+  "tradeWithdraw",
+]);
+
+/** The moves search may weigh: no riot or trade moves, no endTurn, and none that sheds
+ *  the last citizen while another choice remains. */
 function searchable(G: HegemonyState, moves: GameCommand[]): GameCommand[] {
   const optional = moves.filter(
-    (move) => !RIOT_MOVE_TYPES.has(move.type) && move.type !== "endTurn",
+    (move) =>
+      !RIOT_MOVE_TYPES.has(move.type) &&
+      !TRADE_MOVE_TYPES.has(move.type) &&
+      move.type !== "endTurn",
   );
   const kept = optional.filter((move) => !shedsLastCitizen(G, move));
   return kept.length || moves.some((move) => move.type === "endTurn") ? kept : optional;
@@ -317,21 +357,30 @@ function onePlyLookahead(
 }
 
 /**
- * A search policy: the Assembly by heuristic under `assemblyScore`, setup by the shared
- * placement evaluator under `weights`, and its own `turn` otherwise. Left out, the two
- * fall back to the political score and the default weights.
+ * A search policy: an offer naming the seat answered first, by rule; the Assembly by
+ * heuristic under `assemblyScore`; setup by the shared placement evaluator under
+ * `weights`; and its own `turn` otherwise. Left out, the two fall back to the political
+ * score and the default weights.
  */
 function searchPolicy(
   name: PolicyId,
   turn: (G: HegemonyState, moves: GameCommand[]) => GameCommand,
-  weights?: ScoreWeights,
+  weights = DEFAULT_WEIGHTS,
   assemblyScore?: Scorer,
 ): Policy {
   return {
     name,
     choose(view, moves, rng) {
       const G = view.state;
-      if (G.assembly) return resolveAssemblyByHeuristic(G, G.assembly, moves, assemblyScore);
+      const me = view.viewer;
+      const offer = G.offers.find(
+        (open) =>
+          open.to.includes(me) &&
+          moves.some((move) => move.type === "tradeAnswer" && move.offerId === open.id),
+      );
+      if (offer) return answerOffer(G, offer, moves, me, weights);
+      if (G.assembly)
+        return resolveAssemblyByHeuristic(G, G.assembly, moves, me, weights, assemblyScore);
       if (isSetupPhase(G)) return choosePlacement(G, moves, rng, weights);
       return turn(G, moves);
     },
@@ -394,6 +443,55 @@ function popValue(weights: ScoreWeights, pop: PopType): number {
   return HEURISTIC_SCALE * weights.pops[pop];
 }
 
+/** What a bundle of stocks is worth at the seat's weights. */
+function worth(weights: ScoreWeights, stocks: Partial<Resources>): number {
+  return (Object.keys(stocks) as Resource[]).reduce(
+    (sum, resource) => sum + (stocks[resource] ?? 0) * stockValue(weights, resource),
+    0,
+  );
+}
+
+type FoodSource = {
+  /** Buy once through the engine, on the state given. */
+  buy: (G: HegemonyState) => MoveResult;
+  cost: Partial<Resources>;
+  food: number;
+};
+
+/** The food a seat can buy, the cheaper first at its weights: the Dole, and the bank
+ *  where a ruleset keeps one. Prices are the engine's statuses. */
+function foodSources(G: HegemonyState, playerID: PlayerId, weights: ScoreWeights): FoodSource[] {
+  const sources: FoodSource[] = [
+    {
+      buy: (state) => dole(state, playerID),
+      cost: getDoleStatus(G, playerID).cost ?? {},
+      food: playerDole(G, playerID).food,
+    },
+  ];
+  if (G.ruleset.economy.bank.enabled)
+    sources.push({
+      buy: (state) => bankBuy(state, playerID, "food"),
+      cost: getBankBuyStatus(G, playerID, "food").cost ?? {},
+      food: 1,
+    });
+  return sources
+    .filter((source) => source.food > 0)
+    .sort((a, b) => worth(weights, a.cost) / a.food - worth(weights, b.cost) / b.food);
+}
+
+/** Food the seat's stocks would buy, each source paid from its own stock. */
+function foodCover(G: HegemonyState, playerID: PlayerId, weights: ScoreWeights): number {
+  const held = G.players[playerID].resources;
+  return foodSources(G, playerID, weights).reduce((sum, { cost, food }) => {
+    const units = Math.min(
+      ...(Object.keys(cost) as Resource[]).map((resource) =>
+        Math.floor(held[resource] / (cost[resource] || 1)),
+      ),
+    );
+    return sum + Math.max(0, units) * food;
+  }, 0);
+}
+
 /** Incomes the seat still collects in the game, this year's included if it has not
  *  collected yet. */
 function incomesLeftInGame(G: HegemonyState, playerID: PlayerId) {
@@ -430,34 +528,17 @@ export function projectPolicyHorizon(
     riskPenalty: 0,
   };
   // On a later turn the seat would buy the food it is short of before anyone leaves:
-  // from the bank with gold or by the Dole with influence, at its own prices, the
-  // cheaper first by its weights. The stocks pay, so a realm fed from the bank is seen
-  // to hold less gold, and only what it cannot pay for starves. The current turn is
-  // left alone: that food the seat has to buy itself, and a forecast that bought it
-  // would spend gold the seat still counts as held. Setup is left alone too. It picks
-  // land for fourteen years and the forecast sees six, so a starting store and six
-  // years of gold would make any site look fed.
+  // by the Dole, or from the bank where a ruleset keeps one, the cheaper first by its
+  // weights, through the engine's own commands. The stocks pay, so a realm fed by the
+  // Dole is seen to hold less influence, and only what it cannot pay for starves. The
+  // current turn is left alone: that food the seat has to buy itself, and a forecast
+  // that bought it would spend stocks the seat still counts as held. Setup is left
+  // alone too. It picks land for fourteen years and the forecast sees six, so a
+  // starting store and six years of income would make any site look fed.
   const buysLater = G.phase === "gameplay";
-  const foodSources = () => {
-    const dole = playerDole(projectedState, playerID);
-    const bank = getPlayerBankRate(projectedState, playerID, "food").buy;
-    return [
-      { stock: "gold" as const, price: bank, food: 1 },
-      { stock: "influence" as const, price: dole.influenceCost, food: dole.food },
-    ]
-      .filter((source) => source.food > 0)
-      .sort(
-        (a, b) =>
-          (a.price * stockValue(weights, a.stock)) / a.food -
-          (b.price * stockValue(weights, b.stock)) / b.food,
-      );
-  };
   const buyFood = () => {
-    for (const source of foodSources())
-      while (player.resources.food < 0 && player.resources[source.stock] >= source.price) {
-        player.resources[source.stock] -= source.price;
-        player.resources.food += source.food;
-      }
+    for (const source of foodSources(projectedState, playerID, weights))
+      while (player.resources.food < 0 && source.buy(projectedState).ok);
   };
   // Hunger is the engine's own rule and draws no dice, so the projection runs it
   // for real: a turn that ends short loses a pop per missing food, and later incomes
@@ -514,40 +595,44 @@ export function projectPolicyHorizon(
   };
 
   // On a later turn the seat would also buy calm when its level stands at a line and
-  // calm moves it off: once a year, the cheaper payment first by its weights, from the
-  // stocks. Without this a slave past the standing level read as a riot in every year
-  // of the forecast, whatever the seat held, so no realm kept more slaves than its
-  // Temples and goods covered. Like the food, this turn's calm is the seat's to buy.
-  // Returns the outcome the turn ends at: calm adds only its own term, so a calmed
-  // turn ends at the calmed outcome.
-  let calmCosts: Array<Partial<Resources>> | null = null;
+  // calm moves it off: once a year, the cheaper payment first by its weights, through
+  // the engine's own action. Without this a slave past the standing level read as a
+  // riot in every year of the forecast, whatever the seat held, so no realm kept more
+  // slaves than its Temples and goods covered. Like the food, this turn's calm is the
+  // seat's to buy. Returns the outcome the turn ends at.
+  let calmOrder: CivicCalmPayment[] | null = null;
   const buyCalm = (outcome: UnrestOutcome) => {
-    if (!buysLater || player.calmActive || outcome.tier === "none") return outcome;
-    const calmed = unrestOutcome(
-      projectedState,
-      playerID,
-      outcome.level + projectedState.ruleset.civicCalm.happiness,
+    if (!buysLater || outcome.tier === "none") return outcome;
+    calmOrder ??= [...CIVIC_CALM_PAYMENTS].sort(
+      (a, b) =>
+        worth(weights, getCivicCalmStatus(projectedState, playerID, a).cost ?? {}) -
+        worth(weights, getCivicCalmStatus(projectedState, playerID, b).cost ?? {}),
     );
+    const payment = calmOrder.find(
+      (candidate) => getCivicCalmStatus(projectedState, playerID, candidate).can,
+    );
+    if (!payment) return outcome;
+    // Tried on a copy of the seat first: calm bought that moves the realm off no line is
+    // not bought.
+    const trial = {
+      ...projectedState,
+      players: {
+        ...projectedState.players,
+        [playerID]: { ...player, resources: { ...player.resources } },
+      },
+      log: [],
+    };
+    civicCalm(trial, playerID, payment);
+    const calmed = unrestOutcome(trial, playerID);
     if (calmed.tier === outcome.tier) return outcome;
-
-    const worth = (cost: Partial<Resources>) =>
-      (Object.keys(cost) as Resource[]).reduce(
-        (sum, resource) => sum + (cost[resource] ?? 0) * stockValue(weights, resource),
-        0,
-      );
-    calmCosts ??= (["influence", "gold"] as const)
-      .map((payment) => getCivicCalmStatus(projectedState, playerID, payment).cost ?? {})
-      .sort((a, b) => worth(a) - worth(b));
-    const cost = calmCosts.find((candidate) => canAfford(player.resources, candidate));
-    if (!cost) return outcome;
-    payCost(player.resources, cost);
-    player.calmActive = true;
+    civicCalm(projectedState, playerID, payment);
     return calmed;
   };
 
   const expireYear = () => {
     projectedState.activeYearCard = null;
     player.calmActive = false;
+    player.civicCalmUsedThisTurn = false;
     player.collectedThisTurn = false;
   };
 
@@ -674,8 +759,13 @@ function createPolicyProjectionState(G: HegemonyState, playerID: PlayerId): Hege
         resources: { ...originalPlayer.resources },
       },
     },
-    // Arrivals write a log line; keep it off the real log.
+    // Arrivals and the engine's purchases write log lines; keep them off the real log.
     log: [],
+    // Later turns have nothing pending, so the engine's purchases are open in them.
+    assembly: null,
+    pendingPlayerEvent: null,
+    pendingRiot: null,
+    pendingHunger: null,
   };
 }
 
@@ -920,13 +1010,7 @@ function leanYearValue(
   const eaters = hungerMouths(G);
   const mouths = eaters.reduce((sum, pop) => sum + countPlayerPopType(G, playerID, pop), 0);
 
-  const stocks = G.players[playerID].resources;
-  const bank = getPlayerBankRate(G, playerID, "food").buy;
-  const dole = playerDole(G, playerID);
-  const cover =
-    Math.max(0, stocks.food) +
-    Math.floor(stocks.gold / bank) +
-    (dole.food > 0 ? Math.floor(stocks.influence / dole.influenceCost) * dole.food : 0);
+  const cover = Math.max(0, G.players[playerID].resources.food) + foodCover(G, playerID, weights);
   const uncovered = Math.min(mouths, shortfall - cover);
   if (uncovered <= 0) return 0;
 
@@ -1217,7 +1301,23 @@ function beamPlan(
     expectedScore(soleRootOutcomes, evaluation.valueOf) > rootScore + 1e-8
   )
     return rootMoves[0];
+  const best = beamSearch(G, rootMoves, evaluation, soleRootOutcomes);
+  return best.firstMove ?? endTurn;
+}
+
+type SearchEvaluation = ReturnType<typeof searchEvaluation>;
+
+/** The best the beam reaches from `G`, `rootMoves` first: the first move of its line
+ *  (null when nothing beats `G` itself) and the score it ends at. */
+function beamSearch(
+  G: HegemonyState,
+  rootMoves: GameCommand[],
+  evaluation: SearchEvaluation,
+  soleRootOutcomes: SearchOutcome[] | null = null,
+): { firstMove: GameCommand | null; score: number } {
+  const playerID = G.currentPlayer;
   type Node = { state: HegemonyState; firstMove: GameCommand | null; score: number };
+  const rootScore = evaluation.valueOf(G);
   let frontier: Node[] = [{ state: G, firstMove: null, score: rootScore }];
   let best: { firstMove: GameCommand | null; score: number } = {
     firstMove: null,
@@ -1255,7 +1355,7 @@ function beamPlan(
     frontier = children.slice(0, BEAM_WIDTH);
   }
 
-  return best.firstMove && best.score > rootScore + 1e-8 ? best.firstMove : endTurn;
+  return best;
 }
 
 /**
@@ -1643,16 +1743,16 @@ function observablePoliticianPool(
   );
 }
 
-/** Play the agora by heuristic instead of blind search. `moves` is always the current
- *  seat's ({@link G.currentPlayer}) options for the live phase. */
+/** Play the agora by heuristic instead of blind search. `moves` are the acting seat's
+ *  (`me`) options for the live phase. */
 function resolveAssemblyByHeuristic(
   G: HegemonyState,
   session: AssemblySession,
   moves: GameCommand[],
+  me: PlayerId,
+  weights: ScoreWeights,
   score: Scorer = scorePolitical,
 ): GameCommand {
-  const me = G.currentPlayer;
-
   if (session.phase === "closing") {
     return moves.find((move) => move.type === "assemblyClose") ?? moves[0];
   }
@@ -1661,16 +1761,30 @@ function resolveAssemblyByHeuristic(
     return chooseVote(G, session, moves, me, score);
   }
 
-  // Proposal (async): fish/repeal/pass while empty-handed, then propose or discard,
-  // then Ready. Bots make no offers yet.
+  // Proposal (async): take a counter that pays, then fish/repeal/pass while
+  // empty-handed, then propose or discard, then Ready. Short of the influence for the
+  // speech it wants, or of the price of the votes it plans to buy, the seat offers for
+  // it first, once a sitting.
+  const counter = moves.some((move) => move.type === "tradeSettle")
+    ? takeCounter(G, moves, me, tradeScorer(G, me, weights).score)
+    : null;
+  const answered = counter ?? withdrawAnswered(G, moves, me);
+  if (answered) return answered;
   if (session.proposalDone[me]) {
-    return moves.find((move) => move.type === "assemblyReady") ?? moves[0];
+    return (
+      voteOffer(G, session, me, score, weights) ??
+      moves.find((move) => move.type === "assemblyReady") ??
+      moves[0]
+    );
   }
   const held = session.held[me];
   if (held) {
     return chooseProposeOrDiscard(G, held.card, moves, me, score);
   }
-  return chooseDrawRepealOrPass(G, session, moves, me, score);
+  return (
+    speechOffer(G, session, me, score, weights) ??
+    chooseDrawRepealOrPass(G, session, moves, me, score)
+  );
 }
 
 function chooseVote(
@@ -1801,42 +1915,45 @@ function chooseProposeOrDiscard(
   );
 }
 
-function chooseDrawRepealOrPass(
+/** A repeal or a draw, with what it is worth to the seat and its price in influence. */
+type Speech = { move: GameCommand; value: number; cost: number };
+
+/**
+ * The speech the seat wants among `moves`: a strong repeal is a concrete gain and
+ * beats a gamble; else a draw worth making; else none. Its price is not checked, so a
+ * seat can also ask what it would say with the influence for it.
+ */
+function wantedSpeech(
   G: HegemonyState,
   session: AssemblySession,
   moves: GameCommand[],
   me: PlayerId,
   score: Scorer,
-): GameCommand {
+): Speech | null {
   const before = scoreEveryone(G, score);
-  const influence = G.players[me].resources.influence;
 
   // The most valuable hostile-Law repeal on offer.
-  let bestRepeal: GameCommand | null = null;
-  let bestRepealDelta = -Infinity;
+  let repeal: Speech | null = null;
   for (const move of moves) {
     if (move.type !== "assemblyProposeRepeal") {
       continue;
     }
-    const delta = deltaIfEnacted(
+    const value = deltaIfEnacted(
       G,
       before,
       { kind: "repeal", cardId: move.cardId, proposer: me },
       me,
       score,
     );
-    if (delta > bestRepealDelta) {
-      bestRepealDelta = delta;
-      bestRepeal = move;
-    }
+    if (!repeal || value > repeal.value)
+      repeal = { move, value, cost: G.ruleset.assembly.repealCost };
   }
+  if (repeal && repeal.value > REPEAL_THRESHOLD) return repeal;
 
   // Only standing authored Laws advance Voice. Compare each deck's full
   // unordered composition, including its prize and the best rival target/replacement,
   // so Stratokles is a real comeback line without peeking at the shuffled top card.
-  let bestDraw: GameCommand | null = null;
-  let bestDrawValue = -Infinity;
-  let drawCost = Infinity;
+  let draw: Speech | null = null;
   for (const move of moves) {
     if (move.type !== "assemblyDraw") {
       continue;
@@ -1845,26 +1962,20 @@ function chooseDrawRepealOrPass(
     const value =
       expectedDeckDelta(G, before, move.politician, me, score) +
       drawPaymentDelta(G, me, cost, score);
-    if (value > bestDrawValue) {
-      bestDrawValue = value;
-      bestDraw = move;
-      drawCost = cost;
-    }
+    if (!draw || value > draw.value) draw = { move, value, cost };
   }
+  return draw && draw.value > 0 && (session.draws[me] ?? 0) < MAX_DRAWS ? draw : null;
+}
 
-  const canDraw =
-    bestDraw !== null &&
-    bestDrawValue > 0 &&
-    (session.draws[me] ?? 0) < MAX_DRAWS &&
-    influence >= drawCost;
-
-  // A strong repeal is a concrete gain and beats a gamble; else fish if it's worth it; else pass.
-  if (bestRepeal && bestRepealDelta > REPEAL_THRESHOLD) {
-    return bestRepeal;
-  }
-  if (canDraw && bestDraw) {
-    return bestDraw;
-  }
+function chooseDrawRepealOrPass(
+  G: HegemonyState,
+  session: AssemblySession,
+  moves: GameCommand[],
+  me: PlayerId,
+  score: Scorer,
+): GameCommand {
+  const speech = wantedSpeech(G, session, moves, me, score);
+  if (speech && G.players[me].resources.influence >= speech.cost) return speech.move;
   return moves.find((move) => move.type === "assemblyPass") ?? moves[0];
 }
 
@@ -1946,16 +2057,446 @@ function scoreMaster(
 }
 
 /** The master family's turn: the beam over the master score, with what the seat is
- *  saving toward counted in. Wants are listed where the seat is free to act. */
+ *  saving toward counted in. Wants are listed where the seat is free to act, and there
+ *  the seat first takes a counter that pays, then makes its turn's offer. */
 function planTurn(G: HegemonyState, moves: GameCommand[], weights: ScoreWeights): GameCommand {
   const me = G.currentPlayer;
-  const score: Scorer = (state, player) => scoreMaster(state, player, weights);
-  const wants = moves.some((move) => move.type === "endTurn")
-    ? purchaseWants(G, me, score, weights)
-    : NO_WANTS;
-  if (wants.length === 0) return beamPlan(G, moves, score);
-  return beamPlan(G, moves, (state, player) =>
-    scoreMaster(state, player, weights, player === me ? wants : NO_WANTS),
+  const plain: Scorer = (state, player) => scoreMaster(state, player, weights);
+  const free = moves.some((move) => move.type === "endTurn");
+  const wants = free ? purchaseWants(G, me, plain, weights) : NO_WANTS;
+  const score: Scorer =
+    wants.length === 0
+      ? plain
+      : (state, player) => scoreMaster(state, player, weights, player === me ? wants : NO_WANTS);
+  if (!free) return beamPlan(G, moves, score);
+
+  const answered =
+    takeCounter(G, moves, me, (state) => score(state, me)) ?? withdrawAnswered(G, moves, me);
+  if (answered) return answered;
+  // The turn's own search is also the best turn without a deal.
+  const evaluation = searchEvaluation(score, me);
+  const plan = beamSearch(G, searchable(G, moves), evaluation);
+  return (
+    turnOffer(G, me, wants, evaluation, plan.score) ??
+    plan.firstMove ??
+    moves.find((move) => move.type === "endTurn")!
+  );
+}
+
+// ── Trade ────────────────────────────────────────────────────────────────────────────
+//
+// Bots answer, counter and offer by the score they play with: their weights, what they
+// save toward, and the food and calm the forecast buys (docs/plans/player-trade.md,
+// Bots). A deal is weighed on the match as it would stand after the trade, which the
+// engine builds; a bot takes one worth the margin to it that hands its partner no
+// title. Pacing: one offer a turn and one a sitting, read off the engine's count.
+
+/** What a deal must be worth to a bot over no deal: about a unit of food, so a bot does
+ *  not trade for rounding. */
+const TRADE_MARGIN = 1;
+/** The turn's best deals, by the plain score, that it weighs with the whole beam. */
+const TRADE_BEAMS = 2;
+/** The purchases, best first, whose missing materials a bot asks for. */
+const WANTS_ASKED = 2;
+/** The ratios a bot offers a stock at, given for got. Gold goes at 1 a unit only. */
+const DEAL_RATIOS: ReadonlyArray<readonly [number, number]> = [
+  [1, 1],
+  [2, 1],
+  [1, 2],
+];
+
+type TradeAnswerMove = Extract<GameCommand, { type: "tradeAnswer" }>;
+type TradeSettleMove = Extract<GameCommand, { type: "tradeSettle" }>;
+
+/** The match with no sitting and nothing pending, where a seat's purchases are open, so
+ *  what it saves toward counts in its score wherever it trades. */
+function marketView(G: HegemonyState): HegemonyState {
+  return G.assembly || G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger
+    ? { ...G, assembly: null, pendingPlayerEvent: null, pendingRiot: null, pendingHunger: null }
+    : G;
+}
+
+/** The match as on the seat's own turn, where its purchases are legal: no sitting,
+ *  nothing pending, no offers, and no other seat short of food, which only that seat's
+ *  own turn may be. */
+function ownTurnView(G: HegemonyState, me: PlayerId): HegemonyState {
+  const players = { ...G.players };
+  for (const id of PLAYER_IDS) {
+    const player = players[id];
+    if (id !== me && player.resources.food < 0)
+      players[id] = { ...player, resources: { ...player.resources, food: 0 } };
+  }
+  return { ...marketView(G), currentPlayer: me, offers: [], players };
+}
+
+/** A seat's score for a match it may trade in, and what it saves toward, listed from its
+ *  own purchases as on its turn: out of turn it has no legal purchases. */
+function tradeScorer(G: HegemonyState, me: PlayerId, weights: ScoreWeights) {
+  const wants = purchaseWants(
+    ownTurnView(G, me),
+    me,
+    (state, player) => scoreMaster(state, player, weights),
+    weights,
+  );
+  return {
+    wants,
+    score: (state: HegemonyState) => scoreMaster(marketView(state), me, weights, wants),
+  };
+}
+
+/** Whether a trade leaves `partner` holding a title it lacked. */
+function handsTitle(after: HegemonyState, before: TitleHolders, partner: PlayerId): boolean {
+  return titleChanges(after, before).some((change) => change.to === partner);
+}
+
+/** The item worth the most, when one is worth more than nothing. */
+function bestOf<T>(items: readonly T[], value: (item: T) => number): T | null {
+  let best: T | null = null;
+  let bestValue = 0;
+  for (const item of items) {
+    const itemValue = value(item);
+    if (itemValue > bestValue) {
+      best = item;
+      bestValue = itemValue;
+    }
+  }
+  return best;
+}
+
+/** `bundle` with `delta` more of `resource`, a line of zero dropped. */
+function adjusted(bundle: TradeBundle, resource: Resource, delta: number): TradeBundle {
+  const resources = { ...bundle.resources, [resource]: (bundle.resources[resource] ?? 0) + delta };
+  if (resources[resource] === 0) delete resources[resource];
+  return { ...bundle, resources };
+}
+
+/** What a counter may change: one unit more to the answering seat, or one less from it,
+ *  on one stock line of the offer. The offering seat must still hold its side. */
+function counterTerms(G: HegemonyState, offer: TradeOffer): TradeTerms[] {
+  const { give, get } = offer.terms;
+  const terms: TradeTerms[] = [];
+  for (const resource of TRADE_RESOURCES) {
+    if ((give.resources[resource] ?? 0) > 0) {
+      const more = adjusted(give, resource, 1);
+      if (tradeShortfalls(G, offer.from, more, offer.places.from).length === 0)
+        terms.push({ give: more, get });
+    }
+    if ((get.resources[resource] ?? 0) > 0) {
+      const less = adjusted(get, resource, -1);
+      if (!isEmptyBundle(less)) terms.push({ give, get: less });
+    }
+  }
+  return terms;
+}
+
+/**
+ * A bot's answer to an offer naming it: accept when the trade is worth the margin to it
+ * and hands the offering seat no title; else counter once, with the one-unit change
+ * that would make it so; else decline. The first accept trades, so a bot answers at
+ * once.
+ */
+function answerOffer(
+  G: HegemonyState,
+  offer: TradeOffer,
+  moves: GameCommand[],
+  me: PlayerId,
+  weights: ScoreWeights,
+): GameCommand {
+  const { score } = tradeScorer(G, me, weights);
+  const floor = score(G) + TRADE_MARGIN;
+  const holders = titleHolders(G);
+  const gain = (terms: TradeTerms, places: TradePlaces) => {
+    const after = tradeForEval(G, offer.from, me, terms, offer.places, places);
+    return handsTitle(after, holders, offer.from) ? -Infinity : score(after) - floor;
+  };
+
+  const accepts = moves.filter(
+    (move): move is TradeAnswerMove =>
+      move.type === "tradeAnswer" && move.offerId === offer.id && move.answer.kind === "accept",
+  );
+  const accept = bestOf(accepts, (move) =>
+    move.answer.kind === "accept" ? gain(offer.terms, move.answer.places) : -Infinity,
+  );
+  if (accept) return accept;
+
+  // A counter changes stocks only, so its pops go where an accept's would.
+  const places = tradePlaceChoices(G, me, offer.terms.get, offer.terms.give)[0];
+  if (places) {
+    const counters = counterTerms(G, offer).filter(
+      (terms) => getTradeAnswerStatus(G, me, offer.id, { kind: "counter", terms, places }).can,
+    );
+    const terms = bestOf(counters, (candidate) => gain(candidate, places));
+    if (terms)
+      return { type: "tradeAnswer", offerId: offer.id, answer: { kind: "counter", terms, places } };
+  }
+  return { type: "tradeAnswer", offerId: offer.id, answer: { kind: "decline" } };
+}
+
+/** Of the counters on the seat's own offers, the one worth the margin to it that hands
+ *  its partner no title, as the command that takes it; null when none is. */
+function takeCounter(
+  G: HegemonyState,
+  moves: GameCommand[],
+  me: PlayerId,
+  score: (state: HegemonyState) => number,
+): GameCommand | null {
+  const settles = moves.filter((move): move is TradeSettleMove => move.type === "tradeSettle");
+  if (settles.length === 0) return null;
+  const floor = score(G) + TRADE_MARGIN;
+  const holders = titleHolders(G);
+  return bestOf(settles, (move) => {
+    const counter = counterOf(getOffer(G, move.offerId)!, move.partner)!;
+    const after = tradeForEval(G, me, move.partner, counter.terms, move.places, counter.places);
+    return handsTitle(after, holders, move.partner) ? -Infinity : score(after) - floor;
+  });
+}
+
+/** The seat's own offer every named seat has answered, with no counter on it worth
+ *  taking: withdrawn, so its disc leaves the table's alarms row. */
+function withdrawAnswered(
+  G: HegemonyState,
+  moves: GameCommand[],
+  me: PlayerId,
+): GameCommand | null {
+  const spent = G.offers.find(
+    (offer) => offer.from === me && offer.to.every((seat) => offer.answers[seat]),
+  );
+  return (
+    (spent && moves.find((move) => move.type === "tradeWithdraw" && move.offerId === spent.id)) ??
+    null
+  );
+}
+
+/** What a seat lacks: the food it is short of now, and what its best purchases still
+ *  need, materials its land makes none of included. */
+function tradeNeeds(G: HegemonyState, me: PlayerId, wants: Want[]): Partial<Resources> {
+  const held = G.players[me].resources;
+  const needs: Partial<Resources> = {};
+  if (held.food < 0) needs.food = -held.food;
+  for (const { cost } of wants.slice(0, WANTS_ASKED))
+    for (const resource of Object.keys(cost) as Resource[]) {
+      const short = (cost[resource] ?? 0) - held[resource];
+      if (short > 0) needs[resource] = Math.max(needs[resource] ?? 0, short);
+    }
+  return needs;
+}
+
+/** What a seat holds beyond the purchase it saves toward, of each stock it does not
+ *  lack. */
+function tradeSpare(
+  G: HegemonyState,
+  me: PlayerId,
+  wants: Want[],
+  needs: Partial<Resources>,
+): Partial<Resources> {
+  const held = G.players[me].resources;
+  const saving = wants[0]?.cost ?? {};
+  const spare: Partial<Resources> = {};
+  for (const resource of TRADE_RESOURCES) {
+    const amount = held[resource] - (saving[resource] ?? 0);
+    if (!needs[resource] && amount > 0) spare[resource] = amount;
+  }
+  return spare;
+}
+
+/** The deals for what a seat lacks against what it can spare: each spare stock at 1 for
+ *  1, 2 for 1 and 1 for 2, and gold at 1 a unit. */
+function candidateDeals(needs: Partial<Resources>, spare: Partial<Resources>): TradeTerms[] {
+  const deals: TradeTerms[] = [];
+  for (const need of Object.keys(needs) as Resource[]) {
+    const units = needs[need] ?? 0;
+    for (const given of Object.keys(spare) as Resource[]) {
+      if (given === need || units === 0) continue;
+      for (const [give, get] of given === "gold" ? DEAL_RATIOS.slice(0, 1) : DEAL_RATIOS) {
+        if (give * units > (spare[given] ?? 0)) continue;
+        deals.push({
+          give: { ...emptyBundle(), resources: { [given]: give * units } },
+          get: { ...emptyBundle(), resources: { [need]: get * units } },
+        });
+      }
+    }
+  }
+  return deals;
+}
+
+/** The rivals holding what a deal asks of them: only they could accept it. */
+function dealPayers(G: HegemonyState, me: PlayerId, terms: TradeTerms): PlayerId[] {
+  return PLAYER_IDS.filter((id) => id !== me && tradeShortfalls(G, id, terms.get).length === 0);
+}
+
+/** The rivals a deal goes to: those who could pay that it hands no title. All three
+ *  are the table; none, null. */
+function dealRecipients(
+  G: HegemonyState,
+  me: PlayerId,
+  terms: TradeTerms,
+  holders: TitleHolders,
+): PlayerId[] | null {
+  const to = dealPayers(G, me, terms).filter(
+    (rival) => !handsTitle(tradeForEval(G, me, rival, terms), holders, rival),
+  );
+  return to.length === 0 ? null : to.length === PLAYER_IDS.length - 1 ? [] : to;
+}
+
+/** The offer command for a deal, when the engine takes it. */
+function offerCommand(
+  G: HegemonyState,
+  me: PlayerId,
+  to: PlayerId[],
+  terms: TradeTerms,
+): GameCommand | null {
+  return getTradeOfferStatus(G, me, to, terms, {}).can
+    ? { type: "tradeOffer", to, terms, places: {} }
+    : null;
+}
+
+/** Whether a seat may still make its one offer of this turn or sitting. */
+function mayOffer(G: HegemonyState, me: PlayerId): boolean {
+  return (G.offersMade[me] ?? 0) === 0 && offerWindowReason(G, me) === null;
+}
+
+/**
+ * A bot's offer on its turn, weighed with its search: of the deals for what it lacks,
+ * the one whose best turn beats the best turn without a deal (`without`) by the margin.
+ * That search takes the Dole too, so a deal worse than the Dole's food never wins. Only
+ * a deal worth something by itself is searched. The deal goes to every rival who could
+ * pay that it hands no title, and the first to accept trades.
+ */
+function turnOffer(
+  G: HegemonyState,
+  me: PlayerId,
+  wants: Want[],
+  evaluation: SearchEvaluation,
+  without: number,
+): GameCommand | null {
+  if (!mayOffer(G, me)) return null;
+  const needs = tradeNeeds(G, me, wants);
+  const deals = candidateDeals(needs, tradeSpare(G, me, wants, needs));
+  if (deals.length === 0) return null;
+
+  // Which payer accepts does not move the seat's own score.
+  const now = evaluation.valueOf(G);
+  const ranked = deals
+    .flatMap((terms) => {
+      const [payer] = dealPayers(G, me, terms);
+      if (!payer) return [];
+      const after = tradeForEval(G, me, payer, terms);
+      const value = evaluation.valueOf(after);
+      return value > now ? [{ terms, after, value }] : [];
+    })
+    .sort((a, b) => b.value - a.value);
+  const holders = titleHolders(G);
+
+  let best: { offer: GameCommand; score: number } | null = null;
+  let weighed = 0;
+  for (const { terms, after } of ranked) {
+    if (weighed === TRADE_BEAMS) break;
+    const to = dealRecipients(G, me, terms, holders);
+    const offer = to && offerCommand(G, me, to, terms);
+    if (!offer) continue;
+    weighed += 1;
+    const withDeal = beamSearch(
+      after,
+      searchable(after, enumerateLegalCommands(after, me)),
+      evaluation,
+    ).score;
+    if (withDeal > without + TRADE_MARGIN && (!best || withDeal > best.score))
+      best = { offer, score: withDeal };
+  }
+  return best?.offer ?? null;
+}
+
+/**
+ * An offer in the preparation for one of `needs`, worth the margin once what it pays
+ * for (`unlocks`) is counted, to the rivals it hands no title; null when none is.
+ */
+function assemblyOffer(
+  G: HegemonyState,
+  me: PlayerId,
+  needs: Array<Partial<Resources>>,
+  unlocks: number,
+  weights: ScoreWeights,
+): GameCommand | null {
+  const { score, wants } = tradeScorer(G, me, weights);
+  const floor = score(G) + TRADE_MARGIN - unlocks;
+  const holders = titleHolders(G);
+  const ranked = needs
+    .flatMap((need) => candidateDeals(need, tradeSpare(G, me, wants, need)))
+    .flatMap((terms) => {
+      const [payer] = dealPayers(G, me, terms);
+      return payer ? [{ terms, value: score(tradeForEval(G, me, payer, terms)) - floor }] : [];
+    })
+    .filter((deal) => deal.value > 0)
+    .sort((a, b) => b.value - a.value);
+  for (const { terms } of ranked) {
+    const to = dealRecipients(G, me, terms, holders);
+    const offer = to && offerCommand(G, me, to, terms);
+    if (offer) return offer;
+  }
+  return null;
+}
+
+/** Still deciding what to say: a seat short of the influence for the speech it wants
+ *  offers for it. */
+function speechOffer(
+  G: HegemonyState,
+  session: AssemblySession,
+  me: PlayerId,
+  score: Scorer,
+  weights: ScoreWeights,
+): GameCommand | null {
+  if (!mayOffer(G, me)) return null;
+  const influence = G.players[me].resources.influence;
+  // What it would say with the influence: the moves a full purse makes legal.
+  const purse = withStocks(G, me, { influence: FULL_STORE });
+  const speech = wantedSpeech(G, session, enumerateLegalCommands(purse, me), me, score);
+  if (!speech || speech.cost <= influence) return null;
+  return assemblyOffer(G, me, [{ influence: speech.cost - influence }], speech.value, weights);
+}
+
+/**
+ * Sealed, before Ready: the votes the seat would buy for its own proposal, as the vote
+ * stands now (every seat casting as it would, at its votes now), when it cannot pay for
+ * them. It offers for the gold or the influence they cost.
+ */
+function voteOffer(
+  G: HegemonyState,
+  session: AssemblySession,
+  me: PlayerId,
+  score: Scorer,
+  weights: ScoreWeights,
+): GameCommand | null {
+  const item = session.proposals[me];
+  if (!item || !mayOffer(G, me)) return null;
+  const before = scoreEveryone(G, score);
+  const mine = assessVote(G, before, item, me, score);
+  if (Math.abs(mine.voteDelta) < BRIBE_MAGNITUDE) return null;
+
+  let yea = 0;
+  let nay = 0;
+  for (const seat of session.voteOrder) {
+    const weight = currentVoteWeight(G, seat);
+    if ((seat === me ? mine : assessVote(G, before, item, seat, score)).yea) yea += weight;
+    else nay += weight;
+  }
+  const goesMyWay = (bought: number) =>
+    mine.yea ? wouldPass(G, yea + bought, nay) : !wouldPass(G, yea, nay + bought);
+  const cap = votePurchaseLimit(G, me) - session.bribesUsed[me];
+  let needed = 0;
+  while (needed <= cap && !goesMyWay(needed)) needed += 1;
+  if (needed === 0 || needed > cap || needed <= votesLeftToBuy(G, me)) return null;
+
+  // The votes the other stock pays for stay bought; the asked stock covers the rest.
+  const price = G.ruleset.assembly.briberyCost;
+  const { gold, influence } = G.players[me].resources;
+  const short = (stock: number, other: number) =>
+    Math.max(0, (needed - Math.floor(other / price)) * price - stock);
+  return assemblyOffer(
+    G,
+    me,
+    [{ gold: short(gold, influence) }, { influence: short(influence, gold) }],
+    Math.abs(mine.voteDelta),
+    weights,
   );
 }
 

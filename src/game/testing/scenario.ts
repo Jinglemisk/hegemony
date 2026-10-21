@@ -5,7 +5,7 @@ import { clonePops } from "../core/pops";
 import type { MoveResult } from "../core/results";
 import { createInitialState } from "../state";
 import { GAME_MODES, deriveRuleset } from "../ruleset";
-import type { GameModeId } from "../ruleset";
+import type { GameModeId, RulesetPatch } from "../ruleset";
 import { advanceSetupTurn, beginGameplayTurn } from "../turn";
 import type {
   HegemonyState,
@@ -54,6 +54,13 @@ export function materialTile(G: HegemonyState): HexTile & { resource: TileResour
   if (!found?.resource) throw new Error("no material tile on the board");
   return found as HexTile & { resource: TileResource };
 }
+
+/** The economy before player trade: a bank, no base food and no offers. Batches still
+ *  play it beside the one after it, so fixtures set on it keep those bots pinned. */
+export const BEFORE_TRADE: RulesetPatch = {
+  economy: { bank: { enabled: true }, baseFood: 0 },
+  trade: { enabled: false },
+};
 
 export type ScenarioOptions = {
   seed?: number;

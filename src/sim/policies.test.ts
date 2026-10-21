@@ -5,7 +5,7 @@ import { RESOLUTION_CARDS } from "../game/assembly/deck";
 import { PLAYER_IDS, PLAYER_EVENT_CARDS } from "../game/data";
 import { projectForPlayer } from "../game/projection";
 import { DEFAULT_RULESET } from "../game/ruleset";
-import { owned, scenario } from "../game/testing/scenario";
+import { BEFORE_TRADE, owned, scenario } from "../game/testing/scenario";
 import { movePops, upgradeColonyToCity } from "../game/actions";
 import { endTurn } from "../game/turn";
 import { yearDeckSize } from "../game/year";
@@ -38,7 +38,7 @@ import { hexDistance } from "../game/map";
 import { isAdjacentToCity } from "../game/settlement";
 import { createGameDefinition } from "../game/definition";
 import { getAuthoredGameContent } from "../game/content";
-import { GAME_MODES } from "../game/ruleset";
+import { GAME_MODES, deriveRuleset } from "../game/ruleset";
 import { createInitialStateFromDefinition } from "../game/state";
 
 function observe(G: HegemonyState, player = G.currentPlayer) {
@@ -308,9 +308,13 @@ describe("policy unrest risk", () => {
 });
 
 describe("the forecast buys food", () => {
-  /** A citizen and six freemen on a mountain: nothing grows, so seven food a year. */
-  const importer = (resources: Partial<HegemonyState["players"]["0"]["resources"]>) => {
-    const G = scenario()
+  /** A citizen and six freemen on a mountain: nothing grows, so seven food a year. Set
+   *  on the economy before trade, where gold bought food from the bank. */
+  const importer = (
+    resources: Partial<HegemonyState["players"]["0"]["resources"]>,
+    economy = scenario({ patch: BEFORE_TRADE }),
+  ) => {
+    const G = economy
       .withSettlement("0", "-2,0", "city", { citizens: 1, freemen: 6, slaves: 0 })
       .withResources("0", { food: 0, wood: 0, stone: 0, gold: 0, influence: 0, ...resources })
       .build();
@@ -332,6 +336,15 @@ describe("the forecast buys food", () => {
       if (!buy.ok) throw new Error(buy.reasons.join("; "));
       G = buy.state;
     }
+  });
+
+  it("buys by the Dole alone where there is no bank, and gold feeds no one", () => {
+    // The trade economy: the city grows 1 food of its own, so six short a year.
+    const G = importer({ gold: 100, influence: 6 }, scenario());
+    const forecast = projectPolicyHorizon(G, "0", 1);
+    // Two Doles at 3 influence each; the gold is untouched and four leave.
+    expect(forecast.resources).toMatchObject({ gold: 106, influence: 1, food: 0 });
+    expect(forecast.expectedStarvationPopLoss).toBe(4);
   });
 
   it("pays from the stocks at the seat's own prices and leaves the current turn to the seat", () => {
@@ -370,7 +383,7 @@ describe("the forecast buys food", () => {
     // Four freemen and a plains slave in year 2, twelve incomes to come: three food
     // short a year, 6 gold of it against 4 gold of income.
     const at = (gold: number, year = 2, slaves = 1) => {
-      const G = scenario()
+      const G = scenario({ patch: BEFORE_TRADE })
         .withSettlement("0", "-2,1", "city", { citizens: 0, freemen: 4, slaves })
         .withResources("0", { food: 0, wood: 0, stone: 0, gold, influence: 0 })
         .build();
@@ -957,8 +970,9 @@ describe("beam policy", () => {
 });
 
 describe("opening placement", () => {
+  // Set on the economy before trade, where a capital fed itself from plains.
   const definition = createGameDefinition({
-    ruleset: GAME_MODES.standard.ruleset,
+    ruleset: deriveRuleset(GAME_MODES.standard.ruleset, BEFORE_TRADE),
     content: getAuthoredGameContent(),
   });
   const searchPolicies = [

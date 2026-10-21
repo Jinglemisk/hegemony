@@ -49,12 +49,13 @@ describe("year cards that zero a term", () => {
     }
     G.players["0"].collectedThisTurn = false;
 
-    expect(calculateIncome(G, "0").food).toBe(6);
+    expect(calculateIncome(G, "0").food).toBe(8);
 
     standCard(G, "year-drought");
 
-    expect(calculateIncome(G, "0").food).toBe(0);
-    expect(settlementNextYield(G, land, settlement).food).toBe(0);
+    // Each settlement's own food is no class's column.
+    expect(calculateIncome(G, "0").food).toBe(2);
+    expect(settlementNextYield(G, land, settlement).food).toBe(1);
     expect(settlementNextClassColumn(G, land, settlement, "slaves")).toMatchObject({
       perPop: 0,
       zeroed: true,
@@ -70,13 +71,13 @@ describe("year cards that zero a term", () => {
     owned(G, G.players["0"].settlements[0], "0").pops = { citizens: 2, freemen: 3, slaves: 0 };
     G.players["0"].collectedThisTurn = false;
 
-    expect(calculateIncome(G, "0")).toMatchObject({ gold: 3, influence: 2, food: -5 });
+    expect(calculateIncome(G, "0")).toMatchObject({ gold: 3, influence: 2, food: -3 });
 
     standCard(G, "year-piracy");
-    expect(calculateIncome(G, "0")).toMatchObject({ gold: 0, influence: 2, food: -5 });
+    expect(calculateIncome(G, "0")).toMatchObject({ gold: 0, influence: 2, food: -3 });
 
     standCard(G, "year-ostracism");
-    expect(calculateIncome(G, "0")).toMatchObject({ gold: 3, influence: 0, food: -5 });
+    expect(calculateIncome(G, "0")).toMatchObject({ gold: 3, influence: 0, food: -3 });
   });
 
   it("bites only the income a seat has not yet collected this year", () => {
