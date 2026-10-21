@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "post-v2"
-updated: 2026-10-20
+updated: 2026-10-21
 ---
 
 # Code health after v2
@@ -19,7 +19,7 @@ This is v2's Step 16, the refactor, except the island map, which the living map 
 ## Non-goals
 
 - Code that a later plan deletes: the bank and Exchange screens and the bank's copies of the
-  pending-decision check (trade slice 2); Ventures, the Colonists' Voyage, the bots' venture
+  pending-decision check (trade's second PR); Ventures, the Colonists' Voyage, the bots' venture
   valuation and the manifest's `ventureOutcomes` entry (deck slice 1).
 - The island renderer, its labels, tips and CSS (living map): F7's `BoardTip`, F10's label
   layout, C7. The verb disc menu waits for the living map plan to say whether it survives: F2,
@@ -31,9 +31,9 @@ This is v2's Step 16, the refactor, except the island map, which the living map 
 
 ## Settled inputs
 
-- Owner, 2026-10-19: the five cleanup PRs land before player trade slice 1, apart from feature
+- Owner, 2026-10-19: the five cleanup PRs land before player trade, apart from feature
   work, so each can prove it leaves the game unchanged. Only the forecast's bank-adjacent code and
-  the telemetry rewrite stay with trade slice 2, which rewrites them anyway.
+  the telemetry rewrite stay with trade's second PR, which rewrites them anyway.
 - Owner, 2026-10-19: a slice may leave a bug in place when a later slice of the same sequence
   fixes it or deletes its code.
 - `rules.md`: every way to add a pop needs room, pop grants reserve room for pops already on the
@@ -68,7 +68,7 @@ resource chips (shell, board, modals).
   state schema version change (13 after PR 1; `RULESET_VERSION` has never moved); older saves
   are rejected, as today.
 - Commands: unchanged.
-- Actors: the pending-decision gate derives from `currentWorkflow`, which trade slice 1 extends
+- Actors: the pending-decision gate derives from `currentWorkflow`, which trade's first PR extends
   with its workflow.
 - Projections: one typed required decision for the seat (source, actor, choices, reasons), read
   by the board's moment host.
@@ -99,8 +99,8 @@ resource chips (shell, board, modals).
 | Resource chips            | `ResourceChips` plus the frame's `Price`/`Chips`, bare numbers to a screen reader (F6, B6) | One chip with frame styling that reads "4 wood"                                                                                                                                       |
 | Action button             | New screens use native `disabled` and `title`, or fixed hints (F1, B1)                     | One shared button: Tooltip, MechanicsDetails, `aria-disabled`, engine reasons, effective cost; the realm pages, Assembly buttons and Ideas use it (the verb fans wait, see non-goals) |
 
-Trade slice 1's answer card is the decision host's first new user, and its screens are built on
-the shared button.
+Trade's screens are built on the shared button and chip. Its offer card is not a forced moment
+(owner, 2026-10-21), so it does not mount in the host.
 
 ### 3. Typed Laws, one income, one room
 
@@ -108,10 +108,10 @@ the shared button.
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | Laws           | 8 of 16 are flags; their numbers in if-checks across status, settlement, income and Assembly; `text` equals `tradeOff` (E1)                                                                                                         | Typed effects read by one applier; tones in the UI; `tradeOff` dropped; the upside/downside test is back (E12)    |
 | Ideas and Laws | Ideas reuse the Law effect type; table-wide queries read seat 0's Ideas (E5)                                                                                                                                                        | Table effects from Laws only; seat effects are Laws plus the seat's own Ideas                                     |
-| Income         | Pop income has one definition and a hand-coded breakdown; the class raise computed twice (E3)                                                                                                                                       | Breakdown and class columns from the one definition, so trade slice 2's base food lands once                      |
+| Income         | Pop income has one definition and a hand-coded breakdown; the class raise computed twice (E3)                                                                                                                                       | Breakdown and class columns from the one definition, so trade's base food lands once                              |
 | Small copies   | `realmPops`, slave unhappiness, eating classes, "fullest settlement" re-implemented (E7); "port" checks and content labels (E11); `RulesSource` probing and a dead over-capacity helper (E13); food floor (E14); v1 leftovers (E15) | Shared helpers; a `claimsLuxury` flag and labels from the source; functions take the state; the dead code deleted |
 | Bot Ideas      | ID checks, an if-chain of unnamed numbers, a manifest pointing at the wrong functions (S5, S6, S7, S11)                                                                                                                             | An exhaustive switch over named values on the typed effects; manifest entries name the real functions             |
-| Room           | Pops on the move counted by growth and Ideas, ignored by event cards (E2, bug 1)                                                                                                                                                    | One room function for growth, Ideas and events; trade slice 3's "no room, no deal" calls it                       |
+| Room           | Pops on the move counted by growth and Ideas, ignored by event cards (E2, bug 1)                                                                                                                                                    | One room function for growth, Ideas and events; trade's "no room, no deal" calls it                               |
 
 Kept on purpose: the luxury suppression tick, the seam the [luxury plan](luxury-goods.md) keeps
 for suppression Directives (Q48), and the tests that pin the year and player decks' paper mix.
@@ -149,7 +149,7 @@ sitting's boxes); copies of the caps label in the island tip and the Exchange, w
 non-goals. Tooltips now draw over popovers so a popover's own tips show; the map's tile tip
 stays under them on its own rung.
 
-### 6. In trade slice 2
+### 6. In trade's second PR
 
 | Part      | Before                                                                             | After                                                                                                          |
 | --------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
@@ -167,7 +167,7 @@ stays under them on its own rung.
 
 ## PR slices
 
-All to `main`, before player trade slice 1, in this order:
+All to `main`, before player trade, in this order:
 
 1. **Single sources** (section 1). Merged, #125.
 2. **Decision host and shared primitives** (section 2). Merged, #126.
@@ -175,7 +175,7 @@ All to `main`, before player trade slice 1, in this order:
 4. **UI cleanup** (section 4). Merged, #128.
 5. **CSS cleanup** (section 5). Merged, #129.
 
-Then trade slice 2 carries section 6, and deck slices 1 and 2 carry section 7.
+Then trade's second PR carries section 6, and deck slices 1 and 2 carry section 7.
 
 ## Acceptance and validation
 

@@ -1,7 +1,7 @@
 ---
 status: proposed
 phase: "post-v2"
-updated: 2026-10-19
+updated: 2026-10-21
 ---
 
 # Development deck
@@ -125,10 +125,10 @@ deck against Ventures, then the free card on and off, read against the [rotated 
 2. **Happiness and the hand.** The free card at +3, a riot taking a card in place of a pop,
    and the bots' value of both, with a dated report on slaves and happiness by personality.
 3. **Card trading.** Closed cards in the trade composer, the giver's pick, not playable the turn
-   received; bots trade cards. Needs player trade slice 1.
+   received; bots trade cards. Needs player trade's first PR.
 4. **Close-out.** The rules guide, the Codex and the owner's hotseat playtest.
 
-Player trade slices 1 and 2 come first, since they remove the bank and add base food. Step 11
+Both player trade PRs come first, since they remove the bank and add base food. Step 11
 runs after both plans.
 
 The [code-health plan](code-health.md) leaves the Venture code alone, so slice 1 deletes it

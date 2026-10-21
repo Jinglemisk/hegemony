@@ -19,17 +19,19 @@ https://claude.ai/artifact/DRte5TPvVWRxv4RvNt7RDW. This folder is the source of 
   split into segments for turns.
 - `Icons.dc.html`: two Assembly icons to choose between, the curia and the open amphitheatre.
 
-## What the owner approved, not yet in the trade plan
+## What the owner approved
+
+The [trade plan](../../../../plans/player-trade.md) carries these as D11, D12 and D14.
 
 - An offer is a disc on the alarms row. It has a ring in the owner's glaze, the owner's seat
-  badge, and a mark once you have answered. It shakes only when it is waiting on you and time
-  is low. No answer card takes over the screen.
-- Offers can go to chosen seats. This is a new rule: the plan sends every offer to the table.
-  Offers stay visible to every seat; only the chosen seats can answer.
+  badge, and a mark once you have answered. No answer card takes over the screen.
+- Offers can go to chosen seats. Offers stay visible to every seat; only the chosen seats can
+  answer.
 - The compact card, and a counter that edits the same card in place.
 - A handshake for Trade. For the Assembly, a curia and an open amphitheatre; the owner called
   the amphitheatre perfect.
-- Still open: what the ring counts in hotseat, seconds or the offering seat's turn.
+- The mockup's ring drains over 20 seconds and shakes when time is low. That is for networked
+  play: hotseat has no clock, and the ring fills one segment per answer.
 
 ## Files
 

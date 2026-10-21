@@ -143,11 +143,11 @@ merged it into `main` on 2026-10-18 (#121). Its Step 11, the sim gate, moved to 
 
 ## Current initiative — code health and player trade, then the living map
 
-[Player trade](plans/player-trade.md) ships to `main` in six slices; it removes the bank and
+[Player trade](plans/player-trade.md) ships to `main` in two PRs; it removes the bank and
 gives every settlement 1 food. The [code-health plan](plans/code-health.md), from the
-[v2 merge audit](reports/audits/2026-10-19-v2-merge-code-health.md), goes first: five cleanup
-PRs before trade slice 1, kept apart from feature work so each can show the game unchanged. Trade
-slice 2 carries its telemetry rewrite and the bot forecast's bank-adjacent code. The [development deck](plans/development-deck.md) follows trade and replaces
+[v2 merge audit](reports/audits/2026-10-19-v2-merge-code-health.md), went first: five cleanup
+PRs before trade, kept apart from feature work so each could show the game unchanged. Trade's
+second PR carries its telemetry rewrite and the bot forecast's bank-adjacent code. The [development deck](plans/development-deck.md) follows trade and replaces
 Ventures. Step 11 and number tuning follow both. The 3D living map, in three.js after the
 [showcase](reference/design/showcases/living-map.html), is the next track; its plan is
 written when it starts.
