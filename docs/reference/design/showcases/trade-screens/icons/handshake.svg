@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Trade — two hands clasped</title>
+<defs>
+<linearGradient id="a-hs-skin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#edc393"/><stop offset="0.48" stop-color="#c38d5e"/><stop offset="1" stop-color="#895438"/></linearGradient>
+<linearGradient id="a-hs-skin2" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4d3a8"/><stop offset="0.5" stop-color="#d49e6c"/><stop offset="1" stop-color="#a06644"/></linearGradient>
+<linearGradient id="a-hs-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+<linearGradient id="a-hs-clay" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e98a5c"/><stop offset="0.5" stop-color="#c0461c"/><stop offset="1" stop-color="#8f2e13"/></linearGradient>
+</defs>
+<path d="M3 20L15 16L20 47L7 51Z" fill="url(#a-hs-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M61 20L49 16L44 47L57 51Z" fill="url(#a-hs-clay)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M16 20Q25 14 34 17L47 26Q51 31 47 35L37 45Q31 49 24 46L19 44Z" fill="url(#a-hs-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M48 19Q40 14 31 18Q23 22 20 30Q18 36 22 38Q26 39 27 35L28 41Q30 45 33 43L34 46Q37 49 40 45L41 47Q45 48 46 44L45 40Z" fill="url(#a-hs-skin2)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M27 35L29 29M33 43L35 31M40 45L40.5 33" fill="none" stroke="#895438" stroke-width="1.75" stroke-linecap="round"/>
+<path d="M24 22Q31 13 40 14Q46 15 44 20Q42 23 37 23L30 25Z" fill="url(#a-hs-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M29 19Q34 15 39 16" fill="none" stroke="#f6dcb6" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M36 22Q40 21 42 19" fill="none" stroke="#895438" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M6 23L13 21M9 27L12 44" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M58 23L52 21" fill="none" stroke="#f4b48e" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

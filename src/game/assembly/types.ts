@@ -236,9 +236,10 @@ export interface AssemblySession {
   year: number;
   phase: AssemblyPhase;
   /** During voting: whose turn to cast. During proposal it tracks the first seat still
-   *  to decide, purely so a headless driver has someone to play — the UI lets ANY
-   *  undecided seat act, gated on {@link proposalDone}, not on this. During closing:
-   *  the seat play returns to. */
+   *  to seal, then the first not yet Ready, so a headless driver has someone to play
+   *  and hotseat a seat to pass the screen to — the UI lets ANY seat not yet Ready act,
+   *  gated on {@link proposalDone} and {@link ready}, not on this. During closing: the
+   *  seat play returns to. */
   activePlayer: PlayerId;
 
   // ── Proposal (async) ──────────────────────────────────────────────────────────
@@ -249,8 +250,12 @@ export interface AssemblySession {
   /** Each seat's finalized proposal (an enact or a repeal), or null if they passed —
    *  kept secret until voting, then folded into {@link ballot} in turn order. */
   proposals: Record<PlayerId, BallotItem | null>;
-  /** Whether each seat has finalized its proposal decision. All true → voting begins. */
+  /** Whether each seat has finalized its proposal decision. */
   proposalDone: Record<PlayerId, boolean>;
+  /** Whether each seat has pressed Ready after sealing; it makes no new offers. When
+   *  every seat is Ready, open offers close and voting begins. With trade off, sealing
+   *  is Ready. */
+  ready: Record<PlayerId, boolean>;
   /** A draw its seat discarded, kept face down with that seat until the ballot is read,
    *  then laid on its politician's discard pile. */
   setAside: Record<PlayerId, string | null>;

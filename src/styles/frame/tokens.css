@@ -115,15 +115,15 @@
   /* The realm sheet: a fixed box whose top-right corner is one large
      quarter-circle. Its edge is one path from the screen's left edge to the
      screen's bottom: the straight top run, the quarter-circle (--area-curve),
-     then the straight right side. Six discs sit on it at equal arc lengths
+     then the straight right side. Seven discs sit on it at equal arc lengths
      (--verb-pitch), the first and last the same --verb-inset from the path's two
-     ends, so Grow stands as far from the left edge as Exchange from the bottom.
+     ends, so Grow stands as far from the left edge as Trade from the bottom.
      --body-top clears the discs and their names; --body-right clears the discs
      that ride the curve and the side. */
   --area-w: calc(var(--u) * 124); /* 496 */
   --area-h: calc(var(--u) * 92); /* 368 */
   --area-curve: calc(var(--u) * 64); /* 256 */
-  --verb-n: 6;
+  --verb-n: 7;
   --verb-inset: calc(var(--u) * 14); /* 56: a disc and its name clear of the edge */
   --edge: shape(
     from 0 0,

@@ -1,4 +1,4 @@
-import type { BuildingId, PopType } from "../../../game/types";
+import type { BuildingId, PlayerId, PopType, Pops } from "../../../game/types";
 
 /**
  * Map-first selection (refit scope 3 / selection rule 1).
@@ -33,7 +33,17 @@ export type MapSelectionMode =
    *  otherwise the popover does. */
   | { kind: "build"; buildingId?: BuildingId }
   /** Which settlement pays for the promote/demote. */
-  | { kind: "ladder"; request: { kind: "promote" | "demote"; from: PopType } };
+  | { kind: "ladder"; request: { kind: "promote" | "demote"; from: PopType } }
+  /** Traded pops: the settlement of `seat`'s they leave (`send`) or join (`receive`).
+   *  The seat may not be the viewer: an offer is answered out of turn. */
+  | {
+      kind: "tradePops";
+      seat: PlayerId;
+      /** The other side of the trade; null for an offer to the table, before anyone accepts. */
+      partner: PlayerId | null;
+      pops: Pops;
+      direction: "send" | "receive";
+    };
 
 export type MapSelection = {
   mode: MapSelectionMode;
@@ -64,6 +74,10 @@ function promptCopy(mode: MapSelectionMode): string {
       return "Select a settlement to build in";
     case "ladder":
       return `Select the settlement that ${mode.request.kind === "promote" ? "promotes" : "demotes"} a pop`;
+    case "tradePops":
+      return mode.direction === "send"
+        ? "Select the settlement the traded pops leave from"
+        : "Select the settlement that takes in the traded pops";
   }
 }
 
@@ -81,5 +95,9 @@ function emptyCopy(mode: MapSelectionMode): string {
       return "No settlement of yours can build right now";
     case "ladder":
       return "No settlement can make that ladder move right now";
+    case "tradePops":
+      return mode.direction === "send"
+        ? "No settlement holds those pops together"
+        : "No settlement has room for them";
   }
 }

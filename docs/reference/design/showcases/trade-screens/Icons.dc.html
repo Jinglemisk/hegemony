@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Assembly icon options</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700&amp;family=Cinzel:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#17505c}
+.opt-name{margin:0;font:700 24px/28px Cinzel,Georgia,serif;letter-spacing:.04em;color:#fff8e7}
+.opt-sub{margin:4px 0 0;font:400 16px/22px "Alegreya Sans",sans-serif;color:rgba(255,248,231,.85)}
+.plate{display:grid;place-items:center;width:160px;height:160px;border-radius:8px;background:#f4e6c8;box-shadow:inset 0 0 0 1px rgba(36,25,16,.3)}
+.plate img{width:128px;height:128px}
+.ad{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:#efe5d1;box-shadow:inset 0 0 0 2px rgba(36,25,16,.3)}
+.ad img{width:48px;height:48px}
+.size{display:flex;flex-direction:column;align-items:center;gap:8px}
+.size-k{font:500 12px/16px "Alegreya Sans",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,248,231,.8)}
+.tab{display:flex;align-items:center;gap:8px;height:32px;padding:0 16px;border-radius:0 0 0 16px;background:#f4e6c8;font:400 16px/20px "Alegreya Sans",sans-serif;color:rgba(36,25,16,.66)}
+.tab img{width:24px;height:24px}
+</style>
+</helmet>
+<div style="width: 1184px; height: 440px; box-sizing: border-box; padding: 48px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px; background: radial-gradient(110% 90% at 50% 40%, #2e8a9a 0%, #206e7c 50%, #17505c 100%)">
+<sc-for list="{{ options }}" as="o" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 24px">
+<div>
+<h2 class="opt-name">{{ o.name }}</h2>
+<p class="opt-sub">{{ o.sub }}</p>
+</div>
+<div style="display: flex; align-items: flex-end; gap: 32px">
+<span class="plate"><img src="{{ o.icon }}" alt="{{ o.name }}"></span>
+<span class="size"><span class="ad"><img src="{{ o.icon }}" alt=""></span><span class="size-k">Alarm disc</span></span>
+<span class="size"><span class="tab"><img src="{{ o.icon }}" alt="">Agora</span><span class="size-k">Tab, 24px</span></span>
+</div>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1184,"height":440}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      options: [
+        { name: 'Curia', sub: 'The senate house: gabled hall, three arched windows, statues, colonnade.', icon: '/_blob/cc83ee838dc5ca3f1e1e4057d15b2622' },
+        { name: 'Amphitheatre', sub: 'Seen at 45°: stone seats wrap the back and left, a round floor with an altar, the open stage front right.', icon: '/_blob/0dab6f05b543ae50f339b6eaf26be7a2' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

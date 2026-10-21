@@ -1,6 +1,6 @@
 # Parity manifests
 
-Last updated: 2026-10-03.
+Last updated: 2026-10-21.
 
 This reference defines the Phase 3.5 Step 2 enforcement boundary for consequential
 gameplay that is passive, automatic, content-driven, or read-only. It complements
@@ -48,7 +48,11 @@ resolution boundaries instead of inventing one lossy universal effect type.
 Phase 4–5 extend this family deliberately rather than creating feature-private registries:
 
 - `LUXURY_EFFECT_PARITY` for claim, suppression, derived activity, happiness, and transfer;
-- `TRADE_WORKFLOW_PARITY` for propose, reject, counter, accept, cancel/expiry, and atomic settlement;
+- `TRADE_WORKFLOW_PARITY`, built with player trade's first PR, for offer, answer, counter,
+  settle, withdraw and close. Each step names its engine function, its control on the offer
+  card, its telemetry and its fixtures; its simulation route names the trade plan's second PR,
+  where the bots learn to trade. The trade commands' `COMMAND_PARITY` entries use the
+  `not-yet` policy path for the same reason;
 - `LAW_EFFECT_PARITY` also covers the shared typed Idea effects in Step 9, with
   focused rule, setup/purchase policy, public projection and telemetry fixtures.
   Ideas have no consumable effect path.

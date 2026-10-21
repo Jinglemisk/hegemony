@@ -39,8 +39,11 @@ export const ENGINE_VERSION = "0.1.0";
  *  rule flag, a Law card carries no `tradeOff`, and the Port's luxury claim is a
  *  building flag. Older pinned content holds rule flags nothing reads and no claim
  *  flag, so older saves are rejected. Commands are unchanged. */
-export const STATE_SCHEMA_VERSION = 14;
-export const COMMAND_SCHEMA_VERSION = 6;
+/** v15 (player trade, PR 1): open trade offers on the state, a Ready step in the
+ *  Assembly's preparation, and traded pops on the move that name their giver. Command v7
+ *  adds the trade commands and Ready. Older saves are rejected. */
+export const STATE_SCHEMA_VERSION = 15;
+export const COMMAND_SCHEMA_VERSION = 7;
 
 export const SAVE_FORMAT_VERSION = 2;
 export const SCRIPT_FORMAT_VERSION = 2;

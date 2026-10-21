@@ -3,6 +3,7 @@ import { mulberry32 } from "../game/core/rng";
 import { enumerateLegalCommands, transition } from "../game/legalMoves";
 import type { GameCommand } from "../game/legalMoves";
 import type { HegemonyState, PlayerId } from "../game/types";
+import { PLAYER_IDS } from "../game/data";
 import { nextPlayer } from "../game/turn";
 import { happinessLevel } from "../game/happiness";
 import { ideaDraftOrder } from "../game/ideas";
@@ -29,8 +30,10 @@ import { createSimRng, deriveBotSeed } from "../sim/rng";
  * `?dev=rival-unrest` (a rival's riot and another's revolt, toasted), `?dev=threat` (a rival
  * holding three titles, with the title toasts), `?dev=race` and `?dev=age-end` (the two
  * tablets), `?dev=turn-notice` (the turn notice), `?dev=alarms` (a rival one title short,
- * and the seat with gold and stone for a Port) and `?dev=assembly-ballot`, `-vote` and
- * `-rises` (the fourth sitting's ballot).
+ * and the seat with gold and stone for a Port), `?dev=assembly-ballot`, `-vote` and
+ * `-rises` (the fourth sitting's ballot), `?dev=trade` (the seat holding wood to offer,
+ * each rival holding stone) and `?dev=assembly-trade` (the first sitting's preparation,
+ * every seat sealed and none Ready).
  */
 
 /** What a scene asks of the board's first render, beside its state. */
@@ -155,6 +158,24 @@ export const DEV_SCENES: Record<string, (G: HegemonyState) => DevScene> = {
   "assembly-ballot": (G) => ({ G: sealProposals(G) }),
   "assembly-vote": (G) => ({ G: castVotes(sealProposals(G), 1) }),
   "assembly-rises": (G) => ({ G: castVotes(sealProposals(G), 0) }),
+  "assembly-trade": (G) => {
+    let sitting = fastForwardToAssembly(G);
+    for (
+      let guard = 0;
+      guard < 8 && !sitting.assembly?.proposalDone[sitting.currentPlayer];
+      guard++
+    )
+      sitting = apply(sitting, { type: "assemblyPass" });
+    return { G: sitting };
+  },
+  trade: (G) => ({
+    G: produce(clearFate(G), (draft) => {
+      for (const seat of PLAYER_IDS) {
+        const mine = seat === draft.currentPlayer;
+        Object.assign(draft.players[seat].resources, { wood: mine ? 8 : 0, stone: mine ? 0 : 4 });
+      }
+    }),
+  }),
 };
 
 /** Reach the fourth sitting and seal a Directive, a repeal, a Law and a silence, so the
@@ -176,7 +197,8 @@ function sealProposals(initial: HegemonyState): HegemonyState {
       pick("assemblyPropose") ??
       draw ??
       (step === "repeal" ? pick("assemblyProposeRepeal") : undefined) ??
-      pick("assemblyPass");
+      pick("assemblyPass") ??
+      pick("assemblyReady");
     if (!command) break;
     G = apply(G, command);
   }

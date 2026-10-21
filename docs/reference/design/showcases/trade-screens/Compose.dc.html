@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Compact offer card</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700&amp;family=Cinzel:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#17505c}
+.caps{font:500 12px/16px "Alegreya Sans",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:rgba(36,25,16,.66);white-space:nowrap}
+.num{font:700 16px/20px "Alegreya Sans",sans-serif;font-variant-numeric:tabular-nums}
+.moment-k{font:700 12px/16px "Alegreya Sans",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#f4c08a}
+.moment-t{font:400 16px/22px "Alegreya Sans",sans-serif;color:rgba(255,248,231,.9)}
+.glaze{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font:700 15px/1 Cinzel,Georgia,serif;box-shadow:inset 0 0 0 1px rgba(255,248,231,.7),0 0 0 1px rgba(36,25,16,.66)}
+.words{display:flex;flex-direction:column;min-width:0;flex:1}
+.x{flex:none;width:32px;height:32px;border:0;border-radius:4px;background:transparent;font:400 22px/1 "Alegreya Sans",sans-serif;color:rgba(36,25,16,.66);cursor:pointer}
+.x:hover{box-shadow:inset 0 0 0 2px #c0461c}
+.bcard{position:relative;width:448px;border-radius:8px;background:#fff8e7;color:#241910;box-shadow:inset 0 0 0 1px rgba(36,25,16,.3),0 18px 56px rgba(24,18,16,.5)}
+.bhead{display:flex;align-items:flex-start;gap:12px;padding:12px 12px 10px 16px;border-radius:8px 8px 0 0;background:#f4e6c8}
+.bhead .glaze{margin-top:2px}
+.btitle{font:700 18px/24px Cinzel,Georgia,serif;letter-spacing:.04em}
+.to-row{display:flex;align-items:center;gap:8px;margin-top:6px}
+.to-seat{width:28px;height:28px;border:0;padding:0;border-radius:50%;display:grid;place-items:center;font:700 13px/1 Cinzel,Georgia,serif;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,248,231,.7),0 0 0 1px rgba(36,25,16,.66);transition:opacity .15s}
+.to-seat.is-on{box-shadow:inset 0 0 0 1px rgba(255,248,231,.7),0 0 0 2px #f4e6c8,0 0 0 4px #241910}
+.to-seat.is-off{opacity:.3}
+.to-seat.is-off:hover{opacity:.7}
+.to-label{margin-left:4px;font:400 13px/18px "Alegreya Sans",sans-serif;color:rgba(36,25,16,.66)}
+.xchg{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:start;padding:12px 16px}
+.xcol{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
+.xlabel{font:700 16px/20px "Alegreya Sans",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#241910;white-space:nowrap}
+.flow{align-self:start;margin-top:27px;padding:0 4px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.flow-arrow{position:relative;display:block;width:40px;height:12px}
+.flow-arrow::before{content:"";position:absolute;left:3px;right:3px;top:5px;height:3px;border-radius:2px;background:currentColor}
+.flow-arrow::after{content:"";position:absolute;top:1.5px;width:7px;height:7px;border-top:3px solid currentColor;border-right:3px solid currentColor;border-radius:1px}
+.flow-arrow.out{color:#ad3d18}
+.flow-arrow.out::after{right:3px;transform:rotate(45deg)}
+.flow-arrow.in{color:#5e6e3a}
+.flow-arrow.in::after{left:3px;transform:rotate(-135deg)}
+.chips{position:relative;width:100%;display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.rchip{display:inline-flex;align-items:center;gap:0;height:32px;padding:0 2px 0 4px;border-radius:16px;background:#fff8e7;box-shadow:inset 0 0 0 1px rgba(36,25,16,.3)}
+.rchip img{width:24px;height:24px}
+.rchip .num{min-width:10px;text-align:center}
+.mstep{width:18px;height:28px;border:0;padding:0;border-radius:4px;background:transparent;font:700 16px/1 "Alegreya Sans",sans-serif;color:#241910;cursor:pointer}
+.mstep:hover:not([aria-disabled="true"]){background:rgba(36,25,16,.07)}
+.mstep[aria-disabled="true"]{opacity:.3;cursor:default}
+.add{width:32px;height:32px;border:1.5px dashed rgba(36,25,16,.45);border-radius:50%;background:transparent;font:500 22px/1 "Alegreya Sans",sans-serif;color:rgba(36,25,16,.66);cursor:pointer}
+.add:hover,.add.is-open{border:2px solid #c0461c;color:#c0461c}
+.picker{position:absolute;z-index:4;top:42px;left:0;display:flex;gap:2px;padding:6px;border-radius:8px;background:#fff8e7;box-shadow:inset 0 0 0 1px rgba(36,25,16,.3),0 8px 24px rgba(24,18,16,.35)}
+.xcol.right .picker{left:auto;right:0}
+.pick{position:relative;width:40px;height:40px;border:0;padding:0;border-radius:4px;background:transparent;display:grid;place-items:center;cursor:pointer}
+.pick:hover:not([aria-disabled="true"]){box-shadow:inset 0 0 0 2px #c0461c}
+.pick[aria-disabled="true"]{opacity:.3;cursor:default}
+.pick img{width:28px;height:28px}
+.held{position:absolute;right:1px;bottom:0;font:700 10px/12px "Alegreya Sans",sans-serif;color:rgba(36,25,16,.7)}
+.bfoot{display:flex;align-items:center;gap:12px;padding:10px 12px 10px 16px;border-top:1px solid rgba(36,25,16,.12)}
+.deltas{display:flex;flex-wrap:wrap;gap:4px 12px}
+.delta{display:flex;align-items:center;gap:4px;font:500 13px/20px "Alegreya Sans",sans-serif;font-variant-numeric:tabular-nums}
+.delta img{width:16px;height:16px}
+.arr{color:rgba(36,25,16,.45)}
+.to{font-weight:700}.to.up{color:#5e6e3a}.to.down{color:#ad3d18}
+.reason{font:400 13px/18px "Alegreya Sans",sans-serif;color:#ad3d18}
+.grow{flex:1}
+.btn{display:inline-flex;align-items:center;height:36px;padding:0 14px;border:0;border-radius:4px;background:#fff8e7;box-shadow:inset 0 0 0 1px rgba(36,25,16,.3);color:#241910;font:700 13px/1 "Alegreya Sans",sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+.btn.is-primary{background:#c0461c;color:#fff8e7;box-shadow:none}
+.btn.is-primary:hover:not([aria-disabled="true"]){background:#8f2e13}
+.btn[aria-disabled="true"]{opacity:.45;cursor:default}
+</style>
+</helmet>
+<div style="width: 1536px; height: 520px; box-sizing: border-box; padding: 48px; display: flex; gap: 48px; align-items: flex-start; background: radial-gradient(110% 90% at 50% 40%, #2e8a9a 0%, #206e7c 50%, #17505c 100%); font-family: 'Alegreya Sans', sans-serif">
+<sc-for list="{{ cards }}" as="bc" hint-placeholder-count="3">
+<div style="display: flex; flex-direction: column; gap: 16px; width: 448px">
+<div style="display: flex; flex-direction: column; gap: 2px; min-height: 64px"><span class="moment-k">{{ bc.step }}</span><span class="moment-t">{{ bc.how }}</span></div>
+<section class="bcard" aria-label="Offer a trade">
+<header class="bhead">
+<span class="glaze" style="background: #2f5d9e; color: #fff8e7">Δ</span>
+<span class="words">
+<span class="btitle">Offer a trade</span>
+<span class="to-row">
+<sc-for list="{{ bc.seats }}" as="p" hint-placeholder-count="3"><button class="to-seat {{ p.cls }}" type="button" style="background: {{ p.color }}; color: {{ p.ink }}" onClick="{{ p.act }}" aria-pressed="{{ p.pressed }}" aria-label="{{ p.label }}">{{ p.blazon }}</button></sc-for>
+<span class="to-label">{{ bc.toLabel }}</span>
+</span>
+</span>
+<button class="x" type="button" aria-label="Close">×</button>
+</header>
+<div class="xchg">
+<div class="xcol">
+<span class="xlabel">{{ bc.left.label }}</span>
+<div class="chips">
+<sc-for list="{{ bc.left.chips }}" as="c" hint-placeholder-count="1"><span class="rchip"><img src="{{ c.icon }}" alt="{{ c.name }}"><button class="mstep" type="button" onClick="{{ c.dec }}" aria-label="{{ c.decLabel }}">−</button><b class="num">{{ c.n }}</b><button class="mstep" type="button" onClick="{{ c.inc }}" aria-label="{{ c.incLabel }}" aria-disabled="{{ c.incOff }}">+</button></span></sc-for>
+<sc-if value="{{ bc.left.hasPicks }}" hint-placeholder-val="{{ true }}"><button class="add {{ bc.left.addCls }}" type="button" onClick="{{ bc.left.add }}" aria-label="{{ bc.left.addLabel }}" aria-expanded="{{ bc.left.picking }}">+</button></sc-if>
+<sc-if value="{{ bc.left.picking }}" hint-placeholder-val="{{ false }}">
+<span class="picker"><sc-for list="{{ bc.left.picks }}" as="k" hint-placeholder-count="5"><button class="pick" type="button" onClick="{{ k.act }}" aria-disabled="{{ k.off }}" aria-label="{{ k.name }}" title="{{ k.name }}"><img src="{{ k.icon }}" alt=""><sc-if value="{{ k.hasHeld }}" hint-placeholder-val="{{ false }}"><span class="held">{{ k.held }}</span></sc-if></button></sc-for></span>
+</sc-if>
+</div>
+</div>
+<span class="flow" aria-hidden="true"><span class="flow-arrow out"></span><span class="flow-arrow in"></span></span>
+<div class="xcol right">
+<span class="xlabel">{{ bc.right.label }}</span>
+<div class="chips">
+<sc-for list="{{ bc.right.chips }}" as="c" hint-placeholder-count="1"><span class="rchip"><img src="{{ c.icon }}" alt="{{ c.name }}"><button class="mstep" type="button" onClick="{{ c.dec }}" aria-label="{{ c.decLabel }}">−</button><b class="num">{{ c.n }}</b><button class="mstep" type="button" onClick="{{ c.inc }}" aria-label="{{ c.incLabel }}" aria-disabled="{{ c.incOff }}">+</button></span></sc-for>
+<sc-if value="{{ bc.right.hasPicks }}" hint-placeholder-val="{{ true }}"><button class="add {{ bc.right.addCls }}" type="button" onClick="{{ bc.right.add }}" aria-label="{{ bc.right.addLabel }}" aria-expanded="{{ bc.right.picking }}">+</button></sc-if>
+<sc-if value="{{ bc.right.picking }}" hint-placeholder-val="{{ false }}">
+<span class="picker"><sc-for list="{{ bc.right.picks }}" as="k" hint-placeholder-count="5"><button class="pick" type="button" onClick="{{ k.act }}" aria-disabled="{{ k.off }}" aria-label="{{ k.name }}" title="{{ k.name }}"><img src="{{ k.icon }}" alt=""><sc-if value="{{ k.hasHeld }}" hint-placeholder-val="{{ false }}"><span class="held">{{ k.held }}</span></sc-if></button></sc-for></span>
+</sc-if>
+</div>
+</div>
+</div>
+<footer class="bfoot">
+<sc-if value="{{ bc.hasAfter }}" hint-placeholder-val="{{ false }}"><span class="deltas"><sc-for list="{{ bc.after }}" as="d" hint-placeholder-count="2"><span class="delta"><img src="{{ d.icon }}" alt="{{ d.name }}"><span>{{ d.from }}</span><span class="arr">→</span><b class="to {{ d.cls }}">{{ d.to }}</b></span></sc-for></span></sc-if>
+<sc-if value="{{ bc.hasReason }}" hint-placeholder-val="{{ true }}"><span class="reason">{{ bc.reason }}</span></sc-if>
+<span class="grow"></span>
+<button class="btn is-primary" type="button" aria-disabled="{{ bc.sendOff }}">{{ bc.sendLabel }}</button>
+</footer>
+</section>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1536,"height":520}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      drafts: [
+        { to: [], recv: {}, give: {}, picking: null },
+        { to: [], recv: {}, give: { wood: 2 }, picking: 'recv' },
+        { to: ['1', '3'], recv: { stone: 1, food: 1 }, give: { wood: 2 }, picking: null }
+      ]
+    };
+  }
+
+  K() {
+    if (this._k) return this._k;
+    const B = '/_blob/';
+    this._k = {
+      icon: {
+        wood: B + '19c711ffc7e71194b0f5218ee9417f09',
+        stone: B + 'a46e27705bb2a3047f32e0ed6af80581',
+        food: B + 'e2c1fcadbe305d3570038a4e2597a992',
+        gold: B + '0bd651d7a6c21be478bfc1e0f3254c83',
+        influence: B + '66665ca9c08ef3ab7c134e9598e18f5b',
+        incense: B + '8f632b7d181fc35325f1c607e7d6bb13',
+        happiness: B + '8fb71fa5ca72be0b2c9e884ad2e6f310'
+      },
+      seats: {
+        '1': { name: 'Nikos', blazon: 'Ν', color: '#dfa437', ink: '#241910' },
+        '2': { name: 'Theron', blazon: 'Θ', color: '#7c4d79', ink: '#fff8e7' },
+        '3': { name: 'Kyros', blazon: 'Κ', color: '#a83226', ink: '#fff8e7' }
+      },
+      goods: ['wood', 'stone', 'food', 'gold', 'influence', 'incense'],
+      names: { wood: 'Wood', stone: 'Stone', food: 'Food', gold: 'Gold', influence: 'Influence', incense: 'Incense' },
+      lower: { wood: 'wood', stone: 'stone', food: 'food', gold: 'gold', influence: 'influence', incense: 'Incense' },
+      stock: { wood: 8, stone: 6, food: 10, gold: 4, influence: 5, incense: 1 },
+      happy: -1
+    };
+    return this._k;
+  }
+
+  sum(t) { return Object.keys(t).reduce((a, k) => a + (t[k] || 0), 0); }
+  minus(n) { return n < 0 ? '−' + Math.abs(n) : String(n); }
+
+  names(ids) {
+    const n = ids.map((id) => this.K().seats[id].name);
+    return n.length < 2 ? n.join('') : n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1];
+  }
+
+  set(i, patch) {
+    const drafts = this.state.drafts.slice();
+    drafts[i] = Object.assign({}, drafts[i], patch);
+    this.setState({ drafts });
+  }
+
+  toggle(i, id) {
+    const to = this.state.drafts[i].to;
+    let next = to.includes(id) ? to.filter((x) => x !== id) : to.concat([id]);
+    if (next.length === 3) next = [];
+    this.set(i, { to: next });
+  }
+
+  add(i, side, g) {
+    const t = Object.assign({}, this.state.drafts[i][side]);
+    t[g] = 1;
+    this.set(i, { [side]: t, picking: null });
+  }
+
+  step(i, side, g, n) {
+    const K = this.K();
+    const t = Object.assign({}, this.state.drafts[i][side]);
+    const cap = side === 'give' ? K.stock[g] : 9;
+    const v = Math.min(cap, (t[g] || 0) + n);
+    if (v <= 0) delete t[g]; else t[g] = v;
+    this.set(i, { [side]: t });
+  }
+
+  after(d) {
+    const K = this.K(), out = [];
+    K.goods.forEach((g) => {
+      const n = (d.recv[g] || 0) - (d.give[g] || 0);
+      if (!n) return;
+      out.push({ icon: K.icon[g], name: K.lower[g], from: K.stock[g], to: K.stock[g] + n, cls: n > 0 ? 'up' : 'down' });
+      if (g === 'incense') out.push({ icon: K.icon.happiness, name: 'happiness', from: this.minus(K.happy), to: this.minus(K.happy + 2 * n), cls: n > 0 ? 'up' : 'down' });
+    });
+    return out;
+  }
+
+  vm(i, step, how) {
+    const K = this.K(), d = this.state.drafts[i];
+    const ok = this.sum(d.give) > 0 && this.sum(d.recv) > 0;
+    const seats = ['1', '2', '3'].map((id) => {
+      const seat = K.seats[id], on = d.to.includes(id);
+      return Object.assign({}, seat, {
+        cls: d.to.length === 0 ? 'is-table' : on ? 'is-on' : 'is-off', pressed: on,
+        label: on ? 'Take ' + seat.name + ' off the offer' : 'Offer to ' + seat.name, act: () => this.toggle(i, id)
+      });
+    });
+    const col = (side, label) => {
+      const other = side === 'give' ? 'recv' : 'give';
+      const chips = K.goods.filter((g) => d[side][g]).map((g) => ({
+        icon: K.icon[g], name: K.lower[g], n: d[side][g],
+        incOff: side === 'give' ? d[side][g] >= K.stock[g] : d[side][g] >= 9,
+        decLabel: 'One less ' + K.lower[g], incLabel: 'One more ' + K.lower[g],
+        dec: () => this.step(i, side, g, -1), inc: () => this.step(i, side, g, 1)
+      }));
+      const picks = K.goods.filter((g) => !d[side][g] && !d[other][g]).map((g) => {
+        const off = side === 'give' && K.stock[g] < 1;
+        return { icon: K.icon[g], name: K.names[g] + (side === 'give' ? ', you hold ' + K.stock[g] : ''), held: K.stock[g], hasHeld: side === 'give', off, act: off ? () => {} : () => this.add(i, side, g) };
+      });
+      return {
+        label, chips, picks, hasPicks: picks.length > 0, picking: d.picking === side,
+        addCls: d.picking === side ? 'is-open' : '', addLabel: 'Add to ' + label.toLowerCase(),
+        add: () => this.set(i, { picking: d.picking === side ? null : side })
+      };
+    };
+    const one = d.to.length === 1 ? K.seats[d.to[0]].name : null;
+    return {
+      step, how, seats,
+      toLabel: d.to.length ? 'Only ' + this.names(d.to) : 'The table',
+      left: col('recv', 'I receive'), right: col('give', 'You receive'),
+      hasAfter: ok, after: this.after(d), hasReason: !ok, reason: 'Add something on each side.',
+      sendLabel: d.to.length ? 'Offer to ' + (one || d.to.length + ' seats') : 'Offer to the table', sendOff: !ok
+    };
+  }
+
+  renderVals() {
+    return {
+      cards: [
+        this.vm(0, '1 · Opens empty, to the table', 'All three seats lit means the table. Press + on either side.'),
+        this.vm(1, '2 · Press +, pick, then the number', 'The picker shows what is not on the card yet. On your side it shows what you hold.'),
+        this.vm(2, '3 · Two seats picked', 'Tap a seat to pick it alone; tap more to add them; tap again to drop. None picked is the table.')
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

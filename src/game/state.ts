@@ -108,6 +108,7 @@ export function createInitialStateFromDefinition(
       {} as HegemonyState["players"],
     ),
     transfers: [],
+    offers: [],
     yearDrawPile: years.cards,
     yearDiscardPile: [],
     playerDrawPile: player.cards,

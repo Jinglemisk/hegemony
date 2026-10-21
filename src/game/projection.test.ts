@@ -29,13 +29,17 @@ describe("workflow actor eligibility", () => {
     expect(commandActorEligibility(G, "2", { type: "resolveEvent" }).eligible).toBe(true);
   });
 
-  it("admits every undecided Assembly proposer, then only the sequential voter and closer", () => {
+  it("admits every Assembly seat not yet Ready, then only the sequential voter and closer", () => {
     const G = scenario().opening().build();
     G.pendingPlayerEvent = null;
     openAssembly(G, G.currentPlayer);
 
     expect(eligibleActors(G)).toEqual(["0", "1", "2", "3"]);
+    // A sealed seat still trades and presses Ready; a Ready seat is done.
     G.assembly!.proposalDone["2"] = true;
+    expect(eligibleActors(G)).toEqual(["0", "1", "2", "3"]);
+    expect(commandActorEligibility(G, "2", { type: "assemblyReady" }).eligible).toBe(true);
+    G.assembly!.ready["2"] = true;
     expect(eligibleActors(G)).toEqual(["0", "1", "3"]);
     expect(commandActorEligibility(G, "1", { type: "assemblyPass" }).eligible).toBe(true);
     expect(commandActorEligibility(G, "1", { type: "assemblyVote", yea: true }).eligible).toBe(

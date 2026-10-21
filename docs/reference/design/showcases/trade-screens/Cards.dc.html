@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Offer card, four moments</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700&amp;family=Cinzel:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#17505c}
+.caps{font:500 12px/16px "Alegreya Sans",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:rgba(36,25,16,.66);white-space:nowrap}
+.num{font:700 16px/20px "Alegreya Sans",sans-serif;font-variant-numeric:tabular-nums}
+.col-title{margin:0;font:700 24px/28px Cinzel,Georgia,serif;letter-spacing:.04em;color:#fff8e7}
+.moment{display:flex;align-items:center;gap:20px;min-height:104px}
+.moment-words{display:flex;flex-direction:column;gap:2px;color:#fff8e7}
+.moment-k{font:700 12px/16px "Alegreya Sans",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#f4c08a}
+.moment-t{font:400 16px/22px "Alegreya Sans",sans-serif;color:rgba(255,248,231,.9)}
+.slot{position:relative;flex:none;width:96px;height:104px;display:grid;place-items:start center}
+.ad{position:relative;width:64px;height:64px;border-radius:50%;display:grid;place-items:center;border:0;padding:0}
+.ad img{width:48px;height:48px}
+.rd{position:relative;width:64px;height:64px;margin-top:8px}
+.rd .bed{position:absolute;inset:-8px;border-radius:50%;background:#fff8e7;box-shadow:0 0 0 1px rgba(36,25,16,.3),0 8px 24px rgba(10,34,41,.45)}
+.rd .ring{position:absolute;inset:-6px;border-radius:50%;-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4.5px));mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4.5px))}
+.rd .face{background:#fff8e7;box-shadow:inset 0 0 0 1px rgba(36,25,16,.3)}
+.badge{position:absolute;right:-10px;bottom:-10px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:700 14px/1 Cinzel,Georgia,serif;box-shadow:inset 0 0 0 1px rgba(255,248,231,.7),0 0 0 2px #fff8e7,0 0 0 3px rgba(36,25,16,.4)}
+.mark{position:absolute;left:-10px;top:-8px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#241910;color:#fff8e7;font:700 13px/1 "Alegreya Sans",sans-serif;box-shadow:0 0 0 2px #fff8e7}
+.chip{position:absolute;top:78px;left:50%;transform:translateX(-50%);height:20px;padding:0 8px;border-radius:10px;background:#fff8e7;box-shadow:inset 0 0 0 1px rgba(36,25,16,.3);font:700 12px/20px "Alegreya Sans",sans-serif;white-space:nowrap}
+.chip.low{color:#fff8e7;background:#8f2e13;box-shadow:none}
+.pips{position:absolute;top:78px;left:50%;transform:translateX(-50%);display:flex;gap:4px}
+.pip{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font:700 11px/1 Cinzel,Georgia,serif}
+.verb-disc{position:relative;width:48px;height:48px;margin-top:8px;border-radius:50%;background:#fff8e7;display:grid;place-items:center;box-shadow:inset 0 0 0 2px #241910,0 0 0 3px #c0461c}
+.verb-disc img{width:32px;height:32px}
+.verb-name{position:absolute;top:64px;left:50%;transform:translateX(-50%);padding:0 12px;font:400 15px/22px "Alegreya Sans",sans-serif;background:#fff8e7;box-shadow:inset 0 0 0 1px rgba(36,25,16,.3)}
+@keyframes nudge{0%,24%,100%{transform:rotate(0)}3%{transform:rotate(-11deg) translateX(-2px)}7%{transform:rotate(10deg) translateX(2px)}11%{transform:rotate(-8deg)}15%{transform:rotate(6deg)}19%{transform:rotate(-3deg)}}
+.rd.is-low{animation:nudge 2s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.rd{animation:none!important}}
+.card{width:520px;border-radius:8px;background:#fff8e7;color:#241910;box-shadow:inset 0 0 0 1px rgba(36,25,16,.3),0 18px 56px rgba(24,18,16,.5);overflow:hidden}
+.card-head{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#f4e6c8}
+.glaze{flex:none;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font:700 20px/24px Cinzel,Georgia,serif;box-shadow:inset 0 0 0 1px rgba(255,248,231,.7),0 0 0 1px rgba(36,25,16,.66)}
+.glaze.sm{width:32px;height:32px;font-size:15px}
+.words{display:flex;flex-direction:column;min-width:0;flex:1}
+.kicker{font:700 12px/16px "Alegreya Sans",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#ad3d18}
+.title{font:700 20px/24px Cinzel,Georgia,serif;letter-spacing:.04em}
+.caption{font:400 14px/20px "Alegreya Sans",sans-serif;color:rgba(36,25,16,.66)}
+.mini{position:relative;flex:none;width:40px;height:40px;margin:4px}
+.mini .bed{position:absolute;inset:-5px;border-radius:50%;background:#fff8e7;box-shadow:0 0 0 1px rgba(36,25,16,.3)}
+.mini .ring{position:absolute;inset:-3px;border-radius:50%;-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3.5px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3.5px))}
+.mini-face{position:absolute;inset:2px;border-radius:50%;display:grid;place-items:center;background:#fff8e7;font:700 13px/1 "Alegreya Sans",sans-serif}
+.mini-face.low{color:#ad3d18}
+.x{flex:none;width:32px;height:32px;border:0;border-radius:4px;background:transparent;font:400 22px/1 "Alegreya Sans",sans-serif;color:rgba(36,25,16,.66)}
+.card-note{margin:0;padding:8px 16px;font:400 14px/20px "Alegreya Sans",sans-serif;background:rgba(36,25,16,.07)}
+.sides{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:16px}
+.side{display:flex;flex-direction:column;gap:8px}
+.line{display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:40px;padding:4px 4px 4px 8px;border-radius:4px;box-shadow:inset 0 0 0 1px rgba(36,25,16,.12)}
+.line img{width:24px;height:24px}
+.line.zero{opacity:.55}
+.line.changed{box-shadow:inset 0 0 0 2px #c0461c}
+.ln-name{display:flex;flex-direction:column;font:500 14px/18px "Alegreya Sans",sans-serif}
+.sub{font:400 12px/16px "Alegreya Sans",sans-serif;color:rgba(36,25,16,.63)}
+.was{font:400 12px/16px "Alegreya Sans",sans-serif;color:#ad3d18}
+.was s{color:rgba(36,25,16,.63)}
+.big{font-size:20px;padding-right:8px}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper .num{min-width:18px;text-align:center}
+.step{width:32px;height:32px;border:0;border-radius:4px;background:#fff8e7;box-shadow:inset 0 0 0 1px rgba(36,25,16,.3);font:700 18px/1 "Alegreya Sans",sans-serif;color:#241910;cursor:pointer}
+.step:hover:not([aria-disabled="true"]){box-shadow:inset 0 0 0 2px #c0461c}
+.step[aria-disabled="true"]{opacity:.35;cursor:default}
+.after{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:12px 16px;border-top:1px solid rgba(36,25,16,.12)}
+.deltas{display:flex;flex-wrap:wrap;gap:8px 16px}
+.delta{display:flex;align-items:center;gap:4px;font:500 14px/20px "Alegreya Sans",sans-serif}
+.delta img{width:20px;height:20px}
+.arr{color:rgba(36,25,16,.45)}
+.to{font-weight:700}.to.up{color:#5e6e3a}.to.down{color:#ad3d18}
+.answers{display:flex;flex-direction:column;gap:8px;padding:12px 16px;border-top:1px solid rgba(36,25,16,.12)}
+.ans{display:flex;align-items:center;gap:12px;min-height:48px;padding:6px 8px;border-radius:4px;box-shadow:inset 0 0 0 1px rgba(36,25,16,.12)}
+.ans-words{display:flex;flex-direction:column;flex:1;min-width:0}
+.ans-name{font:700 14px/20px Cinzel,Georgia,serif;letter-spacing:.04em}
+.ans-st{font:400 14px/20px "Alegreya Sans",sans-serif;color:rgba(36,25,16,.66)}
+.ans.accept .ans-st{color:#5e6e3a;font-weight:700}
+.ans.counter{box-shadow:inset 0 0 0 2px #c0461c}
+.ans.counter .ans-st{color:#241910}
+.ans.out{opacity:.6}
+.foot{display:flex;align-items:center;gap:8px;padding:12px 16px;border-top:1px solid rgba(36,25,16,.12)}
+.reason{font:400 13px/18px "Alegreya Sans",sans-serif;color:#ad3d18}
+.grow{flex:1}
+.btn{display:inline-flex;align-items:center;height:36px;padding:0 14px;border:0;border-radius:4px;background:#fff8e7;box-shadow:inset 0 0 0 1px rgba(36,25,16,.3);color:#241910;font:700 13px/1 "Alegreya Sans",sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+.btn:hover:not([aria-disabled="true"]){box-shadow:inset 0 0 0 2px #c0461c}
+.btn.is-primary{background:#c0461c;color:#fff8e7;box-shadow:none}
+.btn.is-primary:hover:not([aria-disabled="true"]){background:#8f2e13}
+.btn[aria-disabled="true"]{opacity:.45;cursor:default}
+</style>
+</helmet>
+<div style="width: 1184px; min-height: 1440px; box-sizing: border-box; padding: 48px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px; align-items: start; background: radial-gradient(110% 90% at 50% 40%, #2e8a9a 0%, #206e7c 50%, #17505c 100%); font-family: 'Alegreya Sans', sans-serif; color: #241910">
+<sc-for list="{{ columns }}" as="col" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 24px">
+<h2 class="col-title">{{ col.title }}</h2>
+<sc-for list="{{ col.cards }}" as="card" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div class="moment">
+<span class="slot">
+<sc-if value="{{ card.isVerb }}" hint-placeholder-val="{{ false }}">
+<span class="verb-disc"><img src="/_blob/896825a4a3655d98c5f8e677f2379303" alt=""></span><span class="verb-name">Trade</span>
+</sc-if>
+<sc-if value="{{ card.isDisc }}" hint-placeholder-val="{{ true }}">
+<span class="rd {{ card.disc.cls }}">
+<span class="bed"></span>
+<span class="ring" style="background: {{ card.disc.ring }}"></span>
+<span class="ad face"><img src="/_blob/896825a4a3655d98c5f8e677f2379303" alt=""></span>
+<span class="badge" style="background: {{ card.disc.color }}; color: {{ card.disc.ink }}">{{ card.disc.blazon }}</span>
+<sc-if value="{{ card.disc.hasMark }}" hint-placeholder-val="{{ false }}"><span class="mark">{{ card.disc.mark }}</span></sc-if>
+<sc-if value="{{ card.disc.hasChip }}" hint-placeholder-val="{{ true }}"><span class="chip {{ card.disc.chipCls }}">{{ card.disc.chip }}</span></sc-if>
+<sc-if value="{{ card.disc.hasPips }}" hint-placeholder-val="{{ false }}">
+<span class="pips"><sc-for list="{{ card.disc.pips }}" as="p" hint-placeholder-count="3"><span class="pip" style="background: {{ p.bg }}; color: {{ p.fg }}; box-shadow: inset 0 0 0 2px {{ p.ring }}">{{ p.glyph }}</span></sc-for></span>
+</sc-if>
+</span>
+</sc-if>
+</span>
+<span class="moment-words"><span class="moment-k">{{ card.step }}</span><span class="moment-t">{{ card.how }}</span></span>
+</div>
+<section class="card" aria-label="{{ card.title }}">
+<header class="card-head">
+<span class="glaze" style="background: {{ card.color }}; color: {{ card.ink }}">{{ card.blazon }}</span>
+<span class="words"><span class="kicker">{{ card.kicker }}</span><span class="title">{{ card.title }}</span><span class="caption">{{ card.caption }}</span></span>
+<sc-if value="{{ card.hasClock }}" hint-placeholder-val="{{ true }}">
+<span class="mini"><span class="bed"></span><span class="ring" style="background: {{ card.clockRing }}"></span><span class="mini-face {{ card.clockCls }}">{{ card.clockText }}</span></span>
+</sc-if>
+<button class="x" type="button" aria-label="Close">×</button>
+</header>
+<sc-if value="{{ card.hasNote }}" hint-placeholder-val="{{ false }}"><p class="card-note">{{ card.note }}</p></sc-if>
+<div class="sides">
+<sc-for list="{{ card.sides }}" as="sd" hint-placeholder-count="2">
+<div class="side">
+<span class="caps">{{ sd.label }}</span>
+<sc-for list="{{ sd.lines }}" as="ln" hint-placeholder-count="2">
+<div class="line {{ ln.cls }}">
+<img src="{{ ln.icon }}" alt="">
+<span class="ln-name">{{ ln.name }}<sc-if value="{{ ln.hasSub }}" hint-placeholder-val="{{ false }}"><span class="sub">{{ ln.sub }}</span></sc-if><sc-if value="{{ ln.hasWas }}" hint-placeholder-val="{{ false }}"><span class="was">was <s>{{ ln.was }}</s></span></sc-if></span>
+<sc-if value="{{ ln.edit }}" hint-placeholder-val="{{ false }}">
+<span class="stepper"><button class="step" type="button" onClick="{{ ln.dec }}" aria-label="{{ ln.decLabel }}" aria-disabled="{{ ln.decOff }}">−</button><b class="num">{{ ln.count }}</b><button class="step" type="button" onClick="{{ ln.inc }}" aria-label="{{ ln.incLabel }}" aria-disabled="{{ ln.incOff }}">+</button></span>
+</sc-if>
+<sc-if value="{{ ln.view }}" hint-placeholder-val="{{ true }}"><b class="num big">{{ ln.count }}</b></sc-if>
+</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+<sc-if value="{{ card.hasAfter }}" hint-placeholder-val="{{ true }}">
+<div class="after"><span class="caps">Your stocks after</span><span class="deltas">
+<sc-for list="{{ card.after }}" as="d" hint-placeholder-count="2"><span class="delta"><img src="{{ d.icon }}" alt="{{ d.name }}"><span>{{ d.from }}</span><span class="arr">→</span><b class="to {{ d.cls }}">{{ d.to }}</b></span></sc-for>
+</span></div>
+</sc-if>
+<sc-if value="{{ card.hasAnswers }}" hint-placeholder-val="{{ false }}">
+<div class="answers">
+<span class="caps">Answers</span>
+<sc-for list="{{ card.answers }}" as="a" hint-placeholder-count="3">
+<div class="ans {{ a.cls }}">
+<span class="glaze sm" style="background: {{ a.color }}; color: {{ a.ink }}">{{ a.blazon }}</span>
+<span class="ans-words"><span class="ans-name">{{ a.name }}</span><span class="ans-st">{{ a.status }}</span></span>
+<sc-if value="{{ a.hasBtn }}" hint-placeholder-val="{{ false }}"><button class="btn {{ a.btnCls }}" type="button">{{ a.btn }}</button></sc-if>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<footer class="foot">
+<sc-if value="{{ card.hasReason }}" hint-placeholder-val="{{ false }}"><span class="reason">{{ card.reason }}</span></sc-if>
+<span class="grow"></span>
+<sc-for list="{{ card.buttons }}" as="b" hint-placeholder-count="2"><button class="btn {{ b.cls }}" type="button" aria-disabled="{{ b.off }}">{{ b.label }}</button></sc-for>
+</footer>
+</section>
+</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1184,"height":1440}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      draft: { give: { wood: 2 }, get: { stone: 1 } },
+      cdraft: { give: { stone: 1 }, get: { food: 3 } }
+    };
+  }
+
+  K() {
+    if (this._k) return this._k;
+    const B = '/_blob/';
+    this._k = {
+      icon: {
+        wood: B + '19c711ffc7e71194b0f5218ee9417f09',
+        stone: B + 'a46e27705bb2a3047f32e0ed6af80581',
+        food: B + 'e2c1fcadbe305d3570038a4e2597a992',
+        gold: B + '0bd651d7a6c21be478bfc1e0f3254c83',
+        influence: B + '66665ca9c08ef3ab7c134e9598e18f5b',
+        incense: B + '8f632b7d181fc35325f1c607e7d6bb13',
+        happiness: B + '8fb71fa5ca72be0b2c9e884ad2e6f310'
+      },
+      seats: {
+        '0': { name: 'Damon', blazon: 'Δ', color: '#2f5d9e', ink: '#fff8e7' },
+        '1': { name: 'Nikos', blazon: 'Ν', color: '#dfa437', ink: '#241910' },
+        '2': { name: 'Theron', blazon: 'Θ', color: '#7c4d79', ink: '#fff8e7' },
+        '3': { name: 'Kyros', blazon: 'Κ', color: '#a83226', ink: '#fff8e7' }
+      },
+      goods: ['wood', 'stone', 'food', 'gold', 'influence', 'incense'],
+      names: { wood: 'Wood', stone: 'Stone', food: 'Food', gold: 'Gold', influence: 'Influence', incense: 'Incense' },
+      lower: { wood: 'wood', stone: 'stone', food: 'food', gold: 'gold', influence: 'influence', incense: 'Incense' },
+      stock: { wood: 8, stone: 6, food: 10, gold: 4, influence: 5, incense: 1 }
+    };
+    return this._k;
+  }
+
+  sum(t) { return Object.keys(t).reduce((a, k) => a + (t[k] || 0), 0); }
+  valid(d) { return this.sum(d.give) > 0 && this.sum(d.get) > 0; }
+  same(a, b) { return this.K().goods.every((g) => (a.give[g] || 0) === (b.give[g] || 0) && (a.get[g] || 0) === (b.get[g] || 0)); }
+  ring(frac, color) {
+    const y = Math.round((1 - frac) * 3600) / 10;
+    return 'conic-gradient(rgba(36,25,16,.12) 0deg ' + y + 'deg, ' + color + ' ' + y + 'deg 360deg)';
+  }
+
+  terms(t) {
+    const K = this.K();
+    const parts = K.goods.filter((g) => t[g]).map((g) => t[g] + ' ' + K.lower[g]);
+    if (parts.length < 2) return parts.join('');
+    return parts.slice(0, -1).join(', ') + ' and ' + parts[parts.length - 1];
+  }
+
+  step(which, side, good, d) {
+    const K = this.K();
+    const src = this.state[which];
+    const next = { give: Object.assign({}, src.give), get: Object.assign({}, src.get) };
+    const other = side === 'give' ? 'get' : 'give';
+    const cap = side === 'give' ? K.stock[good] : 9;
+    const v = Math.max(0, Math.min(cap, (next[side][good] || 0) + d));
+    next[side][good] = v;
+    if (v > 0) next[other][good] = 0;
+    this.setState({ [which]: next });
+  }
+
+  editLines(which, side, base) {
+    const K = this.K();
+    const t = this.state[which][side];
+    return K.goods.map((g) => {
+      const n = t[g] || 0;
+      const was = base ? (base[side][g] || 0) : n;
+      const cap = side === 'give' ? K.stock[g] : 9;
+      const changed = !!base && was !== n;
+      return {
+        icon: K.icon[g], name: K.names[g], count: n,
+        cls: (n ? '' : 'zero') + (changed ? ' changed' : ''),
+        edit: true, view: false,
+        hasSub: side === 'give' && !changed, sub: 'you hold ' + K.stock[g],
+        hasWas: changed, was,
+        incOff: n >= cap, decOff: n <= 0,
+        incLabel: 'One more ' + K.lower[g], decLabel: 'One less ' + K.lower[g],
+        inc: () => this.step(which, side, g, 1), dec: () => this.step(which, side, g, -1)
+      };
+    });
+  }
+
+  viewLines(t) {
+    const K = this.K();
+    return K.goods.filter((g) => t[g]).map((g) => ({
+      icon: K.icon[g], name: K.names[g], count: t[g], cls: '', edit: false, view: true,
+      hasSub: false, sub: '', hasWas: false, was: 0
+    }));
+  }
+
+  after(t) {
+    const K = this.K();
+    const out = [];
+    K.goods.forEach((g) => {
+      const d = (t.get[g] || 0) - (t.give[g] || 0);
+      if (d) out.push({ icon: K.icon[g], name: K.lower[g], from: K.stock[g], to: K.stock[g] + d, cls: d > 0 ? 'up' : 'down' });
+    });
+    return out;
+  }
+
+  pip(seat, st) {
+    if (st === 'accept') return { bg: seat.color, fg: seat.ink, ring: seat.color, glyph: '✓' };
+    if (st === 'counter') return { bg: seat.color, fg: seat.ink, ring: seat.color, glyph: '⇄' };
+    return { bg: '#d9cfbd', fg: 'rgba(36,25,16,.66)', ring: 'rgba(36,25,16,.3)', glyph: '×' };
+  }
+
+  renderVals() {
+    const K = this.K(), S = K.seats, me = S['0'], th = S['2'];
+    const d = this.state.draft, okD = this.valid(d);
+    const mine = { give: { wood: 2 }, get: { stone: 1 } };
+    const counterOnMine = { give: { wood: 3 }, get: { stone: 1 } };
+    const theirs = { give: { stone: 1 }, get: { food: 2 } };
+    const c = this.state.cdraft, okC = this.valid(c), changed = !this.same(c, theirs);
+    const compose = {
+      step: '1 · Compose', how: 'Your turn. Press Trade on the realm sheet; the card opens beside it, with no scrim.',
+      isVerb: true, isDisc: false, disc: { pips: [] },
+      color: me.color, ink: me.ink, blazon: me.blazon,
+      kicker: 'New offer', title: 'Offer to the table', caption: 'Every seat sees it and answers.',
+      hasClock: false, hasNote: false,
+      sides: [{ label: 'You give', lines: this.editLines('draft', 'give') }, { label: 'You get', lines: this.editLines('draft', 'get') }],
+      hasAfter: true, after: this.after(d), hasAnswers: false, answers: [],
+      hasReason: !okD, reason: 'Each side gives at least one thing.',
+      buttons: [{ label: 'Cancel', cls: '', off: false }, { label: 'Offer to the table', cls: 'is-primary', off: !okD }]
+    };
+    const onTable = {
+      step: '2 · On the table', how: 'The card folds into a disc on the alarms row, in your colour. A dot per seat fills as it answers.',
+      isVerb: false, isDisc: true,
+      disc: {
+        cls: '', ring: this.ring(0.68, me.color), color: me.color, ink: me.ink, blazon: me.blazon,
+        hasMark: false, hasChip: false, chipCls: '', chip: '', hasPips: true,
+        pips: [this.pip(S['1'], 'accept'), this.pip(S['2'], 'counter'), this.pip(S['3'], 'cantpay')]
+      },
+      color: me.color, ink: me.ink, blazon: me.blazon,
+      kicker: 'Your offer · on the table', title: 'You offer', caption: 'Pick one seat that accepts. The rest close.',
+      hasClock: true, clockRing: this.ring(0.68, me.color), clockText: '0:41', clockCls: '', hasNote: false,
+      sides: [{ label: 'You give', lines: this.viewLines(mine.give) }, { label: 'You get', lines: this.viewLines(mine.get) }],
+      hasAfter: true, after: this.after(mine), hasAnswers: true,
+      answers: [
+        { color: S['1'].color, ink: S['1'].ink, blazon: S['1'].blazon, name: 'Nikos', cls: 'accept', status: '✓ Accepts your terms', hasBtn: true, btn: 'Trade with Nikos', btnCls: 'is-primary' },
+        { color: th.color, ink: th.ink, blazon: th.blazon, name: 'Theron', cls: 'counter', status: '⇄ Counters: you give ' + this.terms(counterOnMine.give) + ', you get ' + this.terms(counterOnMine.get), hasBtn: true, btn: 'Take counter', btnCls: '' },
+        { color: S['3'].color, ink: S['3'].ink, blazon: S['3'].blazon, name: 'Kyros', cls: 'out', status: '× Can’t pay: holds no stone', hasBtn: false, btn: '', btnCls: '' }
+      ],
+      hasReason: false, reason: '', buttons: [{ label: 'Withdraw', cls: '', off: false }]
+    };
+    const toYou = {
+      step: '3 · An offer to you', how: 'The same disc, in Theron’s colour, with his badge. It drops in, then shakes once under six seconds.',
+      isVerb: false, isDisc: true,
+      disc: { cls: 'is-low', ring: this.ring(0.22, th.color), color: th.color, ink: th.ink, blazon: th.blazon, hasMark: false, hasChip: true, chip: '0:05', chipCls: 'low', hasPips: false, pips: [] },
+      color: th.color, ink: th.ink, blazon: th.blazon,
+      kicker: 'Offer to the table', title: 'Theron offers', caption: 'Every seat sees it. Theron trades with one seat that accepts.',
+      hasClock: true, clockRing: this.ring(0.22, th.color), clockText: '0:05', clockCls: 'low', hasNote: false,
+      sides: [{ label: 'You give', lines: this.viewLines(theirs.give) }, { label: 'You get', lines: this.viewLines(theirs.get) }],
+      hasAfter: true, after: this.after(theirs), hasAnswers: false, answers: [],
+      hasReason: false, reason: '',
+      buttons: [{ label: 'Decline', cls: '', off: false }, { label: 'Counter', cls: '', off: false }, { label: 'Accept', cls: 'is-primary', off: false }]
+    };
+    const counter = {
+      step: '4 · Counter on the spot', how: 'Counter turns the same card editable. Changed numbers get a clay ring and show what Theron asked.',
+      isVerb: false, isDisc: true,
+      disc: { cls: '', ring: this.ring(0.5, th.color), color: th.color, ink: th.ink, blazon: th.blazon, hasMark: true, mark: '⇄', hasChip: true, chip: '0:10', chipCls: '', hasPips: false, pips: [] },
+      color: th.color, ink: th.ink, blazon: th.blazon,
+      kicker: 'Your counter to Theron', title: 'Change the terms', caption: 'Theron sees your numbers beside his.',
+      hasClock: true, clockRing: this.ring(0.5, th.color), clockText: '0:10', clockCls: '',
+      hasNote: true, note: 'Theron asked: you give ' + this.terms(theirs.give) + ', you get ' + this.terms(theirs.get) + '.',
+      sides: [{ label: 'You give', lines: this.editLines('cdraft', 'give', theirs) }, { label: 'You get', lines: this.editLines('cdraft', 'get', theirs) }],
+      hasAfter: true, after: this.after(c), hasAnswers: false, answers: [],
+      hasReason: !okC || !changed, reason: !okC ? 'Each side gives at least one thing.' : 'Change at least one number.',
+      buttons: [{ label: 'Back', cls: '', off: false }, { label: 'Send counter', cls: 'is-primary', off: !okC || !changed }]
+    };
+    return {
+      columns: [
+        { title: 'You offer', cards: [compose, onTable] },
+        { title: 'An offer to you', cards: [toYou, counter] }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

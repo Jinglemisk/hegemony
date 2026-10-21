@@ -99,3 +99,41 @@ test("ending a turn short of food asks who leaves, with a way back", async ({ pa
   await expect(hunger).toBeHidden();
   await expect(page.getByRole("dialog", { name: /s turn$/ })).toBeVisible();
 });
+
+test("an offer to the table is countered, then the first accept trades", async ({ page }) => {
+  await page.goto("/?dev=trade&seed=42");
+
+  // The Trade disc opens the offer card: 2 wood for 1 stone, to the table.
+  await page.getByRole("button", { name: /^Trade: Offer/ }).click();
+  const compose = page.getByRole("region", { name: "Offer a trade" });
+  await compose.getByRole("button", { name: "Add to I give" }).click();
+  await compose.getByRole("button", { name: "wood, you hold 8" }).click();
+  await compose.getByRole("button", { name: "One more wood" }).click();
+  await compose.getByRole("button", { name: "Add to I want" }).click();
+  await compose.getByRole("button", { name: "stone", exact: true }).click();
+  await compose.getByRole("button", { name: "Offer to the table" }).click();
+
+  // It waits on the alarms row. Its card shows every seat it names at once. One
+  // counters by editing the card in place; then another accepts, and the first accept
+  // trades: the counter dies with the offer.
+  await page.getByRole("button", { name: /offers the table, 0 of 3 answered/ }).click();
+  const card = page.getByRole("region", { name: /offers the table$/ });
+  await card
+    .getByRole("button", { name: / counters$/ })
+    .first()
+    .click();
+  await card.getByRole("button", { name: "One more wood" }).click();
+  await expect(card).toContainText("was 2");
+  await card.getByRole("button", { name: "Send counter" }).click();
+  await expect(card).toContainText("1 of 3 answered");
+  await expect(card.getByRole("button", { name: "Take counter" })).toBeVisible();
+  await card
+    .getByRole("button", { name: / accepts$/ })
+    .first()
+    .click();
+
+  // Settled on the offer's terms: the offer closes and every seat is toasted.
+  await expect(page.getByRole("button", { name: /offers the table/ })).toHaveCount(0);
+  await expect(page.getByText(/^Trade · /)).toBeVisible();
+  await expect(page.getByText(/gave 2 wood; .* gave 1 stone\./)).toBeVisible();
+});

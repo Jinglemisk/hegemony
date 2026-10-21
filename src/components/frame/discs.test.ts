@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { enumerateLegalCommands } from "../../game/legalMoves";
 import type { GameCommand } from "../../game/legalMoves";
 import { scenario } from "../../game/testing/scenario";
+import { offerWindowReason } from "../../game/trade";
 import type { VerbContext } from "../board/command/verbs";
 import { discGroups } from "./discs";
 import type { DiscOption } from "./discs";
@@ -77,6 +78,7 @@ describe("verb fans", () => {
         onDole: noop,
         onBankBuy: noop,
         onBankSell: noop,
+        onTrade: noop,
       },
       null,
     );
@@ -84,7 +86,10 @@ describe("verb fans", () => {
     // A one-building class keeps its building's id, so it is found here too.
     const byId = new Map(options.map((option) => [option.id, option]));
 
+    // An offer is composed, never listed: Trade is open exactly when the engine's
+    // offer window is.
     const reachable = new Set(legal.map(optionFor).filter((id): id is string => id !== null));
+    if (offerWindowReason(G, "0") === null) reachable.add("offer");
     expect(reachable.size).toBeGreaterThan(8);
     for (const id of reachable) {
       expect(byId.get(id)?.enabled, id).toBe(true);

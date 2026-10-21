@@ -64,6 +64,12 @@ export interface IdeaRules {
   purchases: number;
 }
 
+/** Player trade (docs/plans/player-trade.md). Off, no seat offers and the Assembly's
+ *  preparation has no Ready step: a seat that seals is ready. */
+export interface TradeRules {
+  enabled: boolean;
+}
+
 /** The Dole: influence buys food through the bank, at a worse rate than gold. */
 export interface DoleRules {
   influenceCost: number;
@@ -206,6 +212,7 @@ export interface Ruleset {
   ventureCost: Partial<Resources>;
   /** The Assembly & Politicians layer (Phase 3-B). */
   assembly: AssemblyRules;
+  trade: TradeRules;
   /**
    * The settlements each player places during setup, in round order — capitals
    * first, then colonies. Length = settlements per player before gameplay begins.
@@ -302,6 +309,7 @@ export const DEFAULT_RULESET: Ruleset = {
     briberyCap: 2,
     tiesPass: false,
   },
+  trade: { enabled: true },
   setup: ["capital", "colony"],
 };
 

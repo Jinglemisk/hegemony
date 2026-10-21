@@ -1,6 +1,6 @@
 import type { HegemonyState } from "./types";
 
-export type EntityKind = "settlement" | "transfer" | "luxury";
+export type EntityKind = "settlement" | "transfer" | "luxury" | "offer";
 
 /** Allocate a deterministic, match-local identity from serialized state. Accepts any
  *  holder of the counter so creation-time allocation (luxury seating happens before

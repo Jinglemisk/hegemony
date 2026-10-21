@@ -36,6 +36,7 @@ it("buys an affordable pivotal coalition, authors Voice and reports the seat's A
   take("0", { type: "assemblyDraw", politician: "kleistophenes" });
   take("0", { type: "assemblyPropose" });
   for (const id of ["1", "2", "3"] as const) take(id, { type: "assemblyPass" });
+  for (const id of PLAYER_IDS) take(id, { type: "assemblyReady" });
   take("1", { type: "assemblyVote", yea: true });
   take("2", { type: "assemblyVote", yea: false });
   take("3", { type: "assemblyVote", yea: false });

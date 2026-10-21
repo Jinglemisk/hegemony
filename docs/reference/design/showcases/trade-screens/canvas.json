@@ -1,0 +1,58 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-10-20T21:30:00Z" },
+  "title": "Trade screens",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 960,
+      "title": "Play it: offer, answer, counter",
+      "is_interactive": true
+    },
+    "Cards.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1184,
+      "h": 1440,
+      "title": "A · Full offer card, four moments",
+      "is_interactive": true
+    },
+    "Compose.dc.html": {
+      "x": 2784,
+      "y": 0,
+      "w": 1536,
+      "h": 520,
+      "title": "B · Compact offer card",
+      "is_interactive": true
+    },
+    "Ring.dc.html": {
+      "x": 0,
+      "y": 1080,
+      "w": 1440,
+      "h": 720,
+      "title": "One countdown ring, reused"
+    },
+    "Icons.dc.html": {
+      "x": 1520,
+      "y": 1560,
+      "w": 1184,
+      "h": 440,
+      "title": "Assembly icon: two options"
+    }
+  },
+  "order": ["Main.dc.html", "Cards.dc.html", "Compose.dc.html", "Ring.dc.html", "Icons.dc.html"],
+  "notes": {
+    "title": {
+      "x": 0,
+      "y": -300,
+      "text": "Trade: offers on the alarms row",
+      "kind": "title1",
+      "maxW": 4320
+    }
+  },
+  "designSystems": []
+}

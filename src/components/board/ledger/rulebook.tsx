@@ -902,6 +902,54 @@ const bank: RuleChapter = {
   ),
 };
 
+const trade: RuleChapter = {
+  id: "trade",
+  title: "Trade",
+  icon: "market/handshake",
+  blurb: "Offers between the seats: what trades, who answers, and how a deal settles.",
+  keywords: ["trade", "offer", "counter", "accept", "decline", "settle", "withdraw", "ready"],
+  entries: [
+    { id: anchor("trade", "offers"), label: "Offers" },
+    { id: anchor("trade", "settling"), label: "Settling" },
+    { id: anchor("trade", "assembly"), label: "In the Assembly" },
+  ],
+  Body: ({ G }) => (
+    <div className="compendiumStack">
+      <Entry id={anchor("trade", "offers")} title="Offers">
+        <Note>
+          On your turn, once your event card is resolved, the Trade disc opens the offer card. Wood,
+          stone, food, gold, influence, claimed luxury goods and pops all trade; votes, Ideas, Laws,
+          settlements and buildings never do.
+        </Note>
+        <Note>
+          An offer goes to the table, or only to the seats you pick. Every seat sees it, and the
+          seats it names accept, decline or counter. Each side gives at least one thing, at any
+          ratio, and only what it holds.
+        </Note>
+      </Entry>
+      <Entry id={anchor("trade", "settling")} title="Settling">
+        <Note>
+          The first seat to accept trades, at once; both sides are checked again as it settles. A
+          counter waits for you to take it, and dies with the offer if another seat accepts first.
+          You may withdraw an offer, and your open offers close when your turn ends.
+        </Note>
+        <Note>
+          A luxury good carries its +{G.ruleset.economy.luxury.happinessPerGood} happiness to its
+          new holder. Pops leave at once, travel like a move to a settlement with room picked on the
+          map, and arrive at the start of their new owner&rsquo;s next turn; from the trade on they
+          are its pops.
+        </Note>
+      </Entry>
+      <Entry id={anchor("trade", "assembly")} title="In the Assembly">
+        <Note>
+          Until every seat presses Ready, any seat may offer and answer. A Ready seat makes no new
+          offers. When the last seat is Ready, open offers close and the ballots begin.
+        </Note>
+      </Entry>
+    </div>
+  ),
+};
+
 const ventures: RuleChapter = {
   id: "ventures",
   title: "Ventures",
@@ -1227,6 +1275,7 @@ export const RULEBOOK: RuleChapter[] = [
   unrest,
   years,
   bank,
+  trade,
   ventures,
   // Last in learn-order: the Assembly reshapes every rule above it, so it only makes
   // sense once you know what it is reshaping.

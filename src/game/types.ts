@@ -339,11 +339,57 @@ export interface PlayerState {
 export interface PopulationTransfer {
   id: string;
   owner: PlayerId;
+  /** The seat that traded these pops away: it still owns the settlement they left.
+   *  Absent on a move, where the owner holds both ends. */
+  giver?: PlayerId;
   fromSettlementId: string;
   toSettlementId: string;
   fromTileId: string;
   toTileId: string;
   pops: Pops;
+}
+
+/** What one side of a trade hands over: stocks, luxury goods by asset id, and pops. */
+export interface TradeBundle {
+  resources: Partial<Resources>;
+  goods: string[];
+  pops: Pops;
+}
+
+/** An offer's terms, read from the offering seat: what it gives and what it gets. */
+export interface TradeTerms {
+  give: TradeBundle;
+  get: TradeBundle;
+}
+
+/** The settlements a seat names for its own traded pops: where the pops it gives
+ *  leave, and where the pops it gets arrive. Each is needed only when such pops trade. */
+export interface TradePlaces {
+  from?: string;
+  to?: string;
+}
+
+/** An answer that stays on the offer: an accept settles at once, so it never does. */
+export type TradeReply =
+  | { kind: "decline" }
+  /** Terms of the recipient's own, read from the offering seat like the offer's. */
+  | { kind: "counter"; terms: TradeTerms; places: TradePlaces };
+
+export type TradeAnswer = { kind: "accept"; places: TradePlaces } | TradeReply;
+
+/** An open offer. Every seat sees it; only the seats in `to` answer, and the first to
+ *  accept trades. */
+export interface TradeOffer {
+  id: string;
+  from: PlayerId;
+  /** The seats that may answer, in seat order: the ones named, or every rival. */
+  to: PlayerId[];
+  /** The offer named no seat and went to the table. */
+  toTable: boolean;
+  terms: TradeTerms;
+  /** The offering seat's settlements for its traded pops, named as it offers. */
+  places: TradePlaces;
+  answers: Partial<Record<PlayerId, TradeReply>>;
 }
 
 /** The classes hunger can send away: free pops that eat. Slaves eat nothing. */
@@ -384,6 +430,8 @@ export type LogMoment =
       level: number;
     }
   | { kind: "revolt"; slaves: number; left: PopLeave[]; tokensCleared: number; level: number }
+  /** A settled trade, its terms read from the offering seat. */
+  | { kind: "trade"; from: PlayerId; partner: PlayerId; terms: TradeTerms }
   /** The year's card, turned: no toast, read by the year card's face. */
   | { kind: "yearCard"; cardId: string; impact: YearCardImpact };
 
@@ -441,6 +489,9 @@ export interface HegemonyState {
   board: HegemonyBoard;
   players: Record<PlayerId, PlayerState>;
   transfers: PopulationTransfer[];
+  /** Open trade offers, oldest first. On a turn they are the turn's seat's; in the
+   *  Assembly's preparation any seat's. */
+  offers: TradeOffer[];
   /** The year deck, the game's clock: fourteen cards dealt once and never reshuffled.
    *  The order is hidden; an empty pile when the year turns ends the game. */
   yearDrawPile: YearCard[];

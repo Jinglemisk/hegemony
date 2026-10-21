@@ -228,14 +228,19 @@ export function itemKind(G: HegemonyState, item: BallotItem) {
 }
 
 export function dockMark(session: AssemblySession, stage: SittingStage, id: PlayerId) {
-  if (stage === "proposal" || stage === "drawn") return session.proposalDone[id] ? "✓" : "…";
+  if (stage === "proposal" || stage === "drawn") {
+    return session.ready[id] ? "✓" : session.proposalDone[id] ? "·" : "…";
+  }
   if (stage === "vote") return session.votes.some((vote) => vote.playerID === id) ? "✓" : "…";
   return null;
 }
 
 export function waitingWords(session: AssemblySession) {
   const left = session.voteOrder.filter((id) => !session.proposalDone[id]).length;
-  return `${capitalize(numberWord(left))} seat${left === 1 ? "" : "s"} still to decide.`;
+  if (left > 0)
+    return `${capitalize(numberWord(left))} seat${left === 1 ? "" : "s"} still to decide.`;
+  const waiting = session.voteOrder.filter((id) => !session.ready[id]).length;
+  return `${capitalize(numberWord(waiting))} seat${waiting === 1 ? "" : "s"} not yet Ready.`;
 }
 
 /** "4 (1 + 3 citizens)": the base vote by its parts, read off the engine. */
