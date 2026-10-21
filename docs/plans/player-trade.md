@@ -43,7 +43,10 @@ so the sim shows who trades what, and Step 11 measures a game that has trade in 
   chosen seats; the compact card composes it, and a counter edits that card in place. Hotseat has
   no clock (Q81). Trade ships in two PRs; bots trade only in the second, which also lets one
   person play against bots in the browser. Answering out of turn is built for any mechanic that
-  needs it, not for trade alone.
+  needs it, not for trade alone. Later the same day: first come, first served. The first named
+  seat to accept trades, and a counter dies with the offer. Traded pops are placed on the map
+  like a move's, with the partner fixed and a handshake beside it. The alarms row stays above
+  the Assembly's dimming, and a new offer's disc shakes once.
 
 ## Rules (proposed)
 
@@ -53,8 +56,9 @@ Laws, settlements, buildings, pieces or Unrest tokens. Happiness is a level read
 good carries its +2 to its new holder, and a slave its unrest.
 
 **Pops.** The giver names the pops and the settlement they leave; like a move, a trade may empty
-a settlement. Each side names the settlement of its own that receives what it gets: a recipient
-when it accepts, the offering seat when it settles. Traded pops travel like a move: they leave
+a settlement. Each side names its own settlements for the pops it gives and gets: the offering
+seat when it offers or takes a counter, a recipient when it accepts or counters. Traded pops
+travel like a move: they leave
 at once, are on the move under their new owner, and arrive at the start of that owner's next
 turn. The receiving settlement needs the room, counting pops already on the move to it, or the
 trade cannot settle. From settlement on, the new owner feeds them and counts their unrest, and
@@ -73,10 +77,12 @@ the ballots begin, and nothing trades from there to the recap. Today a sitting h
 step: each seat proposes in turn order and the ballots follow.
 
 Several offers can be open at once, made back to back by one seat or, in the Assembly, by
-several. Each recipient accepts, declines or counters with terms of its own; then the offering
-seat settles with one acceptor, takes one counter, or withdraws. The engine rechecks both sides
-at settlement, so an offer whose goods went to an earlier settlement can no longer settle. A
-seat's open offers close when its turn ends, or when the Assembly's preparation ends.
+several. Each recipient accepts, declines or counters with terms of its own. First come, first
+served: the first to accept trades at once, and the offer closes with every other answer on it.
+A counter waits for the offering seat to take it; if another seat accepts first, it dies with
+the offer. The offering seat may also withdraw. The engine rechecks both sides at settlement, so
+an offer whose goods went to an earlier settlement can no longer be accepted. A seat's open
+offers close when its turn ends, or when the Assembly's preparation ends.
 
 **Limits.** Each side gives at least one thing, at any ratio (D6). A seat gives only what it
 holds, so a seat short of food gives no food, though it can take food to cover the shortfall.
@@ -100,26 +106,29 @@ the screen. Nothing takes over the screen, and play goes on while offers are ope
 [trade screens](../reference/design/showcases/trade-screens/README.md) show the look.
 
 - **The disc.** Each open offer is a disc on the alarms row in the offering seat's glaze, with
-  its seat badge and a mark for each answer: accepts, counters, declines or can't pay. Hotseat
-  has no clock: the ring has one segment per recipient and fills as they answer, and nothing
-  shakes. The mockup's draining seconds come with the server's answer timer.
+  its seat badge and the viewer's mark once it has countered or declined. Hotseat has no clock:
+  the ring has one segment per recipient and fills as they answer. The disc shakes once as the
+  offer lands, and not after. The mockup's draining seconds come with the server's answer timer.
 - **The card.** Hovering a disc shows the offer, and clicking it opens the compact offer card.
   The Trade disc opens the same card to compose: seat discs pick the recipients, none meaning the
   table; each side holds one chip per resource with a − n + stepper; and the footer shows the
-  stocks after, in the delta colours. Pops, which the mockup does not draw, add a settlement
-  pick on each side, as the rules above require.
-- **Answering.** A recipient's card names the seat that answers next, in seat order, and shows
-  its stocks. It accepts, declines, or counters by editing the terms on the card, where a changed
-  line shows what it was. A bot answers at once. The offering seat's card lists the answers;
-  from it the seat settles with an acceptor, takes a counter, or withdraws.
+  stocks after, in the delta colours. Pops are placed on the map as the command goes, like a
+  move: the seat's settlements that can send or take them glow, and the popover names the
+  partner, fixed, with a handshake.
+- **Answering.** The card lists every seat the offer names at once, each with Decline, Counter
+  and Accept, and what it holds of the stocks asked of it. The first Accept trades. A counter
+  edits the terms on the card, where a changed line shows what it was; the offering seat can take
+  it from its row, or withdraw the offer. A bot answers at once.
 - **The Assembly.** During the preparation the sitting sheet shows each seat's Ready mark and an
   Offer button: pick the seat that offers, then compose as on a turn. A seat still seals behind
-  its own notice, and offers wait for the shared sheet.
+  its own notice, and offers wait for the shared sheet. The sheet starts below the alarms row,
+  and the top bar and the alarms row stay above its dimming, so an offer is seen and answered
+  there; a map pick folds the sheet away until it is made.
 - A settled trade writes a Chronicle line and toasts every seat. A game of bots shows no card.
 
-Networked (later): the same commands. Each recipient answers on their own screen in any order,
-the card drops the "answers next" line, and the server adds an answer timer and a disconnect
-rule. The engine takes answers from any recipient still to answer, so no rule changes.
+Networked (later): the same commands. Each recipient answers on their own screen, the first
+accept to reach the server trades, and the server adds an answer timer and a disconnect rule.
+No rule changes.
 
 ## Bots
 
@@ -135,8 +144,8 @@ stocks are saving toward (Step 20), and the food and calm its forecast buys ahea
   including ones its land makes none of. Against that it sets what it holds beyond those
   purchases, and tries 1 for 1, 2 for 1, 1 for 2, and gold at 1 a unit. It keeps the deals its
   search scores above its best turn without a trade; that search already uses the Dole, so a
-  deal worse than the Dole's food never wins. The best goes to every rival, and the bot
-  settles with the acceptor holding the fewest titles, ties by seat order.
+  deal worse than the Dole's food never wins. The best goes to every rival, and the first to
+  accept trades.
 - **Offering in the Assembly.** A bot short of the influence for a proposal it wants, or of the
   gold or influence for the votes it plans to buy, offers for it in the preparation, then
   presses Ready. Otherwise it only answers.
@@ -205,8 +214,8 @@ linear influence pile passed, and no card could meet the draw rule.
 - Ruleset values (trade, the bank and base food, each on or off), version and schema bumps; older
   saves are rejected, as today. Commands carry intent only; the engine derives holdings, room and
   legality.
-- A trade workflow in the actor query. On a turn the offering seat settles or withdraws and each
-  named recipient still to answer may answer. In the Assembly's preparation any seat may open an
+- A trade workflow in the actor query. On a turn the offering seat takes a counter or withdraws,
+  and each named recipient still to answer may answer. In the Assembly's preparation any seat may open an
   offer until every seat is Ready; today the preparation admits every undecided seat, and the
   ballots go in seat order. The actor gate checks the seat and the command's family apart, so a
   recipient listed as a turn actor could play the turn's verbs. Out-of-turn actors become a
@@ -256,8 +265,9 @@ first is built on `feat/player-trade` (2026-10-21).
    one browser test of an offer countered and settled on a turn, and one bot run with no illegal
    moves. Then the owner tries the screens in hotseat.
    - As built: trade is on in the default ruleset, and `trade.enabled: false` takes it and the
-     Ready step out. A recipient names its own settlements for traded pops when it answers, the
-     offering seat when it settles. In the preparation `currentPlayer` walks the seats still to
+     Ready step out. The offering seat names its settlements for traded pops when it offers (or
+     takes a counter), a recipient when it accepts or counters, each by a map pick. In the
+     preparation `currentPlayer` walks the seats still to
      seal, then the seats not yet Ready; once every seat has sealed the sheet is shared, with an
      Offer button that picks the offering seat and a Ready button per seat. The trade commands'
      simulation route in the parity maps names PR 2. `?dev=trade` and `?dev=assembly-trade` open
@@ -309,6 +319,8 @@ Answered by the owner on 2026-10-18, 19 and 21.
 - **D13 · How many PRs?** Two: trade, then the bank's removal with the paired batches.
 - **D14 · Does hotseat have a clock?** No (Q81). The ring fills with answers; seconds come with
   networked play.
+- **D15 · Who gets an offer that several accept?** The first to accept: it trades at once, and a
+  counter dies with the offer (2026-10-21).
 
 ## Retirement
 

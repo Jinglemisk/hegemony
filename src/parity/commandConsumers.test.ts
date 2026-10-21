@@ -55,7 +55,7 @@ describe("behavioral command-consumer parity", () => {
     moves.assemblyVote("1", true);
     moves.assemblyClose();
     moves.assemblyReady("2");
-    moves.tradeOffer("0", ["1", "3"], terms);
+    moves.tradeOffer("0", ["1", "3"], terms, { from: "tile-a" });
     moves.tradeAnswer("1", "offer-9", { kind: "counter", terms, places: { from: "tile-b" } });
     moves.tradeSettle("0", "offer-9", "1", { to: "tile-a" });
     moves.tradeWithdraw("0", "offer-9");
@@ -131,7 +131,10 @@ describe("behavioral command-consumer parity", () => {
       { command: { type: "assemblyVote", yea: true }, actor: "1" },
       { command: { type: "assemblyClose" }, actor: undefined },
       { command: { type: "assemblyReady" }, actor: "2" },
-      { command: { type: "tradeOffer", to: ["1", "3"], terms }, actor: "0" },
+      {
+        command: { type: "tradeOffer", to: ["1", "3"], terms, places: { from: "tile-a" } },
+        actor: "0",
+      },
       {
         command: {
           type: "tradeAnswer",

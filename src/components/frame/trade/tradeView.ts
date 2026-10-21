@@ -14,7 +14,6 @@ import type {
 import { LUXURY_RASTER, POP_RASTERS, RESOURCE_RASTERS } from "../../../ui/iconRegistry";
 import { RESOURCE_LABELS, formatPopLabel } from "../../../ui/formatters";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
-import { settlementNameOf } from "../../../ui/settlementNames";
 
 /**
  * The offer card's words and numbers, read off the engine. A side is what one seat
@@ -140,8 +139,9 @@ export function stocksAfter(G: HegemonyState, seat: PlayerId, sides: Sides): Sto
   return changes;
 }
 
-/** How an answer reads on the disc and the card. */
-export type AnswerMark = "pending" | "accept" | "counter" | "decline" | "cantPay";
+/** How an answer reads on the disc and the card. An accept trades at once, so it has
+ *  no mark. */
+export type AnswerMark = "pending" | "counter" | "decline" | "cantPay";
 
 export function answerMark(G: HegemonyState, offer: TradeOffer, seat: PlayerId): AnswerMark {
   const answer = offer.answers[seat];
@@ -152,7 +152,6 @@ export function answerMark(G: HegemonyState, offer: TradeOffer, seat: PlayerId):
 
 export const MARK_GLYPH: Record<AnswerMark, string> = {
   pending: "",
-  accept: "✓",
   counter: "⇄",
   decline: "×",
   cantPay: "×",
@@ -174,9 +173,4 @@ export function bundleWords(G: HegemonyState, bundle: TradeBundle): string {
   });
   if (parts.length === 0) return "nothing";
   return parts.length > 1 ? `${parts.slice(0, -1).join(", ")} and ${parts.at(-1)}` : parts[0];
-}
-
-export function settlementLabel(G: HegemonyState, seat: PlayerId, tileId: string): string {
-  const settlement = getOwnedSettlement(G, tileId, seat);
-  return settlement ? settlementNameOf(G.board.tiles, settlement.id) : tileId;
 }

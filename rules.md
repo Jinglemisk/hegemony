@@ -260,21 +260,24 @@ the table. Every seat sees every offer.
   every class. Votes, Ideas, Laws, settlements, buildings and Unrest tokens never trade.
 - **No gifts:** each side gives at least one thing, at any ratio. You give only what you
   hold, so a seat short of food gives no food, though it may take food.
-- **Answers:** the offer waits as a disc on the alarms row, in your glaze, its ring
-  filling as seats answer. Each seat it names accepts, declines or counters by changing
-  the numbers on the card; a changed line shows what it was. When several people share
-  the screen the card names the seat that answers next, in seat order. There is no
-  clock.
-- **Settling:** you trade with one seat that accepted, take one counter, or withdraw.
-  Everything moves at once, and both sides are checked again at that moment: if goods
-  you offered went in an earlier trade, the offer can no longer settle.
+- **Answers:** the offer waits as a disc on the alarms row, in your glaze. It shakes once
+  as it lands, and its ring fills as seats answer. The card lists every seat it names,
+  each with Decline, Counter and Accept. There is no clock.
+- **First come, first served:** the first seat to accept trades at once, and the offer
+  closes. Everything moves at once, and both sides are checked again at that moment: if
+  goods you offered went in an earlier trade, the offer can no longer be accepted.
+- **Counters:** a seat counters by changing the numbers on the card; a changed line shows
+  what it was. You may take a counter or leave it. If another seat accepts first, the
+  counter dies with the offer. You may withdraw the offer at any time.
 - You may have several offers open and offer again after a refusal. Your open offers
   close when your turn ends.
 - **Luxury goods** carry their +2 happiness to whoever holds them; the Port that claimed
   one stays where it stands.
-- **Pops** leave at once and travel like a move. Each side names its own settlements:
-  the one the pops it gives leave from, and the one that receives the pops it gets,
-  which needs room, counting pops already on their way. From the trade on they belong
+- **Pops** leave at once and travel like a move. Each side picks its own settlements on
+  the map, as it offers, accepts or counters: the one the pops it gives leave from, and
+  the one that takes in the pops it gets, which needs room, counting pops already on
+  their way. The popover names the other seat, with a handshake. From the trade on they
+  belong
   to their new owner: their slaves count against its happiness, its titles and votes
   count them, and it feeds them. They arrive at the start of its next turn.
 
@@ -479,8 +482,9 @@ offers, as on a turn. A seat that has sealed or passed presses **Ready** when it
 a Ready seat makes no new offers but still answers, and settles its own. When the last
 seat is Ready, open offers close and the ballots begin; nothing trades from then until
 the recap. A citizen traded in the preparation votes for its new owner. On screen each
-seat seals behind its own notice, then the sheet is shared: it shows the open offers, an
-Offer button that first asks which seat offers, and a Ready button for each seat.
+seat seals behind its own notice, then the sheet is shared: it has an Offer button that
+first asks which seat offers, and a Ready button for each seat. The sheet sits below the
+alarms row, which stays bright above it, so open offers are answered there.
 
 At most **four Laws** stand. A new Law at the cap replaces the oldest automatically.
 A Law survives its own sitting and the following one: a Law passed in Year 2 can

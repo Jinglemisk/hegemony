@@ -29,8 +29,8 @@ inside `transition`. Domain validators remain responsible for payload legality a
 **Out of turn.** `outOfTurnActors(state)` names the seats outside the workflow's actors that may
 still act, and the commands each may send; the gate admits exactly those. Trade is the first
 use. On a turn, each seat an open offer names that has not answered may send `tradeAnswer`, and
-nothing else. In the Assembly's preparation a Ready seat may still answer, and settle or
-withdraw its own offers. Listing a recipient as a turn actor instead would have let it play the
+nothing else; the first accept settles the trade. In the Assembly's preparation a Ready seat
+may still answer, and take a counter to its own offers or withdraw them. Listing a recipient as a turn actor instead would have let it play the
 turn's verbs, since the gate checks the seat and the command's family apart. The enumerator
 lists an out-of-turn seat's answers, so a driver that routes by actor finds them.
 
@@ -81,7 +81,7 @@ turn order (`assembly.activePlayer`), and the sitting has no seat switcher, so n
 reads another's drawn card. Once every seat has sealed, the preparation is public: the
 sheet is shared, offers are made and answered on it, and each seat presses Ready there. The
 game's end stays with whoever was looking. Trade answers have no notice either: the offer card
-names the seat that answers next, in seat order.
+lists every seat the offer names at once, and the first to accept trades.
 
 `src/sim/runner.ts` likewise projects before every policy decision. Search can transition the
 sanitized state for deterministic, RNG-free branches, but cannot observe real entropy or deck

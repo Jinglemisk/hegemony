@@ -3,7 +3,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { PLAYER_IDS } from "../../../game/data";
 import { totalPops } from "../../../game/core/pops";
 import {
-  answeredTerms,
+  counterOf,
   emptyBundle,
   getTradeAnswerStatus,
   getTradeOfferStatus,
@@ -35,18 +35,18 @@ import {
   itemsOf,
   offerTitle,
   pickable,
-  settlementLabel,
   stocksAfter,
   withCount,
 } from "./tradeView";
 import type { Sides, TradeItem } from "./tradeView";
+import { useTradePick } from "./tradePick";
 
 /**
  * The compact offer card (docs/reference/design/showcases/trade-screens). One card
- * composes an offer, answers it and settles it; nothing takes over the screen. Its two
- * columns are what the acting seat receives and what the other side receives; a
- * counter edits them in place, each changed line showing what it was. Every "can I?"
- * is the engine's status for the command the button sends.
+ * composes an offer and answers it; nothing takes over the screen. Its two columns are
+ * what the acting seat receives and what the other side receives; a counter edits them
+ * in place, each changed line showing what it was. Every "can I?" is the engine's
+ * status for the command the button sends.
  */
 
 /** A count the receiving side may ask for: the engine checks what is real. */
@@ -274,78 +274,20 @@ function After({ G, seat, sides }: { G: HegemonyState; seat: PlayerId; sides: Si
   );
 }
 
-/** The settlements a seat names for its own traded pops: the one picked, if it still
- *  serves, else the first that does. */
-function resolvePlaces(
+/** The settlements a seat would name for its traded pops: the first that serves each
+ *  end, or the ones already named while they still serve. The buttons ask the engine
+ *  with these; the map pick names the real ones as the command goes. */
+function firstPlaces(
   G: HegemonyState,
   seat: PlayerId,
   sides: Sides,
-  picked: TradePlaces,
+  named: TradePlaces = {},
 ): TradePlaces {
   const froms = totalPops(sides.gives.pops) > 0 ? tradePopSources(G, seat, sides.gives.pops) : [];
   const tos = totalPops(sides.gets.pops) > 0 ? tradePopTargets(G, seat, sides.gets.pops) : [];
-  const from = picked.from && froms.includes(picked.from) ? picked.from : froms[0];
-  const to = picked.to && tos.includes(picked.to) ? picked.to : tos[0];
+  const from = named.from && froms.includes(named.from) ? named.from : froms[0];
+  const to = named.to && tos.includes(named.to) ? named.to : tos[0];
   return { ...(from ? { from } : {}), ...(to ? { to } : {}) };
-}
-
-/** Where the seat's traded pops leave and arrive, when pops trade. */
-function Places({
-  G,
-  seat,
-  sides,
-  places,
-  onChange,
-}: {
-  G: HegemonyState;
-  seat: PlayerId;
-  sides: Sides;
-  places: TradePlaces;
-  onChange: (places: TradePlaces) => void;
-}) {
-  const rows = [
-    totalPops(sides.gives.pops) > 0
-      ? {
-          key: "from" as const,
-          label: "Pops leave",
-          options: tradePopSources(G, seat, sides.gives.pops),
-          none: "no settlement holds them",
-        }
-      : null,
-    totalPops(sides.gets.pops) > 0
-      ? {
-          key: "to" as const,
-          label: "Pops go to",
-          options: tradePopTargets(G, seat, sides.gets.pops),
-          none: "no settlement has room",
-        }
-      : null,
-  ].filter((row) => row !== null);
-  if (rows.length === 0) return null;
-  return (
-    <div className="trade-places">
-      {rows.map((row) => (
-        <label className="trade-place" key={row.key}>
-          <span className="caps">{row.label}</span>
-          {row.options.length === 0 ? (
-            <span className="caption trade-reason">{row.none}</span>
-          ) : (
-            <select
-              className="caption"
-              onChange={(event) => onChange({ ...places, [row.key]: event.target.value })}
-              value={places[row.key] ?? ""}
-            >
-              {row.options.map((tileId) => (
-                <option key={tileId} value={tileId}>
-                  {settlementLabel(G, seat, tileId)}
-                </option>
-              ))}
-            </select>
-          )}
-        </label>
-      ))}
-    </div>
-  );
 }
 
 function CardHead({
@@ -380,14 +322,15 @@ function CardHead({
 }
 
 /** Compose an offer for `seat`: the seats it goes to, none meaning the table, and the
- *  two sides. */
+ *  two sides. Pops it trades are placed on the map as it offers. */
 export function ComposeCard({ seat, onClose }: { seat: PlayerId; onClose: () => void }) {
   const { G, moves } = useGameUi();
+  const pick = useTradePick();
   const rivals = PLAYER_IDS.filter((id) => id !== seat);
   const [to, setTo] = useState<PlayerId[]>([]);
   const [sides, setSides] = useState<Sides>({ gives: emptyBundle(), gets: emptyBundle() });
   const terms = { give: sides.gives, get: sides.gets };
-  const status = getTradeOfferStatus(G, seat, to, terms);
+  const status = getTradeOfferStatus(G, seat, to, terms, firstPlaces(G, seat, sides));
   const names = to.map((id) => G.players[id].name);
   const listed =
     names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names.at(-1)}` : names[0];
@@ -447,7 +390,15 @@ export function ComposeCard({ seat, onClose }: { seat: PlayerId; onClose: () => 
           enabled={status.can}
           heading="Offer"
           onClick={() => {
-            moves.tradeOffer(seat, to, terms);
+            pick(
+              {
+                seat,
+                partner: to.length === 1 ? to[0] : null,
+                gives: sides.gives.pops,
+                gets: sides.gets.pops,
+              },
+              (places) => moves.tradeOffer(seat, to, terms, places),
+            );
             onClose();
           }}
         >
@@ -460,152 +411,197 @@ export function ComposeCard({ seat, onClose }: { seat: PlayerId; onClose: () => 
   );
 }
 
-/** The seat that answers next, in seat order: accept, decline, or counter by editing
- *  the card. Its columns are its own view of the offer. */
-function Answer({ offer, seat }: { offer: TradeOffer; seat: PlayerId }) {
+/** A named seat's counter, edited on the card in place: its own view of the offer,
+ *  each changed line showing what it was. */
+function Counter({
+  offer,
+  seat,
+  onBack,
+}: {
+  offer: TradeOffer;
+  seat: PlayerId;
+  onBack: () => void;
+}) {
   const { G, moves, viewerId } = useGameUi();
+  const pick = useTradePick();
   const base: Sides = { gives: offer.terms.get, gets: offer.terms.give };
-  const [draft, setDraft] = useState<Sides | null>(null);
-  const [picked, setPicked] = useState<TradePlaces>({});
-  const sides = draft ?? base;
-  const places = resolvePlaces(G, seat, sides, picked);
-  const accept = getTradeAnswerStatus(G, seat, offer.id, { kind: "accept", places });
-  const counterTerms = { give: sides.gets, get: sides.gives };
-  const counter = getTradeAnswerStatus(G, seat, offer.id, {
+  const [draft, setDraft] = useState<Sides>(base);
+  const counterTerms = { give: draft.gets, get: draft.gives };
+  const status = getTradeAnswerStatus(G, seat, offer.id, {
     kind: "counter",
     terms: counterTerms,
-    places,
+    places: firstPlaces(G, seat, draft),
   });
-  const changed = draft !== null && !sameSides(draft, base);
+  const changed = !sameSides(draft, base);
   const who = seatName(G, seat, viewerId, true);
-  const owner = G.players[offer.from].name;
 
   return (
     <div className="trade-answer">
-      <span className="kicker trade-next">
-        {who === "You" ? "You answer next" : `${who} answers next`} · holds{" "}
-        {bundleWords(G, {
-          resources: G.players[seat].resources,
-          goods: [],
-          pops: emptyBundle().pops,
-        })}
-      </span>
+      <span className="kicker trade-next">{who === "You" ? "You counter" : `${who} counters`}</span>
       <Exchange
         G={G}
         actor={seat}
-        onChange={draft ? setDraft : undefined}
-        other={owner}
+        onChange={setDraft}
+        other={G.players[offer.from].name}
         others={[offer.from]}
-        sides={sides}
-        was={draft ? base : undefined}
+        sides={draft}
+        was={base}
       />
-      <Places G={G} onChange={setPicked} places={places} seat={seat} sides={sides} />
       <footer className="trade-foot">
-        <After G={G} seat={seat} sides={sides} />
-        {!draft && !accept.can ? (
-          <span className="caption trade-reason">{accept.reasons[0]}</span>
-        ) : null}
-        {draft && changed && !counter.can ? (
-          <span className="caption trade-reason">{counter.reasons[0]}</span>
+        <After G={G} seat={seat} sides={draft} />
+        {changed && !status.can ? (
+          <span className="caption trade-reason">{status.reasons[0]}</span>
         ) : null}
         <span className="trade-grow" />
-        {draft ? (
-          <>
-            <button className="btn kicker" onClick={() => setDraft(null)} type="button">
-              Back
-            </button>
-            <ActionButton
-              blockedReason={changed ? counter.reasons.join(" ") : "Change at least one number."}
-              className="btn kicker is-primary"
-              enabled={changed && counter.can}
-              heading="Send counter"
-              onClick={() =>
-                moves.tradeAnswer(seat, offer.id, { kind: "counter", terms: counterTerms, places })
-              }
-            >
-              Send counter
-            </ActionButton>
-          </>
-        ) : (
-          <>
-            <button
-              className="btn kicker"
-              onClick={() => moves.tradeAnswer(seat, offer.id, { kind: "decline" })}
-              type="button"
-            >
-              Decline
-            </button>
-            <button className="btn kicker" onClick={() => setDraft(base)} type="button">
-              Counter
-            </button>
-            <ActionButton
-              blockedReason={accept.reasons.join(" ")}
-              className="btn kicker is-primary"
-              enabled={accept.can}
-              heading="Accept"
-              onClick={() => moves.tradeAnswer(seat, offer.id, { kind: "accept", places })}
-            >
-              Accept
-            </ActionButton>
-          </>
-        )}
+        <button className="btn kicker" onClick={onBack} type="button">
+          Back
+        </button>
+        <ActionButton
+          blockedReason={changed ? status.reasons.join(" ") : "Change at least one number."}
+          className="btn kicker is-primary"
+          enabled={changed && status.can}
+          heading="Send counter"
+          onClick={() => {
+            pick(
+              { seat, partner: offer.from, gives: draft.gives.pops, gets: draft.gets.pops },
+              (places) =>
+                moves.tradeAnswer(seat, offer.id, { kind: "counter", terms: counterTerms, places }),
+            );
+            onBack();
+          }}
+        >
+          Send counter
+        </ActionButton>
       </footer>
     </div>
   );
 }
 
-const MARK_WORDS = {
-  accept: "Accepts",
-  counter: "Counters",
-  decline: "Declines",
-  cantPay: "Can’t pay",
-} as const;
+/** "holds 4 stone, 2 gold": what a seat holds of the stocks the offer asks of it. */
+function holdsWords(G: HegemonyState, seat: PlayerId, asked: TradeBundle) {
+  const held = G.players[seat].resources;
+  const lines = itemsOf(asked)
+    .filter((item) => item.kind === "resource")
+    .map((item) => `${Math.max(0, held[item.id as keyof typeof held])} ${itemName(G, item)}`);
+  return lines.length ? `holds ${lines.join(", ")}` : "";
+}
 
-/** The offering seat's side of the card: each answer, a settle for each acceptor or
- *  counter, and Withdraw. */
-function Answers({ offer, next }: { offer: TradeOffer; next: PlayerId | null }) {
+/** Every seat the offer names, at once: the first to accept trades. A seat may decline
+ *  or counter instead; the offering seat takes a counter or withdraws. */
+function Answers({
+  offer,
+  onCounter,
+  onClose,
+}: {
+  offer: TradeOffer;
+  onCounter: (seat: PlayerId) => void;
+  onClose: () => void;
+}) {
   const { G, moves, viewerId } = useGameUi();
-  const [picked, setPicked] = useState<TradePlaces>({});
+  const pick = useTradePick();
   const owner = offer.from;
+  const theirs: Sides = { gives: offer.terms.get, gets: offer.terms.give };
 
   return (
     <div className="trade-answers">
-      <span className="caps">Answers</span>
+      <span className="caps">The first to accept trades</span>
       {offer.to.map((seat) => {
         const mark = answerMark(G, offer, seat);
-        const terms = answeredTerms(offer, seat);
-        const sides = terms ? { gives: terms.give, gets: terms.get } : null;
-        const places = sides ? resolvePlaces(G, owner, sides, picked) : {};
-        const settle = sides ? getTradeSettleStatus(G, owner, offer.id, seat, places) : null;
-        const answer = offer.answers[seat];
+        const reply = offer.answers[seat];
+        const counter = counterOf(offer, seat);
         const name = G.players[seat].name;
-        const status =
-          mark === "pending"
-            ? seat === next
-              ? "answers next"
-              : "to answer"
-            : answer?.kind === "counter" && mark === "counter"
-              ? `${MARK_GLYPH.counter} Counters: ${seatName(G, owner, viewerId)} ${owner === viewerId ? "give" : "gives"} ${bundleWords(G, answer.terms.give)}, ${owner === viewerId ? "get" : "gets"} ${bundleWords(G, answer.terms.get)}`
-              : `${MARK_GLYPH[mark]} ${MARK_WORDS[mark]}`;
+        const accept = reply
+          ? null
+          : getTradeAnswerStatus(G, seat, offer.id, {
+              kind: "accept",
+              places: firstPlaces(G, seat, theirs),
+            });
+        const ownSides = counter ? { gives: counter.terms.give, gets: counter.terms.get } : null;
+        const take = ownSides
+          ? getTradeSettleStatus(
+              G,
+              owner,
+              offer.id,
+              seat,
+              firstPlaces(G, owner, ownSides, offer.places),
+            )
+          : null;
+        const status = counter
+          ? `${MARK_GLYPH.counter} Counters: ${seatName(G, owner, viewerId)} ${owner === viewerId ? "give" : "gives"} ${bundleWords(G, counter.terms.give)}, ${owner === viewerId ? "get" : "gets"} ${bundleWords(G, counter.terms.get)}`
+          : reply
+            ? `${MARK_GLYPH.decline} Declines`
+            : accept && !accept.can
+              ? `${MARK_GLYPH.cantPay} ${accept.reasons[0]}`
+              : holdsWords(G, seat, offer.terms.get);
         return (
           <div className={`trade-row is-${mark}`} key={seat}>
             <Glaze seat={seat} size="sm" />
             <span className="body body-sm trade-row-words">
               <b className="name">{name}</b>
-              <span>{status}</span>
-              {sides && settle ? (
-                <Places G={G} onChange={setPicked} places={places} seat={owner} sides={sides} />
-              ) : null}
+              {status ? <span>{status}</span> : null}
             </span>
-            {settle ? (
+            {accept ? (
+              <span className="trade-row-acts">
+                <button
+                  aria-label={`${name} declines`}
+                  className="btn kicker"
+                  onClick={() => moves.tradeAnswer(seat, offer.id, { kind: "decline" })}
+                  type="button"
+                >
+                  Decline
+                </button>
+                <button
+                  aria-label={`${name} counters`}
+                  className="btn kicker"
+                  onClick={() => onCounter(seat)}
+                  type="button"
+                >
+                  Counter
+                </button>
+                <ActionButton
+                  aria-label={`${name} accepts`}
+                  blockedReason={accept.reasons.join(" ")}
+                  className="btn kicker is-primary"
+                  enabled={accept.can}
+                  heading={`${name} accepts`}
+                  onClick={() => {
+                    pick(
+                      {
+                        seat,
+                        partner: owner,
+                        gives: theirs.gives.pops,
+                        gets: theirs.gets.pops,
+                      },
+                      (places) => moves.tradeAnswer(seat, offer.id, { kind: "accept", places }),
+                    );
+                    onClose();
+                  }}
+                >
+                  Accept
+                </ActionButton>
+              </span>
+            ) : null}
+            {take && counter && ownSides ? (
               <ActionButton
-                blockedReason={settle.reasons.join(" ")}
-                className={`btn kicker${answer?.kind === "accept" ? " is-primary" : ""}`}
-                enabled={settle.can}
-                heading={answer?.kind === "accept" ? `Trade with ${name}` : "Take counter"}
-                onClick={() => moves.tradeSettle(owner, offer.id, seat, places)}
+                blockedReason={take.reasons.join(" ")}
+                className="btn kicker"
+                enabled={take.can}
+                heading="Take counter"
+                onClick={() => {
+                  pick(
+                    {
+                      seat: owner,
+                      partner: seat,
+                      gives: ownSides.gives.pops,
+                      gets: ownSides.gets.pops,
+                      places: offer.places,
+                    },
+                    (places) => moves.tradeSettle(owner, offer.id, seat, places),
+                  );
+                  onClose();
+                }}
               >
-                {answer?.kind === "accept" ? `Trade with ${name}` : "Take counter"}
+                Take counter
               </ActionButton>
             ) : null}
           </div>
@@ -625,13 +621,15 @@ function Answers({ offer, next }: { offer: TradeOffer; next: PlayerId | null }) 
   );
 }
 
-/** An open offer: the seat that answers next answers on it, and the offering seat
- *  settles or withdraws from it. Once every seat has answered it shows the terms
- *  from the offering seat's side. */
+/** An open offer: the terms from the offering seat's side, and every named seat's
+ *  answer at once. A counter takes the card over, in place, until it is sent. */
 export function OfferCard({ offer, onClose }: { offer: TradeOffer; onClose: () => void }) {
   const { G } = useGameUi();
-  const next = offer.to.find((seat) => !offer.answers[seat]) ?? null;
-  const answered = offer.to.length - offer.to.filter((seat) => !offer.answers[seat]).length;
+  const [countering, setCountering] = useState<PlayerId | null>(null);
+  const answered = offer.to.filter((seat) => offer.answers[seat]).length;
+  const counterSeat =
+    countering && offer.to.includes(countering) && !offer.answers[countering] ? countering : null;
+  const only = offer.toTable || offer.to.length > 1 ? "They" : G.players[offer.to[0]].name;
 
   return (
     <section aria-label={offerTitle(G, offer)} className="trade-card">
@@ -642,18 +640,25 @@ export function OfferCard({ offer, onClose }: { offer: TradeOffer; onClose: () =
         seat={offer.from}
         title={offerTitle(G, offer)}
       />
-      {next ? (
-        <Answer key={next} offer={offer} seat={next} />
-      ) : (
-        <Exchange
-          G={G}
-          actor={offer.from}
-          other="They"
-          others={offer.to}
-          sides={{ gives: offer.terms.give, gets: offer.terms.get }}
+      {counterSeat ? (
+        <Counter
+          key={counterSeat}
+          offer={offer}
+          onBack={() => setCountering(null)}
+          seat={counterSeat}
         />
+      ) : (
+        <>
+          <Exchange
+            G={G}
+            actor={offer.from}
+            other={only}
+            others={offer.to}
+            sides={{ gives: offer.terms.give, gets: offer.terms.get }}
+          />
+          <Answers offer={offer} onClose={onClose} onCounter={setCountering} />
+        </>
       )}
-      <Answers next={next} offer={offer} />
     </section>
   );
 }

@@ -20,14 +20,16 @@ import type {
   TradeBundle,
   TradeOffer,
   TradePlaces,
+  TradeReply,
   TradeTerms,
 } from "./types";
 
 /**
  * Player trade (docs/plans/player-trade.md). An offer goes to the table or to named
- * seats; each named seat accepts, declines or counters; the offering seat settles with
- * one of them or withdraws. Settlement rechecks both sides and moves everything at
- * once. Offers are public, so nothing here is redacted.
+ * seats. The first named seat to accept trades: settlement rechecks both sides and
+ * moves everything at once, and the offer closes. A counter waits for the offering
+ * seat to take it, and dies with the offer if another seat accepts first. Offers are
+ * public, so nothing here is redacted.
  */
 
 /** Every stock trades. */
@@ -176,11 +178,14 @@ function recipients(seat: PlayerId, named: readonly PlayerId[]): PlayerId[] {
   return named.length === 0 ? rivals : rivals.filter((id) => named.includes(id));
 }
 
+/** An offer names its seat's own settlements for traded pops as it is made: an accept
+ *  settles at once, so nothing waits for the offering seat. */
 export function getTradeOfferStatus(
   G: HegemonyState,
   seat: PlayerId,
   to: readonly PlayerId[],
   terms: TradeTerms,
+  places: TradePlaces,
 ): ActionStatus {
   const reasons: string[] = [];
   const window = offerWindowReason(G, seat);
@@ -191,7 +196,7 @@ export function getTradeOfferStatus(
   const shape = termsReason(G, terms);
   if (shape) reasons.push(shape);
   else {
-    reasons.push(...tradeShortfalls(G, seat, terms.give));
+    reasons.push(...sideReasons(G, seat, terms.give, terms.get, places));
     if (terms.get.goods.some((id) => G.board.luxuries.find((a) => a.id === id)?.owner === seat)) {
       reasons.push("You already hold that good.");
     }
@@ -204,8 +209,9 @@ export function tradeOffer(
   seat: PlayerId,
   to: readonly PlayerId[],
   terms: TradeTerms,
+  places: TradePlaces,
 ): MoveResult {
-  const status = getTradeOfferStatus(G, seat, to, terms);
+  const status = getTradeOfferStatus(G, seat, to, terms, places);
   if (!status.can) return invalid(...status.reasons);
 
   const offer: TradeOffer = {
@@ -214,6 +220,7 @@ export function tradeOffer(
     to: recipients(seat, to),
     toTable: to.length === 0,
     terms,
+    places,
     answers: {},
   };
   G.offers.push(offer);
@@ -239,9 +246,19 @@ export function getTradeAnswerStatus(
   if (offer.answers[seat]) return { can: false, reasons: ["You have answered."] };
 
   if (answer.kind === "decline") return { can: true, reasons: [] };
-  const terms = answer.kind === "counter" ? answer.terms : offer.terms;
-  const shape = answer.kind === "counter" ? termsReason(G, terms) : null;
-  const reasons = shape ? [shape] : sideReasons(G, seat, terms.get, terms.give, answer.places);
+  if (answer.kind === "counter") {
+    const shape = termsReason(G, answer.terms);
+    const reasons = shape
+      ? [shape]
+      : sideReasons(G, seat, answer.terms.get, answer.terms.give, answer.places);
+    return { can: reasons.length === 0, reasons };
+  }
+  // An accept settles at once: both sides are checked now.
+  const reasons = sideReasons(G, seat, offer.terms.get, offer.terms.give, answer.places);
+  const theirs = sideReasons(G, offer.from, offer.terms.give, offer.terms.get, offer.places);
+  if (theirs.length > 0) {
+    reasons.push(`${getPlayerName(G, offer.from)} can no longer trade: ${theirs.join(" ")}`);
+  }
   return { can: reasons.length === 0, reasons };
 }
 
@@ -255,38 +272,42 @@ export function tradeAnswer(
   if (!status.can) return invalid(...status.reasons);
 
   const offer = getOffer(G, offerId)!;
+  if (answer.kind === "accept") {
+    settle(G, offer, seat, offer.terms, offer.places, answer.places);
+    return MOVE_OK;
+  }
   offer.answers[seat] = answer;
   const name = getPlayerName(G, seat);
   const owner = getPlayerName(G, offer.from);
   addLog(
     G,
-    answer.kind === "accept"
-      ? `${name} accepts ${owner}'s offer.`
-      : answer.kind === "decline"
-        ? `${name} declines ${owner}'s offer.`
-        : `${name} counters ${owner}'s offer: ${describeBundle(G, answer.terms.get)} for ${describeBundle(G, answer.terms.give)}.`,
+    answer.kind === "decline"
+      ? `${name} declines ${owner}'s offer.`
+      : `${name} counters ${owner}'s offer: ${describeBundle(G, answer.terms.get)} for ${describeBundle(G, answer.terms.give)}.`,
     seat,
   );
   return MOVE_OK;
 }
 
-/** The terms a partner's answer would settle at: the offer's, or its counter. */
-export function answeredTerms(offer: TradeOffer, partner: PlayerId): TradeTerms | null {
-  const answer = offer.answers[partner];
-  if (answer?.kind === "accept") return offer.terms;
-  if (answer?.kind === "counter") return answer.terms;
-  return null;
+/** A seat's counter, if it countered. */
+export function counterOf(
+  offer: TradeOffer,
+  partner: PlayerId,
+): Extract<TradeReply, { kind: "counter" }> | null {
+  const reply = offer.answers[partner];
+  return reply?.kind === "counter" ? reply : null;
 }
 
-/** Whether the partner could still hand over its side of its answer, as the disc's
- *  "can't pay" mark reads it. */
+/** Whether a seat could still hand over its side, the offer's or its counter's, as the
+ *  disc's "can't pay" mark reads it. */
 export function partnerCanPay(G: HegemonyState, offer: TradeOffer, partner: PlayerId): boolean {
-  const answer = offer.answers[partner];
-  const terms = answer && answer.kind !== "decline" ? answeredTerms(offer, partner)! : offer.terms;
-  const places = answer && answer.kind !== "decline" ? answer.places : {};
-  return tradeShortfalls(G, partner, terms.get, places.from).length === 0;
+  const counter = counterOf(offer, partner);
+  const terms = counter?.terms ?? offer.terms;
+  return tradeShortfalls(G, partner, terms.get, counter?.places.from).length === 0;
 }
 
+/** Taking a counter: the offering seat names its pop settlements for the counter's
+ *  terms, which may differ from its offer's. */
 export function getTradeSettleStatus(
   G: HegemonyState,
   seat: PlayerId,
@@ -299,16 +320,14 @@ export function getTradeSettleStatus(
   const offer = getOffer(G, offerId);
   if (!offer) return { can: false, reasons: ["That offer is closed."] };
   if (offer.from !== seat) return { can: false, reasons: ["Only the offering seat settles."] };
-  const terms = answeredTerms(offer, partner);
-  const answer = offer.answers[partner];
-  if (!terms || !answer || answer.kind === "decline") {
-    return { can: false, reasons: ["That seat has not accepted or countered."] };
-  }
+  const counter = counterOf(offer, partner);
+  if (!counter) return { can: false, reasons: ["That seat has not countered."] };
 
+  const { terms } = counter;
   const reasons = sideReasons(G, seat, terms.give, terms.get, places);
-  const theirs = sideReasons(G, partner, terms.get, terms.give, answer.places);
+  const theirs = sideReasons(G, partner, terms.get, terms.give, counter.places);
   if (theirs.length > 0) {
-    reasons.push(`${getPlayerName(G, partner)} can no longer settle: ${theirs.join(" ")}`);
+    reasons.push(`${getPlayerName(G, partner)} can no longer trade: ${theirs.join(" ")}`);
   }
   return { can: reasons.length === 0, reasons };
 }
@@ -346,8 +365,29 @@ function handOver(
   });
 }
 
-/** Settle with one partner: recheck both sides, move everything, close the offer. The
- *  other open offers stand, each to its own recheck. */
+/** Move both sides at once and close the offer, with every other seat's answer on it.
+ *  The other open offers stand, each to its own recheck. */
+function settle(
+  G: HegemonyState,
+  offer: TradeOffer,
+  partner: PlayerId,
+  terms: TradeTerms,
+  ownPlaces: TradePlaces,
+  theirPlaces: TradePlaces,
+) {
+  const seat = offer.from;
+  handOver(G, seat, partner, terms.give, ownPlaces.from, theirPlaces.to);
+  handOver(G, partner, seat, terms.get, theirPlaces.from, ownPlaces.to);
+  G.offers = G.offers.filter((open) => open.id !== offer.id);
+  addLog(
+    G,
+    `${getPlayerName(G, seat)} trades ${describeBundle(G, terms.give)} to ${getPlayerName(G, partner)} for ${describeBundle(G, terms.get)}.`,
+    seat,
+    { kind: "trade", from: seat, partner, terms },
+  );
+}
+
+/** The offering seat takes a counter. */
 export function tradeSettle(
   G: HegemonyState,
   seat: PlayerId,
@@ -359,17 +399,8 @@ export function tradeSettle(
   if (!status.can) return invalid(...status.reasons);
 
   const offer = getOffer(G, offerId)!;
-  const terms = answeredTerms(offer, partner)!;
-  const theirs = offer.answers[partner] as Exclude<TradeAnswer, { kind: "decline" }>;
-  handOver(G, seat, partner, terms.give, places.from, theirs.places.to);
-  handOver(G, partner, seat, terms.get, theirs.places.from, places.to);
-  G.offers = G.offers.filter((open) => open.id !== offerId);
-  addLog(
-    G,
-    `${getPlayerName(G, seat)} trades ${describeBundle(G, terms.give)} to ${getPlayerName(G, partner)} for ${describeBundle(G, terms.get)}.`,
-    seat,
-    { kind: "trade", from: seat, partner, terms },
-  );
+  const counter = counterOf(offer, partner)!;
+  settle(G, offer, partner, counter.terms, places, counter.places);
   return MOVE_OK;
 }
 

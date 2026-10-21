@@ -369,13 +369,16 @@ export interface TradePlaces {
   to?: string;
 }
 
-export type TradeAnswer =
-  | { kind: "accept"; places: TradePlaces }
+/** An answer that stays on the offer: an accept settles at once, so it never does. */
+export type TradeReply =
   | { kind: "decline" }
   /** Terms of the recipient's own, read from the offering seat like the offer's. */
   | { kind: "counter"; terms: TradeTerms; places: TradePlaces };
 
-/** An open offer. Every seat sees it; only the seats in `to` answer. */
+export type TradeAnswer = { kind: "accept"; places: TradePlaces } | TradeReply;
+
+/** An open offer. Every seat sees it; only the seats in `to` answer, and the first to
+ *  accept trades. */
 export interface TradeOffer {
   id: string;
   from: PlayerId;
@@ -384,7 +387,9 @@ export interface TradeOffer {
   /** The offer named no seat and went to the table. */
   toTable: boolean;
   terms: TradeTerms;
-  answers: Partial<Record<PlayerId, TradeAnswer>>;
+  /** The offering seat's settlements for its traded pops, named as it offers. */
+  places: TradePlaces;
+  answers: Partial<Record<PlayerId, TradeReply>>;
 }
 
 /** The classes hunger can send away: free pops that eat. Slaves eat nothing. */

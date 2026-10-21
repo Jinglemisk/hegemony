@@ -35,7 +35,6 @@ import { glazeOf, PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { offerWindowReason } from "../../../game/trade";
 import { Popover } from "../../overlays/Popover";
 import { ComposeCard } from "../../frame/trade/OfferCard";
-import { OfferDisc } from "../../frame/trade/OfferDisc";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
 import { ActionButton } from "../../ActionButton";
 import { Chips, Ico, SeatMark } from "../../frame/parts";
@@ -317,9 +316,9 @@ function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }
 }
 
 /**
- * Trade in the preparation, on the sheet every seat shares once all have sealed: the
- * open offers, each answered on its card, and an Offer button for each seat not yet
- * Ready, which picks the seat that offers.
+ * Trade in the preparation, on the sheet every seat shares once all have sealed: an
+ * Offer button for each seat not yet Ready, which picks the seat that offers. Open
+ * offers wait on the alarms row above the sheet, where they are answered.
  */
 function Trade({ G, session }: { G: HegemonyState; session: AssemblySession }) {
   const offerers = session.voteOrder.filter((id) => offerWindowReason(G, id) === null);
@@ -330,18 +329,10 @@ function Trade({ G, session }: { G: HegemonyState; session: AssemblySession }) {
     <>
       <h3 className="kicker sit-sec">
         <Ico path="market/handshake" size="chip" />
-        Trade before the ballots · offers close when every seat is Ready
+        Trade before the ballots · open offers are on the alarms row and close when every seat is
+        Ready
       </h3>
       <div className="sit-trade" ref={anchor}>
-        {G.offers.length ? (
-          <ul aria-label="Open offers" className="sit-offers">
-            {G.offers.map((offer) => (
-              <OfferDisc key={offer.id} offer={offer} />
-            ))}
-          </ul>
-        ) : (
-          <span className="sit-note">No offers open.</span>
-        )}
         <span className="sit-offer-as">
           {offerers.length === 0 ? (
             <span className="sit-note">Every seat that could offer is Ready.</span>

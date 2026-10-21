@@ -89,7 +89,7 @@ import type { PoliticianId, VotePayment } from "./assembly";
 import { PLAYER_IDS } from "./data";
 import { commandActorEligibility, eligibleActors, outOfTurnActors } from "./actors";
 import {
-  answeredTerms,
+  counterOf,
   getTradeAnswerStatus,
   getTradeSettleStatus,
   getTradeWithdrawStatus,
@@ -194,7 +194,7 @@ export type GameCommand =
   | { type: "assemblyReady" }
   // ── Trade. Offers name rivals, or none for the table; terms read from the offering
   //    seat. Places name the acting seat's own settlements for traded pops.
-  | { type: "tradeOffer"; to: PlayerId[]; terms: TradeTerms }
+  | { type: "tradeOffer"; to: PlayerId[]; terms: TradeTerms; places: TradePlaces }
   | { type: "tradeAnswer"; offerId: string; answer: TradeAnswer }
   | { type: "tradeSettle"; offerId: string; partner: PlayerId; places: TradePlaces }
   | { type: "tradeWithdraw"; offerId: string }
@@ -378,7 +378,7 @@ function applyCommandMutable(G: HegemonyState, playerID: PlayerId, move: GameCom
     case "assemblyReady":
       return assemblyReady(G, playerID);
     case "tradeOffer":
-      return tradeOffer(G, playerID, move.to, move.terms);
+      return tradeOffer(G, playerID, move.to, move.terms, move.places);
     case "tradeAnswer":
       return tradeAnswer(G, playerID, move.offerId, move.answer);
     case "tradeSettle":
@@ -534,9 +534,9 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
 }
 
 /**
- * The trade answers, settlements and withdrawals open to a seat, with every pair of
- * its own settlements the traded pops could leave and reach. Offers and counters carry
- * terms the seat composes, so they are never listed.
+ * The trade accepts, declines, counters taken and withdrawals open to a seat, with every
+ * pair of its own settlements the traded pops could leave and reach. Offers and counters
+ * carry terms the seat composes, so they are never listed.
  */
 function enumerateTradeCommands(G: HegemonyState, playerID: PlayerId): DerivedCommand[] {
   const moves: DerivedCommand[] = [];
@@ -552,9 +552,9 @@ function enumerateTradeCommands(G: HegemonyState, playerID: PlayerId): DerivedCo
     }
     if (offer.from !== playerID) continue;
     for (const partner of offer.to) {
-      const terms = answeredTerms(offer, partner);
-      if (!terms) continue;
-      for (const places of tradePlaceChoices(G, playerID, terms.give, terms.get)) {
+      const counter = counterOf(offer, partner);
+      if (!counter) continue;
+      for (const places of tradePlaceChoices(G, playerID, counter.terms.give, counter.terms.get)) {
         if (getTradeSettleStatus(G, playerID, offer.id, partner, places).can) {
           moves.push({ type: "tradeSettle", offerId: offer.id, partner, places });
         }

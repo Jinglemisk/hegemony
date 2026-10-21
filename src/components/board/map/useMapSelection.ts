@@ -9,6 +9,7 @@ import {
   getPromotePopStatus,
   totalPops,
 } from "../../../game/rules";
+import { tradePopSources, tradePopTargets } from "../../../game/trade";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { getOwnedHoldings } from "../helpers";
 import type { MapSelection, MapSelectionMode } from "./mapSelection";
@@ -75,7 +76,17 @@ export function useMapSelection({
   }, [selection, clear]);
 
   const candidateTileIds = useMemo(() => {
-    if (!selection || !isActive) {
+    if (!selection) {
+      return [];
+    }
+
+    // Traded pops are the trading seat's to place, on its turn or not.
+    if (selection.mode.kind === "tradePops") {
+      const { seat, pops, direction } = selection.mode;
+      return direction === "send" ? tradePopSources(G, seat, pops) : tradePopTargets(G, seat, pops);
+    }
+
+    if (!isActive) {
       return [];
     }
 
@@ -128,6 +139,7 @@ export function useMapSelection({
           .map(({ tile }) => tile.id);
       }
     }
+    return [];
   }, [selection, G, playerID, isActive]);
 
   return { selection, arm, clear, setTarget, advanceToTarget, candidateTileIds };

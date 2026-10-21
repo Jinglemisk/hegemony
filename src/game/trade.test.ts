@@ -16,10 +16,11 @@ import { TRADE_RESOURCES } from "./trade";
 import { titleHolders } from "./victory";
 import { calculateIncome } from "./economy/income";
 import { realmPops } from "./core/query";
-import type { HegemonyState, PlayerId, Pops, TradeBundle, TradeTerms } from "./types";
+import type { HegemonyState, PlayerId, Pops, TradeBundle, TradePlaces, TradeTerms } from "./types";
 
 // Player trade, PR 1 (docs/plans/player-trade.md): offers to the table or named seats,
-// answers out of turn, and one settlement that rechecks both sides and moves everything.
+// answers out of turn, and the first accept settles: one settlement that rechecks both
+// sides and moves everything.
 
 const NONE: Pops = { citizens: 0, freemen: 0, slaves: 0 };
 const capital = (seat: PlayerId) => TEST_OPENING_SETUP[Number(seat)].capital.tileId;
@@ -64,9 +65,19 @@ function refused(G: HegemonyState, actor: PlayerId, command: GameCommand): strin
   return result.ok ? [] : result.reasons;
 }
 
-function offer(G: HegemonyState, actor: PlayerId, t: TradeTerms, to: PlayerId[] = []) {
-  const next = act(G, actor, { type: "tradeOffer", to, terms: t });
+function offer(
+  G: HegemonyState,
+  actor: PlayerId,
+  t: TradeTerms,
+  to: PlayerId[] = [],
+  places: TradePlaces = {},
+) {
+  const next = act(G, actor, { type: "tradeOffer", to, terms: t, places });
   return { G: next, id: next.offers.at(-1)!.id };
+}
+
+function accept(id: string, places: TradePlaces = {}): GameCommand {
+  return { type: "tradeAnswer", offerId: id, answer: { kind: "accept", places } };
 }
 
 function tableTotals(G: HegemonyState) {
@@ -93,12 +104,7 @@ describe("player trade", () => {
     G = made.G;
     expect(G.offers[0]).toMatchObject({ from: "0", to: ["1", "2", "3"], toTable: true });
 
-    G = act(G, "1", {
-      type: "tradeAnswer",
-      offerId: made.id,
-      answer: { kind: "accept", places: {} },
-    });
-    G = act(G, "0", { type: "tradeSettle", offerId: made.id, partner: "1", places: {} });
+    G = act(G, "1", accept(made.id));
 
     expect(G.players["0"].resources).toMatchObject({ wood: 4, food: 5, gold: 4 });
     expect(G.players["1"].resources).toMatchObject({ wood: 2, food: 5, gold: 4 });
@@ -107,6 +113,23 @@ describe("player trade", () => {
     expect(G.offers).toEqual([]);
     expect(G.log.at(-1)?.moment).toMatchObject({ kind: "trade", from: "0", partner: "1" });
     expect(collectInvariantViolations(G)).toEqual([]);
+  });
+
+  it("trades with the first seat to accept, and a counter dies with the offer", () => {
+    let G = turn();
+    const made = offer(G, "0", terms(side({ wood: 2 }), side({ gold: 1 })));
+    G = act(made.G, "3", {
+      type: "tradeAnswer",
+      offerId: made.id,
+      answer: { kind: "counter", terms: terms(side({ wood: 1 }), side({ gold: 1 })), places: {} },
+    });
+    G = act(G, "2", accept(made.id));
+    expect(G.players["2"].resources).toMatchObject({ wood: 3, gold: 1 });
+    expect(G.offers).toEqual([]);
+    expect(refused(G, "1", accept(made.id))).toEqual(["This player is not an eligible actor."]);
+    expect(
+      refused(G, "0", { type: "tradeSettle", offerId: made.id, partner: "3", places: {} }),
+    ).toEqual(["That offer is closed."]);
   });
 
   it("lets nobody give what it does not hold, so a seat short of food gives no food", () => {
@@ -118,26 +141,13 @@ describe("player trade", () => {
         type: "tradeOffer",
         to: [],
         terms: terms(side({ food: 1 }), side({ wood: 1 })),
+        places: {},
       }),
     ).toContain("Holds 0 food, not 1.");
     const made = offer(G, "0", terms(side({ stone: 2 }), side({ food: 2 })));
     // Seat 3 holds no food: it cannot accept, though it may decline.
-    expect(
-      refused(made.G, "3", {
-        type: "tradeAnswer",
-        offerId: made.id,
-        answer: { kind: "accept", places: {} },
-      }),
-    ).toContain("Holds 0 food, not 2.");
-    const settled = act(
-      act(made.G, "2", {
-        type: "tradeAnswer",
-        offerId: made.id,
-        answer: { kind: "accept", places: {} },
-      }),
-      "0",
-      { type: "tradeSettle", offerId: made.id, partner: "2", places: {} },
-    );
+    expect(refused(made.G, "3", accept(made.id))).toContain("Holds 0 food, not 2.");
+    const settled = act(made.G, "2", accept(made.id));
     expect(settled.players["0"].resources.food).toBe(0);
     expect(settled.players["2"].resources.food).toBe(0);
   });
@@ -156,12 +166,7 @@ describe("player trade", () => {
 
     const ids = goods.map((good) => good.id);
     const made = offer(G, "0", terms(side({}, { goods: ids }), side({ gold: 5 })), ["1"]);
-    G = act(made.G, "1", {
-      type: "tradeAnswer",
-      offerId: made.id,
-      answer: { kind: "accept", places: {} },
-    });
-    G = act(G, "0", { type: "tradeSettle", offerId: made.id, partner: "1", places: {} });
+    G = act(made.G, "1", accept(made.id));
 
     expect(G.board.luxuries.slice(0, 3).map((good) => good.owner)).toEqual(["1", "1", "1"]);
     expect(luxuryHappinessBonus(G, "0")).toBe(0);
@@ -175,22 +180,10 @@ describe("player trade", () => {
     let G = turn();
     const first = offer(G, "0", terms(side({ wood: 6 }), side({ stone: 2 })));
     const second = offer(first.G, "0", terms(side({ wood: 6 }), side({ gold: 2 })));
-    G = second.G;
-    G = act(G, "1", {
-      type: "tradeAnswer",
-      offerId: first.id,
-      answer: { kind: "accept", places: {} },
-    });
-    G = act(G, "2", {
-      type: "tradeAnswer",
-      offerId: second.id,
-      answer: { kind: "accept", places: {} },
-    });
-
-    G = act(G, "0", { type: "tradeSettle", offerId: first.id, partner: "1", places: {} });
-    expect(
-      refused(G, "0", { type: "tradeSettle", offerId: second.id, partner: "2", places: {} }),
-    ).toContain("Holds 0 wood, not 6.");
+    G = act(second.G, "1", accept(first.id));
+    expect(refused(G, "2", accept(second.id))).toContain(
+      "Damon can no longer trade: Holds 0 wood, not 6.",
+    );
     // The second offer stands, to its own recheck; withdrawing closes it.
     expect(G.offers.map((open) => open.id)).toEqual([second.id]);
     G = act(G, "0", { type: "tradeWithdraw", offerId: second.id });
@@ -267,14 +260,12 @@ describe("player trade", () => {
       G,
       "0",
       terms(side({}, { pops: { ...NONE, slaves: 1 } }), side({ gold: 2 })),
+      [],
+      { from: capital("0") },
     );
-    const accept = (to: string): GameCommand => ({
-      type: "tradeAnswer",
-      offerId: made.id,
-      answer: { kind: "accept", places: { to } },
-    });
-    expect(refused(made.G, "1", accept(capital("1")))).toContain("No room there for the pops.");
-    expect(refused(made.G, "1", accept(colony("1")))).toContain("No room there for the pops.");
+    const into = (to: string) => accept(made.id, { to });
+    expect(refused(made.G, "1", into(capital("1")))).toContain("No room there for the pops.");
+    expect(refused(made.G, "1", into(colony("1")))).toContain("No room there for the pops.");
     expect(
       enumerateLegalCommands(made.G, "1").filter((command) => command.type === "tradeAnswer"),
     ).toEqual([{ type: "tradeAnswer", offerId: made.id, answer: { kind: "decline" } }]);
@@ -293,21 +284,22 @@ describe("player trade", () => {
       pops: tablePops(G),
     };
 
-    const made = offer(G, "0", terms(side({}, { pops }), side({ gold: 3 })), ["1"]);
-    G = act(made.G, "1", {
-      type: "tradeAnswer",
-      offerId: made.id,
-      answer: { kind: "accept", places: { to: colony("1") } },
-    });
+    // The giver names where its pops leave as it offers; the taker names where they go.
     expect(
-      refused(G, "0", { type: "tradeSettle", offerId: made.id, partner: "1", places: {} }),
+      refused(G, "0", {
+        type: "tradeOffer",
+        to: ["1"],
+        terms: terms(side({}, { pops }), side({ gold: 3 })),
+        places: {},
+      }),
     ).toContain("Name the settlement the pops leave.");
-    G = act(G, "0", {
-      type: "tradeSettle",
-      offerId: made.id,
-      partner: "1",
-      places: { from: capital("0") },
+    const made = offer(G, "0", terms(side({}, { pops }), side({ gold: 3 })), ["1"], {
+      from: capital("0"),
     });
+    expect(refused(made.G, "1", accept(made.id))).toContain(
+      "Name the settlement that receives the pops.",
+    );
+    G = act(made.G, "1", accept(made.id, { to: colony("1") }));
 
     // They leave at once, on the move under their new owner.
     expect(owned(G, capital("0"), "0").pops).toEqual({ citizens: 1, freemen: 0, slaves: 0 });
@@ -343,18 +335,9 @@ describe("player trade", () => {
       "0",
       terms(side({}, { pops: { ...NONE, citizens: 1 } }), side({ gold: 1 })),
       ["1"],
+      { from: capital("0") },
     );
-    G = act(made.G, "1", {
-      type: "tradeAnswer",
-      offerId: made.id,
-      answer: { kind: "accept", places: { to: colony("1") } },
-    });
-    G = act(G, "0", {
-      type: "tradeSettle",
-      offerId: made.id,
-      partner: "1",
-      places: { from: capital("0") },
-    });
+    G = act(made.G, "1", accept(made.id, { to: colony("1") }));
     expect(calculateIncome(G, "0").food).toBe(food.giver + 1);
 
     G = act(G, "0", { type: "endTurn" });
@@ -380,6 +363,7 @@ describe("player trade", () => {
         type: "tradeOffer",
         to: [],
         terms: terms(side({ wood: 1 }), side({ stone: 1 })),
+        places: {},
       }),
     ).toContain("Trade is off in this game.");
   });
@@ -412,6 +396,7 @@ describe("trade in the Assembly's preparation", () => {
         type: "tradeOffer",
         to: [],
         terms: terms(side({ gold: 1 }), side({ wood: 1 })),
+        places: {},
       }),
     ).toEqual(["This player is not an eligible actor."]);
     expect(outOfTurnActors(G)).toEqual([{ seat: "2", commands: ["tradeSettle", "tradeWithdraw"] }]);
@@ -436,18 +421,9 @@ describe("trade in the Assembly's preparation", () => {
       "1",
       terms(side({}, { pops: { ...NONE, citizens: 1 } }), side({ gold: 2 })),
       ["0"],
+      { from: capital("1") },
     );
-    G = act(made.G, "0", {
-      type: "tradeAnswer",
-      offerId: made.id,
-      answer: { kind: "accept", places: { to: colony("0") } },
-    });
-    G = act(G, "1", {
-      type: "tradeSettle",
-      offerId: made.id,
-      partner: "0",
-      places: { from: capital("1") },
-    });
+    G = act(made.G, "0", accept(made.id, { to: colony("0") }));
     expect([baseVoteWeight(G, "0"), baseVoteWeight(G, "1")]).toEqual([votes[0] + 1, votes[1] - 1]);
 
     // On the ballot the citizen's vote is cast by the new owner.

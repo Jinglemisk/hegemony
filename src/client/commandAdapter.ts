@@ -53,7 +53,7 @@ export type GameMoves = {
   assemblyVote: (playerID: PlayerId, yea: boolean) => void;
   assemblyClose: () => void;
   assemblyReady: (playerID: PlayerId) => void;
-  tradeOffer: (playerID: PlayerId, to: PlayerId[], terms: TradeTerms) => void;
+  tradeOffer: (playerID: PlayerId, to: PlayerId[], terms: TradeTerms, places: TradePlaces) => void;
   tradeAnswer: (playerID: PlayerId, offerId: string, answer: TradeAnswer) => void;
   tradeSettle: (
     playerID: PlayerId,
@@ -122,7 +122,8 @@ export function createCommandMoves(dispatch: DispatchGameCommand): GameMoves {
     assemblyVote: (playerID, yea) => dispatch({ type: "assemblyVote", yea }, playerID),
     assemblyClose: () => dispatch({ type: "assemblyClose" }),
     assemblyReady: (playerID) => dispatch({ type: "assemblyReady" }, playerID),
-    tradeOffer: (playerID, to, terms) => dispatch({ type: "tradeOffer", to, terms }, playerID),
+    tradeOffer: (playerID, to, terms, places) =>
+      dispatch({ type: "tradeOffer", to, terms, places }, playerID),
     tradeAnswer: (playerID, offerId, answer) =>
       dispatch({ type: "tradeAnswer", offerId, answer }, playerID),
     tradeSettle: (playerID, offerId, partner, places) =>

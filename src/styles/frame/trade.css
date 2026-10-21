@@ -14,6 +14,36 @@
   box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
   cursor: pointer;
 }
+/* An offer lands with one shake, the trade screens' nudge; nothing after. */
+.offer-disc {
+  animation: offerNudge 700ms ease-in-out 1;
+}
+@keyframes offerNudge {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  12% {
+    transform: rotate(-11deg) translateX(-2px);
+  }
+  28% {
+    transform: rotate(10deg) translateX(2px);
+  }
+  44% {
+    transform: rotate(-8deg);
+  }
+  60% {
+    transform: rotate(6deg);
+  }
+  78% {
+    transform: rotate(-3deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .offer-disc {
+    animation: none;
+  }
+}
 .offer-ring {
   position: absolute;
   inset: calc(-1 * var(--s-1));
@@ -337,32 +367,13 @@
   font-weight: 700;
 }
 
-/* The answering seat, its pops' settlements, and the footer. */
+/* A counter being edited, and the footer. */
 .trade-answer {
   border-top: var(--rule) solid var(--ink-12);
 }
 .trade-next {
   display: block;
   padding: var(--s-3) var(--s-4) 0;
-}
-.trade-places {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-2) var(--s-4);
-  padding: 0 var(--s-4) var(--s-2);
-}
-.trade-place {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-}
-.trade-place select {
-  height: 28px;
-  border: 0;
-  border-radius: var(--r-4);
-  color: var(--ink);
-  background: var(--ivory);
-  box-shadow: var(--paper-edge);
 }
 .trade-foot {
   display: flex;
@@ -404,7 +415,7 @@
   color: var(--clay-ink);
 }
 
-/* The offering seat's answers. */
+/* Every named seat's answer, at once. */
 .trade-answers {
   display: flex;
   flex-direction: column;
@@ -437,18 +448,16 @@
   color: var(--ink);
   letter-spacing: var(--track-name);
 }
-.trade-row-words .trade-places {
-  padding: var(--s-1) 0 0;
+.trade-row-acts {
+  display: flex;
+  flex: none;
+  gap: var(--s-1);
 }
 .trade-row .btn {
   height: var(--s-8);
   border: 0;
   border-radius: var(--r-4);
   cursor: pointer;
-}
-.trade-row.is-accept .trade-row-words > span {
-  color: var(--pos);
-  font-weight: 700;
 }
 .trade-row.is-counter {
   box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
@@ -460,24 +469,26 @@
 .trade-row.is-cantPay {
   opacity: 0.6;
 }
-.trade-row.is-pending .trade-row-words > span {
-  font-style: italic;
+
+/* The map pick for traded pops: the partner, fixed, with a handshake. */
+.trade-partner-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  vertical-align: middle;
+}
+.trade-partner-name .idea-seat {
+  width: var(--ic-24);
+  height: var(--ic-24);
 }
 
-/* The Assembly's preparation: its offers and the Offer button. */
+/* The Assembly's preparation: the Offer button for each seat. */
 .sit-trade {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--s-4);
   min-height: calc(var(--hit) * 2);
-}
-.sit-offers {
-  display: flex;
-  gap: var(--s-4);
-  margin: 0;
-  padding: var(--s-2);
-  list-style: none;
 }
 .sit-offer-as {
   display: flex;

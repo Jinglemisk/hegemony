@@ -3,10 +3,16 @@
    ticker, where the rivals' toasts sit when it is not. Sizes come from the frame's
    tokens, so the sheet fits 1280 × 720 without scrolling. */
 
+/* The sitting starts under the alarms row, and the top HUD (the bar, the Chronicle and
+   every alarm disc, an offer's among them) stands above its scrim, in full colour and in
+   reach. */
 .modalBackdrop.sitting-scrim {
   z-index: var(--z-takeover);
   align-items: flex-start;
-  padding: calc(var(--bar-h) + var(--hit) + var(--s-4)) var(--s-16) var(--s-4);
+  padding: calc(var(--bar-h) + var(--hit) * 2 + var(--s-4)) var(--s-16) var(--s-4);
+}
+.frame.is-sitting .hud-top {
+  z-index: var(--z-modal);
 }
 
 .sitting {

@@ -166,6 +166,10 @@ export const PARITY_BEHAVIOR_FIXTURES = {
     implementation: "src/game/trade.test.ts",
     evidence: "settles a counter on the counter's terms",
   },
+  tradeFirstAccept: {
+    implementation: "src/game/trade.test.ts",
+    evidence: "trades with the first seat to accept, and a counter dies with the offer",
+  },
   tradeClose: {
     implementation: "src/game/trade.test.ts",
     evidence: "closes a turn's open offers when it ends",
@@ -384,14 +388,21 @@ const card = (evidence: string) => ({
 
 export const TRADE_WORKFLOW_PARITY = {
   offer: tradeStep("tradeOffer", card("ComposeCard"), "Offering on its turn", "tradeSettlement"),
-  answer: tradeStep("tradeAnswer", card("Answer"), "Answering", "tradeAnswerers"),
-  counter: tradeStep("tradeAnswer", card("sameSides"), "counter once", "tradeCounter"),
-  settle: tradeStep(
-    "tradeSettle",
+  answer: tradeStep(
+    "tradeAnswer",
     card("Answers"),
-    "settles with the acceptor",
+    "Answering",
+    "tradeAnswerers",
+    "tradeFirstAccept",
+  ),
+  counter: tradeStep("tradeAnswer", card("Counter"), "counter once", "tradeCounter"),
+  settle: tradeStep(
+    "settle",
+    card("Take counter"),
+    "the first to accept trades",
     "tradeSettlement",
     "tradeRecheck",
+    "tradeCounter",
   ),
   withdraw: tradeStep("tradeWithdraw", card("tradeWithdraw"), "Pacing", "tradeRecheck"),
   close: tradeStep(

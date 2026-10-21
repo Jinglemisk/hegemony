@@ -929,14 +929,15 @@ const trade: RuleChapter = {
       </Entry>
       <Entry id={anchor("trade", "settling")} title="Settling">
         <Note>
-          You trade with one seat that accepted, take one counter, or withdraw. Both sides are
-          checked again as it settles, and everything moves at once. Your open offers close when
-          your turn ends.
+          The first seat to accept trades, at once; both sides are checked again as it settles. A
+          counter waits for you to take it, and dies with the offer if another seat accepts first.
+          You may withdraw an offer, and your open offers close when your turn ends.
         </Note>
         <Note>
           A luxury good carries its +{G.ruleset.economy.luxury.happinessPerGood} happiness to its
-          new holder. Pops leave at once, travel like a move to a settlement with room, and arrive
-          at the start of their new owner&rsquo;s next turn; from the trade on they are its pops.
+          new holder. Pops leave at once, travel like a move to a settlement with room picked on the
+          map, and arrive at the start of their new owner&rsquo;s next turn; from the trade on they
+          are its pops.
         </Note>
       </Entry>
       <Entry id={anchor("trade", "assembly")} title="In the Assembly">
