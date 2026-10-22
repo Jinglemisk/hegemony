@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { collectIncome } from "./actions";
-import { bankBuy } from "./bank";
+import { dole } from "./bank";
 import { applyResourceDeltaWithFloors } from "./core/resources";
 import { EMPTY_RESOURCES } from "./data";
 import { getActiveEffects } from "./activeEffects";
@@ -108,11 +108,11 @@ describe("hunger", () => {
 
   it("takes no one when the seat buys the shortfall back before ending", () => {
     const G = shortAfterIncome({ citizens: 2, freemen: 5, slaves: 0 }, 2);
-    G.players["0"].resources.gold = 99;
+    G.players["0"].resources.influence = 99;
 
-    // One food short of even: a food cost is out of reach, a purchase is not.
-    expect(bankBuy(G, "0", "food").ok).toBe(true);
-    expect(bankBuy(G, "0", "food").ok).toBe(true);
+    // Short of food: a food cost is out of reach, the Dole is not.
+    expect(dole(G, "0").ok).toBe(true);
+    expect(dole(G, "0").ok).toBe(true);
     expect(G.players["0"].resources.food).toBe(0);
 
     expect(endTurn(G).ok).toBe(true);

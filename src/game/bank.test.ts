@@ -10,6 +10,12 @@ const clearPending = (draft: HegemonyState) => {
   draft.pendingPlayerEvent = null;
 };
 
+/** The economy before trade, which batches still play beside the one after it. */
+const withBank = () =>
+  scenario({ patch: { economy: { bank: { enabled: true } } } })
+    .opening()
+    .mutate(clearPending);
+
 describe("bank rate derivation (D6/Q14)", () => {
   it("prices every material at baseline by default: one price per verb", () => {
     const G = scenario().opening().mutate(clearPending).build();
@@ -62,8 +68,18 @@ describe("bank rate derivation (D6/Q14)", () => {
 });
 
 describe("bank trades", () => {
-  it("selling exchanges the sell-rate of a material for 1 gold", () => {
+  it("is shut unless a ruleset keeps it: player trade replaced it", () => {
     const G = scenario().opening().mutate(clearPending).build();
+
+    expect(bankSell(G, "0", "wood")).toEqual({
+      ok: false,
+      reasons: ["There is no bank in this game."],
+    });
+    expect(bankBuy(G, "0", "food").ok).toBe(false);
+  });
+
+  it("selling exchanges the sell-rate of a material for 1 gold", () => {
+    const G = withBank().build();
     const { wood, gold } = G.players["0"].resources;
 
     expect(bankSell(G, "0", "wood").ok).toBe(true);
@@ -73,7 +89,7 @@ describe("bank trades", () => {
   });
 
   it("buying exchanges the buy-rate in gold for 1 material", () => {
-    const G = scenario().opening().mutate(clearPending).build();
+    const G = withBank().build();
     const { stone, gold } = G.players["0"].resources;
 
     expect(bankBuy(G, "0", "stone").ok).toBe(true);
@@ -92,14 +108,14 @@ describe("bank trades", () => {
     expect(bankSell(G, "1", "wood").ok).toBe(false);
     expect(bankBuy(G, "1", "food").ok).toBe(false);
 
-    const rich = scenario().opening().mutate(clearPending).withResources("1", { wood: 40 }).build();
+    const rich = withBank().withResources("1", { wood: 40 }).build();
     for (let i = 0; i < 10; i += 1) {
       expect(bankSell(rich, "1", "wood").ok).toBe(true);
     }
   });
 
   it("stays shut while a committed turn awaits its riot", () => {
-    const G = scenario().opening().mutate(clearPending).build();
+    const G = withBank().build();
     G.pendingRiot = {
       playerID: "0",
       boughtInsurance: [],

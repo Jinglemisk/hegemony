@@ -1,6 +1,6 @@
 # Actors and views
 
-Last updated: 2026-10-21.
+Last updated: 2026-10-22.
 
 This is the living contract between authoritative match state and any browser, bot,
 spectator, or future network client. Commands cross `transition`; observations cross a
@@ -32,7 +32,10 @@ use. On a turn, each seat an open offer names that has not answered may send `tr
 nothing else; the first accept settles the trade. In the Assembly's preparation a Ready seat
 may still answer, and take a counter to its own offers or withdraw them. Listing a recipient as a turn actor instead would have let it play the
 turn's verbs, since the gate checks the seat and the command's family apart. The enumerator
-lists an out-of-turn seat's answers, so a driver that routes by actor finds them.
+lists an out-of-turn seat's answers, so a driver that routes by actor finds them. The sim
+runner and the browser's bot table do: `nextActor` sends a seat an open offer names to answer
+before the turn goes on, a bot before any person, and an answer counts toward no turn's
+action cap.
 
 ## Projection boundary
 

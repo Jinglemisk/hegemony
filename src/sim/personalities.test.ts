@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { getPlayerBankRate } from "../game/bank";
 import { getTile } from "../game/core/query";
 import { PLAYER_IDS } from "../game/data";
 import { happinessLevel } from "../game/happiness";
 import { playerDole } from "../game/ideaRules";
 import { enumerateLegalCommands, transition, type GameCommand } from "../game/legalMoves";
 import { projectForPlayer } from "../game/projection";
-import { owned, scenario } from "../game/testing/scenario";
+import { BEFORE_TRADE, owned, scenario } from "../game/testing/scenario";
 import type { HegemonyState, Pops } from "../game/types";
 import { yearDeckSize } from "../game/year";
 import { ventureOutcomes } from "./chance";
@@ -18,7 +17,7 @@ import { Aggregator } from "./telemetry";
 
 const names: PersonalityId[] = ["slaver", "civic", "trader"];
 function realm(pops = { citizens: 1, freemen: 2, slaves: 2 }) {
-  const G = scenario()
+  const G = scenario({ patch: BEFORE_TRADE })
     .withSettlement("0", "-2,0", "city", pops)
     .withResources("0", { food: 50, wood: 12, stone: 12, gold: 12, influence: 12 })
     .build();
@@ -97,7 +96,7 @@ describe("shared personality search", () => {
   it("the trader keeps its only citizen from the standard opening", () => {
     // It weights a freeman above a citizen, so on points alone it would pay the one
     // influence to demote the citizen setup gave it, and lose its vote and influence.
-    const G = scenario().opening().build();
+    const G = scenario({ patch: BEFORE_TRADE }).opening().build();
     G.pendingPlayerEvent = null;
     G.players["0"].resources.influence = 3;
     const keep = (m: GameCommand) =>
@@ -192,7 +191,7 @@ describe("shared personality search", () => {
       // against 8 gold of income. Its 20 gold cannot feed everyone to the horizon, and
       // the forecast would sooner lose two pops now than run out later. Fed, the seat
       // stands at zero food, where the search can reach the slave that feeds them.
-      const importer = scenario()
+      const importer = scenario({ patch: BEFORE_TRADE })
         .withSettlement("0", "-2,1", "city", { citizens: 1, freemen: 4, slaves: 3 })
         .withSettlement("0", "0,-2", "city", { citizens: 0, freemen: 4, slaves: 0 })
         .withResources("0", { food: -6, wood: 0, stone: 0, gold: 20, influence: 0 })
@@ -219,7 +218,7 @@ describe("shared personality search", () => {
         gold: number,
         pops = { citizens: 0, freemen: 3, slaves: 1 },
       ) => {
-        const G = scenario()
+        const G = scenario({ patch: BEFORE_TRADE })
           .withSettlement("0", "-2,1", "city", pops)
           .withResources("0", { food: 3, wood: 0, stone: 0, gold, influence: 0 })
           .build();
@@ -399,7 +398,7 @@ describe("shared personality search", () => {
       // 4 gold and 2 stone, where two Temples would take 6 stone and two settlements.
       // There is no food for the ladder: with 2 food a slave is promoted instead, the
       // level stands at −2, and at the riot table's prices that is cure enough.
-      const G = scenario()
+      const G = scenario({ patch: BEFORE_TRADE })
         .withSettlement("0", "-2,-1", "city", { citizens: 0, freemen: 0, slaves: 6 })
         .withResources("0", { food: 0, wood: 0, stone: 2, gold: 4, influence: 0 })
         .build();
@@ -444,7 +443,7 @@ describe("shared personality search", () => {
       // forecast used to read calm as bought once and gone, so the sixth slave was a
       // riot a year and no seat grew him. The civic still does not: it weighs the
       // influence and the standing level half as much again.
-      const G = scenario()
+      const G = scenario({ patch: BEFORE_TRADE })
         .withSettlement("0", "-2,1", "city", { citizens: 2, freemen: 0, slaves: 5 })
         .withSettlement("0", "-3,2", "colony", { citizens: 4, freemen: 0, slaves: 0 })
         .withResources("0", { food: 2, wood: 0, stone: 0, gold: 0, influence: 6 })
@@ -470,7 +469,7 @@ describe("shared personality search", () => {
       // alone: the Granary, the Estate, the Marketplace and the forest colony's upgrade
       // all wait for wood, and the realm makes none. At the flat weights a stone is
       // worth more than a wood, so the slave used to go to the quarry every time.
-      const G = scenario()
+      const G = scenario({ patch: BEFORE_TRADE })
         .withSettlement("0", "-2,1", "city", { citizens: 2, freemen: 0, slaves: 3 })
         .withSettlement("0", "-2,0", "colony", { citizens: 0, freemen: 0, slaves: 0 })
         .withSettlement("0", "-3,0", "colony", { citizens: 0, freemen: 0, slaves: 0 })
@@ -572,7 +571,7 @@ describe("shared personality search", () => {
     let caps = 0;
     // Turns a seat ended short of food while it could still pay for one.
     let shortWithMeans = 0;
-    const years = yearDeckSize(scenario().build());
+    const years = yearDeckSize(scenario({ patch: BEFORE_TRADE }).build());
     const G = runGame({
       seed: 1000,
       mode: "standard",
@@ -588,11 +587,8 @@ describe("shared personality search", () => {
         onForceEndTurn: () => caps++,
         onMove: (state, player, command) => {
           if (command.type !== "endTurn" || state.pendingHunger?.playerID !== player) return;
-          const held = state.players[player].resources;
-          if (
-            held.gold >= getPlayerBankRate(state, player, "food").buy ||
-            held.influence >= playerDole(state, player).influenceCost
-          )
+          // With no bank, the Dole is the food a seat can buy.
+          if (state.players[player].resources.influence >= playerDole(state, player).influenceCost)
             shortWithMeans++;
         },
       },
@@ -631,18 +627,20 @@ describe("shared personality search", () => {
       definition: G.definition.identity,
       generatedAt: "test",
     });
-    expect(report.perPolicy.civic).toMatchObject({
+    expect(report.results.perPolicy.civic).toMatchObject({
       finishedSeatGames: 1,
       cappedSeatGames: 1,
       wins: 1,
       winRate: 1,
       finalTitles: { "civic-elite": 1, treasurer: 1 },
     });
-    expect(report.perPolicy.trader).toMatchObject({
+    expect(report.results.perPolicy.trader).toMatchObject({
       finishedSeatGames: 2,
       cappedSeatGames: 2,
       wins: 0,
     });
-    expect(report.perPolicy.civic.finalCards.mean).toBe(report.perGame[0].finalCards["0"]);
+    expect(report.results.perPolicy.civic.finalCards.mean).toBe(
+      report.perGame[0].seats["0"].finalCards,
+    );
   });
 });

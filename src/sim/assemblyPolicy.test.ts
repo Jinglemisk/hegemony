@@ -70,15 +70,15 @@ it("buys an affordable pivotal coalition, authors Voice and reports the seat's A
     definition: G.definition.identity,
     generatedAt: "test",
   });
-  expect(report.assembly.perSeat["0"].count).toMatchObject({
-    lawsProposed: 1,
-    lawsPassed: 1,
-    authoredLawsStanding: 2,
-    votesBought: 2,
-    voiceClaims: 1,
-    voiceHeldTurns: 1,
+  expect(report.assembly.seats.perSeat["0"]).toMatchObject({
+    lawsProposed: { count: 1 },
+    lawsPassed: { count: 1 },
+    authoredLawsStanding: { count: 2 },
+    votesBought: { count: 2 },
+    voteGold: { count: 4 },
+    voiceClaims: { count: 1 },
+    voiceHeldTurns: { count: 1 },
   });
-  expect(report.assembly.goldSpent.count).toBe(4);
   expect(snapshotsToCsv(aggregator.allSnapshots()).split("\n")[0]).toContain(
     "authoredLawsStanding,voiceHeld",
   );

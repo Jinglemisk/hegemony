@@ -10,7 +10,13 @@ import { settlementSlaveResource, settlementCapacity, settlementSlots } from "..
 import { unrestStatus } from "../game/unrest";
 import type { HegemonyState, PlayerId, Resources } from "../game/types";
 import { presentActiveEffects } from "../ui/effects";
-import type { BatchReport } from "./telemetry";
+import type {
+  BatchReport,
+  BelovedLuxury,
+  FoodPurchases,
+  RiotYearRow,
+  TradeUnit,
+} from "./telemetry";
 
 /** Fractional values (happiness, VP) render with one decimal; integers stay bare. */
 export function formatNumber(value: number): string {
@@ -221,8 +227,13 @@ function pct(share: number, digits = 0): string {
   return (share * 100).toFixed(digits) + "%";
 }
 
+/** A per seat-game figure with its sign. */
+function signed(value: number): string {
+  return (value < 0 ? "" : "+") + value.toFixed(2);
+}
+
 /** Riots and revolts over the player-turns of the late years. */
-function lateRiots(byYear: BatchReport["riots"]["byYear"], from: number): string {
+function lateRiots(byYear: RiotYearRow[], from: number): string {
   const late = byYear.filter((row) => row.year >= from);
   const sum = (pick: (row: (typeof late)[number]) => number) =>
     late.reduce((total, row) => total + (pick(row) ?? 0), 0);
@@ -231,26 +242,101 @@ function lateRiots(byYear: BatchReport["riots"]["byYear"], from: number): string
   return `riots ${riots}/${turns} turns (${pct(turns ? riots / turns : 0, 1)}), revolts ${sum((row) => row.revolts)}`;
 }
 
+/** Turns begun short of food and the food bought, in each state of the stock. */
+function foodLine(food: FoodPurchases): string {
+  return (
+    `turns begun short ${food.turnsBegunShort} · food bought to cover a shortfall ` +
+    `${food.coveringShortfall.food} (${food.coveringShortfall.gold} gold, ${food.coveringShortfall.influence} influence), ` +
+    `ahead ${food.buyingAhead.food} (${food.buyingAhead.gold} gold, ${food.buyingAhead.influence} influence)`
+  );
+}
+
+/** Player trade: the offers and what they moved, the prices, and who exports what. */
+function renderTrade(trade: BatchReport["trade"]): string[] {
+  const { offers, answers, given } = trade.total;
+  const lines = [
+    `Trade (per game): ${formatNumber(offers.settled.perGame)} settled ` +
+      `(${formatNumber(trade.total.settledInSitting.perGame)} in a sitting), ` +
+      `${formatNumber(offers.withdrawn.perGame)} withdrawn, ` +
+      `${formatNumber(offers.closed.perGame)} closed with the turn or the preparation · ` +
+      `answers: accept ${formatNumber(answers.accept.perGame)}, counter ${formatNumber(answers.counter.perGame)}, ` +
+      `decline ${formatNumber(answers.decline.perGame)} · ` +
+      `a title changed holder after ${formatNumber(trade.total.titleChanges.perGame)}`,
+    // Every unit one seat gives another receives, so the table's given are its received.
+    `  Units given (per game): ${Object.entries(given)
+      .map(([unit, count]) => `${unit} ${formatNumber(count.perGame)}`)
+      .join(" · ")}`,
+  ];
+
+  const prices = Object.entries(trade.total.prices).flatMap(([material, stocks]) =>
+    Object.entries(stocks ?? {}).map(
+      ([stock, { trades, price }]) =>
+        `${material} in ${stock} ${formatNumber(price.median)} ` +
+        `(${formatNumber(price.p10)}–${formatNumber(price.p90)}, ${trades})`,
+    ),
+  );
+  if (prices.length > 0) {
+    lines.push(`  Prices, a unit in the other (median, p10–p90, trades): ${prices.join(" · ")}`);
+  }
+
+  lines.push(
+    `  Who exports, units sent a game by the seat whose land makes the most / the least: ` +
+      Object.entries(trade.total.exports)
+        .map(
+          ([material, { most, least }]) =>
+            `${material} ${formatDelta(most.netSent)} / ${formatDelta(least.netSent)} (${most.games} games)`,
+        )
+        .join(" · "),
+  );
+
+  for (const [name, stats] of Object.entries(trade.perPolicy)) {
+    const net = Object.keys(stats.exports)
+      .map((material) => {
+        const unit = material as TradeUnit;
+        return `${material} ${signed(stats.given[unit].perGame - stats.received[unit].perGame)}`;
+      })
+      .join(", ");
+    lines.push(
+      `  ${name} (per seat-game): settled ${stats.offers.settled.perGame.toFixed(2)}, ` +
+        `withdrawn ${stats.offers.withdrawn.perGame.toFixed(2)}, closed ${stats.offers.closed.perGame.toFixed(2)} · ` +
+        `answers accept ${stats.answers.accept.perGame.toFixed(2)}, counter ${stats.answers.counter.perGame.toFixed(2)}, ` +
+        `decline ${stats.answers.decline.perGame.toFixed(2)} · net sent ${net}`,
+    );
+  }
+  return lines;
+}
+
 /** Terminal digest of a batch report — the full data lives in the JSON. `years` is the
  *  year deck's size, and Step 11's windows are read off it: riots are judged in the second
  *  half (from year 8 of 14), influence over the last five years (from 10). */
 export function renderBatchReport(report: BatchReport, years: number): string {
   const lateFrom = Math.floor(years / 2) + 1;
   const influenceFrom = years - 4;
+  const { results } = report;
   const lines = [
     `Batch: ${report.meta.games} games × ${report.meta.turns} turns, ${report.meta.policy} policy, ${report.meta.mode} mode, ${report.meta.boardLayout} board (base seed ${report.meta.baseSeed})`,
     `Definition: ${report.meta.definition.id}`,
-    `Final victory cards: mean ${formatNumber(report.finalCardsDistribution.mean)} · ` +
-      `p10 ${formatNumber(report.finalCardsDistribution.p10)} · median ${formatNumber(report.finalCardsDistribution.median)} · ` +
-      `p90 ${formatNumber(report.finalCardsDistribution.p90)}`,
+  ];
+
+  // Cards and titles are read over finished games: a capped game was not played out.
+  if (results.total.finishedSeatGames > 0) {
+    const cards = results.total.finalCards;
+    lines.push(
+      `Final victory cards (finished seat-games): mean ${formatNumber(cards.mean)} · ` +
+        `p10 ${formatNumber(cards.p10)} · median ${formatNumber(cards.median)} · ` +
+        `p90 ${formatNumber(cards.p90)}`,
+    );
+  }
+
+  lines.push(
     `Terminations: victoryRace ${report.terminations.victoryRace} · deckExhausted ${report.terminations.deckExhausted} · turnCap ${report.terminations.turnCap} (win rate is over finished games only)`,
-    `Seats: ${Object.entries(report.perSeat)
+    `Seats: ${Object.entries(results.perSeat)
       .map(
         ([seat, stats]) =>
-          `P${seat} win ${(stats.winRate * 100).toFixed(0)}% · lead@cap ${(stats.capLeaderRate * 100).toFixed(0)}% (cards ${formatNumber(stats.meanFinalCards)})`,
+          `P${seat} win ${(stats.winRate * 100).toFixed(0)}% · lead@cap ${(stats.capLeaderRate * 100).toFixed(0)}% (cards ${formatNumber(stats.finalCards.mean)})`,
       )
       .join(" · ")}`,
-  ];
+  );
 
   if (report.meta.withoutIdeas) {
     lines.push(`Played without these National Ideas: ${report.meta.withoutIdeas.join(", ")}`);
@@ -278,32 +364,23 @@ export function renderBatchReport(report: BatchReport, years: number): string {
     );
   }
 
-  const byPolicy = Object.entries(report.winsByPolicy ?? {});
-  if (byPolicy.length > 0) {
-    lines.push(
-      `Win by policy (finished games): ${byPolicy
-        .map(
-          ([name, stats]) =>
-            `${name} ${(stats.winRate * 100).toFixed(0)}% (${stats.wins}/${stats.games})`,
-        )
-        .join(" · ")}`,
-    );
-  }
+  lines.push(
+    `Win by policy (finished games): ${Object.entries(results.perPolicy)
+      .map(
+        ([name, stats]) =>
+          `${name} ${(stats.winRate * 100).toFixed(0)}% (${stats.wins}/${stats.finishedSeatGames})`,
+      )
+      .join(" · ")}`,
+  );
 
-  for (const [name, stats] of Object.entries(report.perPolicy)) {
+  for (const [name, stats] of Object.entries(results.perPolicy)) {
+    const by = stats.winsDecidedBy;
     lines.push(
       `${name}: ${stats.wins}/${stats.finishedSeatGames} seat wins (${(100 * stats.winRate).toFixed(1)}%); ` +
         `final cards mean ${formatNumber(stats.finalCards.mean)}; capped seats ${stats.cappedSeatGames}`,
-    );
-    if (stats.winsDecidedBy) {
-      const by = stats.winsDecidedBy;
-      lines.push(
-        `  Wins by: the title race ${by.race} · titles at the deck's end ${by.titles} · ` +
-          `the tiebreak ${by.happiness + by.pops + by.seat} ` +
-          `(happiness ${by.happiness}, pops ${by.pops}, seat ${by.seat})`,
-      );
-    }
-    lines.push(
+      `  Wins by: the title race ${by.race} · titles at the deck's end ${by.titles} · ` +
+        `the tiebreak ${by.happiness + by.pops + by.seat} ` +
+        `(happiness ${by.happiness}, pops ${by.pops}, seat ${by.seat})`,
       `  Final titles: ${Object.entries(stats.finalTitles)
         .map(([title, count]) => `${title} ${count}`)
         .join(" · ")}`,
@@ -323,103 +400,85 @@ export function renderBatchReport(report: BatchReport, years: number): string {
     );
   }
 
-  if (report.hunger) {
+  lines.push(
+    `Food under work slots: ${Object.entries(report.hunger.perSeat)
+      .map(
+        ([seat, stats]) =>
+          `P${seat} hunger turns ${formatNumber(stats.hungerTurns.perGame)}/game, ` +
+          `pops lost ${formatNumber(stats.popsLost.perGame)}/game, ` +
+          `idle slaves ${formatNumber(stats.idleSlavesMean)} (${(stats.idleSlaveShare * 100).toFixed(0)}%)`,
+      )
+      .join(" · ")}`,
+    `  table: ${foodLine(report.foodPurchases.total)}`,
+  );
+  for (const [name, stats] of Object.entries(report.hunger.perPolicy)) {
+    const left = report.reach.perPolicy[name].counts;
     lines.push(
-      `Food under work slots: ${Object.entries(report.hunger)
-        .map(
-          ([seat, stats]) =>
-            `P${seat} hunger turns ${formatNumber(stats.hungerTurnsPerGame)}/game, ` +
-            `pops lost ${formatNumber(stats.popsLostPerGame)}/game, ` +
-            `idle slaves ${formatNumber(stats.idleSlavesMean)} (${(stats.idleSlaveShare * 100).toFixed(0)}%)`,
-        )
-        .join(" · ")}`,
+      `  ${name}: hunger turns ${stats.hungerTurns.perGame.toFixed(2)}/seat-game, ` +
+        `pops lost ${stats.popsLost.perGame.toFixed(2)}/seat-game ` +
+        `(freemen ${left["hunger:freemen"] ?? 0}, citizens ${left["hunger:citizens"] ?? 0})` +
+        `, idle slaves ${formatNumber(stats.idleSlavesMean)} (${pct(stats.idleSlaveShare)})` +
+        ` · ${foodLine(report.foodPurchases.perPolicy[name])}`,
     );
   }
 
-  if (report.hungerPerPolicy) {
-    for (const [name, stats] of Object.entries(report.hungerPerPolicy)) {
-      const left = report.reach?.perPolicy[name]?.counts;
-      const food = report.foodPurchases?.perPolicy[name];
-      lines.push(
-        `  ${name}: hunger turns ${stats.hungerTurnsPerSeatGame.toFixed(2)}/seat-game, ` +
-          `pops lost ${stats.popsLostPerSeatGame.toFixed(2)}/seat-game` +
-          (left
-            ? ` (freemen ${left["hunger:freemen"] ?? 0}, citizens ${left["hunger:citizens"] ?? 0})`
-            : "") +
-          `, idle slaves ${formatNumber(stats.idleSlavesMean)} (${pct(stats.idleSlaveShare)})` +
-          (food
-            ? ` · turns begun short ${food.turnsBegunShort} · food bought to cover a shortfall ` +
-              `${food.coveringShortfall.food} (${food.coveringShortfall.gold} gold, ${food.coveringShortfall.influence} influence), ` +
-              `ahead ${food.buyingAhead.food} (${food.buyingAhead.gold} gold, ${food.buyingAhead.influence} influence)`
-            : ""),
-      );
-    }
-  }
-
-  if (report.riots) {
+  const riots = report.riots.total;
+  lines.push(
+    `Riots: ${formatNumber(riots.riots.perGame)}/game · the riot table opens ` +
+      `${(riots.turnShare * 100).toFixed(1)}% of player-turns · ` +
+      `revolts ${formatNumber(riots.revolts.perGame)}/game` +
+      ` · from year ${lateFrom}: ${lateRiots(riots.byYear, lateFrom)}`,
+  );
+  for (const [name, stats] of Object.entries(report.riots.perPolicy)) {
     lines.push(
-      `Riots: ${formatNumber(report.riots.perGame)}/game · the riot table opens ` +
-        `${(report.riots.turnShare * 100).toFixed(1)}% of player-turns · ` +
-        `revolts ${formatNumber(report.riots.revoltsPerGame)}/game` +
-        ` · from year ${lateFrom}: ${lateRiots(report.riots.byYear, lateFrom)}`,
+      `  ${name}: riots ${stats.riots.perGame.toFixed(2)}/seat-game, ` +
+        `revolts ${stats.revolts.perGame.toFixed(2)}/seat-game · ` +
+        `from year ${lateFrom}: ${lateRiots(stats.byYear, lateFrom)}`,
     );
-    for (const [name, stats] of Object.entries(report.riots.perPolicy ?? {})) {
-      lines.push(
-        `  ${name}: riots ${stats.riotsPerSeatGame.toFixed(2)}/seat-game, ` +
-          `revolts ${stats.revoltsPerSeatGame.toFixed(2)}/seat-game · ` +
-          `from year ${lateFrom}: ${lateRiots(stats.byYear, lateFrom)}`,
-      );
-    }
   }
 
-  if (report.beloved) {
-    const line = (stats: BatchReport["beloved"]["total"]) =>
-      `${stats.turnsHeld} turns held, the holder the sole luxury leader in ` +
-      `${pct(stats.soleLuxuryLeaderShare)}, leader or tied in ${pct(stats.luxuryLeaderOrTiedShare)}`;
-    lines.push(`Beloved against the luxury leader: ${line(report.beloved.total)}`);
-    for (const [name, stats] of Object.entries(report.beloved.perPolicy)) {
-      if (stats.turnsHeld > 0) lines.push(`  held by ${name}: ${line(stats)}`);
-    }
+  const beloved = (stats: BelovedLuxury) =>
+    `${stats.turnsHeld} turns held, the holder the sole luxury leader in ` +
+    `${pct(stats.soleLuxuryLeaderShare)}, leader or tied in ${pct(stats.luxuryLeaderOrTiedShare)}`;
+  lines.push(`Beloved against the luxury leader: ${beloved(report.beloved.total)}`);
+  for (const [name, stats] of Object.entries(report.beloved.perPolicy)) {
+    if (stats.turnsHeld > 0) lines.push(`  held by ${name}: ${beloved(stats)}`);
   }
 
-  const influenceYears = report.perYear.filter((row) => row.influence && row.year >= influenceFrom);
+  const influenceYears = report.perYear.filter((row) => row.year >= influenceFrom);
   if (influenceYears.length > 0) {
     const medians = (pick: (row: (typeof influenceYears)[number]) => number | undefined) =>
       influenceYears.map((row) => `y${row.year} ${formatNumber(pick(row) ?? 0)}`).join(" · ");
     lines.push(
-      `Influence stock, median at the year's last turn: ${medians((row) => row.influence.median)}`,
+      `Influence stock, median at the year's last turn: ${medians((row) => row.influence.total.median)}`,
     );
-    for (const name of Object.keys(influenceYears[0].influenceByPolicy)) {
-      lines.push(`  ${name}: ${medians((row) => row.influenceByPolicy[name]?.median)}`);
+    for (const name of Object.keys(influenceYears[0].influence.perPolicy)) {
+      lines.push(`  ${name}: ${medians((row) => row.influence.perPolicy[name]?.median)}`);
     }
   }
 
-  if (report.influenceSpent) {
+  lines.push(
+    `Influence spent (per game): ${Object.entries(report.influenceSpent.total)
+      .map(([sink, stats]) => `${sink} ${formatNumber(stats.perGame)}`)
+      .join(" · ")}`,
+  );
+  for (const [name, sinks] of Object.entries(report.influenceSpent.perPolicy)) {
     lines.push(
-      `Influence spent (per game): ${Object.entries(report.influenceSpent.total)
+      `  ${name} (per seat-game): ${Object.entries(sinks)
         .map(([sink, stats]) => `${sink} ${formatNumber(stats.perGame)}`)
         .join(" · ")}`,
     );
-    for (const [name, sinks] of Object.entries(report.influenceSpent.perPolicy)) {
-      lines.push(
-        `  ${name} (per seat-game): ${Object.entries(sinks)
-          .map(([sink, stats]) => `${sink} ${formatNumber(stats.perSeatGame)}`)
-          .join(" · ")}`,
-      );
-    }
   }
 
-  if (report.drawSwingSummary) {
-    const draws = report.drawSwingSummary.total;
-    lines.push(
-      `Draw swings: ${draws.draws} draws · ${draws.resourceCards} moved a resource, ` +
-        `against the income collected that turn median ${draws.collectedRatio.median.toFixed(2)}, ` +
-        `p90 ${draws.collectedRatio.p90.toFixed(2)}, max ${draws.collectedRatio.max.toFixed(2)} · ` +
-        `${draws.popCards} moved ${draws.popsMoved} pops · ` +
-        `${draws.tokenCards} moved ${draws.tokensMoved} Unrest tokens · ` +
-        `${draws.unchanged} changed nothing · ${draws.discarded} discarded for no room`,
-    );
-  }
+  const draws = report.drawSwingSummary.total;
+  lines.push(
+    `Draw swings: ${draws.draws} draws · ${draws.resourceCards} moved a resource, ` +
+      `against the income collected that turn median ${draws.collectedRatio.median.toFixed(2)}, ` +
+      `p90 ${draws.collectedRatio.p90.toFixed(2)}, max ${draws.collectedRatio.max.toFixed(2)} · ` +
+      `${draws.popCards} moved ${draws.popsMoved} pops · ` +
+      `${draws.tokenCards} moved ${draws.tokensMoved} Unrest tokens · ` +
+      `${draws.unchanged} changed nothing · ${draws.discarded} discarded for no room`,
+  );
 
   // The `hunger` effect is the food warning (food income or stock below zero), not a
   // hunger turn, and the share is over every seat in every snapshot.
@@ -440,28 +499,27 @@ export function renderBatchReport(report: BatchReport, years: number): string {
   lines.push(
     "National Ideas (setup / bought / holder win rate, then by the holder's personality):",
   );
-  for (const [id, stats] of Object.entries(report.nationalIdeas))
+  for (const [id, { total, perPolicy }] of Object.entries(report.nationalIdeas))
     lines.push(
-      `  ${id}: ${stats.setupPicks} / ${stats.purchases} / ${(stats.winRate * 100).toFixed(1)}% (${stats.wins}/${stats.holders})` +
-        Object.entries(stats.perPolicy ?? {})
+      `  ${id}: ${total.setupPicks} / ${total.purchases} / ${(total.winRate * 100).toFixed(1)}% (${total.wins}/${total.holders})` +
+        Object.entries(perPolicy)
+          .filter(([, held]) => held.holders > 0)
           .map(([name, held]) => ` · ${name} ${held.wins}/${held.holders}`)
           .join(""),
     );
 
   // The reach audit: an action or content ID no seat uses is a bot bug, a weak
   // option or a rule hole until a fixture says which.
-  if (report.reach) {
-    const games = report.perGame.length || 1;
-    const policies = Object.keys(report.reach.perPolicy);
-    const low = Object.entries(report.reach.total).filter(([, n]) => n / games < 0.2);
-    lines.push(`Low reach (under 0.2/game; ${policies.join(" / ")}): ${low.length} items`);
-    for (const [id, n] of low)
-      lines.push(
-        `  ${id}: ${n} total (` +
-          policies.map((p) => report.reach.perPolicy[p].counts[id] ?? 0).join(" / ") +
-          ")",
-      );
-  }
+  const games = report.perGame.length || 1;
+  const policies = Object.keys(report.reach.perPolicy);
+  const low = Object.entries(report.reach.total.counts).filter(([, n]) => n / games < 0.2);
+  lines.push(`Low reach (under 0.2/game; ${policies.join(" / ")}): ${low.length} items`);
+  for (const [id, n] of low)
+    lines.push(
+      `  ${id}: ${n} total (` +
+        policies.map((p) => report.reach.perPolicy[p].counts[id] ?? 0).join(" / ") +
+        ")",
+    );
 
   const buildings = Object.entries(report.buildings)
     .sort(([, a], [, b]) => b.built - a.built)
@@ -473,7 +531,7 @@ export function renderBatchReport(report: BatchReport, years: number): string {
   }
 
   // The Phase 1 exit-gate line: a verb at 0/game is a dead currency talking.
-  const verbs = Object.entries(report.currencyVerbs ?? {})
+  const verbs = Object.entries(report.currencyVerbs)
     .map(([verb, stats]) => `${verb} ${formatNumber(stats.perGame)}`)
     .join(" · ");
 
@@ -481,59 +539,59 @@ export function renderBatchReport(report: BatchReport, years: number): string {
     lines.push(`Currency verbs (per game): ${verbs}`);
   }
 
-  if (report.upgrades) {
+  lines.push(
+    `Colony→city upgrades: ${formatNumber(report.upgrades.perGame)}/game (${report.upgrades.count} total)`,
+  );
+
+  // Gifts and swaps between seats exist only where trade is on and someone offered.
+  if (report.movesByType.tradeOffer.count > 0) {
+    lines.push(...renderTrade(report.trade));
+  }
+
+  const { assembly } = report;
+  const table = assembly.seats.total;
+  lines.push(
+    `Assembly: ${formatNumber(assembly.held.perGame)} held/game · ` +
+      `laws enacted ${formatNumber(table.lawsPassed.perGame)}/game · ` +
+      `removed ${formatNumber(assembly.lawsRemoved.perGame)}/game · ` +
+      `standing at end ${formatNumber(table.authoredLawsStanding.perGame)} · ` +
+      `directives ${formatNumber(table.directivesPassed.perGame)}/game · ` +
+      `authored passes ${formatNumber(table.authoredPasses.perGame)}/game · ` +
+      `Voice claims ${formatNumber(table.voiceClaims.perGame)}/game · ` +
+      `held at end ${(assembly.voiceHoldersAtEnd.perGame * 100).toFixed(0)}% · ` +
+      `top authored share ${(assembly.authoredPassLeaderShare.mean * 100).toFixed(0)}% · ` +
+      `influence sunk ${formatNumber(assembly.influenceSpent.perGame)}/game`,
+  );
+
+  for (const [id, seat] of Object.entries(assembly.seats.perSeat)) {
     lines.push(
-      `Colony→city upgrades: ${formatNumber(report.upgrades.perGame)}/game (${report.upgrades.count} total)`,
+      `  Seat ${id}: Laws proposed ${formatNumber(seat.lawsProposed.perGame)}, passed ${formatNumber(seat.lawsPassed.perGame)}, standing ${formatNumber(seat.authoredLawsStanding.perGame)} · Directives ${formatNumber(seat.directivesPassed.perGame)} · votes bought ${formatNumber(seat.votesBought.perGame)} · Voice claims ${formatNumber(seat.voiceClaims.perGame)}, held ${formatNumber(seat.voiceHeldTurns.perGame)} table-turns/game`,
     );
   }
 
-  if (report.assembly) {
-    const { assembly } = report;
+  for (const [name, seat] of Object.entries(assembly.seats.perPolicy)) {
     lines.push(
-      `Assembly: ${formatNumber(assembly.held.perGame)} held/game · ` +
-        `laws enacted ${formatNumber(assembly.lawsEnacted.perGame)}/game · ` +
-        `removed ${formatNumber(assembly.lawsRemoved.perGame)}/game · ` +
-        `standing at end ${formatNumber(assembly.lawsStanding)} · ` +
-        `directives ${formatNumber(assembly.directivesPassed.perGame)}/game · ` +
-        `authored passes ${formatNumber(assembly.authoredPassed.perGame)}/game · ` +
-        `Voice claims ${formatNumber(assembly.voiceClaims.perGame)}/game · ` +
-        `held at end ${(assembly.voiceHoldersAtEnd.perGame * 100).toFixed(0)}% · ` +
-        `top authored share ${(assembly.authoredPassLeaderShare.mean * 100).toFixed(0)}% · ` +
-        `influence sunk ${formatNumber(assembly.influenceSpent.perGame)}/game`,
+      `  ${name} (per seat-game): Laws proposed ${seat.lawsProposed.perGame.toFixed(2)}, passed ${seat.lawsPassed.perGame.toFixed(2)}, standing ${seat.authoredLawsStanding.perGame.toFixed(2)} · Directives ${seat.directivesPassed.perGame.toFixed(2)} · repeals filed ${seat.repealsProposed.perGame.toFixed(2)}, passed ${seat.repealsPassed.perGame.toFixed(2)} · votes bought ${seat.votesBought.perGame.toFixed(2)} · Voice claims ${seat.voiceClaims.perGame.toFixed(2)}, held ${seat.voiceHeldTurns.perGame.toFixed(2)} table-turns · Directives aimed at it ${seat.directivesAimedAt.count}`,
     );
-
-    for (const [id, { perGame: seat }] of Object.entries(assembly.perSeat)) {
-      lines.push(
-        `  Seat ${id}: Laws proposed ${formatNumber(seat.lawsProposed)}, passed ${formatNumber(seat.lawsPassed)}, standing ${formatNumber(seat.authoredLawsStanding)} · Directives ${formatNumber(seat.directivesPlayed)} · votes bought ${formatNumber(seat.votesBought)} · Voice claims ${formatNumber(seat.voiceClaims)}, held ${formatNumber(seat.voiceHeldTurns)} table-turns/game`,
-      );
-    }
-
-    for (const [name, { perSeatGame: seat }] of Object.entries(assembly.perPolicy ?? {})) {
-      lines.push(
-        `  ${name} (per seat-game): Laws proposed ${seat.lawsProposed.toFixed(2)}, passed ${seat.lawsPassed.toFixed(2)}, standing ${seat.authoredLawsStanding.toFixed(2)} · Directives ${seat.directivesPlayed.toFixed(2)} · repeals filed ${seat.repealsProposed.toFixed(2)}, passed ${seat.repealsPassed.toFixed(2)} · votes bought ${seat.votesBought.toFixed(2)} · Voice claims ${seat.voiceClaims.toFixed(2)}, held ${seat.voiceHeldTurns.toFixed(2)} table-turns · Directives aimed at it ${assembly.directiveTargetsPerPolicy[name] ?? 0}`,
-      );
-    }
-
-    if (assembly.repeals) {
-      lines.push(
-        `Repeals: ${assembly.repeals.proposed.count} filed · ${assembly.repeals.passed.count} passed · ${assembly.repeals.failed.count} failed`,
-      );
-    }
-
-    const assemblyVerbs = Object.entries(assembly.verbs)
-      .filter(([, value]) => value.count > 0)
-      .map(
-        ([verb, value]) =>
-          `${verb.replace("assembly", "").toLowerCase()} ${formatNumber(value.perGame)}`,
-      )
-      .join(" · ");
-
-    if (assemblyVerbs) {
-      lines.push(`Assembly verbs (per game): ${assemblyVerbs}`);
-    }
   }
 
-  if (report.forced && report.forced.actionCapHits > 0) {
+  lines.push(
+    `Repeals: ${table.repealsProposed.count} filed · ${table.repealsPassed.count} passed · ${table.repealsFailed.count} failed`,
+  );
+
+  const assemblyVerbs = Object.entries(assembly.verbs)
+    .filter(([, value]) => value.count > 0)
+    .map(
+      ([verb, value]) =>
+        `${verb.replace("assembly", "").toLowerCase()} ${formatNumber(value.perGame)}`,
+    )
+    .join(" · ");
+
+  if (assemblyVerbs) {
+    lines.push(`Assembly verbs (per game): ${assemblyVerbs}`);
+  }
+
+  if (report.forced.actionCapHits > 0) {
     lines.push(
       `Force-ended turns: ${report.forced.actionCapHits} (${formatNumber(report.forced.perGame)}/game) · ` +
         `forced resolutions ${report.forced.forcedResolutions}`,

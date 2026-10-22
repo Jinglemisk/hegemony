@@ -1,6 +1,5 @@
 import {
   getActiveEffects,
-  getBankBuyStatus,
   happinessContributions,
   happinessLevel,
   realmPops,
@@ -47,7 +46,7 @@ export type HungerShortfall = {
 
 /**
  * Food short during the seat's own turn: what ending now takes (the hunger alarm's
- * own mechanic) and the two ways to buy food first.
+ * own mechanic) and the two ways to get food first: the Dole, or a trade.
  */
 export function hungerShortfall(G: HegemonyState, playerID: PlayerId): HungerShortfall | null {
   const hunger = getActiveEffects(G, playerID)
@@ -55,7 +54,6 @@ export function hungerShortfall(G: HegemonyState, playerID: PlayerId): HungerSho
     .find((mechanic) => mechanic.type === "hunger");
   if (!hunger || hunger.unfed === 0) return null;
   const { food, influenceCost } = playerDole(G, playerID);
-  const bank = getBankBuyStatus(G, playerID, "food").cost?.gold ?? 0;
   const held = G.players[playerID].resources;
   return {
     short: -hunger.stockpile,
@@ -65,7 +63,7 @@ export function hungerShortfall(G: HegemonyState, playerID: PlayerId): HungerSho
         icon: "resources/influence",
         text: `Dole: ${food} food for ${influenceCost} influence (you hold ${held.influence})`,
       },
-      { icon: "resources/gold", text: `Bank: 1 food for ${bank} gold (you hold ${held.gold})` },
+      { icon: "market/handshake", text: "Trade: offer the other seats goods for food" },
     ],
   };
 }

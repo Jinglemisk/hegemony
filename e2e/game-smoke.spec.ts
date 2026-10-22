@@ -137,3 +137,53 @@ test("an offer to the table is countered, then the first accept trades", async (
   await expect(page.getByText(/^Trade · /)).toBeVisible();
   await expect(page.getByText(/gave 2 wood; .* gave 1 stone\./)).toBeVisible();
 });
+
+test("one person plays three bots: they answer at once, and the screen stays with the person", async ({
+  page,
+}) => {
+  // The TUNE panel's seat setting, as the browser keeps it: the first seat a person.
+  await page.addInitScript(() => {
+    window.localStorage.setItem(
+      "hegemony-dev-seats",
+      JSON.stringify({ 0: "human", 1: "master", 2: "master", 3: "master" }),
+    );
+  });
+  await page.goto("/?dev=trade&seed=42");
+  const seat = page.getByRole("button", { name: /, your seat$/ });
+  const person = (await seat.getAttribute("aria-label"))!.split(",")[0];
+
+  await page.getByRole("button", { name: /^Trade: Offer/ }).click();
+  const compose = page.getByRole("region", { name: "Offer a trade" });
+  await compose.getByRole("button", { name: "Add to I give" }).click();
+  await compose.getByRole("button", { name: "wood, you hold 8" }).click();
+  await compose.getByRole("button", { name: "One more wood" }).click();
+  await compose.getByRole("button", { name: "Add to I want" }).click();
+  await compose.getByRole("button", { name: "stone", exact: true }).click();
+  await compose.getByRole("button", { name: "Offer to the table" }).click();
+
+  // Every bot answers at once: the offer either traded or waits with all three answers,
+  // and no bot's row offers the person a button.
+  await expect(
+    page.getByRole("button", { name: /offers the table, [012] of 3 answered/ }),
+  ).toHaveCount(0);
+  const open = page.getByRole("button", { name: /offers the table, 3 of 3 answered/ });
+  if (await open.count()) {
+    await open.click();
+    const card = page.getByRole("region", { name: /offers the table$/ });
+    await expect(card.getByRole("button", { name: / (accepts|declines|counters)$/ })).toHaveCount(
+      0,
+    );
+    await page.keyboard.press("Escape");
+  }
+
+  // Ending the turn hands it to a bot, which plays it while the screen stays here.
+  const endTurn = page.getByRole("button", { name: /^End turn/i });
+  await endTurn.focus();
+  await page.keyboard.down("Enter");
+  await page.waitForTimeout(900);
+  await page.keyboard.up("Enter");
+  await expect(page.getByRole("img", { name: / is acting\.$/ })).not.toHaveAccessibleName(
+    `${person} is acting.`,
+  );
+  await expect(seat).toHaveAccessibleName(`${person}, your seat`);
+});

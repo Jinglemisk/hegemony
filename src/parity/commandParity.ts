@@ -4,11 +4,19 @@ export type GameCommandType = GameCommand["type"];
 
 type NonEmptyList<T> = readonly [T, ...T[]];
 
-export type FrontendMoveCoverage = {
-  kind: "interactive";
-  /** Concrete React surfaces that expose or resolve this move. */
-  surfaces: NonEmptyList<string>;
-};
+export type FrontendMoveCoverage =
+  | {
+      kind: "interactive";
+      /** Concrete React surfaces that expose or resolve this move. */
+      surfaces: NonEmptyList<string>;
+    }
+  | {
+      /** No screen offers it: a ruleset switch, off by default, keeps it for batches
+       *  that play an older economy beside today's. */
+      kind: "batch-only";
+      /** The switch's path in the ruleset. */
+      ruleset: string;
+    };
 
 export type SimulationPolicyPath =
   | "setup-driver"
@@ -16,16 +24,13 @@ export type SimulationPolicyPath =
   | "master-rule"
   | "master-forced-choice"
   | "master-assembly"
-  | "turn-control"
-  /** No bot sends it yet; the plan names the PR that teaches them. */
-  | "not-yet";
+  | "turn-control";
 
 export type SimulationMoveCoverage = {
   /** The code path responsible for choosing this move in a headless game. */
   policyPath: SimulationPolicyPath;
   /** Existing file that implements this policy route. */
-  implementation:
-    "src/sim/setup.ts" | "src/sim/policies.ts" | "src/sim/runner.ts" | "docs/plans/player-trade.md";
+  implementation: "src/sim/setup.ts" | "src/sim/policies.ts" | "src/sim/runner.ts";
   /** Concrete implementation seam; strategic quality still needs behavior tests. */
   evidence: string;
 };
@@ -45,9 +50,7 @@ function simulated(policyPath: SimulationPolicyPath, evidence: string): Simulati
       ? "src/sim/setup.ts"
       : policyPath === "turn-control"
         ? "src/sim/runner.ts"
-        : policyPath === "not-yet"
-          ? "docs/plans/player-trade.md"
-          : "src/sim/policies.ts";
+        : "src/sim/policies.ts";
 
   return { policyPath, implementation, evidence };
 }
@@ -130,17 +133,11 @@ export const COMMAND_PARITY = {
     simulation: simulated("master-forced-choice", "beamPlan → onePlyLookahead(scoreMaster)"),
   },
   bankSell: {
-    frontend: interactive(
-      "src/components/frame/discs.ts",
-      "src/components/frame/realm/MarketPage.tsx",
-    ),
+    frontend: { kind: "batch-only", ruleset: "economy.bank.enabled" },
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   bankBuy: {
-    frontend: interactive(
-      "src/components/frame/discs.ts",
-      "src/components/frame/realm/MarketPage.tsx",
-    ),
+    frontend: { kind: "batch-only", ruleset: "economy.bank.enabled" },
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   dole: {
@@ -233,25 +230,25 @@ export const COMMAND_PARITY = {
       "src/components/frame/trade/OfferCard.tsx",
       "src/components/board/assembly/AssemblySitting.tsx",
     ),
-    simulation: simulated("not-yet", "PR 2: bots offer on their turn and in the Assembly"),
+    simulation: simulated("master-rule", "turnOffer, speechOffer and voteOffer"),
   },
   tradeAnswer: {
     frontend: interactive(
       "src/components/frame/trade/OfferDisc.tsx",
       "src/components/frame/trade/OfferCard.tsx",
     ),
-    simulation: simulated("not-yet", "PR 2: bots answer and counter"),
+    simulation: simulated("master-rule", "answerOffer"),
   },
   tradeSettle: {
     frontend: interactive(
       "src/components/frame/trade/OfferDisc.tsx",
       "src/components/frame/trade/OfferCard.tsx",
     ),
-    simulation: simulated("not-yet", "PR 2: bots settle with an acceptor"),
+    simulation: simulated("master-rule", "takeCounter"),
   },
   tradeWithdraw: {
     frontend: interactive("src/components/frame/trade/OfferCard.tsx"),
-    simulation: simulated("not-yet", "PR 2: bots withdraw what no seat takes"),
+    simulation: simulated("master-rule", "withdrawAnswered"),
   },
   endTurn: {
     frontend: interactive("src/components/frame/EndTurn.tsx"),

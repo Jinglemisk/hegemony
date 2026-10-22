@@ -492,6 +492,9 @@ export interface HegemonyState {
   /** Open trade offers, oldest first. On a turn they are the turn's seat's; in the
    *  Assembly's preparation any seat's. */
   offers: TradeOffer[];
+  /** Offers each seat has made in this trading window, the turn or the preparation.
+   *  No rule limits offers; the bots read this to limit their own. */
+  offersMade: Partial<Record<PlayerId, number>>;
   /** The year deck, the game's clock: fourteen cards dealt once and never reshuffled.
    *  The order is hidden; an empty pile when the year turns ends the game. */
   yearDrawPile: YearCard[];

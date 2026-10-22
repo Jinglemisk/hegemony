@@ -3,7 +3,7 @@ import { openAssembly } from "../game/assembly";
 import { happinessLevel } from "../game/happiness";
 import { enumerateLegalCommands, type GameCommand } from "../game/legalMoves";
 import { projectForPlayer } from "../game/projection";
-import { owned, scenario } from "../game/testing/scenario";
+import { BEFORE_TRADE, owned, scenario } from "../game/testing/scenario";
 import type { HegemonyState } from "../game/types";
 import { victoryCardsHeld, voiceHolder } from "../game/victory";
 import { POLICIES, type PersonalityId } from "./policies";
@@ -22,7 +22,7 @@ function choose(name: PersonalityId, G: HegemonyState, keep: (move: GameCommand)
 /** One mouth short at the next income, with no gold to buy food and only the
  *  Idea's price in influence. */
 function oneMouthShort(city: { tileId: string; slaves: number; port?: boolean }, eaters: number) {
-  const G = scenario()
+  const G = scenario({ patch: BEFORE_TRADE })
     .withSettlement("0", city.tileId, "city", { citizens: 1, freemen: 0, slaves: city.slaves })
     .withSettlement("0", "-3,0", "colony", { citizens: 0, freemen: eaters, slaves: 0 })
     .withResources("0", { food: 0, wood: 0, stone: 0, gold: 0, influence: 6 })
@@ -74,7 +74,7 @@ describe("the AI reach audit", () => {
   });
 
   it.each(names)("%s calms with food under Festival Calendar to stop a riot", (name) => {
-    const G = scenario()
+    const G = scenario({ patch: BEFORE_TRADE })
       .withSettlement("0", "-2,1", "city", { citizens: 1, freemen: 1, slaves: 2 })
       .withResources("0", { food: 20, wood: 0, stone: 0, gold: 0, influence: 0 })
       .build();
@@ -94,7 +94,10 @@ describe("the AI reach audit", () => {
   it.each(names)(
     "%s draws Stratokles to break the Voice that would win a rival the game",
     (name) => {
-      const G = scenario().opening().withResources("0", { influence: 12 }).build();
+      const G = scenario({ patch: BEFORE_TRADE })
+        .opening()
+        .withResources("0", { influence: 12 })
+        .build();
       G.pendingPlayerEvent = null;
       G.year = 12;
       G.yearOpener = "0";

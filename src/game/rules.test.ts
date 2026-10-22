@@ -173,7 +173,8 @@ describe("per-settlement income (settlementNetYield)", () => {
     const income = settlementNetYield(mat, settlement, state);
     expect(income.influence).toBe(3);
     expect(income.gold).toBe(0);
-    expect(income.food).toBe(-3);
+    // Three mouths against the settlement's own 1 food.
+    expect(income.food).toBe(-2);
     // The land makes nothing by itself: no slave, no resource.
     expect(income[mat.resource.type]).toBe(0);
   });
@@ -187,7 +188,7 @@ describe("per-settlement income (settlementNetYield)", () => {
 
     const income = settlementNetYield(mat, settlement, state);
     expect(income.gold).toBe(4);
-    expect(income.food).toBe(-4);
+    expect(income.food).toBe(-3);
   });
 
   it("sums slave yields: +1 tile resource each, and no food eaten", () => {
@@ -199,7 +200,8 @@ describe("per-settlement income (settlementNetYield)", () => {
 
     const income = settlementNetYield(mat, settlement, state);
     expect(income[mat.resource.type]).toBe(2);
-    expect(income.food).toBe(0);
+    // The settlement's own food, and no mouth to feed.
+    expect(income.food).toBe(1);
   });
 
   it("a Marketplace raises every freeman here from 1 gold to 2", () => {

@@ -4,7 +4,8 @@ import { createGameDefinition, stableDefinitionHash } from "../game/definition";
 import type { GameDefinition } from "../game/definition";
 import { DEFAULT_RULESET, deriveRuleset, mergeRulesetPatches } from "../game/ruleset";
 import type { Ruleset, RulesetPatch } from "../game/ruleset";
-import type { BuildingDefinition } from "../game/types";
+import { PLAYER_IDS } from "../game/data";
+import type { BuildingDefinition, PlayerId } from "../game/types";
 import { getTuningPreset, isTuningPresetId } from "./tuningPresets";
 import type { TuningPresetId } from "./tuningPresets";
 
@@ -100,6 +101,46 @@ export function saveStartAtAssembly(on: boolean): void {
   } catch {
     // Storage unavailable (private mode etc.) — the toggle simply won't persist.
   }
+}
+
+// ── Who plays each seat ──────────────────────────────────────────────────────────────
+// A person, or a bot of a chosen personality (player trade's D4), so one person can play
+// against bots. Like the fast-forward flag it stays out of the tuning map, and out of
+// the match too: the engine does not care who sends a seat's commands. The controller
+// plays the bot seats and follows a change at once.
+
+export const SEAT_PLAYERS = ["human", "master", "slaver", "civic", "trader"] as const;
+export type SeatPlayer = (typeof SEAT_PLAYERS)[number];
+
+const SEATS_KEY = "hegemony-dev-seats";
+/** Fired on the window when the seats change. */
+export const SEATS_EVENT = "hegemony-dev-seats";
+
+/** Every seat a person by default, as hotseat always was. */
+export function loadSeats(): Record<PlayerId, SeatPlayer> {
+  const seats = Object.fromEntries(PLAYER_IDS.map((id) => [id, "human"])) as Record<
+    PlayerId,
+    SeatPlayer
+  >;
+  if (typeof window === "undefined") return seats;
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(SEATS_KEY) ?? "{}");
+    for (const id of PLAYER_IDS)
+      if (SEAT_PLAYERS.includes(saved?.[id])) seats[id] = saved[id] as SeatPlayer;
+  } catch {
+    // Storage unavailable or garbled: everyone plays.
+  }
+  return seats;
+}
+
+export function saveSeats(seats: Record<PlayerId, SeatPlayer>): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(SEATS_KEY, JSON.stringify(seats));
+  } catch {
+    // Storage unavailable: the change holds until the page reloads.
+  }
+  window.dispatchEvent(new CustomEvent(SEATS_EVENT, { detail: seats }));
 }
 
 // ── Path helpers ─────────────────────────────────────────────────────────────────────

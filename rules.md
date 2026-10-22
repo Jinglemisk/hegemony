@@ -41,7 +41,7 @@ where: fill a big plains with slaves and export food, or build on it and import.
 You keep track of five resources:
 
 - **Wood, Stone, Gold, Food** — the material goods you spend to expand and build.
-  Gold doubles as the **unit of account at the bank** (see The bank, below).
+  There is no bank: trade with the other seats is how one becomes another (see Trade).
 - **Influence** — a political currency earned by your citizens. It stabilizes the
   province (civic calm), pays for demotions on the social ladder, buys food through
   the Dole, buys riot insurance and your second National Idea, and funds Assembly
@@ -109,6 +109,9 @@ Every settlement is populated by three kinds of pop. One pop, one output:
 Each pop fills one unit of a settlement's population capacity. Citizens are never
 grown: after setup, every citizen is a freeman promoted on the social ladder.
 
+Every settlement, colony, city or capital, also grows **1 food** of its own at income,
+whoever lives there. Growth, and food to sell, still take slaves on plains.
+
 ## Settlements
 
 You hold three kinds of settlement:
@@ -161,8 +164,8 @@ start the game with `?board=classic` in the address bar for the fixed authored l
 Play passes around the table. Victory is checked at the start of your own turn,
 before income. On your turn:
 
-1. **Income is collected automatically.** Every settlement adds what its pops make,
-   and your freemen and citizens eat 1 food each. Eating can take your food **below
+1. **Income is collected automatically.** Every settlement adds its own 1 food and what
+   its pops make, and your freemen and citizens eat 1 food each. Eating can take your food **below
    zero**: nobody leaves yet, and you have this turn to buy the food back (see
    Happiness and food).
 2. **Resolve your event card**, if one was drawn for you (see Events below) — you
@@ -188,8 +191,6 @@ before income. On your turn:
      your votes. The same holds for the pop sent to found a colony.
    - **Build** — raise a building in a city or capital that has a free slot, or a
      Port in a coastal colony.
-   - **Trade at the bank** — sell materials for gold or buy them with gold, as
-     often as you like (see The bank).
    - **Trade with the other seats** — offer goods on the Trade disc, to the table or
      to the seats you pick, as often as you like (see Trade).
    - **The Dole** — **3 influence buys 1 food**, as often as you can pay.
@@ -231,22 +232,13 @@ is, then waits for Begin. Until then the screen stays with the last seat, so nob
 another's fate card or drawn Law. Public moments (the year card, the Idea draft, votes,
 riots, the end of the game) have no notice, and a game of bots never shows it.
 
-## The bank
+## No bank
 
-The bank trades materials against gold — never material for material. Its rates
-never move: every material **sells 3 for 1 gold** and **costs 2 gold to buy**. Find
-it in the realm's **Market** page and under the Exchange verb.
-
-- **Sell**: hand over the sell-rate of a material, take 1 gold.
-- **Buy**: pay the buy-rate in gold, take 1 of the material.
-- **No limit** on trades per turn — but every round trip pays the spread, so
-  trading always shrinks your total stockpile (Treasurer counts only your gold).
-
-The bank is a corridor, not a merchant: its fixed rates are the walls that trade
-between the seats (see Trade) negotiates inside.
-
-**The Dole** runs through the same corridor: **3 influence buys 1 food**. It is the
-one way influence reaches the granary, and it is priced worse than gold on purpose.
+There is no bank. No seat sells a material for gold or buys one with gold: trade with
+the other seats (see Trade) is the only way to turn one stock into another, apart from
+**the Dole**, where **3 influence buys 1 food**. Nothing anchors a price: a deal is
+whatever two seats agree. A realm that grows more food than it eats sells it for the
+wood it lacks.
 
 ## Trade
 
@@ -282,6 +274,13 @@ the table. Every seat sees every offer.
   count them, and it feeds them. They arrive at the start of its next turn.
 
 A settled trade writes a line in the Chronicle and is toasted to every seat.
+
+**Trading with bots.** A bot answers an offer at once: it accepts a deal that leaves it
+better off and hands you no title, counters once with one unit more or less on one
+line when that would do, and otherwise declines. On its own turn a bot short of food,
+or of the materials for what it is saving toward, offers once to the seats that could
+pay; in a sitting it offers once for the influence or votes it wants. When a bot's offer
+names you, play waits for your answer.
 
 ## Ventures — Fund an Expedition
 
@@ -357,9 +356,9 @@ stores happiness.
 **Hunger** is separate from happiness, and calm cannot buy it off. Your freemen and
 citizens eat at income, and that is the one thing that takes your food **below zero**.
 A food figure in red is a shortfall, not a debt you carry: you have the rest of that
-turn to cover it with the bank, the Dole or anything else that gives food. While you
+turn to cover it with the Dole, a trade or anything else that gives food. While you
 are short you cannot pay a food cost. The hunger alarm and End turn show how many pops
-would leave, with the Dole's and the bank's food prices.
+would leave, with the Dole's price and a reminder that a trade can buy the food too.
 
 If you end your turn still short, **one pop leaves for each missing food** and your food
 returns to zero, before the riot check. **You choose which freemen or citizens leave**,
@@ -452,8 +451,7 @@ without a reward. The card does not use the settlement's normal growth allowance
 it never grants a citizen. Twelve of the forty copies are harmful.
 
 The top bar shows the year and the cards left; the year's card is a disc in the alarms
-row. The **Codex** consult has the year deck, player deck, dice tables, bank rates and
-base costs.
+row. The **Codex** consult has the year deck, player deck, dice tables and base costs.
 
 ## The Assembly
 
@@ -572,9 +570,10 @@ shows the year and cards remaining.
 
 ## Development bots
 
-`?dev=bots` runs the shared master policy in all browser seats. Headless sims can
-seat `slaver`, `civic` and `trader` by name: they favour slaves and Estates,
-citizens and the Assembly, or freemen and coastal trade. They use the same legal
-commands and search Idea purchases, bank trades and ventures. They do not trade with
-other seats yet: in the Assembly they press Ready as soon as they seal. See the
-[simulation reference](docs/reference/simulation.md) for mixed and rotated batches.
+`?dev=bots` runs the shared master policy in all browser seats. On the dev server, the
+**TUNE** panel makes any seat a person or a bot of a chosen personality, so one person
+can play against bots; the screen stays on the people, and bot seats get no turn
+notice. Headless sims can seat `slaver`, `civic` and `trader` by name: they favour
+slaves and Estates, citizens and the Assembly, or freemen and coastal trade. They use
+the same legal commands, search Idea purchases and ventures, and trade as above. See
+the [simulation reference](docs/reference/simulation.md) for mixed and rotated batches.

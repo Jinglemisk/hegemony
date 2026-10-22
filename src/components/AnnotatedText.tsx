@@ -86,7 +86,8 @@ const TOKEN_MAP: Record<string, Token> = {
   revolt: { type: "concept", chapter: "unrest" },
   unrest: { type: "concept", chapter: "unrest" },
   victory: { type: "concept", chapter: "victory" },
-  bank: { type: "concept", chapter: "bank" },
+  bank: { type: "concept", chapter: "trade" },
+  dole: { type: "concept", chapter: "trade" },
   // The Assembly's vocabulary. Card text, the chronicle and the Agora page all lean
   // on these nouns, and every one of them is a rule a player will want to look up
   // mid-vote — which is exactly when leaving the game to find it is worst.

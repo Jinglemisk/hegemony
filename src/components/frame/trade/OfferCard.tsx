@@ -481,7 +481,8 @@ function holdsWords(G: HegemonyState, seat: PlayerId, asked: TradeBundle) {
 }
 
 /** Every seat the offer names, at once: the first to accept trades. A seat may decline
- *  or counter instead; the offering seat takes a counter or withdraws. */
+ *  or counter instead; the offering seat takes a counter or withdraws. A bot's seat
+ *  answers on its own, so its row only reads. */
 function Answers({
   offer,
   onCounter,
@@ -491,9 +492,10 @@ function Answers({
   onCounter: (seat: PlayerId) => void;
   onClose: () => void;
 }) {
-  const { G, moves, viewerId } = useGameUi();
+  const { G, moves, viewerId, humans } = useGameUi();
   const pick = useTradePick();
   const owner = offer.from;
+  const ownerPlays = humans.includes(owner);
   const theirs: Sides = { gives: offer.terms.get, gets: offer.terms.give };
 
   return (
@@ -504,22 +506,24 @@ function Answers({
         const reply = offer.answers[seat];
         const counter = counterOf(offer, seat);
         const name = G.players[seat].name;
-        const accept = reply
-          ? null
-          : getTradeAnswerStatus(G, seat, offer.id, {
-              kind: "accept",
-              places: firstPlaces(G, seat, theirs),
-            });
+        const accept =
+          reply || !humans.includes(seat)
+            ? null
+            : getTradeAnswerStatus(G, seat, offer.id, {
+                kind: "accept",
+                places: firstPlaces(G, seat, theirs),
+              });
         const ownSides = counter ? { gives: counter.terms.give, gets: counter.terms.get } : null;
-        const take = ownSides
-          ? getTradeSettleStatus(
-              G,
-              owner,
-              offer.id,
-              seat,
-              firstPlaces(G, owner, ownSides, offer.places),
-            )
-          : null;
+        const take =
+          ownSides && ownerPlays
+            ? getTradeSettleStatus(
+                G,
+                owner,
+                offer.id,
+                seat,
+                firstPlaces(G, owner, ownSides, offer.places),
+              )
+            : null;
         const status = counter
           ? `${MARK_GLYPH.counter} Counters: ${seatName(G, owner, viewerId)} ${owner === viewerId ? "give" : "gives"} ${bundleWords(G, counter.terms.give)}, ${owner === viewerId ? "get" : "gets"} ${bundleWords(G, counter.terms.get)}`
           : reply
@@ -601,16 +605,18 @@ function Answers({
           </div>
         );
       })}
-      <footer className="trade-foot">
-        <span className="trade-grow" />
-        <button
-          className="btn kicker"
-          onClick={() => moves.tradeWithdraw(owner, offer.id)}
-          type="button"
-        >
-          Withdraw
-        </button>
-      </footer>
+      {ownerPlays ? (
+        <footer className="trade-foot">
+          <span className="trade-grow" />
+          <button
+            className="btn kicker"
+            onClick={() => moves.tradeWithdraw(owner, offer.id)}
+            type="button"
+          >
+            Withdraw
+          </button>
+        </footer>
+      ) : null}
     </div>
   );
 }

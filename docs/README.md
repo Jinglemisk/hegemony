@@ -34,7 +34,7 @@ precedes full multiplayer.
 | [Luxury goods](plans/luxury-goods.md)               | 4        | `active`   | Slices 1–2 shipped on `main`; the v2 migration carries them unchanged             |
 | [UI — what is left](plans/ui-remaining.md)          | —        | `active`   | The one UI ledger; the KYKLOS triage ledgers are archived                         |
 | [Code health](plans/code-health.md)                 | post-v2  | `active`   | Five cleanup PRs before trade; all merged, trade next                             |
-| [Player trade](plans/player-trade.md)               | post-v2  | `active`   | PR 1, trade in hotseat, merged (#131); PR 2 next: bots trade, the bank goes       |
+| [Player trade](plans/player-trade.md)               | post-v2  | `active`   | PR 1 merged (#131); PR 2 (bots trade, no bank) open, its batches next             |
 | [Development deck](plans/development-deck.md)       | post-v2  | `proposed` | Replaces Ventures; follows both trade PRs                                         |
 | [National Ideas](plans/national-ideas.md)           | v2       | `active`   | Step 9 shipped (#88); twelve v2 rules, open setup draft (#95), influence purchase |
 | [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked`  | Final typed Resolution/Idea effects and evidence before multiplayer               |

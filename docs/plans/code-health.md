@@ -149,7 +149,7 @@ sitting's boxes); copies of the caps label in the island tip and the Exchange, w
 non-goals. Tooltips now draw over popovers so a popover's own tips show; the map's tile tip
 stays under them on its own rung.
 
-### 6. In trade's second PR
+### 6. In trade's second PR (done there)
 
 | Part      | Before                                                                             | After                                                                                                          |
 | --------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |

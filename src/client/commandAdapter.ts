@@ -11,7 +11,6 @@ import type {
   PopType,
   Pops,
   RiotInsuranceId,
-  TradableMaterial,
   TradeAnswer,
   TradePlaces,
   TradeTerms,
@@ -32,8 +31,6 @@ export type GameMoves = {
   movePops: (sourceTileId: string, targetTileId: string, pops: Pops) => void;
   resolvePendingPlayerEvent: (targetTileId?: string) => void;
   resolveHunger: (leave: HungerLeave[]) => void;
-  bankSell: (material: TradableMaterial) => void;
-  bankBuy: (material: TradableMaterial) => void;
   dole: () => void;
   civicCalm: (payment: CivicCalmPayment) => void;
   promotePop: (tileId: string, from: PopType) => void;
@@ -96,8 +93,6 @@ export function createCommandMoves(dispatch: DispatchGameCommand): GameMoves {
     resolvePendingPlayerEvent: (targetTileId) =>
       dispatch({ type: "resolveEvent", ...(targetTileId ? { targetTileId } : {}) }),
     resolveHunger: (leave) => dispatch({ type: "resolveHunger", leave }),
-    bankSell: (material) => dispatch({ type: "bankSell", material }),
-    bankBuy: (material) => dispatch({ type: "bankBuy", material }),
     dole: () => dispatch({ type: "dole" }),
     pickIdea: (playerID, ideaId, target) =>
       dispatch({ type: "pickIdea", ideaId, ...(target ? { target } : {}) }, playerID),

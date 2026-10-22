@@ -1,22 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "./tunePanel.css";
 import { getBuildings, getTerrainDeck } from "../game/content";
-import type { HegemonyState } from "../game/types";
+import { PLAYER_IDS } from "../game/data";
+import type { HegemonyState, PlayerId } from "../game/types";
 import { CHROME_PLACEHOLDERS } from "../ui/icons/placeholders";
 import { isTyping } from "../ui/keys";
 import { buildingSummary, describeBuildingEffect, terrainStats } from "./aggregates";
 import {
   defaultValueAt,
   effectiveValueAt,
+  SEAT_PLAYERS,
   loadOverrides,
+  loadSeats,
   loadStartAtAssembly,
   loadTuningPresetId,
   saveOverrides,
+  saveSeats,
   saveStartAtAssembly,
   saveTuningPresetId,
   tuningBaselineRuleset,
 } from "./tuning";
-import type { OverrideMap, OverrideValue } from "./tuning";
+import type { OverrideMap, OverrideValue, SeatPlayer } from "./tuning";
 import { getTuningPreset } from "./tuningPresets";
 import type { TuningPresetId } from "./tuningPresets";
 
@@ -59,6 +63,7 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
   });
   const [draft, setDraft] = useState<OverrideMap>(() => loadOverrides());
   const [startAtAssembly, setStartAtAssembly] = useState<boolean>(() => loadStartAtAssembly());
+  const [seats, setSeats] = useState(() => loadSeats());
   const [manualSetup, setManualSetup] = useState<boolean>(
     () =>
       typeof window !== "undefined" &&
@@ -153,6 +158,11 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
     window.history.replaceState(null, "", url);
     setManualSetup(next);
     resetGame();
+  };
+  const setSeat = (id: PlayerId, player: SeatPlayer) => {
+    const next = { ...seats, [id]: player };
+    saveSeats(next);
+    setSeats(next);
   };
   const toggleLowNumbers = () => {
     const next = presetId ? null : "low-number-core-v1";
@@ -295,6 +305,29 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
       <p className="tune-hint">
         Adds ?setup=manual to the address, so reloads keep it. Each seat places its opening towns
         and picks their pops in the setup picker. It overrides Start at Assembly and the dev scenes.
+      </p>
+
+      <div className="tune-fields">
+        {PLAYER_IDS.map((id) => (
+          <label className="tune-field" key={id}>
+            <span className="tune-label">{game.players[id].name}</span>
+            <select
+              className="tune-input"
+              onChange={(event) => setSeat(id, event.target.value as SeatPlayer)}
+              value={seats[id]}
+            >
+              {SEAT_PLAYERS.map((player) => (
+                <option key={player} value={player}>
+                  {player === "human" ? "Human" : `Bot · ${player}`}
+                </option>
+              ))}
+            </select>
+          </label>
+        ))}
+      </div>
+      <p className="tune-hint">
+        Who plays each seat, in this game and the next. A bot plays its seat&apos;s turns, answers
+        offers at once and does its own Assembly; the screen stays on the people.
       </p>
 
       <Section title="Terrain" subtitle="read-only aggregates">

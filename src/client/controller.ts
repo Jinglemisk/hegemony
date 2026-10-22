@@ -1,15 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { DEV_ROTATION_SEEDS, GAME_CONFIG } from "../game/config";
+import { PLAYER_IDS } from "../game/data";
 import { enumerateLegalCommands, transition } from "../game/legalMoves";
 import { projectForPlayer } from "../game/projection";
 import type { BoardLayout, HegemonyState, Phase, PlayerId } from "../game/types";
 import { createGameFromDefinition } from "../game/turn";
 import { GAME_MODES, type GameModeId } from "../game/ruleset";
-import { loadStartAtAssembly, loadTuningPresetId, resolveTunedDefinition } from "../dev/tuning";
+import {
+  SEATS_EVENT,
+  loadSeats,
+  loadStartAtAssembly,
+  loadTuningPresetId,
+  resolveTunedDefinition,
+} from "../dev/tuning";
 import { DEV_SCENES, fastForwardToAssembly, playOutAssembly } from "../dev/scenes";
 import type { DevShell } from "../dev/scenes";
 import { createBrowserSeed } from "./seed";
 import { choosePlacement, resolvePolicy } from "../sim/policies";
+import type { Policy } from "../sim/policies";
 import { playTurn } from "../sim/runner";
 import { createSimRng, deriveBotSeed } from "../sim/rng";
 import { buildNewGame } from "../sim/setup";
@@ -27,7 +35,8 @@ export type { Phase } from "../game/types";
  * `?dev=preload` to replay the fixed scripted placements,
  * `?opening=random` for the old uniform draw instead of policy placement, and
  * `?dev=bots` to let the sim's bots play every seat (`&policy=` picks which, `master`
- * by default) — a whole game played through the shell, one turn per tick.
+ * by default) — a whole game played through the shell, one turn per tick. On the dev
+ * server the TUNE panel makes any seat a bot instead (see {@link readTable}).
  * On the dev server only, `?dev=assembly` (`assembly2` to `assembly7` for later sittings)
  * fast-forwards to an Assembly, and the scenes in src/dev/scenes.ts open their moment.
  *
@@ -128,22 +137,44 @@ function createGameFromUrl(): { G: HegemonyState; shell: DevShell } {
 }
 
 /**
- * Hotseat: people share this screen and take the seats in turn. It is the only way
- * people play today, so it is every game but `?dev=bots`.
+ * Who plays each seat. People share this screen and take their seats in turn (hotseat);
+ * the rest are the sim's bots, which the browser plays. The engine never knows which is
+ * which. Every seat is a person in a build, every seat a bot under `?dev=bots`, and on
+ * the dev server the TUNE panel's seat setting decides.
  */
-const HOTSEAT =
-  typeof window === "undefined" ||
-  new URLSearchParams(window.location.search).get("dev") !== "bots";
+type Table = { humans: PlayerId[]; bots: Partial<Record<PlayerId, Policy>> };
+
+function readTable(): Table {
+  const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  if (params?.get("dev") === "bots") {
+    const policy = resolvePolicy(params.get("policy") ?? "master");
+    return { humans: [], bots: Object.fromEntries(PLAYER_IDS.map((id) => [id, policy])) };
+  }
+  const seats = import.meta.env.DEV ? loadSeats() : null;
+  const humans = PLAYER_IDS.filter((id) => !seats || seats[id] === "human");
+  return {
+    humans,
+    bots: Object.fromEntries(
+      PLAYER_IDS.filter((id) => seats && !humans.includes(id)).map((id) => [
+        id,
+        resolvePolicy(seats![id]),
+      ]),
+    ),
+  };
+}
 
 /**
  * The private moment the screen is about to belong to, as a key that changes with each
- * one: a seat's turn, or a seat's Assembly proposal until it seals. Null in a public
+ * one: a person's turn, or a person's Assembly proposal until it seals. Null in a public
  * phase (setup, the Idea draft, the preparation once every seat has sealed, the vote,
- * the house rising, the game's end). In hotseat each new key waits behind the turn
- * notice until its seat begins.
+ * the house rising, the game's end), and for a bot's seat, which needs no screen. In
+ * hotseat each new key waits behind the turn notice until its seat begins.
  */
-export function privateMoment(G: HegemonyState): string | null {
-  if (G.phase !== "gameplay") return null;
+export function privateMoment(
+  G: HegemonyState,
+  humans: readonly PlayerId[] = PLAYER_IDS,
+): string | null {
+  if (G.phase !== "gameplay" || !humans.includes(G.currentPlayer)) return null;
   if (!G.assembly) return `turn:${G.turn}`;
   return G.assembly.phase === "proposal" && !G.assembly.proposalDone[G.currentPlayer]
     ? `proposal:${G.assembly.year}:${G.currentPlayer}`
@@ -207,19 +238,16 @@ function autoPlayOpening(
 
 const BOT_TICK_MS = 250;
 
-/** `?dev=bots`: the sim's policy plays every seat, one whole turn per tick, through the
- *  same `playTurn` the headless batch uses, so the shell renders a real bot game. */
-function useBotTable(G: HegemonyState, setG: (next: HegemonyState) => void) {
-  const [policy] = useState(() => {
-    const params =
-      typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
-    return params?.get("dev") === "bots" ? resolvePolicy(params.get("policy") ?? "master") : null;
-  });
+/** The bot seats play through the same `playTurn` the headless batch uses, one turn per
+ *  tick, so the shell renders a real bot game. A tick stops where a person must act: on
+ *  their turn, an offer naming them, or the sitting's recap; bots answer at once. */
+function useBotTable(G: HegemonyState, setG: (next: HegemonyState) => void, table: Table) {
   // One bot stream per game seed, as `runGame` derives it.
   const rng = useMemo(() => createSimRng(deriveBotSeed(G.seed)), [G.seed]);
 
   useEffect(() => {
-    if (!policy || G.phase === "gameOver") {
+    const bot = PLAYER_IDS.map((id) => table.bots[id]).find(Boolean);
+    if (!bot || G.phase === "gameOver") {
       return;
     }
 
@@ -227,13 +255,15 @@ function useBotTable(G: HegemonyState, setG: (next: HegemonyState) => void) {
     // twice, which would spend the bot stream twice per tick.
     const tick = window.setTimeout(() => {
       try {
-        setG(playTurn(G, policy, rng));
+        setG(
+          playTurn(G, bot, rng, {}, { seatPolicies: table.bots, humans: new Set(table.humans) }),
+        );
       } catch (error) {
         console.error("dev bots stopped:", error);
       }
     }, BOT_TICK_MS);
     return () => window.clearTimeout(tick);
-  }, [G, policy, rng, setG]);
+  }, [G, table, rng, setG]);
 }
 
 /** Read-only projection of the turn fields now living on {@link HegemonyState}, kept for the UI's convenience. */
@@ -251,16 +281,34 @@ export function useHegemonyGame() {
   // The dev scene's shell flags follow the game they were built with, reset included.
   const [start, setStart] = useState(createGameFromUrl);
   const [G, setG] = useState<HegemonyState>(start.G);
-  const [playerID, setPlayerID] = useState<PlayerId>(() => start.shell.viewer ?? G.currentPlayer);
+  const [table, setTable] = useState(readTable);
+  useEffect(() => {
+    const follow = () => setTable(readTable());
+    window.addEventListener(SEATS_EVENT, follow);
+    return () => window.removeEventListener(SEATS_EVENT, follow);
+  }, []);
+  const hotseat = table.humans.length > 0;
+  const [playerID, setPlayerID] = useState<PlayerId>(
+    () =>
+      start.shell.viewer ??
+      (table.humans.includes(G.currentPlayer)
+        ? G.currentPlayer
+        : (table.humans[0] ?? G.currentPlayer)),
+  );
 
-  const moment = privateMoment(G);
+  const moment = privateMoment(G, table.humans);
   useEffect(() => {
     // The viewer follows the seat the game waits on. In hotseat a private moment (a
     // turn, an Assembly proposal) changes hands at the turn notice instead, when its
-    // seat begins it, and the game's end stays with whoever was looking.
-    if (G.phase === "gameOver" || (HOTSEAT && moment)) return;
+    // seat begins it, and the game's end stays with whoever was looking. The screen
+    // stays on the people: a bot's turn is watched from a person's seat.
+    if (G.phase === "gameOver" || (hotseat && moment)) return;
+    if (hotseat && !table.humans.includes(G.currentPlayer)) {
+      setPlayerID((viewer) => (table.humans.includes(viewer) ? viewer : table.humans[0]));
+      return;
+    }
     setPlayerID(G.currentPlayer);
-  }, [G.currentPlayer, G.phase, moment]);
+  }, [G.currentPlayer, G.phase, moment, hotseat, table]);
 
   const moves = useMemo(
     () =>
@@ -276,7 +324,7 @@ export function useHegemonyGame() {
       }),
     [],
   );
-  useBotTable(G, setG);
+  useBotTable(G, setG, table);
   const view = useMemo(() => projectForPlayer(G.definition, G, playerID), [G, playerID]);
   // Rebuild the whole game from URL + current dev tuning overrides. Reuses this page
   // load's rotation seed, so a re-tune re-rolls the SAME board with new params (clean A/B).
@@ -300,8 +348,10 @@ export function useHegemonyGame() {
     events,
     resetGame,
     devShell: start.shell,
-    hotseat: HOTSEAT,
-    isActive: view.eligibleActors.includes(playerID),
+    hotseat,
+    humans: table.humans,
+    // A bot plays its own seat, even while a person looks at it.
+    isActive: view.eligibleActors.includes(playerID) && !table.bots[playerID],
   };
 }
 

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import type { ComponentProps } from "react";
 import { privateMoment } from "../client/controller";
+import { PLAYER_IDS } from "../game/data";
 import type { GameEvents, GameMoves, LocalContext } from "../client/controller";
 import {
   EMPTY_POPS,
@@ -80,6 +81,8 @@ type BoardProps = {
   isActive: boolean;
   /** People share this screen, seat by seat; false only when bots play alone. */
   hotseat: boolean;
+  /** The seats people play. Bots act on their own, so their seats offer no buttons. */
+  humans?: readonly PlayerId[];
   /** What a `?dev=` scene shows on the first render (the dev server only). */
   dev?: DevShell;
 };
@@ -135,6 +138,7 @@ export function HegemonyBoard({
   onPlayerIDChange,
   isActive: seatActive,
   hotseat,
+  humans = PLAYER_IDS,
   dev = {},
 }: BoardProps) {
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
@@ -163,7 +167,7 @@ export function HegemonyBoard({
         : dev.yearReveal
           ? G.year - 1
           : G.year,
-    moment: dev.turnNotice || dev.viewer ? null : privateMoment(G),
+    moment: dev.turnNotice || dev.viewer ? null : privateMoment(G, humans),
     gameOver: false,
   }));
   // The draft is read back once its last pick lands, until the opener turns the year.
@@ -226,7 +230,7 @@ export function HegemonyBoard({
     if (hotseat && G.activeYearCard && G.year > seen.year)
       return { kind: "yearCard", reveal: true };
     if (ctx.phase === "gameOver" && !seen.gameOver) return { kind: "gameOver" };
-    const begins = privateMoment(G);
+    const begins = privateMoment(G, humans);
     if (hotseat && begins !== null && begins !== seen.moment) return { kind: "turnNotice", begins };
     if (decision?.source === "hungerDecision")
       return { kind: "hunger", unfed: decision.unfed, asked: false };
@@ -248,10 +252,12 @@ export function HegemonyBoard({
       phase: ctx.phase,
       isActive,
       turnBlocked: blocked,
+      humans,
       moves,
       events,
     }),
     [
+      humans,
       G,
       viewerId,
       viewer,
@@ -617,8 +623,6 @@ export function HegemonyBoard({
                         onCalm: moves.civicCalm,
                         onDole: moves.dole,
                         onIdeasRequest: () => setActiveModal({ kind: "ideas" }),
-                        onBankBuy: moves.bankBuy,
-                        onBankSell: moves.bankSell,
                         onTrade: () => {
                           const disc = document.querySelector('[data-group="trade"] .verb-disc');
                           if (disc)
@@ -627,8 +631,6 @@ export function HegemonyBoard({
                       },
                       mapSelection.selection?.mode ?? null,
                     )}
-                    onBankBuy={moves.bankBuy}
-                    onBankSell={moves.bankSell}
                     onBuildBuildingRequest={requestBuildBuilding}
                     onLadderRequest={(request) => armSelection({ kind: "ladder", request })}
                     income={projectedIncome}

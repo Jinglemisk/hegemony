@@ -20,10 +20,6 @@ function optionFor(command: GameCommand): string | null {
       return "upgrade";
     case "buildBuilding":
       return `build-${command.buildingId}`;
-    case "bankBuy":
-      return `buy-${command.material}`;
-    case "bankSell":
-      return `sell-${command.material}`;
     case "dole":
       return "dole";
     case "civicCalm":
@@ -76,8 +72,6 @@ describe("verb fans", () => {
         onVentureRequest: noop,
         onCalm: noop,
         onDole: noop,
-        onBankBuy: noop,
-        onBankSell: noop,
         onTrade: noop,
       },
       null,

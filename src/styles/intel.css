@@ -290,8 +290,7 @@
   opacity: 0.75;
 }
 
-/* Market tab — the bank exchange (D6/Q14). Flat rows on the ledger accent, rates
-   always on display so the corridor teaches itself. */
+/* A resource's icon in the Codex's tables. */
 
 .marketRowIcon {
   width: 24px;

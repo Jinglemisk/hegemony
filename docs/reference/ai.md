@@ -72,13 +72,14 @@ The slaver values slaves, Estates' real production, yielding slots and expansion
 The civic values citizens, Forums' influence, Temples and standing Laws toward
 Voice. The trader values freemen, Marketplaces' gold, Ports and luxuries. Buildings
 have no personality bonus: their changes to income, slots and happiness carry
-the value. Each build can convert through the bank and choose ventures in search.
+the value. Each build trades with the other seats by rule (see Trade) and chooses
+ventures in search.
 
 ## Search and forecasts
 
-All optional economic actions enter search, including unit bank buys and sells,
-the Dole, calm, Ideas and ventures. A bank sale can unlock a building or promotion
-later in the same four-action search. A seat has one move a turn, so the engine
+All optional economic actions enter search, including the Dole, calm, Ideas and
+ventures, and unit bank buys and sells where a ruleset keeps the bank. Trade does not:
+an offer is composed and its answers are other seats', so it is played by rule. A seat has one move a turn, so the engine
 offers a few bundles for each pair of settlements: one pop of a class, all of a
 class, everyone, and as many slaves as the target has slots open. The last is the
 one that puts two of four idle slaves to work. A riot on the table has its own
@@ -89,7 +90,7 @@ and every uniform settlement destination for the Voyage jackpot, with its actual
 probability. Synthetic RNG seeds reproduce those outcomes through canonical
 transitions independently of the game's RNG. Compare the expected score with the
 other branches; after execution, observe the real roll and replan. This supports
-bank-to-venture sequences without expanding subsequent turns or a chance tree.
+venture sequences without expanding subsequent turns or a chance tree.
 A negative mean gold payout can still be useful near a title threshold. Equal
 positions at the same depth are expanded once. Scores are shared across depths
 and venture outcomes within one decision, keyed by the economic fields that can
@@ -113,19 +114,20 @@ stocks and tokens do not change printed yields. It assumes no future card or tok
 changes.
 
 On a later forecast turn the seat buys the food it is short of before anyone
-leaves: bank food for gold or the Dole for influence, at the prices the engine
-charges that seat, the cheaper first by its own weights. Only what it cannot pay
-for starves. The gold and influence leave the forecast stocks, so a realm fed from
-the bank is seen to hold less. Before this every eater beyond what the land grew
+leaves: by the Dole, or from the bank where a ruleset keeps one, through the engine's
+own commands on the forecast's copy, the cheaper first by its own weights. Only what
+it cannot pay for starves. The influence leaves the forecast stocks, so a realm fed by
+the Dole is seen to hold less. Before this every eater beyond what the land grew
 starved in the forecast whatever the seat held, and no build grew past its food
 line. Two turns are left out. The current turn is not bought for: that food the
-seat has to buy itself, now. And setup does not count on the bank: it picks land
-for fourteen years and the forecast sees six, so a starting store and six years of
-gold would make any site look fed.
+seat has to buy itself, now, by the Dole or a trade. And setup buys no food: it picks
+land for fourteen years and the forecast sees six, so a starting store and six years
+of income would make any site look fed. The forecast does not trade: what a deal is
+worth is weighed before it is offered (see Trade).
 
 On a later forecast turn the seat also buys calm when its level stands at the riot
-or the revolt line and calm moves it off: once a year, at the price the engine
-charges that seat, the cheaper payment first by its own weights, from the forecast
+or the revolt line and calm moves it off: once a year, through the engine's calm on
+the forecast's copy, the cheaper payment first by its own weights, from the forecast
 stocks and after the food. Before this a slave past the standing level read as a
 riot in every year of the forecast whatever the seat held, so no realm kept more
 slaves than its Temples and goods covered: four masters bought calm 0.35 times a
@@ -179,8 +181,8 @@ with 4 gold and three short, it bought wood. The charge outweighs one more pop
 lost in a later year, 60, and the dearest food a build can buy, the civic's Dole
 at 9, so a seat that can pay feeds its pops first. From zero food its search can
 reach the slave that would feed them; from six short it cannot. A short seat also
-funds the Colonists' Voyage: its 2 gold bring 1.5 food on average against the
-bank's one. There is no hard-coded trade order.
+funds the Colonists' Voyage: its 2 gold bring 1.5 food on average. There is no
+hard-coded order between the Dole, a trade and the Voyage.
 Latent slave slots count only where population room remains, including transfers
 already committed to that settlement.
 
@@ -286,18 +288,54 @@ personality's politics weight. No Idea receives a fixed selection quota. Step 11
 should distinguish missing opportunity from weak or dominated content when reading
 unused Ideas.
 
+## Trade
+
+Bots trade by rule, with the score they play by: their weights, what they save toward,
+and the food and calm the forecast buys. A deal is weighed on the match as it would
+stand after it, which the engine builds (`tradeForEval`). A bot takes a deal worth
+more than a margin to it (about one food) that leaves its partner holding no title it
+lacked (`titleChanges`); a deal that would hand a rival Treasurer is refused whatever
+it pays.
+
+- **Answering.** A seat an offer names answers at once: accept; else counter once with
+  one unit more for it or less from it on one stock line, if that pays; else decline.
+  Out of turn a seat has no legal purchases, so what it saves toward is listed from a
+  view of its own turn.
+- **Its own offers.** It takes a counter that pays, and withdraws an offer every seat
+  has answered, so the disc leaves the alarms row.
+- **Offering on its turn.** Before its search it lists what it lacks (the food it is
+  short of now and the materials its two best purchases need) and what it holds beyond
+  the purchase it saves toward, and tries 1 for 1, 2 for 1 and 1 for 2, and gold at 1
+  a unit. A deal worth something by itself is searched with the beam; the one whose
+  best turn beats the best turn without it by the margin goes to every rival that could
+  pay and gains no title from it. The search takes the Dole, so a deal worse than the
+  Dole's food never wins.
+- **Offering in a sitting.** A seat short of the influence for the draw or repeal it
+  wants, or of the gold or influence for the votes its own proposal needs, offers for
+  it in the preparation, then presses Ready.
+- **Pacing.** One offer a turn and one a sitting, read off the engine's count
+  (`offersMade`), so a bot never repeats a declined offer in the same window.
+
+The runner routes by who may act, as a server will: a seat an open offer names answers
+before the turn goes on, a bot before any person, and an answer does not count toward
+the turn's 30 actions. The browser plays the bot seats the same way and stops where a
+person must act: their turn, an offer naming them, or the sitting's recap.
+
 ## Limits and validation
 
 Search cannot plan a sequence across turns, model general rival replies, or plan
 multi-hop routes. Saving is a value on the stocks and not a plan: a seat that makes
-none of a material does not save gold to buy it at the bank, and does not found a
-forest colony in order to cut wood later. The forecast buys food and calm and loses pops to riots, and
+none of a material asks for it in trade but does not save toward buying it, and does
+not found a forest colony in order to cut wood later. Bots model no rival when they
+price a deal, and bargain no further than one counter. The forecast buys food and calm and loses pops to riots, and
 nothing else: it does not grow slaves or raise a building in a later year. The
 risk of standing near the riot line and future Idea opportunities are heuristics.
 Venture expectation is exact for the shipped public tables; it does not implement
 the outcome-driven AI program. Focused tests cover build preferences, food rescue,
-bank-to-Port sequences, venture odds and title decisions, Idea picks/purchases,
-private-information invariance, seat routing and telemetry denominators.
+bank-to-Port sequences in the economy before trade, wood for food between two bots, a
+refused deal worth less than none, a refused deal that hands Treasurer, venture odds
+and title decisions, Idea picks/purchases, private-information invariance, seat
+routing and telemetry denominators.
 
 Use the rotated [simulation commands](simulation.md) for full-game evidence.
 Record seeds, definitions, policies and opening type before interpreting balance.

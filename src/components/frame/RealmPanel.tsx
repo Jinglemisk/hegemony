@@ -18,7 +18,6 @@ import type {
   PopType,
   Resources,
   Settlement,
-  TradableMaterial,
 } from "../../game/types";
 import { victoryCardsHeld } from "../../game/victory";
 import { LUXURY_RASTER } from "../../ui/iconRegistry";
@@ -32,7 +31,6 @@ import { Ico } from "./parts";
 import { BuildPage } from "./realm/BuildPage";
 import { CitiesPage } from "./realm/CitiesPage";
 import { LadderPage } from "./realm/LadderPage";
-import { MarketPage } from "./realm/MarketPage";
 import { LuxuryPage, OraclePage, TilePage } from "./realm/PlacePages";
 import { SummaryPage } from "./realm/SummaryPage";
 import { SettlementPage } from "./SettlementPage";
@@ -71,12 +69,11 @@ const TABS: Array<{ tab: LedgerTab; label: string }> = [
   { tab: "cities", label: "Cities" },
   { tab: "ladder", label: "Ladder" },
   { tab: "build", label: "Build" },
-  { tab: "market", label: "Market" },
 ];
 
 /**
  * The realm sheet, bottom left: the verb discs ride its curved edge; its body is
- * the ledger — the ruler's head, four pages, and the page of whatever the map
+ * the ledger — the ruler's head, three pages, and the page of whatever the map
  * last picked: the realm itself (the sea), a settlement, a tile, the oracle or
  * a luxury good. Nothing on any page scrolls.
  */
@@ -89,8 +86,6 @@ export function RealmPanel({
   locked = false,
   income,
   onBuildBuildingRequest,
-  onBankSell,
-  onBankBuy,
   onLadderRequest,
   onFound,
 }: {
@@ -104,8 +99,6 @@ export function RealmPanel({
   /** The viewer's projected net income per turn. */
   income: Resources;
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
-  onBankSell: (material: TradableMaterial) => void;
-  onBankBuy: (material: TradableMaterial) => void;
   onLadderRequest: (request: { kind: "promote" | "demote"; from: PopType }) => void;
   onFound: (tileId: string) => void;
 }) {
@@ -260,7 +253,6 @@ export function RealmPanel({
               targetTileId={buildTarget ?? openTileId}
             />
           ) : null}
-          {tab === "market" ? <MarketPage onBankBuy={onBankBuy} onBankSell={onBankSell} /> : null}
         </section>
       </div>
     </section>

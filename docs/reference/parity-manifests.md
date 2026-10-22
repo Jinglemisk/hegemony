@@ -1,6 +1,6 @@
 # Parity manifests
 
-Last updated: 2026-10-21.
+Last updated: 2026-10-22.
 
 This reference defines the Phase 3.5 Step 2 enforcement boundary for consequential
 gameplay that is passive, automatic, content-driven, or read-only. It complements
@@ -23,7 +23,10 @@ create persistent state, and alter a policy decision. Each applicable layer must
 The command manifest is exhaustive by `GameCommand["type"]`. Browser controls construct
 commands in `src/client/controller.ts`; browser, simulation, and replay execute through
 the same atomic `transition`. A behavioral regression compares the browser adapter with a
-direct engine transition, while the manifest keeps every command classified.
+direct engine transition, while the manifest keeps every command classified. A command no
+screen offers is classed `batch-only` and names the ruleset switch, off by default, that
+keeps it: the bank's buy and sell survive only for batches that play the economy before
+player trade.
 
 Workflow-wide actor eligibility and player/spectator-safe observation now cross the engine,
 browser, and policy runner, with redaction and anti-peek fixtures in `projection.test.ts` and
@@ -50,9 +53,8 @@ Phase 4–5 extend this family deliberately rather than creating feature-private
 - `LUXURY_EFFECT_PARITY` for claim, suppression, derived activity, happiness, and transfer;
 - `TRADE_WORKFLOW_PARITY`, built with player trade's first PR, for offer, answer, counter,
   settle, withdraw and close. Each step names its engine function, its control on the offer
-  card, its telemetry and its fixtures; its simulation route names the trade plan's second PR,
-  where the bots learn to trade. The trade commands' `COMMAND_PARITY` entries use the
-  `not-yet` policy path for the same reason;
+  card, the bots' rule for it, the trade figures in telemetry and its fixtures, the bots'
+  own included (wood for food, a refused worse deal, a refused title);
 - `LAW_EFFECT_PARITY` also covers the shared typed Idea effects in Step 9, with
   focused rule, setup/purchase policy, public projection and telemetry fixtures.
   Ideas have no consumable effect path.
