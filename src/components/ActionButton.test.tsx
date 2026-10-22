@@ -47,6 +47,7 @@ it("keeps a blocked act focusable, refuses the click and says why with its cost"
   const tooltip = document.body.querySelector<HTMLElement>("[role=tooltip]")!;
   expect(button.getAttribute("aria-describedby")).toBe(tooltip.id);
   expect(tooltip.textContent).toContain("Draw from Kleon");
-  expect(tooltip.textContent).toContain("Requires 2 influence.");
+  // The reason takes its terms' icons, the term Title-Cased.
+  expect(tooltip.textContent).toContain("Requires 2 Influence.");
   expect(tooltip.textContent).toContain("2 Influence");
 });

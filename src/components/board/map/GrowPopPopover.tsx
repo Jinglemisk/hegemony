@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { GROWABLE_POPS, getGrowPopStatus, previewGrowPopIncomeDelta } from "../../../game/rules";
 import type { PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
+import { Prose } from "../../AnnotatedText";
 import { MechanicsDetails } from "../../MechanicsDetails";
 import { POP_GLYPHS } from "../../../ui/iconRegistry";
 import { Icon } from "../../../ui/icons/Icon";
@@ -81,7 +82,11 @@ export function GrowPopPopover({
                   effectiveCost={candidateStatus.cost}
                   heading={label}
                 >
-                  {!blocked ? <p className="mechanicsExplanation">{reason}</p> : null}
+                  {!blocked ? (
+                    <p className="mechanicsExplanation">
+                      <Prose links={false}>{reason}</Prose>
+                    </p>
+                  ) : null}
                 </MechanicsDetails>
               }
               key={candidate}

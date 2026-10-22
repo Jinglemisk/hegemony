@@ -1,4 +1,4 @@
-import type { LawEffect, Politician, PoliticianId, ResolutionCard } from "./types";
+import type { LawEffect, Politician, ResolutionCard } from "./types";
 
 /** Appendix B, read under section 5.9's global limits. */
 export const RESOLUTION_CARDS: ResolutionCard[] = [
@@ -286,10 +286,6 @@ export const POLITICIANS: Politician[] = [
     tendency: [{ type: "resourceDelta", resource: "food", amount: -3 }],
   },
 ];
-export const POLITICIANS_BY_ID = Object.fromEntries(POLITICIANS.map((p) => [p.id, p])) as Record<
-  PoliticianId,
-  Politician
->;
 export function getAuthoredResolutionCard(cardId: string): ResolutionCard | null {
   return RESOLUTION_CARDS.find((c) => c.id === cardId) ?? null;
 }

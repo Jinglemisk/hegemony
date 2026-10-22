@@ -1,10 +1,11 @@
 import { PLAYER_IDS } from "../../../game/data";
 import { ageEndRanking, victoryCardsHeld, victoryStandings } from "../../../game/victory";
 import type { HegemonyState, PlayerId } from "../../../game/types";
-import { numberWord, toRoman } from "../../../ui/formatters";
+import { numberWord } from "../../../ui/formatters";
 import { sign } from "../../../ui/frameFormat";
 import { TIEBREAK_RASTERS } from "../../../ui/iconRegistry";
 import { PLAYER_GLAZES, glazeOf } from "../../../ui/playerGlazes";
+import { Prose } from "../../AnnotatedText";
 import { Ico } from "../../frame/parts";
 import { ModalShell } from "./ModalShell";
 
@@ -55,17 +56,17 @@ export function GameOverModal({
     >
       <header className="tabletHead">
         <span className="tabletKicker label">
-          {raced
-            ? `The race is won · Year ${toRoman(G.year)}`
-            : `The age has ended · after Year ${toRoman(G.year)}`}
+          {raced ? "The race is won" : "The age has ended"}
         </span>
         <h2 className="display display-xl" id="game-over-title">
           {you ? "You rule" : `${name(winner)} rules`} the Hegemony
         </h2>
         <p className="tabletVoice body-em">
-          {raced
-            ? `${you ? "You opened your" : `${name(winner)} opened their`} turn holding ${toWin} titles.`
-            : "The year deck is spent. Most titles wins."}
+          <Prose links={false}>
+            {raced
+              ? `${you ? "You opened your" : `${name(winner)} opened their`} turn holding ${toWin} titles.`
+              : "The year deck is spent. Most titles wins."}
+          </Prose>
         </p>
       </header>
 
@@ -81,17 +82,19 @@ export function GameOverModal({
               <span className="ageWho">
                 <b className="title">
                   {name(id)}
-                  {id === viewerId ? " · you" : ""}
+                  {id === viewerId ? <span className="visuallyHidden">, you</span> : null}
                 </b>
                 <span className="ageTitles caption">
-                  {held.length
-                    ? held.map(({ card }) => (
-                        <span className="ageTitle" key={card.id}>
-                          <Ico path={`victory/${card.id}`} size="ui" />
-                          {card.shortName ?? card.name}
-                        </span>
-                      ))
-                    : "no titles held"}
+                  {held.length ? (
+                    held.map(({ card }) => (
+                      <span className="ageTitle" key={card.id}>
+                        <Ico path={`victory/${card.id}`} size="ui" />
+                        {card.shortName ?? card.name}
+                      </span>
+                    ))
+                  ) : (
+                    <Prose links={false}>no titles held</Prose>
+                  )}
                 </span>
               </span>
               <span className="ageCards num stat-lg">{held.length}</span>

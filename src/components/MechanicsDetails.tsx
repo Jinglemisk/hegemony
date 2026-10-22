@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { Resources } from "../game/types";
 import type { EffectPresentation } from "../ui/effects";
+import { Prose } from "./AnnotatedText";
 import { EffectLine } from "./EffectLine";
 import { Chips } from "./frame/parts";
 
@@ -9,8 +10,6 @@ export function MechanicsDetails({
   heading,
   effects = [],
   effectiveCost,
-  source,
-  duration,
   blockedReason,
   children,
   className,
@@ -18,8 +17,6 @@ export function MechanicsDetails({
   heading?: ReactNode;
   effects?: readonly EffectPresentation[];
   effectiveCost?: Partial<Resources>;
-  source?: ReactNode;
-  duration?: ReactNode;
   blockedReason?: ReactNode;
   children?: ReactNode;
   className?: string;
@@ -43,22 +40,12 @@ export function MechanicsDetails({
         </div>
       ) : null}
       {children}
-      {source ? (
-        <div className="mechanicsSlot mechanicsSource">
-          <span>Source</span>
-          <b>{source}</b>
-        </div>
-      ) : null}
-      {duration ? (
-        <div className="mechanicsSlot mechanicsDuration">
-          <span>Duration</span>
-          <b>{duration}</b>
-        </div>
-      ) : null}
       {blockedReason ? (
         <p className="mechanicsBlockedReason">
           <strong>Blocked</strong>
-          <span>{blockedReason}</span>
+          <span>
+            <Prose links={false}>{blockedReason}</Prose>
+          </span>
         </p>
       ) : null}
     </section>

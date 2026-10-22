@@ -49,13 +49,9 @@
   font: 700 var(--t-body) / var(--l-body) var(--f-name);
   letter-spacing: var(--track-name);
 }
-/* A caps label free to wrap keeps its own copy (`.caps` never wraps), as the
-   Codex's entry heads do; the island's tips share this one. */
-.tip-sub {
-  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
-  letter-spacing: var(--track-caps);
-  text-transform: uppercase;
-  color: var(--ink-66);
+/* The title's line holds the name and, at its far end, a countdown. */
+.tip-title .turns {
+  margin-left: auto;
 }
 .tip-ledger {
   display: grid;

@@ -4,7 +4,6 @@ import { Chips } from "../../frame/parts";
 import { ModalShell } from "./ModalShell";
 
 export function PlacementModalShell({
-  kicker,
   title,
   labelledBy,
   confirmLabel,
@@ -13,7 +12,6 @@ export function PlacementModalShell({
   onConfirm,
   children,
 }: {
-  kicker: string;
   title: string;
   labelledBy: string;
   confirmLabel: string;
@@ -31,13 +29,10 @@ export function PlacementModalShell({
     >
       <div className="placementCardSurface">
         <div className="eventCardCrest">
-          <span>{kicker}</span>
-          <b>{title}</b>
+          <b id={labelledBy}>{title}</b>
         </div>
 
-        <div className="placementCardBody" id={labelledBy}>
-          {children}
-        </div>
+        <div className="placementCardBody">{children}</div>
 
         <div className="placementCardFooter">
           <button className="placementCancelButton" onClick={onCancel} type="button">
@@ -57,7 +52,7 @@ export function PlacementModalShell({
   );
 }
 
-export function CostRow({ cost, note }: { cost: Partial<Resources>; note?: string }) {
+export function CostRow({ cost, note }: { cost: Partial<Resources>; note?: ReactNode }) {
   return (
     <div className="placementCostRow">
       <span className="placementSectionLabel">Cost</span>

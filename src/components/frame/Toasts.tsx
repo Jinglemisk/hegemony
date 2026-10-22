@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import type { Toast } from "./moments";
+import { Prose } from "../AnnotatedText";
 import { Ico } from "./parts";
 
 /** The lane under the ticker that shows the head of the moment queue (moments.tsx). */
@@ -22,7 +23,9 @@ export function ToastLane({ toast, onDismiss }: { toast: Toast | null; onDismiss
         </span>
         <span className="toast-words">
           <span className="kicker toast-kicker">{toast.kicker}</span>
-          <span className="toast-body">{toast.body}</span>
+          <span className="toast-body">
+            <Prose links={false}>{toast.body}</Prose>
+          </span>
         </span>
         <Ico path={toast.icon} size="tile" />
       </button>

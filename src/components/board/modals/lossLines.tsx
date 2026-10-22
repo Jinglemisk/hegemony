@@ -2,9 +2,12 @@ import type { ReactNode } from "react";
 import type { HegemonyState, LogEntry, PlayerId, PopLeave } from "../../../game/types";
 import { formatPopLabel, toRoman } from "../../../ui/formatters";
 import { sign } from "../../../ui/frameFormat";
+import { Prose } from "../../AnnotatedText";
 import { leaveParts } from "../../frame/moments";
+import { Delta } from "../../frame/parts";
 
-/** The lines a loss card lists (LossCard.tsx), one thing each. */
+/** The lines a loss card lists (LossCard.tsx), one thing each. The line's icon names
+ *  its term; a word the icon does not draw takes its own (`Prose`). */
 export type LossLine = { key: string; icon: string; text: ReactNode; muted?: boolean };
 
 /** "A slave left Korone." — one line per settlement and class. */
@@ -24,13 +27,18 @@ export function leaveLines(
   }));
 }
 
-/** "Unrest tokens 3 → 0. Happiness now −2." */
+/** "Unrest tokens 3 → 0. Happiness now −2." Fewer tokens helps. */
 export function tokensLine(tokens: number, level: number): LossLine {
   return {
     key: "tokens",
     icon: "unrest/unrest",
     muted: true,
-    text: `Unrest tokens ${tokens} → 0. Happiness now ${sign(level)}.`,
+    text: (
+      <>
+        Unrest tokens <Delta from={tokens} higherIsBetter={false} to={0} />.{" "}
+        <Prose links={false}>{`Happiness now ${sign(level)}.`}</Prose>
+      </>
+    ),
   };
 }
 

@@ -12,8 +12,6 @@ describe("MechanicsDetails", () => {
           effectiveCost={{ wood: 2, stone: 1 }}
           effects={[{ text: "+2 food income", tone: "positive" }]}
           heading="Granary"
-          source="Master Builders"
-          duration="Until year end"
         />
       </CodexLinkProvider>,
     );
@@ -24,12 +22,11 @@ describe("MechanicsDetails", () => {
     expect(markup).toContain("Effective cost");
     expect(markup).toContain("Wood");
     expect(markup).toContain("Stone");
-    expect(markup).toContain("Source");
-    expect(markup).toContain("Master Builders");
-    expect(markup).toContain("Duration");
-    expect(markup).toContain("Until year end");
     expect(markup).toContain("Blocked");
-    expect(markup).toContain("Requires an open building slot.");
+    // The reason takes its terms' icons, like every sentence a player reads.
+    expect(markup).toContain("Requires an open ");
+    expect(markup).toContain("Building");
+    expect(markup).toContain("Slot");
     expect(markup).not.toContain('role="button"');
   });
 });

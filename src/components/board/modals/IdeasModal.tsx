@@ -16,9 +16,10 @@ import { enumerateLegalOptions } from "../../../game/legalMoves";
 import type { HegemonyState } from "../../../game/types";
 import { presentLawEffect } from "../../../ui/effects";
 import { IDEA_RASTERS } from "../../../ui/iconRegistry";
-import { formatNumber, numberWord } from "../../../ui/formatters";
+import { formatNumber } from "../../../ui/formatters";
 import { settlementNames } from "../../../ui/settlementNames";
 import { ActionButton } from "../../ActionButton";
+import { Prose } from "../../AnnotatedText";
 import { EffectLine } from "../../EffectLine";
 import { useGameUi } from "../GameUiContext";
 import { Chips, Ico, SeatMark } from "../../frame/parts";
@@ -75,8 +76,6 @@ export function IdeasModal({
   const fresh = draftDone ? (latest?.ideaId ?? undefined) : undefined;
   const selectedIdea = ideas.find((idea) => idea.id === selected);
   const names = settlementNames(G.board.tiles);
-  const picked = draft.filter((seat) => seat.ideaId).length;
-  const left = ideas.length - holders.size;
   const { influenceCost, purchases } = G.ruleset.ideas;
   const take = getTakeIdeaStatus(G, viewerId, selected ?? undefined, target);
   // The engine's reasons; with none, the button only waits for a pick.
@@ -197,7 +196,6 @@ export function IdeasModal({
     ) : null;
 
   if (buying) {
-    const influence = G.players[viewerId].resources.influence;
     return (
       <ModalShell
         backdropClassName="ideas-backdrop"
@@ -215,8 +213,7 @@ export function IdeasModal({
               Buy a National Idea
             </h2>
             <p>
-              {formatNumber(influenceCost)} influence · you hold {formatNumber(influence)} ·{" "}
-              {numberWord(left)} {left === 1 ? "Idea" : "Ideas"} left
+              <Prose>{`An Idea costs ${formatNumber(influenceCost)} influence.`}</Prose>
             </p>
           </div>
           <button className="ideas-close" onClick={onClose} type="button">
@@ -227,7 +224,7 @@ export function IdeasModal({
         <footer className="ideas-footer">
           {settlerPicker ?? (
             <span className="ideas-legend">
-              A holder&rsquo;s mark: plain for the draft, tagged with the year when bought.
+              <Prose>A holder’s mark: plain for the draft, tagged with the year when bought.</Prose>
             </span>
           )}
           <ActionButton
@@ -258,10 +255,7 @@ export function IdeasModal({
       <div className="draft">
         <div className="draft-main">
           <header className="ideas-heading" data-c="ideas-heading">
-            <span className="kicker">
-              Setup · the draft · pick {Math.min(picked + (draftDone ? 0 : 1), draft.length)} of{" "}
-              {draft.length}
-            </span>
+            <span className="kicker">Setup · the draft</span>
             <h2 className="name" id="ideas-heading">
               {acting ? <SeatMark playerID={acting} /> : null}
               {draftDone
@@ -269,16 +263,20 @@ export function IdeasModal({
                 : `${G.players[currentPlayerId].name} · take a National Idea`}
             </h2>
             <p>
-              {draftDone
-                ? `The draft is done. The Ideas left can be bought in play for ${formatNumber(influenceCost)} influence.`
-                : "Seats pick in turn. A taken Idea is gone for everyone else."}
+              <Prose>
+                {draftDone
+                  ? `The draft is done. The Ideas left can be bought in play for ${formatNumber(influenceCost)} influence.`
+                  : "Seats pick in turn. A taken Idea is gone for everyone else."}
+              </Prose>
             </p>
           </header>
           {rows}
           <footer className="ideas-footer" data-c="ideas-footer">
             {draftDone ? (
               <>
-                <span className="ideas-legend">Year I&rsquo;s card comes next.</span>
+                <span className="ideas-legend">
+                  <Prose>Year I’s card comes next.</Prose>
+                </span>
                 <button className="btn name is-primary" onClick={onClose} type="button">
                   Turn the first year
                 </button>
@@ -288,7 +286,7 @@ export function IdeasModal({
                 {settlerPicker ??
                   (selectedIdea ? (
                     <span className="ideas-legend">
-                      {selectedIdea.name} · {effectLines(selectedIdea)}
+                      <Prose>{selectedIdea.name}</Prose> · {effectLines(selectedIdea)}
                     </span>
                   ) : null)}
                 <ActionButton
@@ -342,7 +340,9 @@ function DraftOrder({ G, draftDone }: { G: HegemonyState; draftDone: boolean }) 
               <SeatMark playerID={seat.playerID} />
               <span className="draft-who">
                 <b className="name">{G.players[seat.playerID].name}</b>
-                <span className={`draft-what is-${idea ? "picked" : seat.state}`}>{status}</span>
+                <span className={`draft-what is-${idea ? "picked" : seat.state}`}>
+                  <Prose>{status}</Prose>
+                </span>
               </span>
             </li>
           );

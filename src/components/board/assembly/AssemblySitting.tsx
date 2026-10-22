@@ -29,6 +29,7 @@ import { victoryMetricValue, voiceHolder } from "../../../game/victory";
 import type { HegemonyState, PlayerId, Resources } from "../../../game/types";
 import { tieRule } from "../../../ui/effects";
 import { sign } from "../../../ui/frameFormat";
+import { turnsUntilYear } from "../../../ui/frameSelectors";
 import { RESOURCE_RASTERS } from "../../../ui/iconRegistry";
 import { numberWord, ordinal, seatName, toRoman } from "../../../ui/formatters";
 import { glazeOf, PLAYER_GLAZES } from "../../../ui/playerGlazes";
@@ -37,16 +38,15 @@ import { Popover } from "../../overlays/Popover";
 import { ComposeCard } from "../../frame/trade/OfferCard";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
 import { ActionButton } from "../../ActionButton";
-import { Chips, Ico, SeatMark } from "../../frame/parts";
+import { AnnotatedText, Prose } from "../../AnnotatedText";
+import { Chips, Delta, Ico, SeatMark, Turns } from "../../frame/parts";
 import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { ModalShell } from "../modals/ModalShell";
 import { ResolutionDetails, StandingLawDetails } from "./AssemblyPresentation";
 import type { Sitting, SittingStage } from "./sitting";
 import {
-  cardSource,
   dockMark,
-  itemKind,
   lawSlotWords,
   movedBy,
   orderWords,
@@ -64,6 +64,9 @@ import {
  *
  * What one seat sees of another during the proposal round is what the projection
  * leaves it: whether that seat has sealed, never what it drew or sealed.
+ *
+ * Its words run through the annotator without links: the Codex opens behind the
+ * scrim, where a term's click would land out of sight.
  */
 export function AssemblySitting({ sitting }: { sitting: Sitting }) {
   const { G } = useGameUi();
@@ -112,45 +115,49 @@ function SittingHead({ G, sitting }: { G: HegemonyState; sitting: Sitting }) {
   const { viewerId } = useGameUi();
   const { session, stage } = sitting;
   const at = RAIL.findIndex((step) => step.stages.includes(stage));
-  const year = `Year ${toRoman(session.year)}`;
   const itemIndex = stage === "result" ? sitting.resultIndex : session.ballotIndex;
   const item = session.ballot[itemIndex];
-  const head =
+  const next = nextAssemblyYear(G);
+  // The title is a name. Where the sitting stands in its count is read aloud only
+  // (`count`); the line under the title is the motion's mover, or the next sitting.
+  const head: { title: string; sub?: ReactNode; count?: string } =
     (stage === "vote" || stage === "result") && item
       ? {
-          kicker: `Item ${itemIndex + 1} of ${session.ballot.length}`,
           title: ballotItemName(G, item),
           sub: movedBy(G, item, viewerId),
+          count: `Item ${itemIndex + 1} of ${session.ballot.length}`,
         }
       : stage === "ballot"
-        ? {
-            kicker: "ΕΚΚΛΗΣΙΑ",
-            title: "The ballot",
-            sub: `${capitalize(numberWord(session.ballot.length))} item${session.ballot.length === 1 ? "" : "s"}, voted in turn from ${seatName(G, session.voteOrder[0], viewerId)}`,
-          }
+        ? { title: "The ballot" }
         : stage === "rises"
           ? {
-              kicker: "ΕΚΚΛΗΣΙΑ",
               title: "The Assembly rises",
-              sub: `${year} · ${nextAssemblyYear(G) ? `next sitting in Year ${toRoman(nextAssemblyYear(G)!)}` : "the last sitting"}`,
+              sub:
+                next === null ? (
+                  "The last sitting"
+                ) : (
+                  <>
+                    Next sitting <Turns n={turnsUntilYear(G, viewerId, next)} />
+                  </>
+                ),
             }
           : {
-              kicker: "ΕΚΚΛΗΣΙΑ",
               title: "The Assembly",
-              sub: `${year} · ${ordinal(G.assembliesHeld)} sitting of ${assemblySittings(G)}`,
+              count: `${ordinal(G.assembliesHeld)} sitting of ${assemblySittings(G)}`,
             };
 
   return (
     <header className="sit-head">
       <Ico path="assembly/agora" size="disc" />
       <div className="sit-title">
-        <span className="kicker" lang={head.kicker === "ΕΚΚΛΗΣΙΑ" ? "el" : undefined}>
-          {head.kicker}
+        <span className="kicker" lang="el">
+          ΕΚΚΛΗΣΙΑ
         </span>
         <h2 className="name" id="sitting-title">
           {head.title}
         </h2>
-        <span className="sit-sub">{head.sub}</span>
+        {head.count ? <span className="visuallyHidden">{head.count}</span> : null}
+        {head.sub ? <span className="sit-sub">{head.sub}</span> : null}
       </div>
       <ol aria-label="The sitting" className="sit-rail">
         {RAIL.map((step, index) => (
@@ -201,7 +208,7 @@ export function AssemblyDock({ sitting }: { sitting: Sitting }) {
     >
       <Ico path="assembly/agora" size="ui" />
       <span className="sit-dock-words">
-        <b className="name">Assembly · Year {toRoman(session.year)}</b>
+        <b className="name">Assembly</b>
         <span>{where}</span>
       </span>
       <span className="sit-dock-seats">
@@ -232,8 +239,7 @@ function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }
       <div className="sit-body">
         <h3 className="kicker sit-sec">
           <Ico path="assembly/politician" size="chip" />
-          Draw from a politician · {nextDrawCost(G)}
-          <Ico path={RESOURCE_RASTERS.influence} size="chip" />· you hold {influence}
+          Draw from a politician
         </h3>
         <div className="sit-pols">
           {POLITICIANS.map((politician) => {
@@ -242,10 +248,13 @@ function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }
               <div className="sit-pol" key={politician.id}>
                 <b className="name sit-name">{politician.name}</b>
                 <span className="kicker">{politician.epithet}</span>
-                <span className="sit-text">{politician.creed}</span>
+                <AnnotatedText className="sit-text" links={false} text={politician.creed} />
                 <span className="sit-prize">
-                  Author’s prize <Chips amounts={G.ruleset.assembly.prizes[politician.id]} signed />{" "}
-                  · {politician.kind === "law" ? "Laws" : "Directives"}
+                  <Prose links={false}>
+                    Author’s prize{" "}
+                    <Chips amounts={G.ruleset.assembly.prizes[politician.id]} signed /> ·{" "}
+                    {politician.kind === "law" ? "Laws" : "Directives"}
+                  </Prose>
                 </span>
                 <ActionButton
                   aria-label={`Draw from ${politician.name}`}
@@ -303,7 +312,12 @@ function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }
               <Ico path="assembly/pass" size="ui" />
               Hold your peace
             </button>
-            <span className="sit-note">Your votes this sitting: {votesWords(G, viewerId)}</span>
+            <span className="sit-note">
+              <AnnotatedText
+                links={false}
+                text={`Your votes this sitting: ${votesWords(G, viewerId)}`}
+              />
+            </span>
           </div>
         )}
         {G.ruleset.trade.enabled && session.voteOrder.every((id) => session.proposalDone[id]) ? (
@@ -333,8 +347,7 @@ function Trade({ G, session }: { G: HegemonyState; session: AssemblySession }) {
     <>
       <h3 className="kicker sit-sec">
         <Ico path="market/handshake" size="chip" />
-        Trade before the ballots · open offers are on the alarms row and close when every seat is
-        Ready
+        Trade before the ballots
       </h3>
       <div className="sit-trade" ref={anchor}>
         <span className="sit-offer-as">
@@ -394,21 +407,22 @@ function Laws({
     <>
       <h3 className="kicker sit-sec">
         <Ico path="assembly/stele" size="chip" />
-        Standing Laws · {laws.length} of {lawCap}
+        Standing Laws
       </h3>
       <div className="sit-laws">
         {laws.map((law) => {
           const card = getResolutionCard(G.definition.content, law.cardId);
           const protectedNow = !lawCanBeRemoved(G, law.cardId);
+          // A Law raised this sitting is ringed; the recap above says it is new.
           const fresh = law.enactedYear === year && G.assembly?.phase === "closing";
           const body = (
             <>
               <b className="name sit-name">{card?.name ?? law.cardId}</b>
-              <span className="sit-text">{card?.text}</span>
+              {card ? <AnnotatedText className="sit-text" links={false} text={card.text} /> : null}
               <span className="kicker sit-by">
                 <SeatMark playerID={law.author} />
                 {seatName(G, law.author, viewerId)} · Year {toRoman(law.enactedYear)}
-                {fresh ? " · new" : protectedNow ? " · protected" : ""}
+                {protectedNow ? " · protected" : ""}
               </span>
             </>
           );
@@ -436,9 +450,14 @@ function Laws({
         })}
         {empty > 0 ? (
           <div className="sit-law is-empty" style={{ gridColumn: `span ${empty}` }}>
-            {empty === lawCap
-              ? "No Law stands yet"
-              : `${capitalize(numberWord(empty))} ${empty === 1 ? "stele stands" : "stelae stand"} empty`}
+            <AnnotatedText
+              links={false}
+              text={
+                empty === lawCap
+                  ? "No Law stands yet"
+                  : `${capitalize(numberWord(empty))} ${empty === 1 ? "stele stands" : "stelae stand"} empty`
+              }
+            />
           </div>
         ) : null}
       </div>
@@ -458,19 +477,18 @@ function Drawn({ G, session }: { G: HegemonyState; session: AssemblySession }) {
     <>
       <div className="sit-body sit-drawn">
         <div className="sit-card">
-          <span className="kicker sit-sec">
+          <span className="sit-item-name">
             <Ico path={kindIcon(card)} size="ui" />
-            {cardSource(card)}
+            <Tooltip
+              content={
+                <ResolutionDetails card={card} content={G.definition.content} ruleset={G.ruleset} />
+              }
+              focusable
+            >
+              <b className="name sit-card-name">{card.name}</b>
+            </Tooltip>
           </span>
-          <Tooltip
-            content={
-              <ResolutionDetails card={card} content={G.definition.content} ruleset={G.ruleset} />
-            }
-            focusable
-          >
-            <b className="name sit-card-name">{card.name}</b>
-          </Tooltip>
-          <span className="sit-text">{card.text}</span>
+          <AnnotatedText className="sit-text" links={false} text={card.text} />
           <span className="sit-note">
             If it passes you take the author’s prize:{" "}
             <Chips amounts={G.ruleset.assembly.prizes[card.politician]} signed />
@@ -503,8 +521,14 @@ function Drawn({ G, session }: { G: HegemonyState; session: AssemblySession }) {
           ) : (
             <>
               <h3 className="kicker sit-sec">If it passes</h3>
-              <p className="sit-text">{lawSlotWords(G, card)}</p>
-              {blocked ? <p className="sit-warn">{blocked}</p> : null}
+              <p className="sit-text">
+                <AnnotatedText links={false} text={lawSlotWords(G, card)} />
+              </p>
+              {blocked ? (
+                <p className="sit-warn">
+                  <AnnotatedText links={false} text={blocked} />
+                </p>
+              ) : null}
             </>
           )}
           <div className="sit-acts">
@@ -532,8 +556,10 @@ function Drawn({ G, session }: { G: HegemonyState; session: AssemblySession }) {
             </button>
           </div>
           <p className="sit-note">
-            Discarding leaves the {nextDrawCost(G)} influence spent. There is no second draw this
-            sitting.
+            <AnnotatedText
+              links={false}
+              text={`Discarding leaves the ${nextDrawCost(G)} influence spent. There is no second draw this sitting.`}
+            />
           </p>
         </div>
       </div>
@@ -554,7 +580,7 @@ function directiveFx(G: HegemonyState, card: DirectiveCard, target: PlayerId): R
       fx.push(
         <span key={resource}>
           <Ico path={RESOURCE_RASTERS[resource]} size="chip" />
-          {was} → {now}
+          <Delta from={was} to={now} />
         </span>,
       );
   }
@@ -563,13 +589,24 @@ function directiveFx(G: HegemonyState, card: DirectiveCard, target: PlayerId): R
     fx.push(
       <span key="level">
         <Ico path={RESOURCE_RASTERS.happiness} size="chip" />
-        {sign(level[0])} → {sign(level[1])}
+        <Delta format={sign} from={level[0]} to={level[1]} />
       </span>,
     );
   const pops = [victoryMetricValue(G, target, "pops"), victoryMetricValue(after, target, "pops")];
-  if (pops[0] !== pops[1]) fx.push(<span key="pops">pops {`${pops[0]} → ${pops[1]}`}</span>);
-  if (after.players[target].incomeSuppressedTurns > G.players[target].incomeSuppressedTurns)
-    fx.push(<span key="income">no income next turn</span>);
+  if (pops[0] !== pops[1])
+    fx.push(
+      <span key="pops">
+        <Ico path="pops/crowd" size="chip" />
+        <Delta from={pops[0]} to={pops[1]} />
+      </span>,
+    );
+  const suppressed = after.players[target].incomeSuppressedTurns;
+  if (suppressed > G.players[target].incomeSuppressedTurns)
+    fx.push(
+      <span key="income">
+        no income <Turns n={suppressed} />
+      </span>,
+    );
   const fallen = G.activeLaws.find(
     (law) => !after.activeLaws.some((still) => still.cardId === law.cardId),
   );
@@ -580,7 +617,11 @@ function directiveFx(G: HegemonyState, card: DirectiveCard, target: PlayerId): R
       </span>,
     );
   if (after.pendingIsonomiaTarget === target && G.pendingIsonomiaTarget !== target)
-    fx.push(<span key="votes">1 base vote next sitting</span>);
+    fx.push(
+      <span key="votes">
+        <AnnotatedText links={false} text="1 base vote next sitting" />
+      </span>,
+    );
   return fx.length ? fx : [<span key="none">no effect now</span>];
 }
 
@@ -624,9 +665,10 @@ function Ballot({
                     >
                       <b className="name sit-name">{ballotItemName(G, item)}</b>
                     </Tooltip>
-                    <span className="sit-note">{itemKind(G, item)}</span>
                   </span>
-                  <span className="sit-text">{card?.text}</span>
+                  {card ? (
+                    <AnnotatedText className="sit-text" links={false} text={card.text} />
+                  ) : null}
                 </span>
                 <span className="sit-item-side">{itemSide(G, item, viewerId)}</span>
               </li>
@@ -680,7 +722,10 @@ function itemSide(G: HegemonyState, item: BallotItem, viewer: PlayerId) {
           Authored by {seatName(G, law.author, viewer)}, Year {toRoman(law.enactedYear)}
         </span>
         <span>
-          Counts toward {law.author === viewer ? "your" : `${G.players[law.author].name}’s`} Voice
+          <AnnotatedText
+            links={false}
+            text={`Counts toward ${law.author === viewer ? "your" : `${G.players[law.author].name}’s`} Voice`}
+          />
         </span>
       </>
     ) : null;
@@ -688,9 +733,14 @@ function itemSide(G: HegemonyState, item: BallotItem, viewer: PlayerId) {
   return (
     <>
       <span>
-        {item.card.kind === "directive" && item.target
-          ? `Against ${seatName(G, item.target, viewer)}`
-          : lawSlotWords(G, item.card)}
+        <AnnotatedText
+          links={false}
+          text={
+            item.card.kind === "directive" && item.target
+              ? `Against ${seatName(G, item.target, viewer)}`
+              : lawSlotWords(G, item.card)
+          }
+        />
       </span>
       <span>
         Prize to {seatName(G, item.proposer, viewer)}:{" "}
@@ -730,7 +780,10 @@ function Vote({ G, session }: { G: HegemonyState; session: AssemblySession }) {
               <i className="is-nay" style={{ flexGrow: outlook.nay }} />
             </span>
             <span className="sit-note">
-              {capitalize(tieRule(G.ruleset))}. {house} votes in the house; {left} still to cast.
+              <AnnotatedText
+                links={false}
+                text={`${capitalize(tieRule(G.ruleset))}. ${house} votes in the house; ${left} still to cast.`}
+              />
             </span>
           </span>
           <span className="sit-side is-nay">
@@ -753,8 +806,10 @@ function Vote({ G, session }: { G: HegemonyState; session: AssemblySession }) {
               <span className="kicker sit-sec">Your votes</span>
               <b>{currentVoteWeight(G, viewerId)}</b>
               <span className="sit-note">
-                {weightParts(G, viewerId)}
-                {bought ? ` + ${bought} bought` : ""}
+                <AnnotatedText
+                  links={false}
+                  text={`${weightParts(G, viewerId)}${bought ? ` + ${bought} bought` : ""}`}
+                />
               </span>
             </span>
             <span className="sit-col">
@@ -783,7 +838,9 @@ function Vote({ G, session }: { G: HegemonyState; session: AssemblySession }) {
                 </span>
               </span>
               <p className="sit-what">
-                <b>{line.lead}</b> {line.rest}
+                <Prose links={false}>
+                  <b>{line.lead}</b> {line.rest}
+                </Prose>
               </p>
             </span>
             <span className="sit-col">
@@ -807,14 +864,18 @@ function Vote({ G, session }: { G: HegemonyState; session: AssemblySession }) {
           </div>
         ) : (
           <p className="sit-what">
-            <b>{line.lead}</b> {line.rest}
+            <Prose links={false}>
+              <b>{line.lead}</b> {line.rest}
+            </Prose>
           </p>
         )}
       </div>
       <footer className="sit-foot">
         <span className="sit-note">
-          Votes are open: everyone sees each vote as it lands. Bought votes count for this sitting
-          only.
+          <AnnotatedText
+            links={false}
+            text="Votes are open: everyone sees each vote as it lands. Bought votes count for this sitting only."
+          />
         </span>
       </footer>
     </>
@@ -879,7 +940,7 @@ function Result({
           >
             <div className={`sit-law ${result.item.kind === "repeal" ? "is-gone" : "is-new"}`}>
               <b className="name sit-name">{card.name}</b>
-              <span className="sit-text">{card.text}</span>
+              <AnnotatedText className="sit-text" links={false} text={card.text} />
             </div>
           </Tooltip>
         ) : null}
@@ -891,7 +952,11 @@ function Result({
               <Chips amounts={prize} signed />
             </span>
           ) : null}
-          {result.outcome === "blocked" ? <span>{result.summary}</span> : null}
+          {result.outcome === "blocked" ? (
+            <span>
+              <AnnotatedText links={false} text={result.summary} />
+            </span>
+          ) : null}
           <span>
             <Ico path="victory/voice" size="ui" />
             <b>Voice of the Assembly:</b>{" "}
@@ -934,7 +999,7 @@ function Rises({ G, session }: { G: HegemonyState; session: AssemblySession }) {
                 <SeatMark playerID={result.item.proposer} />
                 <span className="sit-item-words">
                   <b className="name sit-name">{ballotItemName(G, result.item)}</b>
-                  <span className="sit-text">{words.line}</span>
+                  <AnnotatedText className="sit-text" links={false} text={words.line} />
                 </span>
                 <span className="sit-item-side">
                   <span className={`kicker sit-verdict ${words.tone}`}>{words.short}</span>
@@ -962,7 +1027,11 @@ function Rises({ G, session }: { G: HegemonyState; session: AssemblySession }) {
             <b>{seatName(G, voice, viewerId, true)}</b>
           ) : (
             <>
-              <b>nobody</b> (no seat authors {G.ruleset.victory.minimums.voice} standing Laws)
+              <b>nobody</b>
+              <AnnotatedText
+                links={false}
+                text={`(no seat authors ${G.ruleset.victory.minimums.voice} standing Laws)`}
+              />
             </>
           )}
         </span>
@@ -1043,9 +1112,14 @@ function SeatStrip({
       </ol>
       {votes ? null : (
         <span className="sit-note">
-          {shared
-            ? "Trade, then press Ready. The ballots open when every seat is Ready."
-            : "Each seat decides in secret, in turn order."}
+          <AnnotatedText
+            links={false}
+            text={
+              shared
+                ? "Trade, then press Ready. Open offers wait on the alarms row; when every seat is Ready they close and the ballots open."
+                : "Each seat decides in secret, in turn order."
+            }
+          />
         </span>
       )}
     </footer>

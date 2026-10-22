@@ -3,9 +3,10 @@ import { getResolutionCard, nextAssemblyYear, politicianStandings } from "../../
 import type { PoliticianStanding } from "../../../game/assembly";
 import { victoryStandings } from "../../../game/victory";
 import type { HegemonyState, PlayerId } from "../../../game/types";
+import { turnsUntilYear } from "../../../ui/frameSelectors";
 import { numberWord, yearLabel } from "../../../ui/formatters";
-import { AnnotatedText } from "../../AnnotatedText";
-import { Ico, SeatMark, Tip } from "../../frame/parts";
+import { AnnotatedText, Prose } from "../../AnnotatedText";
+import { Ico, SeatMark, Tip, TipBody, Turns } from "../../frame/parts";
 import { Tooltip } from "../../overlays/Tooltip";
 import { StandingLawDetails } from "../assembly/AssemblyPresentation";
 import { TitleRow } from "./VictoryTab";
@@ -30,16 +31,18 @@ export function AgoraTab({ G, playerID }: { G: HegemonyState; playerID: PlayerId
   return (
     <div className="agoraPage" data-c="agora">
       <p className="a-next caps">
-        {G.assembly
-          ? "The Assembly sits now"
-          : nextYear === null
-            ? "No Assembly is left"
-            : `Next Assembly ${yearLabel(nextYear)}`}
+        {G.assembly ? (
+          <Prose>The Assembly sits now</Prose>
+        ) : nextYear === null ? (
+          <Prose>No Assembly is left</Prose>
+        ) : (
+          <Prose>
+            Next Assembly <Turns n={turnsUntilYear(G, playerID, nextYear)} />
+          </Prose>
+        )}
       </p>
 
-      <div className="r-head a-head caps">
-        Standing laws · {laws.length} of {lawCap}
-      </div>
+      <div className="r-head a-head caps">Standing laws</div>
       {laws.map((law) => {
         const card = getResolutionCard(G.definition.content, law.cardId);
         return card ? (
@@ -65,7 +68,9 @@ export function AgoraTab({ G, playerID }: { G: HegemonyState; playerID: PlayerId
       })}
       {empty > 0 ? (
         <p className="a-empty page-empty">
-          {numberWord(empty)} {empty === 1 ? "stele stands" : "stelae stand"} empty
+          <AnnotatedText
+            text={`${numberWord(empty)} ${empty === 1 ? "stele stands" : "stelae stand"} empty`}
+          />
         </p>
       ) : null}
 
@@ -88,8 +93,8 @@ export function AgoraTab({ G, playerID }: { G: HegemonyState; playerID: PlayerId
               <Ico path="assembly/politician" size="chip" />
               <Tooltip
                 content={
-                  <Tip sub={standing.politician.epithet} title={standing.politician.name}>
-                    <p className="tip-body">{standing.politician.creed}</p>
+                  <Tip title={standing.politician.name}>
+                    <TipBody>{standing.politician.creed}</TipBody>
                   </Tip>
                 }
                 focusable
@@ -105,7 +110,11 @@ export function AgoraTab({ G, playerID }: { G: HegemonyState; playerID: PlayerId
             ))}
           </div>
           <div className="r-b">
-            <span className="cap">{oratorLine(standing)}</span>
+            <AnnotatedText
+              className="cap"
+              linkContext={standing.politician.name}
+              text={oratorLine(standing)}
+            />
           </div>
         </div>
       ))}

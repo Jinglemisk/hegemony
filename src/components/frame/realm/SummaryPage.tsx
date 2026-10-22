@@ -1,6 +1,7 @@
 import { playerNationalIdeas } from "../../../game/ideas";
 import { Tooltip } from "../../overlays/Tooltip";
-import { Tip } from "../parts";
+import { Prose } from "../../AnnotatedText";
+import { Tip, TipBody, Turns } from "../parts";
 import {
   POP_TYPES,
   activeClaims,
@@ -13,6 +14,8 @@ import {
 import type { Resources } from "../../../game/types";
 import { victoryStandings } from "../../../game/victory";
 import { formatNumber, formatPopLabel } from "../../../ui/formatters";
+import { sign, tone } from "../../../ui/frameFormat";
+import { turnsLeftInYear } from "../../../ui/frameSelectors";
 import { POP_RASTERS } from "../../../ui/iconRegistry";
 import { settlementNames } from "../../../ui/settlementNames";
 import { useGameUi } from "../../board/GameUiContext";
@@ -65,16 +68,19 @@ export function SummaryPage({
       </dd>
       <dt className="caps">Mood</dt>
       <dd>
-        <span className={`num ${mood.happiness < 0 ? "neg" : "pos"}`}>
-          {formatNumber(mood.happiness)}
-        </span>
+        <span className={`num ${tone(mood.happiness)}`}>{sign(mood.happiness)}</span>
         <span className="cap">
-          happiness, {mood.tier}
-          {mood.outcome.tokens !== 0
-            ? ` · ${formatNumber(mood.outcome.tokens)} Unrest ${mood.outcome.tokens === 1 ? "token" : "tokens"}`
-            : ""}
-          {mood.luxuryBonus !== 0 ? ` · ${formatNumber(mood.luxuryBonus)} from luxuries` : ""}
-          {mood.calmBonus !== 0 ? ` · ${formatNumber(mood.calmBonus)} from calm` : ""}
+          <Prose>happiness</Prose>
+          {/* The tier names a state, not the Calm act or the Unrest token: plain words. */}
+          {`, ${mood.tier}`}
+          <Prose>
+            {mood.outcome.tokens !== 0
+              ? ` · ${formatNumber(mood.outcome.tokens)} Unrest ${mood.outcome.tokens === 1 ? "token" : "tokens"}`
+              : ""}
+            {mood.luxuryBonus !== 0 ? ` · ${sign(mood.luxuryBonus)} from luxuries` : ""}
+            {mood.calmBonus !== 0 ? ` · ${sign(mood.calmBonus)} from calm ` : ""}
+          </Prose>
+          {mood.calmBonus !== 0 ? <Turns n={turnsLeftInYear(G, viewerId)} /> : null}
         </span>
       </dd>
       <dt className="caps">Laurels</dt>
@@ -82,8 +88,10 @@ export function SummaryPage({
         <Ico path="victory/laurel" size="chip" />
         <b className="num">{held.length}</b>
         <span className="cap">
-          of {G.ruleset.victory.cardsToWin}
-          {held.length > 0 ? ` · ${held.map((standing) => standing.card.name).join(", ")}` : ""}
+          <Prose>
+            {`of ${G.ruleset.victory.cardsToWin}`}
+            {held.length > 0 ? ` · ${held.map((standing) => standing.card.name).join(", ")}` : ""}
+          </Prose>
         </span>
       </dd>
       <dt className="caps">Luxuries</dt>
@@ -93,7 +101,9 @@ export function SummaryPage({
         ) : (
           claims.map((asset) => (
             <span className={`cap${active.has(asset.id) ? "" : " is-idle"}`} key={asset.id}>
-              {getLuxuryGood(G.definition.content, asset.goodId)?.name ?? asset.goodId}
+              <Prose>
+                {getLuxuryGood(G.definition.content, asset.goodId)?.name ?? asset.goodId}
+              </Prose>
             </span>
           ))
         )}
@@ -106,12 +116,14 @@ export function SummaryPage({
             focusable
             ariaLabel={`${idea.name}: ${idea.text}`}
             content={
-              <Tip sub="National Idea" title={idea.name}>
-                <p className="tip-body">{idea.text}</p>
+              <Tip title={idea.name}>
+                <TipBody>{idea.text}</TipBody>
               </Tip>
             }
           >
-            <span className="cap">{idea.name}</span>
+            <span className="cap">
+              <Prose links={false}>{idea.name}</Prose>
+            </span>
           </Tooltip>
         ))}
         {playerNationalIdeas(G, viewerId).length === 0 ? (

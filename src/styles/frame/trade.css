@@ -405,15 +405,6 @@
   align-items: center;
   gap: var(--s-1);
 }
-.trade-arr {
-  color: var(--ink-45);
-}
-.trade-delta .is-up {
-  color: var(--pos);
-}
-.trade-delta .is-down {
-  color: var(--clay-ink);
-}
 
 /* Every named seat's answer, at once. */
 .trade-answers {

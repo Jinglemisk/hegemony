@@ -11,6 +11,7 @@ import { PLAYER_GLAZES, glazeOf } from "../../../ui/playerGlazes";
 import { settlementNameOf } from "../../../ui/settlementNames";
 import { SETTLEMENT_GLYPHS, eventBlowGlyph } from "../../../ui/iconRegistry";
 import { Icon } from "../../../ui/icons/Icon";
+import { Prose } from "../../AnnotatedText";
 import { eventCardArtUrl } from "../events";
 import { capitalize } from "../helpers";
 import { CeremonyBlow } from "./CeremonyBlow";
@@ -24,7 +25,8 @@ import { TileListbox } from "../TileListbox";
  *
  * These rows used to read "BOURA · CITY · PLAINS +6 FOOD" — the tile's yield,
  * which is not what "a settlement with room" is a question about, and which left
- * the ONE number that decides it (how much room) off the card entirely.
+ * the ONE number that decides it (how much room) off the card entirely. The kind
+ * is the row's glyph, so the title is the name alone; the label keeps the kind.
  */
 function settlementRoom(
   G: HegemonyState,
@@ -36,7 +38,7 @@ function settlementRoom(
   const settlement = getOwnedSettlement(G, tileId, playerID);
 
   if (!tile || !settlement) {
-    return { title: tileId, detail: "", isCity: false };
+    return { title: tileId, kind: "Settlement", detail: "", isCity: false };
   }
 
   const rivals = tile.settlements.filter((candidate) => candidate.owner !== playerID);
@@ -45,7 +47,8 @@ function settlementRoom(
     : "";
 
   return {
-    title: `${settlementNameOf(G.board.tiles, settlement.id)} · ${capitalize(settlement.kind)}`,
+    title: settlementNameOf(G.board.tiles, settlement.id),
+    kind: capitalize(settlement.kind),
     detail: `room for ${room} more · ${filled} of ${capacity} filled${shared}`,
     isCity: settlement.kind !== "colony",
   };
@@ -145,6 +148,7 @@ export function PendingPlayerEventModal() {
         <CeremonyBlow
           className="blowBand"
           icon={effects.length > 0 ? <Icon glyph={eventBlowGlyph(effects[0])} size="rail" /> : null}
+          links={false}
           presentation={blow}
         />
 
@@ -166,19 +170,23 @@ export function PendingPlayerEventModal() {
                   icon: where.isCity ? SETTLEMENT_GLYPHS.city : SETTLEMENT_GLYPHS.colony,
                   title: where.title,
                   detail: where.detail,
-                  label: `Place the pops in ${where.title} — ${where.detail}.`,
+                  label: `Place the pops in ${where.title} (${where.kind}) — ${where.detail}.`,
                 };
               })}
               value={targetTileId || null}
             />
             {targetTileIds.length === 0 ? (
-              <em className="caption">No owned settlement has room.</em>
+              <em className="caption">
+                <Prose links={false}>No owned settlement has room.</Prose>
+              </em>
             ) : null}
           </div>
         ) : null}
 
         {!isActive ? (
-          <p className="fateWait caption">Only the active player can resolve this event.</p>
+          <p className="fateWait caption">
+            <Prose links={false}>Only the active player can resolve this event.</Prose>
+          </p>
         ) : null}
 
         <button

@@ -6,7 +6,8 @@
  * printed chrome via `title=` sentences. All three are counted here, with the
  * forms that slipped past the first count: sizes inside the `font:` shorthand or
  * a name's `--name-size`, and `rgb()`/`hsl()` colours. A fourth rule counts
- * z-index numbers off the `--z-*` scale.
+ * z-index numbers off the `--z-*` scale, and a fifth tooltip markup hand-rolled
+ * around its shared parts.
  *
  * This is a RATCHET, not a gate. Every existing violation is grandfathered by
  * COUNT in `budgets` below; the run fails when a count RISES, and prints the new
@@ -30,13 +31,18 @@ const listMode = process.argv.includes("--list");
  * A count that comes in UNDER budget is reported so the number can be tightened.
  */
 const budgets = {
-  "font-size": 65,
-  "font-shorthand": 82,
+  "font-size": 64,
+  "font-shorthand": 81,
   "raw-hex": 33,
   "raw-rgb-hsl": 109,
   "raw-z-index": 2,
   "printed-mechanics": 0,
+  "raw-tip-markup": 0,
 };
+
+/** The tooltip's parts (`Tip`, `TipBody`) own its markup: a title holds only its name
+ *  and a countdown, and every paragraph takes its terms' icons. */
+const TIP_PARTS = "src/components/frame/parts.tsx";
 
 /** type.css owns the nine roles; fonts.css declares faces. Sizes are legal there
  *  and nowhere else. tunePanel.css is a dev-only surface the player never sees. */
@@ -199,6 +205,12 @@ for (const file of files) {
     // (d) a layer stacked by a number instead of by its place on the `--z-*` scale.
     if (extension === ".css" && /\bz-index\s*:(?!\s*var\(--z-)/.test(line)) {
       record("raw-z-index", file, lineNumber, line);
+    }
+
+    // (e) a tooltip title or paragraph hand-rolled around the shared parts, where it
+    //     would miss the title rule and the icons.
+    if (extension === ".tsx" && name !== TIP_PARTS && /className="tip-(?:title|body)"/.test(line)) {
+      record("raw-tip-markup", file, lineNumber, line);
     }
   });
 }

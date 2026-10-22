@@ -125,7 +125,7 @@ test("an offer to the table is countered, then the first accept trades", async (
   await card.getByRole("button", { name: "One more wood" }).click();
   await expect(card).toContainText("was 2");
   await card.getByRole("button", { name: "Send counter" }).click();
-  await expect(card).toContainText("1 of 3 answered");
+  await expect(card).toContainText("Counters");
   await expect(card.getByRole("button", { name: "Take counter" })).toBeVisible();
   await card
     .getByRole("button", { name: / accepts$/ })
@@ -135,7 +135,8 @@ test("an offer to the table is countered, then the first accept trades", async (
   // Settled on the offer's terms: the offer closes and every seat is toasted.
   await expect(page.getByRole("button", { name: /offers the table/ })).toHaveCount(0);
   await expect(page.getByText(/^Trade · /)).toBeVisible();
-  await expect(page.getByText(/gave 2 wood; .* gave 1 stone\./)).toBeVisible();
+  // Toasts name their goods as terms, icon first: "2 Wood".
+  await expect(page.getByText(/gave 2 wood; .* gave 1 stone\./i)).toBeVisible();
 });
 
 test("one person plays three bots: they answer at once, and the screen stays with the person", async ({

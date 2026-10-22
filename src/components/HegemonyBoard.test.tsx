@@ -91,7 +91,7 @@ it("queues Damon's riot result, then the turn notice, before Nikos's event", () 
   expect(dialog().querySelector("h2")?.textContent).toBe("Riot");
   act(() => vi.advanceTimersByTime(2000));
   expect(dialog().querySelector("h2")?.textContent).toBe("Bribe demanded");
-  expect(dialog().textContent).toContain("Lost 3 gold.");
+  expect(dialog().textContent).toContain("Lost 3 Gold.");
   expect(dialog().textContent).toContain("Then: Nikos’s turn");
   act(() => button("Endure It").click());
 

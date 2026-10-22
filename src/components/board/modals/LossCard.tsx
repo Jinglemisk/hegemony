@@ -49,6 +49,7 @@ export function LossCard({
       <CeremonyBlow
         className="blowBand"
         icon={<Ico path={blowIcon} size="disc" />}
+        links={false}
         presentation={blow}
       />
 

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { EventTableDefinition, TableEffect, TableRollRecord } from "../../../game/types";
 import { presentTableEffect } from "../../../ui/effects";
 import { EffectIcon } from "../../../ui/icons/EffectIcon";
+import { AnnotatedText } from "../../AnnotatedText";
 import { EffectLine } from "../../EffectLine";
 import { ceremonyMood } from "./ceremonyMood";
 import { LacquerDie } from "./LacquerDie";
@@ -263,9 +264,7 @@ export function EventTableModal({
       {landed ? (
         <div className="tabletVerdict" role="status">
           {(blankLanded && blankRow ? [blankRow.verdict] : landed.outcomes).map((line, index) => (
-            <span className="body-sm body" key={index}>
-              {line}
-            </span>
+            <AnnotatedText className="body-sm body" key={index} text={line} />
           ))}
         </div>
       ) : modifier !== 0 ? (

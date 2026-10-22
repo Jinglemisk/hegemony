@@ -1,8 +1,10 @@
+import { capitalize } from "../../../game/core/format";
 import { PLAYER_IDS } from "../../../game/data";
 import { victoryStandings } from "../../../game/victory";
 import type { VictoryCardStanding } from "../../../game/victory";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { formatNumber, numberWord } from "../../../ui/formatters";
+import { AnnotatedText } from "../../AnnotatedText";
 import { Ico, SeatMark } from "../../frame/parts";
 
 /**
@@ -19,8 +21,12 @@ export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: Player
 
   return (
     <div className="victoryPage" data-c="victory">
+      {/* The win rule. How many you hold is your column's marks; it is read aloud here. */}
       <p className="v-held caps">
-        You hold {held} of {cardsToWin} · {numberWord(cardsToWin)} at your turn’s start win
+        <span className="visuallyHidden">{`You hold ${held} of ${cardsToWin}. `}</span>
+        <AnnotatedText
+          text={`${capitalize(numberWord(cardsToWin))} titles at your turn’s start win`}
+        />
       </p>
       <div className="r-grid v-grid r-head">
         <span className="caps">Title</span>
@@ -57,10 +63,11 @@ export function TitleRow({ G, standing }: { G: HegemonyState; standing: VictoryC
         ))}
       </div>
       <div className="r-b">
-        <span className="cap">
-          {card.description.toLowerCase()}, min {formatNumber(minimum)} ·{" "}
-          {standingLine(G, standing)}
-        </span>
+        <AnnotatedText
+          className="cap"
+          linkContext={card.name}
+          text={`${card.description.toLowerCase()}, min ${formatNumber(minimum)} · ${standingLine(G, standing)}`}
+        />
       </div>
     </div>
   );

@@ -286,7 +286,7 @@ describe("frontend active-effect parity", () => {
       ),
     );
     // The result card reads seat 0's riot although seat 1's turn has opened.
-    expect(html).toContain(`Riot · rolled ${G.lastTableRoll!.roll}`);
+    expect(html).toContain(`Rolled ${G.lastTableRoll!.roll}`);
     expect(html).toContain(G.lastTableRoll!.rowLabel);
     expect(html).toContain(`Then: ${G.players["1"].name}’s turn`);
   });

@@ -16,6 +16,8 @@ import { BUILDING_RASTERS, POP_RASTERS, RESOURCE_RASTERS } from "../../ui/iconRe
 import { getLuxuryGood } from "../../game/content";
 import { presentBuildingEffects } from "../../ui/effects";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
+import { Prose } from "../AnnotatedText";
+import { EffectLine } from "../EffectLine";
 import { Ico } from "./parts";
 import { PlaceSeal } from "./realm/PlaceSeal";
 
@@ -141,18 +143,17 @@ export function SettlementPage({
             .filter((asset) => asset.claimedAtSettlementId === settlement.id)
             .map((asset) => getLuxuryGood(G.definition.content, asset.goodId)?.name ?? asset.goodId)
             .join(", ");
-          const fact = !building
-            ? ""
-            : building.claimsLuxury
-              ? claimed
-                ? `Claims ${claimed}`
-                : "Its claim is gone"
-              : presentBuildingEffects(building.effects).text;
           return (
             <li className="g-line" data-c="settle-line" key={`${id}-${index}`}>
               <Ico path={BUILDING_RASTERS[id]} size="ui" />
               {building?.name ?? id}
-              {fact ? <span>{fact}</span> : null}
+              {!building ? null : building.claimsLuxury ? (
+                <span>
+                  <Prose>{claimed ? `Claims ${claimed}` : "Its claim is gone"}</Prose>
+                </span>
+              ) : (
+                <EffectLine effect={presentBuildingEffects(building.effects)} />
+              )}
             </li>
           );
         })}

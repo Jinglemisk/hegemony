@@ -15,7 +15,7 @@ import { settlementNames } from "../../../ui/settlementNames";
 import { useGameUi } from "../../board/GameUiContext";
 import type { OwnedHolding } from "../../board/types";
 import { Tooltip } from "../../overlays/Tooltip";
-import { Ico, Tip } from "../parts";
+import { Ico, Tip, TipBody } from "../parts";
 import { PlaceSeal } from "./PlaceSeal";
 
 /** Up to this many places, every place gets its drawing line; past it, only the open one. */
@@ -136,17 +136,14 @@ export function CitiesPage({
                   <>
                     <Tooltip
                       content={
-                        <Tip
-                          sub={`${occupiedBuildingSlots(G, settlement)} of ${slots} slots occupied`}
-                          title={name}
-                        >
-                          <p className="tip-body">
+                        <Tip title={name}>
+                          <TipBody>
                             {settlement.buildings.length > 0
                               ? settlement.buildings
                                   .map((id) => buildingName(id, G.definition.content))
                                   .join(", ")
                               : "Nothing raised yet."}
-                          </p>
+                          </TipBody>
                         </Tip>
                       }
                       triggerClassName="sockets"

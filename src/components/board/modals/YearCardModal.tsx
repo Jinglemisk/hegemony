@@ -8,8 +8,10 @@ import type { LogMoment, Resource, YearCard } from "../../../game/types";
 import { presentUnrestOutcome, presentYearCard } from "../../../ui/effects";
 import { ordinal, seatName, toRoman } from "../../../ui/formatters";
 import { sign } from "../../../ui/frameFormat";
+import { turnsUntilYear } from "../../../ui/frameSelectors";
 import { yearCardIcon } from "../../../ui/iconRegistry";
-import { Chips, Ico, SeatMark } from "../../frame/parts";
+import { Prose } from "../../AnnotatedText";
+import { Chips, Delta, Ico, SeatMark, Turns } from "../../frame/parts";
 import { yearCardArtUrl } from "../events";
 import { useGameUi } from "../GameUiContext";
 import { CeremonyBlow } from "./CeremonyBlow";
@@ -54,7 +56,7 @@ export function YearCardModal({
   if (!card) return null;
 
   const years = yearDeckSize(G);
-  const yearName = `Year ${toRoman(G.year)} of ${toRoman(years)}`;
+  const yearName = `Year ${toRoman(G.year)}`;
 
   if (!face) {
     return (
@@ -113,6 +115,7 @@ export function YearCardModal({
         <CeremonyBlow
           className="blowBand"
           icon={<Ico path={yearCardIcon(card)} size="disc" />}
+          iconSubject={card.effect.type === "zeroTerm"}
           presentation={blow}
         />
 
@@ -121,8 +124,8 @@ export function YearCardModal({
             {PLAYER_IDS.map((seat) => {
               const { before, after, loss } = impact[seat];
               const line = movesLevel(card) ? (
-                <span className="yearImpact-lv num">
-                  {sign(before)} → {sign(after)}
+                <span className="yearImpact-lv">
+                  <Delta format={sign} from={before} to={after} />
                 </span>
               ) : (
                 <Chips
@@ -142,7 +145,7 @@ export function YearCardModal({
                   <SeatMark playerID={seat} />
                   {line}
                   <span className={warn ? "yearImpact-warn caption" : "caption"}>
-                    {warn ?? seatName(G, seat, viewerId)}
+                    {warn ? <Prose>{warn}</Prose> : seatName(G, seat, viewerId)}
                   </span>
                 </li>
               );
@@ -156,20 +159,20 @@ export function YearCardModal({
           </span>
           <span>
             {final ? (
-              "The titles are tallied after it"
+              <Prose>The titles are tallied after it</Prose>
             ) : sits ? (
-              <>
+              <Prose>
                 The Assembly sits:{" "}
                 <b>
                   {ordinal(G.assembliesHeld)} of {assemblySittings(G)}
                 </b>
-              </>
+              </Prose>
             ) : next ? (
               <>
-                Next Assembly: <b>Year {toRoman(next)}</b>
+                <Prose>Next Assembly</Prose> <Turns n={turnsUntilYear(G, viewerId, next)} />
               </>
             ) : (
-              "No Assembly sits again"
+              <Prose>No Assembly sits again</Prose>
             )}
           </span>
         </p>

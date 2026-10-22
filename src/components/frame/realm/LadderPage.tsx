@@ -11,7 +11,7 @@ import { calculatePopEconomy, capitalize } from "../../board/helpers";
 import type { OwnedHolding } from "../../board/types";
 import { CodexTermLink } from "../../codexLink";
 import { Tooltip } from "../../overlays/Tooltip";
-import { Chips, Ico, Tip } from "../parts";
+import { Chips, Ico, Tip, TipBody } from "../parts";
 import { PlaceSeal } from "./PlaceSeal";
 
 /** The two gaps in the ladder, top to bottom; each is a step either way. */
@@ -98,7 +98,7 @@ export function LadderPage({
               <Tooltip
                 content={
                   <Tip title={capitalize(formatPopLabel(pop, 2))}>
-                    <p className="tip-body">{history}</p>
+                    <TipBody>{history}</TipBody>
                   </Tip>
                 }
                 triggerAs="div"

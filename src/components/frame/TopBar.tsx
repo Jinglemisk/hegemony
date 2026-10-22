@@ -19,7 +19,7 @@ import { POP_RASTERS, RESOURCE_RASTERS } from "../../ui/iconRegistry";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { settlementNames } from "../../ui/settlementNames";
 import { Tooltip } from "../overlays/Tooltip";
-import { Ico, Tip, TipLedger, TipWarn } from "./parts";
+import { Ico, Tip, TipBody, TipLedger, TipWarn, Turns } from "./parts";
 
 const PURSE: Resource[] = ["wood", "stone", "food", "gold", "influence"];
 
@@ -38,11 +38,10 @@ function Clock({ G }: { G: HegemonyState }) {
       <Tooltip
         ariaLabel={`Year ${year} of ${totalYears}, ${left} ${left === 1 ? "card" : "cards"} left`}
         content={
-          <Tip sub={`of ${toRoman(totalYears)}`} title={`Year ${toRoman(year)}`}>
-            <p className="tip-body">
-              A year is one turn for every seat. {left} {left === 1 ? "card is" : "cards are"} left
-              in the year deck and the next one is hidden. The game ends when the deck is spent.
-            </p>
+          <Tip title={`Year ${toRoman(year)}`}>
+            <TipBody>
+              {`A year is one turn for every seat. ${left} ${left === 1 ? "card is" : "cards are"} left in the year deck and the next one is hidden. The game ends when the deck is spent.`}
+            </TipBody>
           </Tip>
         }
         focusable
@@ -80,7 +79,7 @@ function ResourceCell({
     <Tooltip
       ariaLabel={`${label} ${owed ? store : value}, ${sign(delta)} next turn${short && !owed ? ", short" : ""}`}
       content={
-        <Tip sub={`${store} · ${sign(delta)} next turn`} title={label}>
+        <Tip title={label}>
           {lines.length > 0 ? (
             <TipLedger
               rows={lines.map((line) => ({
@@ -90,7 +89,7 @@ function ResourceCell({
               }))}
             />
           ) : (
-            <p className="tip-body">No income or expense.</p>
+            <TipBody>No income or expense.</TipBody>
           )}
           {owed ? (
             <TipWarn>
@@ -134,24 +133,39 @@ export function HappinessGauge({
     <Tooltip
       ariaLabel={`${noun} ${sign(display.value)}, ${tokens}; riot at ${sign(display.riotAt)}, revolt at ${sign(display.revoltAt)}`}
       content={
-        <Tip
-          sub={`Riot at ${sign(display.riotAt)} · revolt at ${sign(display.revoltAt)}`}
-          title={`${noun} ${sign(display.value)}`}
-        >
+        <Tip title={noun}>
           <TipLedger
             rows={[
               ...display.lines.map((line) => ({
                 key: line.label,
-                label: line.label,
+                label:
+                  line.turns === undefined ? (
+                    line.label
+                  ) : (
+                    <>
+                      {line.label} <Turns n={line.turns} />
+                    </>
+                  ),
                 value: sign(line.amount),
               })),
               { key: "total", label: noun, value: sign(display.value), total: true },
             ]}
           />
-          <p className="tip-body">
+          <TipLedger
+            rows={[
+              { key: "riot", label: "Riot at", value: sign(display.riotAt), icon: "unrest/riot" },
+              {
+                key: "revolt",
+                label: "Revolt at",
+                value: sign(display.revoltAt),
+                icon: "unrest/revolt",
+              },
+            ]}
+          />
+          <TipBody>
             Read off the board each turn; nothing is saved up. Unrest tokens stay until a riot, a
             revolt or a card clears them.
-          </p>
+          </TipBody>
           {atRiot ? <TipWarn>{presentUnrestOutcome(ruleset, outcome.tier).warning}</TipWarn> : null}
         </Tip>
       }
@@ -200,14 +214,11 @@ function Rival({
 }) {
   const glaze = PLAYER_GLAZES[id];
   const census = publicCensus(G, id);
-  const status = [acting ? "acting" : null, viewing ? "your seat" : null]
-    .filter(Boolean)
-    .join(", ");
 
   return (
     <Tooltip
       content={
-        <Tip sub={`${glaze.glaze}${status ? ` · ${status}` : ""}`} title={glaze.name}>
+        <Tip title={glaze.name}>
           <TipLedger
             rows={[
               { key: "s", label: "Slaves", value: census.slaves, icon: POP_RASTERS.slaves },
@@ -218,22 +229,33 @@ function Rival({
               {
                 key: "hap",
                 label: "Happiness",
-                value: happinessLevel(G, id),
+                value: sign(happinessLevel(G, id)),
                 icon: RESOURCE_RASTERS.happiness,
               },
               {
                 key: "laws",
-                label: "Authored Laws standing",
+                label: "Standing Laws authored",
                 value: victoryMetricValue(G, id, "voice"),
+                icon: "assembly/law",
               },
-              { key: "votes", label: "Assembly votes", value: currentVoteWeight(G, id) },
-              { key: "voice", label: "Voice", value: voiceHolder(G) === id ? "held" : "unheld" },
+              {
+                key: "votes",
+                label: "Votes",
+                value: currentVoteWeight(G, id),
+                icon: "assembly/vote",
+              },
+              {
+                key: "voice",
+                label: "Voice",
+                value: voiceHolder(G) === id ? "held" : "unheld",
+                icon: "victory/voice",
+              },
             ]}
           />
           {playerNationalIdeas(G, id).map((idea) => (
-            <p className="tip-body" key={idea.id}>
+            <TipBody key={idea.id}>
               <strong>{idea.name}</strong> · {idea.text}
-            </p>
+            </TipBody>
           ))}
         </Tip>
       }

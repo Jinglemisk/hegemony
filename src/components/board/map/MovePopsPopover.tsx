@@ -7,9 +7,11 @@ import {
   totalPops,
 } from "../../../game/rules";
 import type { Pops } from "../../../game/types";
+import { settlementNameOf } from "../../../ui/settlementNames";
+import { Prose } from "../../AnnotatedText";
 import { useGameUi } from "../GameUiContext";
-import { Chips } from "../../frame/parts";
-import { actionRequirementText, gameplayActionDisabled, settlementPickerLabel } from "../helpers";
+import { Chips, Turns } from "../../frame/parts";
+import { actionRequirementText, gameplayActionDisabled } from "../helpers";
 import { TileSubject } from "../TileSubject";
 import { PopoverActions } from "../PopoverActions";
 import { PopulationStepper } from "../modals/PopulationStepper";
@@ -50,7 +52,9 @@ export function MovePopsSourcePopover({
   return (
     <TilePopover anchor={anchor} label="Move pops from" onCancel={onCancel} title="Move From">
       <TileSubject G={G} playerID={playerID} tile={tile} />
-      <p className="placementCostNote">Holds {formatPops(settlement.pops)}.</p>
+      <p className="placementCostNote">
+        <Prose>{`Holds ${formatPops(settlement.pops)}.`}</Prose>
+      </p>
 
       <PopoverActions
         confirmLabel="Move From Here"
@@ -101,8 +105,10 @@ export function MovePopsTargetPopover({
     >
       <TileSubject G={G} playerID={playerID} tile={tile} />
       <p className="placementCostNote">
-        From {settlementPickerLabel(G, sourceTile, playerID)}. They arrive next turn. Costs{" "}
-        <Chips amounts={status.cost ?? {}} empty="nothing" />, one move a turn.
+        <Prose>
+          From <b>{settlementNameOf(G.board.tiles, source.id)}</b>. They arrive in <Turns n={1} />.
+          Costs <Chips amounts={status.cost ?? {}} empty="nothing" />, one move a turn.
+        </Prose>
       </p>
 
       <section className="placementSection">

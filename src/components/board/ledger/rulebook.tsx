@@ -39,7 +39,7 @@ import {
   numberWord,
 } from "../../../ui/formatters";
 import { RESOURCE_ORDER, resourceCssVars } from "../../../ui/resourceVisuals";
-import { AnnotatedText } from "../../AnnotatedText";
+import { AnnotatedText, Prose } from "../../AnnotatedText";
 import { EffectLine } from "../../EffectLine";
 import { ResourceIcon } from "../../Sprites";
 import { eventCardArtUrl } from "../events";
@@ -76,27 +76,42 @@ export type RuleChapter = {
 const anchor = (chapter: string, sub: string) => `codex-${chapter}-${sub}`;
 
 // ── shared render helpers ────────────────────────────────────────────────────
+//
+// Every sentence in the rulebook is annotated HERE, at these three seams, not line
+// by line: an entry's own markup (flavour, roster rows), each Note and each DefRow.
+// `Prose` leaves components whole, so the seams never annotate one string twice.
 
-/** A titled sub-section inside a chapter — the jump-strip destinations anchor here. */
+/** A titled sub-section inside a chapter — the jump-strip destinations anchor here.
+ *  The heading is a name and is never annotated. */
 function Entry({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
     <article className="compendiumEntry" id={id}>
       <h3>{title}</h3>
-      {children}
+      <Prose>{children}</Prose>
     </article>
   );
 }
 
 function Note({ children }: { children: ReactNode }) {
-  return <p className="compendiumNote">{children}</p>;
+  return (
+    <p className="compendiumNote">
+      <Prose>{children}</Prose>
+    </p>
+  );
 }
 
-/** A defined-term row: a label and its sourced value/description. */
+/** A defined-term row: a label and its sourced value/description. A label passed as
+ *  markup draws its own icon (the resource rows), so only a plain-string label is
+ *  annotated — never both. */
 function DefRow({ term, children }: { term: ReactNode; children: ReactNode }) {
   return (
     <li className="ruleDefRow">
-      <span className="ruleDefTerm">{term}</span>
-      <span className="ruleDefBody">{children}</span>
+      <span className="ruleDefTerm">
+        {typeof term === "string" ? <AnnotatedText text={term} /> : term}
+      </span>
+      <span className="ruleDefBody">
+        <Prose>{children}</Prose>
+      </span>
     </li>
   );
 }
@@ -170,11 +185,11 @@ const victory: RuleChapter = {
   id: "victory",
   title: "How to Win",
   icon: "victory/laurel",
-  blurb: "The victory race — the public cards and how to hold them.",
-  keywords: ["win", "victory", "cards", "minimum", "race", "endgame", "lead"],
+  blurb: "The victory race — the public titles and how to hold them.",
+  keywords: ["win", "victory", "titles", "cards", "minimum", "race", "endgame", "lead"],
   entries: [
     { id: anchor("victory", "race"), label: "The race" },
-    { id: anchor("victory", "cards"), label: "The cards" },
+    { id: anchor("victory", "cards"), label: "The titles" },
   ],
   Body: ({ G }) => {
     const { victory } = G.ruleset;
@@ -187,20 +202,20 @@ const victory: RuleChapter = {
       <div className="compendiumStack">
         <Entry id={anchor("victory", "race")} title="The race">
           <Note>
-            There are {numberWord(VICTORY_CARDS.length)} public victory cards, each awarded to the
-            sole leader in one measure. Hold <strong>{victory.cardsToWin}</strong> of them at the{" "}
+            There are {numberWord(VICTORY_CARDS.length)} public titles, each awarded to the sole
+            leader in one measure. Hold <strong>{victory.cardsToWin}</strong> of them at the{" "}
             <em>start of your own turn</em> and you win at once. A tie awards nothing, and every
-            card can be taken back: each reads what stands on the board now.
+            title can be taken back: each reads what stands on the board now.
           </Note>
           <Note>
-            The year deck is the game's clock (see <AnnotatedText text="Years" />
-            ). If it runs out before anyone holds {victory.cardsToWin}, the player holding the most
-            cards wins. Happiness without calm, then population, then seat order break a tie.
+            The year deck is the game's clock (see Years). If it runs out before anyone holds{" "}
+            {victory.cardsToWin}, the player holding the most titles wins. Happiness without calm,
+            then population, then seat order break a tie.
           </Note>
         </Entry>
-        <Entry id={anchor("victory", "cards")} title="The cards & their minimums">
+        <Entry id={anchor("victory", "cards")} title="The titles & their minimums">
           <Note>
-            A card can only be held once its measure passes a floor — set so nothing is winnable at
+            A title can only be held once its measure passes a floor — set so nothing is winnable at
             setup or on turn one.
           </Note>
           <DefList>
@@ -249,17 +264,12 @@ const board: RuleChapter = {
           of the terrain's resource. Slaves beyond the open slots sit idle. Two colonies on one tile
           split its slots, and the colony founded first takes the odd one.
         </Note>
+        {/* The terrain leads with its own icon; the resource's rides in the yield
+            beside it, so neither word wears the other's picture. */}
         <ul className="compendiumCostList">
           {terrainSummary(G).map((row) => (
-            <li
-              className="compendiumCostRow"
-              key={row.kind}
-              style={row.resource ? resourceCssVars(row.resource) : undefined}
-            >
+            <li className="compendiumCostRow" key={row.kind}>
               <span className="compendiumCostLabel">
-                {row.resource ? (
-                  <ResourceIcon resource={row.resource} className="marketRowIcon" />
-                ) : null}{" "}
                 {capitalize(row.kind)} <em className="ruleDim">×{row.count}</em>
               </span>
               <span className="compendiumCostValue">
@@ -370,7 +380,7 @@ const population: RuleChapter = {
         <DefList>
           {(["citizens", "freemen", "slaves"] as PopType[]).map((pop) => (
             <DefRow key={pop} term={capitalize(formatPopLabel(pop, 2))}>
-              <AnnotatedText text={popIncomeText(G, pop)} />
+              {popIncomeText(G, pop)}
             </DefRow>
           ))}
         </DefList>
@@ -383,11 +393,11 @@ const population: RuleChapter = {
       </Entry>
       <Entry id={anchor("population", "capacity")} title="Capacity">
         <Note>
-          A settlement holds only so many pops (see <AnnotatedText text="Settlements" />
-          ), and no building raises the cap. Every way to add a pop needs room: growing, moving, a
-          pop card, the Voyage's settlers, and an Idea or Law grant. Growing, moving and Idea or Law
-          grants count pops already on their way. There is no penalty for standing over the cap: a
-          Law that cuts capacity only blocks new pops.
+          A settlement holds only so many pops (see Settlements), and no building raises the cap.
+          Every way to add a pop needs room: growing, moving, a pop card, the Voyage's settlers, and
+          an Idea or Law grant. Growing, moving and Idea or Law grants count pops already on their
+          way. There is no penalty for standing over the cap: a Law that cuts capacity only blocks
+          new pops.
         </Note>
       </Entry>
     </div>
@@ -448,16 +458,15 @@ const settlements: RuleChapter = {
       <Entry id={anchor("settlements", "expansion")} title="Founding & upgrading">
         <DefList>
           <DefRow term="Found a colony">
-            <strong>Base cost:</strong>{" "}
-            <AnnotatedText text={formatResourceCost(G.ruleset.actionCosts.foundColony)} /> and a
-            colony piece — beside an owned settlement, or on any coastal tile if you hold a coast
+            <strong>Base cost:</strong> {formatResourceCost(G.ruleset.actionCosts.foundColony)} and
+            a colony piece — beside an owned settlement, or on any coastal tile if you hold a coast
             (sailing, not teleporting). The pop you send moves free.
           </DefRow>
           <DefRow term="Upgrade colony → city">
             <strong>Base cost:</strong>{" "}
-            <AnnotatedText text={formatResourceCost(G.ruleset.actionCosts.upgradeColonyToCity)} />{" "}
-            and a city piece — lifts the pop cap, unlocks building, and returns the colony piece.
-            Cities never stand side by side, and the new city drives off a rival colony on its tile.
+            {formatResourceCost(G.ruleset.actionCosts.upgradeColonyToCity)} and a city piece — lifts
+            the pop cap, unlocks building, and returns the colony piece. Cities never stand side by
+            side, and the new city drives off a rival colony on its tile.
           </DefRow>
         </DefList>
       </Entry>
@@ -550,7 +559,7 @@ const ladder: RuleChapter = {
               >
             ).map(([pop, cost]) => (
               <DefRow key={pop} term={capitalize(formatPopLabel(pop, 1))}>
-                <AnnotatedText text={formatResourceCost(cost)} />
+                {formatResourceCost(cost)}
               </DefRow>
             ))}
           </DefList>
@@ -564,12 +573,12 @@ const ladder: RuleChapter = {
           <DefList>
             {promotes.map(([pop, cost]) => (
               <DefRow key={`p-${pop}`} term={`Promote ${formatPopLabel(pop, 1)}`}>
-                <AnnotatedText text={formatResourceCost(cost)} />
+                {formatResourceCost(cost)}
               </DefRow>
             ))}
             {demotes.map(([pop, cost]) => (
               <DefRow key={`d-${pop}`} term={`Demote ${formatPopLabel(pop, 1)}`}>
-                <AnnotatedText text={formatResourceCost(cost)} />
+                {formatResourceCost(cost)}
               </DefRow>
             ))}
           </DefList>
@@ -577,10 +586,10 @@ const ladder: RuleChapter = {
         <Entry id={anchor("ladder", "move")} title="Moving">
           <Note>
             One move per turn carries pops between two of your settlements for{" "}
-            <AnnotatedText text={formatResourceCost(G.ruleset.movePopCost)} /> a pop. The target
-            must have room, and they arrive at the start of your next turn. Pops on the move are
-            still in your realm: their slaves count against your happiness, and all of them count
-            for your titles and your votes.
+            {formatResourceCost(G.ruleset.movePopCost)} a pop. The target must have room, and they
+            arrive at the start of your next turn. Pops on the move are still in your realm: their
+            slaves count against your happiness, and all of them count for your titles and your
+            votes.
           </Note>
         </Entry>
       </div>
@@ -618,11 +627,9 @@ const buildings: RuleChapter = {
             <li className="compendiumCostRow" key={building.id}>
               <span className="compendiumCostLabel">{building.name}</span>
               <span className="compendiumCostValue">
-                Base cost: <AnnotatedText text={formatResourceCost(building.cost)} />
+                Base cost: {formatResourceCost(building.cost)}
               </span>
-              <span className="compendiumCostNote">
-                <AnnotatedText text={buildingRuleText(building)} />
-              </span>
+              <span className="compendiumCostNote">{buildingRuleText(building)}</span>
             </li>
           ))}
         </ul>
@@ -666,15 +673,10 @@ const luxuries: RuleChapter = {
         <Entry id={anchor("luxuries", "claim")} title="The Port & the claim">
           <Note>
             Each good sits off the shared vertex of two coastal tiles. A Port
-            {port ? (
-              <>
-                {" "}
-                (base cost <AnnotatedText text={formatResourceCost(port.cost)} />)
-              </>
-            ) : null}{" "}
-            raised in a settlement on either tile claims it — a colony may raise one too. The first
-            Port wins, and the good stays claimed for the rest of the game, even if the Port burns.
-            A Port needs the coast and an unclaimed good adjacent.
+            {port ? <> (base cost {formatResourceCost(port.cost)})</> : null} raised in a settlement
+            on either tile claims it — a colony may raise one too. The first Port wins, and the good
+            stays claimed for the rest of the game, even if the Port burns. A Port needs the coast
+            and an unclaimed good adjacent.
           </Note>
         </Entry>
         <Entry id={anchor("luxuries", "offset")} title="The standing offset">
@@ -766,7 +768,7 @@ const unrest: RuleChapter = {
             Hunger is separate. Your freemen and citizens eat at income, which can take your food
             below zero. You have that turn to buy the food back. If you end the turn short, one pop
             leaves per missing food and food returns to zero, before the riot check. You choose
-            which freemen or citizens leave; the card opens with freemen chosen first.
+            which freemen or citizens leave; freemen are picked first unless you change it.
           </Note>
         </Entry>
         <Entry id={anchor("unrest", "calm")} title="Buying calm">
@@ -777,11 +779,9 @@ const unrest: RuleChapter = {
           </Note>
           <DefList>
             <DefRow term="Stabilize Province">
-              <AnnotatedText text={`${calm.influenceCost} ${RESOURCE_LABELS.influence}`} />
+              {`${calm.influenceCost} ${RESOURCE_LABELS.influence}`}
             </DefRow>
-            <DefRow term="Bread & Circuses">
-              <AnnotatedText text={`${calm.goldCost} ${RESOURCE_LABELS.gold}`} />
-            </DefRow>
+            <DefRow term="Bread & Circuses">{`${calm.goldCost} ${RESOURCE_LABELS.gold}`}</DefRow>
           </DefList>
         </Entry>
         <Entry id={anchor("unrest", "riot")} title="The riot table">
@@ -887,7 +887,7 @@ const trade: RuleChapter = {
     <div className="compendiumStack">
       <Entry id={anchor("trade", "offers")} title="Offers">
         <Note>
-          On your turn, once your event card is resolved, the Trade disc opens the offer card. Wood,
+          On your turn, once your event card is resolved, the Trade disc opens an offer. Wood,
           stone, food, gold, influence, claimed luxury goods and pops all trade; votes, Ideas, Laws,
           settlements and buildings never do.
         </Note>
@@ -1022,10 +1022,9 @@ const assembly: RuleChapter = {
             else happens while it sits — the whole table proposes and votes, then play resumes.
           </Note>
           <Note>
-            This is what <AnnotatedText text="Influence" /> is for. Everything the Assembly asks of
-            you to draw or repeal is paid in influence. Extra votes take gold or influence.
-            Participation prices in this reference are base costs; Assembly controls show effective
-            costs.
+            This is what Influence is for. Everything the Assembly asks of you to draw or repeal is
+            paid in influence. Extra votes take gold or influence. Participation prices in this
+            reference are base costs; Assembly controls show effective costs.
           </Note>
         </Entry>
 
@@ -1037,15 +1036,16 @@ const assembly: RuleChapter = {
           <DefList>
             <DefRow term="Draw">
               Pay <strong>{rules.drawCost}</strong> influence to draw from a politician{" "}
-              <em>you choose</em>. The politician is your pick; the card is not. You see it in
+              <em>you choose</em>. The politician is your pick; the resolution is not. You see it in
               secret.
             </DefRow>
             <DefRow term="One draw">
               You may propose your draw or discard it and pass. No redraw.
             </DefRow>
             <DefRow term="Propose">
-              Seal the card for the ballot. A Stratokles Directive must name one rival; both card
-              and target are revealed before voting. One proposal per player per Assembly.
+              Seal the resolution for the ballot. A Stratokles Directive must name one rival; both
+              the Directive and its target are revealed before voting. One proposal per player per
+              Assembly.
             </DefRow>
             <DefRow term="Repeal">
               For <strong>{rules.repealCost}</strong> influence, move to strike a standing Law whose
@@ -1059,13 +1059,13 @@ const assembly: RuleChapter = {
         <Entry id={anchor("assembly", "vote")} title="Voting">
           <Note>
             The ballot is voted one resolution at a time, in turn order, <strong>openly</strong> —
-            every vote is visible as it lands, so the last seat to speak on a close card is a
+            every vote is visible as it lands, so the last seat to speak on a close vote is a
             kingmaker.
           </Note>
           <DefList>
             <DefRow term="Your votes">
-              One seat vote plus one per <AnnotatedText text="citizen" />. Rural Bloc changes
-              settlement votes. Isonomia fixes its target’s base at one.
+              One seat vote plus one per citizen. Rural Bloc changes settlement votes. Isonomia
+              fixes its target’s base at one.
             </DefRow>
             <DefRow term="Majority">
               More yea than nay carries. {capitalize(tieRule(G.ruleset))}.
@@ -1087,7 +1087,7 @@ const assembly: RuleChapter = {
             A resolution is not a one-year buff — it changes how the game is played.{" "}
             {capitalize(numberWord(lawmakers.length))} of the {numberWord(POLITICIANS.length)}{" "}
             politicians deal in <strong>Laws</strong>: table-wide rules that stand until repealed,
-            each carrying a trade-off, so a vote is a referendum on which strategy the table backs.
+            each with a downside, so a vote is a referendum on which strategy the table backs.
           </Note>
           <Note>
             {directivemakers.length === 1 ? "The other, " : "The others, "}
@@ -1142,11 +1142,13 @@ const assembly: RuleChapter = {
 
               return (
                 <div className="rulePolitician" key={politician.id}>
-                  <h3>
-                    {politician.name}
-                    <em>{politician.epithet}</em>
-                  </h3>
-                  <p className="compendiumFlavor">{politician.creed}</p>
+                  {/* The heading is the name alone; the epithet opens the flavour. */}
+                  <h3>{politician.name}</h3>
+                  <p className="compendiumFlavor">
+                    {politician.epithet}
+                    <br />
+                    {politician.creed}
+                  </p>
                   <Note>
                     {deck.length} {politician.kind === "law" ? "Laws" : "Directives"} · author
                     prize: <strong>{formatResourceCost(rules.prizes[politician.id])}</strong>
@@ -1155,9 +1157,7 @@ const assembly: RuleChapter = {
                     {deck.map((card) => (
                       <li key={card.id}>
                         <strong>{card.name}</strong>
-                        <span>
-                          <AnnotatedText text={card.text} />
-                        </span>
+                        <span>{card.text}</span>
                       </li>
                     ))}
                   </ul>
@@ -1182,14 +1182,16 @@ const ideas: RuleChapter = {
   Body: ({ G }) => (
     <div className="ruleChapterBody">
       <p>
-        After placement, the seats draft one Idea each, in turn, continuing the placement snake.
-        Each pick is public at once, and an Idea belongs to one seat only. Buy{" "}
-        {G.ruleset.ideas.purchases === 1
-          ? "a second Idea"
-          : `up to ${G.ruleset.ideas.purchases} more Ideas`}{" "}
-        from the untaken ones during your turn through Civic → Ideas for{" "}
-        {formatResourceCost({ influence: G.ruleset.ideas.influenceCost })}. Ideas cannot be
-        replaced.
+        <Prose>
+          After placement, the seats draft one Idea each, in turn, continuing the placement snake.
+          Each pick is public at once, and an Idea belongs to one seat only. Buy{" "}
+          {G.ruleset.ideas.purchases === 1
+            ? "a second Idea"
+            : `up to ${G.ruleset.ideas.purchases} more Ideas`}{" "}
+          from the untaken ones during your turn through Civic → Ideas for{" "}
+          {formatResourceCost({ influence: G.ruleset.ideas.influenceCost })}. Ideas cannot be
+          replaced.
+        </Prose>
       </p>
       <Entry id={anchor("ideas", "roster")} title="The Ideas">
         <dl>

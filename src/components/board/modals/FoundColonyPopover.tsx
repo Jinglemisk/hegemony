@@ -9,12 +9,20 @@ import {
 import { previewFoundedSettlement } from "../../../game/economy/preview";
 import type { PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
+import { settlementNameOf } from "../../../ui/settlementNames";
+import { Prose } from "../../AnnotatedText";
+import { Turns } from "../../frame/parts";
 import { SettlementSummaryCard } from "../../SettlementCard";
 import { POP_GLYPHS, SETTLEMENT_GLYPHS } from "../../../ui/iconRegistry";
 import { Icon } from "../../../ui/icons/Icon";
 import { useGameUi } from "../GameUiContext";
 import { TileListbox } from "../TileListbox";
-import { firstAvailablePop, getSettlementEntries, settlementPickerLabel } from "../helpers";
+import {
+  capitalize,
+  firstAvailablePop,
+  getSettlementEntries,
+  settlementPickerLabel,
+} from "../helpers";
 import { PopoverActions } from "../PopoverActions";
 import { TilePopover } from "../map/TilePopover";
 import { CostRow } from "./PlacementModalShell";
@@ -75,7 +83,9 @@ export function FoundColonyPopover({
       title="Found Colony"
     >
       {sources.length === 0 ? (
-        <p className="placementEmptyState">No settlement has a pop to spare for a new colony.</p>
+        <p className="placementEmptyState">
+          <Prose>No settlement has a pop to spare for a new colony.</Prose>
+        </p>
       ) : (
         <>
           {preview ? (
@@ -98,17 +108,22 @@ export function FoundColonyPopover({
             <TileListbox
               ariaLabel="Settlement the pop leaves from"
               onChange={setSourceTileId}
-              options={sources.map((entry) => ({
-                value: entry.tile.id,
-                icon: entry.tile.settlements.some(
-                  (s) => s.owner === playerID && s.kind !== "colony",
-                )
-                  ? SETTLEMENT_GLYPHS.city
-                  : SETTLEMENT_GLYPHS.colony,
-                title: settlementPickerLabel(G, entry.tile, playerID),
-                detail: formatPops(entry.pops),
-                label: `Send a pop from ${settlementPickerLabel(G, entry.tile, playerID)} — holds ${formatPops(entry.pops)}.`,
-              }))}
+              options={sources.map(({ tile, pops }) => {
+                const own = tile.settlements.find((s) => s.owner === playerID)!;
+                const ground = `${capitalize(tile.terrain)}, ${tile.slots} slots${tile.resource ? ` for ${tile.resource.type}` : ""}`;
+                return {
+                  value: tile.id,
+                  icon: own.kind === "colony" ? SETTLEMENT_GLYPHS.colony : SETTLEMENT_GLYPHS.city,
+                  // The kind is the glyph, so the title skips it; the label keeps it.
+                  title: (
+                    <Prose links={false}>
+                      {`${settlementNameOf(G.board.tiles, own.id)} · ${ground}`}
+                    </Prose>
+                  ),
+                  detail: <Prose links={false}>{formatPops(pops)}</Prose>,
+                  label: `Send a pop from ${settlementPickerLabel(G, tile, playerID)} — holds ${formatPops(pops)}.`,
+                };
+              })}
               value={source?.tile.id ?? null}
             />
             {/* Stacked, not 3-up: in a 312px popover the columns clipped "Citizen" to
@@ -134,7 +149,14 @@ export function FoundColonyPopover({
             </div>
           </section>
 
-          <CostRow cost={cost} note="Arrives next turn." />
+          <CostRow
+            cost={cost}
+            note={
+              <>
+                Arrives in <Turns n={1} />
+              </>
+            }
+          />
 
           <PopoverActions
             confirmLabel="Found Colony"

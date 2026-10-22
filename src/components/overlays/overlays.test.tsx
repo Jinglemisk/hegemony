@@ -61,7 +61,7 @@ describe("Tooltip", () => {
     const tooltip = document.body.querySelector<HTMLElement>("[role=tooltip]")!;
     expect(tooltip).not.toBeNull();
     expect(tooltip.textContent).toContain("Blocked");
-    expect(tooltip.textContent).toContain("Not enough stone");
+    expect(tooltip.textContent).toContain("Not enough Stone");
     expect(button.getAttribute("aria-describedby")).toBe(tooltip.id);
     expect(Number.parseFloat(tooltip.style.left)).toBeGreaterThanOrEqual(10);
     expect(Number.parseFloat(tooltip.style.top)).toBeGreaterThanOrEqual(10);
@@ -230,8 +230,8 @@ describe("Popover", () => {
 
 describe("End turn's confirm", () => {
   it.each([
-    [-3, "riot", "Face the riot"],
-    [-6, "revolt", "Revolt"],
+    [-3, "Ending your turn starts a riot", "Face the riot"],
+    [-6, "Ending your turn now means revolt", "Revolt"],
   ] as const)("opens at %s as a popover a press outside closes", (level, consequence, face) => {
     const G = scenario().opening().withHappiness("0", level).build();
 
@@ -253,7 +253,7 @@ describe("End turn's confirm", () => {
 
     // The hold opens the confirm at the line, focused on the plain choice to face it.
     const dialog = document.body.querySelector<HTMLElement>("[role=dialog]")!;
-    expect(dialog.textContent).toContain(`the ${consequence} line`);
+    expect(dialog.textContent).toContain(consequence);
     expect(document.activeElement?.textContent).toBe(face);
 
     act(() => document.body.dispatchEvent(new Event("pointerdown", { bubbles: true })));
