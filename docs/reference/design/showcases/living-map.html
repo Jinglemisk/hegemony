@@ -247,6 +247,154 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+/* ---- the corner dock: the game's bone paper over the map ----
+   Top bar across the map; the consult strip hangs from its right end and drops its page.
+   Bottom right, one dock: the Chronicle's last line over the five map modes, End turn
+   spanning both rows. The right column is one flex stack, so a dropped page runs down to
+   the dock, and stops above the Chronicle whenever the Chronicle is open. */
+.stage.has-hud { height: clamp(460px, 74vh, 740px); }
+.stage.has-hud .compass { right: auto; left: 12px; top: 44px; }
+.hud {
+  --paper: #f4e6c8; --paper-hi: #fff8e7; --ink: #241910; --ink-66: rgb(36 25 16 / 66%); --ink-45: rgb(36 25 16 / 45%); --ink-12: rgb(36 25 16 / 12%);
+  --clay: #c0461c; --clay-deep: #8f2e13; --ivory-45: rgb(255 248 231 / 45%);
+  --hit: 32px; --fillet: 16px; --chrome: drop-shadow(0 1px 3px rgb(10 34 41 / 50%));
+  position: absolute; inset: 0; z-index: 5; pointer-events: none; cursor: default;
+  color: var(--ink); font: 500 14px/1.3 var(--f-sans);
+}
+:where(.hud) button { margin: 0; padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; }
+:where(.hud) p { margin: 0; }
+.hud button:focus-visible { outline: 2px solid var(--clay); outline-offset: -2px; }
+.hud img { display: block; flex: none; }
+.seal {
+  width: 22px; height: 22px; flex: none; display: grid; place-items: center; border-radius: 50%;
+  background: var(--own); color: var(--paper-hi); font: 700 12px/1 var(--f-name);
+  box-shadow: inset 0 0 0 1.5px rgb(36 25 16 / 30%);
+}
+.seal.dark { color: var(--ink); }
+.seal.none { background: none; box-shadow: inset 0 0 0 1px var(--ink-45); }
+
+.hud-bar {
+  position: absolute; top: 0; left: 0; right: 0; height: var(--hit); padding: 0 16px;
+  display: flex; align-items: center; gap: 16px; background: var(--paper); filter: var(--chrome); pointer-events: auto;
+}
+.hud-clock { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+.hud-year { font: 700 16px/1 var(--f-name); letter-spacing: .04em; }
+.hud-sub { font: 700 12px/1 var(--f-sans); color: var(--ink-66); }
+.hud-purse { margin: 0 auto; display: flex; gap: 14px; }
+.hud-purse span { display: inline-flex; align-items: center; gap: 3px; font: 700 14px/1 var(--f-sans); font-variant-numeric: tabular-nums; }
+.hud-purse img { width: 18px; height: 18px; }
+.hud-court { margin-left: auto; display: flex; gap: 8px; }
+.hud-court .seal.is-acting { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--clay); }
+.stage.is-narrow .hud-purse { display: none; }
+
+.hud-col {
+  position: absolute; top: var(--hit); right: 0; bottom: 0; width: min(360px, 100%);
+  display: flex; flex-direction: column; pointer-events: none;
+}
+.hud-col > * { pointer-events: auto; }
+.hud-strip {
+  position: relative; flex: none; height: var(--hit); padding: 0 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--paper); border-bottom-left-radius: var(--fillet);
+  filter: var(--chrome); clip-path: inset(0 -24px -24px -24px);
+}
+/* the concave join of tab and bar */
+.hud-strip::after {
+  content: ""; position: absolute; top: 0; right: 100%; width: var(--fillet); height: var(--fillet);
+  background: radial-gradient(circle at 0 100%, transparent calc(var(--fillet) - 1px), var(--paper) var(--fillet));
+}
+.hud-strip.is-open { border-bottom-left-radius: 0; }
+.consult { height: var(--hit); display: flex; align-items: center; gap: 5px; color: var(--ink-66); }
+.consult img { width: 18px; height: 18px; }
+.consult:hover, .consult[aria-pressed="true"] { color: var(--ink); }
+.consult[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--clay); }
+
+/* the dropped page: as tall as it needs, down to the dock or the open Chronicle */
+.hud-sheet {
+  flex: 0 1 auto; min-height: 0; margin-bottom: 8px; padding: 8px 16px 16px;
+  overflow: auto; overscroll-behavior: contain; touch-action: pan-y;
+  background: var(--paper); box-shadow: inset 0 1px 0 var(--ink-12); border-bottom-left-radius: var(--fillet);
+  filter: var(--chrome); clip-path: inset(0 -24px -24px -24px);
+}
+.hud-sheet[data-tab="codex"] { flex-grow: 1; }
+.sheet-back { padding: 4px 0 2px; font: 700 12px/1 var(--f-sans); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-66); }
+.sheet-back:hover { color: var(--ink); }
+.hud-sheet h3 { margin: 6px 0 8px; font: 700 18px/1.2 var(--f-name); letter-spacing: .03em; }
+.hud-sheet p { margin: 0 0 8px; font: 400 15px/1.45 var(--f-body); }
+.hud-sheet .dim { color: var(--ink-66); }
+.hud .caps { font: 700 11px/1.3 var(--f-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-66); }
+.codex-shelf { margin: 4px 0 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.codex-shelf button {
+  width: 100%; height: 100%; padding: 8px; border-radius: 4px; text-align: left;
+  display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 2px 8px; align-content: start;
+  background: rgb(255 248 231 / 50%);
+}
+.codex-shelf button:hover { background: var(--paper-hi); }
+.codex-shelf img { grid-row: span 2; width: 28px; height: 28px; }
+.codex-shelf b { font: 700 13px/1.15 var(--f-name); letter-spacing: .02em; }
+.codex-shelf span { font: 500 11.5px/1.3 var(--f-sans); color: var(--ink-66); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.v-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 2px 12px; align-items: center; padding: 7px 0; box-shadow: inset 0 -1px 0 var(--ink-12); }
+.v-row b { font: 700 13px/1.2 var(--f-name); letter-spacing: .02em; }
+.v-row small { grid-column: 1; font: 500 12px/1.25 var(--f-sans); color: var(--ink-66); }
+.v-min, .v-holder { grid-row: 1 / span 2; font: 700 12px/1 var(--f-sans); }
+.v-min { color: var(--ink-66); }
+.v-holder { min-width: 70px; display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.v-holder .seal { width: 18px; height: 18px; font-size: 10px; }
+
+/* the Chronicle, opened upward out of the dock's top row */
+.hud-log {
+  flex: none; max-height: 70%; margin-top: auto; display: flex; flex-direction: column;
+  background: var(--paper); border-top-left-radius: var(--fillet);
+  filter: var(--chrome); clip-path: inset(-24px -24px 0 -24px);
+}
+.hud-col.has-sheet .hud-log { max-height: 45%; }
+.log-head { flex: none; display: flex; align-items: center; gap: 4px; padding: 8px 12px 6px 16px; box-shadow: inset 0 -1px 0 var(--ink-12); }
+.log-head .caps { margin-right: auto; }
+.log-filter { height: 24px; min-width: 24px; display: grid; place-items: center; border-radius: 12px; }
+.log-filter.all { padding: 0 8px; font: 700 11px/1 var(--f-sans); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-66); }
+.log-filter[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--clay); }
+.log-filter.all[aria-pressed="true"] { color: var(--ink); }
+.log-filter .seal { width: 18px; height: 18px; font-size: 10px; }
+.log-list { flex: 1 1 auto; min-height: 0; padding: 2px 16px 8px; overflow: auto; overscroll-behavior: contain; touch-action: pan-y; }
+.log-year { margin: 8px 0 2px; display: flex; align-items: center; gap: 8px; }
+.log-year::after { content: ""; flex: 1; height: 1px; background: var(--ink-12); }
+.log-row { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; align-items: start; padding: 3px 0; font: 400 14px/1.35 var(--f-body); }
+.log-row .seal { width: 18px; height: 18px; margin-top: 1px; font-size: 10px; }
+
+.hud-dock {
+  flex: none; margin-top: auto; display: grid; grid-template-columns: minmax(0, 1fr) 96px; grid-template-rows: 40px 56px;
+  background: var(--paper); border-top-left-radius: var(--fillet);
+  filter: var(--chrome); clip-path: inset(-24px 0 0 -24px);
+}
+.hud-log:not([hidden]) + .hud-dock { margin-top: 0; border-top-left-radius: 0; box-shadow: inset 0 1px 0 var(--ink-12); clip-path: inset(0 0 0 -24px); }
+.dock-line { grid-area: 1 / 1; min-width: 0; padding: 0 12px 0 16px; display: flex; align-items: center; gap: 8px; text-align: left; box-shadow: inset 0 -1px 0 var(--ink-12); }
+.dock-line .ln { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 400 14px/1.2 var(--f-body); }
+.dock-line .seal { width: 18px; height: 18px; font-size: 10px; }
+/* the whole Chronicle waits above: an up-caret at the line's right end */
+.dock-line::after { content: ""; flex: none; width: 8px; height: 8px; background: var(--ink-66); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.dock-line[aria-expanded="true"]::after { transform: rotate(180deg); }
+.dock-line:hover { background: rgb(255 248 231 / 50%); }
+.dock-line.is-new .ln { animation: line-in .45s ease-out; }
+@keyframes line-in { from { opacity: 0; transform: translateY(6px); } }
+.dock-modes { grid-area: 2 / 1; padding: 0 2px 0 6px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.dock-mode { height: 56px; display: grid; justify-items: center; align-content: center; gap: 3px; color: var(--ink-66); font: 700 10.5px/1 var(--f-sans); letter-spacing: .02em; }
+.dock-mode img { width: 26px; height: 26px; }
+.dock-mode:hover, .dock-mode[aria-pressed="true"] { color: var(--ink); }
+.dock-mode[aria-pressed="true"] { background: rgb(255 248 231 / 60%); box-shadow: inset 0 -2px 0 var(--clay); }
+.dock-end { grid-area: 1 / 2 / 3 / 3; position: relative; display: grid; place-items: center; padding-bottom: 12px; box-shadow: inset 1px 0 0 var(--ink-12); touch-action: none; }
+.end-disc {
+  width: 64px; height: 64px; display: grid; place-items: center; border-radius: 50%; background: var(--clay);
+  box-shadow: inset 0 0 0 2px var(--clay-deep), inset 0 0 0 4px var(--ivory-45);
+}
+.end-disc img { width: 36px; height: 36px; }
+.dock-end:hover .end-disc { background: #a93c17; }
+.dock-end.is-held .end-disc { background: conic-gradient(var(--clay-deep) calc(var(--hold) * 1turn), var(--clay) 0); }
+.end-label {
+  position: absolute; left: 10px; right: 10px; bottom: 10px; height: 20px; display: grid; place-items: center;
+  background: var(--paper-hi); box-shadow: inset 0 0 0 1px var(--clay-deep);
+  font: 700 11px/1 var(--f-sans); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap;
+}
 </style>
 
 <div class="page">
@@ -258,6 +406,11 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
   <section class="demo" aria-labelledby="demo-h">
     <h2 id="demo-h" class="vh">Living map prototype</h2>
     <div class="top">
+      <fieldset class="seg" id="layouts">
+        <legend>Layout</legend>
+        <label><input type="radio" name="layout" id="layout-dock" value="dock" checked><span>Corner dock</span></label>
+        <label><input type="radio" name="layout" id="layout-bare" value="bare"><span>Map only</span></label>
+      </fieldset>
       <fieldset class="seg" id="scenarios">
         <legend>Scenario</legend>
         <label><input type="radio" name="scenario" id="scn-opening" value="opening"><span>Opening<small>Year 1</small></span></label>
@@ -279,6 +432,36 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
       <div class="overlay" id="overlay" aria-hidden="true"></div>
       <div class="compass" id="compass" aria-hidden="true"><b>N</b><i></i></div>
       <div class="tilekeys" id="tilekeys" role="group" aria-label="Tiles"></div>
+      <div class="hud" id="hud">
+        <div class="hud-bar">
+          <p class="hud-clock"><span class="hud-year" id="hudYear">Year 6</span><span class="hud-sub" id="hudSub">of 14</span></p>
+          <p class="hud-purse" id="hudPurse" aria-label="Income a turn"></p>
+          <div class="hud-court" id="hudCourt" aria-label="Seats"></div>
+        </div>
+        <div class="hud-col" id="hudCol">
+          <nav class="hud-strip" id="hudStrip" aria-label="Consult">
+            <button type="button" class="consult" data-tab="codex" aria-pressed="false"><img alt="" src="../../../../assets/icons/bronze/chrome/codex.svg">Codex</button>
+            <button type="button" class="consult" data-tab="victory" aria-pressed="false"><img alt="" src="../../../../assets/icons/bronze/victory/laurel.svg">Victory</button>
+            <button type="button" class="consult" data-tab="agora" aria-pressed="false"><img alt="" src="../../../../assets/icons/bronze/assembly/agora.svg">Agora</button>
+          </nav>
+          <section class="hud-sheet" id="hudSheet" aria-label="Consult page" hidden></section>
+          <section class="hud-log" id="hudLog" aria-label="Chronicle" hidden>
+            <div class="log-head" id="logHead"></div>
+            <div class="log-list" id="logList" role="log"></div>
+          </section>
+          <div class="hud-dock">
+            <button type="button" class="dock-line" id="dockLine" aria-expanded="false" aria-controls="hudLog" title="Open the Chronicle"></button>
+            <div class="dock-modes" role="group" aria-label="Map mode">
+              <button type="button" class="dock-mode" data-mode="terrain" title="Terrain (1)"><img alt="" src="../../../../assets/icons/bronze/terrain/plains.svg">Terrain</button>
+              <button type="button" class="dock-mode" data-mode="political" title="Political (2)"><img alt="" src="../../../../assets/icons/bronze/settlements/city.svg">Political</button>
+              <button type="button" class="dock-mode" data-mode="economy" title="Economy (3)"><img alt="" src="../../../../assets/icons/bronze/market/income.svg">Economy</button>
+              <button type="button" class="dock-mode" data-mode="unrest" title="Unrest (4)"><img alt="" src="../../../../assets/icons/bronze/unrest/riot.svg">Unrest</button>
+              <button type="button" class="dock-mode" data-mode="trade" title="Trade (5)"><img alt="" src="../../../../assets/icons/bronze/market/handshake.svg">Trade</button>
+            </div>
+            <button type="button" class="dock-end" id="dockEnd" aria-label="End turn: press and hold"><span class="end-disc"><img alt="" src="../../../../assets/icons/bronze/events/end-turn.svg"></span><span class="end-label">End turn</span></button>
+          </div>
+        </div>
+      </div>
       <p class="fallback" id="fallback" hidden>three.js did not load in this view, so the map cannot draw.</p>
     </div>
 
@@ -301,6 +484,7 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
     <div class="under">
       <p class="picked" id="picked" aria-live="polite">Click a tile to select it.</p>
       <p class="mode-note" id="modeNote"></p>
+      <p class="mode-note" id="layoutNote"><b>Corner dock.</b> The Chronicle's newest line sits over the five map modes, and End turn spans both rows to their right. Press the line and the Chronicle opens upward. Codex, Victory and Agora still drop from the top bar's right end: a page runs as far down as it needs and stops above the dock; with the Chronicle open, the page gets shorter and scrolls. Hold End turn to pass the turn.</p>
       <div class="scn" id="scnPanel">
         <p id="scnText"></p>
         <div class="scn-chips" id="scnChips"></div>
@@ -473,7 +657,7 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
       ],
       moves: [[1, "EPHYRA", "ZANKLE", 2], [0, "THERMON", "KORONE", 1]],
       riot: { seat: 3, level: -4 },
-      titles: { seat: 0, cards: ["Polis Builder", "Demos", "Civic Elite"] },
+      titles: { seat: 0, cards: ["Polis Builder", "Demos", "Civic Elite"] }, treasurer: 1,
     },
   };
   const ICON = {
@@ -1764,6 +1948,7 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
     animate(clock, true);
     buildOverlay(sc);
     describeScenario(sc);
+    hudScenario(sc);
     renderLegend();
     tiles.forEach((t) => {
       const here = sc.atTile.get(t.id) || [];
@@ -2040,6 +2225,7 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
     const radio = $(`mode-${m}`);
     if (radio && !radio.checked) radio.checked = true;
     $("modeNote").innerHTML = MODE_NOTE[m];
+    syncDockModes();
     renderLegend();
     layerSig = ""; washSig = ""; camDirty = true;
     kick();
@@ -2405,6 +2591,206 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
   $("reset").addEventListener("click", reset);
   document.querySelectorAll('input[name="scenario"]').forEach((r) => r.addEventListener("change", () => { if (r.checked) buildScenario(r.value); }));
 
+  // ---------- the corner dock: Chronicle line and map modes beside End turn; consult pages from the top ----------
+  const hud = $("hud"), hudCol = $("hudCol"), sheet = $("hudSheet"), logBox = $("hudLog"), logList = $("logList"), dockLine = $("dockLine"), dockEnd = $("dockEnd");
+  const ico = (name) => `<img alt="" src="../../../../assets/icons/bronze/${name.replace("-", "/")}.svg">`;
+  const seal = (seat) => (seat === null || seat === undefined ? '<i class="seal none"></i>'
+    : `<i class="seal${seat === 1 ? " dark" : ""}" style="--own:${SEATS[seat].color}" title="${SEATS[seat].name}">${SEATS[seat].blazon}</i>`);
+  const listOf = (a) => (a.length < 2 ? a.join("") : `${a.slice(0, -1).join(", ")} and ${a[a.length - 1]}`);
+  const article = (w) => (/^[AEIOU]/.test(w) ? `an ${w}` : `a ${w}`);
+  // The Codex's chapters as the rulebook lists them, each a large button on the landing page.
+  const CHAPTERS = [
+    ["How to Win", "victory-laurel", "The victory race — the public cards and how to hold them."],
+    ["The Board", "terrain-plains", "The island's terrain — what each kind yields and how much it can hold."],
+    ["Resources", "resources-stockpile", "The five resources: four goods and influence."],
+    ["Population", "pops-crowd", "Citizens, freemen and slaves — what each earns, eats and needs."],
+    ["Settlements", "settlements-city", "Capitals, cities and colonies — capacities and what each can do."],
+    ["The Turn", "market-income", "Income, then your actions, then end — and the once-per-turn limits."],
+    ["Growing & the Ladder", "pops-promote", "Grow new pops, promote or demote them, and move them between settlements."],
+    ["Buildings", "buildings-build", "The building roster: costs and effects, one of each per settlement."],
+    ["Luxury Goods", "resources-luxury", "Six coastal goods, claimed by Ports, that raise your happiness."],
+    ["Happiness & Unrest", "unrest-riot", "What happiness is made of, the calm you can buy, and the riot table."],
+    ["Years & Cards", "events-die", "The year deck that is the clock, and the player deck."],
+    ["Trade", "market-handshake", "Offers between the seats: what trades, who answers, and how a deal settles."],
+    ["Ventures", "events-venture", "The three expeditions, their stakes, and the odds."],
+    ["The Assembly", "assembly-agora", "The agora: politicians, resolutions, voting, and the laws that stand."],
+    ["National Ideas", "assembly-stele", "One setup choice and one influence purchase."],
+  ];
+  // The six public cards and their minimums (ruleset defaults); hold three at the start of your turn to win.
+  const CARDS = [
+    ["Polis Builder", "Most cities standing", 3, (r) => r.cities],
+    ["Demos", "Most total pops", 14, (r) => r.pops],
+    ["Civic Elite", "Most citizens", 5, (r) => r.citizens],
+    ["Treasurer", "Largest gold stock", 30, null],
+    ["Beloved of the People", "Highest happiness", 4, (r) => r.level],
+    ["Voice of the Assembly", "Most standing Laws authored", 2, null],
+  ];
+  let story = [], acting = 0, logFilter = "all", consultTab = null, chapter = null;
+
+  // The Chronicle, rebuilt from the three moments: anything first seen in a moment happened
+  // between it and the moment before, at a seeded year, in the engine's past-tense voice.
+  const ORDER = ["opening", "mid", "late"];
+  function chronicle(sc) {
+    const past = ORDER.slice(0, ORDER.indexOf(sc.key) + 1).map((k) => (k === sc.key ? sc : expand(k)));
+    const rows = [], add = (year, step, seat, text) => rows.push({ year, step, seat, text, tie: hash01(text) });
+    const span = (i) => [i ? past[i - 1].year + 1 : 1, past[i].year];
+    const pick = (lo, hi, key) => (hi <= lo ? hi : lo + Math.floor(hash01(key) * (hi - lo + 1)));
+    const first = (name, test) => past.findIndex((p) => p.byName.has(name) && test(p.byName.get(name)));
+    for (let y = 1; y <= sc.year; y++) {
+      const opener = (((y - sc.year) % 4) + 4) % 4;
+      add(y, 0, opener, `Year ${y} begins. ${SEATS[opener].name} plays first.`);
+      if (y % 2 === 0) add(y, 1, null, `The Assembly convenes for Year ${y}.`);
+    }
+    for (const s of sc.list) {
+      const who = SEATS[s.seat].name, place = title(s.name);
+      const seen = first(s.name, () => true), [lo, hi] = span(seen);
+      const founded = seen === 0 ? 1 : pick(lo, hi - 2, `found:${s.name}`);
+      add(founded, 2, s.seat, s.kind === "capital" ? `${who} founded ${place}.` : `${who} founded a colony at ${place}.`);
+      let since = founded;
+      if (s.kind === "city") {
+        const [clo, chi] = span(first(s.name, (o) => o.kind === "city"));
+        since = pick(Math.max(clo, founded + 1), chi, `city:${s.name}`);
+        add(since, 3, s.seat, `${place} became a city.`);
+      }
+      for (const b of s.build) {
+        const [blo, bhi] = span(first(s.name, (o) => o.build.includes(b)));
+        const y = pick(Math.max(blo, since + 1), bhi, `build:${s.name}:${b}`);
+        add(y, 4, s.seat, `${who} built ${article(BUILD_NAME[b])} at ${place}.`);
+        if (b === "port" && s.good) add(y, 5, s.seat, `The Port at ${place} claimed ${s.good.name}.`);
+      }
+    }
+    for (const m of sc.moves) add(sc.year, 6, m.seat, `${SEATS[m.seat].name} shipped ${m.n} ${m.n === 1 ? "pop" : "pops"} from ${title(m.from.name)} to ${title(m.to.name)}.`);
+    for (const [seat, n] of Object.entries(sc.tokens)) add(sc.year, 6, +seat, `${SEATS[seat].name} took ${n === 1 ? "an Unrest token" : `${n} Unrest tokens`}.`);
+    if (sc.riot) add(sc.year, 7, sc.riot.seat, `${SEATS[sc.riot.seat].name}'s realm rioted at ${minus(sc.riot.level)}.`);
+    if (sc.titles) add(sc.year, 7, sc.titles.seat, `${SEATS[sc.titles.seat].name} holds ${listOf(sc.titles.cards)}.`);
+    if (sc.treasurer !== undefined) add(sc.year, 7, sc.treasurer, `${SEATS[sc.treasurer].name} holds Treasurer.`);
+    return rows.sort((a, b) => a.year - b.year || a.step - b.step || a.tie - b.tie);
+  }
+
+  function renderBar() {
+    $("hudYear").textContent = `Year ${current.year}`;
+    $("hudSub").textContent = `of 14 · ${SEATS[acting].name}'s turn`;
+    const sum = new Map();
+    for (const s of current.list.filter((o) => o.seat === acting)) for (const [k, n] of yieldsOf(s)) sum.set(k, (sum.get(k) || 0) + n);
+    $("hudPurse").innerHTML = ["wood", "stone", "food", "gold", "influence"]
+      .map((k) => `<span title="${title(k.toUpperCase())} a turn">${img(k)}+${sum.get(k) || 0}</span>`).join("");
+    $("hudCourt").innerHTML = SEATS.map((_, i) => seal(i).replace('class="seal', `class="seal${i === acting ? " is-acting" : ""}`)).join("");
+  }
+  function renderLog() {
+    const last = story[story.length - 1];
+    dockLine.innerHTML = `${seal(last.seat)}<span class="ln">${esc(last.text)}</span>`;
+    if (logBox.hidden) return;
+    $("logHead").innerHTML = `<span class="caps">Chronicle</span><button type="button" class="log-filter all" data-filter="all" aria-pressed="${logFilter === "all"}">All</button>`
+      + SEATS.map((s, i) => `<button type="button" class="log-filter" data-filter="${i}" aria-pressed="${logFilter === i}" aria-label="Only ${s.name}">${seal(i)}</button>`).join("");
+    let year = 0, html = "";
+    for (const row of story) {
+      if (logFilter !== "all" && row.seat !== logFilter) continue;
+      if (row.year !== year) { year = row.year; html += `<p class="log-year caps">Year ${year}</p>`; }
+      html += `<p class="log-row">${seal(row.seat)}<span>${esc(row.text)}</span></p>`;
+    }
+    logList.innerHTML = html;
+    logList.scrollTop = logList.scrollHeight;
+  }
+  function toggleLog(open = logBox.hidden) {
+    logBox.hidden = !open;
+    dockLine.setAttribute("aria-expanded", String(open));
+    dockLine.title = open ? "Close the Chronicle" : "Open the Chronicle";
+    renderLog();
+  }
+
+  function renderSheet() {
+    sheet.hidden = !consultTab;
+    sheet.dataset.tab = consultTab || "";
+    hudCol.classList.toggle("has-sheet", Boolean(consultTab));
+    $("hudStrip").classList.toggle("is-open", Boolean(consultTab));
+    hud.querySelectorAll(".consult").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tab === consultTab)));
+    if (!consultTab) return;
+    if (consultTab === "codex" && chapter === null) {
+      sheet.innerHTML = `<ol class="codex-shelf">${CHAPTERS.map(([name, icon, blurb], i) =>
+        `<li><button type="button" data-chapter="${i}">${ico(icon)}<b>${esc(name)}</b><span>${esc(blurb)}</span></button></li>`).join("")}</ol>`;
+    } else if (consultTab === "codex") {
+      const [name, , blurb] = CHAPTERS[chapter];
+      sheet.innerHTML = `<button type="button" class="sheet-back">← Codex</button><h3>${esc(name)}</h3><p>${esc(blurb)}</p>`
+        + '<p class="dim">The chapter\'s rules follow here in the game, with its sub-headings to jump between.</p>';
+    } else if (consultTab === "victory") {
+      sheet.innerHTML = '<p class="caps">Hold 3 at the start of your turn to win</p>' + CARDS.map(([name, text, min, metric]) => {
+        let holder = name === "Treasurer" && current.treasurer !== undefined ? current.treasurer : null;
+        if (metric) {
+          const v = current.realms.map(metric), top = Math.max(...v);
+          if (top >= min && v.filter((x) => x === top).length === 1) holder = v.indexOf(top);
+        }
+        return `<div class="v-row"><b>${esc(name)}</b><small>${esc(text)}</small><span class="v-min">min ${min}</span>`
+          + `<span class="v-holder">${holder === null ? '<span class="dim">no holder</span>' : `${seal(holder)}${SEATS[holder].name}`}</span></div>`;
+      }).join("");
+    } else {
+      const next = current.year + (current.year % 2 ? 1 : 2);
+      sheet.innerHTML = `<p class="caps">${next > 14 ? "No Assembly is left" : `Next Assembly Year ${next}`}</p>`
+        + '<p class="caps" style="margin-top:12px">Standing laws · 0 of 4</p><p class="dim">Four stelae stand empty.</p>';
+    }
+    sheet.scrollTop = 0;
+  }
+
+  function syncDockModes() {
+    hud.querySelectorAll(".dock-mode").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
+  }
+  function hudScenario(sc) {
+    story = chronicle(sc);
+    acting = 0;
+    renderBar();
+    renderLog();
+    renderSheet();
+    syncDockModes();
+  }
+
+  // End turn is a press-and-hold, as in the game: the ring fills over 620 ms, a release cancels.
+  let holdStart = 0, holdFrame = 0;
+  function holdStep(now) {
+    const k = Math.min(1, (now - holdStart) / 620);
+    dockEnd.style.setProperty("--hold", k.toFixed(3));
+    if (k < 1) { holdFrame = requestAnimationFrame(holdStep); return; }
+    holdCancel();
+    story.push({ year: current.year, seat: acting, text: `${SEATS[acting].name} ended the turn.` });
+    acting = (acting + 1) % 4;
+    renderBar();
+    renderLog();
+    dockLine.classList.remove("is-new"); void dockLine.offsetWidth; dockLine.classList.add("is-new");
+  }
+  function holdBegin() { if (holdFrame) return; holdStart = performance.now(); dockEnd.classList.add("is-held"); holdFrame = requestAnimationFrame(holdStep); }
+  function holdCancel() { cancelAnimationFrame(holdFrame); holdFrame = 0; dockEnd.classList.remove("is-held"); dockEnd.style.setProperty("--hold", "0"); }
+  dockEnd.addEventListener("pointerdown", (e) => { try { dockEnd.setPointerCapture(e.pointerId); } catch (err) { /* optional */ } holdBegin(); });
+  for (const ev of ["pointerup", "pointercancel", "lostpointercapture", "blur", "keyup"]) dockEnd.addEventListener(ev, holdCancel);
+  dockEnd.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (!e.repeat) holdBegin(); } });
+
+  // The HUD sits on the map: its presses and scrolls stay its own.
+  hud.addEventListener("pointerdown", (e) => e.stopPropagation());
+  hud.addEventListener("wheel", (e) => e.stopPropagation());
+  hud.addEventListener("click", (e) => {
+    const t = e.target.closest("button");
+    if (!t) return;
+    if (t.dataset.tab) { consultTab = consultTab === t.dataset.tab ? null : t.dataset.tab; chapter = null; renderSheet(); }
+    else if (t.dataset.chapter) { chapter = +t.dataset.chapter; renderSheet(); sheet.querySelector(".sheet-back").focus(); }
+    else if (t.classList.contains("sheet-back")) { chapter = null; renderSheet(); }
+    else if (t.dataset.mode) setMode(t.dataset.mode);
+    else if (t.dataset.filter) { logFilter = t.dataset.filter === "all" ? "all" : +t.dataset.filter; renderLog(); }
+    else if (t === dockLine) toggleLog();
+  });
+  hud.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (logBox.contains(e.target) || e.target === dockLine) { if (!logBox.hidden) { toggleLog(false); dockLine.focus(); e.stopPropagation(); } }
+    else if (consultTab) { consultTab = null; renderSheet(); e.stopPropagation(); }
+  });
+
+  // The page's layout choice: the corner dock over the map, or the bare map with the switchers above it.
+  function setLayout(v) {
+    const dock = v === "dock";
+    hud.hidden = !dock;
+    stage.classList.toggle("has-hud", dock);
+    $("modes").hidden = dock;
+    $("layoutNote").hidden = !dock;
+  }
+  document.querySelectorAll('input[name="layout"]').forEach((r) => r.addEventListener("change", () => { if (r.checked) setLayout(r.value); }));
+  setLayout(document.querySelector('input[name="layout"]:checked').value);
+
   // ---------- sizing, visibility ----------
   function resize() {
     const r = stage.getBoundingClientRect();
@@ -2412,6 +2798,7 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
     if (!nW || !nH || (nW === W && nH === H)) return;
     const rel = zFit ? cam.z / zFit : 1, grel = zFit ? goal.z / zFit : 1;
     W = nW; H = nH;
+    stage.classList.toggle("is-narrow", W < 640);
     zFit = Math.min(W / WW, H / WH);
     zMin = Z_MIN * zFit; zMax = Z_MAX * zFit;
     cam.z = clamp(rel * zFit, zMin, zMax);

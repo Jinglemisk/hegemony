@@ -485,7 +485,8 @@ describe("Aggregator", () => {
     // toEqual does not look at key order; the written file does.
     expect(JSON.stringify(mergedReport)).toBe(JSON.stringify(report));
     expect(csv(merged, mergedReport)).toBe(csv(together, report));
-  });
+    // Three whole games; with trade a game takes about twice as long, past the 5s default.
+  }, 60_000);
 });
 
 describe("the Step 11 report fields", () => {
