@@ -68,7 +68,8 @@ function validateLocalTarget(sourceFile, rawTarget) {
   }
 
   target = target.split("#", 1)[0].split("?", 1)[0];
-  if (!target || /YYYY|\{\{/.test(target)) return;
+  // A placeholder or a path a page's script builds (`${name}`) has no file to check.
+  if (!target || /YYYY|\{\{|\$\{/.test(target)) return;
 
   try {
     target = decodeURIComponent(target);
