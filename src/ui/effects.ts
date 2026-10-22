@@ -520,7 +520,7 @@ export function presentUnrestOutcome(ruleset: Ruleset, tier: UnrestOutcome["tier
         line: null,
         fraction,
         share,
-        warning: `A riot starts at ${formatNumber(riotThreshold)} happiness.`,
+        warning: `A riot starts at ${formatSignedNumber(riotThreshold)} happiness.`,
       };
   }
 }

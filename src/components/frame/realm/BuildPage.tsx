@@ -16,10 +16,11 @@ import type {
 import { presentBuildingEffects } from "../../../ui/effects";
 import { canPay } from "../../../ui/frameFormat";
 import { BUILDING_RASTERS } from "../../../ui/iconRegistry";
-import { formatResourceCost } from "../../../ui/formatters";
+import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
 import { settlementNames } from "../../../ui/settlementNames";
 import { ActionButton } from "../../ActionButton";
 import { AnnotatedText } from "../../AnnotatedText";
+import { EffectLine } from "../../EffectLine";
 import { useGameUi } from "../../board/GameUiContext";
 import { getBuildingBenefitText } from "../../board/helpers";
 import type { OwnedHolding } from "../../board/types";
@@ -133,6 +134,11 @@ export function BuildPage({
           const line = refused
             ? (turnBlocked ?? status.reasons[0])
             : cellLine(G, playerID, holding.tile, building);
+          const effect = presentBuildingEffects(building.effects);
+          const benefit = getBuildingBenefitText(G, playerID, holding.tile, building);
+          const discounted = RESOURCE_ORDER.some(
+            (resource) => (cost[resource] ?? 0) !== (building.cost[resource] ?? 0),
+          );
 
           return (
             <ActionButton
@@ -148,17 +154,18 @@ export function BuildPage({
               explanation={
                 <>
                   <p className="mechanicsExplanation">
-                    {presentBuildingEffects(building.effects).text || "—"}
+                    <EffectLine effect={effect} links={false} />
                   </p>
-                  <p className="mechanicsExplanation">
-                    <AnnotatedText
-                      links={false}
-                      text={getBuildingBenefitText(G, playerID, holding.tile, building)}
-                    />
-                  </p>
-                  <p className="mechanicsExplanation">
-                    Base cost {formatResourceCost(building.cost)}.
-                  </p>
+                  {benefit === effect.text ? null : (
+                    <p className="mechanicsExplanation">
+                      <AnnotatedText links={false} text={benefit} />
+                    </p>
+                  )}
+                  {discounted ? (
+                    <p className="mechanicsExplanation">
+                      Base cost <Chips amounts={building.cost} />
+                    </p>
+                  ) : null}
                 </>
               }
               heading={`${building.name} in ${name}`}

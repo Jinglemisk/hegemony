@@ -12,8 +12,8 @@ import type { HexTile } from "../game/types";
  * different machine. That is the same guarantee a stored name would give, at no
  * cost to the state.
  *
- * Coordinates do not disappear — they retreat to the tooltip, where "the tile at
- * -2,0" is a debugging fact rather than the settlement's identity.
+ * Coordinates do not disappear — they retreat to the tile's accessible name, where
+ * "the tile at -2,0" is a debugging fact rather than the settlement's identity.
  */
 
 /**

@@ -3,7 +3,6 @@ import {
   baseVoteWeight,
   getResolutionCard,
   lawReplacementIds,
-  POLITICIANS_BY_ID,
   restCanTurn,
   voteOutlook,
   voteWeightParts,
@@ -110,8 +109,9 @@ export function useSitting(G: HegemonyState, viewer: PlayerId): Sitting | null {
 }
 
 /**
- * A ballot item's result in words, from the engine's outcome kind: the verdict with its
- * tally, the recap's short verdict, their tone, the headline, and the recap's line.
+ * A ballot item's result in words, from the engine's outcome kind: the verdict (its
+ * tally is the votes listed under it), the recap's short verdict with the tally, their
+ * tone, the headline, and the recap's line.
  */
 export function presentResult(G: HegemonyState, result: AssemblyResult, viewer: PlayerId) {
   const { item, outcome, yea, nay } = result;
@@ -140,12 +140,12 @@ export function presentResult(G: HegemonyState, result: AssemblyResult, viewer: 
 
   return {
     verdict: carried
-      ? `Carried ${yea} to ${nay}`
+      ? "Carried"
       : outcome === "blocked"
-        ? `Carried ${yea} to ${nay}, without effect`
+        ? "Carried, without effect"
         : yea === nay
-          ? `Tied ${yea} to ${nay}: it fails`
-          : `Fails ${yea} to ${nay}`,
+          ? "Tied: it fails"
+          : "Fails",
     short: `${carried ? "Carried" : "Fails"} ${yea}–${nay}`,
     tone: carried ? "is-yea" : "is-nay",
     headline,
@@ -206,25 +206,14 @@ export function voteLine(
   return { lead, rest: `${after}: ${verdict}.` };
 }
 
-/** "Demosthenes · Law": the politician a card comes from, and its kind. */
-export function cardSource(card: ResolutionCard) {
-  return `${POLITICIANS_BY_ID[card.politician].name} · ${card.kind === "law" ? "Law" : "Directive"}`;
-}
-
-/** The head's line under a ballot item: who moved it, and what it is or strikes. */
+/** The head's line under a ballot item: who moved it, and whose Law a repeal strikes. */
 export function movedBy(G: HegemonyState, item: BallotItem, viewer: PlayerId) {
   const by = `Moved by ${seatName(G, item.proposer, viewer)}`;
-  if (item.kind === "enact") return `${by} · ${cardSource(item.card)}`;
+  if (item.kind === "enact") return by;
   const law = G.activeLaws.find((standing) => standing.cardId === item.cardId);
   return law
     ? `${by} · authored by ${seatName(G, law.author, viewer)}, Year ${toRoman(law.enactedYear)}`
     : by;
-}
-
-export function itemKind(G: HegemonyState, item: BallotItem) {
-  return item.kind === "repeal"
-    ? `repeal · paid ${G.ruleset.assembly.repealCost} influence`
-    : cardSource(item.card);
 }
 
 export function dockMark(session: AssemblySession, stage: SittingStage, id: PlayerId) {

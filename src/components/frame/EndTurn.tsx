@@ -7,9 +7,10 @@ import type { TurnEndUnrest } from "../../game/unrest";
 import { presentUnrestOutcome } from "../../ui/effects";
 import { sign } from "../../ui/frameFormat";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
+import { Prose } from "../AnnotatedText";
 import { Popover } from "../overlays/Popover";
 import { Tooltip } from "../overlays/Tooltip";
-import { Chips, Ico, Tip, TipWarn } from "./parts";
+import { Chips, Ico, Tip, TipBody, TipWarn } from "./parts";
 
 const HOLD_MS = 620;
 
@@ -127,7 +128,7 @@ export function EndTurn({
       <Tooltip
         content={
           <Tip title="End turn">
-            <p className="tip-body">{title}</p>
+            <TipBody>{title}</TipBody>
             {warning ? <TipWarn>{warning.message}</TipWarn> : null}
           </Tip>
         }
@@ -206,7 +207,7 @@ function EndTurnConfirm({
 }) {
   const revolt = unrest.tier === "revolt";
   const { calm } = unrest;
-  const { line, share } = presentUnrestOutcome(ruleset, unrest.tier);
+  const { share } = presentUnrestOutcome(ruleset, unrest.tier);
   const title = revolt ? "Ending your turn now means revolt" : "Ending your turn starts a riot";
 
   return (
@@ -218,33 +219,32 @@ function EndTurnConfirm({
       onDismiss={onClose}
       preferredPlacement="above"
     >
-      <span className="kicker">
-        Happiness {sign(unrest.level)} · {line}
-      </span>
       <h2 className="name confirm-title">{title}</h2>
       <p className="confirm-body">
-        {revolt ? (
-          unrest.slaves ? (
-            <>
-              {share} your slaves walk away:{" "}
-              <b>
-                {unrest.leaving} of {unrest.slaves}
-              </b>
-              . No roll and no insurance.
-            </>
+        <Prose links={false}>
+          {revolt ? (
+            unrest.slaves ? (
+              <>
+                {`${share} your slaves walk away: `}
+                <b>
+                  {unrest.leaving} of {unrest.slaves}
+                </b>
+                . No roll and no insurance.
+              </>
+            ) : (
+              "No slaves are left to walk away; only your Unrest tokens clear."
+            )
           ) : (
-            "No slaves are left to walk away; only your Unrest tokens clear."
-          )
-        ) : (
-          `Your ${unrest.tokens} Unrest ${unrest.tokens === 1 ? "token clears" : "tokens clear"}, then you roll on the riot table.`
-        )}
+            `Your ${unrest.tokens} Unrest ${unrest.tokens === 1 ? "token clears" : "tokens clear"}, then you roll on the riot table.`
+          )}
+        </Prose>
       </p>
       {calm ? (
         <p className="confirm-calm">
           <Ico path="unrest/calm" size="ui" />
           <span>
             {calm.tier === "none"
-              ? `Calm gives ${sign(calm.level - unrest.level)} for this year and holds the line.`
+              ? `Calm gives ${sign(calm.level - unrest.level)} and holds the line.`
               : `Calm (${sign(calm.level - unrest.level)}) lifts you to ${sign(calm.level)}: a riot instead.`}
           </span>
         </p>

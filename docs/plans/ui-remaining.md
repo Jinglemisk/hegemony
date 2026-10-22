@@ -34,28 +34,26 @@ resource chips, two token tables) are scheduled in the
 
 ## The list
 
-| ID        | needs      | what                                               |
-| --------- | ---------- | -------------------------------------------------- |
-| `TYPE-1`  | a decision | Two type sizes sit under spec, on purpose          |
-| `DUP-1`   | nothing    | Four repeated glossary words, judged and left      |
-| `V2-3`    | nothing    | A shared tile's second seal has no name plate      |
-| `DELTA-1` | a build    | A change from x to y shows its direction in colour |
+| ID       | needs      | what                                          |
+| -------- | ---------- | --------------------------------------------- |
+| `TYPE-1` | a decision | Two type sizes sit under spec, on purpose     |
+| `DUP-1`  | nothing    | Four repeated glossary words, judged and left |
+| `V2-3`   | nothing    | A shared tile's second seal has no name plate |
 
 ### v2 frame carry-overs (Steps 1–2, 2026-09-30 to 10-01)
 
 - **`V2-3`.** A rival colony sharing a tile draws as a small seal on the tile's
   shoulder; its name is in the tile tooltip. Two plates side by side do not fit a hex.
 
-### Owner note (2026-10-20)
-
-- **`DELTA-1` · a change shows its direction in colour.** Wherever the UI shows a value
-  changing from x to y, x stays in normal ink and y turns green when the change helps the
-  player, red when it hurts. Which way helps comes from the rule, not the sign: a pop's price
-  going down is green, happiness going down is red. Surfaces today: effective costs against
-  the printed price, the Assembly's directive effects, the year card's happiness line, the
-  upgrade card's pop cap, the Ladder popover and the riot loss lines.
-
 ### Shipped or closed
+
+- **`DELTA-1` · a change shows its direction in colour** (owner note 2026-10-20, built
+  2026-10-22 with the tooltip grammar). One `Delta` part draws every "x → y": x in normal
+  ink, y green when the change helps and red when it hurts, judged by the rule rather than
+  the sign. It is on the offer card's stocks, the Assembly's directive preview, the year
+  card's happiness line, the upgrade card's pop cap and the riot's Unrest token line. The
+  Ladder popover's arrow joins two classes, not two numbers, and a discounted build shows
+  its base price as chips beside the effective one.
 
 - **`V2-2` · the consult pages in the realm pages' style** (2026-10-15 and 16, #107 to
   #113). The realm's pages are rebuilt to fit the sheet with nothing scrolling

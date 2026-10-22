@@ -11,6 +11,7 @@ import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { settlementNames } from "../../../ui/settlementNames";
 import { ActionButton } from "../../ActionButton";
 import { useGameUi } from "../../board/GameUiContext";
+import { Prose } from "../../AnnotatedText";
 import { Chips, Ico } from "../parts";
 
 /** A tile as a place: its settlement's name if it has one, else its ground. */
@@ -56,7 +57,7 @@ export function TilePage({ tile, onFound }: { tile: HexTile; onFound: (tileId: s
           Slaves make
           {column.resource ? (
             <span>
-              <b>{column.perPop}</b> {column.resource} each
+              <Prose>{`${column.perPop} ${column.resource} each`}</Prose>
             </span>
           ) : (
             <span>nothing</span>
@@ -73,11 +74,13 @@ export function TilePage({ tile, onFound }: { tile: HexTile; onFound: (tileId: s
           <Ico path={LUXURY_RASTER} size="ui" />
           Goods
           <span>
-            {goods.length > 0
-              ? goods
-                  .map((asset) => getLuxuryGood(G.definition.content, asset.goodId)?.name)
-                  .join(", ")
-              : "none moored here"}
+            <Prose>
+              {goods.length > 0
+                ? goods
+                    .map((asset) => getLuxuryGood(G.definition.content, asset.goodId)?.name)
+                    .join(", ")
+                : "none moored here"}
+            </Prose>
           </span>
         </li>
       </ul>
@@ -94,7 +97,11 @@ export function TilePage({ tile, onFound }: { tile: HexTile; onFound: (tileId: s
           Found a colony here
           {found.cost ? <Chips amounts={found.cost} /> : null}
         </ActionButton>
-        {can ? null : <span className="cap">{reason}</span>}
+        {can ? null : (
+          <span className="cap">
+            <Prose>{reason}</Prose>
+          </span>
+        )}
       </div>
     </>
   );

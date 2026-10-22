@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { clonePops, totalPops } from "../../../game/rules";
 import type { Pops } from "../../../game/types";
+import { Prose } from "../../AnnotatedText";
 import { ModalShell } from "./ModalShell";
 import { PopulationStepper } from "./PopulationStepper";
 
@@ -53,7 +54,9 @@ export function PopulationPickerModal({
       <div className="modalHeader">
         <div>
           <h2 id="population-picker-title">{title}</h2>
-          <p>{description}</p>
+          <p>
+            <Prose>{description}</Prose>
+          </p>
         </div>
         <button className="iconButton" onClick={onCancel}>
           Close
@@ -72,11 +75,13 @@ export function PopulationPickerModal({
           Selected <strong>{selectedTotal}</strong>/<strong>{requiredTotal}</strong>
         </span>
         <span className={remaining === 0 && !citizensOff ? "positive" : "negative"}>
-          {citizensOff
-            ? `Needs ${requiredCitizens} ${requiredCitizens === 1 ? "citizen" : "citizens"}`
-            : remaining === 0
-              ? "Ready"
-              : `${Math.abs(remaining)} ${remaining > 0 ? "left" : "too many"}`}
+          <Prose>
+            {citizensOff
+              ? `Needs ${requiredCitizens} ${requiredCitizens === 1 ? "citizen" : "citizens"}`
+              : remaining === 0
+                ? "Ready"
+                : `${Math.abs(remaining)} ${remaining > 0 ? "left" : "too many"}`}
+          </Prose>
         </span>
       </div>
 

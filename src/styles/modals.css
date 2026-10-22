@@ -29,16 +29,11 @@
   text-transform: uppercase;
 }
 
-.eventCardCrest span,
-.eventCardCrest b {
-  color: var(--clay-deep);
-  font-size: 0.68rem;
-  letter-spacing: 0.08em;
-}
-
 .eventCardCrest b {
   overflow: hidden;
   color: var(--fg);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -267,11 +262,6 @@
   font-family: var(--f-name);
   font-size: 0.92rem;
   font-variant-numeric: tabular-nums;
-}
-
-.placementUpgradeStat .meterSlash {
-  margin: 0 3px;
-  color: var(--clay-ink);
 }
 
 .placementCostRow {
@@ -561,7 +551,7 @@
 
 /* A heading is a caps label over a rule, like a realm page's column head. It
    may wrap, so it keeps its own copy of the label rather than `.caps` (which
-   never wraps), as .tip-sub does; nested venture and politician names take it too. */
+   never wraps); nested venture and politician names take it too. */
 .compendiumEntry h3 {
   margin: 0;
   padding-bottom: var(--s-1);

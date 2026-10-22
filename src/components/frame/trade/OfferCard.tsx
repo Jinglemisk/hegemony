@@ -22,7 +22,8 @@ import { seatName } from "../../../ui/formatters";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { ActionButton } from "../../ActionButton";
 import { useGameUi } from "../../board/GameUiContext";
-import { Ico } from "../parts";
+import { Prose } from "../../AnnotatedText";
+import { Delta, Ico } from "../parts";
 import {
   MARK_GLYPH,
   answerMark,
@@ -260,9 +261,7 @@ function After({ G, seat, sides }: { G: HegemonyState; seat: PlayerId; sides: Si
       {changes.map((change) => (
         <span className="body body-sm trade-delta" key={change.key}>
           <Ico path={change.icon} size="chip" />
-          <span>{change.from}</span>
-          <span className="trade-arr">→</span>
-          <b className={change.to > change.from ? "is-up" : "is-down"}>{change.to}</b>
+          <Delta from={change.from} to={change.to} />
           <span className="visuallyHidden">{change.label}</span>
         </span>
       ))}
@@ -376,7 +375,9 @@ export function ComposeCard({ seat, onClose }: { seat: PlayerId; onClose: () => 
           <span className="caption trade-reason">Add something on each side.</span>
         )}
         {filled && !status.can ? (
-          <span className="caption trade-reason">{status.reasons[0]}</span>
+          <span className="caption trade-reason">
+            <Prose links={false}>{status.reasons[0]}</Prose>
+          </span>
         ) : null}
         <span className="trade-grow" />
         <ActionButton
@@ -444,7 +445,9 @@ function Counter({
       <footer className="trade-foot">
         <After G={G} seat={seat} sides={draft} />
         {changed && !status.can ? (
-          <span className="caption trade-reason">{status.reasons[0]}</span>
+          <span className="caption trade-reason">
+            <Prose links={false}>{status.reasons[0]}</Prose>
+          </span>
         ) : null}
         <span className="trade-grow" />
         <button className="btn kicker" onClick={onBack} type="button">
@@ -536,7 +539,11 @@ function Answers({
             <Glaze seat={seat} size="sm" />
             <span className="body body-sm trade-row-words">
               <b className="name">{name}</b>
-              {status ? <span>{status}</span> : null}
+              {status ? (
+                <span>
+                  <Prose links={false}>{status}</Prose>
+                </span>
+              ) : null}
             </span>
             {accept ? (
               <span className="trade-row-acts">
@@ -626,14 +633,13 @@ function Answers({
 export function OfferCard({ offer, onClose }: { offer: TradeOffer; onClose: () => void }) {
   const { G } = useGameUi();
   const [countering, setCountering] = useState<PlayerId | null>(null);
-  const answered = offer.to.filter((seat) => offer.answers[seat]).length;
   const counterSeat =
     countering && offer.to.includes(countering) && !offer.answers[countering] ? countering : null;
 
   return (
     <section aria-label={offerTitle(G, offer)} className="trade-card">
       <CardHead
-        caption={`Every seat sees it · ${answered} of ${offer.to.length} answered`}
+        caption="Every seat sees it"
         kicker={offer.toTable ? "On the table" : "To chosen seats"}
         onClose={onClose}
         seat={offer.from}

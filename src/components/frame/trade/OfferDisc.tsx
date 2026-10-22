@@ -5,7 +5,7 @@ import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { useGameUi } from "../../board/GameUiContext";
 import { Popover } from "../../overlays/Popover";
 import { Tooltip } from "../../overlays/Tooltip";
-import { Ico, Tip } from "../parts";
+import { Ico, Tip, TipBody } from "../parts";
 import { OfferCard } from "./OfferCard";
 import { MARK_GLYPH, answerMark, bundleWords, offerTitle } from "./tradeView";
 
@@ -44,8 +44,8 @@ export function OfferDisc({ offer }: { offer: TradeOffer }) {
     <li className="offer-alarm">
       <Tooltip
         content={
-          <Tip sub={sub} title={title}>
-            <p className="tip-body">{terms}</p>
+          <Tip title={title}>
+            <TipBody>{terms}</TipBody>
             <p className="tip-act">
               {answered < offer.to.length ? "Click to answer" : "Click to settle or withdraw"}
             </p>

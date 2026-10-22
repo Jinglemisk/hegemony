@@ -2,8 +2,8 @@
  * The Assembly's chapter in the Codex. The sitting itself is `sitting.css`; the
  * Agora page is a ledger in frame/pages.css.
  *
- * Known and NOT fixed here: the Codex roster below still sets 8px and 10.5px,
- * which is the illegible register the overhaul exists to remove. Fixing it means
+ * Known and NOT fixed here: the Codex roster below still sets 10.5px, which is
+ * the illegible register the overhaul exists to remove. Fixing it means
  * putting type roles on the markup in rulebook.tsx, which is the Codex's own
  * pass, not this sheet's — a size cannot be corrected from here without breaking
  * the rule that type.css owns sizes.
@@ -20,21 +20,9 @@
   border-top: 0;
 }
 
+/* The name alone: the epithet reads as the first line of the flavour below it. */
 .rulePolitician h3 {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 7px;
   margin: 0 0 3px;
-}
-
-.rulePolitician h3 em {
-  color: var(--aegean);
-  font-family: var(--f-name);
-  font-size: 8px;
-  font-style: normal;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
 
 .ruleCardList {

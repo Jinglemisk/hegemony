@@ -715,7 +715,8 @@
   line-height: 1.15;
 }
 
-.blowWhat b {
+/* The subject only: a signed number in the annotated condition is a `b` too. */
+.blowWhat > b {
   display: block;
   color: var(--mood-ink);
 }

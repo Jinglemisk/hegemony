@@ -4,28 +4,37 @@ import { seatsBefore } from "../../game/turn";
 import type { VictoryThreat } from "../../game/victory";
 import type { HegemonyState, PlayerId, VictoryMetric } from "../../game/types";
 import { capitalize } from "../../game/core/format";
-import { listed, numberWord, seatName, toRoman } from "../../ui/formatters";
+import { listed, numberWord, seatName } from "../../ui/formatters";
 import { titleValue } from "../../ui/frameFormat";
+import { turnsLeftInYear } from "../../ui/frameSelectors";
 import { yearCardIcon } from "../../ui/iconRegistry";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
+import { Prose } from "../AnnotatedText";
 import { Popover } from "../overlays/Popover";
 import { Tooltip } from "../overlays/Tooltip";
-import { Ico, Tip } from "./parts";
+import { Ico, Tip, TipBody } from "./parts";
 
 /**
  * The year card, closed: the first disc of the alarms row until the year turns. The
  * year icon carries the card's subject as a badge; a click reopens the face.
  */
-export function YearDisc({ G, onOpen }: { G: HegemonyState; onOpen: () => void }) {
+export function YearDisc({
+  G,
+  viewerId,
+  onOpen,
+}: {
+  G: HegemonyState;
+  viewerId: PlayerId;
+  onOpen: () => void;
+}) {
   const card = G.activeYearCard;
   if (!card) return null;
-  const until = G.yearDrawPile.length ? `until Year ${toRoman(G.year + 1)}` : "the final year";
   return (
     <li>
       <Tooltip
         content={
-          <Tip sub={`This year’s card · ${until}`} title={card.name}>
-            <p className="tip-body">{card.text}</p>
+          <Tip title={card.name} turns={turnsLeftInYear(G, viewerId)}>
+            <TipBody>{card.text}</TipBody>
             <p className="tip-act">Click to read the card</p>
           </Tip>
         }
@@ -132,16 +141,20 @@ export function ThreatAlarm({
                         <span className="threat-row-words">
                           <b className="name">{card.name}</b>
                           <span className="caption">
-                            {G.players[threat.seat].name} {titleValue(card.metric, value)}
-                            {runnerUp
-                              ? ` · next best ${seatName(G, runnerUp.seat, viewerId)} ${runnerUp.value}`
-                              : ""}
+                            <Prose links={false}>
+                              {`${G.players[threat.seat].name} ${titleValue(card.metric, value)}`}
+                              {runnerUp
+                                ? ` · next best ${seatName(G, runnerUp.seat, viewerId)} ${runnerUp.value}`
+                                : ""}
+                            </Prose>
                           </span>
                         </span>
                         <span className="threat-gap caption">
-                          {gap === null
-                            ? "no challenger"
-                            : `${capitalize(yours ? "you are" : `${seatName(G, runnerUp!.seat, viewerId)} is`)} ${shortBy(card.metric, gap)} short of a tie`}
+                          <Prose links={false}>
+                            {gap === null
+                              ? "no challenger"
+                              : `${capitalize(yours ? "you are" : `${seatName(G, runnerUp!.seat, viewerId)} is`)} ${shortBy(card.metric, gap)} short of a tie`}
+                          </Prose>
                         </span>
                       </li>
                     );

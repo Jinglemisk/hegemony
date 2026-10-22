@@ -2,7 +2,7 @@
 
 Status: living reference for the implemented frontend.
 
-Last updated: 2026-08-03.
+Last updated: 2026-10-22.
 
 This contract defines how the frontend explains gameplay mechanics without creating a
 second rules engine. Engine selectors, action statuses, and content manifests are the
@@ -57,11 +57,39 @@ keyboard pattern is implemented.
 ### `MechanicsDetails`
 
 Use the standard slots in this order where present: heading, structured effects,
-effective cost, short explanation, source, duration, and blocked reason. Resource
+effective cost, short explanation, and blocked reason. A source is not a slot: the
+thing's owner already stands beside it (a Law's stele, its Agora line). Resource
 amounts use the frame's `Chips`, which read each amount in words ("4 Wood"). The holding
 table's net-income grid is the one exception: it shows every resource, a zero as a dash,
 so its columns line up. Tooltip content is descriptive only; actions and Codex
 navigation live outside it.
+
+### Headings, icons and countdowns
+
+Three rules, each owned by one shared part so a new surface gets it by using the part
+(owner, 2026-10-22):
+
+- **A heading is a name.** The frame tooltip (`Tip`) takes a title and, at the far end
+  of its line, a countdown; nothing else. A number the chip or disc already shows is not
+  repeated beside it, and what the tooltip adds goes in its body. Kickers above a card's
+  title name the moment ("Turn end"); they do not restate a number. Screen readers keep
+  the words in the trigger's label. `npm run ui:check` counts tooltip titles or
+  paragraphs built by hand outside the parts.
+- **Every sentence a player reads takes its terms' icons.** `AnnotatedText` (a string)
+  and `Prose` (JSX) put each game term's icon before its word: resources, classes,
+  buildings, settlements, terrain, luxuries and each good, unrest, titles and each
+  title, Ideas and each Idea, trade, ventures, the Assembly's nouns. The term list is
+  built from the icon registry and the content package, so new content gets its icon
+  without touching a sentence. Tooltip paragraphs (`TipBody`), ledger labels, warnings,
+  blocked reasons, toasts and card text all pass through it; an effect renders through
+  `EffectLine`, never as raw text.
+- **A countdown is a token.** `Turns` is the hourglass and how many of the seat's own
+  turns are left (`effectTurns`, `turnsLeftInYear`, `turnsUntilYear`). A turn, an income
+  and a seat's year are the same tick, so one number serves food that lasts, a strike, a
+  year card, calm and the next Assembly. Rates and limits ("once a turn") stay words, and
+  a card's authored rule keeps its own wording.
+
+Changes read "x → y" through `Delta`: y is green when it helps and red when it hurts.
 
 ## Required decisions and multi-seat workflows
 

@@ -18,6 +18,7 @@ import type {
 import { presentTableEffect } from "../../../ui/effects";
 import { sign } from "../../../ui/frameFormat";
 import { RESOURCE_RASTERS } from "../../../ui/iconRegistry";
+import { AnnotatedText, Prose } from "../../AnnotatedText";
 import { placeName } from "../../frame/moments";
 import { Ico } from "../../frame/parts";
 import { useGameUi } from "../GameUiContext";
@@ -91,7 +92,9 @@ export function RiotModal({
     const row = riotTable.rows.find((candidate) => candidate.roll === moment.modified);
     const first = row?.effects[0];
     const presented = first ? presentTableEffect(first) : null;
+    // The roll is said nowhere else on the card, so the foot carries it.
     const rolled = moment.modifier ? `${moment.roll} + ${moment.modifier}` : String(moment.roll);
+    const foot = nextFoot(G, entry);
     const insurance = moment.insurance.flatMap((id): LossLine[] => {
       const option = riotTable.insurance?.find((candidate) => candidate.id === id);
       if (!option) return [];
@@ -101,11 +104,11 @@ export function RiotModal({
             key: id,
             icon: "pops/demote",
             text: (
-              <>
+              <Prose links={false}>
                 A citizen of{" "}
                 <b>{moment.concessionTileId ? placeName(G, seat, moment.concessionTileId) : "?"}</b>{" "}
                 became a freeman ({option.label.toLowerCase()}).
-              </>
+              </Prose>
             ),
           },
         ];
@@ -130,8 +133,8 @@ export function RiotModal({
         }
         blowIcon={blowIconOf(first)}
         commit={commitVerb(ceremonyMood(presented?.tone ?? "neutral"))}
-        foot={nextFoot(G, entry)}
-        kicker={`Riot · rolled ${rolled}`}
+        foot={{ ...foot, when: `Rolled ${rolled} · ${foot.when}` }}
+        kicker="Riot"
         lines={[
           ...leaveLines(G, seat, moment.left),
           ...insurance,
@@ -199,9 +202,7 @@ export function RiotModal({
           <Insurance seat={seat} canAct={canAct} />
         ) : null}
         <section className="sheetCol">
-          <h3 className="sheetSec label">
-            The table · you roll a d6{modifier ? ` ${sign(modifier)}` : ""}
-          </h3>
+          <h3 className="sheetSec label">The table</h3>
           <EventTableRows
             links={false}
             reach={reach}
@@ -211,14 +212,16 @@ export function RiotModal({
           />
           <p className="caption sheetNote">
             {modifier
-              ? `With ${sign(modifier)}, the worst you can roll is a ${reach.lowest}.`
-              : "Each insurance puts the lowest row out of reach."}
+              ? `You roll a d6 ${sign(modifier)}: the worst you can roll is a ${reach.lowest}.`
+              : "You roll a d6. Each insurance puts the lowest row out of reach."}
           </p>
         </section>
       </div>
 
       <footer className="sheetFoot">
-        <span className="caption">Losses take slaves first.</span>
+        <span className="caption">
+          <Prose links={false}>Losses take slaves first.</Prose>
+        </span>
         {pending ? (
           <button
             className="ceremonyCommit verb verb-lg"
@@ -244,7 +247,6 @@ function Insurance({ seat, canAct }: { seat: PlayerId; canAct: boolean }) {
   const { G, moves } = useGameUi();
   const pending = G.pendingRiot!;
   const riotTable = getRiotTable(G.definition.content);
-  const held = G.players[seat].resources;
   // Concession targets: every owned settlement with a citizen to demote.
   const targets = useMemo(
     () =>
@@ -258,7 +260,7 @@ function Insurance({ seat, canAct }: { seat: PlayerId; canAct: boolean }) {
 
   return (
     <section className="sheetCol">
-      <h3 className="sheetSec label">Insurance · +1 to the roll each</h3>
+      <h3 className="sheetSec label">Insurance</h3>
       <ul className="insRows">
         {(riotTable.insurance ?? []).map((option) => {
           const bought = pending.boughtInsurance.includes(option.id);
@@ -277,15 +279,17 @@ function Insurance({ seat, canAct }: { seat: PlayerId; canAct: boolean }) {
                 {option.demotesPop ? (
                   bought ? (
                     <span className="caption">
-                      A citizen of{" "}
-                      {pending.concessionTileId
-                        ? placeName(G, seat, pending.concessionTileId)
-                        : "?"}{" "}
-                      became a freeman
+                      <Prose links={false}>
+                        A citizen of{" "}
+                        {pending.concessionTileId
+                          ? placeName(G, seat, pending.concessionTileId)
+                          : "?"}{" "}
+                        became a freeman
+                      </Prose>
                     </span>
                   ) : targets.length ? (
                     <label className="caption insPick">
-                      Demote a citizen:
+                      <Prose links={false}>Demote a citizen:</Prose>
                       <select
                         disabled={!canAct}
                         onChange={(event) => setTarget(Number(event.target.value))}
@@ -299,12 +303,16 @@ function Insurance({ seat, canAct }: { seat: PlayerId; canAct: boolean }) {
                       </select>
                     </label>
                   ) : (
-                    <span className="caption">No citizen to demote</span>
+                    <span className="caption">
+                      <Prose links={false}>No citizen to demote</Prose>
+                    </span>
                   )
                 ) : (
-                  <span className="caption">
-                    {amount} {resource} · you hold {resource ? held[resource] : 0}
-                  </span>
+                  <AnnotatedText
+                    className="caption"
+                    links={false}
+                    text={`${amount ?? 0} ${resource ?? ""}`}
+                  />
                 )}
               </span>
               <button
@@ -325,6 +333,7 @@ function Insurance({ seat, canAct }: { seat: PlayerId; canAct: boolean }) {
           );
         })}
       </ul>
+      <p className="caption sheetNote">Each one declared adds +1 to the roll, paid now.</p>
       <p className="caption sheetNote insCleared">
         <Ico path="unrest/unrest" size="ui" />
         Your {pending.tokensCleared} Unrest{" "}

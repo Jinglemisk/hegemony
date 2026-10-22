@@ -41,6 +41,23 @@
   flex: none;
   object-fit: contain;
 }
+/* A countdown (`Turns`): the hourglass and the seat's turns left. */
+.turns {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  white-space: nowrap;
+}
+/* A change (`Delta`): x → y, y toned by whether it helps. */
+.delta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--s-1);
+  white-space: nowrap;
+}
+.delta-arr {
+  color: var(--ink-45);
+}
 .ico-chip {
   width: var(--ic-chip);
   height: var(--ic-chip);

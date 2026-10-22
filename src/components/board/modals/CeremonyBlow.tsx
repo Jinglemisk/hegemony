@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { EffectPresentation } from "../../../ui/effects";
+import { AnnotatedText } from "../../AnnotatedText";
 import { EffectLine } from "../../EffectLine";
 
 /**
@@ -18,6 +19,8 @@ export function CeremonyBlow({
   icon,
   className,
   figureRole = "stat-lg stat-hero",
+  iconSubject = false,
+  links = true,
 }: {
   presentation: EffectPresentation;
   icon?: ReactNode;
@@ -29,6 +32,13 @@ export function CeremonyBlow({
    * being used to label one of several options.
    */
   figureRole?: "stat-lg stat-hero" | "stat-lg";
+  /**
+   * The subject names more than the glyph draws (a year card's "Plains food"), so its
+   * words take their icons. A lone term beside its own glyph ("Gold") stays bare.
+   */
+  iconSubject?: boolean;
+  /** Glossary links on the condition; off where a blocking ceremony leaves no codex. */
+  links?: boolean;
 }) {
   const { magnitude, subject, condition } = presentation;
 
@@ -39,12 +49,16 @@ export function CeremonyBlow({
         <>
           <span className={`blowFigure num ${figureRole}`}>{magnitude}</span>
           <span className="blowWhat">
-            <b className="title">{subject}</b>
-            {condition ? <span className="caption">{condition}</span> : null}
+            <b className="title">
+              {iconSubject ? <AnnotatedText links={false} text={subject} /> : subject}
+            </b>
+            {condition ? (
+              <AnnotatedText className="caption" links={links} text={condition} />
+            ) : null}
           </span>
         </>
       ) : (
-        <EffectLine className="blowLine body" effect={presentation} />
+        <EffectLine className="blowLine body" effect={presentation} links={links} />
       )}
     </div>
   );

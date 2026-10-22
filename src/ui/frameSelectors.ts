@@ -5,7 +5,10 @@ import {
   realmPops,
   unrestOutcome,
 } from "../game/rules";
+import type { ActiveEffectDescriptor } from "../game/activeEffects";
+import { nextAssemblyYear } from "../game/assembly";
 import { capitalize } from "../game/core/format";
+import { PLAYER_IDS } from "../game/data";
 import { playerDole } from "../game/ideaRules";
 import { presentUnrestOutcome } from "./effects";
 import { sign } from "./frameFormat";
@@ -41,7 +44,7 @@ export type HungerShortfall = {
   /** Pops that leave if the turn ended now: one per missing food, while mouths last. */
   unfed: number;
   /** What would feed the shortfall now, with its price and what the seat holds. */
-  fixes: Array<{ icon: string; text: string }>;
+  fixes: string[];
 };
 
 /**
@@ -59,11 +62,8 @@ export function hungerShortfall(G: HegemonyState, playerID: PlayerId): HungerSho
     short: -hunger.stockpile,
     unfed: hunger.unfed,
     fixes: [
-      {
-        icon: "resources/influence",
-        text: `Dole: ${food} food for ${influenceCost} influence (you hold ${held.influence})`,
-      },
-      { icon: "market/handshake", text: "Trade: offer the other seats goods for food" },
+      `Dole: ${food} food for ${influenceCost} influence (you hold ${held.influence})`,
+      "Trade: offer the other seats goods for food",
     ],
   };
 }
@@ -83,7 +83,8 @@ export type HappinessDisplay = {
   revoltAt: number;
   /** Unrest tokens on the realm, each worth −1 until a riot or a card clears them. */
   tokens: number;
-  lines: Array<{ label: string; amount: number }>;
+  /** `turns` on a term that runs out (calm, at year end). */
+  lines: Array<{ label: string; amount: number; turns?: number }>;
 };
 
 function termLabel(G: HegemonyState, term: HappinessContribution): string {
@@ -91,9 +92,49 @@ function termLabel(G: HegemonyState, term: HappinessContribution): string {
     case "slaves":
       return `${capitalize(term.detail)}, 1 per ${G.ruleset.economy.slavesPerUnhappiness}`;
     case "calm":
-      return "Calm, until year end";
+      return "Calm";
     default:
       return capitalize(term.detail);
+  }
+}
+
+/**
+ * The seat's own turns left this year, the one being played included. A year is one
+ * turn per seat, in order from the year's opener; the Assembly sits before any of them.
+ */
+export function turnsLeftInYear(G: HegemonyState, seat: PlayerId): number {
+  if (G.assembly) return 1;
+  const order = PLAYER_IDS.map(
+    (_, index) => PLAYER_IDS[(PLAYER_IDS.indexOf(G.yearOpener) + index) % PLAYER_IDS.length],
+  );
+  return order.indexOf(seat) >= order.indexOf(G.currentPlayer) ? 1 : 0;
+}
+
+/** The seat's own turns before `year` opens. */
+export function turnsUntilYear(G: HegemonyState, seat: PlayerId, year: number): number {
+  return Math.max(0, year - G.year - 1) + turnsLeftInYear(G, seat);
+}
+
+/** How many of the seat's turns a standing effect has left (`Turns`); null while it
+ *  stands until repealed or for good. */
+export function effectTurns(
+  G: HegemonyState,
+  seat: PlayerId,
+  descriptor: ActiveEffectDescriptor,
+): number | null {
+  switch (descriptor.duration.expiry) {
+    case "afterIncomeCollections":
+    case "whenFed":
+      return descriptor.duration.remaining;
+    case "atYearEnd":
+      return turnsLeftInYear(G, seat);
+    case "atNextAssembly": {
+      const year = nextAssemblyYear(G);
+      return year === null ? null : turnsUntilYear(G, seat, year);
+    }
+    case "whenRepealed":
+    case "permanent":
+      return null;
   }
 }
 
@@ -120,7 +161,11 @@ export function happinessDisplay(G: HegemonyState, playerID: PlayerId): Happines
     tokens: G.players[playerID].unrestTokens,
     lines: terms
       .filter((term) => term.amount !== 0 || always.includes(term.id))
-      .map((term) => ({ label: termLabel(G, term), amount: term.amount })),
+      .map((term) => ({
+        label: termLabel(G, term),
+        amount: term.amount,
+        ...(term.id === "calm" ? { turns: turnsLeftInYear(G, playerID) } : {}),
+      })),
   };
 }
 

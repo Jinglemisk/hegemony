@@ -5,6 +5,7 @@ import { getOwnedSettlement } from "../../../game/rules";
 import type { HungerLeave, HungerPop } from "../../../game/types";
 import { formatNumber, formatPopLabel, numberWord } from "../../../ui/formatters";
 import { settlementNameOf } from "../../../ui/settlementNames";
+import { Prose } from "../../AnnotatedText";
 import { Ico } from "../../frame/parts";
 import { useGameUi } from "../GameUiContext";
 import { CeremonyBlow } from "./CeremonyBlow";
@@ -74,19 +75,21 @@ export function HungerModal({
       onDismiss={onBack}
     >
       <header className="hungerHead">
-        <span className="fateKicker label">A lean year · the end of your turn</span>
+        <span className="fateKicker label">Turn end</span>
         <h2 className="display display-xl" id="hunger-title">
           Hunger
         </h2>
         <p className="fateVoice body-em">
-          The granary is short. {capitalize(numberWord(unfed))}{" "}
-          {unfed === 1 ? "household" : "households"} must leave before the next harvest.
+          <Prose links={false}>
+            {`Food runs short. ${capitalize(numberWord(unfed))} ${unfed === 1 ? "pop" : "pops"} must leave before the next harvest.`}
+          </Prose>
         </p>
       </header>
 
       <CeremonyBlow
         className="blowBand"
         icon={<Ico path="pops/pop-loss" size="tile" />}
+        links={false}
         presentation={{
           text: `−${unfed} pops`,
           tone: "negative",
@@ -123,7 +126,9 @@ export function HungerModal({
           </div>
         ))}
         <p className="hungerCount caption">
-          <span>Slaves eat nothing, so they never leave for hunger.</span>
+          <span>
+            <Prose links={false}>Slaves eat nothing, so they never leave for hunger.</Prose>
+          </span>
           <b className={chosen === unfed ? "is-met" : undefined}>
             {chosen} of {unfed} chosen
           </b>
@@ -132,7 +137,9 @@ export function HungerModal({
 
       <p className="hungerFoot caption">
         <span>Next: your turn ends</span>
-        <span>Food returns to 0 · no debt</span>
+        <span>
+          <Prose links={false}>Food returns to 0 · no debt</Prose>
+        </span>
       </p>
       <div className="hungerActs">
         {onBack ? (

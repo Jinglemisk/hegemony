@@ -8,6 +8,8 @@ import {
 } from "../../../game/rules";
 import type { HexTile, Settlement } from "../../../game/types";
 import { formatResourceDelta } from "../../../ui/formatters";
+import { AnnotatedText, Prose } from "../../AnnotatedText";
+import { Delta } from "../../frame/parts";
 import { SettlementSummaryCard } from "../../SettlementCard";
 import { SETTLEMENT_GLYPHS } from "../../../ui/iconRegistry";
 import { Icon } from "../../../ui/icons/Icon";
@@ -55,8 +57,7 @@ export function UpgradeCityModal({
 
   return (
     <PlacementModalShell
-      kicker="Upgrade to City"
-      title={`Player ${G.players[playerID].name}`}
+      title="Upgrade to City"
       labelledBy="upgrade-city-title"
       confirmLabel="Upgrade City"
       canConfirm={canConfirm}
@@ -68,7 +69,9 @@ export function UpgradeCityModal({
       }}
     >
       {candidates.length === 0 ? (
-        <p className="placementEmptyState">No colony is ready to become a city.</p>
+        <p className="placementEmptyState">
+          <Prose>No colony is ready to become a city.</Prose>
+        </p>
       ) : (
         <>
           {candidates.length > 1 ? (
@@ -94,18 +97,17 @@ export function UpgradeCityModal({
                     >
                       <Icon glyph={SETTLEMENT_GLYPHS.colony} size="rail" className="miniIcon" />
                       <span className="placementChipText">
-                        <strong>
-                          {capitalize(tile.terrain)}
-                          {tile.resource
-                            ? ` · ${tile.slots} slots, ${tile.resource.type}`
-                            : ` · ${tile.slots} slots`}
-                        </strong>
+                        <strong>{settlementNameOf(G.board.tiles, settlement.id)}</strong>
                         <em>
-                          {tile.id} · {totalPops(settlement.pops)}/
-                          {settlementPopCapacity("colony", G)}
-                          {rivals.length > 0
-                            ? ` · evicts ${rivals.map((candidate) => G.players[candidate.owner].name).join(", ")}`
-                            : ""}
+                          <Prose links={false}>
+                            {`${capitalize(tile.terrain)}, ${tile.slots} slots${
+                              tile.resource ? ` for ${tile.resource.type}` : ""
+                            } · ${totalPops(settlement.pops)}/${settlementPopCapacity("colony", G)} pops${
+                              rivals.length > 0
+                                ? ` · evicts ${rivals.map((candidate) => G.players[candidate.owner].name).join(", ")}`
+                                : ""
+                            }`}
+                          </Prose>
                         </em>
                       </span>
                     </button>
@@ -138,13 +140,17 @@ export function UpgradeCityModal({
             <span className="placementUpgradeStat">
               <em>Capacity</em>
               <strong>
-                {settlementPopCapacity("colony", G)} <span className="meterSlash">→</span>{" "}
-                {settlementPopCapacity("city", G)}
+                <Delta
+                  from={settlementPopCapacity("colony", G)}
+                  to={settlementPopCapacity("city", G)}
+                />
               </strong>
             </span>
             <span className="placementUpgradeStat">
               <em>Projected income</em>
-              <strong>{preview ? formatResourceDelta(preview.incomeDelta) : "—"}</strong>
+              <strong>
+                {preview ? <AnnotatedText text={formatResourceDelta(preview.incomeDelta)} /> : "—"}
+              </strong>
             </span>
           </div>
 

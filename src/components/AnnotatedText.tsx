@@ -1,120 +1,147 @@
-import type { ReactNode } from "react";
+import { Children, cloneElement, isValidElement, type ReactElement, type ReactNode } from "react";
 import { POLITICIANS } from "../game/assembly/deck";
 import { getAuthoredGameContent } from "../game/content";
 import { capitalize } from "../game/core/format";
-import type { BuildingId, PopType, SettlementKind, Stat } from "../game/types";
+import type { Stat } from "../game/types";
+import { VICTORY_CARDS } from "../game/victory";
 import { resourceCssVars } from "../ui/resourceVisuals";
 import { useCodexLink, type CodexLink } from "./codexLink";
 import {
-  BUILDING_GLYPHS,
-  POP_GLYPHS,
-  RESOURCE_GLYPHS,
-  SETTLEMENT_GLYPHS,
+  BUILDING_RASTERS,
+  IDEA_RASTERS,
+  LUXURY_RASTER,
+  POP_RASTERS,
+  RESOURCE_RASTERS,
 } from "../ui/iconRegistry";
-import { Icon } from "../ui/icons/Icon";
-import type { GlyphId } from "../ui/icons/glyphs";
+import { rasterIcon } from "../ui/icons/placeholders";
 
 /**
- * Renders free text with a small icon appended to every resource, pop, or
- * building it names — so "gain 3 Food" reads "gain 3 Food🌾" and "add 1 Freeman"
- * reads "add 1 Freeman👤". Used anywhere card/effect prose appears (event cards,
- * modals, the chronicle) so a glance carries the same information as a read.
+ * Renders free text with the icon of every game term it names leading the word —
+ * "gain 3 Food" reads "gain 3 🌾Food", "Tyrian Dye" reads "💎Tyrian Dye". Every
+ * sentence a player reads goes through here (`AnnotatedText` for a string, `Prose`
+ * for a run of JSX), so a glance carries the same information as a read on every
+ * surface, and a term that gets a picture gets it everywhere at once.
  */
 
-type Token =
-  | { type: "resource"; key: Stat }
-  | { type: "pop"; key: PopType }
-  | { type: "building"; key: BuildingId }
-  | { type: "settlement"; key: SettlementKind }
-  // Concept terms have no glyph at all — they carry their rulebook chapter directly.
-  | { type: "concept"; chapter: string };
+type Term = {
+  /** A raster path (`family/name`); null for a term that only links to its chapter. */
+  icon: string | null;
+  /** The rulebook chapter (rulebook.tsx id) the term opens. */
+  chapter: string;
+  /** A resource word takes its resource's colour. */
+  resource?: Stat;
+};
 
-const TOKEN_MAP: Record<string, Token> = {
-  wood: { type: "resource", key: "wood" },
-  stone: { type: "resource", key: "stone" },
-  gold: { type: "resource", key: "gold" },
-  food: { type: "resource", key: "food" },
-  influence: { type: "resource", key: "influence" },
-  happiness: { type: "resource", key: "happiness" },
-  citizen: { type: "pop", key: "citizens" },
-  citizens: { type: "pop", key: "citizens" },
-  freeman: { type: "pop", key: "freemen" },
-  freemen: { type: "pop", key: "freemen" },
-  slave: { type: "pop", key: "slaves" },
-  slaves: { type: "pop", key: "slaves" },
-  // Generic pops get the roster's population glyph; a generic "building" reads as
-  // the Estate — both so table rows and chronicle lines can be chip-only.
-  pop: { type: "pop", key: "citizens" },
-  pops: { type: "pop", key: "citizens" },
-  building: { type: "building", key: "estate" },
-  buildings: { type: "building", key: "estate" },
-  marketplace: { type: "building", key: "marketplace" },
-  marketplaces: { type: "building", key: "marketplace" },
-  temple: { type: "building", key: "temple" },
-  temples: { type: "building", key: "temple" },
-  estate: { type: "building", key: "estate" },
-  estates: { type: "building", key: "estate" },
-  granary: { type: "building", key: "granary" },
-  granaries: { type: "building", key: "granary" },
-  forum: { type: "building", key: "forum" },
-  forums: { type: "building", key: "forum" },
-  port: { type: "building", key: "port" },
-  ports: { type: "building", key: "port" },
-  // Settlements — their own glyph, link to the Settlements chapter.
-  capital: { type: "settlement", key: "capital" },
-  capitals: { type: "settlement", key: "capital" },
-  metropolis: { type: "settlement", key: "capital" },
-  city: { type: "settlement", key: "city" },
-  cities: { type: "settlement", key: "city" },
-  colony: { type: "settlement", key: "colony" },
-  colonies: { type: "settlement", key: "colony" },
-  settlement: { type: "settlement", key: "city" },
-  settlements: { type: "settlement", key: "city" },
-  // Concept terms — no glyph, just a clay keyword that opens its chapter.
-  card: { type: "concept", chapter: "years" },
-  cards: { type: "concept", chapter: "years" },
-  event: { type: "concept", chapter: "years" },
-  events: { type: "concept", chapter: "years" },
-  year: { type: "concept", chapter: "years" },
-  years: { type: "concept", chapter: "years" },
-  venture: { type: "concept", chapter: "ventures" },
-  ventures: { type: "concept", chapter: "ventures" },
-  expedition: { type: "concept", chapter: "ventures" },
-  expeditions: { type: "concept", chapter: "ventures" },
-  riot: { type: "concept", chapter: "unrest" },
-  riots: { type: "concept", chapter: "unrest" },
-  revolt: { type: "concept", chapter: "unrest" },
-  unrest: { type: "concept", chapter: "unrest" },
-  victory: { type: "concept", chapter: "victory" },
-  bank: { type: "concept", chapter: "trade" },
-  dole: { type: "concept", chapter: "trade" },
+const term = (icon: string | null, chapter: string): Term => ({ icon, chapter });
+
+/** The singular and plural spelling of one term. */
+function both(singular: string, plural: string, value: Term): Record<string, Term> {
+  return { [singular]: value, [plural]: value };
+}
+
+/**
+ * The vocabulary, matched whatever its case and Title-Cased on screen. A word joins
+ * only when it means the same thing in every sentence the game writes: "income" stays
+ * out because it rides beside a resource in nearly every line, and "year", "card",
+ * "event" and "settlement" only link (no one picture is right for them), so where links
+ * are off they stay plain words.
+ */
+const VOCABULARY: Record<string, Term> = {
+  ...Object.fromEntries(
+    Object.entries(RESOURCE_RASTERS).map(([resource, icon]) => [
+      resource,
+      { icon, chapter: "resources", resource: resource as Stat },
+    ]),
+  ),
+  ...both("citizen", "citizens", term(POP_RASTERS.citizens, "population")),
+  ...both("freeman", "freemen", term(POP_RASTERS.freemen, "population")),
+  ...both("slave", "slaves", term(POP_RASTERS.slaves, "population")),
+  ...both("pop", "pops", term("pops/crowd", "population")),
+  promote: term("pops/promote", "ladder"),
+  demote: term("pops/demote", "ladder"),
+  ...both("building", "buildings", term("buildings/build", "buildings")),
+  ...both("marketplace", "marketplaces", term(BUILDING_RASTERS.marketplace, "buildings")),
+  ...both("temple", "temples", term(BUILDING_RASTERS.temple, "buildings")),
+  ...both("estate", "estates", term(BUILDING_RASTERS.estate, "buildings")),
+  ...both("granary", "granaries", term(BUILDING_RASTERS.granary, "buildings")),
+  ...both("forum", "forums", term(BUILDING_RASTERS.forum, "buildings")),
+  ...both("port", "ports", term(BUILDING_RASTERS.port, "buildings")),
+  ...both("capital", "capitals", term("settlements/capital", "settlements")),
+  metropolis: term("settlements/capital", "settlements"),
+  ...both("city", "cities", term("settlements/city", "settlements")),
+  ...both("colony", "colonies", term("settlements/colony", "settlements")),
+  ...both("settlement", "settlements", term(null, "settlements")),
+  ...both("slot", "slots", term("settlements/slot", "settlements")),
+  plains: term("terrain/plains", "board"),
+  ...both("forest", "forests", term("terrain/forest", "board")),
+  ...both("hill", "hills", term("terrain/hill", "board")),
+  ...both("mountain", "mountains", term("terrain/mountain", "board")),
+  oracle: term("terrain/oracle", "board"),
+  ...both("luxury", "luxuries", term(LUXURY_RASTER, "luxuries")),
+  unrest: term("unrest/unrest", "unrest"),
+  ...both("unrest token", "unrest tokens", term("unrest/unrest", "unrest")),
+  discontent: term("unrest/discontent", "unrest"),
+  ...both("riot", "riots", term("unrest/riot", "unrest")),
+  ...both("revolt", "revolts", term("unrest/revolt", "unrest")),
+  calm: term("unrest/calm-verb", "unrest"),
+  hunger: term("unrest/starvation", "resources"),
+  ...both("title", "titles", term("victory/laurel", "victory")),
+  victory: term("victory/laurel", "victory"),
+  ...both("idea", "ideas", term("assembly/national-idea", "ideas")),
+  ...both("national idea", "national ideas", term("assembly/national-idea", "ideas")),
+  trade: term("market/handshake", "trade"),
+  dole: term("unrest/bread-dole", "trade"),
+  bank: term(null, "trade"),
+  ...both("card", "cards", term(null, "years")),
+  ...both("event", "events", term(null, "years")),
+  ...both("year", "years", term(null, "years")),
+  ...both("venture", "ventures", term("events/venture", "ventures")),
+  ...both("expedition", "expeditions", term("events/venture", "ventures")),
   // The Assembly's vocabulary. Card text, the chronicle and the Agora page all lean
   // on these nouns, and every one of them is a rule a player will want to look up
   // mid-vote — which is exactly when leaving the game to find it is worst.
-  assembly: { type: "concept", chapter: "assembly" },
-  politician: { type: "concept", chapter: "assembly" },
-  politicians: { type: "concept", chapter: "assembly" },
-  resolution: { type: "concept", chapter: "assembly" },
-  resolutions: { type: "concept", chapter: "assembly" },
-  law: { type: "concept", chapter: "assembly" },
-  laws: { type: "concept", chapter: "assembly" },
-  directive: { type: "concept", chapter: "assembly" },
-  directives: { type: "concept", chapter: "assembly" },
-  stele: { type: "concept", chapter: "assembly" },
-  stelae: { type: "concept", chapter: "assembly" },
-  patron: { type: "concept", chapter: "assembly" },
-  patronage: { type: "concept", chapter: "assembly" },
-  repeal: { type: "concept", chapter: "assembly" },
-  agora: { type: "concept", chapter: "assembly" },
+  assembly: term("assembly/agora", "assembly"),
+  agora: term("assembly/agora", "assembly"),
+  ...both("politician", "politicians", term("assembly/politician", "assembly")),
+  ...both("resolution", "resolutions", term(null, "assembly")),
+  ...both("law", "laws", term("assembly/law", "assembly")),
+  ...both("directive", "directives", term("assembly/directive", "assembly")),
+  ...both("stele", "stelae", term("assembly/stele", "assembly")),
+  ...both("vote", "votes", term("assembly/vote", "assembly")),
+  repeal: term("assembly/repeal", "assembly"),
+  patron: term(null, "assembly"),
+  patronage: term(null, "assembly"),
 };
 
-// Longer words first so "citizens" wins over "citizen", etc.
-const TOKEN_PATTERN = new RegExp(
-  `\\b(${Object.keys(TOKEN_MAP)
+/** Longer words first so "citizens" wins over "citizen", "unrest tokens" over "unrest". */
+const VOCABULARY_PATTERN = new RegExp(
+  `\\b(${Object.keys(VOCABULARY)
     .sort((a, b) => b.length - a.length)
     .join("|")})\\b`,
   "gi",
 );
+
+const content = getAuthoredGameContent();
+
+/**
+ * Names that ARE game terms, matched verbatim (case included) and shown as written:
+ * the luxury goods, the titles (full and short) and the National Ideas.
+ */
+const NAMED_TERMS: Record<string, Term> = {
+  ...Object.fromEntries(
+    content.luxuryGoods.map((good) => [good.name, term(LUXURY_RASTER, "luxuries")]),
+  ),
+  ...Object.fromEntries(
+    VICTORY_CARDS.flatMap((card) =>
+      [card.name, card.shortName]
+        .filter((name): name is string => Boolean(name))
+        .map((name) => [name, term(`victory/${card.id}`, "victory")]),
+    ),
+  ),
+  ...Object.fromEntries(
+    content.nationalIdeas.map((idea) => [idea.name, term(IDEA_RASTERS[idea.id], "ideas")]),
+  ),
+};
 
 /**
  * Titles the annotator must read as names, not as vocabulary.
@@ -136,56 +163,40 @@ const TOKEN_PATTERN = new RegExp(
  * Derived at module load, so authoring a new card extends the list for free —
  * and `AnnotatedText.test.tsx` walks every authored name to prove it.
  */
-const PROPER_NAMES: string[] = (() => {
-  const content = getAuthoredGameContent();
-
-  return [
-    ...content.buildings,
-    ...content.yearCards,
-    ...content.playerEvents,
-    ...content.resolutions,
-    ...POLITICIANS,
-    content.riotTable,
-    ...content.expeditionTables,
-  ]
-    .map((authored) => authored.name)
-    .filter((name) => {
-      TOKEN_PATTERN.lastIndex = 0;
-      return (
-        TOKEN_PATTERN.test(name) &&
-        (!(name.toLowerCase() in TOKEN_MAP) ||
-          content.playerEvents.some((card) => card.name === name))
-      );
-    })
-    .sort((a, b) => b.length - a.length);
-})();
+const PROPER_NAMES: string[] = [
+  ...content.buildings,
+  ...content.yearCards,
+  ...content.playerEvents,
+  ...content.resolutions,
+  ...POLITICIANS,
+  content.riotTable,
+  ...content.expeditionTables,
+]
+  .map((authored) => authored.name)
+  .filter((name) => {
+    VOCABULARY_PATTERN.lastIndex = 0;
+    return (
+      VOCABULARY_PATTERN.test(name) &&
+      (!(name.toLowerCase() in VOCABULARY) ||
+        content.playerEvents.some((card) => card.name === name))
+    );
+  });
 
 function escapeRegExp(literal: string) {
   return literal.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/** Longest title first, so "Granary Surplus" is not shadowed by a shorter name. */
-const PROPER_NAME_PATTERN = PROPER_NAMES.length
-  ? new RegExp(`\\b(?:${PROPER_NAMES.map(escapeRegExp).join("|")})\\b`, "g")
-  : null;
-
-function tokenGlyph(token: Token): GlyphId | null {
-  switch (token.type) {
-    case "concept":
-      return null;
-    case "resource":
-      return RESOURCE_GLYPHS[token.key];
-    case "pop":
-      return POP_GLYPHS[token.key];
-    case "building":
-      return BUILDING_GLYPHS[token.key];
-    case "settlement":
-      return SETTLEMENT_GLYPHS[token.key];
-  }
-}
+/** Longest name first, so "Granary Surplus" is not shadowed by a shorter one. */
+const NAME_PATTERN = new RegExp(
+  `\\b(?:${[...PROPER_NAMES, ...Object.keys(NAMED_TERMS)]
+    .sort((a, b) => b.length - a.length)
+    .map(escapeRegExp)
+    .join("|")})\\b`,
+  "g",
+);
 
 /**
- * The glyph leads, the word follows: "-1 ⬮ Gold", not "-1 Gold ⬮".
+ * The icon leads, the word follows: "-1 ⬮ Gold", not "-1 Gold ⬮".
  *
  * It used to trail, and the effect of that was that the fastest thing to read —
  * the picture — sat on the far side of the slowest. Reading a cost meant taking
@@ -193,26 +204,12 @@ function tokenGlyph(token: Token): GlyphId | null {
  * said. Leading puts the glyph next to the digits it belongs to, which is the
  * order the eye wants and the order every strategy game in this genre uses.
  */
-function tokenIcon(token: Token) {
-  const glyph = tokenGlyph(token);
+function termIcon(term: Term) {
+  const src = term.icon ? rasterIcon(term.icon) : undefined;
 
-  return glyph ? <Icon glyph={glyph} className="richIcon" /> : null;
-}
-
-/** The rulebook chapter (rulebook.tsx id) a token deep-links to. */
-function tokenChapter(token: Token): string {
-  switch (token.type) {
-    case "resource":
-      return "resources";
-    case "pop":
-      return "population";
-    case "building":
-      return "buildings";
-    case "settlement":
-      return "settlements";
-    case "concept":
-      return token.chapter;
-  }
+  return src ? (
+    <img alt="" aria-hidden className="icon icon-inline richIcon" draggable={false} src={src} />
+  ) : null;
 }
 
 export function AnnotatedText({
@@ -229,29 +226,60 @@ export function AnnotatedText({
 }) {
   const contextCodexLink = useCodexLink();
   const codexLink = links ? contextCodexLink : null;
+
+  return <span className={className}>{annotate(text, codexLink, linkContext)}</span>;
+}
+
+/**
+ * The annotator over a run of JSX: every string inside it, however deep in plain
+ * elements (`<b>`, `<em>`, a fragment), is annotated in place. Components are left
+ * whole — they draw their own text.
+ */
+export function Prose({ children, links = true }: { children: ReactNode; links?: boolean }) {
+  const contextCodexLink = useCodexLink();
+  const codexLink = links ? contextCodexLink : null;
+
+  return <>{annotateNode(children, codexLink)}</>;
+}
+
+function annotateNode(node: ReactNode, codexLink: CodexLink | null): ReactNode {
+  return Children.map(node, (child) => {
+    if (typeof child === "string") return annotate(child, codexLink);
+    if (!isValidElement(child) || typeof child.type !== "string") return child;
+    const element = child as ReactElement<{ children?: ReactNode }>;
+    return element.props.children === undefined
+      ? element
+      : cloneElement(element, undefined, annotateNode(element.props.children, codexLink));
+  });
+}
+
+function annotate(text: string, codexLink: CodexLink | null, linkContext?: string): ReactNode[] {
   const nodes: ReactNode[] = [];
 
-  // Titles are lifted out FIRST and passed through untouched; only what is left
-  // between them is vocabulary the tokeniser may annotate.
+  // Names are lifted out FIRST: a card's title passes through untouched, a named
+  // term (a luxury good, a title, an Idea) takes its icon as written. Only what is
+  // left between them is vocabulary the tokeniser may annotate.
   let cursor = 0;
+  let name: RegExpExecArray | null;
 
-  if (PROPER_NAME_PATTERN) {
-    PROPER_NAME_PATTERN.lastIndex = 0;
-    let name: RegExpExecArray | null;
-
-    while ((name = PROPER_NAME_PATTERN.exec(text)) !== null) {
-      annotateInto(nodes, text.slice(cursor, name.index), cursor, codexLink, linkContext);
-      nodes.push(name[0]);
-      cursor = name.index + name[0].length;
-    }
+  NAME_PATTERN.lastIndex = 0;
+  while ((name = NAME_PATTERN.exec(text)) !== null) {
+    annotateInto(nodes, text.slice(cursor, name.index), cursor, codexLink, linkContext);
+    const named = NAMED_TERMS[name[0]];
+    nodes.push(
+      named
+        ? termNode(named, name[0], `${name.index}-${name[0]}`, codexLink, linkContext)
+        : name[0],
+    );
+    cursor = name.index + name[0].length;
   }
 
   annotateInto(nodes, text.slice(cursor), cursor, codexLink, linkContext);
 
-  return <span className={className}>{nodes.map(signPlainText)}</span>;
+  return nodes.map(signPlainText);
 }
 
-/** The tokenising pass, run over one stretch of text that holds no title. */
+/** The tokenising pass, run over one stretch of text that holds no name. */
 function annotateInto(
   nodes: ReactNode[],
   text: string,
@@ -262,58 +290,32 @@ function annotateInto(
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
-  TOKEN_PATTERN.lastIndex = 0;
+  VOCABULARY_PATTERN.lastIndex = 0;
 
-  while ((match = TOKEN_PATTERN.exec(text)) !== null) {
+  while ((match = VOCABULARY_PATTERN.exec(text)) !== null) {
     const word = match[0];
-    const token = TOKEN_MAP[word.toLowerCase()];
+    const term = VOCABULARY[word.toLowerCase()];
 
     if (match.index > lastIndex) {
       nodes.push(text.slice(lastIndex, match.index));
     }
 
-    const style = token.type === "resource" ? resourceCssVars(token.key) : undefined;
-    const key = `${offset + match.index}-${word}`;
+    // A term with neither a picture nor a link to give is just its word.
+    if (!term.icon && !codexLink) {
+      nodes.push(word);
+      lastIndex = match.index + word.length;
+      continue;
+    }
+
     // Terminology is a proper noun (RPG style): Title-Case it however the source
     // wrote it — "gain 3 freemen" reads "gain 3 Freemen".
-    const label = capitalize(word);
-
-    // With a Codex link in context, the term IS the link — one shared keyword colour
-    // (CSS) invites the click, and it opens the rulebook at the term's chapter. Rendered
-    // as a role=button SPAN, not a <button>: prose often sits INSIDE a button (a build
-    // candidate's benefit text), and a nested <button> is invalid HTML. stopPropagation
-    // keeps the term's click from also firing that outer button. Without a link it stays
-    // a plain (still Title-Cased) chip — isolation / tests.
     nodes.push(
-      codexLink ? (
-        <span
-          className="richToken richTokenLink"
-          key={key}
-          role="button"
-          aria-label={linkContext ? `${label} rules for ${linkContext}` : undefined}
-          tabIndex={0}
-          onClick={(event) => {
-            event.stopPropagation();
-            codexLink.openCodexTo(tokenChapter(token));
-          }}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              event.stopPropagation();
-              codexLink.openCodexTo(tokenChapter(token));
-            }
-          }}
-          style={style}
-          title={`Open the rulebook: ${label}`}
-        >
-          {tokenIcon(token)}
-          {label}
-        </span>
-      ) : (
-        <span className="richToken" key={key} style={style}>
-          {tokenIcon(token)}
-          {label}
-        </span>
+      termNode(
+        term,
+        word.replace(/\S+/g, capitalize),
+        `${offset + match.index}-${word}`,
+        codexLink,
+        linkContext,
       ),
     );
 
@@ -323,6 +325,53 @@ function annotateInto(
   if (lastIndex < text.length) {
     nodes.push(text.slice(lastIndex));
   }
+}
+
+function termNode(
+  term: Term,
+  label: string,
+  key: string,
+  codexLink: CodexLink | null,
+  linkContext?: string,
+) {
+  const style = term.resource ? resourceCssVars(term.resource) : undefined;
+
+  // With a Codex link in context, the term IS the link — one shared keyword colour
+  // (CSS) invites the click, and it opens the rulebook at the term's chapter. Rendered
+  // as a role=button SPAN, not a <button>: prose often sits INSIDE a button (a build
+  // candidate's benefit text), and a nested <button> is invalid HTML. stopPropagation
+  // keeps the term's click from also firing that outer button. Without a link it stays
+  // a plain (still Title-Cased) chip — tooltips, isolation, tests.
+  return codexLink ? (
+    <span
+      className="richToken richTokenLink"
+      key={key}
+      role="button"
+      aria-label={linkContext ? `${label} rules for ${linkContext}` : undefined}
+      tabIndex={0}
+      onClick={(event) => {
+        event.stopPropagation();
+        codexLink.openCodexTo(term.chapter);
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          event.stopPropagation();
+          codexLink.openCodexTo(term.chapter);
+        }
+      }}
+      style={style}
+      title={`Open the rulebook: ${label}`}
+    >
+      {termIcon(term)}
+      {label}
+    </span>
+  ) : (
+    <span className="richToken" key={key} style={style}>
+      {termIcon(term)}
+      {label}
+    </span>
+  );
 }
 
 /**
@@ -338,11 +387,11 @@ function annotateInto(
  * legible to a colour-blind player because the glyph in front of the digits
  * already carries the whole meaning; the colour is a second, faster channel.
  */
-const SIGNED_NUMBER = /([+\u2212-]\d+(?:\.\d+)?)/g;
+const SIGNED_NUMBER = /([+−-]\d+(?:\.\d+)?)/g;
 /** The same pattern, anchored and NOT global: `test` on a /g regex advances its
  *  own lastIndex, so reusing SIGNED_NUMBER for the per-part check would match
  *  every other number and silently drop the rest. */
-const IS_SIGNED_NUMBER = /^[+\u2212-]\d+(?:\.\d+)?$/;
+const IS_SIGNED_NUMBER = /^[+−-]\d+(?:\.\d+)?$/;
 
 function signPlainText(node: ReactNode, index: number): ReactNode {
   if (typeof node !== "string") {

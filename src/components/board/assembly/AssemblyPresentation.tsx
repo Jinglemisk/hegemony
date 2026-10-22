@@ -5,20 +5,19 @@ import type { GameContent } from "../../../game/content";
 import type { Ruleset } from "../../../game/ruleset";
 import type { HegemonyState } from "../../../game/types";
 import { presentDirectiveEffect, presentLawEffect } from "../../../ui/effects";
+import { Prose } from "../../AnnotatedText";
 import { MechanicsDetails } from "../../MechanicsDetails";
 
 export function ResolutionDetails({
   card,
   content,
   ruleset,
-  source,
-  duration,
+  children,
 }: {
   card: ResolutionCard;
   content: GameContent;
   ruleset: Ruleset;
-  source?: ReactNode;
-  duration?: ReactNode;
+  children?: ReactNode;
 }) {
   const effects =
     card.kind === "law"
@@ -26,13 +25,17 @@ export function ResolutionDetails({
       : card.effects.map(presentDirectiveEffect);
 
   return (
-    <MechanicsDetails duration={duration} effects={effects} heading={card.name} source={source}>
-      <p className="mechanicsExplanation">{card.text}</p>
+    <MechanicsDetails effects={effects} heading={card.name}>
+      <p className="mechanicsExplanation">
+        <Prose links={false}>{card.text}</Prose>
+      </p>
+      {children}
     </MechanicsDetails>
   );
 }
 
-/** A standing Law: what it does, the seat that carried it, and how long it is safe. */
+/** A standing Law: what it does, and whether it is safe from repeal. Its author and
+ *  year stand beside it wherever it is shown. */
 export function StandingLawDetails({
   G,
   card,
@@ -43,14 +46,12 @@ export function StandingLawDetails({
   law: ActiveLaw;
 }) {
   return (
-    <ResolutionDetails
-      card={card}
-      content={G.definition.content}
-      duration={
-        lawCanBeRemoved(G, law.cardId) ? "Until repealed" : "Protected through the next sitting"
-      }
-      ruleset={G.ruleset}
-      source={G.players[law.author].name}
-    />
+    <ResolutionDetails card={card} content={G.definition.content} ruleset={G.ruleset}>
+      {lawCanBeRemoved(G, law.cardId) ? null : (
+        <p className="mechanicsExplanation">
+          <Prose links={false}>Protected: no repeal through the next sitting.</Prose>
+        </p>
+      )}
+    </ResolutionDetails>
   );
 }

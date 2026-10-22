@@ -8,20 +8,17 @@ import type { VictoryThreat } from "../../game/victory";
 import { presentActiveEffect, presentUnrestOutcome } from "../../ui/effects";
 import type { EffectTone } from "../../ui/effects";
 import { ACTIVE_EFFECT_MECHANIC_RASTERS, UNREST_TIER_RASTERS } from "../../ui/iconRegistry";
-import {
-  formatNumber,
-  formatResourceCost,
-  formatSignedNumber,
-  listed,
-  toRoman,
-} from "../../ui/formatters";
+import { formatNumber, formatResourceCost, listed, toRoman } from "../../ui/formatters";
+import { sign } from "../../ui/frameFormat";
 import { settlementNames } from "../../ui/settlementNames";
+import { Prose } from "../AnnotatedText";
 import { EffectLine } from "../EffectLine";
 import { Tooltip } from "../overlays/Tooltip";
+import { effectTurns, turnsLeftInYear, turnsUntilYear } from "../../ui/frameSelectors";
 import type { HungerShortfall } from "../../ui/frameSelectors";
 import { ThreatAlarm, YearDisc } from "./MomentDiscs";
 import { OfferDisc } from "./trade/OfferDisc";
-import { Ico, Tip } from "./parts";
+import { Ico, Tip, TipBody, Turns } from "./parts";
 
 /**
  * The realm's alarms, after a Paradox title's alerts: one disc per entry of the
@@ -79,15 +76,21 @@ export function Alarms({
           case "offer":
             return <OfferDisc key={alarm.offer.id} offer={alarm.offer} />;
           case "yearCard":
-            return <YearDisc G={G} key="year" onOpen={onOpenYear} />;
+            return <YearDisc G={G} key="year" onOpen={onOpenYear} viewerId={viewerId} />;
           case "unrest":
-            return <UnrestDisc G={G} key="unrest" unrest={alarm.status} />;
+            return <UnrestDisc G={G} key="unrest" unrest={alarm.status} viewerId={viewerId} />;
           case "effect":
             return (
-              <EffectDisc descriptor={alarm.effect} G={G} hunger={hunger} key={alarm.effect.id} />
+              <EffectDisc
+                descriptor={alarm.effect}
+                G={G}
+                hunger={hunger}
+                key={alarm.effect.id}
+                viewerId={viewerId}
+              />
             );
           case "assemblyNextYear":
-            return <AssemblyDisc G={G} key="assembly" year={alarm.year} />;
+            return <AssemblyDisc G={G} key="assembly" viewerId={viewerId} year={alarm.year} />;
           case "portClaim":
             return <PortDisc G={G} key="port" sites={alarm.sites} />;
         }
@@ -96,31 +99,32 @@ export function Alarms({
   );
 }
 
-function UnrestDisc({ G, unrest }: { G: HegemonyState; unrest: UnrestStatus }) {
+function UnrestDisc({
+  G,
+  unrest,
+  viewerId,
+}: {
+  G: HegemonyState;
+  unrest: UnrestStatus;
+  viewerId: PlayerId;
+}) {
   const tier = unrest.tier as Exclude<UnrestStatus["tier"], "calm">;
   const { tokens } = unrest.outcome;
   const { warning } = presentUnrestOutcome(G.ruleset, unrest.outcome.tier);
   return (
     <li>
       <Tooltip
-        ariaLabel={`${UNREST_WORD[tier]}, happiness ${formatNumber(unrest.happiness)}. ${warning}`}
+        ariaLabel={`${UNREST_WORD[tier]}, happiness ${sign(unrest.happiness)}. ${warning}`}
         content={
-          <Tip sub={`happiness ${formatNumber(unrest.happiness)}`} title={UNREST_WORD[tier]}>
-            <p className="tip-body">{warning}</p>
-            {tokens !== 0 || unrest.calmBonus !== 0 ? (
-              <p className="tip-body">
-                {[
-                  tokens !== 0
-                    ? `${formatNumber(tokens)} Unrest ${tokens === 1 ? "token" : "tokens"}`
-                    : null,
-                  unrest.calmBonus !== 0
-                    ? `${formatSignedNumber(unrest.calmBonus)} from calm this year`
-                    : null,
-                ]
-                  .filter(Boolean)
-                  .join(", ")}
-                .
-              </p>
+          <Tip title={UNREST_WORD[tier]}>
+            <TipBody>{warning}</TipBody>
+            {tokens !== 0 ? (
+              <TipBody>{`${formatNumber(tokens)} Unrest ${tokens === 1 ? "token" : "tokens"}.`}</TipBody>
+            ) : null}
+            {unrest.calmBonus !== 0 ? (
+              <TipBody>
+                {`${sign(unrest.calmBonus)} from calm`} <Turns n={turnsLeftInYear(G, viewerId)} />
+              </TipBody>
             ) : null}
           </Tip>
         }
@@ -137,24 +141,27 @@ function EffectDisc({
   G,
   descriptor,
   hunger,
+  viewerId,
 }: {
   G: HegemonyState;
   descriptor: ActiveEffectDescriptor;
   hunger: HungerShortfall | null;
+  viewerId: PlayerId;
 }) {
   if (descriptor.kind === "hunger" && hunger) {
-    const leaving = hunger.unfed === 1 ? "One pop leaves" : `${hunger.unfed} pops leave`;
+    const leaving = hunger.unfed === 1 ? "one pop leaves" : `${hunger.unfed} pops leave`;
     return (
       <li>
         <Tooltip
           ariaLabel={`Hunger: ${hunger.short} food short at turn end. ${leaving} unless you buy food first.`}
           content={
-            <Tip sub="when you end your turn" title={`Hunger: ${hunger.short} short at turn end`}>
-              <p className="tip-body">{leaving} unless you buy food first. You choose which.</p>
+            <Tip title="Hunger">
+              <TipBody>
+                {`${hunger.short} food short: at turn end ${leaving} unless you buy food first. You choose which.`}
+              </TipBody>
               {hunger.fixes.map((fix) => (
-                <p className="tip-fix" key={fix.icon}>
-                  <Ico path={fix.icon} size="chip" />
-                  {fix.text}
+                <p className="tip-fix" key={fix}>
+                  <Prose links={false}>{fix}</Prose>
                 </p>
               ))}
             </Tip>
@@ -173,10 +180,10 @@ function EffectDisc({
       <Tooltip
         ariaLabel={effect.accessibleText}
         content={
-          <Tip sub={effect.duration.toLowerCase()} title={effect.source}>
-            <p className="tip-body">
+          <Tip title={effect.source} turns={effectTurns(G, viewerId, descriptor)}>
+            <TipBody>
               <EffectLine effect={effect} links={false} />
-            </p>
+            </TipBody>
           </Tip>
         }
         focusable
@@ -203,13 +210,11 @@ function OneTitleShortDisc({ G, seats }: { G: HegemonyState; seats: VictoryThrea
       <Tooltip
         ariaLabel={`One title short: ${holds.join(" ")} ${more}`}
         content={
-          <Tip sub="one title from the race" title="One title short">
+          <Tip title="One title short">
             {holds.map((line) => (
-              <p className="tip-body" key={line}>
-                {line}
-              </p>
+              <TipBody key={line}>{line}</TipBody>
             ))}
-            <p className="tip-body">{more}</p>
+            <TipBody>{more}</TipBody>
           </Tip>
         }
         focusable
@@ -221,7 +226,15 @@ function OneTitleShortDisc({ G, seats }: { G: HegemonyState; seats: VictoryThrea
   );
 }
 
-function AssemblyDisc({ G, year }: { G: HegemonyState; year: number }) {
+function AssemblyDisc({
+  G,
+  viewerId,
+  year,
+}: {
+  G: HegemonyState;
+  viewerId: PlayerId;
+  year: number;
+}) {
   const { drawCost, repealCost, briberyCost } = G.ruleset.assembly;
   const save = `Save influence for it: a draw costs ${drawCost} influence, a repeal ${repealCost} influence, a bought vote ${briberyCost} ${VOTE_PAYMENTS.join(" or ")}.`;
   return (
@@ -229,8 +242,8 @@ function AssemblyDisc({ G, year }: { G: HegemonyState; year: number }) {
       <Tooltip
         ariaLabel={`The Assembly sits next year, in Year ${toRoman(year)}. ${save}`}
         content={
-          <Tip sub={`Year ${toRoman(year)}`} title="The Assembly sits next year">
-            <p className="tip-body">{save}</p>
+          <Tip title="The Assembly" turns={turnsUntilYear(G, viewerId, year)}>
+            <TipBody>{save}</TipBody>
           </Tip>
         }
         focusable
@@ -261,17 +274,15 @@ function PortDisc({
     return `A Port at ${names.get(site.settlementId) ?? "your settlement"} claims ${goods} for +${perGood} happiness. It costs ${formatResourceCost(site.cost)}${site.affordable ? "" : ", more than you hold"}.`;
   });
   const title = "A free luxury";
-  const sub = ready ? "you can build the Port now" : "when you can pay for a Port";
+  const state = ready ? "you can build the Port now" : "when you can pay for a Port";
   return (
     <li>
       <Tooltip
-        ariaLabel={`${title}, ${sub}. ${lines.join(" ")}`}
+        ariaLabel={`${title}, ${state}. ${lines.join(" ")}`}
         content={
-          <Tip sub={sub} title={title}>
+          <Tip title={title}>
             {lines.map((line) => (
-              <p className="tip-body" key={line}>
-                {line}
-              </p>
+              <TipBody key={line}>{line}</TipBody>
             ))}
           </Tip>
         }

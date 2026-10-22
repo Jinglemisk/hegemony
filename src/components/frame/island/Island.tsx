@@ -21,6 +21,9 @@ import {
   MOORING_LABEL_X,
   MOORING_RADIUS,
 } from "../../board/map/LuxuryVertexMarker";
+import { POP_RASTERS } from "../../../ui/iconRegistry";
+import { Chips, Tip, TipLedger } from "../parts";
+import type { LedgerRow } from "../parts";
 import { fitIsland } from "./fit";
 import type { IslandFit, UnitBox } from "./fit";
 
@@ -358,40 +361,54 @@ function Tile({
   );
 }
 
-function tileTip(G: HegemonyState, tile: HexTile, names: Map<string, string>) {
+function tileTip(
+  G: HegemonyState,
+  tile: HexTile,
+  names: Map<string, string>,
+): { title: string; rows: LedgerRow[] } {
   const settlements = orderSettlements(tile.settlements);
 
   if (settlements.length === 0) {
     const column = tileSlaveColumn(G, tile);
     return {
       title: `${tile.terrain[0].toUpperCase()}${tile.terrain.slice(1)}`,
-      sub: `Hex ${tile.id}`,
       rows: [
-        ["Slots", String(tile.slots)],
-        ["A slave makes", column.resource ? `${column.perPop} ${column.resource}` : "nothing"],
-      ] as Array<[string, string]>,
+        { key: "slots", label: "Slots", value: tile.slots, icon: "settlements/slot" },
+        {
+          key: "slave",
+          label: "Each slave makes",
+          value: column.resource ? (
+            <Chips amounts={{ [column.resource]: column.perPop }} />
+          ) : (
+            "nothing"
+          ),
+          icon: POP_RASTERS.slaves,
+        },
+      ],
     };
   }
 
   const [lead] = settlements;
   return {
     title: names.get(lead.id) ?? "Polis",
-    sub: `${PLAYER_GLAZES[lead.owner].name} · ${lead.kind}`,
     rows: [
-      ...POP_ORDER.map((pop): [string, string] => [
-        `${pop[0].toUpperCase()}${pop.slice(1)}`,
-        String(lead.pops[pop]),
-      ]),
-      ...settlements
-        .slice(1)
-        .map((other): [string, string] => [
-          `Also ${PLAYER_GLAZES[other.owner].name}'s ${other.kind}`,
-          names.get(other.id) ?? "",
-        ]),
-      [
-        "Slots",
-        `${occupiedBuildingSlots(G, lead)} slots built, ${settlementWorkingSlaves(tile, lead, G)} worked of ${settlementSlots(tile, lead, G)}`,
-      ],
+      ...POP_ORDER.map((pop) => ({
+        key: pop,
+        label: `${pop[0].toUpperCase()}${pop.slice(1)}`,
+        value: lead.pops[pop],
+        icon: POP_RASTERS[pop],
+      })),
+      ...settlements.slice(1).map((other) => ({
+        key: other.id,
+        label: `Also ${PLAYER_GLAZES[other.owner].name}'s ${other.kind}`,
+        value: names.get(other.id) ?? "",
+      })),
+      {
+        key: "slots",
+        label: "Slots",
+        value: `${occupiedBuildingSlots(G, lead)} built, ${settlementWorkingSlaves(tile, lead, G)} worked of ${settlementSlots(tile, lead, G)}`,
+        icon: "settlements/slot",
+      },
     ],
   };
 }
@@ -824,18 +841,9 @@ function IslandComponent({
       </svg>
       {hover && tip ? (
         <BoardTip anchor={hover.rect}>
-          <div className="tip-title">
-            {tip.title}
-            <span className="tip-sub">{tip.sub}</span>
-          </div>
-          <div className="tip-ledger">
-            {tip.rows.map(([k, v]) => (
-              <span className="tip-row" key={k}>
-                <span className="tip-k">{k}</span>
-                <b>{v}</b>
-              </span>
-            ))}
-          </div>
+          <Tip title={tip.title}>
+            <TipLedger rows={tip.rows} />
+          </Tip>
         </BoardTip>
       ) : null}
     </div>

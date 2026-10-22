@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Prose } from "../AnnotatedText";
 import { MechanicsDetails } from "../MechanicsDetails";
 import { Tooltip } from "../overlays/Tooltip";
 
@@ -37,7 +38,11 @@ export function PopoverActions({
       <Tooltip
         content={
           <MechanicsDetails blockedReason={disabled ? reason : undefined} heading={confirmLabel}>
-            {!disabled ? <p className="mechanicsExplanation">{reason}</p> : null}
+            {!disabled ? (
+              <p className="mechanicsExplanation">
+                <Prose links={false}>{reason}</Prose>
+              </p>
+            ) : null}
           </MechanicsDetails>
         }
         preferredPlacement="above"

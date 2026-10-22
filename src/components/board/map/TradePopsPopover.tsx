@@ -1,7 +1,8 @@
 import { formatPops } from "../../../game/rules";
 import type { PlayerId } from "../../../game/types";
+import { Prose } from "../../AnnotatedText";
 import { useGameUi } from "../GameUiContext";
-import { Ico, SeatMark } from "../../frame/parts";
+import { Ico, SeatMark, Turns } from "../../frame/parts";
 import { PopoverActions } from "../PopoverActions";
 import { TileSubject } from "../TileSubject";
 import type { MapSelectionMode } from "./mapSelection";
@@ -38,12 +39,12 @@ export function TradePopsPopover({
     >
       <TileSubject G={G} playerID={mode.seat} tile={tile} />
       <p className="placementCostNote trade-partner">
-        {send ? "Sends" : "Takes in"} {formatPops(mode.pops)} {send ? "to" : "from"}{" "}
+        <Prose>{`${send ? "Sends" : "Takes in"} ${formatPops(mode.pops)} ${send ? "to" : "from"} `}</Prose>
         <Partner partner={mode.partner} />
       </p>
       {send ? null : (
         <p className="placementCostNote">
-          They arrive at the start of {G.players[mode.seat].name}&rsquo;s next turn.
+          They arrive in <Turns n={1} />.
         </p>
       )}
       <PopoverActions
