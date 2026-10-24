@@ -70,7 +70,8 @@ or base income. Every setting is part of the game's recorded rules, so a game re
   - colony contiguity;
   - the Assembly switch (first year 0 turns it off).
 - **A name clash.** "Classic" today names the authored fixed board, so a Classic preset would
-  clash. The [board modes plan](board-modes.md) proposes renaming that board to `authored`.
+  clash. The owner renamed that board `scenario` (2026-10-25); the
+  [board modes plan](board-modes.md)'s first slice does it.
 
 ## The first list of settings
 

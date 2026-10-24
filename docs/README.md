@@ -20,11 +20,16 @@ shallow-economy rules in the Hybrid arc shell, merged into `main` on 2026-10-18 
 owner set base income to 0 and asked for three specs: [board modes](plans/board-modes.md),
 [recurring deals](plans/recurring-deals.md) and [game settings](plans/game-settings.md).
 
-**Next:** the 3D living map, built from the
-[showcase](reference/design/showcases/living-map.html)'s build plan; its plan is written
-when the track starts. v2's Step 16, the refactor, is the code-health plan, except the island
-code the living map replaces. Step 11, the sim gate, runs from the trade plan once Q80 is
-answered. The full-game browser test still waits.
+**Next (owner, 2026-10-25), in waves of at most three agents with an owner checkpoint after
+each:**
+
+1. A confirming batch without base income, the Archipelago and recurring-deals proposals,
+   and board slice 1 (topology; shuffled becomes `continental`, classic becomes `scenario`).
+2. The Archipelago build, and recurring deals between people.
+3. Bots for deals, the game-settings model and setup screen, then batches one at a time.
+
+Then Step 11 on Q80's shape, the development deck, length batches, and the 3D living map,
+whose plan is written after Archipelago lands. The full-game browser test still waits.
 
 **Locked sequence:** V1 includes luxury goods, full Catan-style player trade, all twelve
 National Ideas, and the intended typed Resolution/Idea effects. The v1 mechanics freeze

@@ -84,18 +84,39 @@ A game is played on one of two boards, chosen before setup:
 
 ## The builder's proposal
 
-Before writing code, the builder writes a short proposal that answers each question below. It
-includes one or two drawn example boards and goes to the owner as a question in
-[questions.md](../questions.md). Nothing is built until the owner picks.
+Before writing engine code, the builder writes a short proposal that answers each question
+below. It goes to the owner as a question in [questions.md](../questions.md), with two or three
+variants. Each variant's example boards are drawn by a throwaway prototype generator, three
+seeds each, on a one-page artifact, with a few figures per board:
+
+- tiles;
+- islands and groups;
+- coastal tiles;
+- moorings;
+- plains per group.
+
+Nothing is built until the owner picks.
 
 1. **Shape.**
    - How many islands, how large, how grouped.
    - Total land against today's 37 tiles, since batches compare the two.
    - Whether island groups are one sea cell apart or more.
-2. **Resources.** Whether each island can feed and build for itself, or each lacks something.
+2. **Generator limits.** Numbers the generator enforces on every seed, rejecting and redrawing
+   a board that breaks them (owner, 2026-10-25):
+   - **Islands:** the fewest and most per board, the smallest and largest island in tiles,
+     and whether a one-tile islet may exist at all.
+   - **Groups:** the fewest and most islands per group, the number of groups, the sea gap
+     inside a group and between groups.
+   - **Compact islands:** no chains or snakes. An island of n tiles fits in a small radius
+     around its centre; a line of islands like 1-1-1-1 across the board is impossible.
+   - **Map size:** the whole board fits a fixed radius and a width-to-height limit, so it
+     fits the screen. Groups spread around the board rather than in a row.
+   - **A bounded redraw:** a fixed number of tries, then a fallback that always passes, so
+     setup never hangs.
+3. **Resources.** Whether each island can feed and build for itself, or each lacks something.
    An island without plains must buy its food, which ties in with
    [recurring deals](recurring-deals.md) and the removal of base income.
-3. **What the sea limits.** Today any shore reaches any shore. Weigh at least these:
+4. **What the sea limits.** Today any shore reaches any shore. Weigh at least these:
    - founding across water only within N sea cells, or only from the same island group;
    - pop moves between islands costing more or taking a turn longer;
    - a Port required to found, move or trade across water;
@@ -103,9 +124,9 @@ includes one or two drawn example boards and goes to the owner as a question in
 
    Name which rules change and which stay.
 
-4. **Starts.** Every seat gets a legal capital and colony with room to grow. Say whether seats
+5. **Starts.** Every seat gets a legal capital and colony with room to grow. Say whether seats
    start on separate islands or share them. Equal starts are not required.
-5. **Landmarks and goods.**
+6. **Landmarks and goods.**
    - Where the oracle and the landmarks may fall.
    - Islands have more coast, which means more moorings: keep six goods, or scale them.
 
@@ -115,7 +136,7 @@ includes one or two drawn example boards and goes to the owner as a question in
 | ---------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Engine / backend | Yes      | One board generator per mode; the layout type gains `continental` and `archipelago`; the sea rules the owner picks; invariants; a state schema bump; tests            |
 | Frontend         | Yes      | The 2D map renders sea between islands; arrow keys move sensibly across gaps; founding, move and Port prompts say when water blocks them; the rulebook and `rules.md` |
-| Simulation & AI  | Yes      | `--board continental\|archipelago\|classic`; placement and frontier scoring under the new sea rules; telemetry for founding and moves across water; batches           |
+| Simulation & AI  | Yes      | `--board continental\|archipelago\|scenario`; placement and frontier scoring under the new sea rules; telemetry for founding and moves across water; batches          |
 
 ## Architecture impact
 
@@ -125,7 +146,7 @@ includes one or two drawn example boards and goes to the owner as a question in
   - Renaming `shuffled` to `continental` either keeps reading the old name in older scripts,
     or rejects them under the versioning rule.
   - The authored board's id, `classic`, clashes with the default settings preset the owner
-    calls Classic. The proposal is to rename the board to `authored`.
+    calls Classic. Owner, 2026-10-25: rename the board to `scenario`.
 - **Topology.** One board topology (land cells, neighbours, coast, water distance) that every
   rule and renderer reads. No rule branches on the mode's name.
 - **Determinism.** The generator draws from the seeded RNG chain. Today the year and event
@@ -137,7 +158,7 @@ includes one or two drawn example boards and goes to the owner as a question in
 
 1. **Topology and the Continental rename.**
    - One topology module, with every coast and adjacency reader moved onto it.
-   - `shuffled` becomes `continental`, and `classic` becomes `authored` if the owner agrees.
+   - `shuffled` becomes `continental`, and `classic` becomes `scenario`.
    - No behaviour change: batches match byte for byte.
 2. **Archipelago.** The generator, the sea rules the owner picked, the 2D map, the bots and the
    sim flag.
@@ -148,7 +169,8 @@ includes one or two drawn example boards and goes to the owner as a question in
 
 ## Acceptance and validation
 
-- A test over many seeds: every Archipelago board gives four legal starts.
+- A test over many seeds: every Archipelago board meets every generator limit and gives four
+  legal starts.
 - Batches compare, against Continental:
   - hunger and food traded;
   - Ports built;
