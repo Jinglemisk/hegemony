@@ -25,7 +25,7 @@ A game is played on one of two boards, chosen before setup:
 
 ## Settled inputs
 
-- Owner, 2026-10-24:
+- Owner, 2026-10-24 and 25:
   - Two board modes, Continental and Archipelago. In Archipelago, islands and island groups
     affect play.
   - The shuffled board is the sim's default (done on `feat/game-settings-engine`).
@@ -82,20 +82,35 @@ A game is played on one of two boards, chosen before setup:
 - 32 test files use the scripted opening and 23 hard-code tile ids of the authored board. They
   stay on it.
 
-## The builder's proposal
+## The builder's first deliverable: a working generator
 
-Before writing engine code, the builder writes a short proposal that answers each question
-below. It goes to the owner as a question in [questions.md](../questions.md), with two or three
-variants. Each variant's example boards are drawn by a throwaway prototype generator, three
-seeds each, on a one-page artifact, with a few figures per board:
+Every Archipelago board is generated at random from the game seed. The owner judges the system
+that generates them, not a few chosen maps (owner, 2026-10-25: "a system that actually works
+and delivers"). Before anything is wired into the game, the builder delivers:
 
-- tiles;
-- islands and groups;
-- coastal tiles;
-- moorings;
-- plains per group.
+- **The generator, as code meant to ship.**
+  - A pure, seeded function from a seed and the terrain content to a board: tile coordinates
+    and terrain.
+  - It uses the game's own RNG.
+  - Its limits (item 2 below) are named parameters with defaults.
+  - It stays out of the game's setup path until the owner approves it.
+- **A validation run over at least 1,000 seeds.**
+  - Every board meets every limit.
+  - Every board gives four legal starts, checked with the engine's own placement rules.
+  - It reports how often a board is redrawn, how often the fallback is used, and the time per
+    board.
+  - It reports the spread of tiles, islands, group sizes, coastal tiles, moorings and plains
+    per group across seeds.
+  - The run is light: it generates boards and plays no games.
+- **A one-page artifact.**
+  - A grid of boards from consecutive seeds, not chosen ones.
+  - The spreads.
+  - Each parameter and what changing it does.
+  - The builder's answers to items 3 to 6.
+- **A question in [questions.md](../questions.md)**, asking the owner to approve the generator
+  and its defaults, and to pick the sea rules.
 
-Nothing is built until the owner picks.
+The game's rules for the sea, the map, the bots and the sim flag wait for that answer.
 
 1. **Shape.**
    - How many islands, how large, how grouped.
@@ -156,12 +171,14 @@ Nothing is built until the owner picks.
 
 ## PR slices
 
+0. **The generator and its validation**, delivered as above. It may run alongside slice 1, using
+   today's map helpers, and is rebased onto the topology module once that merges.
 1. **Topology and the Continental rename.**
    - One topology module, with every coast and adjacency reader moved onto it.
    - `shuffled` becomes `continental`, and `classic` becomes `scenario`.
    - No behaviour change: batches match byte for byte.
-2. **Archipelago.** The generator, the sea rules the owner picked, the 2D map, the bots and the
-   sim flag.
+2. **Archipelago in the game.** The approved generator wired into setup, the sea rules the owner
+   picked, the 2D map, the bots and the sim flag.
 3. **Batches.**
    - Mixed and masters tables, Continental against Archipelago, on the same seeds.
    - Run with base income at 0, as the game now plays.
