@@ -5,7 +5,7 @@ tree. The roadmap establishes sequence and exit gates; plans define unshipped
 work; references describe the game that exists; reports preserve dated evidence;
 and the archive is historical context, never current authority.
 
-Last updated: 2026-10-22.
+Last updated: 2026-10-24.
 
 ## Now
 
@@ -15,7 +15,10 @@ shallow-economy rules in the Hybrid arc shell, merged into `main` on 2026-10-18 
 [plan](archive/plans/v2-migration.md) is archived.
 
 **Owner blockers:** Q80, now that trade's
-[paired batches](reports/simulation/2026-10-22-trade-paired.md) are in.
+[paired batches](reports/simulation/2026-10-22-trade-paired.md) and the
+[balance batches](reports/simulation/2026-10-24-balance-lines.md) are in. On 2026-10-24 the
+owner set base income to 0 and asked for three specs: [board modes](plans/board-modes.md),
+[recurring deals](plans/recurring-deals.md) and [game settings](plans/game-settings.md).
 
 **Next:** the 3D living map, built from the
 [showcase](reference/design/showcases/living-map.html)'s build plan; its plan is written
@@ -37,6 +40,9 @@ precedes full multiplayer.
 | [Code health](plans/code-health.md)                 | post-v2  | `active`   | Five cleanup PRs before trade; all merged, trade next                             |
 | [Player trade](plans/player-trade.md)               | post-v2  | `active`   | PRs #131 and #132 merged; batches reported; the owner plays trade next            |
 | [Development deck](plans/development-deck.md)       | post-v2  | `proposed` | Replaces Ventures; follows both trade PRs                                         |
+| [Board modes](plans/board-modes.md)                 | post-v2  | `proposed` | Continental and Archipelago; the builder's proposal goes to the owner first       |
+| [Recurring deals](plans/recurring-deals.md)         | post-v2  | `proposed` | Yearly standing trades; the builder proposes the settlement timing first          |
+| [Game settings](plans/game-settings.md)             | post-v2  | `proposed` | Classic plus per-game settings; length and base income built in the engine        |
 | [National Ideas](plans/national-ideas.md)           | v2       | `active`   | Step 9 shipped (#88); twelve v2 rules, open setup draft (#95), influence purchase |
 | [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked`  | Final typed Resolution/Idea effects and evidence before multiplayer               |
 
