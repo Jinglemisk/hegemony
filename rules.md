@@ -109,8 +109,8 @@ Every settlement is populated by three kinds of pop. One pop, one output:
 Each pop fills one unit of a settlement's population capacity. Citizens are never
 grown: after setup, every citizen is a freeman promoted on the social ladder.
 
-Every settlement, colony, city or capital, also grows **1 food** of its own at income,
-whoever lives there. Growth, and food to sell, still take slaves on plains.
+A settlement makes nothing on its own: all food comes from slaves on plains, and from
+trade.
 
 ## Settlements
 
@@ -164,8 +164,8 @@ start the game with `?board=classic` in the address bar for the fixed authored l
 Play passes around the table. Victory is checked at the start of your own turn,
 before income. On your turn:
 
-1. **Income is collected automatically.** Every settlement adds its own 1 food and what
-   its pops make, and your freemen and citizens eat 1 food each. Eating can take your food **below
+1. **Income is collected automatically.** Every settlement adds what its pops make, and
+   your freemen and citizens eat 1 food each. Eating can take your food **below
    zero**: nobody leaves yet, and you have this turn to buy the food back (see
    Happiness and food).
 2. **Resolve your event card**, if one was drawn for you (see Events below) — you

@@ -19,7 +19,7 @@ import { getBuilding, getResolutionCard, getResolutionCards, getRiotTable } from
 import { totalPops } from "../game/core/pops";
 import { getOwnedSettlement, getTile, popsInTransit, realmPops } from "../game/core/query";
 import { resolveArrivingPops } from "../game/actions";
-import { yearDeckSize } from "../game/year";
+import { lastYear, yearDeckSize } from "../game/year";
 import { unrestOutcome } from "../game/unrest";
 import type { UnrestOutcome } from "../game/unrest";
 import {
@@ -495,7 +495,7 @@ function foodCover(G: HegemonyState, playerID: PlayerId, weights: ScoreWeights):
 /** Incomes the seat still collects in the game, this year's included if it has not
  *  collected yet. */
 function incomesLeftInGame(G: HegemonyState, playerID: PlayerId) {
-  return Math.max(0, yearDeckSize(G) - G.year + (G.players[playerID].collectedThisTurn ? 0 : 1));
+  return Math.max(0, lastYear(G) - G.year + (G.players[playerID].collectedThisTurn ? 0 : 1));
 }
 
 /** The incomes inside the horizon. */
@@ -2604,7 +2604,7 @@ function upgradableColonies(G: HegemonyState, me: PlayerId): number {
 /** What the seat's Ideas are worth beyond what the forecast and the position show: the
  *  lasting effects that pay only once the seat acts on them. */
 function ideaOpportunityValue(G: HegemonyState, me: PlayerId, weights = DEFAULT_WEIGHTS): number {
-  const years = Math.max(0, Math.min(INCOME_HORIZON, yearDeckSize(G) - G.year));
+  const years = Math.max(0, Math.min(INCOME_HORIZON, lastYear(G) - G.year));
   const effects = playerNationalIdeas(G, me).flatMap((idea) => idea.effects);
   if (!effects.length || !years) return 0;
   let room: boolean | undefined;

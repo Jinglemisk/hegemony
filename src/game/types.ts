@@ -36,7 +36,8 @@ export type BoardLayout = "classic" | "shuffled";
  *  count of standing Laws a player authored. */
 export type VictoryMetric = "cities" | "pops" | "citizens" | "gold" | "happiness" | "voice";
 
-/** Why the game ended: a player held enough victory cards or the year deck ran out. */
+/** Why the game ended: a player held enough victory cards, or the last year passed
+ *  (`deckExhausted`, named when the deck's end was the game's end). */
 export type GameOverReason = "victoryRace" | "deckExhausted";
 
 export type BuildingId = "marketplace" | "estate" | "forum" | "temple" | "granary" | "port";
@@ -495,8 +496,8 @@ export interface HegemonyState {
   /** Offers each seat has made in this trading window, the turn or the preparation.
    *  No rule limits offers; the bots read this to limit their own. */
   offersMade: Partial<Record<PlayerId, number>>;
-  /** The year deck, the game's clock: fourteen cards dealt once and never reshuffled.
-   *  The order is hidden; an empty pile when the year turns ends the game. */
+  /** The year deck: fourteen cards in a hidden order, one turned each year. A game
+   *  longer than the deck shuffles the discards back in when the pile runs out. */
   yearDrawPile: YearCard[];
   yearDiscardPile: YearCard[];
   playerDrawPile: EventDeck;

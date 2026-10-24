@@ -15,6 +15,7 @@ import { getBuilding, getBuildings, getLuxuryGoods, getTerrainDeck } from "../..
 import { POLITICIANS, isHappinessLaw, isPriceLaw } from "../../../game/assembly";
 import { DEFAULT_RULESET } from "../../../game/ruleset";
 import { VICTORY_CARDS } from "../../../game/victory";
+import { lastYear } from "../../../game/year";
 import type {
   BuildingDefinition,
   EventCard,
@@ -208,9 +209,9 @@ const victory: RuleChapter = {
             title can be taken back: each reads what stands on the board now.
           </Note>
           <Note>
-            The year deck is the game's clock (see Years). If it runs out before anyone holds{" "}
-            {victory.cardsToWin}, the player holding the most titles wins. Happiness without calm,
-            then population, then seat order break a tie.
+            The game runs <strong>{lastYear(G)}</strong> years (see Years). If the last one passes
+            before anyone holds {victory.cardsToWin}, the player holding the most titles wins.
+            Happiness without calm, then population, then seat order break a tie.
           </Note>
         </Entry>
         <Entry id={anchor("victory", "cards")} title="The titles & their minimums">
@@ -338,7 +339,7 @@ const resources: RuleChapter = {
               {resource === "wood" || resource === "stone"
                 ? "A building material, worked from the land by slaves."
                 : resource === "food"
-                  ? `Every settlement grows ${G.ruleset.economy.baseFood} of its own at income, and slaves on plains grow more. It feeds freemen and citizens; end your turn short and one pop leaves for each missing food.`
+                  ? `${G.ruleset.economy.baseIncome.food ? `Every settlement grows ${G.ruleset.economy.baseIncome.food} of its own at income, and slaves on plains grow more.` : "Slaves on plains grow it."} It feeds freemen and citizens; end your turn short and one pop leaves for each missing food.`
                   : resource === "gold"
                     ? "Earned by freemen and events, and the stock Treasurer counts."
                     : `Civic weight: spent on demotions, calm, the Dole, riot insurance and ${G.ruleset.ideas.purchases === 1 ? "a second Idea" : "more Ideas"}; its great sink is the Assembly.`}
@@ -823,8 +824,8 @@ const years: RuleChapter = {
             first moves on one place each year.
           </Note>
           <Note>
-            The deck holds {countCopies(yearCards)} cards and is never reshuffled. When it runs dry
-            the age ends, so its length is the game's length.
+            The game runs {lastYear(G)} years and the deck holds {countCopies(yearCards)} cards; a
+            longer game shuffles the spent cards back in. After the last year the age ends.
           </Note>
         </Entry>
         <Entry id={anchor("years", "decks")} title="The decks">

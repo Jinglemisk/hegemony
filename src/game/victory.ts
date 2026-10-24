@@ -10,7 +10,7 @@ import { standingHappiness } from "./happiness";
  * board, so each can be broken off its holder. Holding `ruleset.victory.cardsToWin`
  * cards at the start of your own turn wins immediately.
  *
- * The year deck is the clock: it never reshuffles, and if it runs out before anyone
+ * The game's length in years is the clock: if its last year passes before anyone
  * wins the race, most cards held takes the game (tiebreak: happiness, then pops,
  * then seat order).
  *
@@ -191,10 +191,11 @@ export function ageEndRanking(G: HegemonyState): {
 }
 
 /**
- * The failsafe ending: the year deck (the clock) is exhausted. Most victory cards
- * held wins; ties break on happiness, then total pops, then seat order.
+ * The failsafe ending: the game's last year is played. Most victory cards held wins;
+ * ties break on happiness, then total pops, then seat order. The reason keeps its
+ * older name, `deckExhausted`, so reports stay comparable.
  */
-export function resolveDeckExhaustion(G: HegemonyState) {
+export function resolveAgeEnd(G: HegemonyState) {
   if (G.phase !== "gameplay") {
     return;
   }

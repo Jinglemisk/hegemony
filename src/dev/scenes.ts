@@ -8,6 +8,7 @@ import { nextPlayer } from "../game/turn";
 import { happinessLevel } from "../game/happiness";
 import { ideaDraftOrder } from "../game/ideas";
 import { calculateIncome } from "../game/economy/income";
+import { lastYear } from "../game/year";
 import { getOwnedSettlement, isCapital } from "../game/core/query";
 import { totalPops } from "../game/core/pops";
 import { settlementCapacity } from "../game/settlement";
@@ -145,8 +146,7 @@ export const DEV_SCENES: Record<string, (G: HegemonyState) => DevScene> = {
   }),
   "age-end": (G) => {
     let last = produce(G, (draft) => {
-      draft.year = draft.yearDrawPile.length + 1;
-      draft.yearDrawPile = [];
+      draft.year = lastYear(draft);
     });
     for (let guard = 0; last.phase === "gameplay" && guard < 8; guard++)
       last = endCurrentTurn(last);

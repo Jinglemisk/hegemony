@@ -1,7 +1,7 @@
 import { votePurchaseLimit } from "../ideaRules";
 import { applyUnrestTokenChange, describeUnrestTokenChange } from "../happiness";
 import { PLAYER_IDS } from "../data";
-import { yearDeckSize } from "../year";
+import { lastYear } from "../year";
 import type { HegemonyState, PlayerId } from "../types";
 import { addLog, getOwnedSettlement, getPlayerName, getTile, realmPops } from "../core/query";
 import { MOVE_OK, invalid } from "../core/results";
@@ -59,14 +59,14 @@ export function nextAssemblyYear(G: HegemonyState): number | null {
   if (G.year < firstYear) return firstYear;
   const cadence = Math.max(1, everyYears);
   const next = firstYear + (Math.floor((G.year - firstYear) / cadence) + 1) * cadence;
-  return next <= yearDeckSize(G) ? next : null;
+  return next <= lastYear(G) ? next : null;
 }
 
-/** How many times the Assembly sits in a whole game: every sitting year the year
- *  deck reaches. */
+/** How many times the Assembly sits in a whole game: every sitting year the game
+ *  reaches. */
 export function assemblySittings(G: HegemonyState): number {
   const { firstYear, everyYears } = G.ruleset.assembly;
-  const years = yearDeckSize(G);
+  const years = lastYear(G);
   if (firstYear === 0 || firstYear > years) return 0;
   return Math.floor((years - firstYear) / Math.max(1, everyYears)) + 1;
 }

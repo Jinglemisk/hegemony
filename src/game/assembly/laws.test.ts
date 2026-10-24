@@ -122,7 +122,7 @@ describe("standing Laws", () => {
     city.pops = { citizens: 0, freemen: 0, slaves: 2 };
     city.buildings = ["estate"];
     law(G, "land-reform");
-    expect(settlementNextYield(G, tile(G, cap), city).food).toBe(5);
+    expect(settlementNextYield(G, tile(G, cap), city).food).toBe(4);
     expect(getBuildBuildingStatus(G, "0", cap, "estate").reasons.join(" ")).toContain(
       "Land Reform",
     );
@@ -130,7 +130,7 @@ describe("standing Laws", () => {
     ground.terrain = "hill";
     ground.resource = null;
     city.buildings = [];
-    expect(settlementNextYield(G, ground, city).food).toBe(3);
+    expect(settlementNextYield(G, ground, city).food).toBe(2);
     expect(tileSlaveColumn(G, ground)).toEqual({ resource: "food", perPop: 1 });
   });
   it("Land Reform food survives Wildfire in both the class head and income forecast", () => {
@@ -153,7 +153,7 @@ describe("standing Laws", () => {
       perPop: 1,
       income: { food: 2, wood: 0 },
     });
-    expect(settlementNextYield(G, ground, city).food).toBe(3);
+    expect(settlementNextYield(G, ground, city).food).toBe(2);
   });
   it("Sacred Fields pays Temple food and states the whole building price", () => {
     const G = opening();

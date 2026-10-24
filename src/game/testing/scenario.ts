@@ -55,10 +55,10 @@ export function materialTile(G: HegemonyState): HexTile & { resource: TileResour
   return found as HexTile & { resource: TileResource };
 }
 
-/** The economy before player trade: a bank, no base food and no offers. Batches still
- *  play it beside the one after it, so fixtures set on it keep those bots pinned. */
+/** The economy before player trade: a bank and no offers. Batches still play it beside
+ *  the one after it, so fixtures set on it keep those bots pinned. */
 export const BEFORE_TRADE: RulesetPatch = {
-  economy: { bank: { enabled: true }, baseFood: 0 },
+  economy: { bank: { enabled: true } },
   trade: { enabled: false },
 };
 

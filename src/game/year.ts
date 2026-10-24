@@ -3,7 +3,8 @@ import { PLAYER_IDS } from "./data";
 import { addLog, getOwnedSettlement, getPlayerName, getTile } from "./core/query";
 import { applyUnrestTokenChange, happinessLevel } from "./happiness";
 import { yearCardLoss } from "./economy/income";
-import { resolveDeckExhaustion } from "./victory";
+import { shuffleWithSeed } from "./core/rng";
+import { resolveAgeEnd } from "./victory";
 
 export function resetTurnFlags(G: HegemonyState) {
   for (const player of Object.values(G.players)) {
@@ -71,17 +72,26 @@ function realmLoss(G: HegemonyState, playerID: PlayerId): Partial<Resources> {
 }
 
 export function startNewYear(G: HegemonyState) {
-  // The year deck is the game's clock and never reshuffles. When it is spent the age
-  // ends and the victory-card tally resolves, before anything advances, so the
-  // game-over state sits on the last year actually played.
-  if (G.yearDrawPile.length === 0) {
-    resolveDeckExhaustion(G);
+  // The game's length is its clock. After the last year the age ends and the
+  // victory-card tally resolves, before anything advances, so the game-over state
+  // sits on the last year actually played.
+  if (G.year >= lastYear(G)) {
+    resolveAgeEnd(G);
     return;
   }
 
   if (G.activeYearCard) {
     G.yearDiscardPile.push(G.activeYearCard);
     G.activeYearCard = null;
+  }
+
+  // A game longer than the deck shuffles the spent years back in.
+  if (G.yearDrawPile.length === 0) {
+    const reshuffled = shuffleWithSeed(G.yearDiscardPile, G.rng);
+    G.yearDrawPile = reshuffled.cards;
+    G.rng = reshuffled.state;
+    G.yearDiscardPile = [];
+    addLog(G, "The year deck is spent and shuffled back in.");
   }
 
   G.year += 1;
@@ -96,8 +106,16 @@ export function startNewYear(G: HegemonyState) {
   revealYearCard(G);
 }
 
-/** The clock's full deck size, including the card not yet revealed during setup. The
- *  definition is enough, so the sim can size a game before it builds one. */
+/** An open game's safety stop: no game runs past this year. */
+const OPEN_GAME_YEAR_CAP = 40;
+
+/** The game's last year: its length, or an open game's safety stop. The ruleset is
+ *  enough, so the sim can size a game before it builds one. */
+export function lastYear(G: Pick<HegemonyState, "ruleset">): number {
+  return G.ruleset.victory.years ?? OPEN_GAME_YEAR_CAP;
+}
+
+/** The year deck's full size, including the card not yet revealed during setup. */
 export function yearDeckSize(G: Pick<HegemonyState, "definition">): number {
   return G.definition.content.yearCards.reduce((total, card) => total + card.count, 0);
 }

@@ -339,9 +339,10 @@ export const TERRAIN_DECK: Array<{
 
 // ── Year deck (direction paper §6.2) ────────────────────────────────────────────────
 //
-// The clock: fourteen cards, dealt once in a seeded order, the next one hidden. Each
-// card exposes one kind of player by zeroing one term for the whole table for the
-// year; Plague and Festival move every realm's Unrest tokens once, when revealed.
+// Fourteen cards in a seeded order, the next one hidden, one for each year of the
+// default game; a longer game reshuffles them. Each card exposes one kind of player by
+// zeroing one term for the whole table for the year; Plague and Festival move every
+// realm's Unrest tokens once, when revealed.
 
 export const YEAR_CARDS: YearCard[] = [
   {

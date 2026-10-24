@@ -15,7 +15,8 @@ export const GAME_CONFIG = {
   // ?dev=preload always forces classic (its scripted opening is tied to fixed tiles).
   // NOTE: the shuffle is still UNCONSTRAINED — landmarks can cluster and seats can be
   // uneven; the constrained shuffle (landmarks non-adjacent, breadbasket off-rim, fair
-  // seats) is the deferred proper version. Sims stay on classic for reproducible A/B.
+  // seats) is the deferred proper version. Sims default to shuffled too; the shuffle is
+  // seeded, so a batch stays reproducible.
   boardLayout: "shuffled" as BoardLayout,
   // Dev testing default: auto-play the opening with the sim's placement policy so a
   // reload lands straight in a sanely placed game. ?setup=manual restores hand
