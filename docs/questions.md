@@ -4,7 +4,7 @@ Only unresolved owner decisions live here. Answer in chat or after `Answer:`; th
 answer is then incorporated into the affected plan and this entry is removed.
 Recommendations are defaults for discussion, not silent authorization.
 
-Last updated: 2026-10-21.
+Last updated: 2026-10-22.
 
 ## Q80 — What shape should Step 11 take?
 
@@ -81,5 +81,31 @@ batch.
   titles in 10, 28 and 2 games, 11 decided by the tiebreak, wins by seat 23 / 30 / 13 /
   35%. Polis Builder is held at the end of 17 games where it was 4. The other two
   columns have not been run again.
+
+**Trade batches (2026-10-22):** the no-Ideas batch again on trade PR 2's build, in three
+economies ([report](reports/simulation/2026-10-22-trade-paired.md)). The bank column is
+Step 20's economy and lands within a unit or two of its figures above.
+
+|                                           | Bank               | Trade, no base food | Trade and base food |
+| ----------------------------------------- | ------------------ | ------------------- | ------------------- |
+| Wins by seat, first to fourth             | 23 / 30 / 13 / 35% | 25 / 15 / 30 / 30%  | 35 / 5 / 30 / 30%   |
+| Pops at the end of year 1, seat 0, others | 6.2, 6.4           | 6.6, 6.5            | 7.0, 6.4            |
+| Pops a seat at year 14                    | 13.4               | 14.4                | 16.4                |
+| Ended by the deck, by the race            | 38, 2              | 36, 4               | 33, 7               |
+| Winner holds one, two, three titles       | 11, 27, 2          | 17, 18, 5           | 9, 24, 7            |
+| Decided by the tiebreak                   | 13                 | 15                  | 9                   |
+| Riot turns from year 8                    | 5.4%               | 4.4%                | 3.6%                |
+| Median influence a year, years 10 to 14   | +4.5               | +4.5                | +9.3                |
+| Turns begun short of food                 | 629                | 510                 | 155                 |
+| Dole uses a game                          | 40.5               | 41.8                | 19.3                |
+| Pops lost to hunger a seat-game           | 0.46               | 0.62                | 0.02                |
+
+- Base food, not trade, ends the food shortage. The influence the Dole took now piles up,
+  at nearly twice the plateau rule's 5 a year.
+- Seat 1 wins 2 of 40 with base food, which 40 games seldom give by chance.
+- On the rotated table with base food the trader wins 23 of 40 and holds Treasurer at the
+  end of 39: its gold piles up with no bank to spend it in, yet it still loses 3.3 pops a
+  seat-game to hunger. That is part rules, part bot, and only a mixed table shows it. With
+  trade and no base food the four builds win 20 to 33%.
 
 **Answer:**

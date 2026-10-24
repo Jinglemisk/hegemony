@@ -1,0 +1,16 @@
+{
+  "src/sim/policies.ts:DEAL_RATIOS": [
+    [
+      2,
+      1
+    ],
+    [
+      1,
+      1
+    ],
+    [
+      1,
+      2
+    ]
+  ]
+}

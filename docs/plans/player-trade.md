@@ -181,6 +181,13 @@ the trade commands and its build-viability rule testing whether missing trade wa
 number tuning follows. Step 11's rule on the influence plateau now reads a stock that can be
 sold.
 
+The batches ran on 2026-10-22 ([report](../reports/simulation/2026-10-22-trade-paired.md)).
+Every material goes from the seat whose land makes the most of it to the seat that makes the
+least. Base food, not trade, ends the food shortage: turns begun short fall by three quarters on
+both tables. It leaves the influence stock growing about 10 a year, against the plateau rule's
+5, and on the rotated table gold piles up at the trader, which wins 23 of 40 and holds Treasurer
+in 39. The trader bot still starves with gold in hand. Q80's table has the trade columns.
+
 ## Step 11 decision rules
 
 Moved here from the [v2 migration plan](../archive/plans/v2-migration.md) on 2026-10-18.
@@ -249,8 +256,8 @@ linear influence pile passed, and no card could meet the draw rule.
 ## PRs
 
 Two, both to `main`; the [code-health plan](code-health.md)'s five cleanup PRs are merged. The
-first merged as #131 (2026-10-21); the second is open, and its paired batches wait for the
-owner's word.
+first merged as #131 (2026-10-21), the second as #132 (2026-10-22); its paired batches are
+reported under The sim.
 
 1. **Trade.** Trade between human seats in hotseat, with the bank still in place. Offers on a
    turn and in the Assembly's preparation, to the table or named seats, in materials, gold,

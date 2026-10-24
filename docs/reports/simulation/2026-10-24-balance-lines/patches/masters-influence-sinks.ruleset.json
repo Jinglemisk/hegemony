@@ -1,0 +1,9 @@
+{
+  "assembly": {
+    "drawCost": 4,
+    "repealCost": 6
+  },
+  "ideas": {
+    "purchases": 2
+  }
+}
