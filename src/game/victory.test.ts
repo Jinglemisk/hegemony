@@ -167,7 +167,7 @@ describe("the year deck is a finite clock", () => {
     expect(G.yearDiscardPile.length).toBeGreaterThan(0);
   });
 
-  it("resolves the exhaustion tally when the deck runs out: cards tie at zero, happiness decides", () => {
+  it("resolves the age-end tally after the last year: cards tie at zero, happiness decides", () => {
     // Nobody reaches a minimum from the opening, so cards tie at 0 and the tally
     // falls through to the happiness tiebreak.
     const G = scenario()
@@ -178,7 +178,7 @@ describe("the year deck is a finite clock", () => {
         }
       })
       .build();
-    G.yearDrawPile = [];
+    G.year = G.ruleset.victory.years ?? 0;
     const yearBefore = G.year;
 
     startNewYear(G);
@@ -258,6 +258,32 @@ describe("phase-0 turn structure", () => {
     expect(G.phase).toBe("gameOver");
     expect(G.gameOverReason).toBe("deckExhausted");
     expect(G.year).toBe(14);
+  });
+
+  it("plays a game longer than the deck, shuffling the spent years back in", () => {
+    const G = assemblyFreeGame(SEED);
+    G.ruleset = { ...G.ruleset, victory: { ...G.ruleset.victory, cardsToWin: 99, years: 18 } };
+
+    for (let turn = 0; turn < 18 * 4 && G.phase === "gameplay"; turn += 1) {
+      expect(advanceTurn(G).ok).toBe(true);
+    }
+
+    expect(G.phase).toBe("gameOver");
+    expect(G.year).toBe(18);
+    expect(G.log.some((entry) => entry.message.includes("shuffled back in"))).toBe(true);
+  });
+
+  it("ends a shorter game after its last year, with cards left in the deck", () => {
+    const G = assemblyFreeGame(SEED);
+    G.ruleset = { ...G.ruleset, victory: { ...G.ruleset.victory, cardsToWin: 99, years: 6 } };
+
+    for (let turn = 0; turn < 6 * 4 && G.phase === "gameplay"; turn += 1) {
+      expect(advanceTurn(G).ok).toBe(true);
+    }
+
+    expect(G.phase).toBe("gameOver");
+    expect(G.year).toBe(6);
+    expect(G.yearDrawPile).toHaveLength(8);
   });
 });
 

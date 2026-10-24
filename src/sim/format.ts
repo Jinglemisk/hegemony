@@ -378,7 +378,7 @@ export function renderBatchReport(report: BatchReport, years: number): string {
     lines.push(
       `${name}: ${stats.wins}/${stats.finishedSeatGames} seat wins (${(100 * stats.winRate).toFixed(1)}%); ` +
         `final cards mean ${formatNumber(stats.finalCards.mean)}; capped seats ${stats.cappedSeatGames}`,
-      `  Wins by: the title race ${by.race} · titles at the deck's end ${by.titles} · ` +
+      `  Wins by: the title race ${by.race} · titles after the last year ${by.titles} · ` +
         `the tiebreak ${by.happiness + by.pops + by.seat} ` +
         `(happiness ${by.happiness}, pops ${by.pops}, seat ${by.seat})`,
       `  Final titles: ${Object.entries(stats.finalTitles)

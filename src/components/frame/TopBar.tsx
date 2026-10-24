@@ -6,7 +6,7 @@ import { victoryMetricValue, voiceHolder } from "../../game/victory";
 import { happinessLevel } from "../../game/happiness";
 import { unrestOutcome } from "../../game/unrest";
 import type { UnrestOutcome } from "../../game/unrest";
-import { yearDeckSize } from "../../game/year";
+import { lastYear } from "../../game/year";
 import type { IncomeContribution } from "../../game/economy/income";
 import type { Ruleset } from "../../game/ruleset";
 import type { HegemonyState, PlayerId, Resource, Resources } from "../../game/types";
@@ -26,21 +26,21 @@ const PURSE: Resource[] = ["wood", "stone", "food", "gold", "influence"];
 /** Pips the gauge has room for; the tooltip prints the true count. */
 const MAX_TOKEN_PIPS = 6;
 
-/** The year and the cards left: the clock at the bar's left end. The year's card
+/** The year and the years left: the clock at the bar's left end. The year's card
  *  itself leads the alarms row. */
 function Clock({ G }: { G: HegemonyState }) {
   const year = G.year;
-  const left = G.yearDrawPile.length;
-  const totalYears = yearDeckSize(G);
+  const totalYears = lastYear(G);
+  const left = totalYears - year;
 
   return (
     <div className="clock" data-c="clock">
       <Tooltip
-        ariaLabel={`Year ${year} of ${totalYears}, ${left} ${left === 1 ? "card" : "cards"} left`}
+        ariaLabel={`Year ${year} of ${totalYears}, ${left} ${left === 1 ? "year" : "years"} left`}
         content={
           <Tip title={`Year ${toRoman(year)}`}>
             <TipBody>
-              {`A year is one turn for every seat. ${left} ${left === 1 ? "card is" : "cards are"} left in the year deck and the next one is hidden. The game ends when the deck is spent.`}
+              {`A year is one turn for every seat, and each turns a card from the year deck; the next card is hidden. ${left} ${left === 1 ? "year follows" : "years follow"} this one, then the game ends.`}
             </TipBody>
           </Tip>
         }

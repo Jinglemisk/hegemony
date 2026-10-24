@@ -303,8 +303,13 @@ seat's personality that game), `actingSeat`, `winner` (the game's winner, empty 
 capped game), `final`, `belovedHolder` (the seat holding Beloved, empty for none; the
 same on all four rows) and `activeLuxuries`.
 
-- `--board` — `classic` (default, reproducible) or `shuffled` (seeded random terrain,
-  as the live game defaults to). Recorded in the report and in saves/scripts.
+- `--board` — `shuffled` (default since 2026-10-24: seeded random terrain, as in the live
+  game) or `classic` (the authored fixed board; `new --opening fixed` falls back to it).
+  Reports before that date ran on classic unless they say otherwise. Recorded in the
+  report and in saves/scripts.
+- `--years N|open` — the game's length (`victory.years`, 14 by default), folded into the
+  ruleset patch. A game longer than the 14-card year deck reshuffles it; `open` plays until
+  the race is won, with a safety stop at year 40. `batch`'s default `--turns` follows it.
 - `--tune-preset low-number-core-v1` — resolves the shared development preset before
   the batch. Unknown IDs fail. `meta` records the ID and stable full-content hash.
 - `--tune-patch` — a dev tune-panel override map (the panel's "Copy patch" output):
@@ -480,10 +485,11 @@ older names: `perSeat`, `perPolicy` and `winsByPolicy` are now `results`;
 **Economy switches.** Three ruleset values turn player trade's economy on piece by
 piece, so the same seeds can play the game before it beside the game after it:
 `trade.enabled` (offers and the Assembly's Ready step), `economy.bank.enabled` (the
-bank's buy and sell, off by default; no screen offers it) and `economy.baseFood` (the
-food each settlement grows on its own, 1 by default). The economy before trade is
-`{"economy":{"bank":{"enabled":true},"baseFood":0},"trade":{"enabled":false}}`, passed
-with `--ruleset-patch`.
+bank's buy and sell, off by default; no screen offers it) and `economy.baseIncome` (what
+each settlement makes on its own, by resource, all 0 by default; `{"economy":{"baseIncome":{"food":1}}}`
+is trade PR 2's base food). The economy before trade is
+`{"economy":{"bank":{"enabled":true}},"trade":{"enabled":false}}`, passed with
+`--ruleset-patch`.
 
 Identical inputs produce byte-identical reports (minus `meta.generatedAt`), and
 the same CSV, whatever `--jobs` is. Compare two patches by running two batches with

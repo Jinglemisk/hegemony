@@ -113,9 +113,9 @@ export interface EconomyRules {
   unrest: UnrestRules;
   /** Bank exchange rates & derivation (D6/Q14). */
   bank: BankRules;
-  /** Food every settlement makes at income on its own, before upkeep (D10). 0 is the
-   *  economy before trade, where only slaves on plains grew food. */
-  baseFood: number;
+  /** What every settlement makes at income on its own, before upkeep, by resource (D10).
+   *  All zero by default (owner, 2026-10-24): only pops make anything. */
+  baseIncome: Partial<Record<Resource, number>>;
   /** Lower bounds a charge from an event or a table stops at, and income for every
    *  stock but food: income takes food below its floor (`applyIncome`). Costs remain
    *  affordability-gated and are never rescued by clamping. */
@@ -150,6 +150,10 @@ export interface UnrestRules {
 export interface VictoryRules {
   cardsToWin: number;
   minimums: Record<VictoryMetric, number>;
+  /** The game's length in years (owner, 2026-10-24: 6, 12, 14 or 18). After the last
+   *  year the tally decides; a game longer than the year deck reshuffles its spent
+   *  cards. Null is an open game: only the race ends it, or the safety stop. */
+  years: number | null;
 }
 
 export interface PlacementRules {
@@ -253,6 +257,7 @@ export const DEFAULT_RULESET: Ruleset = {
     // Laws a player authored.
     cardsToWin: 3,
     minimums: { cities: 3, pops: 14, citizens: 5, gold: 30, happiness: 4, voice: 2 },
+    years: 14,
   },
   actionCosts: ACTION_COSTS,
   growPopCosts: GROW_POP_COSTS,
@@ -280,7 +285,7 @@ export const DEFAULT_RULESET: Ruleset = {
       abundant: { sell: 4, buy: 2 },
       scarce: { sell: 2, buy: 3 },
     },
-    baseFood: 1,
+    baseIncome: { wood: 0, stone: 0, gold: 0, food: 0, influence: 0 },
     // No stock goes below zero: a charge takes what the seat holds and no more. Income
     // alone passes the food floor: it may take food below zero during its owner's turn
     // (core/resources `applyIncome`), and turn end settles the shortfall as hunger.

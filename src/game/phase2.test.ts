@@ -61,8 +61,8 @@ describe("yield-less hills (Phase 2)", () => {
     expect(settlementIdleSlaves(hill, settlement, G)).toBe(3);
 
     const income = settlementNetYield(hill, settlement, G);
-    // Slaves make nothing on the hill and eat nothing: the city's own food is all.
-    expect(income.wood + income.stone + income.food + income.gold).toBe(1);
+    // Slaves make nothing on the hill and eat nothing.
+    expect(income.wood + income.stone + income.food + income.gold).toBe(0);
   });
 
   it("still lets citizens and freemen produce, fed from the shared pool", () => {
@@ -70,9 +70,9 @@ describe("yield-less hills (Phase 2)", () => {
     const hill = findTile(G, (tile) => tile.terrain === "hill");
 
     const income = settlementNetYield(hill, city({ citizens: 1, freemen: 1, slaves: 0 }), G);
-    // Citizen: +1 influence, −1 food. Freeman: +1 gold, −1 food. The city: +1 food.
+    // Citizen: +1 influence, −1 food. Freeman: +1 gold, −1 food.
     expect(income.influence).toBe(1);
     expect(income.gold).toBe(1);
-    expect(income.food).toBe(-1);
+    expect(income.food).toBe(-2);
   });
 });

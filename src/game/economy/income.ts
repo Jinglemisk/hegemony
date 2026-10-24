@@ -354,18 +354,18 @@ function settlementIncomeLines(
   const source = settlementIncomeSource(tile, settlement);
   const primary = settlementSlaveResource(tile, G);
   const workingSlaves = settlementWorkingSlaves(tile, settlement, G);
-  // Every settlement grows some food of its own (D10), so no realm buys all it eats.
-  const lines: SettlementIncomeLine[] = [
-    {
+  // What every settlement makes on its own (D10), zero unless the game sets it.
+  const lines: SettlementIncomeLine[] = Object.entries(ruleset.economy.baseIncome).map(
+    ([resource, amount]) => ({
       line: {
-        resource: "food",
-        amount: ruleset.economy.baseFood,
+        resource: resource as Resource,
+        amount,
         source,
         settlementId: settlement.id,
-        detail: "its own fields",
+        detail: "base income",
       },
-    },
-  ];
+    }),
+  );
 
   for (const pop of ["citizens", "freemen", "slaves"] as const) {
     const count = settlement.pops[pop];

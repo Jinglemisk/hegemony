@@ -65,7 +65,7 @@ export function GameOverModal({
           <Prose links={false}>
             {raced
               ? `${you ? "You opened your" : `${name(winner)} opened their`} turn holding ${toWin} titles.`
-              : "The year deck is spent. Most titles wins."}
+              : "The last year has passed. Most titles wins."}
           </Prose>
         </p>
       </header>

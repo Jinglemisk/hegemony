@@ -293,8 +293,11 @@ reported under The sim.
    against bots, and Q80 and Step 11 follow.
    - As built: the bank stays in the engine behind `economy.bank.enabled`, off by default,
      so the batches can play the economy before trade; no screen offers it, and the
-     command parity map classes its commands `batch-only`. Base food is
-     `economy.baseFood`, an income line on every settlement that no year card zeroes.
+     command parity map classes its commands `batch-only`. Base food was
+     `economy.baseFood`, an income line on every settlement that no year card zeroes. On
+     2026-10-24 the owner removed it after the
+     [balance batches](../reports/simulation/2026-10-24-balance-lines.md): it is now
+     `economy.baseIncome`, one value per resource, all 0.
      The pacing reads the engine's count of each seat's offers in the trading window
      (`offersMade`), since a stateless bot cannot remember them. A bot offers only to
      rivals who hold its price, and also withdraws an offer every seat has answered, so

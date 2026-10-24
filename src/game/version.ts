@@ -46,7 +46,11 @@ export const ENGINE_VERSION = "0.1.0";
  *  settlement makes base food, and the state counts each seat's offers in the trading
  *  window. Older pinned rulesets cannot answer the switches, so older saves are
  *  rejected. Commands are unchanged. */
-export const STATE_SCHEMA_VERSION = 16;
+/** v17 (game settings, engine): base food becomes a base income in every resource, all
+ *  zero by default, and the ruleset carries the game's length in years. Older pinned
+ *  rulesets carry `baseFood` and no length, so older saves are rejected. Commands are
+ *  unchanged. */
+export const STATE_SCHEMA_VERSION = 17;
 export const COMMAND_SCHEMA_VERSION = 7;
 
 export const SAVE_FORMAT_VERSION = 2;

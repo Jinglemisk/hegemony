@@ -3,7 +3,7 @@ import { PLAYER_IDS } from "../../../game/data";
 import { assemblySittings, nextAssemblyYear } from "../../../game/assembly";
 import { YEAR_TERM_COLUMNS } from "../../../game/economy/income";
 import { unrestOutcome } from "../../../game/unrest";
-import { yearDeckSize } from "../../../game/year";
+import { lastYear } from "../../../game/year";
 import type { LogMoment, Resource, YearCard } from "../../../game/types";
 import { presentUnrestOutcome, presentYearCard } from "../../../ui/effects";
 import { ordinal, seatName, toRoman } from "../../../ui/formatters";
@@ -55,7 +55,7 @@ export function YearCardModal({
   const card = G.activeYearCard;
   if (!card) return null;
 
-  const years = yearDeckSize(G);
+  const years = lastYear(G);
   const yearName = `Year ${toRoman(G.year)}`;
 
   if (!face) {
@@ -67,7 +67,7 @@ export function YearCardModal({
         label="The year turns"
         scrimNote={
           <p className="deckEcho label">
-            {yearName} · the deck turns its top card · {G.yearDrawPile.length} remain after it
+            {yearName} · the deck turns its top card · {years - G.year} years remain after it
           </p>
         }
       >

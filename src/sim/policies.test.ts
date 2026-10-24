@@ -339,12 +339,12 @@ describe("the forecast buys food", () => {
   });
 
   it("buys by the Dole alone where there is no bank, and gold feeds no one", () => {
-    // The trade economy: the city grows 1 food of its own, so six short a year.
+    // The trade economy: seven short a year.
     const G = importer({ gold: 100, influence: 6 }, scenario());
     const forecast = projectPolicyHorizon(G, "0", 1);
-    // Two Doles at 3 influence each; the gold is untouched and four leave.
+    // Two Doles at 3 influence each; the gold is untouched and five leave.
     expect(forecast.resources).toMatchObject({ gold: 106, influence: 1, food: 0 });
-    expect(forecast.expectedStarvationPopLoss).toBe(4);
+    expect(forecast.expectedStarvationPopLoss).toBe(5);
   });
 
   it("pays from the stocks at the seat's own prices and leaves the current turn to the seat", () => {
