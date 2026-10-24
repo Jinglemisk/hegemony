@@ -1,0 +1,13 @@
+{
+  "economy": {
+    "baseFood": 0,
+    "bank": {
+      "enabled": true,
+      "derivation": "uniform",
+      "baseline": {
+        "sell": 99,
+        "buy": 2
+      }
+    }
+  }
+}

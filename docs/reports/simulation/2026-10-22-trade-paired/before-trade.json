@@ -1,0 +1,1 @@
+{ "economy": { "bank": { "enabled": true }, "baseFood": 0 }, "trade": { "enabled": false } }

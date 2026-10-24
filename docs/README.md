@@ -5,7 +5,7 @@ tree. The roadmap establishes sequence and exit gates; plans define unshipped
 work; references describe the game that exists; reports preserve dated evidence;
 and the archive is historical context, never current authority.
 
-Last updated: 2026-10-21.
+Last updated: 2026-10-24.
 
 ## Now
 
@@ -14,13 +14,22 @@ The [code-health plan](plans/code-health.md)'s five cleanup PRs are merged. v2, 
 shallow-economy rules in the Hybrid arc shell, merged into `main` on 2026-10-18 (#121); its
 [plan](archive/plans/v2-migration.md) is archived.
 
-**Owner blockers:** none. Q80 waits for the report of trade's second PR.
+**Owner blockers:** Q80, now that trade's
+[paired batches](reports/simulation/2026-10-22-trade-paired.md) and the
+[balance batches](reports/simulation/2026-10-24-balance-lines.md) are in. On 2026-10-24 the
+owner set base income to 0 and asked for three specs: [board modes](plans/board-modes.md),
+[recurring deals](plans/recurring-deals.md) and [game settings](plans/game-settings.md).
 
-**Next:** the 3D living map, built from the
-[showcase](reference/design/showcases/living-map.html)'s build plan; its plan is written
-when the track starts. v2's Step 16, the refactor, is the code-health plan, except the island
-code the living map replaces. Step 11, the sim gate, runs from the trade plan once both
-trade PRs are in. The full-game browser test still waits.
+**Next (owner, 2026-10-25), in waves of at most three agents with an owner checkpoint after
+each:**
+
+1. A confirming batch without base income, the Archipelago and recurring-deals proposals,
+   and board slice 1 (topology; shuffled becomes `continental`, classic becomes `scenario`).
+2. The Archipelago build, and recurring deals between people.
+3. Bots for deals, the game-settings model and setup screen, then batches one at a time.
+
+Then Step 11 on Q80's shape, the development deck, length batches, and the 3D living map,
+whose plan is written after Archipelago lands. The full-game browser test still waits.
 
 **Locked sequence:** V1 includes luxury goods, full Catan-style player trade, all twelve
 National Ideas, and the intended typed Resolution/Idea effects. The v1 mechanics freeze
@@ -34,8 +43,11 @@ precedes full multiplayer.
 | [Luxury goods](plans/luxury-goods.md)               | 4        | `active`   | Slices 1–2 shipped on `main`; the v2 migration carries them unchanged             |
 | [UI — what is left](plans/ui-remaining.md)          | —        | `active`   | The one UI ledger; the KYKLOS triage ledgers are archived                         |
 | [Code health](plans/code-health.md)                 | post-v2  | `active`   | Five cleanup PRs before trade; all merged, trade next                             |
-| [Player trade](plans/player-trade.md)               | post-v2  | `active`   | PR 1 (#131) and PR 2 (#132) merged; the paired batches are next                   |
+| [Player trade](plans/player-trade.md)               | post-v2  | `active`   | PRs #131 and #132 merged; batches reported; the owner plays trade next            |
 | [Development deck](plans/development-deck.md)       | post-v2  | `proposed` | Replaces Ventures; follows both trade PRs                                         |
+| [Board modes](plans/board-modes.md)                 | post-v2  | `proposed` | Continental and Archipelago; the builder's proposal goes to the owner first       |
+| [Recurring deals](plans/recurring-deals.md)         | post-v2  | `proposed` | Yearly standing trades; the builder proposes the settlement timing first          |
+| [Game settings](plans/game-settings.md)             | post-v2  | `proposed` | Classic plus per-game settings; length and base income built in the engine        |
 | [National Ideas](plans/national-ideas.md)           | v2       | `active`   | Step 9 shipped (#88); twelve v2 rules, open setup draft (#95), influence purchase |
 | [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked`  | Final typed Resolution/Idea effects and evidence before multiplayer               |
 

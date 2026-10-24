@@ -1,0 +1,190 @@
+[
+ {
+  "name": "mixed-shuffled",
+  "line": "board: does the trader's lead and seat 1's slump survive the live game's shuffled board?",
+  "table": "mixed",
+  "board": "shuffled"
+ },
+ {
+  "name": "masters-shuffled",
+  "line": "board: seat balance and influence growth on the shuffled board",
+  "table": "masters",
+  "board": "shuffled"
+ },
+ {
+  "name": "mixed-food-at-2-gold",
+  "line": "food barter: bots offer gold at 2 a food instead of 1; does the trader stop starving with gold in hand?",
+  "table": "mixed",
+  "board": "shuffled",
+  "consts": {
+   "src/sim/policies.ts:DEAL_RATIOS": [
+    [
+     2,
+     1
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     1,
+     2
+    ]
+   ]
+  }
+ },
+ {
+  "name": "mixed-treasurer-100",
+  "line": "gold: every trader win holds Treasurer; at a 100-gold minimum does the trader still lead?",
+  "table": "mixed",
+  "board": "shuffled",
+  "ruleset": {
+   "victory": {
+    "minimums": {
+     "gold": 100
+    }
+   }
+  }
+ },
+ {
+  "name": "mixed-gold-buys-materials",
+  "line": "gold sink stand-in: gold buys any material at 2, uncapped, nothing sells back; does a bulk sink drain the trader or feed it?",
+  "table": "mixed",
+  "board": "shuffled",
+  "ruleset": {
+   "economy": {
+    "bank": {
+     "enabled": true,
+     "derivation": "uniform",
+     "baseline": {
+      "sell": 99,
+      "buy": 2
+     }
+    }
+   }
+  }
+ },
+ {
+  "name": "masters-random-openings",
+  "line": "seat edge: four masters with random openings; does seat 0 still win most once nobody picks the best site first?",
+  "table": "masters",
+  "board": "shuffled",
+  "extra": [
+   "--opening",
+   "random"
+  ]
+ },
+ {
+  "name": "mixed-slave-grow-3",
+  "line": "food to pops: a slave costs 3 food instead of 2; does food stay in stock long enough to trade?",
+  "table": "mixed",
+  "board": "shuffled",
+  "ruleset": {
+   "growPopCosts": {
+    "slaves": {
+     "food": 3
+    }
+   }
+  }
+ },
+ {
+  "name": "mixed-port-8-gold",
+  "line": "gold to luxuries: a Port costs 8 gold instead of 4 (the balance check own remedy for Beloved); does gold stop buying Beloved and the trader lead?",
+  "table": "mixed",
+  "board": "shuffled",
+  "tune": {
+   "buildings.port.cost.gold": 8
+  }
+ },
+ {
+  "name": "mixed-no-base-food",
+  "line": "food income: base food 0 on the shuffled board (control for the food grid)",
+  "table": "mixed",
+  "board": "shuffled",
+  "ruleset": {
+   "economy": {
+    "baseFood": 0
+   }
+  }
+ },
+ {
+  "name": "mixed-base-food-2",
+  "line": "food income: 2 base food a settlement; more food, more influence, more trader?",
+  "table": "mixed",
+  "board": "shuffled",
+  "ruleset": {
+   "economy": {
+    "baseFood": 2
+   }
+  }
+ },
+ {
+  "name": "masters-influence-sinks",
+  "line": "influence: the balance check's own remedy, dearer Assembly draws (4) and repeals (6), plus a second Idea purchase",
+  "table": "masters",
+  "board": "shuffled",
+  "ruleset": {
+   "assembly": {
+    "drawCost": 4,
+    "repealCost": 6
+   },
+   "ideas": {
+    "purchases": 2
+   }
+  }
+ },
+ {
+  "name": "masters-ideas",
+  "line": "recent mechanics: the trade economy with National Ideas on (never run)",
+  "table": "masters-ideas",
+  "board": "shuffled"
+ },
+ {
+  "name": "mixed-no-base-food-gold-buys-materials",
+  "line": "food income vs food trade: no base food, but gold buys food (or wood, stone) at 2, uncapped; can gold-for-food replace base food without the gold and influence glut?",
+  "table": "mixed",
+  "board": "shuffled",
+  "ruleset": {
+   "economy": {
+    "baseFood": 0,
+    "bank": {
+     "enabled": true,
+     "derivation": "uniform",
+     "baseline": {
+      "sell": 99,
+      "buy": 2
+     }
+    }
+   }
+  }
+ },
+ {
+  "name": "mixed-treasurer-100-slaves-3",
+  "line": "package: Treasurer at 100 and one unhappiness per 3 slaves instead of 2; do two rule changes put every build in 20-45%?",
+  "table": "mixed",
+  "board": "shuffled",
+  "ruleset": {
+   "victory": {
+    "minimums": {
+     "gold": 100
+    }
+   },
+   "economy": {
+    "slavesPerUnhappiness": 3
+   }
+  }
+ },
+ {
+  "name": "mixed-treasurer-60",
+  "line": "gold: Treasurer at 60, a middle dose between 30 and 100",
+  "table": "mixed",
+  "board": "shuffled",
+  "ruleset": {
+   "victory": {
+    "minimums": {
+     "gold": 60
+    }
+   }
+  }
+ }
+]

@@ -1,0 +1,10 @@
+{
+  "victory": {
+    "minimums": {
+      "gold": 100
+    }
+  },
+  "economy": {
+    "slavesPerUnhappiness": 3
+  }
+}
