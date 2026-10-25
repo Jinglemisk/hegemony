@@ -1,0 +1,11 @@
+arm control (1:9b065eb93415ff76/1:08e754de419b15ad)
+seat | capital from centre | on coast | slots | free land within 2 | colony from capital | colony non-contiguous | colony on coast | moorings | reach at start | food slots held | pops | food income | income
+  0  | 2.92 | 95% | 4.78 | 8.00 | 3.48 | 30 | 88% | 1.18 | 16.73 | 9.50 | 6.00 | -0.15 | 2.00
+  1  | 2.15 | 53% | 4.83 | 11.03 | 3.65 | 34 | 90% | 1.25 | 17.13 | 5.40 | 6.00 | -2.08 | 1.20
+  2  | 2.55 | 73% | 4.83 | 9.63 | 4.05 | 36 | 100% | 1.48 | 17.48 | 4.78 | 6.00 | -2.08 | 1.27
+  3  | 2.38 | 57% | 4.95 | 10.43 | 3.90 | 37 | 98% | 1.25 | 18.15 | 4.47 | 6.00 | -2.08 | 1.38
+capital on the rim (distance 3): 38 / 21 / 29 / 23
+capital resource food / wood / stone / gold / none, by seat: 40-0-0-0-0 | 40-0-0-0-0 | 39-0-1-0-0 | 33-1-6-0-0
+colony resource food / wood / stone / gold / none, by seat: 37-0-3-0-0 | 5-10-25-0-0 | 1-12-27-0-0 | 5-10-25-0-0
+games where the seat's capital is the most central (ties to the lower seat): 5 / 17 / 6 / 12
+seat 0 capital distance spread: 0: 0, 1: 1, 2: 1, 3: 38
