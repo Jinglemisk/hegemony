@@ -1,8 +1,9 @@
 # Archipelago batches: island hopping at 4 against any shore and Continental
 
 Date: 2026-10-25. Code: `4fdf564` (#145: `main` at `127bc65`, the last-colony bot fix #144 and
-the Archipelago board). The Continental masters control is #144's own batch at `9d47850`; #145's
-parity run shows the two play Continental identically. The batches ran one at a time on two
+the Archipelago board). The Continental masters control is the masters arm of the
+[last colony pick report](2026-10-25-last-colony-pick.md) (#144, `9d47850`), copied here as
+`conti-masters`; #145's parity run shows the two codes play Continental identically. The batches ran one at a time on two
 workers at the lowest CPU priority, 12:13 to 13:22.
 
 ## Question
