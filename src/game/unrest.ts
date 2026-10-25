@@ -132,6 +132,20 @@ export function unrestStatus(G: HegemonyState, playerID: PlayerId): UnrestStatus
   };
 }
 
+/** A tier's band of whole levels: calm has no ceiling (`top` null), revolt no floor. */
+export type UnrestBand = { tier: UnrestTier; top: number | null; bottom: number | null };
+
+/** Where {@link unrestStatus} puts each level, by the ruleset's lines, calm first. */
+export function unrestBands(G: HegemonyState): UnrestBand[] {
+  const { riotThreshold: riot, revoltThreshold: revolt } = G.ruleset.economy.unrest;
+  return [
+    { tier: "calm", top: null, bottom: 0 },
+    { tier: "discontent", top: -1, bottom: riot + 1 },
+    { tier: "unrest", top: riot, bottom: revolt + 1 },
+    { tier: "revolt", top: revolt, bottom: null },
+  ];
+}
+
 /** What ending the turn now sets off, and what calm bought first would change. */
 export interface TurnEndUnrest extends UnrestOutcome {
   tier: "riot" | "revolt";

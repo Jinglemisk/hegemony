@@ -90,6 +90,11 @@ export function settlementIdleSlaves(tile: HexTile, settlement: Settlement, G: H
   return settlement.pops.slaves - settlementWorkingSlaves(tile, settlement, G);
 }
 
+/** Slots neither built on nor worked: room for a slave or a building. */
+export function settlementUnworkedSlots(tile: HexTile, settlement: Settlement, G: HegemonyState) {
+  return settlementOpenSlots(tile, settlement, G) - settlementWorkingSlaves(tile, settlement, G);
+}
+
 export function settlementIncomeSource(tile: HexTile, settlement: Settlement) {
   return `${capitalize(settlement.kind)} on ${tile.terrain} ${tile.id}`;
 }

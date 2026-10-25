@@ -72,6 +72,16 @@ export function isCoastalTile(tile: AxialCell, tiles: readonly AxialCell[]) {
   return AXIAL_DIRECTIONS.some(({ q, r }) => !land.has(`${tile.q + q},${tile.r + r}`));
 }
 
+/** Which of a tile's six sides have open sea behind them, as indices into the axial
+ *  steps: side i faces the neighbour one step `i` away, and on the drawn board runs
+ *  from the corner at 60i − 30° to the one at 60i + 30°. The living map's surf. */
+export function openSeaSides(tile: AxialCell, tiles: readonly AxialCell[]) {
+  const land = landCells(tiles);
+  return AXIAL_DIRECTIONS.flatMap(({ q, r }, side) =>
+    land.has(`${tile.q + q},${tile.r + r}`) ? [] : [side],
+  );
+}
+
 /** A geometric vertex of the board: the three hex cells that meet at one point.
  *  Cells that hold no tile are open sea. */
 export interface BoardVertex {
