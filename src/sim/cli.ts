@@ -24,7 +24,7 @@ import type { GameCommand } from "../game/legalMoves";
 import { getAuthoredGameContent } from "../game/content";
 import { createGameDefinition } from "../game/definition";
 import { PLAYER_IDS } from "../game/data";
-import { GAME_MODES, mergeRulesetPatches } from "../game/ruleset";
+import { GAME_MODES, boardRulesetPatch, mergeRulesetPatches } from "../game/ruleset";
 import { lastYear } from "../game/year";
 import type { GameModeId } from "../game/ruleset";
 import { resolveTuning } from "../dev/tuning";
@@ -259,15 +259,18 @@ function distinctRotations(names: Record<PlayerId, string>): number[] {
   });
 }
 
-/** `--ruleset-patch p.json`, with `--years N|open` folded in as the game's length. */
-function parsePatch(flags: Flags): RulesetPatch | null {
+/** `--ruleset-patch p.json` over the board's own settings (Archipelago hops 3 hexes unless
+ *  the file sets `placement.seaReach`), with `--years N|open` folded in as the game's
+ *  length. Reports and saves record the result. */
+function parsePatch(flags: Flags, board: BoardLayout): RulesetPatch | null {
   const file =
     typeof flags["ruleset-patch"] === "string"
       ? (JSON.parse(readFileSync(flags["ruleset-patch"], "utf8")) as RulesetPatch)
       : null;
-  if (flags.years === undefined) return file;
+  const patch = boardRulesetPatch(board, file);
+  if (flags.years === undefined) return patch;
   const years = flags.years === "open" ? null : requirePositiveInt(flags.years, "--years");
-  return mergeRulesetPatches(file, { victory: { years } });
+  return mergeRulesetPatches(patch, { victory: { years } });
 }
 
 /** `--tune-patch p.json` reads the dev tune-panel override map (dot-path → value),
@@ -325,11 +328,11 @@ function parseOpening(flags: Flags, allowed: OpeningKind[]): OpeningKind {
 function cmdNew(flags: Flags, file: string) {
   const seed = flags.seed !== undefined ? requireInt(flags.seed, "--seed") : createCliSeed();
   const mode = parseMode(flags);
-  const patch = parsePatch(flags);
   const opening: OpeningKind = flags["manual-setup"]
     ? "manual"
     : parseOpening(flags, ["policy", "random", "fixed"]);
   const boardLayout = parseBoard(flags, opening === "fixed" ? "scenario" : "continental");
+  const patch = parsePatch(flags, boardLayout);
 
   const botSeed =
     flags["bot-seed"] !== undefined
@@ -775,8 +778,8 @@ function cmdBatch(flags: Flags) {
   }
 
   const mode = parseMode(flags);
-  const patch = parsePatch(flags);
   const boardLayout = parseBoard(flags);
+  const patch = parsePatch(flags, boardLayout);
   const opening = parseOpening(flags, ["policy", "random"]);
   const tune = parseTune(flags);
   const presetId = parseTuningPreset(flags);

@@ -8,11 +8,12 @@ import type { HexTile } from "./types";
  * The Archipelago board generator (docs/plans/board-modes.md, slice 0).
  *
  * A pure function of the seed and the terrain deck. It lays the whole deck as islands in
- * groups around the board's centre, where the oracle stands alone on its islet. Every draw
- * is checked against the limits below and redrawn when it breaks one; after
- * `ARCHIPELAGO_LIMITS.draws` failures a fixed board that passes them is dealt instead, so
- * setup can never hang. Match creation lays the `archipelago` layout with it, seeded from
- * the game's rng chain, and the chain goes on from the state it returns.
+ * groups around the board's centre. The oracle is dealt like any other card and lands on
+ * an island as part of it (owner, Q81): it only blocks a tile, so the centre would buy no
+ * balance. Every draw is checked against the limits below and redrawn when it breaks one;
+ * after `ARCHIPELAGO_LIMITS.draws` failures a fixed board that passes them is dealt
+ * instead, so setup can never hang. Match creation lays the `archipelago` layout with it,
+ * seeded from the game's rng chain, and the chain goes on from the state it returns.
  *
  * Distances are plain hex distances. A gap is the sea cells between two pieces of land:
  * islands one cell apart have tiles two hexes apart.
@@ -24,11 +25,12 @@ export interface Range {
 }
 
 export interface ArchipelagoLimits {
-  /** Settleable islands on a board. The oracle's islet is not one. */
+  /** Islands on a board. */
   islands: Range;
-  /** Tiles in a settleable island. */
+  /** Tiles in an island, the oracle's included. The island that holds the oracle keeps at
+   *  least two settleable tiles. */
   islandSize: Range;
-  /** Whether a settleable island may be a single tile. */
+  /** Whether an island may be a single tile. */
   islet: boolean;
   /** Hexes between an island's two farthest tiles: 4 allows a line of five, or a line of
    *  three with a two-tile arm off one end. */
@@ -117,11 +119,10 @@ export function generateArchipelago(
   limits: ArchipelagoLimits = ARCHIPELAGO_LIMITS,
 ): ArchipelagoBoard {
   const rng = seededDraw(seed);
-  const hasOracle = deck.some((card) => card.terrain === "oracle");
-  const land = deck.filter((card) => card.terrain !== "oracle").length;
+  const land = deck.length;
 
   for (let draw = 1; draw <= limits.draws; draw += 1) {
-    const islands = drawIslands(rng, land, limits, hasOracle);
+    const islands = drawIslands(rng, land, limits);
     if (!islands) continue;
     const tiles = dealTerrain(
       rng,
@@ -135,9 +136,7 @@ export function generateArchipelago(
   }
 
   if (FALLBACK_LAND.length !== land) {
-    throw new Error(
-      `the fallback archipelago holds ${FALLBACK_LAND.length} land tiles, not ${land}`,
-    );
+    throw new Error(`the fallback archipelago holds ${FALLBACK_LAND.length} tiles, not ${land}`);
   }
 
   const tiles = dealTerrain(rng, FALLBACK_ISLANDS, deck, limits);
@@ -163,8 +162,8 @@ function board(
 
 // ── Reading a board ──────────────────────────────────────────────────────────────────
 
-/** Islands and groups as the land lies: an island is a run of touching tiles, the oracle's
- *  lone islet excepted, and a group is islands chained by gaps of at most `groupGap.max`. */
+/** Islands and groups as the land lies: an island is a run of touching tiles, and a group is
+ *  islands chained by gaps of at most `groupGap.max`. */
 function describeArchipelago(
   tiles: readonly HexTile[],
   limits: Pick<ArchipelagoLimits, "groupGap">,
@@ -186,7 +185,7 @@ function describeArchipelago(
         }
       }
     }
-    if (!island.every((id) => byKey.get(id)!.terrain === "oracle")) islands.push(island);
+    islands.push(island);
   }
 
   const cells = islands.map((island) => island.map((id) => byKey.get(id)!));
@@ -244,6 +243,9 @@ export function checkArchipelago(tiles: readonly HexTile[], limits: ArchipelagoL
     if (islandSpanOf(island) > limits.islandSpan) {
       broken.push(`an island spanning ${islandSpanOf(island)} hexes`);
     }
+    if (island.filter((tile) => tile.terrain !== "oracle").length < 2) {
+      broken.push("an island with fewer than two settleable tiles");
+    }
   }
 
   if (!within(groups.length, limits.groups)) broken.push(`${groups.length} groups`);
@@ -272,12 +274,6 @@ export function checkArchipelago(tiles: readonly HexTile[], limits: ArchipelagoL
     }
   }
 
-  const oracle = tiles.filter((tile) => tile.terrain === "oracle");
-  if (
-    oracle.some((tile) => land.some((island) => gapBetween([tile], island) < limits.groupGap.min))
-  ) {
-    broken.push("the oracle's islet touching an island");
-  }
   if (tiles.some((tile) => hexDistance(tile, origin) > limits.mapRadius)) {
     broken.push("land beyond the map radius");
   }
@@ -381,12 +377,7 @@ const CENTRES_TRIED = 30;
 type Draw = ReturnType<typeof seededDraw>;
 type DrawnIsland = { cells: AxialCell[]; shape: IslandShape };
 
-function drawIslands(
-  rng: Draw,
-  land: number,
-  limits: ArchipelagoLimits,
-  hasOracle: boolean,
-): DrawnIsland[] | null {
+function drawIslands(rng: Draw, land: number, limits: ArchipelagoLimits): DrawnIsland[] | null {
   const groupCount = rng.between(limits.groups);
   const total = rng.between({
     min: Math.max(limits.islands.min, groupCount * limits.islandsPerGroup.min),
@@ -405,7 +396,6 @@ function drawIslands(
     (_, group) => turn + group * sector + (rng.next() - 0.5) * sector * HEADING_JITTER,
   );
   const placed: { cells: AxialCell[]; group: number; shape: IslandShape }[] = [];
-  const reserved = hasOracle ? [{ q: 0, r: 0 }] : [];
 
   for (let order = 0; order < Math.max(...counts); order += 1) {
     for (const [group, groupSizes] of plan.entries()) {
@@ -419,7 +409,6 @@ function drawIslands(
         headings[group],
         sector,
         placed,
-        reserved,
         limits,
       );
       if (!cells) return null;
@@ -464,7 +453,6 @@ function placeIsland(
   heading: number,
   sector: number,
   placed: readonly { cells: AxialCell[]; group: number }[],
-  reserved: readonly AxialCell[],
   limits: ArchipelagoLimits,
 ): AxialCell[] | null {
   const kin = placed.filter((island) => island.group === group).flatMap(({ cells }) => cells);
@@ -473,7 +461,6 @@ function placeIsland(
   const open = (cell: AxialCell) => {
     if (hexDistance(cell, origin) > limits.mapRadius) return false;
     if (Math.abs(angleBetween(angleOf(cell), heading)) > sector / 2) return false;
-    if (reserved.some((other) => hexDistance(cell, other) <= limits.groupGap.min)) return false;
     return placed.every(({ cells, group: other }) => {
       const nearest = Math.min(...cells.map((tile) => hexDistance(cell, tile)));
       return nearest > (other === group ? limits.groupGap.min : limits.channelGap.min);
@@ -626,9 +613,9 @@ function angleBetween(a: number, b: number) {
 // ── Dealing the terrain ──────────────────────────────────────────────────────────────
 
 /**
- * Lay the deck on the islands. The oracle takes the centre. Each landmark goes to its own
- * island; each group is then given one tile of every resource it lacks, so a seat can feed
- * and build inside its group; the rest of the deck is shuffled onto the rest of the land.
+ * Lay the deck on the islands. Each landmark goes to its own island; each group is then
+ * given one tile of every resource it lacks, so a seat can feed and build inside its group;
+ * the rest of the deck, the oracle included, is shuffled onto the rest of the land.
  */
 function dealTerrain(
   rng: Draw,
@@ -636,10 +623,8 @@ function dealTerrain(
   deck: TerrainDeck,
   limits: ArchipelagoLimits,
 ): HexTile[] {
-  const tiles = deck
-    .filter((card) => card.terrain === "oracle")
-    .map((card) => layCard({ q: 0, r: 0 }, card));
-  const cards = rng.shuffle(deck.filter((card) => card.terrain !== "oracle"));
+  const tiles: HexTile[] = [];
+  const cards = rng.shuffle([...deck]);
   const used = cards.map(() => false);
   const free = islands.map((island) => rng.shuffle([...island]));
   const laid = islands.map(() => [] as HexTile[]);
@@ -711,18 +696,19 @@ function seededDraw(seed: number) {
   };
 }
 
-/** The board dealt when every draw fails: one the generator drew (seed 8), three groups of
- *  three islands around the oracle. The deal still comes from the seed. */
+/** The board dealt when every draw fails: one the generator drew (seed 11), three groups of
+ *  three islands round the centre, 37 tiles with the oracle's. The deal still comes from the
+ *  seed. */
 const FALLBACK_ISLANDS: AxialCell[][] = [
-  "-4,5 -3,5 -4,6",
-  "-3,2 -2,2 -3,3 -2,3",
-  "-1,4 0,4 0,3 0,2",
-  "-3,-2 -2,-2 -3,-1 -2,-1",
-  "-2,-4 -1,-4 -1,-5 0,-5",
-  "0,-3 1,-3 0,-2 1,-2",
-  "3,-1 4,-1 4,-2 5,-2 5,-3",
-  "3,1 4,1 3,2 5,1 4,2",
-  "4,-5 5,-5 4,-4",
+  "-6,1 -5,1 -6,2",
+  "-5,3 -4,3 -5,4",
+  "-3,0 -2,0 -3,1 -2,1",
+  "-2,5 -1,5 0,5 1,5 2,4",
+  "-1,3 0,2 1,2 1,1 1,3",
+  "1,-3 1,-2 2,-4 3,-5",
+  "3,-2 4,-2 5,-2 5,-3 6,-2",
+  "3,1 4,1 3,2 5,1",
+  "4,-4 5,-5 6,-5 6,-6",
 ].map((island) =>
   island.split(" ").map((cell) => {
     const [q, r] = cell.split(",").map(Number);

@@ -44,9 +44,9 @@ export type GameOverReason = "victoryRace" | "deckExhausted";
 
 export type BuildingId = "marketplace" | "estate" | "forum" | "temple" | "granary" | "port";
 
-/** The six coastal luxury goods (docs/plans/luxury-goods.md §6, Q32). */
+/** The seven coastal luxury goods (docs/plans/luxury-goods.md §6): 2n − 1 for four seats. */
 export type LuxuryGoodId =
-  "tyrian-dye" | "pearls" | "coral" | "glassware" | "incense" | "fine-linen";
+  "tyrian-dye" | "pearls" | "coral" | "glassware" | "incense" | "fine-linen" | "silphium";
 
 export interface LuxuryGoodDefinition {
   id: LuxuryGoodId;

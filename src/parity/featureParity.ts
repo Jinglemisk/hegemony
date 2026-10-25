@@ -450,6 +450,7 @@ export const LUXURY_GOOD_CONTENT_IDS = [
   "glassware",
   "incense",
   "fine-linen",
+  "silphium",
 ] as const satisfies readonly LuxuryGoodId[];
 
 export const TERRAIN_CONTENT_IDS = [

@@ -8,15 +8,16 @@ import { createGameDefinition, createModeDefinition } from "./definition";
 import { enumerateLegalCommands, transition } from "./legalMoves";
 import { assertGameInvariants } from "./invariants";
 import { hexDistance } from "./mapTopology";
-import { deriveRuleset } from "./ruleset";
+import { boardRulesetPatch, deriveRuleset } from "./ruleset";
 import { canPlaceColonyOnTile } from "./settlement";
 import { createInitialStateFromDefinition } from "./state";
 import type { HexTile, PlayerId } from "./types";
 
 const DEFINITION = createModeDefinition("standard");
 const DECK = getTerrainDeck(DEFINITION.content);
-const HOP_4 = createGameDefinition({
-  ruleset: deriveRuleset(DEFINITION.ruleset, { placement: { seaReach: 4 } }),
+/** The rules a game on the Archipelago board plays by: the board's own patch. */
+const ARCHIPELAGO_RULES = createGameDefinition({
+  ruleset: deriveRuleset(DEFINITION.ruleset, boardRulesetPatch("archipelago")!),
   content: DEFINITION.content,
 });
 const SEEDS = Array.from({ length: 200 }, (_, index) => index + 1);
@@ -34,11 +35,43 @@ describe("archipelago generator", () => {
     }
   });
 
+  it("deals the oracle onto an island with two settleable tiles beside it, on 200 seeds", () => {
+    const cells = new Set<string>();
+    for (const seed of SEEDS) {
+      const board = generateArchipelago(seed, DECK);
+      const oracle = board.tiles.find((tile) => tile.terrain === "oracle")!;
+      const byId = new Map(board.tiles.map((tile) => [tile.id, tile]));
+      const holding = board.layout.islands.filter((island) => island.includes(oracle.id));
+      expect(holding, `seed ${seed}`).toHaveLength(1);
+      const settleable = holding[0].filter((id) => byId.get(id)!.terrain !== "oracle");
+      expect(settleable.length, `seed ${seed}`).toBeGreaterThanOrEqual(2);
+      cells.add(oracle.id);
+    }
+    // Dealt like any card, not set at the centre.
+    expect(cells.size).toBeGreaterThan(50);
+  });
+
+  it("flags an island with fewer than two settleable tiles", () => {
+    const tiles = generateArchipelago(1, DECK).tiles;
+    const oracle = tiles.find((tile) => tile.terrain === "oracle")!;
+    const beside = tiles.find((tile) => hexDistance(tile, oracle) === 1)!;
+    // The oracle and one neighbour, cut off from the rest of their island.
+    const cut = tiles.filter(
+      (tile) =>
+        tile === oracle ||
+        tile === beside ||
+        (hexDistance(tile, oracle) > 1 && hexDistance(tile, beside) > 1),
+    );
+    expect(checkArchipelago(cut, ARCHIPELAGO_LIMITS)).toContainEqual(
+      "an island with fewer than two settleable tiles",
+    );
+  });
+
   it("lays a match's board from its seed, goods and bank rates included", () => {
     const G = createInitialStateFromDefinition(DEFINITION, 7, "archipelago");
     expect(createInitialStateFromDefinition(DEFINITION, 7, "archipelago")).toEqual(G);
     expect(checkArchipelago(G.board.tiles, ARCHIPELAGO_LIMITS)).toEqual([]);
-    expect(G.board.luxuries).toHaveLength(G.ruleset.economy.luxury.coastalGoods);
+    expect(G.board.luxuries).toHaveLength(7);
     expect(G.bank).toEqual(deriveBankRates(G.board.tiles, G.ruleset.economy.bank));
     expect(createInitialStateFromDefinition(DEFINITION, 8, "archipelago").board.tiles).not.toEqual(
       G.board.tiles,
@@ -47,8 +80,8 @@ describe("archipelago generator", () => {
   });
 
   it.each([
+    ["the board's hop 3", ARCHIPELAGO_RULES],
     ["any shore", DEFINITION],
-    ["hop 4", HOP_4],
   ])("gives four legal starts with room to grow on 200 matches, %s", (_, definition) => {
     for (const seed of SEEDS) {
       let G = createInitialStateFromDefinition(definition, seed, "archipelago");
@@ -113,5 +146,32 @@ describe("archipelago generator", () => {
       expect(checkArchipelago(board.tiles, ARCHIPELAGO_LIMITS), `seed ${seed}`).toEqual([]);
       expect(cardsOf(board.tiles)).toEqual(cardsOf(DECK));
     }
+  });
+});
+
+describe("the Archipelago board's settings", () => {
+  it("hops 3 hexes across water unless the patch given sets the reach", () => {
+    expect(boardRulesetPatch("archipelago")).toEqual({ placement: { seaReach: 3 } });
+    expect(boardRulesetPatch("archipelago", { victory: { years: 6 } })).toEqual({
+      placement: { seaReach: 3 },
+      victory: { years: 6 },
+    });
+    expect(boardRulesetPatch("archipelago", { placement: { seaReach: 4 } })).toEqual({
+      placement: { seaReach: 4 },
+    });
+    expect(boardRulesetPatch("archipelago", { placement: { seaReach: null } })).toEqual({
+      placement: { seaReach: null },
+    });
+    expect(ARCHIPELAGO_RULES.ruleset.placement.seaReach).toBe(3);
+  });
+
+  it("leaves Continental and Scenario with any shore", () => {
+    for (const board of ["continental", "scenario"] as const) {
+      expect(boardRulesetPatch(board)).toBeNull();
+      expect(boardRulesetPatch(board, { victory: { years: 6 } })).toEqual({
+        victory: { years: 6 },
+      });
+    }
+    expect(DEFINITION.ruleset.placement.seaReach).toBeNull();
   });
 });

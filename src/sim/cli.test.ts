@@ -1,11 +1,12 @@
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { availableParallelism, tmpdir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
+import type { SaveFile } from "./io";
 import type { BatchReport } from "./telemetry";
 
 const CLI = fileURLToPath(new URL("./cli.ts", import.meta.url));
@@ -65,4 +66,41 @@ describe("batch --jobs", () => {
     },
     500_000,
   );
+});
+
+describe("--board archipelago", () => {
+  it("hops 3 hexes unless the ruleset patch sets the reach, and records the patch", () => {
+    const dir = mkdtempSync(join(tmpdir(), "hegemony-board-"));
+    const saved = (...args: string[]) => {
+      const file = join(dir, "save.json");
+      execFileSync(
+        process.execPath,
+        [
+          "--import",
+          "tsx",
+          CLI,
+          "new",
+          "--seed",
+          "7",
+          "--manual-setup",
+          "--board",
+          "archipelago",
+        ].concat(args, ["--file", file]),
+        { encoding: "utf8", timeout: 60_000 },
+      );
+      return JSON.parse(readFileSync(file, "utf8")) as SaveFile;
+    };
+
+    try {
+      const board = saved();
+      expect(board.rulesetPatch).toEqual({ placement: { seaReach: 3 } });
+      expect(board.state.ruleset.placement.seaReach).toBe(3);
+
+      const anyShore = join(dir, "any-shore.json");
+      writeFileSync(anyShore, JSON.stringify({ placement: { seaReach: null } }));
+      expect(saved("--ruleset-patch", anyShore).state.ruleset.placement.seaReach).toBeNull();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 120_000);
 });

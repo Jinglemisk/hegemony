@@ -788,7 +788,7 @@ describe("political policy", () => {
     const voices = new Set<string>();
     let capped = 0;
     const years = yearDeckSize(scenario().build());
-    for (const seed of [2, 3, 4]) {
+    for (const seed of [2, 3, 5]) {
       const G = runGame({
         seed,
         mode: "standard",

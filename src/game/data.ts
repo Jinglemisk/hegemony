@@ -268,8 +268,8 @@ export const BUILDINGS: BuildingDefinition[] = [
   },
 ];
 
-/** The six coastal luxury goods (luxury-goods.md §6, Q32 accepted). Order is the
- *  authored seating order onto the board's selected moorings. */
+/** The seven coastal luxury goods (luxury-goods.md §6): 2n − 1 for four seats (owner, Q81).
+ *  Order is the authored seating order onto the board's selected moorings. */
 export const LUXURY_GOODS: LuxuryGoodDefinition[] = [
   { id: "tyrian-dye", name: "Tyrian Dye", flavour: "the murex trade" },
   { id: "pearls", name: "Pearls", flavour: "deep-water diving" },
@@ -277,6 +277,7 @@ export const LUXURY_GOODS: LuxuryGoodDefinition[] = [
   { id: "glassware", name: "Glassware", flavour: "eastern kilns" },
   { id: "incense", name: "Incense", flavour: "the southern routes" },
   { id: "fine-linen", name: "Fine Linen", flavour: "riverine weaving" },
+  { id: "silphium", name: "Silphium", flavour: "the Cyrenaic steppe" },
 ];
 
 // ── Terrain deck (v2 work slots, ruled 2026-10-01) ──────────────────────────────────
