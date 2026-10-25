@@ -204,8 +204,8 @@ function parseMode(flags: Flags): GameModeId {
 function parseBoard(flags: Flags, fallback: BoardLayout = "continental"): BoardLayout {
   const board = typeof flags.board === "string" ? flags.board : fallback;
 
-  if (board !== "continental" && board !== "scenario") {
-    fail(`unknown board "${board}" — expected continental or scenario`);
+  if (board !== "continental" && board !== "archipelago" && board !== "scenario") {
+    fail(`unknown board "${board}" — expected continental, archipelago or scenario`);
   }
 
   return board;
@@ -986,7 +986,7 @@ const HELP = `Hegemony headless sim — usage: npm run sim -- <command> [args] [
 Save file defaults to ${DEFAULT_SAVE_PATH}.
 
   new        --seed N [--mode standard|fastStart|deathmatch] [--ruleset-patch p.json] [--years N|open]
-             [--manual-setup | --opening policy|random|fixed] [--bot-seed N] [--board continental|scenario]
+             [--manual-setup | --opening policy|random|fixed] [--bot-seed N] [--board continental|archipelago|scenario]
              [--policy ${POLICY_IDS}] [--seats ${POLICY_IDS}×4]
   show       [--json] [--player 0..3]
   log        [--tail N]
@@ -1008,7 +1008,7 @@ Save file defaults to ${DEFAULT_SAVE_PATH}.
              index <N>                     apply the Nth move from \`legal\`
   end-turn
   auto       [--turns N] [--policy ${POLICY_IDS}] [--seats ${POLICY_IDS}×4] [--record s.json] [--quiet]
-  batch      --games N [--turns N] [--policy ${POLICY_IDS}] [--seed N] [--board continental|scenario]
+  batch      --games N [--turns N] [--policy ${POLICY_IDS}] [--seed N] [--board continental|archipelago|scenario]
              [--opening policy|random]
              [--ruleset-patch p.json] [--years N|open] [--tune-preset low-number-core-v1] [--tune-patch p.json]
              [--seats ${POLICY_IDS}×4] [--rotate]

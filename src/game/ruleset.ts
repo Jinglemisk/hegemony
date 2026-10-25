@@ -163,6 +163,11 @@ export interface PlacementRules {
   /** Coastal leapfrog (roadmap-appendix Q13a): holding any settlement on a coastal
    *  tile lets you found colonies on any other coastal tile — sailing, not teleporting. */
   coastalLeapfrog: boolean;
+  /** Island hopping (board-modes plan, Q81): founding across water reaches only coastal
+   *  tiles within this many hexes of one of the seat's own coastal settlements, in play
+   *  and on the founding voyage, where the capital is the only one. Null is any shore to
+   *  any shore. Founding beside an own settlement is never limited. */
+  seaReach: number | null;
   /** A tile holds at most this many colonies (and no city may share). Two colonies may
    *  work one chora; the third is refused (post-sprint-debt §2.6 — was inline `>= 2`). */
   maxColoniesPerTile: number;
@@ -245,6 +250,7 @@ export const DEFAULT_RULESET: Ruleset = {
   placement: {
     colonyContiguity: true,
     coastalLeapfrog: true,
+    seaReach: null,
     maxColoniesPerTile: 2,
     cityExclusionRadius: 1,
   },

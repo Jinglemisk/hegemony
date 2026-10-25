@@ -4,34 +4,25 @@ import { ARCHIPELAGO_LIMITS, checkArchipelago, generateArchipelago } from "./arc
 import { deriveBankRates } from "./bank";
 import { getTerrainDeck } from "./content";
 import { mulberry32 } from "./core/rng";
-import { createModeDefinition } from "./definition";
+import { createGameDefinition, createModeDefinition } from "./definition";
 import { enumerateLegalCommands, transition } from "./legalMoves";
-import { createLuxuryAssets } from "./luxury";
+import { assertGameInvariants } from "./invariants";
 import { hexDistance } from "./mapTopology";
+import { deriveRuleset } from "./ruleset";
 import { canPlaceColonyOnTile } from "./settlement";
 import { createInitialStateFromDefinition } from "./state";
-import type { HegemonyState, HexTile, PlayerId } from "./types";
+import type { HexTile, PlayerId } from "./types";
 
 const DEFINITION = createModeDefinition("standard");
 const DECK = getTerrainDeck(DEFINITION.content);
+const HOP_4 = createGameDefinition({
+  ruleset: deriveRuleset(DEFINITION.ruleset, { placement: { seaReach: 4 } }),
+  content: DEFINITION.content,
+});
 const SEEDS = Array.from({ length: 200 }, (_, index) => index + 1);
 
 const cardsOf = (tiles: readonly Pick<HexTile, "terrain" | "slots">[]) =>
   tiles.map(({ terrain, slots }) => `${terrain}:${slots}`).sort();
-
-/** A new match with the generated board in place of the disc, its goods and bank rates
- *  derived from it the way match creation derives them. */
-function matchOn(tiles: HexTile[], seed: number): HegemonyState {
-  const G = createInitialStateFromDefinition(DEFINITION, seed, "continental");
-  const identity = { nextEntityId: 1 };
-  const luxuries = createLuxuryAssets(identity, tiles, G.ruleset, G.definition.content, seed);
-  return {
-    ...G,
-    nextEntityId: identity.nextEntityId,
-    board: { tiles, luxuries },
-    bank: deriveBankRates(tiles, G.ruleset.economy.bank),
-  };
-}
 
 describe("archipelago generator", () => {
   it("meets every limit and lays the whole deck on 200 seeds", () => {
@@ -43,9 +34,24 @@ describe("archipelago generator", () => {
     }
   });
 
-  it("gives four legal starts with room to grow on 200 seeds", () => {
+  it("lays a match's board from its seed, goods and bank rates included", () => {
+    const G = createInitialStateFromDefinition(DEFINITION, 7, "archipelago");
+    expect(createInitialStateFromDefinition(DEFINITION, 7, "archipelago")).toEqual(G);
+    expect(checkArchipelago(G.board.tiles, ARCHIPELAGO_LIMITS)).toEqual([]);
+    expect(G.board.luxuries).toHaveLength(G.ruleset.economy.luxury.coastalGoods);
+    expect(G.bank).toEqual(deriveBankRates(G.board.tiles, G.ruleset.economy.bank));
+    expect(createInitialStateFromDefinition(DEFINITION, 8, "archipelago").board.tiles).not.toEqual(
+      G.board.tiles,
+    );
+    assertGameInvariants(G, { strictCardConservation: true });
+  });
+
+  it.each([
+    ["any shore", DEFINITION],
+    ["hop 4", HOP_4],
+  ])("gives four legal starts with room to grow on 200 matches, %s", (_, definition) => {
     for (const seed of SEEDS) {
-      let G = matchOn(generateArchipelago(seed, DECK).tiles, seed);
+      let G = createInitialStateFromDefinition(definition, seed, "archipelago");
       let pick = seed;
       while (G.phase === "setupCapital" || G.phase === "setupColony") {
         const commands = enumerateLegalCommands(G, G.currentPlayer);
@@ -61,6 +67,7 @@ describe("archipelago generator", () => {
         expect(result.ok).toBe(true);
         if (result.ok) G = result.state;
       }
+      assertGameInvariants(G);
 
       for (const player of ["0", "1", "2", "3"] as PlayerId[]) {
         expect(G.players[player].settlements).toHaveLength(2);

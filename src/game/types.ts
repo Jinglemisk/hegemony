@@ -29,9 +29,10 @@ export type SettlementKind = "capital" | "city" | "colony";
 export type Phase =
   "setupIdeas" | "setupCapital" | "setupCity" | "setupColony" | "gameplay" | "gameOver";
 
-/** How the terrain deck is laid onto the board: a seeded shuffle (`continental`), or the
+/** How the terrain deck is laid onto the board: a seeded shuffle over one disc
+ *  (`continental`), seeded islands in groups (`archipelago`, game/archipelago.ts), or the
  *  fixed authored layout the tests and the scripted opening use (`scenario`). */
-export type BoardLayout = "continental" | "scenario";
+export type BoardLayout = "continental" | "archipelago" | "scenario";
 
 /** The scoreboard metrics victory cards race on (see game/victory.ts). `voice` is the
  *  count of standing Laws a player authored. */

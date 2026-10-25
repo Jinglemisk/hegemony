@@ -11,6 +11,7 @@ export const GAME_CONFIG = {
   mode: "standard" as GameModeId,
   // "continental" = seeded random layout (owner call 2026-07-18: the board should vary
   // each game — the oracle and landmarks land wherever the shuffle drops them);
+  // "archipelago" = seeded islands in groups (board-modes plan);
   // "scenario" = the authored fixed board. The UI overrides via ?board=, and
   // ?dev=preload always forces scenario (its scripted opening is tied to fixed tiles).
   // NOTE: the shuffle is still UNCONSTRAINED — landmarks can cluster and seats can be
