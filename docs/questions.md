@@ -4,7 +4,7 @@ Only unresolved owner decisions live here. Answer in chat or after `Answer:`; th
 answer is then incorporated into the affected plan and this entry is removed.
 Recommendations are defaults for discussion, not silent authorization.
 
-Last updated: 2026-10-22.
+Last updated: 2026-10-25.
 
 ## Q80 — What shape should Step 11 take?
 
@@ -107,5 +107,47 @@ Step 20's economy and lands within a unit or two of its figures above.
   end of 39: its gold piles up with no bank to spend it in, yet it still loses 3.3 pops a
   seat-game to hunger. That is part rules, part bot, and only a mixed table shows it. With
   trade and no base food the four builds win 20 to 33%.
+
+**Answer:**
+
+## Q82 — When does a standing deal settle?
+
+**Context:** A recurring deal is a yearly exchange between two seats that stands until one of
+them cancels it. Your draft settles it in the turn of whichever of the two plays first that
+year, and you doubted it was fair. The [recurring-deals plan](plans/recurring-deals.md)'s
+builder's proposal works one example under three timings: seat 1's 3 food for seat 3's 1 stone,
+years 1 to 4. The turn order turned up two things. Seats across the table, like 1 and 3, each
+play first two years in four, but between neighbours the seat behind plays first only in the
+year it opens, all game. And a seat waits two turns between its own for three years, then six
+after it opens a year, so paying on your own turn leaves gaps.
+
+**Options:**
+
+- **Timing.**
+  - A, your draft: right after the earlier seat's income. Each seat gets one exchange between
+    two of its turns. But the seat playing second keeps its side in stock, a seat pays twice in
+    the turn it loses first place, and between neighbours the seat behind keeps its side three
+    years in four.
+  - B: each side pays on its own turn, from the income it just collected. One side always pays
+    before it is paid, and once every four years each seat goes a turn without its delivery: a
+    seat buying food meets its hunger check without it.
+  - C: every deal settles as the year turns, after the year card and before any sitting. Both
+    pay at once from what they kept, and both are paid before their next income. The seat
+    order changes nothing. Each side keeps one payment in stock while the deal stands.
+- **Missed payment.** Nothing moves that year, and then: A, the deal stands; B, the deal ends;
+  C, it ends after two misses in a row.
+- **The rest, as proposed.** Say if any of these is wrong:
+  - nothing moves when a deal is made, and the first exchange is the next settlement;
+  - either seat cancels for free on its own turn, at once, but not in the Assembly's
+    preparation;
+  - resources only: no pops, which would travel and need room every year, and no luxury goods,
+    which are owned once;
+  - one deal per pair, and a new one replaces the old;
+  - deals are public: partner discs on the alarms row, a line in the income forecast, and each
+    seat's deals on its tooltip and realm page.
+
+**Recommendation:** Timing C, missed payment B, and the rest as proposed. C is the only timing
+where the seat order changes nothing. Under C a seat misses only by ending its turn without its
+side, or through its own riot roll, so a miss is a cancel by another name.
 
 **Answer:**
