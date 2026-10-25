@@ -48,7 +48,7 @@ precedes full multiplayer.
 | [Code health](plans/code-health.md)                 | post-v2  | `active`   | Five cleanup PRs before trade; all merged, trade next                             |
 | [Player trade](plans/player-trade.md)               | post-v2  | `active`   | PRs #131 and #132 merged; batches reported; the owner plays trade next            |
 | [Development deck](plans/development-deck.md)       | post-v2  | `proposed` | Replaces Ventures; follows both trade PRs                                         |
-| [Board modes](plans/board-modes.md)                 | post-v2  | `proposed` | Continental and Archipelago; the builder's proposal goes to the owner first       |
+| [Board modes](plans/board-modes.md)                 | post-v2  | `proposed` | The Archipelago generator is validated (Q81); slice 1 next                        |
 | [Recurring deals](plans/recurring-deals.md)         | post-v2  | `proposed` | Yearly standing trades; the builder proposes the settlement timing first          |
 | [Game settings](plans/game-settings.md)             | post-v2  | `proposed` | Classic plus per-game settings; length and base income built in the engine        |
 | [National Ideas](plans/national-ideas.md)           | v2       | `active`   | Step 9 shipped (#88); twelve v2 rules, open setup draft (#95), influence purchase |

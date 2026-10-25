@@ -109,3 +109,55 @@ Step 20's economy and lands within a unit or two of its figures above.
   trade and no base food the four builds win 20 to 33%.
 
 **Answer:**
+
+## Q81 — Approve the Archipelago generator, and which sea rule?
+
+**Context:** The generator is built and validated over 1,000 seeds
+([report](reports/simulation/2026-10-25-archipelago-generator.md)). It lays today's whole
+37-tile deck as 6 to 9 islands of 3 to 7 tiles, in 3 or 4 groups of 2 or 3 islands, around the
+oracle alone at the centre. Islands of a group are one sea cell apart, groups two or three. No
+board broke a limit, none needed the fallback, and every board gave four legal starts. Each
+group holds plains, forest and mountain; each landmark sits on its own island; six goods reach
+every group. The board draws about 1.6 times as wide as today's disc, so its tiles draw at
+about 60% of today's size.
+
+On these boards nearly every tile is coastal, so today's rule (any shore reaches any shore) lets
+every seat found on 26 or 27 sites, and the bots' founding colonies land in another group 74% of
+the time. Island hopping limits founding across water to N hexes from one of the seat's own
+coastal settlements. By the bots' placement score after four capitals, seat 0 leads seat 3 by:
+
+|                        | Lead | Seat 0 best placed | Sites a seat reaches |
+| ---------------------- | ---- | ------------------ | -------------------- |
+| Continental, today     | 5.5  | 45%                | 11 to 14             |
+| Archipelago, today     | 5.2  | 91%                | 27                   |
+| Hop 4                  | 7.9  | 46%                | 9 to 11              |
+| Hop 3                  | 9.6  | 61%                | 6 to 7               |
+| Hop 2                  | 9.8  | 83%                | 4 to 5               |
+| Own group, Port across | 9.9  | 58%                | 8                    |
+| No leapfrog, or a Port | 11.4 | 99%                | 2 to 3               |
+
+A 5-slot tile among a seat's best three sites is worth 10 points. The score sees position, not
+tempo: under today's rule the first seat's edge is moving first on a shared coast, which only
+batches show. With the founding voyage at setup held to the same reach, every seat still has
+somewhere to found once setup ends at hop 3 and hop 4 (median 7 and 12 sites); no leapfrog leaves
+64 of 4,000 seats with none.
+
+**Options:**
+
+- **Generator:** A: approve the defaults as drawn. B: approve with named limits changed (for
+  example `mapRadius`, `groups` or `channelGap`).
+- **Sea rule in play:** A: today's. B: hop 2. C: hop 3. D: hop 4. E: free within the own group, a
+  Port to cross to another (needs a Port that can be built without a good). F: a Port to cross
+  water.
+- **Founding voyage at setup:** A: any coastal tile, as today. B: the same reach as in play,
+  measured from the capital.
+- **Continental:** A: keeps unlimited reach. B: takes the same limit. The range is one ruleset
+  number, so neither branches on the board's name.
+- **Goods:** A: keep six, evenly spaced. B: scale them with the moorings.
+
+**Recommendation:** Generator A, sea rule D (hop 4), voyage B, Continental A until the
+leapfrog-off batch reports, goods A. Hop 4 cuts each seat's reach to its own group and the
+shores facing it while holding the first pick to Continental's worth. Choose hop 3 instead if
+the islands should bite harder.
+
+**Answer:**
