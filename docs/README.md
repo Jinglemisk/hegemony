@@ -23,8 +23,11 @@ owner set base income to 0 and asked for three specs: [board modes](plans/board-
 **Next (owner, 2026-10-25), in waves of at most three agents with an owner checkpoint after
 each:**
 
-1. A confirming batch without base income, the Archipelago and recurring-deals proposals,
-   and board slice 1 (topology; shuffled becomes `continental`, classic becomes `scenario`).
+1. A confirming batch without base income, the Archipelago generator and its validation, the
+   recurring-deals proposal, and board slice 1 (topology; shuffled becomes `continental`,
+   classic becomes `scenario`). Then, in sequence overnight:
+   - a batch with the coastal leapfrog off, to test whether it causes seat 0's lead;
+   - one starting-bonus test, built on a single stated hypothesis rather than a sweep.
 2. The Archipelago build, and recurring deals between people.
 3. Bots for deals, the game-settings model and setup screen, then batches one at a time.
 
