@@ -1,14 +1,16 @@
-import { AXIAL_DIRECTIONS, occupiedCoordinates } from "./map";
 import { shuffleWithSeed } from "./core/rng";
 
 /**
- * Board vertex topology (docs/plans/luxury-goods.md, slice 1).
+ * The board's topology (docs/plans/board-modes.md): which cells hold land, which tiles
+ * border each other, where the coast is, and the vertices the luxury goods moor at.
+ * Every rule, bot and renderer that asks a question about the board's shape asks it
+ * here, of the tiles themselves. Nothing reads the layout's name or the builder's
+ * radius, so any board the builder lays has the same coast in every rule.
  *
- * A luxury good sits at the shared vertex of two coastal tiles, claimable by a Port
- * on either. Everything here is pure geometry over tile coordinates: vertex identity
- * is the sorted triple of hex cells that meet at the point, never a floating-point
- * position, so engine rules and replays can name a vertex without ever agreeing on
- * pixel maths with the renderer.
+ * Everything here is pure geometry over tile coordinates: vertex identity is the
+ * sorted triple of hex cells that meet at the point, never a floating-point position,
+ * so engine rules and replays can name a vertex without ever agreeing on pixel maths
+ * with the renderer.
  */
 
 export type BoardVertexId = string;
@@ -16,6 +18,53 @@ export type BoardVertexId = string;
 export interface AxialCell {
   q: number;
   r: number;
+}
+
+/** Axial neighbour steps, one per hex edge. Order is arbitrary but fixed. */
+const AXIAL_DIRECTIONS = [
+  { q: 1, r: 0 },
+  { q: 0, r: 1 },
+  { q: -1, r: 1 },
+  { q: -1, r: 0 },
+  { q: 0, r: -1 },
+  { q: 1, r: -1 },
+] as const;
+
+/** Cache of the land cells per board, so the per-tile shoreline test doesn't rebuild
+ *  the set inside the sim's move-enumeration loops. Keyed weakly on the tiles array
+ *  itself: coordinates never change within a match, and a new array simply computes a
+ *  new set. */
+const landByBoard = new WeakMap<readonly AxialCell[], ReadonlySet<string>>();
+
+/** The cells that hold a tile, as "q,r" keys. Every other cell is open sea. */
+function landCells(tiles: readonly AxialCell[]): ReadonlySet<string> {
+  let land = landByBoard.get(tiles);
+  if (!land) {
+    land = new Set(tiles.map(cellKey));
+    landByBoard.set(tiles, land);
+  }
+  return land;
+}
+
+/** Hex distance between two cells, counting sea cells like land. */
+export function hexDistance(a: AxialCell, b: AxialCell) {
+  const aS = -a.q - a.r;
+  const bS = -b.q - b.r;
+  return (Math.abs(a.q - b.q) + Math.abs(a.r - b.r) + Math.abs(aS - bS)) / 2;
+}
+
+/** Whether two cells share an edge. */
+export function areNeighbours(a: AxialCell, b: AxialCell) {
+  return hexDistance(a, b) === 1;
+}
+
+/** The shoreline: any tile with open sea behind at least one edge. Asked of the actual
+ *  board, so an irregular map or an internal inlet is coastal in every rule that reads
+ *  it — the coastal-leapfrog placement rule (roadmap-appendix Q13a), the founding
+ *  colony's voyage (Q12), the Port, and the luxury moorings below. */
+export function isCoastalTile(tile: AxialCell, tiles: readonly AxialCell[]) {
+  const land = landCells(tiles);
+  return AXIAL_DIRECTIONS.some(({ q, r }) => !land.has(`${tile.q + q},${tile.r + r}`));
 }
 
 /** A geometric vertex of the board: the three hex cells that meet at one point.
@@ -57,7 +106,7 @@ function canonicalCells(cells: AxialCell[]): [AxialCell, AxialCell, AxialCell] {
  * and shared corners deduplicate through the canonical id.
  */
 export function boardVertices(tiles: readonly AxialCell[]): BoardVertex[] {
-  const occupied = occupiedCoordinates(tiles);
+  const land = landCells(tiles);
   const byId = new Map<BoardVertexId, BoardVertex>();
 
   for (const tile of tiles) {
@@ -75,7 +124,7 @@ export function boardVertices(tiles: readonly AxialCell[]): BoardVertex[] {
         byId.set(id, {
           id,
           cells,
-          tileIds: cells.map(cellKey).filter((key) => occupied.has(key)),
+          tileIds: cells.map(cellKey).filter((key) => land.has(key)),
         });
       }
     }

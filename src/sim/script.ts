@@ -33,7 +33,7 @@ export type ScriptFile = {
   definition: GameDefinition;
   opening: OpeningKind;
   /** Terrain layout to rebuild from. Optional so pre-existing scripts still parse
-   *  (they fall back to the classic default). */
+   *  (they fall back to the scenario default). */
   boardLayout: BoardLayout;
   /** Where the bot decision stream is parked after the recorded moves. Optional so
    *  pre-existing scripts still parse; carried through so a CONTINUED replay resumes

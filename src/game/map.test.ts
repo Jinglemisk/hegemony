@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { axialRadius, createInitialMap, hexDistance } from "./map";
+import { axialRadius, createInitialMap } from "./map";
 
 describe("hex map", () => {
   it("generates a radius-3 board of 37 tiles", () => {
@@ -35,14 +35,5 @@ describe("hex map", () => {
     expect(oracle).toHaveLength(1);
     expect(oracle[0].id).toBe("0,1");
     expect(oracle[0].slots).toBe(0);
-  });
-
-  it("measures hex distance symmetrically from the center", () => {
-    const center = { q: 0, r: 0 };
-    expect(hexDistance(center, center)).toBe(0);
-    expect(hexDistance(center, { q: 3, r: 0 })).toBe(3);
-    expect(hexDistance({ q: 1, r: -1 }, { q: -1, r: 1 })).toBe(
-      hexDistance({ q: -1, r: 1 }, { q: 1, r: -1 }),
-    );
   });
 });

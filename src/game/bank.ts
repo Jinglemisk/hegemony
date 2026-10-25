@@ -22,7 +22,7 @@ export const TRADABLE_MATERIALS: TradableMaterial[] = ["wood", "stone", "food"];
  * the supply). `scarcity` classes materials by tile count: the strictly most common
  * sells worse (abundant), the strictly rarest sells better and costs more (scarce),
  * everything else is baseline. One step off baseline, computed once, static all game
- * — Classic always prices the same, each Shuffled board gets its own texture.
+ * — the scenario board always prices the same, each continental board gets its own texture.
  */
 export function deriveBankRates(tiles: HexTile[], rules: BankRules): BankRates {
   const uniform: BankRates = {

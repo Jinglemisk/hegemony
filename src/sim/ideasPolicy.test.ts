@@ -204,7 +204,7 @@ describe("scores setup Ideas and in-play purchases", () => {
       turns: 56,
       policy: "master",
       mode: "standard",
-      boardLayout: "classic",
+      boardLayout: "scenario",
       opening: "policy",
       baseSeed: 1,
       botSeedRule: "test",

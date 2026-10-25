@@ -1442,7 +1442,7 @@ function luxuryClaimReach(G: HegemonyState, playerID: PlayerId): number {
 }
 
 /** A reachable future claim is a thumb on the scale, not a mandate: at half a
- *  realized claim's value the capital abandoned the classic board's food-10
+ *  realized claim's value the capital abandoned the scenario board's food-10
  *  breadbasket for a mooring, which trades certain income for an option. Sized
  *  like a good frontier tile instead — it breaks ties toward the coast and no
  *  more; the A/B campaigns own the fine tuning. */

@@ -4,7 +4,7 @@ import { createGame, endTurn, nextPlayer } from "./turn";
 import type { HegemonyState } from "./types";
 
 // Opt into the scripted 4-player two-city opening (dev preload, off by default).
-const preloadedGame = (seed: number) => createGame(seed, undefined, "classic", true);
+const preloadedGame = (seed: number) => createGame(seed, undefined, "scenario", true);
 
 // A player event drawn during income collection blocks endTurn; clear it first to
 // exercise the turn transition itself (as resolving the event would in the UI).

@@ -39,7 +39,7 @@ it("queues Damon's riot result, then the turn notice, before Nikos's event", () 
   let G = buildNewGame({
     seed: 42,
     mode: "standard",
-    boardLayout: "classic",
+    boardLayout: "scenario",
     opening: "fixed",
     simRng: createSimRng(deriveBotSeed(42)),
   });
@@ -109,7 +109,7 @@ it("seats the Assembly in a modal that folds to a read-only dock and keeps a dra
   const start = buildNewGame({
     seed: 42,
     mode: "standard",
-    boardLayout: "classic",
+    boardLayout: "scenario",
     opening: "fixed",
     simRng: createSimRng(deriveBotSeed(42)),
   });

@@ -44,7 +44,7 @@ npm run sim -- new --seed 42 [--mode standard|fastStart|deathmatch]
                   [--ruleset-patch patch.json]
                   [--manual-setup | --opening policy|random|fixed]
                   [--policy master|slaver|civic|trader] [--seats p0,p1,p2,p3]
-                  [--bot-seed N] [--file path]
+                  [--board continental|scenario] [--bot-seed N] [--file path]
 ```
 
 - `--seed` drives **everything**: deck shuffles, random placements, table rolls. Same seed → same game, always. Omitting it picks (and prints) one.
@@ -192,7 +192,7 @@ which cards come up.
 
 ```bash
 npm run sim -- batch --games 50 [--turns 56] [--policy random|greedy|smart|beam|political|settler|master|slaver|civic|trader]
-                     [--mode …] [--board classic|shuffled] [--ruleset-patch p.json]
+                     [--mode …] [--board continental|scenario] [--ruleset-patch p.json]
                      [--tune-preset low-number-core-v1] [--tune-patch p.json]
                      [--seats p0,p1,p2,p3] [--rotate] [--seed 1000] [--jobs N]
                      [--without-ideas all|id,id]
@@ -303,10 +303,11 @@ seat's personality that game), `actingSeat`, `winner` (the game's winner, empty 
 capped game), `final`, `belovedHolder` (the seat holding Beloved, empty for none; the
 same on all four rows) and `activeLuxuries`.
 
-- `--board` — `shuffled` (default since 2026-10-24: seeded random terrain, as in the live
-  game) or `classic` (the authored fixed board; `new --opening fixed` falls back to it).
-  Reports before that date ran on classic unless they say otherwise. Recorded in the
-  report and in saves/scripts.
+- `--board` — `continental` (default since 2026-10-24: seeded random terrain, as in the
+  live game) or `scenario` (the authored fixed board; `new --opening fixed` falls back to
+  it). Reports before 2026-10-24 ran on the authored board unless they say otherwise. Until
+  2026-10-25 the two were named `shuffled` and `classic`; older reports use those names,
+  and the old names are now rejected. Recorded in the report and in saves/scripts.
 - `--years N|open` — the game's length (`victory.years`, 14 by default), folded into the
   ruleset patch. A game longer than the 14-card year deck reshuffles it; `open` plays until
   the race is won, with a safety stop at year 40. `batch`'s default `--turns` follows it.
@@ -513,8 +514,8 @@ Replays are byte-identical to the original run.
 {
   "version": 2,
   "engineVersion": "0.1.0",
-  "stateSchemaVersion": 13,
-  "commandSchemaVersion": 6,
+  "stateSchemaVersion": 18,
+  "commandSchemaVersion": 7,
   "seed": 42, // game seed: decks, board draws, table rolls
   "mode": "standard",
   "rulesetPatch": null, // deep-merged over the mode's ruleset
@@ -524,7 +525,7 @@ Replays are byte-identical to the original run.
     "content": {/* exact immutable content package */},
   },
   "opening": "random",
-  "boardLayout": "classic",
+  "boardLayout": "scenario",
   "botRngState": 123, // where the bot decision stream is parked
   "history": [{ "player": "0", "command": { "type": "endTurn" } }],
   "state": {/* full HegemonyState — plain JSON */},

@@ -20,8 +20,8 @@ export type NewGameOptions = {
   /** Pre-resolved package for tuned or replayed games. */
   definition?: GameDefinition;
   opening: OpeningKind;
-  /** Terrain layout. Defaults to "classic" so historical balance runs stay
-   *  reproducible; realistic runs pass "shuffled" to match the live game. */
+  /** Terrain layout. Defaults to "scenario" so historical balance runs stay
+   *  reproducible; realistic runs pass "continental" to match the live game. */
   boardLayout?: BoardLayout;
   /** Breaks placement ties (policy) or draws placements (random); also scores fixed-opening Ideas; unused for manual. */
   simRng: SimRng;
