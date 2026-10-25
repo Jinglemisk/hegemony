@@ -29,6 +29,12 @@ export interface ArchipelagoLimits {
   islandSize: Range;
   /** Whether a settleable island may be a single tile. */
   islet: boolean;
+  /** Hexes between an island's two farthest tiles: 4 allows a line of five, or a line of
+   *  three with a two-tile arm off one end. */
+  islandSpan: number;
+  /** How often each shape is drawn, by weight. A shape that cannot hold an island's tiles
+   *  within the span drops out for that island. */
+  islandShapes: Record<IslandShape, number>;
   /** Island groups on a board. */
   groups: Range;
   /** Islands in a group. */
@@ -40,7 +46,7 @@ export interface ArchipelagoLimits {
    *  within `max`. */
   channelGap: Range;
   /** Every tile of a group lies within this many hexes of the group's middle. With the
-   *  islands compact, no group can be a chain. */
+   *  islands' span held too, no group can be a chain. */
   groupRadius: number;
   /** Every tile lies within this many hexes of the board's centre. */
   mapRadius: number;
@@ -57,6 +63,8 @@ export const ARCHIPELAGO_LIMITS: ArchipelagoLimits = {
   islands: { min: 6, max: 9 },
   islandSize: { min: 3, max: 7 },
   islet: false,
+  islandSpan: 4,
+  islandShapes: { round: 1, line: 1, bent: 1 },
   groups: { min: 3, max: 4 },
   islandsPerGroup: { min: 2, max: 3 },
   groupGap: { min: 1, max: 1 },
@@ -68,9 +76,18 @@ export const ARCHIPELAGO_LIMITS: ArchipelagoLimits = {
   draws: 40,
 };
 
+/**
+ * - round: grown tile by tile around a centre, touching as much of itself as it can;
+ * - line: along one hex axis, with at most one tile off its side;
+ * - bent: straight, then one turn of 60° or 120°.
+ */
+export type IslandShape = "round" | "line" | "bent";
+
 export interface ArchipelagoBoard {
   tiles: HexTile[];
   layout: ArchipelagoLayout;
+  /** The shape each island was drawn as, in the layout's island order. */
+  shapes: IslandShape[];
   /** The rng state after the board, for the next draw in the seed chain. */
   rng: number;
   /** Draws made, the accepted one included; `limits.draws` when the fallback was dealt. */
@@ -85,8 +102,8 @@ export interface ArchipelagoLayout {
   groups: number[][];
 }
 
-/** The smallest hex disc that holds `tiles` tiles: 1 for up to 7, 2 for up to 19. An
- *  island must fit the disc of that radius around one of its own tiles. */
+/** The smallest hex disc that holds `tiles` tiles: 1 for up to 7, 2 for up to 19. A round
+ *  island grows inside the disc of that radius around its centre. */
 function islandRadius(tiles: number) {
   let radius = 0;
   while (3 * radius * (radius + 1) + 1 < tiles) radius += 1;
@@ -105,9 +122,14 @@ export function generateArchipelago(
   for (let draw = 1; draw <= limits.draws; draw += 1) {
     const islands = drawIslands(rng, land, limits, hasOracle);
     if (!islands) continue;
-    const tiles = dealTerrain(rng, islands, deck, limits);
+    const tiles = dealTerrain(
+      rng,
+      islands.map(({ cells }) => cells),
+      deck,
+      limits,
+    );
     if (checkArchipelago(tiles, limits).length === 0) {
-      return board(tiles, limits, rng.state(), draw, false);
+      return board(tiles, islands, limits, rng.state(), draw, false);
     }
   }
 
@@ -118,17 +140,24 @@ export function generateArchipelago(
   }
 
   const tiles = dealTerrain(rng, FALLBACK_ISLANDS, deck, limits);
-  return board(tiles, limits, rng.state(), limits.draws, true);
+  const islands = FALLBACK_ISLANDS.map((cells) => ({ cells, shape: "round" as const }));
+  return board(tiles, islands, limits, rng.state(), limits.draws, true);
 }
 
 function board(
   tiles: HexTile[],
+  drawn: readonly DrawnIsland[],
   limits: ArchipelagoLimits,
   rng: number,
   draws: number,
   fallback: boolean,
 ): ArchipelagoBoard {
-  return { tiles, layout: describeArchipelago(tiles, limits), rng, draws, fallback };
+  const layout = describeArchipelago(tiles, limits);
+  const shapeOf = new Map<string, IslandShape>(
+    drawn.flatMap(({ cells, shape }) => cells.map(({ q, r }) => [`${q},${r}`, shape] as const)),
+  );
+  const shapes = layout.islands.map((island) => shapeOf.get(island[0])!);
+  return { tiles, layout, shapes, rng, draws, fallback };
 }
 
 // ── Reading a board ──────────────────────────────────────────────────────────────────
@@ -183,6 +212,13 @@ function groupIslands(
   return [...groups.values()];
 }
 
+/** Hexes between an island's two farthest tiles. */
+function islandSpanOf(cells: readonly AxialCell[]) {
+  let span = 0;
+  for (const a of cells) for (const b of cells) span = Math.max(span, hexDistance(a, b));
+  return span;
+}
+
 /** Sea cells between two pieces of land. */
 function gapBetween(a: readonly AxialCell[], b: readonly AxialCell[]) {
   let nearest = Infinity;
@@ -204,9 +240,8 @@ export function checkArchipelago(tiles: readonly HexTile[], limits: ArchipelagoL
     if (!within(island.length, limits.islandSize) || (!limits.islet && island.length === 1)) {
       broken.push(`an island of ${island.length} tiles`);
     }
-    const radius = islandRadius(island.length);
-    if (!island.some((centre) => island.every((tile) => hexDistance(centre, tile) <= radius))) {
-      broken.push(`an island of ${island.length} tiles that is not compact`);
+    if (islandSpanOf(island) > limits.islandSpan) {
+      broken.push(`an island spanning ${islandSpanOf(island)} hexes`);
     }
   }
 
@@ -343,13 +378,14 @@ const HEADING_JITTER = 0.2;
 const CENTRES_TRIED = 30;
 
 type Draw = ReturnType<typeof seededDraw>;
+type DrawnIsland = { cells: AxialCell[]; shape: IslandShape };
 
 function drawIslands(
   rng: Draw,
   land: number,
   limits: ArchipelagoLimits,
   hasOracle: boolean,
-): AxialCell[][] | null {
+): DrawnIsland[] | null {
   const groupCount = rng.between(limits.groups);
   const total = rng.between({
     min: Math.max(limits.islands.min, groupCount * limits.islandsPerGroup.min),
@@ -367,15 +403,17 @@ function drawIslands(
   const headings = plan.map(
     (_, group) => turn + group * sector + (rng.next() - 0.5) * sector * HEADING_JITTER,
   );
-  const placed: { cells: AxialCell[]; group: number }[] = [];
+  const placed: { cells: AxialCell[]; group: number; shape: IslandShape }[] = [];
   const reserved = hasOracle ? [{ q: 0, r: 0 }] : [];
 
   for (let order = 0; order < Math.max(...counts); order += 1) {
     for (const [group, groupSizes] of plan.entries()) {
       if (order >= groupSizes.length) continue;
+      const shape = pickShape(rng, groupSizes[order], limits);
       const cells = placeIsland(
         rng,
         groupSizes[order],
+        shape,
         group,
         headings[group],
         sector,
@@ -384,11 +422,26 @@ function drawIslands(
         limits,
       );
       if (!cells) return null;
-      placed.push({ cells, group });
+      placed.push({ cells, group, shape });
     }
   }
 
-  return placed.map(({ cells }) => cells);
+  return placed.map(({ cells, shape }) => ({ cells, shape }));
+}
+
+/** An island's shape, drawn by weight among the shapes that can hold its tiles within the
+ *  span: a line holds at most the span plus two (one tile off its side). */
+function pickShape(rng: Draw, size: number, limits: ArchipelagoLimits): IslandShape {
+  const holds: Record<IslandShape, boolean> = {
+    round: 2 * islandRadius(size) <= limits.islandSpan,
+    line: size <= limits.islandSpan + 2,
+    bent: size >= 3,
+  };
+  const shapes = (Object.keys(limits.islandShapes) as IslandShape[]).filter(
+    (shape) => holds[shape] && limits.islandShapes[shape] > 0,
+  );
+  let pick = rng.next() * shapes.reduce((sum, shape) => sum + limits.islandShapes[shape], 0);
+  return shapes.find((shape) => (pick -= limits.islandShapes[shape]) < 0) ?? shapes[0] ?? "round";
 }
 
 /** Split `total` into `parts` numbers, each within `range`, or null when it cannot be. */
@@ -405,6 +458,7 @@ function share(rng: Draw, total: number, parts: number, range: Range) {
 function placeIsland(
   rng: Draw,
   size: number,
+  shape: IslandShape,
   group: number,
   heading: number,
   sector: number,
@@ -412,7 +466,6 @@ function placeIsland(
   reserved: readonly AxialCell[],
   limits: ArchipelagoLimits,
 ): AxialCell[] | null {
-  const radius = islandRadius(size);
   const kin = placed.filter((island) => island.group === group).flatMap(({ cells }) => cells);
   const origin = { q: 0, r: 0 };
 
@@ -433,7 +486,8 @@ function placeIsland(
           y: FIRST_ISLAND_DISTANCE * Math.sqrt(3) * Math.sin(heading),
         })
       : planeToAxial(centroid(kin));
-  const reach = kin.length === 0 ? 1 : radius + limits.groupGap.max + 1;
+  const extent = shape === "round" ? islandRadius(size) : limits.islandSpan;
+  const reach = kin.length === 0 ? 1 : extent + limits.groupGap.max + 1;
   const centres = cellsAround(aim, kin.length === 0 ? 1 : limits.groupRadius)
     .filter(
       (cell) =>
@@ -446,11 +500,73 @@ function placeIsland(
     .sort((a, b) => a.order - b.order)
     .slice(0, CENTRES_TRIED);
 
-  for (const { cell: centre } of centres) {
-    const cells = growIsland(rng, centre, size, radius, open);
-    if (cells && (kin.length === 0 || gapBetween(cells, kin) <= limits.groupGap.max)) return cells;
+  const near = (cells: AxialCell[]) =>
+    kin.length === 0 || gapBetween(cells, kin) <= limits.groupGap.max;
+  for (const { cell: start } of centres) {
+    const cells =
+      shape === "round"
+        ? growIsland(rng, start, size, islandRadius(size), open)
+        : straightIsland(
+            rng,
+            shape,
+            start,
+            size,
+            limits.islandSpan,
+            (cells) => cells.every(open) && near(cells),
+          );
+    if (cells && near(cells)) return cells;
   }
   return null;
+}
+
+/** A line or a bent island starting at `start`: one of the ways the shape can lie there
+ *  that `usable` accepts, at random. A line runs along one axis and may take one tile off
+ *  its side; a bent island runs straight for at least two tiles, then turns once. */
+function straightIsland(
+  rng: Draw,
+  shape: "line" | "bent",
+  start: AxialCell,
+  size: number,
+  span: number,
+  usable: (cells: AxialCell[]) => boolean,
+): AxialCell[] | null {
+  const steps = neighbourCells({ q: 0, r: 0 });
+  const walk = (from: AxialCell, step: AxialCell, count: number) =>
+    Array.from({ length: count }, (_, index) => ({
+      q: from.q + step.q * (index + 1),
+      r: from.r + step.r * (index + 1),
+    }));
+  const key = ({ q, r }: AxialCell) => `${q},${r}`;
+  const ways: AxialCell[][] = [];
+
+  for (const [direction, step] of steps.entries()) {
+    if (shape === "line") {
+      ways.push([start, ...walk(start, step, size - 1)]);
+      const line = [start, ...walk(start, step, size - 2)];
+      const ends = new Set(
+        [
+          walk(start, steps[(direction + 3) % 6], 1)[0],
+          walk(line[line.length - 1], step, 1)[0],
+        ].map(key),
+      );
+      for (const side of line.flatMap(neighbourCells)) {
+        if (size >= 3 && !ends.has(key(side))) ways.push([...line, side]);
+      }
+    } else {
+      for (let arm = 2; arm < size; arm += 1) {
+        for (const turn of [1, 2, 4, 5]) {
+          const first = [start, ...walk(start, step, arm - 1)];
+          ways.push([...first, ...walk(first[arm - 1], steps[(direction + turn) % 6], size - arm)]);
+        }
+      }
+    }
+  }
+
+  const options = ways.filter(
+    (cells) =>
+      new Set(cells.map(key)).size === size && islandSpanOf(cells) <= span && usable(cells),
+  );
+  return options.length > 0 ? options[rng.int(options.length)] : null;
 }
 
 /** Grow an island tile by tile from its centre, inside the centre's disc, preferring the

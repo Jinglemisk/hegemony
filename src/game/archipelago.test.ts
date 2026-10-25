@@ -7,6 +7,7 @@ import { mulberry32 } from "./core/rng";
 import { createModeDefinition } from "./definition";
 import { enumerateLegalCommands, transition } from "./legalMoves";
 import { createLuxuryAssets } from "./luxury";
+import { hexDistance } from "./mapTopology";
 import { canPlaceColonyOnTile } from "./settlement";
 import { createInitialStateFromDefinition } from "./state";
 import type { HegemonyState, HexTile, PlayerId } from "./types";
@@ -69,6 +70,28 @@ describe("archipelago generator", () => {
         expect(room.length, `seed ${seed}, seat ${player}`).toBeGreaterThan(0);
       }
     }
+  });
+
+  it("holds every island within the span and draws all three shapes on 200 seeds", () => {
+    const shapes = new Set<string>();
+    for (const seed of SEEDS) {
+      const board = generateArchipelago(seed, DECK);
+      const byId = new Map(board.tiles.map((tile) => [tile.id, tile]));
+      board.shapes.forEach((shape) => shapes.add(shape));
+      for (const island of board.layout.islands) {
+        const cells = island.map((id) => byId.get(id)!);
+        const span = Math.max(...cells.flatMap((a) => cells.map((b) => hexDistance(a, b))));
+        expect(span, `seed ${seed}`).toBeLessThanOrEqual(ARCHIPELAGO_LIMITS.islandSpan);
+      }
+    }
+    expect([...shapes].sort()).toEqual(["bent", "line", "round"]);
+  });
+
+  it("flags an island wider than the span", () => {
+    const board = generateArchipelago(1, DECK);
+    expect(checkArchipelago(board.tiles, { ...ARCHIPELAGO_LIMITS, islandSpan: 1 })).toContainEqual(
+      expect.stringMatching(/^an island spanning/),
+    );
   });
 
   it("draws the same board from the same seed", () => {
