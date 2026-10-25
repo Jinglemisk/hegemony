@@ -413,6 +413,9 @@ for (let seed = 1; seed <= SEEDS; seed += 1) {
   generationMs += ms;
   add("ms per board", ms);
   add("draws per board", board.draws);
+  // The same seed with round islands only: the redraws the other shapes add.
+  const roundOnly = { ...ARCHIPELAGO_LIMITS, islandShapes: { round: 1, line: 0, bent: 0 } };
+  add("draws per board, round islands only", generateArchipelago(seed, DECK, roundOnly).draws);
   if (board.fallback) bump("fallback boards");
   const broken = checkArchipelago(board.tiles, ARCHIPELAGO_LIMITS);
   if (broken.length > 0) {
@@ -428,7 +431,16 @@ for (let seed = 1; seed <= SEEDS; seed += 1) {
   );
   add("tiles", tiles.length);
   add("islands", layout.islands.length);
-  layout.islands.forEach((island) => add("island size", island.length));
+  layout.islands.forEach((island, index) => {
+    const shape = board.shapes[index];
+    add("island size", island.length);
+    add(`island size, ${shape}`, island.length);
+    bump(`islands drawn ${shape}`);
+    const cells = island.map((id) => byId.get(id)!);
+    const span = Math.max(...cells.flatMap((a) => cells.map((b) => hexDistance(a, b))));
+    add("island span", span);
+    add(`island span, ${shape}`, span);
+  });
   add("groups", layout.groups.length);
   for (const group of layout.groups) {
     add("islands per group", group.length);
@@ -555,6 +567,7 @@ for (let seed = 1; seed <= SEEDS; seed += 1) {
         shown = {
           seed,
           draws: board.draws,
+          shapes: board.shapes,
           fallback: board.fallback,
           tiles: tiles.map(({ q, r, terrain, slots }) => ({ q, r, terrain, slots })),
           islands: layout.islands,
@@ -624,10 +637,18 @@ out(spread("bot setups: founding sites after setup"));
 out(`generation: ${fmt(generationMs / SEEDS)} ms a board on average`);
 out(spread("ms per board"));
 out(histogram("draws per board"));
+out(histogram("draws per board, round islands only"));
+out(spread("draws per board, round islands only"));
 out(spread("draws per board"));
 out();
 for (const name of ["tiles", "islands", "groups", "islands per group"]) out(histogram(name));
 out(histogram("island size"));
+const islandsDrawn = (series.get("island size") ?? []).length;
+for (const shape of ["round", "line", "bent"]) {
+  const n = counts.get(`islands drawn ${shape}`) ?? 0;
+  out(`islands drawn ${shape}: ${n} of ${islandsDrawn} (${((100 * n) / islandsDrawn).toFixed(1)}%); ${histogram(`island size, ${shape}`)}; ${histogram(`island span, ${shape}`)}`);
+}
+out(histogram("island span"));
 for (const name of [
   "tiles per group",
   "plains per group",
