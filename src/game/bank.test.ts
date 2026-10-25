@@ -25,7 +25,7 @@ describe("bank rate derivation (D6/Q14)", () => {
     }
   });
 
-  it("the scarcity knob classes the classic board by tile supply: wood abundant", () => {
+  it("the scarcity knob classes the scenario board by tile supply: wood abundant", () => {
     const G = scenario({ patch: { economy: { bank: { derivation: "scarcity" } } } })
       .opening()
       .mutate(clearPending)

@@ -1,6 +1,6 @@
 import { standingSlotBonus, occupiedBuildingSlots, colonyPieceBonus } from "./ideaRules";
 import { colonyLimitDelta, effectiveRuleset, lawSlaveResource } from "./assembly/laws";
-import { hexDistance, isCoastalTile } from "./map";
+import { areNeighbours, hexDistance, isCoastalTile } from "./mapTopology";
 import type {
   HegemonyState,
   HexTile,
@@ -153,7 +153,7 @@ export function isAdjacentToCity(G: HegemonyState, tile: HexTile) {
 export function isContiguousForPlayer(G: HegemonyState, playerID: PlayerId, tile: HexTile) {
   return G.players[playerID].settlements.some((tileId) => {
     const owned = getTile(G, tileId);
-    return owned ? hexDistance(owned, tile) === 1 : false;
+    return owned ? areNeighbours(owned, tile) : false;
   });
 }
 
@@ -166,12 +166,25 @@ export function playerHoldsCoast(G: HegemonyState, playerID: PlayerId) {
   });
 }
 
+/** Whether a sail reaches the tile under the ruleset's sea reach: within that many hexes
+ *  of one of the player's coastal settlements. With no reach set, every shore does. */
+function withinSeaReach(G: HegemonyState, playerID: PlayerId, tile: HexTile) {
+  const reach = G.ruleset.placement.seaReach;
+  if (reach === null) return true;
+  return G.players[playerID].settlements.some((tileId) => {
+    const owned = getTile(G, tileId);
+    return owned ? isCoastalTile(owned, G.board.tiles) && hexDistance(owned, tile) <= reach : false;
+  });
+}
+
 /**
  * Colony placement legality. `context` picks the geometry rule:
  * - "gameplay" (founding): border your realm, OR sail — a coastal target is legal
  *   while you hold any coastal settlement (leapfrog, Q13a).
  * - "setup" (the founding voyage, Q12): border your metropolis, OR any coastal tile —
  *   apoikiai were coastal foundations; no prior coastal holding required.
+ * A sea reach (island hopping) holds either sail to that many hexes from the player's
+ * coast, so an inland metropolis's founding colony must border it.
  */
 export function canPlaceColonyOnTile(
   G: HegemonyState,
@@ -214,6 +227,13 @@ export function canPlaceColonyOnTile(
         context === "setup"
           ? "The founding colony must border your metropolis or lie on the coast."
           : "Must border one of your settlements — or be a coastal tile while you hold the coast.",
+      );
+    } else if (!contiguous && !withinSeaReach(G, playerID, tile)) {
+      const reach = G.ruleset.placement.seaReach;
+      status.reasons.push(
+        context === "setup"
+          ? `The sea is too wide: the founding colony sails at most ${reach} hexes from a coastal metropolis.`
+          : `The sea is too wide: sail at most ${reach} hexes from one of your coastal settlements.`,
       );
     }
   }

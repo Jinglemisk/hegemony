@@ -62,7 +62,7 @@ it("buys an affordable pivotal coalition, authors Voice and reports the seat's A
     turns: 56,
     policy: "smart",
     mode: "standard",
-    boardLayout: "classic",
+    boardLayout: "scenario",
     baseSeed: 42,
     opening: "policy",
     botSeedRule: "test",

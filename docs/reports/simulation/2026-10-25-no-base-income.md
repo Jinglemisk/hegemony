@@ -5,6 +5,11 @@ base income per resource at 0, the game's length in years). The two batches ran 
 other on two workers at the lowest CPU priority: 22 minutes for the mixed table, 11 for the
 masters table.
 
+**Read with** [the last colony pick](2026-10-25-last-colony-pick.md), written later the same
+day: the masters table here ran with a bot bug that sent seat 0's last setup colony onto a
+second plains. Seat 3's lead below was that bug; with it fixed the seats win 7 / 10 / 11 / 12.
+The mixed table (with Ideas) was not affected.
+
 ## Question
 
 #136 made no base income the game's rule. Does `main` play as the

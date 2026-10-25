@@ -619,7 +619,7 @@ describe("shared personality search", () => {
       turns: 56,
       policy: "mixed",
       mode: "standard",
-      boardLayout: "classic",
+      boardLayout: "scenario",
       opening: "policy",
       baseSeed: 1,
       botSeedRule: "test",

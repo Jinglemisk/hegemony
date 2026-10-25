@@ -29,8 +29,8 @@ export type { Phase } from "../game/types";
 
 /**
  * URL-driven game options, so a browser session can pick the board and seed without a
- * lobby: `?board=shuffled&seed=42` for a quick game on a randomized layout,
- * `?mode=fastStart` for the richer treasury, `?setup=manual` to place the opening
+ * lobby: `?board=scenario&seed=42` for a quick game on the fixed authored layout,
+ * `?board=archipelago` for the islands, `?mode=fastStart` for the richer treasury, `?setup=manual` to place the opening
  * towns by hand, `?setup=ideas` to auto-place but keep the Idea picker,
  * `?dev=preload` to replay the fixed scripted placements,
  * `?opening=random` for the old uniform draw instead of policy placement, and
@@ -49,7 +49,9 @@ function createGameFromUrl(): { G: HegemonyState; shell: DevShell } {
   const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
   const boardParam = params?.get("board");
   const boardLayout: BoardLayout =
-    boardParam === "shuffled" || boardParam === "classic" ? boardParam : GAME_CONFIG.boardLayout;
+    boardParam === "continental" || boardParam === "archipelago" || boardParam === "scenario"
+      ? boardParam
+      : GAME_CONFIG.boardLayout;
   const seedParam = Number(params?.get("seed"));
   const pinnedSeed =
     Number.isFinite(seedParam) && params?.get("seed") ? seedParam >>> 0 : undefined;
@@ -87,7 +89,7 @@ function createGameFromUrl(): { G: HegemonyState; shell: DevShell } {
       definition,
       seed: matchSeed,
       mode,
-      boardLayout: "classic",
+      boardLayout: "scenario",
       opening: "fixed",
       simRng: createSimRng(deriveBotSeed(matchSeed)),
     });

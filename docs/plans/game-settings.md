@@ -1,7 +1,7 @@
 ---
 status: proposed
 phase: "post-v2"
-updated: 2026-10-24
+updated: 2026-10-25
 ---
 
 # Game settings
@@ -50,7 +50,7 @@ or base income. Every setting is part of the game's recorded rules, so a game re
 - `economy.baseIncome`: one value per resource, all 0.
 - Sim flags:
   - `--years N|open`;
-  - shuffled is now the default board.
+  - the shuffled board, now named `continental`, is the default board.
 
 ## What exists today
 
@@ -69,9 +69,9 @@ or base income. Every setting is part of the game's recorded rules, so a game re
   - the bank switch;
   - colony contiguity;
   - the Assembly switch (first year 0 turns it off).
-- **A name clash.** "Classic" today names the authored fixed board, so a Classic preset would
-  clash. The owner renamed that board `scenario` (2026-10-25); the
-  [board modes plan](board-modes.md)'s first slice does it.
+- **A name clash, resolved.** "Classic" named the authored fixed board, which clashed with a
+  Classic preset. The owner renamed that board `scenario` (2026-10-25), and the
+  [board modes plan](board-modes.md)'s first slice made the rename; the old name is rejected.
 
 ## The first list of settings
 

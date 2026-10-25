@@ -7,10 +7,11 @@ import {
 } from "./content";
 import { createGameDefinition } from "./definition";
 import type { GameDefinition } from "./definition";
+import { generateArchipelago } from "./archipelago";
 import { deriveBankRates } from "./bank";
 import { createLuxuryAssets } from "./luxury";
 import { createInitialMap } from "./map";
-import type { BoardLayout, HegemonyState } from "./types";
+import type { BoardLayout, HegemonyState, HexTile } from "./types";
 import { expandDeck, shuffleWithSeed } from "./core/rng";
 import { DEFAULT_RULESET } from "./ruleset";
 import type { Ruleset } from "./ruleset";
@@ -20,7 +21,7 @@ import { CURRENT_RECIPE_VERSIONS } from "./version";
 export function createInitialState(
   seed: number,
   ruleset: Ruleset = DEFAULT_RULESET,
-  boardLayout: BoardLayout = "classic",
+  boardLayout: BoardLayout = "scenario",
 ): HegemonyState {
   return createInitialStateFromDefinition(
     createGameDefinition({
@@ -36,7 +37,7 @@ export function createInitialState(
 export function createInitialStateFromDefinition(
   definition: GameDefinition,
   seed: number,
-  boardLayout: BoardLayout = "classic",
+  boardLayout: BoardLayout = "scenario",
 ): HegemonyState {
   const { content, ruleset } = definition;
   let rng = seed >>> 0;
@@ -45,15 +46,23 @@ export function createInitialStateFromDefinition(
   const player = shuffleWithSeed(expandDeck(getPlayerEventCards(content)), rng);
   rng = player.state;
 
-  const baseTerrainDeck = getTerrainDeck(content);
-  let terrainDeck = baseTerrainDeck;
-  if (boardLayout === "shuffled") {
-    const shuffled = shuffleWithSeed(baseTerrainDeck, rng);
-    terrainDeck = shuffled.cards;
+  // The one place the layout's name is read: every rule asks the tiles laid here.
+  const terrainDeck = getTerrainDeck(content);
+  let tiles: HexTile[];
+  if (boardLayout === "continental") {
+    const shuffled = shuffleWithSeed(terrainDeck, rng);
+    tiles = createInitialMap(shuffled.cards);
     rng = shuffled.state;
+  } else if (boardLayout === "archipelago") {
+    const islands = generateArchipelago(rng, terrainDeck);
+    tiles = islands.tiles;
+    rng = islands.rng;
+  } else if (boardLayout === "scenario") {
+    tiles = createInitialMap(terrainDeck);
+  } else {
+    // A legacy script can still carry a retired name; it is rejected, not read as another board.
+    throw new Error(`unknown board layout "${String(boardLayout)}"`);
   }
-
-  const tiles = createInitialMap(terrainDeck);
 
   // Each politician's deck is shuffled from the same seed chain as the event decks, so
   // an assembly four years away is still reproducible from the game's seed alone.
