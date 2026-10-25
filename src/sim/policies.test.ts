@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { enumerateLegalCommands, transition } from "../game/legalMoves";
+import type { GameCommand } from "../game/legalMoves";
 import { RESOLUTION_CARDS } from "../game/assembly/deck";
 import { PLAYER_IDS, PLAYER_EVENT_CARDS } from "../game/data";
 import { projectForPlayer } from "../game/projection";
@@ -1053,6 +1054,42 @@ describe("opening placement", () => {
     expect(command).toMatchObject({ type: "placeColony", tileId: "-3,2" });
     expect(isAdjacentToCity(G, getTile(G, "-3,2")!)).toBe(false);
     expect(isAdjacentToCity(G, getTile(G, "0,-3")!)).toBe(true);
+  });
+
+  it("scores the last colony as setup, whether or not an Idea draft follows it", () => {
+    // Without Ideas, seat 0's colony is the last placement and its transition opens
+    // year 1. Scored there, the forecast saw a stone site starve in year 7 that no other
+    // seat's forecast reached, and seat 0 took a second plains in 37 of 40 games.
+    const content = getAuthoredGameContent();
+    const ruleset = GAME_MODES.standard.ruleset;
+    const noIdeas = createGameDefinition({ ruleset, content: { ...content, nationalIdeas: [] } });
+    let G = createInitialStateFromDefinition(noIdeas, 1000, "continental");
+    let withIdeas = createInitialStateFromDefinition(
+      createGameDefinition({ ruleset, content }),
+      1000,
+      "continental",
+    );
+    const choose = (state: HegemonyState) =>
+      masterPolicy.choose(
+        observe(state),
+        enumerateLegalCommands(state, state.currentPlayer),
+        createSimRng(1),
+      );
+    const apply = (state: HegemonyState, command: GameCommand) => {
+      const result = transition(state.definition, state, state.currentPlayer, command);
+      if (!result.ok) throw new Error(result.reasons.join());
+      return result.state;
+    };
+    while (!(G.phase === "setupColony" && G.currentPlayer === "0")) {
+      const command = choose(G);
+      G = apply(G, command);
+      withIdeas = apply(withIdeas, command);
+    }
+
+    const last = choose(G);
+    expect(apply(G, last).phase).toBe("gameplay");
+    expect(apply(withIdeas, last).phase).toBe("setupIdeas");
+    expect(last).toEqual(choose(withIdeas));
   });
 
   it("counts a hill's slots in the frontier once Land Reform lets its slaves grow food", () => {
