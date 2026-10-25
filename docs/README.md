@@ -5,7 +5,7 @@ tree. The roadmap establishes sequence and exit gates; plans define unshipped
 work; references describe the game that exists; reports preserve dated evidence;
 and the archive is historical context, never current authority.
 
-Last updated: 2026-10-25.
+Last updated: 2026-10-26.
 
 ## Now
 
@@ -31,8 +31,11 @@ each:**
 2. The Archipelago build, and recurring deals between people.
 3. Bots for deals, the game-settings model and setup screen, then batches one at a time.
 
-Then Step 11 on Q80's shape, the development deck, length batches, and the 3D living map,
-whose plan is written after Archipelago lands. The full-game browser test still waits.
+Then Step 11 on Q80's shape, the development deck and length batches. The full-game browser
+test still waits.
+
+**The board:** the 3D map is the only board (owner, 2026-10-26): no 2D board, no flag, no
+fallback without WebGL. Its seven open calls are [Q83](questions.md), none blocking.
 
 **Locked sequence:** V1 includes luxury goods, full Catan-style player trade, all twelve
 National Ideas, and the intended typed Resolution/Idea effects. The v1 mechanics freeze

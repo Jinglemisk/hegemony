@@ -2,8 +2,8 @@ import { CONSULT } from "../../ui/frameFormat";
 import type { ConsultTab } from "../board/types";
 import { Ico } from "./parts";
 
-/** The ticker's mirror at the bar's right end: a tab naming the consult pages. A page
- *  drops down out of it; pressing its name again closes it. */
+/** A tab hanging from the bar's right end, naming the consult pages. A page drops down
+ *  out of it; pressing its name again closes it. */
 export function ConsultStrip({
   open,
   onConsult,

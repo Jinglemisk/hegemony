@@ -32,7 +32,7 @@ import { RESOURCE_LABELS, formatSignedNumber } from "../../../ui/formatters";
 import { luxuryMarkerPosition, vertexCenter } from "../../../ui/hexGeometry";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
-import { orderSettlements, tileName } from "../island/tileTip";
+import { orderSettlements, tileName } from "./tileTip";
 import { mapRealms } from "./modes";
 import type { MapMode, MapRealm } from "./modes";
 
@@ -121,7 +121,10 @@ export type MapTile = {
   slots: number;
   /** The sides open to the sea (see `openSeaSides`). */
   seaSides: number[];
-  /** What a slave makes here, or null where slaves make nothing. */
+  /** The land's own resource, which the far view and the slot plate name. */
+  land: MaterialResource | null;
+  /** What a slave makes here, or null where slaves make nothing. A Law can make it
+   *  differ from `land` (Land Reform: food everywhere). */
   resource: MaterialResource | null;
   /** How much of it one slave makes on an open slot (`tileSlaveColumn`). */
   perSlave: number;
@@ -279,6 +282,7 @@ export function mapModel(
       terrain: tile.terrain,
       slots: tile.slots,
       seaSides: cell.seaSides,
+      land: tile.resource?.type ?? null,
       resource,
       perSlave: perPop,
       labels: {

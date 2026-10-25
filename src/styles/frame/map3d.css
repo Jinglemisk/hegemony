@@ -1,5 +1,5 @@
 /* ============================================================================
-   The living map (?map=3d): the three.js board, the HTML over it, and the tile
+   The living map: the three.js board, the HTML over it, and the tile
    buttons. Loaded with the map's own chunk. Every label fades with the zoom
    bands through --a-<key>, which the camera sets on the stage, and sizes from
    --lab (the sizes live in type.css).
@@ -318,7 +318,7 @@
   opacity: 0.8;
 }
 
-/* The compass, in the corner dock's spot: the top left, under the bar. */
+/* The compass: the top left, under the bar. */
 .lm-compass {
   position: absolute;
   left: var(--s-3);

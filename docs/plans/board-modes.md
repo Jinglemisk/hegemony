@@ -1,7 +1,7 @@
 ---
 status: proposed
 phase: "post-v2"
-updated: 2026-10-25
+updated: 2026-10-26
 ---
 
 # Board modes: Continental and Archipelago
@@ -104,11 +104,11 @@ A game is played on one of two boards, chosen before setup:
 
 - The bots' placement scoring reads the board through three things: the tiles the seat could
   found on, the luxury goods within reach, and colonies that could later become cities.
-- The 2D map draws one shape per tile and fits whatever tiles exist, so gaps would render.
+- The map draws one shape per tile and fits whatever tiles exist, so gaps would render.
   The arrow keys move to the nearest drawn tile in the pressed direction, not by the
-  topology, so they would jump across gaps.
-- The 3D living map is a showcase, not part of the app. It assumes one disc centred on the
-  origin.
+  topology, so they would jump across gaps. Since 2026-10-26 the map is the 3D one: it
+  centres on the tiles' bounding box and walls every tile side with no land beside it, so
+  the same holds there.
 - 32 test files use the scripted opening and 23 hard-code tile ids of the authored board. They
   stay on it.
 
@@ -197,11 +197,11 @@ The game's rules for the sea, the map, the bots and the sim flag wait for that a
 
 ## Three-axis parity
 
-| Axis             | Applies? | Required representation and proof                                                                                                                                     |
-| ---------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Engine / backend | Yes      | One board generator per mode; the layout type gains `continental` and `archipelago`; the sea rules the owner picks; invariants; a state schema bump; tests            |
-| Frontend         | Yes      | The 2D map renders sea between islands; arrow keys move sensibly across gaps; founding, move and Port prompts say when water blocks them; the rulebook and `rules.md` |
-| Simulation & AI  | Yes      | `--board continental\|archipelago\|scenario`; placement and frontier scoring under the new sea rules; telemetry for founding and moves across water; batches          |
+| Axis             | Applies? | Required representation and proof                                                                                                                                  |
+| ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Engine / backend | Yes      | One board generator per mode; the layout type gains `continental` and `archipelago`; the sea rules the owner picks; invariants; a state schema bump; tests         |
+| Frontend         | Yes      | The map renders sea between islands; arrow keys move sensibly across gaps; founding, move and Port prompts say when water blocks them; the rulebook and `rules.md` |
+| Simulation & AI  | Yes      | `--board continental\|archipelago\|scenario`; placement and frontier scoring under the new sea rules; telemetry for founding and moves across water; batches       |
 
 ## Architecture impact
 
@@ -233,7 +233,7 @@ The game's rules for the sea, the map, the bots and the sim flag wait for that a
    - `shuffled` becomes `continental`, and `classic` becomes `scenario`.
    - No behaviour change: batches match byte for byte.
 2. **Archipelago in the game.** The approved generator wired into setup, the sea rules the owner
-   picked, the 2D map, the bots and the sim flag.
+   picked, the map, the bots and the sim flag.
    **Engine and sim, 2026-10-25 (#145),** built while the owner was out so batches can run
    before Q81 is answered:
    - The `archipelago` layout: match creation lays it with the generator from the game's rng
@@ -245,7 +245,9 @@ The game's rules for the sea, the map, the bots and the sim flag wait for that a
      status says when the sea is too wide. It matches the validation script's hop rule.
    - The bots need no change: their placement scoring and frontier ask the founding rule.
    - `--board archipelago` for `new` and `batch`; `?board=archipelago` in the browser, where
-     the 2D map draws the islands and the arrow keys jump the gaps to the nearest tile.
+     the map draws the islands and the arrow keys jump the gaps to the nearest tile. Built
+     on the SVG board; the 3D map that replaced it still needs a look on an Archipelago
+     board.
    - **Q81's answer, 2026-10-25:** `?board=archipelago` and `--board archipelago` apply
      `{"placement":{"seaReach":3}}` unless the patch given sets the reach, and batch reports
      record it; seven goods with Silphium on every board; the oracle dealt onto an island.

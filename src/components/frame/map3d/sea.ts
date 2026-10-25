@@ -27,53 +27,67 @@ const DENSITY = 256 / 18;
  *  on land, stored as (d + 0.5) / 3 so −0.5 … 2.5 fills a byte. */
 export function coastField(shape: BoardShape) {
   const n = Math.min(512, Math.ceil(2 * shape.half * DENSITY));
-  const coast: [number, number, number, number][] = [];
-  for (const cell of shape.cells) {
-    for (const side of cell.seaSides) {
-      const a0 = (60 * side - 30) * DEG;
-      const a1 = (60 * side + 30) * DEG;
-      coast.push([
-        cell.x + Math.cos(a0),
-        cell.y + Math.sin(a0),
-        cell.x + Math.cos(a1),
-        cell.y + Math.sin(a1),
-      ]);
-    }
-  }
-  const segDist2 = (px: number, py: number, [ax, ay, bx, by]: (typeof coast)[number]) => {
-    const vx = bx - ax;
-    const vy = by - ay;
-    const u = clamp(((px - ax) * vx + (py - ay) * vy) / (vx * vx + vy * vy), 0, 1);
-    const dx = px - ax - u * vx;
-    const dy = py - ay - u * vy;
-    return dx * dx + dy * dy;
+  const at = (i: number) => -shape.half + ((i + 0.5) * 2 * shape.half) / n;
+  /** The texels within `r` of the box [x0, x1] × [y0, y1], as index ranges. */
+  const texels = (x0: number, x1: number, y0: number, y1: number, r: number) => {
+    const index = (v: number) => ((v + shape.half) * n) / (2 * shape.half) - 0.5;
+    const lo = (v: number) => clamp(Math.floor(index(v - r)), 0, n - 1);
+    const hi = (v: number) => clamp(Math.ceil(index(v + r)), 0, n - 1);
+    return [lo(x0), hi(x1), lo(y0), hi(y1)] as const;
   };
-  const data = new Uint8Array(n * n);
-  for (let j = 0; j < n; j++) {
-    for (let i = 0; i < n; i++) {
-      const px = -shape.half + ((i + 0.5) * 2 * shape.half) / n;
-      const py = -shape.half + ((j + 0.5) * 2 * shape.half) / n;
-      let inside = false;
-      for (const cell of shape.cells) {
-        const dx = px - cell.x;
-        const dy = py - cell.y;
-        if (dx * dx + dy * dy > 1.01) continue;
+
+  // Each tile marks the texels on its top, and each coast side measures only the texels
+  // within 2.5 of it: farther out the byte is already full on the sea, empty on land. An
+  // archipelago has several times one island's coast, and this keeps its bake short.
+  const land = new Uint8Array(n * n);
+  for (const cell of shape.cells) {
+    const [i0, i1, j0, j1] = texels(cell.x, cell.x, cell.y, cell.y, 1);
+    for (let j = j0; j <= j1; j++) {
+      for (let i = i0; i <= i1; i++) {
+        const dx = at(i) - cell.x;
+        const dy = at(j) - cell.y;
         if (
           Math.max(
             Math.abs(dx),
             Math.abs(0.5 * dx + APOTHEM * dy),
             Math.abs(-0.5 * dx + APOTHEM * dy),
           ) <= APOTHEM
-        ) {
-          inside = true;
-          break;
+        )
+          land[j * n + i] = 1;
+      }
+    }
+  }
+  const d2 = new Float64Array(n * n).fill(Infinity);
+  for (const cell of shape.cells) {
+    for (const side of cell.seaSides) {
+      const a0 = (60 * side - 30) * DEG;
+      const a1 = (60 * side + 30) * DEG;
+      const [ax, ay] = [cell.x + Math.cos(a0), cell.y + Math.sin(a0)];
+      const [bx, by] = [cell.x + Math.cos(a1), cell.y + Math.sin(a1)];
+      const vx = bx - ax;
+      const vy = by - ay;
+      const [i0, i1, j0, j1] = texels(
+        Math.min(ax, bx),
+        Math.max(ax, bx),
+        Math.min(ay, by),
+        Math.max(ay, by),
+        2.5,
+      );
+      for (let j = j0; j <= j1; j++) {
+        for (let i = i0; i <= i1; i++) {
+          const [px, py] = [at(i), at(j)];
+          const u = clamp(((px - ax) * vx + (py - ay) * vy) / (vx * vx + vy * vy), 0, 1);
+          const dx = px - ax - u * vx;
+          const dy = py - ay - u * vy;
+          d2[j * n + i] = Math.min(d2[j * n + i], dx * dx + dy * dy);
         }
       }
-      let d2 = Infinity;
-      for (const s of coast) d2 = Math.min(d2, segDist2(px, py, s));
-      const d = Math.sqrt(d2);
-      data[j * n + i] = clamp(((inside ? -d : d) + 0.5) / 3, 0, 1) * 255;
     }
+  }
+  const data = new Uint8Array(n * n);
+  for (let k = 0; k < n * n; k++) {
+    const d = Math.sqrt(d2[k]);
+    data[k] = clamp(((land[k] ? -d : d) + 0.5) / 3, 0, 1) * 255;
   }
   return { data, n };
 }

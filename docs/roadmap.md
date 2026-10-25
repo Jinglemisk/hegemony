@@ -5,7 +5,7 @@ before planning, implementing, or declaring work complete. Implementation detail
 belongs in linked plans; unresolved owner decisions belong only in
 [questions.md](questions.md).
 
-Last updated: 2026-10-19.
+Last updated: 2026-10-26.
 
 ## Mandatory three-axis parity contract
 
@@ -139,18 +139,22 @@ shallow-economy [direction paper](reports/balance/2026-09-05-shallow-economy.md)
 the in-match shell with the Hybrid arc layout, on `feat/v2` through #79 to #120. The owner
 merged it into `main` on 2026-10-18 (#121). Its Step 11, the sim gate, moved to the
 [player trade plan](plans/player-trade.md); its Step 16, the refactor, is the
-[code-health plan](plans/code-health.md), except the island code the living map replaces.
+[code-health plan](plans/code-health.md), except the SVG island code, which the 3D map has
+since replaced.
 
-## Current initiative — code health and player trade, then the living map
+## Current initiative — code health, player trade and the 3D map
 
 [Player trade](plans/player-trade.md) ships to `main` in two PRs; it removes the bank and
 gives every settlement 1 food. The [code-health plan](plans/code-health.md), from the
 [v2 merge audit](reports/audits/2026-10-19-v2-merge-code-health.md), went first: five cleanup
 PRs before trade, kept apart from feature work so each could show the game unchanged. Trade's
 second PR carries its telemetry rewrite and the bot forecast's bank-adjacent code. The [development deck](plans/development-deck.md) follows trade and replaces
-Ventures. Step 11 and number tuning follow both. The 3D living map, in three.js after the
-[showcase](reference/design/showcases/living-map.html), is the next track; its plan is
-written when it starts.
+Ventures. Step 11 and number tuning follow both.
+
+The 3D map, in three.js after the [showcase](reference/design/showcases/living-map.html), is
+the only board. On 2026-10-26 the owner ruled out going back to 2D: no 2D board, no flag and
+no fallback without WebGL, so the SVG board survives only in old commits. Its seven open
+calls are [Q83](questions.md); further map work gets a plan when it starts.
 
 ## Locked v1 finish line
 

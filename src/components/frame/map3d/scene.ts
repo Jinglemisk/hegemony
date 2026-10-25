@@ -287,7 +287,7 @@ export function createScene(canvas: HTMLCanvasElement, shape: BoardShape) {
   const ringGeo = (ri: number, ro: number) =>
     own(new RingGeometry(ri, ro, 6, 1, Math.PI / 2).rotateX(-Math.PI / 2));
   // They lie a hair over the top and paint in order, so the pick covers a candidate
-  // and the keyboard's focus covers the pick, as on the SVG board.
+  // and the keyboard's focus covers the pick.
   const flat = (color: number) => own(new MeshBasicMaterial({ color, depthWrite: false }));
   const edgeRing = ringGeo(R_TOP - 0.075, R_TOP);
   const owners = own(

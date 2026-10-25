@@ -19,7 +19,7 @@ export type UnitBox = readonly [number, number, number, number];
 
 export type ScreenRect = { left: number; right: number; top: number; bottom: number };
 
-export type IslandFit = { s: number; cx: number; cy: number };
+type IslandFit = { s: number; cx: number; cy: number };
 
 export type FitInput = {
   width: number;

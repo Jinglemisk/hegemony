@@ -33,8 +33,7 @@
 @import "./styles/ceremony.css";
 /* The v2 frame (Hybrid arc): the shell every match is played in, one sheet per
    surface. Order matters here too: every surface restyles base's primitives
-   (a page's inline icon, for one, overrides the bar's). frame.css is the island,
-   left as it was for the living map. */
+   (a page's inline icon, for one, overrides the bar's). */
 @import "./styles/frame/tokens.css";
 @import "./styles/frame/base.css";
 @import "./styles/frame/bar.css";
@@ -42,7 +41,6 @@
 @import "./styles/frame/verbs.css";
 @import "./styles/frame/endturn.css";
 @import "./styles/frame/tooltip.css";
-@import "./styles/frame.css";
 @import "./styles/frame/pages.css";
 @import "./styles/frame/alarms.css";
 @import "./styles/frame/ideas.css";

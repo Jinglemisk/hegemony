@@ -1,17 +1,16 @@
 import { Fragment, memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { ComponentProps, CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import { sign } from "../../../ui/frameFormat";
 import { hexDistance } from "../../../game/mapTopology";
+import type { HegemonyState } from "../../../game/types";
 import { RESOURCE_LABELS, formatNumber } from "../../../ui/formatters";
 import { BUILDING_RASTERS, RESOURCE_RASTERS, UNREST_TIER_RASTERS } from "../../../ui/iconRegistry";
 import { rasterIcon } from "../../../ui/icons/placeholders";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
 import { settlementNames } from "../../../ui/settlementNames";
-import { BoardTip } from "../island/BoardTip";
-import type { Island } from "../island/Island";
-import { ARROWS, tileTip } from "../island/tileTip";
 import { Tip, TipLedger } from "../parts";
+import { BoardTip } from "./BoardTip";
 import { H_TILE } from "./camera";
 import { MAIN_Z, layoutMap } from "./layout";
 import type { Layout, Town } from "./layout";
@@ -21,23 +20,29 @@ import { MAP_MODES } from "./modes";
 import type { MapMode, MapRealm } from "./modes";
 import { createRuntime } from "./runtime";
 import type { Runtime } from "./runtime";
+import { ARROWS, tileTip } from "./tileTip";
 import "../../../styles/frame/map3d.css";
 
 /**
- * The living map (`?map=3d`): the island as a three.js board, a drop-in for the SVG
- * `Island` with the same props and the map mode (the shell's view state). The scene
- * draws the board; over it sit the HTML labels, upright at every angle, and one real
- * button per tile, clipped to the hex as drawn, so clicks, focus, screen readers and
- * the shell's popover anchors work as they do on the SVG board. Every mode's labels
- * are drawn at once; the zoom bands and the mode fade each kind in or out. The shell
- * mounts it only where WebGL draws (`livingMapOn`), and takes the SVG island back if
- * the renderer fails to start all the same.
+ * The living map: the island as a three.js board, in the map mode (the shell's view
+ * state). The scene draws the board; over it sit the HTML labels, upright at every
+ * angle, and one real button per tile, clipped to the hex as drawn, so clicks, focus,
+ * screen readers and the shell's popover anchors work on the tiles themselves. Every
+ * mode's labels are drawn at once; the zoom bands and the mode fade each kind in or out.
  */
 
-type BoardProps = ComponentProps<typeof Island> & {
+type BoardProps = {
+  G: HegemonyState;
   mode: MapMode;
-  /** The renderer could not start: the shell draws the SVG island instead. */
-  onFail: () => void;
+  selectedTileId: string | null;
+  highlightTileIds?: readonly string[];
+  placementActive?: boolean;
+  onTileAction: (tileId: string) => void;
+  /** A click on the sea, not on a tile or a mooring. */
+  onBackgroundAction?: () => void;
+  onMooringAction?: (vertexId: string) => void;
+  /** The player moved the map: anything anchored to a tile's old position is stale. */
+  onViewChange?: () => void;
 };
 
 const icon = (path: string) => <img alt="" src={rasterIcon(path)} />;
@@ -100,7 +105,8 @@ function Plate({ tile, dimmed }: { tile: MapTile; dimmed: boolean }) {
   );
 }
 
-/** An open tile's yield chip: its slots and what a slave makes there. */
+/** An open tile's yield chip: its slots and its land's resource (the Economy card
+ *  says what a slave makes under the standing Laws). */
 function Yield({ tile, dimmed }: { tile: MapTile; dimmed: boolean }) {
   const dim = dimmed ? " is-dimmed" : "";
   if (tile.terrain === "oracle") {
@@ -117,7 +123,7 @@ function Yield({ tile, dimmed }: { tile: MapTile; dimmed: boolean }) {
   }
   return (
     <div className={`lm-yield${dim}`} data-alpha="yield" data-wx={tile.x} data-wy={tile.y + 0.05}>
-      {tile.slots} {tile.resource ? RESOURCE_LABELS[tile.resource].toLowerCase() : "slots"}
+      {tile.slots} {tile.land ? RESOURCE_LABELS[tile.land].toLowerCase() : "slots"}
     </div>
   );
 }
@@ -355,7 +361,6 @@ function LivingMap({
   onBackgroundAction,
   onMooringAction,
   onViewChange,
-  onFail,
 }: BoardProps) {
   const stageRef = useRef<HTMLDivElement | null>(null);
   const runtime = useRef<Runtime | null>(null);
@@ -381,26 +386,20 @@ function LivingMap({
   });
 
   useLayoutEffect(() => {
-    let made: Runtime;
-    try {
-      made = createRuntime({
-        stage: stageRef.current!,
-        shape,
-        onViewChange: () => {
-          setHover(null);
-          viewChange.current?.();
-        },
-      });
-    } catch {
-      onFail();
-      return;
-    }
+    const made = createRuntime({
+      stage: stageRef.current!,
+      shape,
+      onViewChange: () => {
+        setHover(null);
+        viewChange.current?.();
+      },
+    });
     runtime.current = made;
     return () => {
       made.dispose();
       runtime.current = null;
     };
-  }, [shape, onFail]);
+  }, [shape]);
 
   // The heavy work (the fit, the shaders) waits for the passive pass; see `start`.
   useEffect(() => runtime.current?.start(), [shape]);
@@ -495,7 +494,7 @@ function LivingMap({
       </div>
       <div aria-hidden="true" className="lm-overlay">
         {model.tiles.map((tile) =>
-          tile.resource ? (
+          tile.land ? (
             <div
               className={`lm-far${candidates && !candidates.has(tile.id) ? " is-dimmed" : ""}`}
               data-alpha="faryield"
@@ -505,7 +504,7 @@ function LivingMap({
               key={`far-${tile.id}`}
             >
               <b>{tile.slots}</b>
-              <img alt="" src={rasterIcon(`resources/${tile.resource}`)} />
+              <img alt="" src={rasterIcon(RESOURCE_RASTERS[tile.land])} />
             </div>
           ) : null,
         )}

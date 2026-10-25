@@ -5,14 +5,13 @@ test("the living map: a tile's button places the metropolis, and arrows walk the
 }) => {
   // Playwright's renderer is a software one: each frame of the map takes a while.
   test.slow();
-  await page.goto("/?setup=manual&seed=42&board=scenario&map=3d");
+  await page.goto("/?setup=manual&seed=42&board=scenario");
   await page.locator(".living-map[data-ready]").waitFor();
 
-  // The tile buttons sit over the drawn hexes, so the smoke test's click works here too.
-  await expect(page.getByText("Select a tile for your metropolis", { exact: false })).toBeVisible();
+  // The placement's dialog is what the mode keys must keep still behind, and its city
+  // is what the tile's name describes below.
   await page.getByRole("button", { name: /Hex -2,0,/ }).click();
   await expect(page.getByRole("heading", { name: "Choose metropolis pops" })).toBeVisible();
-  // The map's mode keys keep still behind a dialog.
   const modes = page.getByRole("group", { name: "Map mode" });
   await page.keyboard.press("3");
   await expect(modes.getByRole("button", { name: "Terrain" })).toHaveAttribute(
@@ -21,7 +20,6 @@ test("the living map: a tile's button places the metropolis, and arrows walk the
   );
   await page.getByRole("button", { name: "Place metropolis" }).click();
   await expect(page.getByRole("heading", { name: "Choose metropolis pops" })).toBeHidden();
-  await expect(page.getByRole("img", { name: /Nikos is acting/ })).toBeVisible();
   // The tile's name says what its plate and pips show.
   await expect(
     page.getByRole("button", {

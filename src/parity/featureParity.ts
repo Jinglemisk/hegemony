@@ -596,7 +596,7 @@ export const CONTENT_MANIFEST = {
   terrain: {
     ids: TERRAIN_CONTENT_IDS,
     engine: { implementation: "src/game/content.ts", evidence: "getTerrainDeck" },
-    frontend: { implementation: "src/components/frame/island/Island.tsx", evidence: "terrain" },
+    frontend: { implementation: "src/components/frame/map3d/mapModel.ts", evidence: "terrain" },
     simulation: { implementation: "src/sim/setup.ts", evidence: "boardLayout" },
     telemetry: { implementation: "src/sim/telemetry.ts", evidence: "frontierTiles" },
     behaviorFixtures: ["contentInventory"],

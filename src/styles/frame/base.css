@@ -190,11 +190,11 @@
   pointer-events: auto;
 }
 
-/* What the board is asking, on raised paper under the ticker, over open sea. */
+/* What the board is asking, on raised paper under the compass, over open sea. */
 .map-caption {
   position: fixed;
   z-index: var(--z-over-sea);
-  top: calc(var(--bar-h) + var(--hit) + var(--s-2));
+  top: calc(var(--bar-h) + var(--s-16));
   left: var(--s-4);
   padding: var(--s-1) var(--s-3);
   box-shadow: var(--paper-edge), var(--shadow-hud);

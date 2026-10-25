@@ -13,12 +13,11 @@ import { Chips } from "../parts";
 import type { LedgerRow } from "../parts";
 
 /**
- * What every board says about a tile, whichever board draws it: its accessible
- * name, its hover tip, and how the arrow keys walk from it. The SVG island and the
- * living map share these, so the two boards cannot drift apart.
+ * What the map says about a tile: the start of its accessible name, its hover tip,
+ * and how the arrow keys walk from it.
  */
 
-export const POP_ORDER: readonly PopType[] = ["slaves", "freemen", "citizens"];
+const POP_ORDER: readonly PopType[] = ["slaves", "freemen", "citizens"];
 
 /** The leading settlement of a tile: a city before a colony. */
 export function orderSettlements(settlements: readonly Settlement[]) {
@@ -33,15 +32,6 @@ export function tileName(G: HegemonyState, tile: HexTile) {
     (primary ? ` for ${RESOURCE_LABELS[primary].toLowerCase()}` : "");
   return `Hex ${tile.id}, ${tile.terrain} tile, ${slotLabel}`;
 }
-
-/** The tile's accessible name on the SVG board: its name, then its lead settlement's. */
-export function tileLabel(G: HegemonyState, tile: HexTile, names: Map<string, string>) {
-  const [lead] = orderSettlements(tile.settlements);
-  const leadName = lead ? names.get(lead.id) : undefined;
-  return `${tileName(G, tile)}${leadName ? `, ${leadName}` : ""}`;
-}
-
-export type TileCenter = { tile: HexTile; x: number; y: number };
 
 /**
  * Arrow keys walk the board by where the hexes are drawn: the nearest tile inside

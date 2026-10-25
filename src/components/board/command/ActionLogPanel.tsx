@@ -10,7 +10,7 @@ type Filter = PlayerId | "all";
 type TaggedEntry = { entry: LogEntry; player: PlayerId | null };
 
 /**
- * The chronicle — what happened, newest first, in the game's own voice, as a ledger
+ * The chronicle — what happened, in the game's own voice, as a ledger
  * like the realm's pages: a caps rule per year, a line per deed with its seat's seal.
  *
  * Three things were wrong with it and all three are fixed here:
@@ -29,10 +29,10 @@ type TaggedEntry = { entry: LogEntry; player: PlayerId | null };
  * heuristic survives only as a fallback for saves written before that field
  * existed.
  *
- * Opened `upward`, above its line (the corner dock), it runs oldest first and
- * keeps its foot in view, so the newest deed sits next to the line it opened from.
+ * It opens upward, above its line in the corner dock, so it runs oldest first and
+ * keeps its foot in view: the newest deed sits next to the line it opened from.
  */
-export function ActionLogPanel({ G, upward = false }: { G: HegemonyState; upward?: boolean }) {
+export function ActionLogPanel({ G }: { G: HegemonyState }) {
   const [filter, setFilter] = useState<Filter>("all");
   const list = useRef<HTMLDivElement>(null);
 
@@ -49,20 +49,20 @@ export function ActionLogPanel({ G, upward = false }: { G: HegemonyState; upward
       rows.push({ entry, player: deedSeat(G, entry) });
     }
 
-    return upward ? rows : rows.reverse();
-  }, [G, upward]);
+    return rows;
+  }, [G]);
 
   const visible = filter === "all" ? tagged : tagged.filter((row) => row.player === filter);
 
-  // Upward, the foot comes into view as deeds land and as the filter changes, and
-  // stays there when the list is resized under it (a page dropped above it), unless
-  // the reader has scrolled away from it.
+  // The foot comes into view as deeds land and as the filter changes, and stays
+  // there when the list is resized under it (a page dropped above it), unless the
+  // reader has scrolled away from it.
   useLayoutEffect(() => {
-    if (upward && list.current) list.current.scrollTop = list.current.scrollHeight;
-  }, [upward, filter, tagged.length]);
+    if (list.current) list.current.scrollTop = list.current.scrollHeight;
+  }, [filter, tagged.length]);
   useEffect(() => {
     const el = list.current;
-    if (!upward || !el) return;
+    if (!el) return;
     let atFoot = true;
     const read = () => {
       atFoot = el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
@@ -76,7 +76,7 @@ export function ActionLogPanel({ G, upward = false }: { G: HegemonyState; upward
       el.removeEventListener("scroll", read);
       keep.disconnect();
     };
-  }, [upward]);
+  }, []);
 
   // Fold consecutive entries from the same year under one heading.
   const groups: Array<{ year: number; rows: TaggedEntry[] }> = [];

@@ -1,11 +1,10 @@
 /* The Assembly sitting: a modal over the shell, after the ceremony design. The scrim
    is light so the map reads behind it; minimised, the sitting is the dock under the
-   ticker, where the rivals' toasts sit when it is not. Sizes come from the frame's
+   compass, where the rivals' toasts sit when it is not. Sizes come from the frame's
    tokens, so the sheet fits 1280 × 720 without scrolling. */
 
-/* The sitting starts under the alarms row, and the top HUD (the bar, the Chronicle and
-   every alarm disc, an offer's among them) stands above its scrim, in full colour and in
-   reach. */
+/* The sitting starts under the alarms row, and the top HUD (the bar and every alarm
+   disc, an offer's among them) stands above its scrim, in full colour and in reach. */
 .modalBackdrop.sitting-scrim {
   z-index: var(--z-takeover);
   align-items: flex-start;
@@ -544,7 +543,7 @@
 
 .sit-dock {
   position: absolute;
-  top: calc(var(--bar-h) + var(--hit) + var(--s-4));
+  top: calc(var(--bar-h) + var(--s-16));
   left: var(--s-4);
   display: grid;
   grid-template-areas:
@@ -553,7 +552,7 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--s-2) var(--s-3);
-  width: var(--ticker-w);
+  width: var(--strip-w);
   padding: var(--s-3) var(--s-4);
   border-radius: var(--r-8);
   color: var(--ivory);

@@ -1,6 +1,4 @@
 import { isTyping } from "../../../ui/keys";
-import { fitIsland, tokenPx } from "../island/fit";
-import { nextTileInDirection } from "../island/tileTip";
 import {
   H_TILE,
   R_TOP,
@@ -19,12 +17,14 @@ import {
   zoomRange,
 } from "./camera";
 import type { Cam, Frame, Goal, Point, View } from "./camera";
+import { fitIsland, tokenPx } from "./fit";
 import type { Layout } from "./layout";
 import type { BoardShape, MapModel } from "./mapModel";
 import type { MapMode } from "./modes";
 import { BONE, GLAZE, OPEN, SEA, TIER, glazeOf } from "./palette";
 import { createScene } from "./scene";
 import type { Ring } from "./scene";
+import { nextTileInDirection } from "./tileTip";
 
 /**
  * The living map's runtime: the camera and its input, the one draw loop, and the
@@ -95,13 +95,7 @@ export function createRuntime({
   const canvas = document.createElement("canvas");
   canvas.className = "lm-canvas";
   stage.prepend(canvas);
-  let scene: ReturnType<typeof createScene>;
-  try {
-    scene = createScene(canvas, shape);
-  } catch (error) {
-    canvas.remove();
-    throw error;
-  }
+  const scene = createScene(canvas, shape);
   const cellIndex = new Map(shape.cells.map((cell, i) => [cell.id, i]));
 
   let frame: Frame = { W: 0, H: 0, cx: 0, cy: 0, zFit: 1 };
@@ -567,7 +561,7 @@ export function createRuntime({
     }
     e.preventDefault();
   };
-  // 0 returns to the opening view from anywhere but a field, as on the SVG board.
+  // 0 returns to the opening view from anywhere but a field.
   const zero = (e: KeyboardEvent) => {
     if (e.key === "0" && !e.altKey && !e.metaKey && !e.ctrlKey && !isTyping(e.target)) reset();
   };

@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "4"
-updated: 2026-10-25
+updated: 2026-10-26
 ---
 
 # Luxury Goods — feature plan & open decisions
@@ -245,6 +245,10 @@ consume.
 **Exit gate:** engine coast legality and SVG coastline/vertex placement derive from the same
 board topology; the classic map is behaviorally unchanged; six authored marker locations can
 be selected without coordinate guesses; type-check, map tests, render test, lint, and build pass.
+
+The SVG marker went with the SVG board on 2026-10-26. The 3D map moors each good as a raft
+at the same canonical vertex id, offset toward the open sea, and its render test moved with
+it: one mooring per selected vertex, named for both tiles.
 
 ### Slice 2 — the Port, claims, and the happiness bonus
 

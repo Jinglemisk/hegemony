@@ -1,11 +1,11 @@
 /* ============================================================================
-   Toasts: one moment another seat had, under the ticker, then gone
+   Toasts: one moment another seat had, under the compass, then gone
    ========================================================================== */
 .toast-lane {
   position: absolute;
-  top: calc(var(--bar-h) + var(--hit) + var(--s-4));
+  top: calc(var(--bar-h) + var(--s-16));
   left: var(--s-4);
-  width: var(--ticker-w);
+  width: var(--strip-w);
 }
 .toast {
   display: grid;

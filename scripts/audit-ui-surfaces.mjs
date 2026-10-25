@@ -9,13 +9,11 @@
  * optionally an `after` that leaves the app somewhere the next surface can start
  * from. They run in order and share one page, so each one inherits the last.
  */
-// AUDIT_BASE points the audits at another checkout's dev server; AUDIT_QUERY adds
-// to every visit (map=3d audits the living map).
+// AUDIT_BASE points the audits at another checkout's dev server.
 export const BASE = process.env.AUDIT_BASE ?? "http://127.0.0.1:5199";
-const QUERY = process.env.AUDIT_QUERY ? `&${process.env.AUDIT_QUERY}` : "";
 const visit = async (p, search, waitMs) => {
-  await p.goto(`${BASE}/?${search}${QUERY}`, { waitUntil: "networkidle" });
-  // The living map shows once its first frame is drawn.
+  await p.goto(`${BASE}/?${search}`, { waitUntil: "networkidle" });
+  // The map shows once its first frame is drawn.
   await p.waitForFunction(() => !document.querySelector(".living-map:not([data-ready])"));
   await p.waitForTimeout(waitMs);
 };
@@ -70,16 +68,14 @@ const pressVerb = async (p, group, options = []) => {
 };
 
 /** Pick the first tile whose name plate and label pass `test`, and wait for its page.
- *  The living map's plates float apart from its tiles; its labels name the lead first. */
+ *  The plates float apart from the tile buttons; a tile's label names its lead
+ *  settlement after the semicolon. */
 /* global document */
 const pickTile = async (p, test) => {
   const id = await p.evaluate((source) => {
     const fits = new Function(`return ${source}`)();
-    const plate = (e) =>
-      e.querySelector(".plate-text")?.textContent ??
-      e.getAttribute("aria-label")?.match(/; ([^,]+),/)?.[1] ??
-      "";
-    const tile = [...document.querySelectorAll(".island [data-tile-id], .lm-tile")].find((e) =>
+    const plate = (e) => e.getAttribute("aria-label")?.match(/; ([^,]+),/)?.[1] ?? "";
+    const tile = [...document.querySelectorAll(".lm-tile")].find((e) =>
       fits(plate(e), e.getAttribute("aria-label") ?? ""),
     );
     return tile?.dataset.tileId ?? null;
@@ -92,10 +88,10 @@ const pickTile = async (p, test) => {
   await p.waitForTimeout(400);
 };
 
-/** The Chronicle drops from the ticker (on the living map, rises from the corner dock's
- *  line); it stays open until its tab is pressed again. */
+/** The Chronicle rises from the corner dock's line; it stays open until the line is
+ *  pressed again. */
 const setChronicle = async (p, open) => {
-  const t = p.locator(".ticker-head, .dock-line");
+  const t = p.locator(".dock-line");
   if ((await t.count()) && ((await t.getAttribute("aria-expanded")) === "true") !== open) {
     await t.click().catch(() => {});
     await p.waitForTimeout(250);
@@ -297,7 +293,7 @@ export const SURFACES = [
     name: "pick-mooring",
     go: async (p) => {
       await p
-        .locator(".island .moor, .lm-moor:not(.is-faded)")
+        .locator(".lm-moor:not(.is-faded)")
         .first()
         .click({ force: true })
         .catch(() => {});

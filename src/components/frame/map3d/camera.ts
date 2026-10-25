@@ -1,4 +1,4 @@
-import type { UnitBox } from "../island/fit";
+import type { UnitBox } from "./fit";
 import type { MapMode } from "./modes";
 
 /**
@@ -7,7 +7,7 @@ import type { MapMode } from "./modes";
  * rising to 45° close in).
  *
  * World units are hexes (centre to corner is 1) on the sea plane, with the island's
- * centre at the origin, x east and y south as on the SVG board; `h` is height above
+ * centre at the origin, x east and y south as on the engine's plane; `h` is height above
  * the sea. The camera looks at a target on the plane; `z` is screen pixels per world
  * unit at that target. The target sits at the frame's (cx, cy): the middle of the
  * room the chrome leaves, not the middle of the screen.

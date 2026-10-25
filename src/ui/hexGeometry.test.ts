@@ -1,74 +1,9 @@
 import { describe, expect, it } from "vitest";
-import {
-  getHexCorners,
-  hexCenter,
-  hexPoints,
-  LUXURY_MARKER_OFFSET,
-  luxuryMarkerPosition,
-  vertexCenter,
-} from "./hexGeometry";
+import { hexCenter, luxuryMarkerPosition, vertexCenter } from "./hexGeometry";
 import type { AxialCell } from "../game/mapTopology";
 
-/** Tiles are drawn at a hex radius of 45 here; any radius would do. */
+/** Any hex size would do; one other than 1, so a dropped `size` factor shows. */
 const HEX_SIZE = 45;
-
-describe("hex shape", () => {
-  it("draws six corners at hex radius", () => {
-    const corners = getHexCorners(0, 0, HEX_SIZE);
-
-    expect(corners).toHaveLength(6);
-
-    for (const corner of corners) {
-      expect(Math.hypot(corner.x, corner.y)).toBeCloseTo(HEX_SIZE, 6);
-    }
-  });
-
-  it("emits a closed six-point outline", () => {
-    expect(hexPoints(HEX_SIZE).split(" ")).toHaveLength(6);
-  });
-
-  it("corners are 60° apart, starting at -30°", () => {
-    const [first, second] = getHexCorners(0, 0, HEX_SIZE);
-    const angleOf = (p: { x: number; y: number }) => (Math.atan2(p.y, p.x) * 180) / Math.PI;
-
-    expect(angleOf(first)).toBeCloseTo(-30, 6);
-    expect(angleOf(second) - angleOf(first)).toBeCloseTo(60, 6);
-  });
-});
-
-describe("layout agrees with the outline", () => {
-  // The pairing R6 broke: the outline stayed pointy-top while the layout was
-  // rewritten flat-top, so every tile overlapped its neighbours. Note that BOTH
-  // layouts put centres √3·size apart — they are the same tiling rotated 90° —
-  // so a distance check passes either way and proves nothing. The bug is the
-  // MISMATCH, so each test below measures the layout against the outline's own
-  // bounding box rather than against a remembered constant.
-
-  const corners = getHexCorners(0, 0, HEX_SIZE);
-  const outlineWidth = Math.max(...corners.map((c) => c.x)) - Math.min(...corners.map((c) => c.x));
-  const outlineHeight = Math.max(...corners.map((c) => c.y)) - Math.min(...corners.map((c) => c.y));
-
-  it("spaces columns by the outline's real width", () => {
-    // Flat-top spacing steps 1.5·size while a pointy-top outline is √3·size
-    // wide — a 13% overlap on every tile, which is what the board looked like.
-    const columnStep = hexCenter(1, 0, HEX_SIZE).x - hexCenter(0, 0, HEX_SIZE).x;
-
-    expect(columnStep).toBeCloseTo(outlineWidth, 6);
-  });
-
-  it("keeps same-row neighbours level", () => {
-    // Pointy-top hexes in one row share a y. Flat-top spacing shears them.
-    expect(hexCenter(1, 0, HEX_SIZE).y).toBeCloseTo(0, 6);
-  });
-
-  it("spaces rows by three-quarters of the outline's height", () => {
-    // Rows interlock: each drops 3/4 of a hex so the points nest between.
-    const rowStep = hexCenter(0, 1, HEX_SIZE).y - hexCenter(0, 0, HEX_SIZE).y;
-
-    expect(rowStep).toBeCloseTo(outlineHeight * 0.75, 6);
-    expect(hexCenter(0, 1, HEX_SIZE).x).toBeCloseTo(outlineWidth / 2, 6);
-  });
-});
 
 describe("luxury vertex projection", () => {
   // The vertex where tiles (0,0), (1,0) and the sea cell (1,-1) meet.
@@ -97,11 +32,12 @@ describe("luxury vertex projection", () => {
   });
 
   it("moors the marker the offset distance seaward of its vertex", () => {
+    const offset = 14;
     const at = vertexCenter(vertex.cells, HEX_SIZE);
-    const marker = luxuryMarkerPosition(vertex, HEX_SIZE, LUXURY_MARKER_OFFSET);
+    const marker = luxuryMarkerPosition(vertex, HEX_SIZE, offset);
     const sea = hexCenter(vertex.seaCell.q, vertex.seaCell.r, HEX_SIZE);
 
-    expect(Math.hypot(marker.x - at.x, marker.y - at.y)).toBeCloseTo(LUXURY_MARKER_OFFSET, 6);
+    expect(Math.hypot(marker.x - at.x, marker.y - at.y)).toBeCloseTo(offset, 6);
     // Seaward: the marker is closer to the sea cell's centre than the vertex is.
     expect(Math.hypot(marker.x - sea.x, marker.y - sea.y)).toBeLessThan(
       Math.hypot(at.x - sea.x, at.y - sea.y),

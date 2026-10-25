@@ -2,7 +2,7 @@
 
 Status: living reference for the implemented frontend.
 
-Last updated: 2026-10-22.
+Last updated: 2026-10-26.
 
 This contract defines how the frontend explains gameplay mechanics without creating a
 second rules engine. Engine selectors, action statuses, and content manifests are the
@@ -104,7 +104,7 @@ not a generic rules scripting engine. The shared layer owns only presentation, a
 focus, cancellation/expiry, and public/private projection contracts. Luxury claim choices,
 trade responses, National Idea picks and the hunger choice use it rather than creating
 feature-private overlay infrastructure. A rival's public moment (its hunger, its Idea
-purchase, its riot or revolt) lands as a toast in the lane under the ticker: the engine
+purchase, its riot or revolt) lands as a toast in the lane under the compass: the engine
 tags the Chronicle line with a `LogMoment`, and `src/components/frame/moments.tsx` queues
 and words it. Each seat keeps its own place in the log, so in hotseat a seat taking the
 screen reads what the others did since its last look. Title changes toast every seat,
@@ -128,13 +128,35 @@ authority only to execute commands; React receives `PlayerView.state`, never tha
 Changing the hot-seat viewer recomputes the projection so only that seat's private Assembly
 and event decision data becomes visible.
 
+## Map presentation
+
+The board is the 3D map, drawn with three.js. The owner ruled on 2026-10-26 that there is
+no 2D board and no fallback: without WebGL the game does not load. The map reads the board
+and the engine's selectors through one pure projection (`mapModel`), so it cannot disagree
+with the rules. The map mode is shell view state and changes nothing in the game.
+
+The canvas is only a picture. Each tile is a real HTML button over the scene, clipped to
+the hex as drawn, whose accessible name follows the mode, and each luxury good's name is a
+button too. The other labels are HTML that stays upright at any angle and takes no pointer,
+so a label never eats a tile's click. That keeps clicks, focus, screen readers, popover
+anchors, the browser smoke test and the UI audits working on tiles rather than pixels.
+
+The camera moves, so anything placed by a tile's screen position goes stale. A popover
+pinned to a tile closes when the view moves, while the armed pick stays armed, and no tile
+tooltip opens while the view is still moving.
+
+Keys 1 to 5 switch the map mode from anywhere but a field or a dialog, so the verb discs
+take no number keys and each key has one job (Q83 asks whether to keep that). The scene
+draws only while the camera eases or ambient motion is allowed: the page visible, the map
+on screen, no reduced motion, and a GPU rather than software rendering.
+
 ## Assembly presentation
 
 The sitting is a modal over the shell (`AssemblySitting`), and the map, top bar and realm
 stay drawn behind its light scrim. `useSitting` reads the engine's three phases as six
 stages: the proposal choice, the drawn card, the ballot read, the vote, an item's result
 and the house rising. The ballot read and each result are shell beats the engine does
-not wait for. Minimise (or Escape) folds any stage to the dock under the ticker, where
+not wait for. Minimise (or Escape) folds any stage to the dock under the compass, where
 rivals' toasts sit otherwise; the dock or Escape restores the same stage. While the
 Assembly sits the shell only reads: the sitting is the turn gate's pending reason
 (`turnPending`, read through `turnBlocked` on the context), so the verb discs wear a lock,

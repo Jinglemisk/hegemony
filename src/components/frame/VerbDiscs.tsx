@@ -2,7 +2,6 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, MouseEvent } from "react";
 import type { Resources } from "../../game/types";
 import { canPay } from "../../ui/frameFormat";
-import { isTyping } from "../../ui/keys";
 import type { DiscGroup, DiscOption } from "./discs";
 import { Chips, Ico } from "./parts";
 
@@ -77,20 +76,8 @@ function fanShapes(item: HTMLElement, d: number): Array<[number, number, number,
   ];
 }
 
-/**
- * Where a fan opens, ported from the Hybrid arc mock: its options sit on an arc
- * around the host's centre, aimed at the island's centre (a second fan: straight
- * out from the disc through its option). The arc may turn up to a right angle
- * either way and widen; the cheapest placement wins in which no circle or label
- * leaves the screen, overlaps another, or touches the sheet (by its curve), the chrome, a settlement's
- * mark (its seal and name), a mooring, or the open disc's hint. A second fan also keeps clear of the first fan's
- * circles and labels, so its peers stay in reach. When nothing clears the
- * settlements, they leave the walls first, then the gap between peers.
- */
-/** The island's box on screen: the SVG board's, or the living map's tiles together. */
+/** The island's box on screen: its tiles together. */
 function islandBox() {
-  const svg = document.querySelector(".island");
-  if (svg) return svg.getBoundingClientRect();
   const tiles = [...document.querySelectorAll(".lm-tile")]
     .map((el) => el.getBoundingClientRect())
     .filter((r) => r.width > 0 && r.right > -innerWidth);
@@ -102,6 +89,16 @@ function islandBox() {
   return { left, top, width, height };
 }
 
+/**
+ * Where a fan opens, ported from the Hybrid arc mock: its options sit on an arc
+ * around the host's centre, aimed at the island's centre (a second fan: straight
+ * out from the disc through its option). The arc may turn up to a right angle
+ * either way and widen; the cheapest placement wins in which no circle or label
+ * leaves the screen, overlaps another, or touches the sheet (by its curve), the chrome, a settlement's
+ * mark (its name plate), a mooring, or the open disc's hint. A second fan also keeps clear of the first fan's
+ * circles and labels, so its peers stay in reach. When nothing clears the
+ * settlements, they leave the walls first, then the gap between peers.
+ */
 function placeFan(host: HTMLElement, fanAt: WeakMap<Element, [number, number]>) {
   const items = [...host.querySelectorAll<HTMLElement>(":scope > .fan > .fan-item")];
   const n = items.length;
@@ -151,11 +148,7 @@ function placeFan(host: HTMLElement, fanAt: WeakMap<Element, [number, number]>) 
       }
     }
   }
-  const marks = [
-    ...document.querySelectorAll(
-      ".island .settle, .island .settle-shared, .island .moor, .living-map .lm-plate, .living-map .lm-moor:not(.is-faded)",
-    ),
-  ]
+  const marks = [...document.querySelectorAll(".lm-plate, .lm-moor:not(.is-faded)")]
     .map((el) => el.getBoundingClientRect())
     .filter((r) => r.width > 0)
     .map(pad);
@@ -275,22 +268,18 @@ function placeFan(host: HTMLElement, fanAt: WeakMap<Element, [number, number]>) 
  * rules refuse it (a touch screen has no hover); a click on an armed disc
  * gives the map back. Enter or ArrowUp on a disc opens its fan and moves focus
  * in; arrows walk a fan, Enter opens a second fan, Escape backs out one level.
- * The number keys act on the discs in order.
+ * The number keys are the map's (its modes), so the discs take none.
  */
 export function VerbDiscs({
   groups,
   store,
   locked = false,
-  hotkeys = true,
 }: {
   groups: DiscGroup[];
   /** The Assembly sits: each disc wears a lock and its fan only reads. */
   locked?: boolean;
   /** The viewer's resources: a price reads short only when this cannot pay it. */
   store: Resources;
-  /** The number keys act on the discs. Not on the living map: there the digits switch
-   *  its mode (1 to 5), one key, one act. */
-  hotkeys?: boolean;
 }) {
   const [path, setPath] = useState<Path>([]);
   const pathRef = useRef(path);
@@ -367,7 +356,7 @@ export function VerbDiscs({
     onPointerLeave: () => linger(key),
   });
 
-  const pressDisc = useCallback((group: DiscGroup, keyboard: boolean) => {
+  const pressDisc = (group: DiscGroup, keyboard: boolean) => {
     window.clearTimeout(timers.current.get(group.id));
     const armed = armedLeaf(group.options);
     const primary = findOption(group.options, group.primary);
@@ -383,7 +372,7 @@ export function VerbDiscs({
       if (keyboard) focusInto.current = group.id;
       setPath([group.id]);
     }
-  }, []);
+  };
 
   const openFan = (key: string) => {
     focusInto.current = key;
@@ -397,25 +386,7 @@ export function VerbDiscs({
         event.stopPropagation();
         setPath(pathRef.current.slice(0, -1));
         hostBtn(key)?.focus();
-        return;
       }
-      const index = Number(event.key) - 1;
-      if (
-        !hotkeys ||
-        !Number.isInteger(index) ||
-        index < 0 ||
-        index >= groups.length ||
-        event.altKey ||
-        event.ctrlKey ||
-        event.metaKey ||
-        event.repeat ||
-        isTyping(event.target) ||
-        document.querySelector('[aria-modal="true"]')
-      ) {
-        return;
-      }
-      hostBtn(groups[index].id)?.focus();
-      pressDisc(groups[index], true);
     };
     const away = (event: PointerEvent) => {
       if (!listRef.current?.contains(event.target as Node)) setPath([]);
@@ -436,7 +407,7 @@ export function VerbDiscs({
     };
     // hostBtn only reads the list ref.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groups, pressDisc, hotkeys]);
+  }, []);
 
   useEffect(() => {
     const pending = timers.current;
@@ -529,7 +500,6 @@ export function VerbDiscs({
         const live = group.options.some((option) => option.enabled);
         const isOpen = within(path, group.id);
         const isArmed = Boolean(armedLeaf(group.options));
-        const hotkey = hotkeys && i < 9 ? String(i + 1) : undefined;
         const label = primary
           ? `${group.label}: ${primary.label}, ${spoken(primary) || primary.hint}. Enter for more.`
           : `${group.label}: ${group.hint.toLowerCase()}.`;
@@ -563,7 +533,6 @@ export function VerbDiscs({
               aria-disabled={live ? undefined : true}
               aria-expanded={isOpen}
               aria-haspopup="menu"
-              aria-keyshortcuts={hotkey}
               aria-label={label}
               aria-pressed={isArmed || undefined}
               className="verb-btn"
@@ -577,11 +546,6 @@ export function VerbDiscs({
             >
               <span className="verb-disc" data-c="verb-disc" data-exclude {...gate.disc}>
                 <Ico path={group.icon} size="disc" />
-                {hotkey ? (
-                  <span aria-hidden="true" className="verb-key">
-                    {hotkey}
-                  </span>
-                ) : null}
                 {group.left === undefined ? null : (
                   <span aria-hidden="true" className="verb-count">
                     {group.left}

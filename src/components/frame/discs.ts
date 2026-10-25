@@ -31,7 +31,7 @@ import { getOwnedHoldings } from "../board/helpers";
  * The verb discs on the realm sheet's edge, as data: a disc is a group of
  * options, in the order the owner picked (Grow, People, Expand, Build, Civic,
  * Trade). The count is not fixed anywhere else — the sheet lays out however
- * many groups this returns, and the hotkeys follow the order.
+ * many groups this returns.
  *
  * An option either runs (a command, or arming the map for one) or holds a
  * second fan of its own (Build's classes, the ladder's rungs).

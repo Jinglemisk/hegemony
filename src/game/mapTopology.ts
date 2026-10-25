@@ -171,7 +171,7 @@ export function luxuryEligibleVertices(tiles: readonly AxialCell[]): LuxuryVerte
 }
 
 /** Axial → planar embedding at unit hex size. The renderer's `hexCenter` is this
- *  times its pixel size — one formula, owned here, so the engine's angular order
+ *  times its hex size — one formula, owned here, so the engine's angular order
  *  and the drawn board can never disagree about where a cell sits. */
 export function axialToPlane(q: number, r: number) {
   return { x: Math.sqrt(3) * (q + r / 2), y: 1.5 * r };

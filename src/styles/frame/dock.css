@@ -1,9 +1,9 @@
 /* ============================================================================
-   The corner dock (?map=3d), after the living-map prototype: the right column
-   under the consult strip. A dropped page runs down it as far as it needs and
-   stops above the dock. The dock is one paper at the foot: the map's key when
-   open over its row, the Chronicle when open, then the Chronicle's newest line
-   over the five map modes, with End turn spanning both rows on the right.
+   The corner dock, after the living-map prototype: the right column under the
+   consult strip. A dropped page (bar.css) runs down it as far as it needs and
+   stops above the dock. The dock is one paper at the foot: the map's key when open
+   over its row, the Chronicle when open, then the Chronicle's newest line over
+   the five map modes, with End turn spanning both rows on the right.
    ========================================================================== */
 .dock-col {
   --col-h: calc(100vh - var(--bar-h) - var(--hit));
@@ -12,7 +12,7 @@
   top: calc(var(--bar-h) + var(--hit));
   right: 0;
   bottom: 0;
-  width: min(var(--ticker-w), 100%);
+  width: min(var(--strip-w), 100%);
   display: flex;
   flex-direction: column;
   pointer-events: none;
@@ -20,22 +20,6 @@
 .dock-col > * {
   pointer-events: auto;
 }
-/* The page keeps its paper and its drop; in the column it is as tall as it needs,
-   and shorter, scrolling, when the dock grows under it. The Codex takes the whole
-   drop, so turning a chapter never moves its foot. */
-.dock-col > .consult-sheet {
-  position: static;
-  flex: 0 1 auto;
-  width: auto;
-  min-height: 0;
-  max-height: none;
-  margin-bottom: var(--s-2);
-}
-.dock-col > .consult-sheet[data-tab="codex"] {
-  flex-grow: 1;
-  height: auto;
-}
-
 .dock {
   flex: none;
   margin-top: auto;
@@ -188,8 +172,13 @@
   width: 100%;
   height: 100%;
 }
-/* A new line rises into place. */
-.dock-line .ticker-line {
+/* The line, cut to fit (see FittedLine); a new one rises into place. */
+.dock-line-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   animation: dockLineIn 450ms var(--ease-out);
 }
 @keyframes dockLineIn {
@@ -255,16 +244,8 @@
   bottom: var(--price-h);
 }
 
-/* ---- the rest of the shell, with the ticker gone from the top left ------------ */
-/* The compass takes the corner under the bar; what hung under the ticker drops below it. */
-.frame.has-dock .toast-lane,
-.frame.has-dock .sit-dock,
-.frame.has-dock .map-caption {
-  top: calc(var(--bar-h) + var(--s-16));
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .dock-line .ticker-line {
+  .dock-line-text {
     animation: none;
   }
 }

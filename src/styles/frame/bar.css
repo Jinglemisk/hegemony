@@ -1,6 +1,6 @@
 /* ============================================================================
-   Top bar: the clock, the purse, the rivals, and the two tabs that hang from
-   its ends (the ticker and the consult strip, with the sheet it drops)
+   Top bar: the clock, the purse, the rivals, and the consult strip that hangs
+   from its right end
    ========================================================================== */
 .topbar {
   position: absolute;
@@ -191,91 +191,18 @@
   color: var(--ink);
 }
 
-/* ---- ticker: the last Chronicle line, a tab hanging from the bar's left end --- */
-.ticker {
-  position: absolute;
-  top: var(--bar-h);
-  left: 0;
-  width: var(--ticker-w);
-  height: var(--hit);
-  background: var(--bone);
-  border-bottom-right-radius: var(--fillet);
-}
-/* the concave join of tab and bar */
-.ticker::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 100%;
-  width: var(--fillet);
-  height: var(--fillet);
-  background: radial-gradient(
-    circle at 100% 100%,
-    transparent calc(var(--fillet) - var(--rule)),
-    var(--bone) var(--fillet)
-  );
-}
-.ticker-head {
-  width: 100%;
-  height: 100%;
-  padding: 0 var(--s-4);
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  font: inherit;
-  text-align: left;
-}
-/* the whole Chronicle waits below: a down-caret at the tab's right end */
-.ticker-head::after {
-  content: "";
-  flex: none;
-  margin-left: auto;
-  width: var(--caret);
-  height: var(--caret);
-  background: var(--ink-66);
-  clip-path: polygon(0 0, 100% 0, 50% 100%);
-}
-.ticker.is-open .ticker-head::after {
-  transform: rotate(180deg);
-}
 /* Inline icons in the bar's text take the chip size. */
 .hud .richIcon {
   width: var(--ic-chip);
   height: var(--ic-chip);
 }
-.ticker-line {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-/* The Chronicle drops out of the tab itself: the same paper and width, one hairline
-   under the current line, and the tab's rounded corner moves down to the bottom of
-   the log. It stops short of the realm sheet and scrolls inside. */
-.ticker-more {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  max-height: calc(100vh - var(--bar-h) - var(--hit) - var(--area-h) - var(--s-6));
-  padding: 0 var(--s-4) var(--s-3);
-  display: flex;
-  flex-direction: column;
-  background: var(--bone);
-  box-shadow: inset 0 var(--rule) 0 var(--ink-12);
-  border-bottom-right-radius: var(--fillet);
-}
-.ticker.is-open {
-  border-bottom-right-radius: 0;
-}
 
-/* ---- consult strip: the ticker's mirror, a tab hanging from the bar's right end - */
+/* ---- consult strip: a tab hanging from the bar's right end -------------------- */
 .consult-strip {
   position: absolute;
   top: var(--bar-h);
   right: 0;
-  width: var(--ticker-w);
+  width: var(--strip-w);
   height: var(--hit);
   padding: 0 var(--s-4);
   display: flex;
@@ -317,19 +244,17 @@
   box-shadow: inset 0 calc(var(--rule-2) * -1) 0 var(--clay);
 }
 
-/* The consult page, dropped out of the right strip: the same paper and width, one
-   hairline under the strip, the strip's rounded corner moved down to its foot. It
-   sits outside the HUD, so it carries the HUD's shadow itself, clipped at the top
-   where it joins the strip. As tall as its page, down to the end-turn disc at most;
-   the Codex always takes the full drop, so turning a chapter never moves its foot. */
+/* The consult page, dropped out of the right strip into the column under it (see
+   dock.css): the same paper and width, one hairline under the strip, the strip's
+   rounded corner moved down to its foot. It sits outside the HUD, so it carries the
+   HUD's shadow itself, clipped at the top where it joins the strip. As tall as it
+   needs, and shorter, scrolling, when the dock grows under it; the Codex takes the
+   whole drop, so turning a chapter never moves its foot. */
 .consult-sheet {
-  --drop: calc(100vh - var(--bar-h) - var(--hit) - var(--endturn-h) - var(--s-2));
-  position: fixed;
   z-index: var(--z-bar);
-  top: calc(var(--bar-h) + var(--hit));
-  right: 0;
-  width: var(--ticker-w);
-  max-height: var(--drop);
+  flex: 0 1 auto;
+  min-height: 0;
+  margin-bottom: var(--s-2);
   padding: var(--s-2) var(--s-4) var(--s-4);
   display: flex;
   flex-direction: column;
@@ -340,5 +265,5 @@
   clip-path: inset(0 calc(-1 * var(--s-6)) calc(-1 * var(--s-6)) calc(-1 * var(--s-6)));
 }
 .consult-sheet[data-tab="codex"] {
-  height: var(--drop);
+  flex-grow: 1;
 }

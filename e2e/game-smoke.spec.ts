@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-/** E2E_MAP=3d plays the same walk on the living map, once it has drawn: without a GPU
- *  its first frame stalls the animation frames that End turn's hold runs on. */
+/** Each walk starts once the map has drawn: without a GPU its first frame stalls the
+ *  animation frames that End turn's hold runs on. */
 async function visit(page: Page, path: string) {
-  await page.goto(process.env.E2E_MAP ? `${path}&map=${process.env.E2E_MAP}` : path);
-  if (process.env.E2E_MAP) await page.locator(".living-map[data-ready]").waitFor();
+  await page.goto(path);
+  await page.locator(".living-map[data-ready]").waitFor();
 }
 
 test("setup, forced decision, normal command, and deterministic reload", async ({ page }) => {

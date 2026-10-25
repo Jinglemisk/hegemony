@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import type { ComponentProps } from "react";
-import { livingMapOn, privateMoment } from "../client/controller";
+import { privateMoment } from "../client/controller";
 import { PLAYER_IDS } from "../game/data";
 import type { GameEvents, GameMoves, LocalContext } from "../client/controller";
 import {
@@ -63,10 +63,8 @@ import { CodexLinkProvider } from "./codexLink";
 import { getOwnedHoldings } from "./board/helpers";
 import { endTurnWarning, happinessDisplay, hungerShortfall } from "../ui/frameSelectors";
 import { isTyping } from "../ui/keys";
-import { Island } from "./frame/island/Island";
 import { TopBar } from "./frame/TopBar";
 import { ConsultStrip } from "./frame/ConsultStrip";
-import { Ticker } from "./frame/Ticker";
 import { ToastLane } from "./frame/Toasts";
 import { useMomentToasts, useOwnMoment } from "./frame/moments";
 import { TurnNotice } from "./frame/TurnNotice";
@@ -83,7 +81,7 @@ import { CornerDock } from "./frame/CornerDock";
 import { MAP_MODES } from "./frame/map3d/modes";
 import type { MapMode } from "./frame/map3d/modes";
 
-/** The living map loads on its own, so three.js stays out of the main bundle. */
+/** The map loads on its own, so three.js stays out of the main bundle. */
 const LivingMap = lazy(() => import("./frame/map3d/LivingMap"));
 
 type BoardProps = {
@@ -156,10 +154,7 @@ export function HegemonyBoard({
   humans = PLAYER_IDS,
   dev = {},
 }: BoardProps) {
-  const [livingMap, setLivingMap] = useState(livingMapOn);
-  // A living map that cannot start after all hands the board back to the SVG island.
-  const dropLivingMap = useCallback(() => setLivingMap(false), []);
-  // What the living map shows: the shell's view state, never the game's.
+  // What the map shows: the shell's view state, never the game's.
   const [mapMode, setMapMode] = useState<MapMode>("terrain");
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
   // `?dev=ideas` opens on the purchase list.
@@ -449,8 +444,8 @@ export function HegemonyBoard({
     if (sitting?.minimised && !moment && !activeModal) sitting.setMinimised(false);
   });
 
-  // `?` toggles the codex from anywhere: the same act as pressing its consult icon. On
-  // the living map, 1 to 5 switch its mode.
+  // `?` toggles the codex from anywhere: the same act as pressing its consult icon. 1 to
+  // 5 switch the map's mode.
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") restoreSitting();
@@ -460,10 +455,9 @@ export function HegemonyBoard({
         setCodexTarget(null);
         setConsultTab((open) => (open === "codex" ? null : "codex"));
       }
-      // Like the verb discs' digits: never behind a dialog, never on a held key.
+      // Never behind a dialog, never on a held key.
       const mode = MAP_MODES[Number(event.key) - 1];
       if (
-        livingMap &&
         mode &&
         !event.altKey &&
         !event.ctrlKey &&
@@ -476,7 +470,7 @@ export function HegemonyBoard({
 
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [livingMap]);
+  }, []);
 
   const handleTileAction = useCallback(
     (tileId: string) => {
@@ -564,76 +558,40 @@ export function HegemonyBoard({
     setMapSelectionTarget({ tileId, anchor: element.getBoundingClientRect() });
   };
 
-  const boardProps: ComponentProps<typeof Island> = {
-    G,
-    highlightTileIds: mapSelection.selection
-      ? mapSelection.candidateTileIds
-      : setupColonyValidTileIds,
-    onBackgroundAction: () => {
-      setSelectedTileId(null);
-      setSubject({ kind: "realm" });
-      setRealmTab("subject");
-    },
-    onMooringAction: (vertexId) => {
-      setSelectedTileId(null);
-      setSubject({ kind: "mooring", vertexId });
-      setRealmTab("subject");
-    },
-    onTileAction: handleTileAction,
-    // A popover pinned to a tile's old spot closes when the map moves; the mode stays
-    // armed, so the next click re-opens it in place.
-    onViewChange: () => setMapSelectionTarget(null),
-    placementActive: Boolean(mapSelection.selection) || ctx.phase === "setupColony",
-    selectedTileId,
-  };
-
-  const endTurn = (
-    <EndTurn
-      actingId={currentPlayerId}
-      canEndTurn={turnOpen}
-      confirmOpen={dev.endTurnConfirm}
-      onCalm={moves.civicCalm}
-      onEndTurn={() => (shortfall ? setHeld("hungerAsk") : events.endTurn())}
-      ruleset={G.ruleset}
-      title={turnCommitTitle(turnGate)}
-      waitingLabel={inAssembly ? "In Assembly" : undefined}
-      unrest={turnOpen ? turnEndUnrest(G, currentPlayerId) : null}
-      warning={endTurnWarning(G, currentPlayerId)}
-    />
-  );
-  const consultSheet = consultTab ? (
-    <aside
-      aria-label="Consult"
-      className="consult-sheet"
-      data-c="consult-sheet"
-      data-tab={consultTab}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") {
-          event.stopPropagation();
-          setConsultTab(null);
-        }
-      }}
-    >
-      <ConsultPanel activeTab={consultTab} codexTarget={codexTarget} />
-    </aside>
-  ) : null;
-
   return (
     <GameUiProvider value={gameUi}>
       <TradePickContext.Provider value={pickTradePlaces}>
         <CodexLinkProvider value={codexLink}>
-          <main
-            className={`frame${moment?.kind === "assembly" ? " is-sitting" : ""}${livingMap ? " has-dock" : ""}`}
-          >
+          <main className={`frame${moment?.kind === "assembly" ? " is-sitting" : ""}`}>
             {!drafting ? (
               <>
-                {livingMap ? (
-                  <Suspense fallback={null}>
-                    <LivingMap {...boardProps} mode={mapMode} onFail={dropLivingMap} />
-                  </Suspense>
-                ) : (
-                  <Island {...boardProps} />
-                )}
+                <Suspense fallback={null}>
+                  <LivingMap
+                    G={G}
+                    highlightTileIds={
+                      mapSelection.selection
+                        ? mapSelection.candidateTileIds
+                        : setupColonyValidTileIds
+                    }
+                    mode={mapMode}
+                    onBackgroundAction={() => {
+                      setSelectedTileId(null);
+                      setSubject({ kind: "realm" });
+                      setRealmTab("subject");
+                    }}
+                    onMooringAction={(vertexId) => {
+                      setSelectedTileId(null);
+                      setSubject({ kind: "mooring", vertexId });
+                      setRealmTab("subject");
+                    }}
+                    onTileAction={handleTileAction}
+                    // A popover pinned to a tile's old spot closes when the map moves;
+                    // the mode stays armed, so the next click re-opens it in place.
+                    onViewChange={() => setMapSelectionTarget(null)}
+                    placementActive={Boolean(mapSelection.selection) || ctx.phase === "setupColony"}
+                    selectedTileId={selectedTileId}
+                  />
+                </Suspense>
 
                 <div className="hud hud-top">
                   <TopBar
@@ -646,8 +604,6 @@ export function HegemonyBoard({
                     threats={threats.map((threat) => threat.seat)}
                     viewerId={viewerId}
                   />
-                  {/* On the living map the Chronicle lives in the corner dock. */}
-                  {livingMap ? null : <Ticker G={G} />}
                   <ConsultStrip
                     onClose={() => setConsultTab(null)}
                     onConsult={(tab) => {
@@ -685,7 +641,6 @@ export function HegemonyBoard({
 
                 <div className="hud hud-bottom">
                   <RealmPanel
-                    hotkeys={!livingMap}
                     locked={inAssembly}
                     groups={discGroups(
                       verbContext,
@@ -719,21 +674,42 @@ export function HegemonyBoard({
                     subject={subject}
                     tab={realmTab}
                   />
-                  {livingMap ? null : endTurn}
                 </div>
 
-                {/* The living map's corner dock: the right column under the consult
-                    strip, where a dropped page stops above the dock. */}
-                {livingMap ? (
-                  <div className={`dock-col${consultTab ? " has-sheet" : ""}`}>
-                    {consultSheet}
-                    <CornerDock G={G} mode={mapMode} onMode={setMapMode}>
-                      {endTurn}
-                    </CornerDock>
-                  </div>
-                ) : (
-                  consultSheet
-                )}
+                {/* The corner dock: the right column under the consult strip, where a
+                    dropped page stops above the dock. */}
+                <div className={`dock-col${consultTab ? " has-sheet" : ""}`}>
+                  {consultTab ? (
+                    <aside
+                      aria-label="Consult"
+                      className="consult-sheet"
+                      data-c="consult-sheet"
+                      data-tab={consultTab}
+                      onKeyDown={(event) => {
+                        if (event.key === "Escape") {
+                          event.stopPropagation();
+                          setConsultTab(null);
+                        }
+                      }}
+                    >
+                      <ConsultPanel activeTab={consultTab} codexTarget={codexTarget} />
+                    </aside>
+                  ) : null}
+                  <CornerDock G={G} mode={mapMode} onMode={setMapMode}>
+                    <EndTurn
+                      actingId={currentPlayerId}
+                      canEndTurn={turnOpen}
+                      confirmOpen={dev.endTurnConfirm}
+                      onCalm={moves.civicCalm}
+                      onEndTurn={() => (shortfall ? setHeld("hungerAsk") : events.endTurn())}
+                      ruleset={G.ruleset}
+                      title={turnCommitTitle(turnGate)}
+                      waitingLabel={inAssembly ? "In Assembly" : undefined}
+                      unrest={turnOpen ? turnEndUnrest(G, currentPlayerId) : null}
+                      warning={endTurnWarning(G, currentPlayerId)}
+                    />
+                  </CornerDock>
+                </div>
               </>
             ) : null}
 
@@ -966,7 +942,7 @@ export function HegemonyBoard({
                 case "event":
                   return <PendingPlayerEventModal />;
                 // The Assembly sits in a modal over the shell. It mounts off engine state;
-                // minimised, it is the dock under the ticker. A proposal is private, and
+                // minimised, it is the dock under the compass. A proposal is private, and
                 // its seat begins it at the turn notice.
                 case "assembly":
                   return <AssemblySitting sitting={moment.sitting} />;

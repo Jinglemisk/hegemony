@@ -173,7 +173,7 @@
   line-height: 1.35;
 }
 
-/* The living map's labels (?map=3d) take one size, --lab, which the camera sets as
+/* The living map's labels take one size, --lab, which the camera sets as
    the map comes closer, and keep the frame's 12px floor. A tile's far numeral is
    sized to its hex by the camera; its parts scale with it. */
 .lm-plate .pl-name,
