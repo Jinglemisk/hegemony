@@ -1,0 +1,270 @@
+/* ============================================================================
+   The corner dock (?map=3d), after the living-map prototype: the right column
+   under the consult strip. A dropped page runs down it as far as it needs and
+   stops above the dock. The dock is one paper at the foot: the map's key when
+   open over its row, the Chronicle when open, then the Chronicle's newest line
+   over the five map modes, with End turn spanning both rows on the right.
+   ========================================================================== */
+.dock-col {
+  --col-h: calc(100vh - var(--bar-h) - var(--hit));
+  position: fixed;
+  z-index: var(--z-bar);
+  top: calc(var(--bar-h) + var(--hit));
+  right: 0;
+  bottom: 0;
+  width: min(var(--ticker-w), 100%);
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+.dock-col > * {
+  pointer-events: auto;
+}
+/* The page keeps its paper and its drop; in the column it is as tall as it needs,
+   and shorter, scrolling, when the dock grows under it. The Codex takes the whole
+   drop, so turning a chapter never moves its foot. */
+.dock-col > .consult-sheet {
+  position: static;
+  flex: 0 1 auto;
+  width: auto;
+  min-height: 0;
+  max-height: none;
+  margin-bottom: var(--s-2);
+}
+.dock-col > .consult-sheet[data-tab="codex"] {
+  flex-grow: 1;
+  height: auto;
+}
+
+.dock {
+  flex: none;
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--endturn-w);
+  grid-template-rows:
+    auto var(--hit) auto var(--dock-line-h)
+    calc(var(--endturn-h) - var(--dock-line-h));
+  grid-template-areas:
+    "key key"
+    "keyhead keyhead"
+    "log log"
+    "line end"
+    "modes end";
+  background: var(--bone);
+  border-top-left-radius: var(--fillet);
+  filter: var(--shadow-chrome);
+}
+
+/* The map key's row: the mode's name and an up-caret, under the Chronicle's caret;
+   pressed, the key rises over it. */
+.map-key-head {
+  grid-area: keyhead;
+  min-width: 0;
+  padding: 0 calc(var(--endturn-w) + var(--s-3)) 0 var(--s-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  color: var(--ink-66);
+  text-align: left;
+  box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--ink-12);
+}
+.map-key-head:hover,
+.map-key-head[aria-expanded="true"] {
+  color: var(--ink);
+}
+.map-key-head:hover {
+  background: var(--ivory-45);
+}
+
+/* The map's key over its row, and the Chronicle under it when open: each as tall
+   as it needs up to its share of the column, then scrolling. They give way to an
+   open page and to each other. */
+.dock .map-key {
+  grid-area: key;
+  max-height: calc(var(--col-h) * 0.45);
+  box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--ink-12);
+}
+.has-sheet .dock .map-key {
+  max-height: calc(var(--col-h) * 0.3);
+}
+.dock.is-open .map-key {
+  max-height: calc(var(--col-h) * 0.2);
+}
+.dock-log {
+  grid-area: log;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: calc(var(--col-h) * 0.7);
+  box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--ink-12);
+}
+.has-sheet .dock-log,
+.dock:has(.map-key) .dock-log {
+  max-height: calc(var(--col-h) * 0.45);
+}
+.has-sheet .dock:has(.map-key) .dock-log {
+  max-height: calc(var(--col-h) * 0.3);
+}
+/* The log's head: its name at the left, the seat filters at the right. */
+.dock-log-title {
+  position: absolute;
+  top: var(--s-3);
+  left: var(--s-4);
+}
+.dock-log .chronicleFilters {
+  justify-content: flex-end;
+  padding: var(--s-2) var(--s-3) var(--s-1) var(--s-4);
+  box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--ink-12);
+}
+.dock-log .chronicleList {
+  padding: 0 var(--s-4) var(--s-2);
+  overscroll-behavior: contain;
+}
+/* A year: its caps name, ruled off to the right. */
+.dock-log .chron-year {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding-block: var(--s-2) 0;
+  box-shadow: none;
+}
+.dock-log .chron-year::after {
+  content: "";
+  flex: 1;
+  height: var(--rule);
+  background: var(--ink-12);
+}
+.dock-log .chron-row {
+  padding-block: var(--rule-2);
+  font-family: var(--f-body);
+  font-weight: 400;
+  line-height: var(--l-body);
+}
+.dock-log .chron-row + .chron-row {
+  box-shadow: none;
+}
+
+/* ---- the Chronicle's newest line, its seal at the left, an up-caret at the right */
+.dock-line {
+  grid-area: line;
+  min-width: 0;
+  padding: 0 var(--s-3) 0 var(--s-4);
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--ink);
+  text-align: left;
+  box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--ink-12);
+}
+.dock-line:hover {
+  background: var(--ivory-45);
+}
+.dock-line::after,
+.map-key-head::after {
+  content: "";
+  flex: none;
+  width: var(--caret);
+  height: var(--caret);
+  background: var(--ink-66);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+.dock-line[aria-expanded="true"]::after,
+.map-key-head[aria-expanded="true"]::after {
+  rotate: 180deg;
+}
+.dock-seal {
+  flex: none;
+  display: grid;
+  width: var(--ic-chip);
+  height: var(--ic-chip);
+  border-radius: var(--r-round);
+}
+.dock-seal:empty {
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-45);
+}
+.dock-seal .idea-seat {
+  width: 100%;
+  height: 100%;
+}
+/* A new line rises into place. */
+.dock-line .ticker-line {
+  animation: dockLineIn 450ms var(--ease-out);
+}
+@keyframes dockLineIn {
+  from {
+    opacity: 0;
+    translate: 0 var(--s-2);
+  }
+}
+
+/* ---- the five map modes: icon over name, the shown one underlined in clay ---- */
+.dock-modes {
+  grid-area: modes;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  padding: 0 var(--rule-2) 0 var(--s-1);
+}
+.dock-mode {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: var(--rule-2);
+  color: var(--ink-66);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  line-height: var(--lh-16);
+  white-space: nowrap;
+}
+.dock-mode .ico {
+  filter: var(--at-rest);
+}
+.dock-mode:hover,
+.dock-mode[aria-pressed="true"] {
+  color: var(--ink);
+}
+.dock-mode:hover .ico,
+.dock-mode[aria-pressed="true"] .ico {
+  filter: none;
+}
+.dock-mode[aria-pressed="true"] {
+  background: var(--ivory-70);
+  box-shadow: inset 0 calc(-1 * var(--rule-2)) 0 var(--clay);
+}
+
+/* ---- End turn, housed: the disc centred over its label, a hairline to its left -- */
+.dock-end {
+  grid-area: end;
+  position: relative;
+  box-shadow: inset var(--rule) 0 0 var(--ink-12);
+}
+.dock-end .endturn {
+  justify-content: center;
+  padding-bottom: var(--s-3);
+}
+.dock-end .endturn-label {
+  bottom: calc(var(--s-2) + var(--rule-2));
+}
+/* A warning takes the foot: the disc rises to the top and the label over the words. */
+.dock-end .endturn.is-danger {
+  justify-content: flex-start;
+  padding: var(--s-1) 0 0;
+}
+.dock-end .endturn.is-danger .endturn-label {
+  bottom: var(--price-h);
+}
+
+/* ---- the rest of the shell, with the ticker gone from the top left ------------ */
+/* The compass takes the corner under the bar; what hung under the ticker drops below it. */
+.frame.has-dock .toast-lane,
+.frame.has-dock .sit-dock,
+.frame.has-dock .map-caption {
+  top: calc(var(--bar-h) + var(--s-16));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dock-line .ticker-line {
+    animation: none;
+  }
+}

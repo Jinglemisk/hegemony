@@ -41,6 +41,9 @@ export type { Phase } from "../game/types";
  * On the dev server only, `?dev=assembly` (`assembly2` to `assembly7` for later sittings)
  * fast-forwards to an Assembly, and the scenes in src/dev/scenes.ts open their moment.
  *
+ * `?map=3d` draws the living map (three.js) in place of the SVG island; see
+ * {@link livingMapOn}.
+ *
  * Default dev behavior: the opening is auto-played by the sim's placement policy (the
  * same brain the bots use, seeded from the game seed), and the seed rotates through
  * {@link DEV_ROTATION_SEEDS} on every reload — testing never starts at "place your
@@ -139,6 +142,23 @@ function createGameFromUrl(): { G: HegemonyState; shell: DevShell } {
   }
 
   return { G, shell };
+}
+
+let livingMap: boolean | undefined;
+
+/** `?map=3d`, where this browser can draw it: the board is the living map, the three.js
+ *  island, with its corner dock, instead of the SVG one. Without WebGL the whole shell
+ *  stays the SVG board's. Probed once; the probe's context is let go at once. */
+export function livingMapOn() {
+  livingMap ??=
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("map") === "3d" &&
+    (() => {
+      const gl = document.createElement("canvas").getContext("webgl2");
+      gl?.getExtension("WEBGL_lose_context")?.loseContext();
+      return Boolean(gl);
+    })();
+  return livingMap;
 }
 
 /**

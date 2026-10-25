@@ -1,0 +1,528 @@
+/* ============================================================================
+   The living map (?map=3d): the three.js board, the HTML over it, and the tile
+   buttons. Loaded with the map's own chunk. Every label fades with the zoom
+   bands through --a-<key>, which the camera sets on the stage, and sizes from
+   --lab (the sizes live in type.css).
+   ========================================================================== */
+
+.living-map {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-sea);
+  overflow: clip;
+  background: var(--sea-deep);
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+}
+.living-map.is-panning,
+.living-map.is-panning :is(.lm-tile, .lm-moor) {
+  cursor: grabbing;
+}
+/* Nothing shows until the first frame is drawn: no labels over an empty sea. The
+   canvas is out of the page meanwhile, so its warm-up draw is never composited. */
+.living-map:not([data-ready]) > .lm-canvas {
+  display: none;
+}
+.living-map:not([data-ready]) > :not(.lm-canvas) {
+  visibility: hidden;
+}
+/* The map's own focus mark is drawn over the canvas: an outline would sit under it. */
+.living-map:focus-visible {
+  outline: none;
+}
+.living-map:focus-visible::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-lift);
+  box-shadow: inset 0 0 0 var(--rule-2) var(--ochre);
+  pointer-events: none;
+}
+.lm-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* One button per tile, clipped to its hex as drawn. The ring the scene draws is
+   its only mark: selected, candidate or the keyboard's focus. */
+.lm-tiles {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+  pointer-events: none;
+}
+.lm-tile {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.lm-tile:focus {
+  outline: none;
+}
+
+/* The labels: upright at every angle, stacked by how far down the screen they sit. */
+.lm-overlay,
+.lm-moorings {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  pointer-events: none;
+}
+.lm-overlay {
+  isolation: isolate;
+}
+.lm-overlay > *,
+.lm-moorings > * {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.lm-plate {
+  --kind: 1;
+  --dimmed: 1;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 5px 9px 4px;
+  background: var(--ivory);
+  color: var(--ink);
+  border: var(--rule) solid var(--ink);
+  border-radius: 1px;
+  box-shadow: var(--map-label-shadow);
+  white-space: nowrap;
+  transform: translate(-50%, 0);
+  opacity: calc(var(--a-plates, 1) * var(--kind) * var(--dimmed));
+}
+.lm-plate.city {
+  --kind: var(--a-cityplate, 1);
+}
+.lm-plate.colony {
+  --kind: var(--a-colony, 1);
+}
+/* A placement is asking: the tiles that are not an answer recede. */
+.lm-plate.is-dimmed {
+  --dimmed: var(--dim);
+}
+.lm-plate .pl-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+}
+.lm-plate .pl-name {
+  font-family: var(--f-name);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: var(--track-name);
+}
+.lm-plate :is(.pl-name, .pl-pops) i {
+  font-style: normal;
+  opacity: var(--dim);
+  margin: 0 0.35em;
+}
+.lm-plate .pl-pops {
+  font-family: var(--f-sans);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--ink-66);
+  opacity: var(--a-popsline, 0);
+}
+.lm-plate .pips {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  opacity: var(--a-pips, 1);
+}
+.lm-plate .pips i {
+  display: block;
+  width: 0.62em;
+  height: 0.62em;
+  border-radius: var(--r-round);
+  border: 1.5px solid var(--ink);
+}
+.lm-plate .pips i.b {
+  background: var(--ink);
+  border-radius: 1px;
+}
+.lm-plate .pips i.w {
+  background: var(--ink-45);
+}
+.lm-plate .pips u {
+  display: block;
+  width: 1px;
+  height: 0.8em;
+  margin: 0 2px;
+  background: var(--ink-45);
+}
+.living-map:not(.pips-on) :is(.lm-plate, .lm-eco.compact) .pips,
+.living-map:not(.pops-on) .lm-plate .pl-pops {
+  display: none;
+}
+
+.lm-yield {
+  padding: 0 0.4em;
+  font-family: var(--f-sans);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ink);
+  background: var(--map-chip);
+  border-radius: 1px;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+  opacity: calc(var(--a-yield, 1) * var(--dimmed, 1));
+}
+.lm-yield.is-dimmed,
+.lm-far.is-dimmed {
+  --dimmed: var(--dim);
+}
+.lm-yield.oracle {
+  font-family: var(--f-body);
+  font-style: italic;
+  font-weight: 500;
+  transform: translate(-50%, 0);
+}
+
+/* Far out, each tile's slot count and what it makes, sized to the hex. */
+.lm-far {
+  display: flex;
+  align-items: baseline;
+  gap: 0.1em;
+  padding: 2px;
+  font-family: var(--f-name);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ivory);
+  white-space: nowrap;
+  transform-origin: 0 0;
+  transform: translate(-50%, -50%);
+  opacity: calc(var(--a-faryield, 0) * var(--dimmed, 1));
+}
+.lm-far b {
+  /* Cinzel's numeral ink is about .72em high; match it to the requested height. */
+  line-height: 0.72;
+  font-weight: inherit;
+  -webkit-text-stroke: max(2px, 0.075em) var(--vase-black);
+  paint-order: stroke fill;
+  text-shadow: var(--map-numeral-shadow);
+}
+.lm-far img {
+  flex: none;
+  box-sizing: border-box;
+  width: 1cap;
+  height: 1cap;
+  padding: 0.04em;
+  background: var(--ivory);
+  border: var(--rule) solid var(--ink);
+  border-radius: 0.14em;
+  box-shadow: var(--map-label-shadow);
+}
+
+/* A selected tile's buildings: each a bronze icon on a stem over its building. */
+.lm-badge {
+  display: grid;
+  place-items: center;
+  width: 23px;
+  height: 25px;
+  background: var(--map-badge);
+  border: var(--rule) solid var(--ink-63);
+  border-radius: 3px;
+  box-shadow: var(--map-label-shadow);
+  transform: translate(-50%, -100%);
+}
+.lm-badge::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  width: 1px;
+  height: 7px;
+  background: var(--ink-63);
+}
+.lm-badge img {
+  width: 21px;
+  height: 21px;
+}
+/* Every town's, close in on Economy; a selected tile's always. */
+.lm-badge[data-alpha="building"] {
+  opacity: var(--a-building, 0);
+}
+
+/* A ship's chip, over the ship as it sails: how many pops, and where to. */
+.lm-ship {
+  padding: 2px 7px;
+  font-family: var(--f-sans);
+  font-weight: 500;
+  line-height: 1.1;
+  color: var(--ivory);
+  background: var(--map-ship);
+  border: var(--rule) solid var(--map-ship-rule);
+  border-radius: 2px;
+  white-space: nowrap;
+  transform: translate(-50%, -100%);
+  opacity: var(--a-ship, 1);
+}
+
+/* A luxury good's name, out on the water under its raft. The button reaches below
+   the name, so it is a target a finger can hit. */
+.lm-moor {
+  display: flex;
+  align-items: flex-start;
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  white-space: nowrap;
+  cursor: pointer;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+  opacity: var(--a-goodname, 1);
+}
+.lm-moor.is-faded {
+  pointer-events: none;
+}
+.lm-moor:focus-visible {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: var(--rule-2);
+  opacity: 1;
+}
+.lm-moor .m-name {
+  font-family: var(--f-sans);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ivory);
+  text-shadow:
+    0 0 2px var(--sea-deep),
+    0 0 5px var(--sea-deep);
+}
+.lm-moor .m-name b {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  margin-right: 0.35em;
+  border-radius: var(--r-round);
+  background: var(--own);
+  box-shadow: 0 0 0 1.5px var(--ivory);
+  vertical-align: -0.05em;
+}
+.lm-moor .m-name small {
+  margin-left: 0.3em;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+/* The compass, in the corner dock's spot: the top left, under the bar. */
+.lm-compass {
+  position: absolute;
+  left: var(--s-3);
+  top: calc(var(--bar-h) + var(--s-3));
+  display: grid;
+  place-items: start center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-round);
+  border: var(--rule) solid var(--ivory-45);
+  background: var(--map-compass);
+  pointer-events: none;
+  rotate: var(--turn, 0rad);
+}
+.lm-compass b {
+  margin-top: 3px;
+  font-family: var(--f-name);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ivory);
+}
+.lm-compass i {
+  position: absolute;
+  left: 50%;
+  top: 17px;
+  width: 2px;
+  height: 14px;
+  margin-left: -1px;
+  background: var(--ivory);
+  opacity: 0.7;
+}
+
+/* ---- the map modes' labels: each fades with its mode through --a-<key> ---------- */
+
+/* Political: a realm's name over its land. */
+.lm-realm {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  opacity: var(--a-realm, 0);
+}
+.lm-realm b {
+  font-family: var(--f-name);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  color: var(--ivory);
+  text-shadow:
+    0 0 3px var(--ink),
+    0 0 10px var(--ink),
+    0 2px 2px var(--ink);
+}
+.lm-realm small {
+  font-family: var(--f-sans);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  color: var(--ivory);
+  text-shadow:
+    0 0 3px var(--ink),
+    0 0 6px var(--ink);
+}
+
+/* Economy: a settled tile's card, compact far out and full close in, and an open
+   tile's slots. */
+.lm-eco {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  padding: 4px 7px;
+  font-family: var(--f-sans);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--ink);
+  background: var(--map-card);
+  border: var(--rule) solid var(--ink);
+  border-radius: 2px;
+  box-shadow: var(--map-label-shadow);
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+}
+.lm-eco.full {
+  opacity: var(--a-ecoF, 0);
+}
+.lm-eco.compact {
+  gap: 1px;
+  padding: 2px 6px;
+  opacity: var(--a-ecoC, 0);
+}
+.lm-eco.compact .row {
+  gap: 4px;
+}
+/* Where the hexes are drawn narrow the pips fade out, and then leave (bandAlphas). */
+.lm-eco.compact .pips {
+  opacity: var(--a-pips, 1);
+}
+.lm-eco.empty {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  background: var(--ivory-70);
+  border-color: var(--ink-45);
+  opacity: calc(var(--a-ecoE, 0) * var(--dimmed, 1));
+}
+.lm-eco.empty.is-dimmed {
+  --dimmed: var(--dim);
+}
+.lm-eco.empty.oracle {
+  transform: translate(-50%, 0);
+}
+.lm-eco img {
+  width: 1.5em;
+  height: 1.5em;
+}
+.lm-eco em {
+  font-style: normal;
+  font-weight: 500;
+  color: var(--ink-66);
+}
+.lm-eco hr {
+  width: 100%;
+  margin: 1px 0;
+  border: 0;
+  border-top: var(--rule) solid var(--ink-30);
+}
+.lm-eco .en {
+  font-family: var(--f-name);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: var(--track-name);
+}
+.lm-eco .row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.lm-eco .pips {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+.lm-eco .pips i {
+  display: block;
+  width: 0.62em;
+  height: 0.62em;
+  border-radius: var(--r-round);
+  border: 1.5px solid var(--ink);
+}
+.lm-eco .pips i.b {
+  background: var(--ink);
+  border-radius: 1px;
+}
+.lm-eco .pips i.w {
+  background: var(--ink-45);
+}
+
+/* A dark chip over the board: a realm's level (Unrest), a Port's good (Trade), a
+   riot or the titles (Terrain's events). */
+.lm-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px 3px 4px;
+  font-family: var(--f-sans);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--ivory);
+  background: var(--map-ship);
+  border: var(--rule) solid var(--map-ship-rule);
+  border-radius: 2px;
+  white-space: nowrap;
+  transform: translate(-50%, -100%);
+}
+.lm-chip img {
+  width: 22px;
+  height: 22px;
+}
+.lm-chip small {
+  font-weight: 500;
+  opacity: 0.8;
+}
+.lm-chip[data-alpha="event"] {
+  opacity: var(--a-event, 1);
+}
+.lm-chip[data-alpha="port"] {
+  opacity: var(--a-port, 0);
+}
+.lm-chip[data-alpha="unrest"] {
+  border-width: var(--rule-2);
+  opacity: var(--a-unrest, 0);
+}
+.lm-chip[data-tier="calm"] {
+  border-color: var(--map-calm);
+}
+.lm-chip[data-tier="discontent"] {
+  border-color: var(--map-discontent);
+}
+.lm-chip[data-tier="unrest"] {
+  border-color: var(--map-unrest);
+}
+.lm-chip[data-tier="revolt"] {
+  border-color: var(--map-revolt);
+  background: var(--map-revolt-chip);
+}

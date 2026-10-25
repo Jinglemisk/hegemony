@@ -87,6 +87,21 @@ function fanShapes(item: HTMLElement, d: number): Array<[number, number, number,
  * circles and labels, so its peers stay in reach. When nothing clears the
  * settlements, they leave the walls first, then the gap between peers.
  */
+/** The island's box on screen: the SVG board's, or the living map's tiles together. */
+function islandBox() {
+  const svg = document.querySelector(".island");
+  if (svg) return svg.getBoundingClientRect();
+  const tiles = [...document.querySelectorAll(".lm-tile")]
+    .map((el) => el.getBoundingClientRect())
+    .filter((r) => r.width > 0 && r.right > -innerWidth);
+  if (!tiles.length) return null;
+  const left = Math.min(...tiles.map((r) => r.left));
+  const top = Math.min(...tiles.map((r) => r.top));
+  const width = Math.max(...tiles.map((r) => r.right)) - left;
+  const height = Math.max(...tiles.map((r) => r.bottom)) - top;
+  return { left, top, width, height };
+}
+
 function placeFan(host: HTMLElement, fanAt: WeakMap<Element, [number, number]>) {
   const items = [...host.querySelectorAll<HTMLElement>(":scope > .fan > .fan-item")];
   const n = items.length;
@@ -101,7 +116,7 @@ function placeFan(host: HTMLElement, fanAt: WeakMap<Element, [number, number]>) 
   const dy = disc.top + disc.height / 2;
   const second = host !== group;
   const [cx, cy] = second ? (fanAt.get(host) ?? [dx, dy]) : [dx, dy];
-  const isle = document.querySelector(".island")?.getBoundingClientRect();
+  const isle = islandBox();
   const aim = second
     ? Math.atan2(cy - dy, cx - dx)
     : isle
@@ -137,7 +152,9 @@ function placeFan(host: HTMLElement, fanAt: WeakMap<Element, [number, number]>) 
     }
   }
   const marks = [
-    ...document.querySelectorAll(".island .settle, .island .settle-shared, .island .moor"),
+    ...document.querySelectorAll(
+      ".island .settle, .island .settle-shared, .island .moor, .living-map .lm-plate, .living-map .lm-moor:not(.is-faded)",
+    ),
   ]
     .map((el) => el.getBoundingClientRect())
     .filter((r) => r.width > 0)
@@ -264,12 +281,16 @@ export function VerbDiscs({
   groups,
   store,
   locked = false,
+  hotkeys = true,
 }: {
   groups: DiscGroup[];
   /** The Assembly sits: each disc wears a lock and its fan only reads. */
   locked?: boolean;
   /** The viewer's resources: a price reads short only when this cannot pay it. */
   store: Resources;
+  /** The number keys act on the discs. Not on the living map: there the digits switch
+   *  its mode (1 to 5), one key, one act. */
+  hotkeys?: boolean;
 }) {
   const [path, setPath] = useState<Path>([]);
   const pathRef = useRef(path);
@@ -380,6 +401,7 @@ export function VerbDiscs({
       }
       const index = Number(event.key) - 1;
       if (
+        !hotkeys ||
         !Number.isInteger(index) ||
         index < 0 ||
         index >= groups.length ||
@@ -414,7 +436,7 @@ export function VerbDiscs({
     };
     // hostBtn only reads the list ref.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groups, pressDisc]);
+  }, [groups, pressDisc, hotkeys]);
 
   useEffect(() => {
     const pending = timers.current;
@@ -507,7 +529,7 @@ export function VerbDiscs({
         const live = group.options.some((option) => option.enabled);
         const isOpen = within(path, group.id);
         const isArmed = Boolean(armedLeaf(group.options));
-        const hotkey = i < 9 ? String(i + 1) : undefined;
+        const hotkey = hotkeys && i < 9 ? String(i + 1) : undefined;
         const label = primary
           ? `${group.label}: ${primary.label}, ${spoken(primary) || primary.hint}. Enter for more.`
           : `${group.label}: ${group.hint.toLowerCase()}.`;

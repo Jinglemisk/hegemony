@@ -45,11 +45,12 @@ export function Ticker({ G }: { G: HegemonyState }) {
 }
 
 /**
- * One line, cut at a word with an ellipsis when it would not fit the tab. The cut is
- * made in the text rather than by `text-overflow`, so nothing runs on past the tab
- * under whatever lies beside it. The Chronicle page keeps every line whole.
+ * One line, cut at a word with an ellipsis when it would not fit the tab (or the
+ * corner dock's line). The cut is made in the text rather than by `text-overflow`, so
+ * nothing runs on past the tab under whatever lies beside it. The Chronicle page keeps
+ * every line whole.
  */
-function FittedLine({ text }: { text: string }) {
+export function FittedLine({ text }: { text: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const words = text.split(" ");
   // A search for the most words that fit: `lo` fits (one word always does), `hi` is

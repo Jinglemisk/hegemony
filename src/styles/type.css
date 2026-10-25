@@ -173,6 +173,63 @@
   line-height: 1.35;
 }
 
+/* The living map's labels (?map=3d) take one size, --lab, which the camera sets as
+   the map comes closer, and keep the frame's 12px floor. A tile's far numeral is
+   sized to its hex by the camera; its parts scale with it. */
+.lm-plate .pl-name,
+.lm-plate .pips i,
+.lm-plate .pips u,
+.lm-yield.oracle {
+  font-size: var(--lab);
+}
+.lm-plate.capital .pl-name {
+  font-size: calc(var(--lab) * 1.1);
+}
+.lm-plate .pl-pops {
+  font-size: max(var(--t-12), calc(var(--lab) * 0.9));
+}
+.lm-yield,
+.lm-ship {
+  font-size: max(var(--t-12), calc(var(--lab) * 0.95));
+}
+.lm-moor .m-name {
+  font-size: max(var(--t-12), calc(var(--lab) * 0.92));
+}
+.lm-far b,
+.lm-far img {
+  font-size: 1.39em;
+}
+.lm-compass b {
+  font-size: var(--t-12);
+}
+/* The modes' labels: a realm's name twice the board's size, the cards and chips a
+   little under it. */
+.lm-realm b {
+  font-size: min(calc(var(--lab) * 2), 5vw);
+}
+.lm-realm small,
+.lm-chip {
+  font-size: max(var(--t-12), calc(var(--lab) * 0.95));
+}
+.lm-eco {
+  font-size: max(var(--t-12), calc(var(--lab) * 0.92));
+}
+.lm-eco .pips i {
+  font-size: var(--lab);
+}
+/* The map's key, in the shell. */
+.map-key li > span,
+.map-key .pips i {
+  font-size: var(--t-12);
+}
+/* The corner dock: a mode's name at the floor, the Chronicle's deeds at reading size. */
+.dock-mode {
+  font-size: var(--t-12);
+}
+.dock-log .chron-row {
+  font-size: var(--t-14);
+}
+
 /* A number set in the frame's numeral face, after the roles so it wins over them. */
 .num {
   font-family: var(--f-sans);

@@ -1,9 +1,7 @@
 import { occupiedBuildingSlots } from "../../../game/ideaRules";
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
-import { createPortal } from "react-dom";
+import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent } from "react";
 import { getLuxuryGood } from "../../../game/content";
-import { tileSlaveColumn } from "../../../game/economy/income";
 import {
   settlementSlaveResource,
   settlementSlots,
@@ -15,17 +13,24 @@ import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { hexCenter, hexPoints, luxuryMarkerPosition, vertexCenter } from "../../../ui/hexGeometry";
 import { rasterIcon } from "../../../ui/icons/placeholders";
 import { settlementNames } from "../../../ui/settlementNames";
-import { RESOURCE_LABELS } from "../../../ui/formatters";
 import {
   LuxuryVertexMarker,
   MOORING_LABEL_X,
   MOORING_RADIUS,
 } from "../../board/map/LuxuryVertexMarker";
-import { POP_RASTERS } from "../../../ui/iconRegistry";
-import { Chips, Tip, TipLedger } from "../parts";
-import type { LedgerRow } from "../parts";
-import { fitIsland } from "./fit";
+import { Tip, TipLedger } from "../parts";
+import { BoardTip } from "./BoardTip";
+import { fitIsland, tokenPx } from "./fit";
 import type { IslandFit, UnitBox } from "./fit";
+import {
+  ARROWS,
+  POP_ORDER,
+  nextTileInDirection,
+  orderSettlements,
+  tileLabel,
+  tileTip,
+} from "./tileTip";
+import type { TileCenter } from "./tileTip";
 
 /**
  * The island, after the Hybrid arc mock: a canvas the player drags to pan and
@@ -49,71 +54,11 @@ const TEXT_FLOOR = 12;
 const PAD = 0.05;
 const Z_MIN = 0.6;
 const Z_MAX = 2.5;
-const POP_ORDER: readonly PopType[] = ["slaves", "freemen", "citizens"];
 const POP_ICON: Record<PopType, string> = {
   slaves: "pops/slaves",
   freemen: "pops/freemen",
   citizens: "pops/citizens",
 };
-
-/** A length token from the stylesheet, in px (0 where there is no document, as in SSR). */
-const tokenPx = (name: string) =>
-  typeof getComputedStyle === "undefined"
-    ? 0
-    : parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
-
-type TileCenter = { tile: HexTile; x: number; y: number };
-
-/** The leading settlement of a tile: a city before a colony. */
-function orderSettlements(settlements: readonly Settlement[]) {
-  return [...settlements].sort((a, b) => Number(a.kind === "colony") - Number(b.kind === "colony"));
-}
-
-/**
- * Arrow keys walk the board by where the hexes are drawn: the nearest tile inside
- * a 120° cone, divided by how squarely it lies in the pressed direction (the east
- * and south-east neighbours are the same distance away).
- */
-const ARROWS: Record<string, readonly [number, number]> = {
-  ArrowLeft: [-1, 0],
-  ArrowRight: [1, 0],
-  ArrowUp: [0, -1],
-  ArrowDown: [0, 1],
-};
-
-function nextTileInDirection(centers: readonly TileCenter[], fromId: string, key: string) {
-  const direction = ARROWS[key];
-  const origin = centers.find(({ tile }) => tile.id === fromId);
-
-  if (!direction || !origin) {
-    return null;
-  }
-
-  let best: { id: string; cost: number } | null = null;
-
-  for (const candidate of centers) {
-    if (candidate.tile.id === fromId) {
-      continue;
-    }
-
-    const dx = candidate.x - origin.x;
-    const dy = candidate.y - origin.y;
-    const distance = Math.hypot(dx, dy);
-    const alignment = (dx * direction[0] + dy * direction[1]) / distance;
-
-    if (alignment < 0.5) {
-      continue;
-    }
-
-    const cost = distance / alignment;
-
-    if (!best || cost < best.cost) {
-      best = { id: candidate.tile.id, cost };
-    }
-  }
-
-  return best?.id ?? null;
-}
 
 /** Three pop counts need the hex's width at their row; below that a tile shows one total. */
 function compactAt(s: number) {
@@ -280,9 +225,6 @@ function Tile({
   const built = lead ? occupiedBuildingSlots(G, lead) : 0;
   const worked = lead ? settlementWorkingSlaves(tile, lead, G) : 0;
   const primary = settlementSlaveResource(tile, G);
-  const slotLabel =
-    `${tile.slots} ${tile.slots === 1 ? "slot" : "slots"}` +
-    (primary ? ` for ${RESOURCE_LABELS[primary].toLowerCase()}` : "");
   const leadName = lead ? names.get(lead.id) : undefined;
   const className = [
     "tile-btn",
@@ -295,7 +237,7 @@ function Tile({
 
   return (
     <g
-      aria-label={`Hex ${tile.id}, ${tile.terrain} tile, ${slotLabel}${leadName ? `, ${leadName}` : ""}`}
+      aria-label={tileLabel(G, tile, names)}
       className={className}
       data-tile={tile.id}
       data-tile-id={tile.id}
@@ -358,88 +300,6 @@ function Tile({
         ))}
       </g>
     </g>
-  );
-}
-
-function tileTip(
-  G: HegemonyState,
-  tile: HexTile,
-  names: Map<string, string>,
-): { title: string; rows: LedgerRow[] } {
-  const settlements = orderSettlements(tile.settlements);
-
-  if (settlements.length === 0) {
-    const column = tileSlaveColumn(G, tile);
-    return {
-      title: `${tile.terrain[0].toUpperCase()}${tile.terrain.slice(1)}`,
-      rows: [
-        { key: "slots", label: "Slots", value: tile.slots, icon: "settlements/slot" },
-        {
-          key: "slave",
-          label: "Each slave makes",
-          value: column.resource ? (
-            <Chips amounts={{ [column.resource]: column.perPop }} />
-          ) : (
-            "nothing"
-          ),
-          icon: POP_RASTERS.slaves,
-        },
-      ],
-    };
-  }
-
-  const [lead] = settlements;
-  return {
-    title: names.get(lead.id) ?? "Polis",
-    rows: [
-      ...POP_ORDER.map((pop) => ({
-        key: pop,
-        label: `${pop[0].toUpperCase()}${pop.slice(1)}`,
-        value: lead.pops[pop],
-        icon: POP_RASTERS[pop],
-      })),
-      ...settlements.slice(1).map((other) => ({
-        key: other.id,
-        label: `Also ${PLAYER_GLAZES[other.owner].name}'s ${other.kind}`,
-        value: names.get(other.id) ?? "",
-      })),
-      {
-        key: "slots",
-        label: "Slots",
-        value: `${occupiedBuildingSlots(G, lead)} built, ${settlementWorkingSlaves(tile, lead, G)} worked of ${settlementSlots(tile, lead, G)}`,
-        icon: "settlements/slot",
-      },
-    ],
-  };
-}
-
-function BoardTip({ anchor, children }: { anchor: DOMRect; children: ReactNode }) {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [at, setAt] = useState<{ left: number; top: number } | null>(null);
-
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const gap = tokenPx("--board-gap") || 8;
-    const { offsetWidth: w, offsetHeight: h } = el;
-    const left = Math.min(
-      innerWidth - w - gap,
-      Math.max(gap, anchor.left + anchor.width / 2 - w / 2),
-    );
-    const above = anchor.top - h - gap;
-    setAt({ left, top: above >= gap ? above : anchor.bottom + gap });
-  }, [anchor]);
-
-  return createPortal(
-    <div
-      className="sharedTooltip map-tip"
-      ref={ref}
-      role="tooltip"
-      style={at ? { left: at.left, top: at.top, opacity: 1 } : { left: 0, top: 0, opacity: 0 }}
-    >
-      {children}
-    </div>,
-    document.body,
   );
 }
 

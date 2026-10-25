@@ -1,0 +1,79 @@
+/* ============================================================================
+   The map's key (?map=3d): what the living map's mode shows, as a compact list
+   on the corner dock's paper, risen over its own row when pressed (dock.css
+   sets the row and the key's share).
+   ========================================================================== */
+.map-key {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: var(--s-2) var(--s-3) var(--s-3) var(--s-4);
+  color: var(--ink);
+}
+.map-key ul {
+  display: grid;
+  gap: var(--s-1);
+  margin: var(--s-1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.map-key li {
+  display: grid;
+  grid-template-columns: var(--s-6) minmax(0, 1fr);
+  column-gap: var(--s-2);
+  align-items: center;
+}
+.map-key li > :first-child {
+  justify-self: center;
+}
+.map-key li > span {
+  font-family: var(--f-sans);
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--ink-66);
+}
+.map-key b {
+  font-weight: 700;
+  color: var(--ink);
+}
+.map-key-swatch {
+  width: var(--s-4);
+  height: var(--s-4);
+  border-radius: 3px;
+  background: var(--swatch);
+  box-shadow: var(--paper-edge);
+}
+/* The trade routes' dotted bronze, on a patch of sea. */
+.map-key-route {
+  display: grid;
+  place-items: center;
+  width: var(--s-6);
+  height: var(--s-4);
+  border-radius: 3px;
+  background: var(--sea);
+}
+.map-key-route::after {
+  content: "";
+  width: 70%;
+  border-top: var(--rule-2) dotted var(--route);
+}
+/* The slot pips, as the map draws them. */
+.map-key .pips {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+.map-key .pips i {
+  display: block;
+  width: 0.62em;
+  height: 0.62em;
+  border-radius: var(--r-round);
+  border: 1.5px solid var(--ink);
+}
+.map-key .pips i.b {
+  background: var(--ink);
+  border-radius: 1px;
+}
+.map-key .pips i.w {
+  background: var(--ink-45);
+}

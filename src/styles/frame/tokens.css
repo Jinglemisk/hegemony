@@ -97,6 +97,7 @@
   --fan-w: calc(var(--u) * 24); /* 96: an option's slot: its name and price */
   --endturn-w: calc(var(--u) * 24); /* 96: the end-turn column, flush to the right edge */
   --endturn-h: calc(var(--u) * 24); /* 96 */
+  --dock-line-h: calc(var(--u) * 10); /* 40: the dock's Chronicle line; its modes take the rest */
   --res-w: calc(var(--u) * 18); /* 72 */
   --level-w: calc(var(--u) * 32); /* 128 */
   --purse-w: calc(var(--res-w) * 5 + var(--s-4) + var(--level-w)); /* 504 */
@@ -227,6 +228,24 @@
   --sea-lit: #2e8a9a;
   --sea-deep: #17505c;
   --sea-shade: rgb(10 34 41 / 35%);
+  /* The living map's labels over the water: a plate's drop, a yield chip's paper,
+     a building badge's paper, a ship's dark chip and its rule, the far numerals'
+     shadow and the compass's glass. */
+  --map-label-shadow: 0 1px 3px rgb(10 34 41 / 40%);
+  --map-chip: rgb(255 248 231 / 82%);
+  --map-badge: rgb(255 248 231 / 91%);
+  --map-ship: rgb(24 18 16 / 84%);
+  --map-ship-rule: rgb(255 248 231 / 30%);
+  --map-numeral-shadow: 0 2px 4px rgb(24 18 16 / 75%);
+  --map-compass: rgb(23 80 92 / 55%);
+  /* The map modes: an Economy card's paper, and the rule round a realm's Unrest chip
+     by its tier (a revolt's chip darkens too). */
+  --map-card: rgb(255 248 231 / 92%);
+  --map-calm: #a8b877;
+  --map-discontent: #e2a558;
+  --map-unrest: #e8846b;
+  --map-revolt: #ff5a3c;
+  --map-revolt-chip: rgb(60 14 6 / 92%);
 
   /* ---- fired artwork values --------------------------------------------------- */
   /* The seal's fired gradient names a curved clay surface, not a state. */
@@ -337,6 +356,7 @@
     --disc-end: calc(var(--u) * 20); /* 80 */
     --endturn-w: calc(var(--u) * 28); /* 112 */
     --endturn-h: calc(var(--u) * 30); /* 120 */
+    --dock-line-h: calc(var(--u) * 12); /* 48 */
     --chip-h: calc(var(--u) * 6); /* 24 */
     --price-h: var(--ic-24);
     --ic-disc: var(--ic-48);

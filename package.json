@@ -30,7 +30,8 @@
   "dependencies": {
     "immer": "^10.2.0",
     "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "react-dom": "^19.2.6",
+    "three": "^0.186.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -38,6 +39,7 @@
     "@types/node": "^25.8.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@types/three": "^0.186.0",
     "@vitejs/plugin-react": "^6.0.2",
     "eslint": "^10.6.0",
     "eslint-config-prettier": "^10.1.8",

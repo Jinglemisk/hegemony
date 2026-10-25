@@ -9,7 +9,16 @@
  * optionally an `after` that leaves the app somewhere the next surface can start
  * from. They run in order and share one page, so each one inherits the last.
  */
-export const BASE = "http://127.0.0.1:5199";
+// AUDIT_BASE points the audits at another checkout's dev server; AUDIT_QUERY adds
+// to every visit (map=3d audits the living map).
+export const BASE = process.env.AUDIT_BASE ?? "http://127.0.0.1:5199";
+const QUERY = process.env.AUDIT_QUERY ? `&${process.env.AUDIT_QUERY}` : "";
+const visit = async (p, search, waitMs) => {
+  await p.goto(`${BASE}/?${search}${QUERY}`, { waitUntil: "networkidle" });
+  // The living map shows once its first frame is drawn.
+  await p.waitForFunction(() => !document.querySelector(".living-map:not([data-ready])"));
+  await p.waitForTimeout(waitMs);
+};
 
 export const SIZES = [
   [1920, 1080],
@@ -60,13 +69,18 @@ const pressVerb = async (p, group, options = []) => {
   await p.waitForTimeout(400);
 };
 
-/** Pick the first tile whose name plate and label pass `test`, and wait for its page. */
+/** Pick the first tile whose name plate and label pass `test`, and wait for its page.
+ *  The living map's plates float apart from its tiles; its labels name the lead first. */
 /* global document */
 const pickTile = async (p, test) => {
   const id = await p.evaluate((source) => {
     const fits = new Function(`return ${source}`)();
-    const tile = [...document.querySelectorAll(".island [data-tile-id]")].find((e) =>
-      fits(e.querySelector(".plate-text")?.textContent ?? "", e.getAttribute("aria-label") ?? ""),
+    const plate = (e) =>
+      e.querySelector(".plate-text")?.textContent ??
+      e.getAttribute("aria-label")?.match(/; ([^,]+),/)?.[1] ??
+      "";
+    const tile = [...document.querySelectorAll(".island [data-tile-id], .lm-tile")].find((e) =>
+      fits(plate(e), e.getAttribute("aria-label") ?? ""),
     );
     return tile?.dataset.tileId ?? null;
   }, test.toString());
@@ -78,9 +92,10 @@ const pickTile = async (p, test) => {
   await p.waitForTimeout(400);
 };
 
-/** The Chronicle drops from the ticker; it stays open until its tab is pressed again. */
+/** The Chronicle drops from the ticker (on the living map, rises from the corner dock's
+ *  line); it stays open until its tab is pressed again. */
 const setChronicle = async (p, open) => {
-  const t = p.locator(".ticker-head");
+  const t = p.locator(".ticker-head, .dock-line");
   if ((await t.count()) && ((await t.getAttribute("aria-expanded")) === "true") !== open) {
     await t.click().catch(() => {});
     await p.waitForTimeout(250);
@@ -100,8 +115,7 @@ export const SURFACES = [
   {
     name: "fate",
     go: async (p) => {
-      await p.goto(`${BASE}/?dev=preload&seed=42`, { waitUntil: "networkidle" });
-      await p.waitForTimeout(1300);
+      await visit(p, "dev=preload&seed=42", 1300);
     },
   },
   { name: "table", go: async (p) => dismissDialogs(p) },
@@ -231,24 +245,21 @@ export const SURFACES = [
   {
     name: "assembly-proposal",
     go: async (p) => {
-      await p.goto(`${BASE}/?dev=assembly&seed=42`, { waitUntil: "networkidle" });
-      await p.waitForTimeout(1400);
+      await visit(p, "dev=assembly&seed=42", 1400);
     },
   },
   {
     // Year 8 exposes standing Laws and eligible Year 4 repeals.
     name: "assembly-standing",
     go: async (p) => {
-      await p.goto(`${BASE}/?dev=assembly4&seed=42`, { waitUntil: "networkidle" });
-      await p.waitForTimeout(2200);
+      await visit(p, "dev=assembly4&seed=42", 2200);
     },
   },
   {
     name: "assembly-vote",
     go: async (p) => {
       // Year 4 seats can afford a draw. A Directive has no protected replacement.
-      await p.goto(`${BASE}/?dev=assembly2&seed=42`, { waitUntil: "networkidle" });
-      await p.waitForTimeout(1400);
+      await visit(p, "dev=assembly2&seed=42", 1400);
       await p.getByRole("button", { name: "Draw from Stratokles", exact: true }).click();
       await p.locator(".sit-pick").first().click();
       await p.getByRole("button", { name: /^Seal against/ }).click();
@@ -275,8 +286,7 @@ export const SURFACES = [
     // inherit their scene otherwise.
     name: "pick-rival",
     go: async (p) => {
-      await p.goto(`${BASE}/?dev=preload&seed=42`, { waitUntil: "networkidle" });
-      await p.waitForTimeout(1300);
+      await visit(p, "dev=preload&seed=42", 1300);
       await dismissDialogs(p);
       await pickTile(p, (plate) => plate && !["PHLIOUS", "NEMEA"].includes(plate));
     },
@@ -287,7 +297,7 @@ export const SURFACES = [
     name: "pick-mooring",
     go: async (p) => {
       await p
-        .locator(".island .moor")
+        .locator(".island .moor, .lm-moor:not(.is-faded)")
         .first()
         .click({ force: true })
         .catch(() => {});

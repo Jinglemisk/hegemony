@@ -8,6 +8,12 @@
  * pans and zooms freely — this only decides where the map starts.
  */
 
+/** A length token from the stylesheet, in px (0 where there is no document, as in SSR). */
+export const tokenPx = (name: string) =>
+  typeof getComputedStyle === "undefined"
+    ? 0
+    : parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
+
 /** [x0, x1, y0, y1] in hex units, relative to the island's origin. */
 export type UnitBox = readonly [number, number, number, number];
 
