@@ -199,7 +199,7 @@ The game's rules for the sea, the map, the bots and the sim flag wait for that a
 
 0. **The generator and its validation**, delivered as above. It may run alongside slice 1, using
    today's map helpers, and is rebased onto the topology module once that merges.
-1. **Topology and the Continental rename.**
+1. **Topology and the Continental rename** (#139).
    - One topology module, with every coast and adjacency reader moved onto it.
    - `shuffled` becomes `continental`, and `classic` becomes `scenario`.
    - No behaviour change: batches match byte for byte.
