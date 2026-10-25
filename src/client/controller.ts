@@ -5,7 +5,7 @@ import { enumerateLegalCommands, transition } from "../game/legalMoves";
 import { projectForPlayer } from "../game/projection";
 import type { BoardLayout, HegemonyState, Phase, PlayerId } from "../game/types";
 import { createGameFromDefinition } from "../game/turn";
-import { GAME_MODES, type GameModeId } from "../game/ruleset";
+import { GAME_MODES, boardRulesetPatch, type GameModeId } from "../game/ruleset";
 import {
   SEATS_EVENT,
   loadSeats,
@@ -30,8 +30,9 @@ export type { Phase } from "../game/types";
 /**
  * URL-driven game options, so a browser session can pick the board and seed without a
  * lobby: `?board=scenario&seed=42` for a quick game on the fixed authored layout,
- * `?board=archipelago` for the islands, `?mode=fastStart` for the richer treasury, `?setup=manual` to place the opening
- * towns by hand, `?setup=ideas` to auto-place but keep the Idea picker,
+ * `?board=archipelago` for the islands (with its island hopping of 3 hexes, which the TUNE
+ * panel can override), `?mode=fastStart` for the richer treasury, `?setup=manual` to place
+ * the opening towns by hand, `?setup=ideas` to auto-place but keep the Idea picker,
  * `?dev=preload` to replay the fixed scripted placements,
  * `?opening=random` for the old uniform draw instead of policy placement, and
  * `?dev=bots` to let the sim's bots play every seat (`&policy=` picks which, `master`
@@ -79,14 +80,15 @@ function createGameFromUrl(): { G: HegemonyState; shell: DevShell } {
       (import.meta.env.DEV && loadTuningPresetId() !== null) ||
       devAutoOpening);
 
-  // Resolve one immutable definition before state creation. Existing matches keep their
-  // pinned package even if the tuning controls are changed for the next reset.
-  const definition = resolveTunedDefinition(GAME_MODES[mode].ruleset);
+  // Resolve one immutable definition before state creation, with the settings of the
+  // board it plays. Existing matches keep their pinned package even if the tuning controls
+  // are changed for the next reset.
+  const base = GAME_MODES[mode].ruleset;
 
   if (preload && autoOpening && !keepIdeaPicker) {
     // Fix placement only; Ideas use the same scorer as other quick starts.
     const G = buildNewGame({
-      definition,
+      definition: resolveTunedDefinition(base, boardRulesetPatch("scenario")),
       seed: matchSeed,
       mode,
       boardLayout: "scenario",
@@ -97,6 +99,7 @@ function createGameFromUrl(): { G: HegemonyState; shell: DevShell } {
   }
 
   const seed = pinnedSeed ?? (autoOpening && devAutoOpening ? nextRotationSeed() : matchSeed);
+  const definition = resolveTunedDefinition(base, boardRulesetPatch(boardLayout));
   let G = createGameFromDefinition(definition, seed, boardLayout, false);
 
   if (autoOpening) {

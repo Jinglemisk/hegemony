@@ -5,7 +5,7 @@ tree. The roadmap establishes sequence and exit gates; plans define unshipped
 work; references describe the game that exists; reports preserve dated evidence;
 and the archive is historical context, never current authority.
 
-Last updated: 2026-10-24.
+Last updated: 2026-10-25.
 
 ## Now
 
@@ -48,7 +48,7 @@ precedes full multiplayer.
 | [Code health](plans/code-health.md)                 | post-v2  | `active`   | Five cleanup PRs before trade; all merged, trade next                             |
 | [Player trade](plans/player-trade.md)               | post-v2  | `active`   | PRs #131 and #132 merged; batches reported; the owner plays trade next            |
 | [Development deck](plans/development-deck.md)       | post-v2  | `proposed` | Replaces Ventures; follows both trade PRs                                         |
-| [Board modes](plans/board-modes.md)                 | post-v2  | `proposed` | Slice 1 merged (#139); the generator is validated and goes to the owner (Q81)     |
+| [Board modes](plans/board-modes.md)                 | post-v2  | `proposed` | Engine and sim (#145); Q81 answered: hop 3, seven goods, the oracle on an island  |
 | [Recurring deals](plans/recurring-deals.md)         | post-v2  | `proposed` | Yearly standing trades; the builder proposes the settlement timing first          |
 | [Game settings](plans/game-settings.md)             | post-v2  | `proposed` | Classic plus per-game settings; length and base income built in the engine        |
 | [National Ideas](plans/national-ideas.md)           | v2       | `active`   | Step 9 shipped (#88); twelve v2 rules, open setup draft (#95), influence purchase |

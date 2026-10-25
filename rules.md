@@ -319,11 +319,11 @@ instead of 1. The other three state one fact.
 
 ## Luxury goods
 
-Six named goods — Tyrian Dye, Pearls, Coral, Glassware, Incense, Fine Linen — sit
-moored off the coast, each at a point shared by **two** coastal tiles. A **Port**
-raised in a settlement on either tile claims the good; **the first Port wins**, and
-the good stays claimed for the rest of the game. Each good is unique: one copy, one
-owner.
+Seven named goods — Tyrian Dye, Pearls, Coral, Glassware, Incense, Fine Linen,
+Silphium — sit moored off the coast, each at a point shared by **two** coastal
+tiles. A **Port** raised in a settlement on either tile claims the good; **the first
+Port wins**, and the good stays claimed for the rest of the game. Each good is
+unique: one copy, one owner.
 
 Every good you hold adds **+2 to your happiness** for as long as you hold it, and
 there is no limit on how many count. The riot and revolt lines and the **Beloved of

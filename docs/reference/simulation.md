@@ -314,9 +314,11 @@ same on all four rows) and `activeLuxuries`.
   colony that does not border one of the seat's settlements must lie on a coastal tile
   within that many hexes of one of the seat's coastal settlements, in play and for the
   founding colony at setup (the capital is then the only one, so an inland capital's colony
-  must border it). `null`, the default, is any shore to any shore. It reads no board name,
-  so it applies on any board. Archipelago batches play hop 4, Q81's recommendation:
-  `--board archipelago` with a patch of `{"placement":{"seaReach":4}}`.
+  must border it). `null`, the ruleset's default, is any shore to any shore. No rule reads
+  the board's name; instead the board brings its own patch. `--board archipelago` applies
+  `{"placement":{"seaReach":3}}` (Q81) under `--ruleset-patch`, so a patch that sets
+  `seaReach` keeps its own: `4` for hop 4, `null` for any shore. Continental and scenario
+  bring none. The report's `meta.rulesetPatch` and the save record the applied patch.
 - `--years N|open` — the game's length (`victory.years`, 14 by default), folded into the
   ruleset patch. A game longer than the 14-card year deck reshuffles it; `open` plays until
   the race is won, with a safety stop at year 40. `batch`'s default `--turns` follows it.
@@ -523,7 +525,7 @@ Replays are byte-identical to the original run.
 {
   "version": 2,
   "engineVersion": "0.1.0",
-  "stateSchemaVersion": 19,
+  "stateSchemaVersion": 20,
   "commandSchemaVersion": 7,
   "seed": 42, // game seed: decks, board draws, table rolls
   "mode": "standard",

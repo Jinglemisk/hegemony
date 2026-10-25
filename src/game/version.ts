@@ -56,7 +56,10 @@ export const ENGINE_VERSION = "0.1.0";
 /** v19 (board modes, slice 2): the `archipelago` layout, and the ruleset's placement block
  *  carries the sea reach. Older pinned rulesets cannot answer it, so older saves are
  *  rejected. Commands are unchanged. */
-export const STATE_SCHEMA_VERSION = 19;
+/** v20 (board modes, Q81): Silphium makes seven luxury goods, and an Archipelago board
+ *  deals the oracle onto an island. The same seed lays a different board and seats the
+ *  goods elsewhere, so older saves are rejected. Commands are unchanged. */
+export const STATE_SCHEMA_VERSION = 20;
 export const COMMAND_SCHEMA_VERSION = 7;
 
 export const SAVE_FORMAT_VERSION = 2;

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { buildBuilding } from "./actions";
+import { PLAYER_IDS } from "./data";
+import { createModeDefinition } from "./definition";
 import { collectInvariantViolations } from "./invariants";
 import { happinessLevel, standingHappiness } from "./happiness";
 import {
@@ -11,6 +13,7 @@ import {
   transferLuxury,
 } from "./luxury";
 import { isCoastalTile } from "./mapTopology";
+import { createInitialStateFromDefinition } from "./state";
 import { getBuildBuildingStatus } from "./status";
 import { beginTurnFor, createGame } from "./turn";
 import { applyUnrestAtTurnEnd, unrestStatus } from "./unrest";
@@ -65,12 +68,12 @@ function gameWithPortSite(): { G: HegemonyState; asset: LuxuryAsset; tileId: str
 }
 
 describe("the luxury registry", () => {
-  it("seats six unique unclaimed goods on eligible shared vertices at creation", () => {
+  it("seats seven unique unclaimed goods on eligible shared vertices at creation", () => {
     const G = preloadedGame(SEED);
 
-    expect(G.board.luxuries).toHaveLength(6);
-    expect(new Set(G.board.luxuries.map((asset) => asset.goodId)).size).toBe(6);
-    expect(new Set(G.board.luxuries.map((asset) => asset.vertexId)).size).toBe(6);
+    expect(G.board.luxuries).toHaveLength(7);
+    expect(new Set(G.board.luxuries.map((asset) => asset.goodId)).size).toBe(7);
+    expect(new Set(G.board.luxuries.map((asset) => asset.vertexId)).size).toBe(7);
 
     for (const asset of G.board.luxuries) {
       expect(asset.owner).toBeNull();
@@ -84,6 +87,27 @@ describe("the luxury registry", () => {
     }
 
     expect(collectInvariantViolations(G)).toEqual([]);
+  });
+
+  it("seats 2n − 1 goods for n seats, Silphium among them, on Continental and Archipelago", () => {
+    const definition = createModeDefinition("standard");
+    expect(definition.ruleset.economy.luxury.coastalGoods).toBe(2 * PLAYER_IDS.length - 1);
+    expect(definition.ruleset.economy.luxury.coastalGoods).toBe(7);
+
+    for (const board of ["continental", "archipelago"] as const) {
+      for (const seed of [1, 2, 3, 4, 5]) {
+        const goods = createInitialStateFromDefinition(definition, seed, board).board.luxuries;
+        expect(goods.map((asset) => asset.goodId).sort(), `${board}, seed ${seed}`).toEqual([
+          "coral",
+          "fine-linen",
+          "glassware",
+          "incense",
+          "pearls",
+          "silphium",
+          "tyrian-dye",
+        ]);
+      }
+    }
   });
 });
 
