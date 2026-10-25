@@ -16,12 +16,25 @@ for (const [label, base] of ARMS) {
   const lines = readFileSync(`${base}.csv`, 'utf8').trim().split('\n');
   const head = lines[0].split(',');
   const col = (name) => head.indexOf(name);
-  // The last row of a player's year is its state after its own turn and the others'.
-  const last = new Map();
+  // A turn's rows are written as the turn ends, so their acting seat is the one about to play.
+  // A seat's state after its own year-Y turn is therefore its row in the next snapshot
+  // (the final rows after the game's last turn).
+  const snapshots = new Map();
   for (const line of lines.slice(1)) {
     const c = line.split(',');
-    if (c[col('final')] === '1') continue;
-    last.set(`${c[col('game')]}:${c[col('player')]}:${c[col('year')]}`, c);
+    const game = c[col('game')];
+    if (!snapshots.has(game)) snapshots.set(game, []);
+    const list = snapshots.get(game);
+    const key = `${c[col('turn')]}:${c[col('final')]}`;
+    if (list.at(-1)?.key !== key) list.push({ key, year: c[col('year')], acting: c[col('actingSeat')], final: c[col('final')], rows: {} });
+    list.at(-1).rows[c[col('player')]] = c;
+  }
+  const last = new Map();
+  for (const [game, list] of snapshots) {
+    list.forEach((snap, at) => {
+      if (snap.final === '1' || !list[at + 1]) return;
+      last.set(`${game}:${snap.acting}:${snap.year}`, list[at + 1].rows[snap.acting]);
+    });
   }
   console.log(`\n${label}`);
   console.log('seat | wins | cities, colonies at year 5 | pops at year 5, 14 | pops lost to hunger | titles held at the end');

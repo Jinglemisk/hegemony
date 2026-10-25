@@ -39,10 +39,10 @@ At 40 games a win rate is uncertain by about ±13 points.
   - Mixed: 7 / 11 / 6 / 16.
   - Chance gives one seat of four 19 or more wins of 40 in under 1% of batches.
   - Seat 3 ends with the most pops (15.3 at year 14) and holds Demos in 16 games.
-  - Seat 0's lead in cities at year 5 shrinks: 1.88 against 1.60 to 1.70, where it was 2.38
-    against 1.60 to 1.88.
-  - So the first-pick edge measured on 10-24 belongs to the game with base food. The leapfrog
-    test now runs against both.
+  - Seat 0's lead in cities at year 5 shrinks: 1.88 against 1.60 to 1.73, where it was 2.38
+    against 1.80 to 1.88.
+  - So the first-pick edge measured on 10-24 belongs to the game with base food. The
+    leapfrog-off batch (#142) tests both.
 - **Hunger is back on the masters table.**
   - 450 turns begun short of food, against 166.
   - 0.59 pops lost to hunger a seat-game, against 0.01.
@@ -98,20 +98,21 @@ The no-base-income column is both the 10-24 patched arm and main: they are ident
 
 ## 3. Seats on the masters table
 
-The state after each seat's year, averaged over 40 games. Titles are those held when the game
+Each seat's state right after its own turn of the year, averaged over 40 games. Titles are those held when the game
 ended.
 
 | Seat | Wins, 1 base food → none | Cities, colonies at year 5 | Pops at year 5, 14 | Pops lost to hunger | Polis Builder / Demos / Civic Elite / Voice |
 | ---- | ------------------------ | -------------------------- | ------------------ | ------------------- | ------------------------------------------- |
-| 0    | 17 → 4                   | 2.38, 2.45 → 1.88, 2.42    | 10.1, 15.9 → 9.4, 13.5  | 0.00 → 0.63    | 10 / 11 / 10 / 7 → 5 / 3 / 7 / 5            |
-| 1    | 7 → 8                    | 1.80, 2.58 → 1.60, 2.42    | 10.5, 15.7 → 10.0, 13.8 | 0.00 → 0.47    | 3 / 6 / 8 / 6 → 4 / 5 / 10 / 4              |
+| 0    | 17 → 4                   | 2.38, 2.45 → 1.88, 2.42    | 10.1, 16.6 → 9.4, 14.1  | 0.00 → 0.63    | 10 / 11 / 10 / 7 → 5 / 3 / 7 / 5            |
+| 1    | 7 → 8                    | 1.80, 2.60 → 1.60, 2.42    | 10.5, 15.7 → 10.0, 13.8 | 0.00 → 0.47    | 3 / 6 / 8 / 6 → 4 / 5 / 10 / 4              |
 | 2    | 8 → 9                    | 1.88, 2.55 → 1.70, 2.40    | 10.4, 16.6 → 9.5, 14.8  | 0.00 → 0.82    | 3 / 7 / 4 / 3 → 7 / 9 / 8 / 2               |
-| 3    | 8 → 19                   | 1.60, 2.60 → 1.65, 2.30    | 10.5, 17.2 → 10.4, 15.3 | 0.03 → 0.42    | 5 / 10 / 9 / 2 → 5 / 16 / 8 / 6             |
+| 3    | 8 → 19                   | 1.85, 2.50 → 1.73, 2.35    | 10.5, 17.2 → 10.3, 15.3 | 0.03 → 0.42    | 5 / 10 / 9 / 2 → 5 / 16 / 8 / 6             |
 
 - Seat 3 is ahead on pops by year 5 and further ahead by year 14, and loses the fewest pops to
   hunger.
-- This report does not find the cause. The leapfrog report replays these setups and looks at
-  placement order, the colony pick, food on each seat's tiles and the turn order.
+- This report does not find the cause. The leapfrog-off batch (#142) replays these setups:
+  seat 3 places the last capital and the first colony, has the least food on its tiles and the
+  highest income from year 2. That points at the setup order without proving it.
 
 ## For the balance check (Q80)
 
