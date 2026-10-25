@@ -39,6 +39,18 @@ A game is played on one of two boards, chosen before setup:
 
   Archipelago must be judged by batches, not by eye.
 
+- **The first pick takes the richest coastal tile, not the centre** (2026-10-25). This comes
+  from replaying the setup of the 40 four-master games in those batches, on the shuffled board.
+  - Seat 0, which places its capital first, builds on the rim in 36 of 40 games. That is a
+    mean distance of 2.85 from the centre, where 3 is the rim. Its capital is coastal in 90% of
+    games and has the most slots: 5.05, against 3.88 for seat 3.
+  - Seat 1 takes the middle: a mean distance of 1.90.
+  - Seat 0 then wins 17 of 40, with the same early income as the others.
+  - The likely cause is the coastal leapfrog. A coastal capital may found on every coastal
+    tile from turn one, and the luxury goods sit on the coast.
+  - The owner's reading is that reach comes from the richest coastal tile, wherever it lies.
+    An overnight batch with the leapfrog off tests it.
+
 - Coast is an occupancy query: a tile is coastal when a neighbouring cell holds no tile. The
   [luxury plan](luxury-goods.md) chose this so that "a later archipelago has the same coast in
   every engine rule".
@@ -131,11 +143,20 @@ The game's rules for the sea, the map, the bots and the sim flag wait for that a
 3. **Resources.** Whether each island can feed and build for itself, or each lacks something.
    An island without plains must buy its food, which ties in with
    [recurring deals](recurring-deals.md) and the removal of base income.
-4. **What the sea limits.** Today any shore reaches any shore. Weigh at least these:
-   - founding across water only within N sea cells, or only from the same island group;
-   - pop moves between islands costing more or taking a turn longer;
-   - a Port required to found, move or trade across water;
-   - trade left as it is.
+4. **What the sea limits.** Today any shore reaches any shore. On an archipelago nearly every
+   tile is coastal, so this rule decides both whether islands mean anything and how much the
+   first pick is worth. Weigh at least these:
+   - **Island hopping:** found across water only within N hexes of one of the seat's own
+     coastal settlements. The owner floated about 3.
+     - Test N = 2, 3 and 4, unlimited (today's rule), and no leapfrog.
+     - For each, measure over the 1,000 seeds how much the first capital pick is worth: the
+       bots' placement score of the first pick against the fourth.
+     - Then recommend one value.
+   - Founding free within the seat's own island group, with a Port needed to cross to another
+     group.
+   - Pop moves between islands costing more or taking a turn longer.
+   - A Port required to found, move or trade across water.
+   - Trade left as it is.
 
    Name which rules change and which stay.
 
