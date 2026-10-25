@@ -199,6 +199,9 @@ The game's rules for the sea, the map, the bots and the sim flag wait for that a
 
 0. **The generator and its validation**, delivered as above. It may run alongside slice 1, using
    today's map helpers, and is rebased onto the topology module once that merges.
+   **Delivered 2026-10-25:** the generator, its test and the
+   [validation report](../reports/simulation/2026-10-25-archipelago-generator.md); the owner's
+   call is Q81.
 1. **Topology and the Continental rename** (#139).
    - One topology module, with every coast and adjacency reader moved onto it.
    - `shuffled` becomes `continental`, and `classic` becomes `scenario`.

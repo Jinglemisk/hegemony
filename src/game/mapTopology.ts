@@ -53,6 +53,11 @@ export function hexDistance(a: AxialCell, b: AxialCell) {
   return (Math.abs(a.q - b.q) + Math.abs(a.r - b.r) + Math.abs(aS - bS)) / 2;
 }
 
+/** The six cells that share an edge with this one, in a fixed order. */
+export function neighbourCells({ q, r }: AxialCell): AxialCell[] {
+  return AXIAL_DIRECTIONS.map((step) => ({ q: q + step.q, r: r + step.r }));
+}
+
 /** Whether two cells share an edge. */
 export function areNeighbours(a: AxialCell, b: AxialCell) {
   return hexDistance(a, b) === 1;
