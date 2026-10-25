@@ -134,8 +134,8 @@ after it opens a year, so paying on your own turn leaves gaps.
   - C: every deal settles as the year turns, after the year card and before any sitting. Both
     pay at once from what they kept, and both are paid before their next income. The seat
     order changes nothing. Each side keeps one payment in stock while the deal stands.
-- **Missed payment.** Nothing moves that year, and then: A, the deal stands; B, the deal ends;
-  C, it ends after two misses in a row.
+- **Missed payment.** Nothing moves that year, and then either the deal stands, the deal ends,
+  or it ends after two misses in a row.
 - **The rest, as proposed.** Say if any of these is wrong:
   - nothing moves when a deal is made, and the first exchange is the next settlement;
   - either seat cancels for free on its own turn, at once, but not in the Assembly's
@@ -146,8 +146,8 @@ after it opens a year, so paying on your own turn leaves gaps.
   - deals are public: partner discs on the alarms row, a line in the income forecast, and each
     seat's deals on its tooltip and realm page.
 
-**Recommendation:** Timing C, missed payment B, and the rest as proposed. C is the only timing
-where the seat order changes nothing. Under C a seat misses only by ending its turn without its
-side, or through its own riot roll, so a miss is a cancel by another name.
+**Recommendation:** Timing C, and a missed payment ends the deal; the rest as proposed. C is the
+only timing where the seat order changes nothing. Under C a seat misses only by ending its turn
+without its side, or through its own riot roll, so a miss is a cancel by another name.
 
 **Answer:**

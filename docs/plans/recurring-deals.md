@@ -218,10 +218,10 @@ The deal settles right after the income of whichever seat of the pair plays firs
   what it kept. Seat 1 keeps food at the end of years 2 and 3, seat 3 keeps stone at the end of
   years 4 and 1.
 - **The switch.** In the turn a seat loses first place it pays twice: seat 1 needs 6 food in
-  year 2, and seat 3 needs 2 stone in year 4. In the turn it gains first place it pays nothing. A seat
-  plans two years ahead: seat 1 must save 2 of year 4's free food for year 6, its next double
-  turn.
-- **No chance to react.** The first seat pays right after its income, before it can act, so a
+  year 2, and seat 3 needs 2 stone in year 4. In the turn it gains first place it pays nothing.
+  A seat plans two years ahead: seat 1 must save 2 of year 4's free food for year 6, its next
+  double turn.
+- **What can break it.** The first seat pays right after its income, before it can act, so a
   year card it could not see, such as Drought, can make it miss. Kept stock waits through other
   seats' turns: in year 4 seat 1's food waits through the sitting, where a Grain Riot (lose 3
   food) breaks the deal.
@@ -280,7 +280,7 @@ Every deal at the table settles when the year turns, after the year card and bef
 - **The cost.** Each side keeps one payment in stock at every turn end while the deal stands.
   Seat 3 holds its food from the year turn to its income, through the sitting in years 2 and 4,
   where a Grain Riot can take it as it can any food a seat holds.
-- **No chance to react.** A seat misses only by ending its own turn without its side, or by
+- **What can break it.** A seat misses only by ending its own turn without its side, or by
   losing it to that turn's riot roll (Granary sacked, Bribe demanded). The End-turn confirm warns
   a seat that keeps less than it owes.
 - **Assembly years.** The deal settles before the sitting, so an influence deal can pay for a
