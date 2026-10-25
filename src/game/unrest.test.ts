@@ -26,7 +26,7 @@ import type { HegemonyState, PlayerId, Pops, Settlement } from "./types";
 // Opt into the scripted 4-player two-city opening (dev preload, off by default), so
 // every player starts in gameplay with two cities already placed.
 const SEED = 0xc0ffee;
-const preloadedGame = (seed: number) => createGame(seed, undefined, "classic", true);
+const preloadedGame = (seed: number) => createGame(seed, undefined, "scenario", true);
 
 function ownedSettlements(G: HegemonyState, id: PlayerId): Settlement[] {
   return G.players[id].settlements.map((tileId) => {

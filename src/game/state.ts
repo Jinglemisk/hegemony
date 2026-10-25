@@ -20,7 +20,7 @@ import { CURRENT_RECIPE_VERSIONS } from "./version";
 export function createInitialState(
   seed: number,
   ruleset: Ruleset = DEFAULT_RULESET,
-  boardLayout: BoardLayout = "classic",
+  boardLayout: BoardLayout = "scenario",
 ): HegemonyState {
   return createInitialStateFromDefinition(
     createGameDefinition({
@@ -36,7 +36,7 @@ export function createInitialState(
 export function createInitialStateFromDefinition(
   definition: GameDefinition,
   seed: number,
-  boardLayout: BoardLayout = "classic",
+  boardLayout: BoardLayout = "scenario",
 ): HegemonyState {
   const { content, ruleset } = definition;
   let rng = seed >>> 0;
@@ -47,10 +47,13 @@ export function createInitialStateFromDefinition(
 
   const baseTerrainDeck = getTerrainDeck(content);
   let terrainDeck = baseTerrainDeck;
-  if (boardLayout === "shuffled") {
+  if (boardLayout === "continental") {
     const shuffled = shuffleWithSeed(baseTerrainDeck, rng);
     terrainDeck = shuffled.cards;
     rng = shuffled.state;
+  } else if (boardLayout !== "scenario") {
+    // A legacy script can still carry a retired name; it is rejected, not read as another board.
+    throw new Error(`unknown board layout "${String(boardLayout)}"`);
   }
 
   const tiles = createInitialMap(terrainDeck);

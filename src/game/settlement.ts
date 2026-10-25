@@ -1,6 +1,6 @@
 import { standingSlotBonus, occupiedBuildingSlots, colonyPieceBonus } from "./ideaRules";
 import { colonyLimitDelta, effectiveRuleset, lawSlaveResource } from "./assembly/laws";
-import { hexDistance, isCoastalTile } from "./map";
+import { areNeighbours, hexDistance, isCoastalTile } from "./mapTopology";
 import type {
   HegemonyState,
   HexTile,
@@ -153,7 +153,7 @@ export function isAdjacentToCity(G: HegemonyState, tile: HexTile) {
 export function isContiguousForPlayer(G: HegemonyState, playerID: PlayerId, tile: HexTile) {
   return G.players[playerID].settlements.some((tileId) => {
     const owned = getTile(G, tileId);
-    return owned ? hexDistance(owned, tile) === 1 : false;
+    return owned ? areNeighbours(owned, tile) : false;
   });
 }
 

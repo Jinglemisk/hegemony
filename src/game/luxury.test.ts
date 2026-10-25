@@ -10,7 +10,7 @@ import {
   ownedClaims,
   transferLuxury,
 } from "./luxury";
-import { isCoastalTile } from "./map";
+import { isCoastalTile } from "./mapTopology";
 import { getBuildBuildingStatus } from "./status";
 import { beginTurnFor, createGame } from "./turn";
 import { applyUnrestAtTurnEnd, unrestStatus } from "./unrest";
@@ -20,7 +20,7 @@ import type { HegemonyState, LuxuryAsset, PlayerId } from "./types";
 // The scripted two-city opening: every player starts gameplay with a capital and a
 // second city already placed, which is what a Port needs (a non-colony settlement).
 const SEED = 0xa171c;
-const preloadedGame = (seed: number) => createGame(seed, undefined, "classic", true);
+const preloadedGame = (seed: number) => createGame(seed, undefined, "scenario", true);
 
 /** Move an existing city onto a chosen coastal tile so a Port is placeable there.
  *  Rigging position is fine — the claim rules under test don't depend on how the

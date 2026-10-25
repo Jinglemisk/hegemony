@@ -7,7 +7,7 @@ import { happinessContributions, happinessLevel } from "./happiness";
 import { collectInvariantViolations } from "./invariants";
 import { enumerateLegalCommands } from "./legalMoves";
 import { claimableLuxuriesAt } from "./luxury";
-import { isCoastalTile } from "./map";
+import { isCoastalTile } from "./mapTopology";
 import { playerPieces } from "./settlement";
 import {
   buildingGround,
@@ -26,7 +26,7 @@ import type { HegemonyState } from "./types";
 const NONE = { citizens: 0, freemen: 0, slaves: 0 };
 const P0_CAPITAL = TEST_OPENING_SETUP[0].capital.tileId;
 const P0_COLONY = TEST_OPENING_SETUP[0].colony.tileId;
-/** Classic board: a three-slot forest, a three-slot hill, the seven-slot breadbasket. */
+/** Scenario board: a three-slot forest, a three-slot hill, the seven-slot breadbasket. */
 const FOREST = "-3,0";
 const HILL = "-2,3";
 const BREADBASKET = "1,0";

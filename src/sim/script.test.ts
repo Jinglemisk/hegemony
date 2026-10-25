@@ -140,7 +140,7 @@ describe("record/replay", () => {
           turns: 0,
         }).definition,
         opening: "random",
-        boardLayout: "classic",
+        boardLayout: "scenario",
         botRngState: 1,
         commands: [],
       }),

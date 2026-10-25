@@ -199,13 +199,13 @@ function parseMode(flags: Flags): GameModeId {
   return mode;
 }
 
-/** Shuffled by default, as in the live game. The fixed opening's tiles exist only on the
- *  classic board, so it falls back to classic. */
-function parseBoard(flags: Flags, fallback: BoardLayout = "shuffled"): BoardLayout {
+/** Continental by default, as in the live game. The fixed opening's tiles exist only on
+ *  the scenario board, so it falls back to scenario. */
+function parseBoard(flags: Flags, fallback: BoardLayout = "continental"): BoardLayout {
   const board = typeof flags.board === "string" ? flags.board : fallback;
 
-  if (board !== "classic" && board !== "shuffled") {
-    fail(`unknown board "${board}" — expected classic or shuffled`);
+  if (board !== "continental" && board !== "scenario") {
+    fail(`unknown board "${board}" — expected continental or scenario`);
   }
 
   return board;
@@ -329,7 +329,7 @@ function cmdNew(flags: Flags, file: string) {
   const opening: OpeningKind = flags["manual-setup"]
     ? "manual"
     : parseOpening(flags, ["policy", "random", "fixed"]);
-  const boardLayout = parseBoard(flags, opening === "fixed" ? "classic" : "shuffled");
+  const boardLayout = parseBoard(flags, opening === "fixed" ? "scenario" : "continental");
 
   const botSeed =
     flags["bot-seed"] !== undefined
@@ -986,7 +986,7 @@ const HELP = `Hegemony headless sim — usage: npm run sim -- <command> [args] [
 Save file defaults to ${DEFAULT_SAVE_PATH}.
 
   new        --seed N [--mode standard|fastStart|deathmatch] [--ruleset-patch p.json] [--years N|open]
-             [--manual-setup | --opening policy|random|fixed] [--bot-seed N] [--board shuffled|classic]
+             [--manual-setup | --opening policy|random|fixed] [--bot-seed N] [--board continental|scenario]
              [--policy ${POLICY_IDS}] [--seats ${POLICY_IDS}×4]
   show       [--json] [--player 0..3]
   log        [--tail N]
@@ -1008,7 +1008,7 @@ Save file defaults to ${DEFAULT_SAVE_PATH}.
              index <N>                     apply the Nth move from \`legal\`
   end-turn
   auto       [--turns N] [--policy ${POLICY_IDS}] [--seats ${POLICY_IDS}×4] [--record s.json] [--quiet]
-  batch      --games N [--turns N] [--policy ${POLICY_IDS}] [--seed N] [--board shuffled|classic]
+  batch      --games N [--turns N] [--policy ${POLICY_IDS}] [--seed N] [--board continental|scenario]
              [--opening policy|random]
              [--ruleset-patch p.json] [--years N|open] [--tune-preset low-number-core-v1] [--tune-patch p.json]
              [--seats ${POLICY_IDS}×4] [--rotate]

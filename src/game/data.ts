@@ -291,7 +291,7 @@ export const LUXURY_GOODS: LuxuryGoodDefinition[] = [
 // 6→6, 4→4, 3→3, 2→3 (29); forest 4→5, 3→4, 2→3, 1→2 (51). Hills keep 3, 3, 4, 3, 3:
 // their slots hold buildings and their slaves make nothing (`resource: null`). The
 // oracle has no slots and cannot be settled. Landmarks (breadbasket, quarry, two
-// old-growth forests) are pairwise non-adjacent on this authored "classic" board; the
+// old-growth forests) are pairwise non-adjacent on this authored "scenario" board; the
 // live game shuffles by default (GAME_CONFIG).
 export const TERRAIN_DECK: Array<{
   terrain: Terrain;

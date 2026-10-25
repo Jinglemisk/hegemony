@@ -28,7 +28,7 @@ function giveLuxuries(G: HegemonyState, playerID: PlayerId, count: number) {
       asset.owner = playerID;
     });
 }
-const preloadedGame = (seed: number) => createGame(seed, undefined, "classic", true);
+const preloadedGame = (seed: number) => createGame(seed, undefined, "scenario", true);
 
 /**
  * These turn-structure tests cycle whole years to assert the year/opener machine.
@@ -39,7 +39,12 @@ const preloadedGame = (seed: number) => createGame(seed, undefined, "classic", t
  * cadence has its own suite in assembly/assembly.test.ts.
  */
 const assemblyFreeGame = (seed: number) =>
-  createGame(seed, deriveRuleset(DEFAULT_RULESET, { assembly: { firstYear: 0 } }), "classic", true);
+  createGame(
+    seed,
+    deriveRuleset(DEFAULT_RULESET, { assembly: { firstYear: 0 } }),
+    "scenario",
+    true,
+  );
 
 function advanceTurn(G: HegemonyState) {
   G.pendingPlayerEvent = null;
@@ -288,26 +293,32 @@ describe("phase-0 turn structure", () => {
 });
 
 describe("board layouts", () => {
-  it("classic layout is identical across seeds; shuffled differs and is seed-stable", () => {
-    const classicA = createInitialState(1)
+  it("scenario layout is identical across seeds; continental differs and is seed-stable", () => {
+    const scenarioA = createInitialState(1)
       .board.tiles.map((tile) => tile.terrain)
       .join();
-    const classicB = createInitialState(2)
+    const scenarioB = createInitialState(2)
       .board.tiles.map((tile) => tile.terrain)
       .join();
-    expect(classicA).toBe(classicB);
+    expect(scenarioA).toBe(scenarioB);
 
-    const shuffledA = createInitialState(7, undefined, "shuffled")
+    const continentalA = createInitialState(7, undefined, "continental")
       .board.tiles.map((tile) => tile.terrain)
       .join();
-    const shuffledB = createInitialState(7, undefined, "shuffled")
+    const continentalB = createInitialState(7, undefined, "continental")
       .board.tiles.map((tile) => tile.terrain)
       .join();
-    const shuffledC = createInitialState(8, undefined, "shuffled")
+    const continentalC = createInitialState(8, undefined, "continental")
       .board.tiles.map((tile) => tile.terrain)
       .join();
-    expect(shuffledA).toBe(shuffledB);
-    expect(shuffledA).not.toBe(classicA);
-    expect(shuffledA).not.toBe(shuffledC);
+    expect(continentalA).toBe(continentalB);
+    expect(continentalA).not.toBe(scenarioA);
+    expect(continentalA).not.toBe(continentalC);
+  });
+
+  it("rejects the retired layout names rather than reading them as another board", () => {
+    for (const retired of ["shuffled", "classic"]) {
+      expect(() => createInitialState(7, undefined, retired as never)).toThrow(retired);
+    }
   });
 });

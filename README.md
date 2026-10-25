@@ -71,9 +71,9 @@ npm run dev
 
 Open the local address printed by Vite. Node.js 22 or newer is required.
 
-The standard authored island is used by default. Add `?board=shuffled` to the URL
-for a reproducible shuffled map, and use `?seed=YOUR_SEED` to replay a particular
-setup.
+The continental island, shuffled from the game seed, is used by default. Add
+`?board=scenario` to the URL for the fixed authored island, and use `?seed=YOUR_SEED`
+to replay a particular setup.
 
 ## For Contributors
 
