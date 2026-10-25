@@ -21,7 +21,7 @@ import { basename } from 'node:path';
 const POLICIES = ['slaver', 'civic', 'trader', 'master'];
 const SEATS = ['0', '1', '2', '3'];
 const DRAWS = 2000;
-const WANT = { level: 60, winRates: 480 };
+const WANT = { level: 60, winRates: 160 };
 
 // v1 on standard rules and the shuffled board: seat wins and length from the 2026-09-05
 // baseline, riots from the 2026-10-19 v1-vs-v2 report. v1 sent both tiers to the riot table;

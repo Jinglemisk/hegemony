@@ -195,18 +195,22 @@ The owner set its shape on 2026-10-25 (Q80). Bot games on `main` judge the rules
 script prints each rule's limit, the measured value, a 95% interval and a verdict, and the dated
 report says what fails and what might explain it.
 
-**Batches.** 56 turns, seeds from 1000, run by the owner one at a time:
+**Batches.** 56 turns, seeds from 1000, run by the owner:
 
-| Table                                           | Board       | Games                        | Judges                                 |
-| ----------------------------------------------- | ----------- | ---------------------------- | -------------------------------------- |
-| Four masters, no Ideas                          | Continental | 60                           | The runaway leader and the level rules |
-| Mixed: slaver, civic, trader and master rotated | Continental | 480 (120 seeds × 4 seatings) | Win rates and the level rules          |
-| Four masters, no Ideas                          | Archipelago | 60                           | The same as Continental's masters      |
+| Table                                           | Board       | Games                       | Judges                                 |
+| ----------------------------------------------- | ----------- | --------------------------- | -------------------------------------- |
+| Four masters, no Ideas                          | Continental | 60                          | The runaway leader and the level rules |
+| Mixed: slaver, civic, trader and master rotated | Continental | 160 (40 seeds × 4 seatings) | Win rates and the level rules          |
+| Four masters, no Ideas                          | Archipelago | 60                          | The same as Continental's masters      |
+
+On the owner's fanless MacBook Air, two workers at normal priority reached 100°C. The batches run
+on the efficiency cores only, through `taskpolicy -b`, with four workers, in about 4.5 hours for
+all three:
 
 ```bash
-npm run sim -- batch --turns 56 --seed 1000 --jobs 2 --board continental --games 60 --policy master --without-ideas all --report <out>.json --csv <out>.csv
-npm run sim -- batch --turns 56 --seed 1000 --jobs 2 --board continental --games 120 --seats slaver,civic,trader,master --rotate --report <out>.json --csv <out>.csv
-npm run sim -- batch --turns 56 --seed 1000 --jobs 2 --board archipelago --games 60 --policy master --without-ideas all --report <out>.json --csv <out>.csv
+taskpolicy -b node --import tsx src/sim/cli.ts batch --turns 56 --seed 1000 --jobs 4 --board continental --games 60 --policy master --without-ideas all --report <out>.json --csv <out>.csv
+taskpolicy -b node --import tsx src/sim/cli.ts batch --turns 56 --seed 1000 --jobs 4 --board continental --games 40 --seats slaver,civic,trader,master --rotate --report <out>.json --csv <out>.csv
+taskpolicy -b node --import tsx src/sim/cli.ts batch --turns 56 --seed 1000 --jobs 4 --board archipelago --games 60 --policy master --without-ideas all --report <out>.json --csv <out>.csv
 node docs/reports/simulation/2026-10-26-balance-check/tools/check.mjs <report> [<report> ...]
 ```
 
@@ -229,7 +233,9 @@ node docs/reports/simulation/2026-10-26-balance-check/tools/check.mjs <report> [
 **How the figures are read.**
 
 - 60 games for the rules that measure a level (riots, influence, hunger, Beloved, the stock
-  ratio), about 480 for win rates. At 60 games a measured 20% could be anything from 12% to 32%.
+  ratio), 160 for win rates. At 60 games a measured 20% could be anything from 12% to 32%. Win
+  rates are a benchmark, so about ±7 points at 160 games is enough (owner, 2026-10-25); 480 games
+  ran too long and too hot.
 - Year-5 income and year-10 stock are read after each seat's own turn that year. Income is the
   baseline's gross income: wood, stone, gold, and food when positive. Stock is wood, stone, gold
   and food, with the laggard counted as at least 1. A game with a tied income lead is left out.

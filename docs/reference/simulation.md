@@ -251,8 +251,8 @@ the runner and CLI telemetry hooks in a scratch Vitest harness: 17 minutes
 The mixed seed-1000 game also matched all 425 commands and resulting states
 against the original engine and AI. The lead still times the CLI itself.
 
-The balance check plays 60 games on a four-master table (`--games 60`) and 480 on the
-mixed table (`--games 120 --rotate`); its commands are in the
+The balance check plays 60 games on a four-master table (`--games 60`) and 160 on the
+mixed table (`--games 40 --rotate`); its commands are in the
 [player trade plan](../plans/player-trade.md#the-balance-check). `--games` counts base seeds;
 rotation multiplies the actual games by four and records that total in `meta.games`.
 Rotation is cyclic, not all 24 permutations. Repeating a personality in two seats
