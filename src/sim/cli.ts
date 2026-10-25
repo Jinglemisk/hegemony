@@ -23,7 +23,7 @@ import {
 import type { GameCommand } from "../game/legalMoves";
 import { getAuthoredGameContent } from "../game/content";
 import { createGameDefinition } from "../game/definition";
-import { PLAYER_IDS } from "../game/data";
+import { EMPTY_RESOURCES, PLAYER_IDS } from "../game/data";
 import { GAME_MODES, mergeRulesetPatches } from "../game/ruleset";
 import { lastYear } from "../game/year";
 import type { GameModeId } from "../game/ruleset";
@@ -54,6 +54,7 @@ import { POLICIES, resolvePolicy } from "./policies";
 import type { Policy } from "./policies";
 import { createSimRng, deriveBotSeed } from "./rng";
 import { runGame, runTurns } from "./runner";
+import type { SeatBonus } from "./runner";
 import { replayScript, scriptFromSave } from "./script";
 import type { ScriptFile } from "./script";
 import { buildNewGame } from "./setup";
@@ -310,6 +311,24 @@ function parseWithoutIdeas(flags: Flags, ideas: { id: string }[]): string[] | nu
     fail(`--without-ideas leaves ${kept} Ideas: the draft needs ${PLAYER_IDS.length}, or none`);
   }
   return known.filter((id) => left.includes(id));
+}
+
+/** `--seat-bonus b.json` reads per-seat stock granted after setup, e.g.
+ *  `{"0":{"stone":3},"1":{"stone":2}}`. Seats and resources are checked by name. */
+function parseSeatBonus(flags: Flags): SeatBonus | null {
+  const file = flags["seat-bonus"];
+  if (typeof file !== "string") return null;
+  const bonus = JSON.parse(readFileSync(file, "utf8")) as SeatBonus;
+  for (const [seat, stock] of Object.entries(bonus)) {
+    if (!PLAYER_IDS.includes(seat as PlayerId)) fail(`--seat-bonus: unknown seat "${seat}"`);
+    for (const [resource, amount] of Object.entries(stock ?? {})) {
+      if (!(resource in EMPTY_RESOURCES)) fail(`--seat-bonus: unknown resource "${resource}"`);
+      if (!Number.isInteger(amount) || amount < 0) {
+        fail(`--seat-bonus: seat ${seat} ${resource} must be a whole number of 0 or more`);
+      }
+    }
+  }
+  return bonus;
 }
 
 function parseOpening(flags: Flags, allowed: OpeningKind[]): OpeningKind {
@@ -783,6 +802,7 @@ function cmdBatch(flags: Flags) {
   const resolved = resolveTuning(GAME_MODES[mode].ruleset, presetId, tune ?? {}, patch);
   const effectivePatch = resolved.rulesetPatch;
   const withoutIdeas = parseWithoutIdeas(flags, resolved.content.nationalIdeas);
+  const seatBonus = parseSeatBonus(flags);
   const definition = withoutIdeas
     ? createGameDefinition({
         ruleset: resolved.ruleset,
@@ -819,6 +839,7 @@ function cmdBatch(flags: Flags) {
       seatPolicies,
       turns,
       trimLogTo: 200,
+      seatBonus,
       hooks: {
         onGameStart: (state) =>
           aggregator.beginGame(
@@ -895,6 +916,7 @@ function cmdBatch(flags: Flags) {
       rulesetPatch: effectivePatch,
       definition: definition.identity,
       withoutIdeas,
+      seatBonus,
       tunePatch: tune ?? null,
       tunePatchHash: resolved.manualPatchHash,
       tuningPresetId: resolved.presetId,
@@ -1013,7 +1035,8 @@ Save file defaults to ${DEFAULT_SAVE_PATH}.
              [--ruleset-patch p.json] [--years N|open] [--tune-preset low-number-core-v1] [--tune-patch p.json]
              [--seats ${POLICY_IDS}×4] [--rotate]
              [--without-ideas all|id,id]   play without those National Ideas
-             [--jobs N]                    worker processes to play the games on: 1 by default,
+             [--seat-bonus b.json]         per-seat stock after setup, e.g. {"0":{"stone":3}}
+             [--jobs N]                  worker processes to play the games on: 1 by default,
                                            at most the cores less one (${MAX_JOBS} here); same report
              [--report r.json] [--csv t.csv]
   replay     --script s.json [--out save.json]

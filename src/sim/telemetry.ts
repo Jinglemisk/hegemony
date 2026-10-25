@@ -749,6 +749,8 @@ export type BatchReport = {
     definition: DefinitionIdentity;
     /** The National Ideas `--without-ideas` took out of the batch's content (null when none). */
     withoutIdeas?: string[] | null;
+    /** The per-seat stock `--seat-bonus` granted after setup (null when none). */
+    seatBonus?: Partial<Record<PlayerId, Partial<Resources>>> | null;
     /** The dev tune-panel override map applied to content/ruleset for this run (null when
      *  none), plus a stable fingerprint — so a batch's content is identifiable and A/B-able. */
     tunePatch?: unknown;

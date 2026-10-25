@@ -5,7 +5,7 @@ import type { TransitionResult } from "../game/legalMoves";
 import type { GameModeId } from "../game/ruleset";
 import type { GameDefinition } from "../game/definition";
 import { projectForPlayer } from "../game/projection";
-import type { BoardLayout, HegemonyState, PlayerId } from "../game/types";
+import type { BoardLayout, HegemonyState, PlayerId, Resource, Resources } from "../game/types";
 import type { OpeningKind, RulesetPatch } from "./io";
 import type { Policy } from "./policies";
 import { createSimRng, deriveBotSeed } from "./rng";
@@ -236,7 +236,28 @@ export type RunGameOptions = {
   turns: number;
   hooks?: SimHooks;
   trimLogTo?: number;
+  /** Stock added to each named seat once setup is done, before the first turn. */
+  seatBonus?: SeatBonus | null;
 };
+
+/** Per-seat stock a batch grants after setup (`--seat-bonus`): an experiment's lever,
+ *  not a rule. The ruleset and the state schema do not know it. */
+export type SeatBonus = Partial<Record<PlayerId, Partial<Resources>>>;
+
+/** Add each seat's bonus to its stock. Setup must be over, so the placements are the
+ *  ones the game would have made without it. */
+export function grantSeatBonus(G: HegemonyState, bonus: SeatBonus): HegemonyState {
+  if (G.phase !== "gameplay") {
+    throw new Error(`a seat bonus is granted after setup, not in phase ${G.phase}`);
+  }
+  return produce(G, (draft) => {
+    for (const [seat, stock] of Object.entries(bonus) as [PlayerId, Partial<Resources>][]) {
+      for (const [resource, amount] of Object.entries(stock) as [Resource, number][]) {
+        draft.players[seat].resources[resource] += amount;
+      }
+    }
+  });
+}
 
 /** One self-contained bot game: build (setup counts as turns played too), then run to the cap. */
 export function runGame({
@@ -252,6 +273,7 @@ export function runGame({
   turns,
   hooks = {},
   trimLogTo,
+  seatBonus,
 }: RunGameOptions): HegemonyState {
   const rng = createSimRng(botSeed ?? deriveBotSeed(seed));
   let G = buildNewGame({
@@ -266,6 +288,7 @@ export function runGame({
     seatPolicies,
     onMove: hooks.onMove,
   });
+  if (seatBonus) G = grantSeatBonus(G, seatBonus);
 
   hooks.onGameStart?.(G);
   G = runTurns(G, policy, rng, turns, hooks, { trimLogTo, seatPolicies });

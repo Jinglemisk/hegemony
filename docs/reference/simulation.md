@@ -195,7 +195,7 @@ npm run sim -- batch --games 50 [--turns 56] [--policy random|greedy|smart|beam|
                      [--mode …] [--board classic|shuffled] [--ruleset-patch p.json]
                      [--tune-preset low-number-core-v1] [--tune-patch p.json]
                      [--seats p0,p1,p2,p3] [--rotate] [--seed 1000] [--jobs N]
-                     [--without-ideas all|id,id]
+                     [--without-ideas all|id,id] [--seat-bonus b.json]
                      [--report .sim/report.json] [--csv .sim/turns.csv]
 ```
 
@@ -323,6 +323,11 @@ same on all four rows) and `activeLuxuries`.
   With `all` the setup draft is skipped and nothing is bought in play. A partial list
   must leave an Idea for every seat. `meta.withoutIdeas` records the list, and the
   definition ID changes with the content.
+- `--seat-bonus b.json` — adds stock to named seats once setup is done, before the first
+  turn, e.g. `{"0":{"stone":3},"1":{"stone":2}}`. Setup is the game's own, so the
+  placements are those of the same seed without it. It is a sim lever, not a rule: the
+  ruleset, the definition ID and the save schema do not change, and `meta.seatBonus`
+  records it.
 - `--jobs N` — plays the games on N worker processes and still writes one report and
   one CSV. The default is 1: every game runs in the command's own process. N is capped
   at the machine's cores less one (the help text gives the number) and at the number

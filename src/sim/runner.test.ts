@@ -62,6 +62,24 @@ describe("runGame smoke", () => {
     expect(G.turn).toBe(13);
   });
 
+  it("grants a seat bonus after setup, leaving the placements alone", () => {
+    const plain = runGame({ seed: 9, mode: "standard", policy: randomPolicy, turns: 0 });
+    const bonus = runGame({
+      seed: 9,
+      mode: "standard",
+      policy: randomPolicy,
+      turns: 0,
+      seatBonus: { "0": { stone: 3 }, "2": { stone: 1, wood: 2 } },
+    });
+
+    expect(JSON.stringify(bonus.board)).toBe(JSON.stringify(plain.board));
+    expect(bonus.players["0"].resources.stone).toBe(plain.players["0"].resources.stone + 3);
+    expect(bonus.players["2"].resources.stone).toBe(plain.players["2"].resources.stone + 1);
+    expect(bonus.players["2"].resources.wood).toBe(plain.players["2"].resources.wood + 2);
+    expect(bonus.players["1"].resources).toEqual(plain.players["1"].resources);
+    expect(bonus.players["3"].resources).toEqual(plain.players["3"].resources);
+  });
+
   it("trims the log when asked", () => {
     const G = runGame({
       seed: 7,
