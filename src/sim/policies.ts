@@ -1,3 +1,4 @@
+import { produce } from "immer";
 import { ideaForEval, playerNationalIdeas } from "../game/ideas";
 import { playerDole, votePurchaseLimit } from "../game/ideaRules";
 import { PLAYER_IDS } from "../game/data";
@@ -18,7 +19,7 @@ import type { CivicCalmPayment } from "../game/civic";
 import { getBuilding, getResolutionCard, getResolutionCards, getRiotTable } from "../game/content";
 import { totalPops } from "../game/core/pops";
 import { getOwnedSettlement, getTile, popsInTransit, realmPops } from "../game/core/query";
-import { resolveArrivingPops } from "../game/actions";
+import { placeCapital, placeCity, placeColony, resolveArrivingPops } from "../game/actions";
 import { lastYear, yearDeckSize } from "../game/year";
 import { unrestOutcome } from "../game/unrest";
 import type { UnrestOutcome } from "../game/unrest";
@@ -1500,6 +1501,32 @@ function representativeSplit(placements: Placement[]): Placement {
   return best;
 }
 
+const PLACE: Record<Placement["type"], typeof placeColony> = {
+  placeCapital,
+  placeCity,
+  placeColony,
+};
+
+/**
+ * A placement scored where it lands, before the setup turn moves on. Without an Idea
+ * draft the last placement's transition also opens year 1: the year's card, the seat's
+ * first income, and the gameplay forecast, which buys food and follows hunger to the
+ * game's last year. Setup's forecast does neither. Scored there, seat 0's colony saw a
+ * stone site starve in year 7 that no other seat's forecast reached, and seat 0 took a
+ * second plains in 37 of 40 games while the other seats took stone or wood.
+ */
+function placementForEval(
+  G: HegemonyState,
+  playerID: PlayerId,
+  move: Placement,
+): HegemonyState | null {
+  const placed = { ok: false };
+  const state = produce(G, (draft) => {
+    placed.ok = PLACE[move.type](draft, playerID, move.tileId, move.pops).ok;
+  });
+  return placed.ok ? state : null;
+}
+
 function scorePlacements(
   G: HegemonyState,
   moves: GameCommand[],
@@ -1509,10 +1536,9 @@ function scorePlacements(
   const scored: { move: GameCommand; score: number }[] = [];
 
   for (const move of moves) {
-    const result = transition(G.definition, G, playerID, move);
-    if (result.ok) {
-      scored.push({ move, score: evaluatePlacement(result.state, playerID, weights) });
-    }
+    if (!(move.type in PLACE)) continue;
+    const state = placementForEval(G, playerID, move as Placement);
+    if (state) scored.push({ move, score: evaluatePlacement(state, playerID, weights) });
   }
 
   return scored;
