@@ -226,6 +226,11 @@ The game's rules for the sea, the map, the bots and the sim flag wait for that a
    - Mixed and masters tables, Continental against Archipelago, on the same seeds.
    - Run with base income at 0, as the game now plays.
    - A dated report.
+   - **First batches, 2026-10-25:** masters and mixed at hop 4, masters with any shore, and the
+     Continental controls, in the
+     [Archipelago batches report](../reports/simulation/2026-10-25-archipelago-batches.md). Hop 4
+     works and no seat or build stands out beyond the noise. Still to measure: how many foundings
+     cross water, the first pick's worth in wins, and the rules Q81 has not settled.
 
 ## Acceptance and validation
 

@@ -144,6 +144,16 @@ batches show. With the founding voyage at setup held to the same reach, every se
 somewhere to found once setup ends at hop 3 and hop 4 (median 7 and 11 sites); no leapfrog leaves
 191 of 4,000 seats with none.
 
+**Batches, 2026-10-25** ([report](reports/simulation/2026-10-25-archipelago-batches.md)). #145
+puts the board in the game with island hopping as one ruleset number, off by default. At hop 4,
+on the voyage and in play, 80 games finished without a forced turn. Four masters won by seat
+11 / 6 / 8 / 15 (Continental 7 / 10 / 11 / 12), and the mixed table 12 / 10 / 10 / 8 by seat and
+15 / 10 / 9 / 6 by build (Continental 13 / 10 / 10 / 7). Both are within the noise of 40 games
+(±5). The islands end with more cities than Continental (2.36 against 1.99 a seat). On the same
+islands, hop 4 against any shore gives fewer cities (2.36 against 2.68) and temples (6.4 against
+8.4 a game); its more gold (16 against 9 a seat-game), trade and Ports do not clear the noise.
+How many foundings cross water is not measured yet.
+
 **Options:**
 
 - **Generator:** A: approve the defaults as drawn. B: approve with named limits changed (for
