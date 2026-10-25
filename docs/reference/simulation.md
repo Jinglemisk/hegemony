@@ -237,9 +237,9 @@ a +2 lift avoids a visible riot or revolt. Since Step 19 a riot is charged what
 the riot table takes, so expect less calm and more riots than in the batches
 before it: a riot that calm would only move a year is faced. Capital Works is
 weakly dominated by Urban Planning; other unused Ideas need context, not quotas.
-Step 11 owns the 20–45% win-rate decision and any balance changes.
+The balance check owns the 20–45% win-rate decision and any balance changes.
 
-Time the forty-game rotation before starting Step 11's larger conditions. The
+Time the forty-game rotation before starting the balance check's larger conditions. The
 runtime target is under twenty minutes on one core; `--jobs 4` plays the same forty
 games on four worker processes and writes the same report. The performance follow-up
 keeps width 3, depth 4 and all public venture outcomes; cached queries and scores
@@ -251,8 +251,9 @@ the runner and CLI telemetry hooks in a scratch Vitest harness: 17 minutes
 The mixed seed-1000 game also matched all 425 commands and resulting states
 against the original engine and AI. The lead still times the CLI itself.
 
-For Step 11's minimum sixty rotated games per condition, use `--games 15 --rotate`
-with the same four named seats and baseline seeds. `--games` counts base seeds;
+The balance check plays 60 games on a four-master table (`--games 60`) and 480 on the
+mixed table (`--games 120 --rotate`); its commands are in the
+[player trade plan](../plans/player-trade.md#the-balance-check). `--games` counts base seeds;
 rotation multiplies the actual games by four and records that total in `meta.games`.
 Rotation is cyclic, not all 24 permutations. Repeating a personality in two seats
 counts two finished seat-games per game; `results.perPolicy[name].winRate` uses that denominator.
@@ -383,8 +384,8 @@ spending from the stock change.
   pooled across games and seats, `influence` as a cut of percentiles, and unrest-tier
   and active-effect shares. Each row is every game's last snapshot of that year: the
   start of the year's last turn, when its seat has collected and not yet acted, so one
-  seat in four carries an unspent income. Step 11's influence rule reads
-  `influence.total.median` for years 10 to 14; the Assembly sits in even years only, so
+  seat in four carries an unspent income, which is why the balance check reads each
+  seat after its own turn from the CSV. The Assembly sits in even years only, so
   the steps alternate
 - `riots` (cut) — `riots` resolved and `revolts`, `turnShare` (the group's own turns
   that ended on the riot table) and `byYear` rows of `riots`, `revolts` and
@@ -399,7 +400,7 @@ spending from the stock change.
   zero, after income) and the food bought in two states: `coveringShortfall` while the
   stock is below zero, `buyingAhead` at zero or above. Each has `bankBuys` (only where a
   ruleset keeps the bank), `doles`, the `food` gained and the `gold` and `influence` paid
-- `beloved` (cut) — Step 11's luxury rule, by the holder's personality: `turnsHeld` and
+- `beloved` (cut) — the balance check's luxury rule, by the holder's personality: `turnsHeld` and
   how often the holder was the luxury leader, both ways of counting a tie.
   `soleLuxuryLeader` needs more active goods than every other seat;
   `luxuryLeaderOrTied` needs at least one good and no seat with more. Goods are counted
@@ -472,7 +473,7 @@ spending from the stock change.
   draws and repeals, and a per-verb breakdown. CSV snapshots include standing
   authorship and whether each seat holds Voice
 
-Step 11's rules read from one rotated report, with no second script:
+The balance check's rules read these fields:
 
 - Riots after year 7: `riots.total.byYear` rows for years 8 to 14, `riots` over
   `playerTurns`; `riots.perPolicy` for whose riots they are. Revolts sit beside them.
@@ -487,8 +488,10 @@ Step 11's rules read from one rotated report, with no second script:
   `decidedBy`.
 - Trade: `trade.total.exports`, and the trade commands in `reach`.
 
-The summary prints each of these. The runaway-leader rule is not covered: its terms
-wait for an owner answer (Q80). Reports written before player trade's second PR used
+The summary prints each of these. The balance check's script,
+`docs/reports/simulation/2026-10-26-balance-check/tools/check.mjs`, reads them from a report
+and its CSV, adds the runaway-leader rules, and prints each rule with a 95% interval over
+seeds and a verdict. Reports written before player trade's second PR used
 older names: `perSeat`, `perPolicy` and `winsByPolicy` are now `results`;
 `hungerPerPolicy` is `hunger.perPolicy`; `influenceByPolicy` is
 `perYear[].influence.perPolicy`; `assembly.lawsEnacted` is

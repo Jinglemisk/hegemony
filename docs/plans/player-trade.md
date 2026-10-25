@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "post-v2"
-updated: 2026-10-22
+updated: 2026-10-25
 ---
 
 # Player trade
@@ -12,7 +12,7 @@ On their turn a player offers goods to the other seats, the table answers, and a
 moves both sides' goods at once. There is no bank: apart from the Dole's food, trade is the only
 way to turn one resource into another. A realm that grows more food than it eats sells it for the
 wood it lacks. While the Assembly prepares, the market opens to every seat. Bots trade the same way,
-so the sim shows who trades what, and Step 11 measures a game that has trade in it.
+so the sim shows who trades what, and the balance check measures a game that has trade in it.
 
 ## Non-goals
 
@@ -29,7 +29,7 @@ so the sim shows who trades what, and Step 11 measures a game that has trade in 
   accepts, declines or counters, and agreed terms execute at once.
 - Luxury goods are tradable (Q49).
 - The sim measures trade, for example a player with plenty of wood trading it for food (owner).
-  Step 11 and Q80 wait for trade (owner, 2026-10-14), and so does number tuning (2026-10-13).
+  The balance check waits for trade (owner, 2026-10-14), and so does number tuning (2026-10-13).
 - Owner, 2026-10-18: trade ships after the v2 merge. Influence and pops trade, which ends the
   Q14 rule that influence never changes hands; votes never trade. In the Assembly any seat may
   offer, only in the opening preparation, until every seat presses Ready; citizens trade there
@@ -170,40 +170,72 @@ the first is positive and the second negative: the plains seat sells food, the f
 
 Ruleset switches turn the new economy on piece by piece, so the same seeds run as today's game
 (bank, no trade, no base food), with trade and no bank, and with trade, no bank and base food:
-four masters with no Ideas on seeds 1000 to 1039 (Q80's batch), then the rotated mixed table.
+four masters with no Ideas on seeds 1000 to 1039 (the 2026-10-11 same-policy batch), then the
+rotated mixed table.
 Compare turns begun short of food (630 of 2,240 on Step 20's build), Dole uses (40.7 a game),
 pops lost to hunger, the freeman share, gold income, realms that never cut wood (55 of 160),
 the influence stock by year, and wins and titles.
 
-Then, in order: the second PR's report adds a trade column to Q80's table and the owner answers
-Q80; Step 11 runs once both PRs are in, by the decision rules below, its reach audit counting
-the trade commands and its build-viability rule testing whether missing trade was the gap;
-number tuning follows. Step 11's rule on the influence plateau now reads a stock that can be
-sold.
+Then, in order: the second PR's report adds a trade column to the same-policy table and the owner
+sets the balance check's shape (done 2026-10-25); the balance check runs once both PRs are in, by
+the rules below, its reach audit counting the trade commands; number tuning follows. Its rule on
+the influence plateau now reads a stock that can be sold.
 
 The batches ran on 2026-10-22 ([report](../reports/simulation/2026-10-22-trade-paired.md)).
 Every material goes from the seat whose land makes the most of it to the seat that makes the
 least. Base food, not trade, ends the food shortage: turns begun short fall by three quarters on
 both tables. It leaves the influence stock growing about 10 a year, against the plateau rule's
 5, and on the rotated table gold piles up at the trader, which wins 23 of 40 and holds Treasurer
-in 39. The trader bot still starves with gold in hand. Q80's table has the trade columns.
+in 39. The trader bot still starves with gold in hand.
 
-## Step 11 decision rules
+## The balance check
 
-Moved here from the [v2 migration plan](../archive/plans/v2-migration.md) on 2026-10-18.
+Step 11 of the [v2 migration plan](../archive/plans/v2-migration.md), moved here on 2026-10-18.
+The owner set its shape on 2026-10-25 (Q80). Bot games on `main` judge the rules below. One
+script prints each rule's limit, the measured value, a 95% interval and a verdict, and the dated
+report says what fails and what might explain it.
 
-Proposed thresholds; the owner may change them before Step 11 runs.
+**Batches.** 56 turns, seeds from 1000, run by the owner one at a time:
 
-| Question                        | Rule                                                                                                                       | If it fails                                                               |
-| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Do riots stay rare?             | The riot table is reached on at most 10% of turns after year 7                                                             | Retune the level's terms or the token cards                               |
-| Does influence plateau?         | Median influence stock grows by at most 5 a year from year 10 to year 14                                                   | Raise the propose and repeal prices first                                 |
-| Is every build viable?          | Each personality wins between 20% and 45% of games                                                                         | Rework the weakest build, and check whether missing trade is the real gap |
-| Does the leader run away?       | The round-5 income leader wins at most 40% of games, and the leader holds at most 2.5 times the laggard's stock at year 10 | Report, with a proposed catch-up rule                                     |
-| Do luxuries decide Beloved?     | Beloved's holder is also the luxury leader in at most 60% of the turns it is held                                          | Raise the Port price or cap what luxuries add                             |
-| Is it legible?                  | Recount the paper's section 5.11 reads per decision against the built game                                                 | Report only                                                               |
-| Do draws matter?                | The spread of draw swings against income is recorded                                                                       | Report only; cutting the deck is the owner's call                         |
-| How long, and how do games end? | Fourteen years; the share ending by the race is recorded                                                                   | Report only                                                               |
+| Table                                           | Board       | Games                        | Judges                                 |
+| ----------------------------------------------- | ----------- | ---------------------------- | -------------------------------------- |
+| Four masters, no Ideas                          | Continental | 60                           | The runaway leader and the level rules |
+| Mixed: slaver, civic, trader and master rotated | Continental | 480 (120 seeds × 4 seatings) | Win rates and the level rules          |
+| Four masters, no Ideas                          | Archipelago | 60                           | The same as Continental's masters      |
+
+```bash
+npm run sim -- batch --turns 56 --seed 1000 --jobs 2 --board continental --games 60 --policy master --without-ideas all --report <out>.json --csv <out>.csv
+npm run sim -- batch --turns 56 --seed 1000 --jobs 2 --board continental --games 120 --seats slaver,civic,trader,master --rotate --report <out>.json --csv <out>.csv
+npm run sim -- batch --turns 56 --seed 1000 --jobs 2 --board archipelago --games 60 --policy master --without-ideas all --report <out>.json --csv <out>.csv
+node docs/reports/simulation/2026-10-26-balance-check/tools/check.mjs <report> [<report> ...]
+```
+
+**Rules.**
+
+| Question                        | Rule                                                                                                                                                                                                                                                                                                                                          | Table                                                                                                                     | If it fails                                       |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Do riots stay rare?             | The riot table is reached on at most 10% of turns from year 8                                                                                                                                                                                                                                                                                 | Both                                                                                                                      | Retune the level's terms or the token cards       |
+| Does influence plateau?         | The median influence stock grows by at most 5 a year from year 10 to year 14                                                                                                                                                                                                                                                                  | Both                                                                                                                      | Raise the draw and repeal prices first            |
+| How often do realms go hungry?  | Pops lost to hunger a seat-game and turns begun short of food are recorded; no limit is set                                                                                                                                                                                                                                                   | Both                                                                                                                      | Report only                                       |
+| Do luxuries decide Beloved?     | Beloved's holder is the sole luxury leader in at most 60% of the turns it is held; the share counting a tie is printed beside it                                                                                                                                                                                                              | Both                                                                                                                      | Raise the Port price or cap what luxuries add     |
+| Does the leader run away?       | The year-5 income leader wins at most 40% of games                                                                                                                                                                                                                                                                                            | Four masters, where a lead is a lead; the mixed table's slaver always leads year-5 income, so its figure is for reference | Report, with a proposed catch-up rule             |
+|                                 | In the median game the leader holds at most 2.5 times the laggard's stock at year 10                                                                                                                                                                                                                                                          | Both                                                                                                                      | Report, with a proposed catch-up rule             |
+| Is every build viable?          | Each personality wins 20% to 45% of games. A benchmark while the bots and mechanics are unfinished; but a personality consistently over 45% (the whole interval above it) with no bug or missing feature to explain it, such as the development deck, gold uses or freemen, does not pass: the report flags it and says what could explain it | Mixed                                                                                                                     | Rework the weakest build                          |
+| Is it legible?                  | Recount the paper's section 5.11 reads per decision against the built game                                                                                                                                                                                                                                                                    | –                                                                                                                         | Report only                                       |
+| Do draws matter?                | The spread of draw swings against income is recorded                                                                                                                                                                                                                                                                                          | Both                                                                                                                      | Report only; cutting the deck is the owner's call |
+| How long, and how do games end? | Fourteen years; the share ending by the race is recorded                                                                                                                                                                                                                                                                                      | Both                                                                                                                      | Report only                                       |
+| Against v1                      | Only the figures both versions already record: win spread (wins by seat), game length and riots a game, from the [v1-vs-v2 report](../reports/simulation/2026-10-19-v1-vs-v2.md) and its [baseline](../reports/simulation/2026-09-05-shallow-economy-baseline.md); no v1 backport                                                             | –                                                                                                                         | Report only                                       |
+
+**How the figures are read.**
+
+- 60 games for the rules that measure a level (riots, influence, hunger, Beloved, the stock
+  ratio), about 480 for win rates. At 60 games a measured 20% could be anything from 12% to 32%.
+- Year-5 income and year-10 stock are read after each seat's own turn that year. Income is the
+  baseline's gross income: wood, stone, gold, and food when positive. Stock is wood, stone, gold
+  and food, with the laggard counted as at least 1. A game with a tied income lead is left out.
+- Influence is read after each seat's own year-10 and year-14 turns, in games that reach year 14.
+- Intervals are bootstraps over seeds, since the four seatings of a seed share a board. A pass or
+  fail whose interval crosses the limit is marked "within noise".
 
 The audit showed the first draft of these rules could not measure what they asked: a
 linear influence pile passed, and no card could meet the draw rule.
@@ -290,7 +322,7 @@ reported under The sim.
    seat short of food buys food from a food-rich seat that wants wood for a building; a bot
    refuses a deal worse than its best turn without it, and one that hands its partner
    Treasurer. Ends with the paired batches and a dated report; then the owner plays trade
-   against bots, and Q80 and Step 11 follow.
+   against bots, and the balance check follows.
    - As built: the bank stays in the engine behind `economy.bank.enabled`, off by default,
      so the batches can play the economy before trade; no screen offers it, and the
      command parity map classes its commands `batch-only`. Base food was
@@ -322,8 +354,8 @@ reported under The sim.
 
 Answered by the owner on 2026-10-18, 19 and 21.
 
-- **D1 · When does trade ship?** After the v2 merge; trade PRs go to `main`, and Step 11 runs
-  from this plan.
+- **D1 · When does trade ship?** After the v2 merge; trade PRs go to `main`, and the balance
+  check runs from this plan.
 - **D2 · What can be traded?** Materials, gold, luxury goods, influence and pops. Never votes.
 - **D3 · How many offers a turn?** No limit, and several can be open at once.
 - **D4 · Can one person trade with bots?** Yes: the second PR adds a dev setting that makes each
