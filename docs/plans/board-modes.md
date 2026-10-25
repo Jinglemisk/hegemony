@@ -208,8 +208,8 @@ The game's rules for the sea, the map, the bots and the sim flag wait for that a
    - No behaviour change: batches match byte for byte.
 2. **Archipelago in the game.** The approved generator wired into setup, the sea rules the owner
    picked, the 2D map, the bots and the sim flag.
-   **Engine and sim, 2026-10-25,** built while the owner was out so batches can run before
-   Q81 is answered:
+   **Engine and sim, 2026-10-25 (#145),** built while the owner was out so batches can run
+   before Q81 is answered:
    - The `archipelago` layout: match creation lays it with the generator from the game's rng
      chain, then derives the goods and bank rates from its tiles. State schema 19.
    - Island hopping as one ruleset number, `placement.seaReach`, `null` by default (any shore
