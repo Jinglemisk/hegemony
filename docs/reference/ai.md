@@ -260,6 +260,13 @@ every split of every tile: ranked on the even split alone, a tile worth two
 slaves fell out of the top three, and the colony went beside a city on a worse
 score.
 
+A placement is scored where it lands, before the setup turn moves on. In a game
+without Ideas the last placement's transition also opens year 1: the year's card,
+the seat's first income and the gameplay forecast, which buys food and follows hunger
+to the last year. Scored there, seat 0's colony saw a stone site starve in year 7
+that no other seat's forecast reached, and seat 0 took a second plains in 37 of 40
+master games while the other seats took stone or wood.
+
 The frontier term is nothing for a seat with no colony piece left. An upgrade
 frees a piece and brings it back.
 
