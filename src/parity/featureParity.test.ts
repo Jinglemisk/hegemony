@@ -290,7 +290,7 @@ describe("feature and content parity manifests", () => {
       turns: 0,
       policy: "fixture",
       mode: "standard",
-      boardLayout: "classic",
+      boardLayout: "scenario",
       baseSeed: 0,
       opening: "policy",
       botSeedRule: "fixture",

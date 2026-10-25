@@ -17,8 +17,8 @@ import { createGameDefinition, createModeDefinition } from "../../../../../src/g
 import { enumerateLegalCommands, transition } from "../../../../../src/game/legalMoves";
 import type { GameCommand } from "../../../../../src/game/legalMoves";
 import { createLuxuryAssets } from "../../../../../src/game/luxury";
-import { axialRadius, hexDistance, isCoastalTile } from "../../../../../src/game/map";
-import { axialToPlane, luxuryEligibleVertices } from "../../../../../src/game/mapTopology";
+import { axialRadius } from "../../../../../src/game/map";
+import { axialToPlane, hexDistance, isCoastalTile, luxuryEligibleVertices } from "../../../../../src/game/mapTopology";
 import { canPlaceColonyOnTile, settlementSlaveResource } from "../../../../../src/game/settlement";
 import { createInitialStateFromDefinition } from "../../../../../src/game/state";
 import type { HegemonyState, HexTile, PlayerId, Pops } from "../../../../../src/game/types";
@@ -53,7 +53,7 @@ const FRONTIER_WEIGHT = 2;
 // ── Boards in a match ────────────────────────────────────────────────────────────────
 
 function matchOn(tiles: HexTile[], seed: number): HegemonyState {
-  const G = createInitialStateFromDefinition(DEFINITION, seed, "shuffled");
+  const G = createInitialStateFromDefinition(DEFINITION, seed, "continental");
   const identity = { nextEntityId: 1 };
   const luxuries = createLuxuryAssets(identity, tiles, G.ruleset, G.definition.content, seed);
   return {
@@ -485,7 +485,7 @@ for (let seed = 1; seed <= SEEDS; seed += 1) {
   bump("groups without a good", goodsPerGroup.filter((count) => count === 0).length);
 
   // The bots' capitals under each sea rule, on this board and on the Continental board.
-  const continental = createInitialStateFromDefinition(DEFINITION, seed, "shuffled");
+  const continental = createInitialStateFromDefinition(DEFINITION, seed, "continental");
   const oneGroup: GroupOf = new Map(continental.board.tiles.map((tile) => [tile.id, 0]));
   const caches = { arch: { states: new Map(), rest: new Map() }, cont: { states: new Map(), rest: new Map() } };
   let shown: Record<string, unknown> | null = null;
@@ -573,7 +573,7 @@ for (let seed = 1; seed <= SEEDS; seed += 1) {
           mode: "standard",
           definition: DEFINITION,
           opening: "policy",
-          boardLayout: "shuffled",
+          boardLayout: "continental",
           simRng: createSimRng(deriveBotSeed(seed)),
           policy: resolvePolicy("master"),
         });
@@ -648,7 +648,7 @@ out(`islands without plains: ${counts.get("islands without plains") ?? 0} of ${i
 out(`islands with food, wood and stone: ${counts.get("islands with food, wood and stone") ?? 0} of ${islandCount}`);
 const groupCount = (series.get("tiles per group") ?? []).length;
 out(`plain shuffle instead: groups without plains ${counts.get("plain shuffle: groups without plains") ?? 0} of ${groupCount}, groups missing a resource ${counts.get("plain shuffle: groups missing a resource") ?? 0} of ${groupCount}`);
-const disc = createInitialStateFromDefinition(DEFINITION, 1, "shuffled").board.tiles;
+const disc = createInitialStateFromDefinition(DEFINITION, 1, "continental").board.tiles;
 out(`Continental for reference: 37 tiles, ${disc.filter((tile) => isCoastalTile(tile, disc)).length} coastal, ${luxuryEligibleVertices(disc).length} moorings`);
 out();
 out(`Sea rules: the bots' capital picks, seat 0 (first) against seat 3 (fourth)`);

@@ -74,31 +74,32 @@ describe("runGame smoke", () => {
     expect(G.log.length).toBeLessThanOrEqual(10);
   });
 
-  it("honours boardLayout: shuffled diverges from classic and is recorded on state", () => {
-    const classic = runGame({
+  it("honours boardLayout: continental diverges from scenario and is recorded on state", () => {
+    const scenarioGame = runGame({
       seed: 5,
       mode: "standard",
-      boardLayout: "classic",
+      boardLayout: "scenario",
       policy: randomPolicy,
       turns: 2,
     });
-    const shuffled = runGame({
+    const continentalGame = runGame({
       seed: 5,
       mode: "standard",
-      boardLayout: "shuffled",
+      boardLayout: "continental",
       policy: randomPolicy,
       turns: 2,
     });
 
-    expect(classic.boardLayout).toBe("classic");
-    expect(shuffled.boardLayout).toBe("shuffled");
+    expect(scenarioGame.boardLayout).toBe("scenario");
+    expect(continentalGame.boardLayout).toBe("continental");
     // Same seed, different layout → a different terrain arrangement.
-    const terrainOf = (G: typeof classic) => G.board.tiles.map((tile) => tile.terrain).join(",");
-    expect(terrainOf(shuffled)).not.toBe(terrainOf(classic));
+    const terrainOf = (G: typeof scenarioGame) =>
+      G.board.tiles.map((tile) => tile.terrain).join(",");
+    expect(terrainOf(continentalGame)).not.toBe(terrainOf(scenarioGame));
 
-    // Omitting the option keeps the reproducible classic default.
+    // Omitting the option keeps the reproducible scenario default.
     const defaulted = runGame({ seed: 5, mode: "standard", policy: randomPolicy, turns: 2 });
-    expect(defaulted.boardLayout).toBe("classic");
+    expect(defaulted.boardLayout).toBe("scenario");
   });
 
   it("routes each seat to its own policy via seatPolicies", () => {

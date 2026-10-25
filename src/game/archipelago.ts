@@ -1,7 +1,6 @@
 import type { TerrainDeck } from "./content";
 import { mulberry32 } from "./core/rng";
-import { AXIAL_DIRECTIONS, hexDistance } from "./map";
-import { axialToPlane } from "./mapTopology";
+import { axialToPlane, hexDistance, neighbourCells } from "./mapTopology";
 import type { AxialCell } from "./mapTopology";
 import type { HexTile } from "./types";
 
@@ -149,9 +148,8 @@ function describeArchipelago(
     const island = [tile.id];
     seen.add(tile.id);
     for (let index = 0; index < island.length; index += 1) {
-      const { q, r } = byKey.get(island[index])!;
-      for (const step of AXIAL_DIRECTIONS) {
-        const key = `${q + step.q},${r + step.r}`;
+      for (const { q, r } of neighbourCells(byKey.get(island[index])!)) {
+        const key = `${q},${r}`;
         if (byKey.has(key) && !seen.has(key)) {
           seen.add(key);
           island.push(key);
@@ -471,8 +469,7 @@ function growIsland(
   while (cells.length < size) {
     const options = new Map<string, { cell: AxialCell; weight: number }>();
     for (const tile of cells) {
-      for (const step of AXIAL_DIRECTIONS) {
-        const cell = { q: tile.q + step.q, r: tile.r + step.r };
+      for (const cell of neighbourCells(tile)) {
         const id = key(cell);
         if (taken.has(id) || hexDistance(cell, centre) > radius || !open(cell)) continue;
         const option = options.get(id) ?? { cell, weight: 0 };

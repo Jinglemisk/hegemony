@@ -156,8 +156,9 @@ city, your metropolis included, can never be upgraded: only one founded on the o
 coast can become a city. (Some modes change the opening — _deathmatch_ places three
 colonies.)
 
-By default the island is shuffled from the game seed, so each game has its own layout;
-start the game with `?board=classic` in the address bar for the fixed authored layout.
+By default the island is the continental board, shuffled from the game seed, so each game
+has its own layout; start the game with `?board=scenario` in the address bar for the fixed
+authored layout.
 
 ## Taking a turn
 

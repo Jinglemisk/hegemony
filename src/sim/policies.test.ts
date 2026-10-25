@@ -34,7 +34,7 @@ import { playTurn, runGame } from "./runner";
 import { buildNewGame } from "./setup";
 import { getTile } from "../game/core/query";
 import { victoryCardsHeld, voiceHolder } from "../game/victory";
-import { hexDistance } from "../game/map";
+import { hexDistance } from "../game/mapTopology";
 import { isAdjacentToCity } from "../game/settlement";
 import { createGameDefinition } from "../game/definition";
 import { getAuthoredGameContent } from "../game/content";
@@ -985,7 +985,7 @@ describe("opening placement", () => {
   ];
 
   it("seats the first metropolis on food land with enough slave work slots", () => {
-    const G = createInitialStateFromDefinition(definition, 5, "classic");
+    const G = createInitialStateFromDefinition(definition, 5, "scenario");
     const commands = enumerateLegalCommands(G, G.currentPlayer);
     const command = smartPolicy.choose(observe(G), commands, createSimRng(1));
 
@@ -997,7 +997,7 @@ describe("opening placement", () => {
   });
 
   it("every search policy places identically — openings are a held constant in A/Bs", () => {
-    const G = createInitialStateFromDefinition(definition, 5, "classic");
+    const G = createInitialStateFromDefinition(definition, 5, "scenario");
     const commands = enumerateLegalCommands(G, G.currentPlayer);
     const choices = searchPolicies.map((policy) =>
       JSON.stringify(policy.choose(observe(G), commands, createSimRng(1))),
@@ -1012,7 +1012,7 @@ describe("opening placement", () => {
         seed,
         mode: "standard",
         opening: "policy",
-        boardLayout: "shuffled",
+        boardLayout: "continental",
         simRng: createSimRng(seed),
       });
       expect(G.phase).toBe("gameplay");
@@ -1031,7 +1031,7 @@ describe("opening placement", () => {
   });
 
   it("founds the setup colony away from a city when a comparable site is open", () => {
-    let G = createInitialStateFromDefinition(definition, 5, "classic");
+    let G = createInitialStateFromDefinition(definition, 5, "scenario");
     const capitals = { "0": "-2,0", "1": "0,-2", "2": "2,0", "3": "0,2" } as const;
     while (G.phase === "setupCapital") {
       const placed = transition(G.definition, G, G.currentPlayer, {
@@ -1068,8 +1068,8 @@ describe("opening placement", () => {
   });
 
   it("discounts frontier a rival can also reach", () => {
-    const G = createInitialStateFromDefinition(definition, 5, "classic");
-    const site = getTile(G, "-2,1")!; // six-slot plains, the second-best seat on the classic board
+    const G = createInitialStateFromDefinition(definition, 5, "scenario");
+    const site = getTile(G, "-2,1")!; // six-slot plains, the second-best seat on the scenario board
     const legalCapitals = G.board.tiles.filter(
       (tile) =>
         tile.terrain !== "oracle" &&

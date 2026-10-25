@@ -21,7 +21,7 @@ const cardsOf = (tiles: readonly Pick<HexTile, "terrain" | "slots">[]) =>
 /** A new match with the generated board in place of the disc, its goods and bank rates
  *  derived from it the way match creation derives them. */
 function matchOn(tiles: HexTile[], seed: number): HegemonyState {
-  const G = createInitialStateFromDefinition(DEFINITION, seed, "shuffled");
+  const G = createInitialStateFromDefinition(DEFINITION, seed, "continental");
   const identity = { nextEntityId: 1 };
   const luxuries = createLuxuryAssets(identity, tiles, G.ruleset, G.definition.content, seed);
   return {

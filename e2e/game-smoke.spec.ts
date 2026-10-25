@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test("setup, forced decision, normal command, and deterministic reload", async ({ page }) => {
-  await page.goto("/?setup=manual&seed=42&board=classic");
+  await page.goto("/?setup=manual&seed=42&board=scenario");
 
   await expect(page.getByText("Select a tile for your metropolis", { exact: false })).toBeVisible();
   await page.getByRole("button", { name: /Hex -2,0,/ }).click();

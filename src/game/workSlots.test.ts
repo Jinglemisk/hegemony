@@ -23,11 +23,11 @@ const clearPending = (draft: HegemonyState) => {
   draft.pendingPlayerEvent = null;
 };
 
-/** The classic board's first forest: three slots, wood. */
+/** The scenario board's first forest: three slots, wood. */
 const FOREST = "-3,0";
 /** A three-slot hill. */
 const HILL = "-2,3";
-/** The classic breadbasket: seven slots, food. */
+/** The scenario board's breadbasket: seven slots, food. */
 const BREADBASKET = "1,0";
 
 describe("work slots", () => {
