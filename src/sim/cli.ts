@@ -1036,7 +1036,7 @@ Save file defaults to ${DEFAULT_SAVE_PATH}.
              [--seats ${POLICY_IDS}×4] [--rotate]
              [--without-ideas all|id,id]   play without those National Ideas
              [--seat-bonus b.json]         per-seat stock after setup, e.g. {"0":{"stone":3}}
-             [--jobs N]                  worker processes to play the games on: 1 by default,
+             [--jobs N]                    worker processes to play the games on: 1 by default,
                                            at most the cores less one (${MAX_JOBS} here); same report
              [--report r.json] [--csv t.csv]
   replay     --script s.json [--out save.json]
