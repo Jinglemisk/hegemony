@@ -53,7 +53,10 @@ export const ENGINE_VERSION = "0.1.0";
 /** v18 (board modes, slice 1): the layouts are renamed, `shuffled` to `continental` and
  *  `classic` to `scenario`. Older saves name a layout this engine no longer reads, so
  *  they are rejected, not aliased. Commands are unchanged. */
-export const STATE_SCHEMA_VERSION = 18;
+/** v19 (board modes, slice 2): the `archipelago` layout, and the ruleset's placement block
+ *  carries the sea reach. Older pinned rulesets cannot answer it, so older saves are
+ *  rejected. Commands are unchanged. */
+export const STATE_SCHEMA_VERSION = 19;
 export const COMMAND_SCHEMA_VERSION = 7;
 
 export const SAVE_FORMAT_VERSION = 2;

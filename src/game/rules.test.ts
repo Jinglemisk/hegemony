@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildBuilding,
+  canPlaceColonyOnTile,
   createInitialState,
+  getFoundColonyStatus,
   revealYearCard,
   foundColony,
   growPop,
@@ -159,6 +161,59 @@ describe("setup placement", () => {
     // …but a far tile is fine (no contiguity for the starting cities).
     expect(placeCity(state, "0", "3,0", { citizens: 0, freemen: 2, slaves: 1 }).ok).toBe(true);
     expect(owned(state, "3,0", "0").kind).toBe("city");
+  });
+});
+
+describe("island hopping (placement.seaReach)", () => {
+  const withReach = (seaReach: number | null) =>
+    createInitialState(SEED, deriveRuleset(DEFAULT_RULESET, { placement: { seaReach } }));
+  const capital = { citizens: 1, freemen: 2, slaves: 1 };
+  const colony = { citizens: 0, freemen: 0, slaves: 2 };
+  const tooWide = expect.stringMatching(/^The sea is too wide/);
+
+  it("holds the founding voyage to N hexes from a coastal metropolis", () => {
+    const state = withReach(2);
+    placeCapital(state, "0", "3,0", capital);
+
+    // Along the rim, "3,-2" is two hexes from the metropolis and "3,-3" three.
+    expect(canPlaceColonyOnTile(state, "0", tile(state, "3,-2"), "setup").can).toBe(true);
+    expect(canPlaceColonyOnTile(state, "0", tile(state, "3,-3"), "setup").reasons).toEqual([
+      tooWide,
+    ]);
+    // Beside the metropolis is never limited.
+    expect(canPlaceColonyOnTile(state, "0", tile(state, "2,0"), "setup").can).toBe(true);
+
+    // An inland metropolis has no coast to sail from, so its colony borders it.
+    const inland = withReach(4);
+    placeCapital(inland, "0", "0,0", capital);
+    expect(placeColony(inland, "0", "3,0", colony).ok).toBe(false);
+    expect(placeColony(inland, "0", "1,0", colony).ok).toBe(true);
+  });
+
+  it("holds founding in play to N hexes from one of the seat's coastal settlements", () => {
+    const state = withReach(2);
+    poke(state, "0", "0,0", "capital", capital);
+    poke(state, "0", "3,0", "colony", colony);
+    state.phase = "gameplay";
+
+    // Measured from the coastal colony; the inland capital sails nowhere.
+    expect(canPlaceColonyOnTile(state, "0", tile(state, "3,-2")).can).toBe(true);
+    expect(getFoundColonyStatus(state, "0", "3,-3").reasons).toContainEqual(tooWide);
+    expect(canPlaceColonyOnTile(state, "0", tile(state, "-3,0")).reasons).toEqual([tooWide]);
+    expect(canPlaceColonyOnTile(state, "0", tile(state, "-1,0")).can).toBe(true);
+  });
+
+  it("lets any shore reach any shore when no reach is set", () => {
+    expect(DEFAULT_RULESET.placement.seaReach).toBeNull();
+    const setup = withReach(null);
+    placeCapital(setup, "0", "3,0", capital);
+    expect(canPlaceColonyOnTile(setup, "0", tile(setup, "-3,0"), "setup").can).toBe(true);
+
+    const play = withReach(null);
+    poke(play, "0", "3,0", "capital", capital);
+    play.phase = "gameplay";
+    expect(canPlaceColonyOnTile(play, "0", tile(play, "-3,0")).can).toBe(true);
+    expect(canPlaceColonyOnTile(play, "0", tile(play, "0,-3")).can).toBe(true);
   });
 });
 

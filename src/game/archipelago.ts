@@ -11,7 +11,8 @@ import type { HexTile } from "./types";
  * groups around the board's centre, where the oracle stands alone on its islet. Every draw
  * is checked against the limits below and redrawn when it breaks one; after
  * `ARCHIPELAGO_LIMITS.draws` failures a fixed board that passes them is dealt instead, so
- * setup can never hang. Nothing in setup calls it yet: the owner approves it first.
+ * setup can never hang. Match creation lays the `archipelago` layout with it, seeded from
+ * the game's rng chain, and the chain goes on from the state it returns.
  *
  * Distances are plain hex distances. A gap is the sea cells between two pieces of land:
  * islands one cell apart have tiles two hexes apart.
