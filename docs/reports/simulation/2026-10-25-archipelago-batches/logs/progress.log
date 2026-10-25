@@ -1,0 +1,9 @@
+12:13:03 code 4fdf564
+12:13:03 start archi-masters-hop4: --board archipelago --games 40 --policy master --without-ideas all --ruleset-patch /private/tmp/claude-501/-Users-jinglemisk-Desktop-hegemony/74b57959-97b9-42a6-b78c-aab6135376df/scratchpad/archi-batches/hop4.ruleset.json
+12:23:29 done archi-masters-hop4
+12:23:29 start archi-masters-anyshore: --board archipelago --games 40 --policy master --without-ideas all
+12:33:51 done archi-masters-anyshore
+12:33:51 start archi-mixed-hop4: --board archipelago --games 10 --seats slaver,civic,trader,master --rotate --ruleset-patch /private/tmp/claude-501/-Users-jinglemisk-Desktop-hegemony/74b57959-97b9-42a6-b78c-aab6135376df/scratchpad/archi-batches/hop4.ruleset.json
+13:01:13 done archi-mixed-hop4
+13:01:13 start conti-mixed: --board continental --games 10 --seats slaver,civic,trader,master --rotate
+13:22:29 done conti-mixed

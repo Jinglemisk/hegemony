@@ -27,7 +27,7 @@ describe("luxury moorings on the rendered map", () => {
       seed: G.seed,
     });
 
-    expect(expected).toHaveLength(6);
+    expect(expected).toHaveLength(7);
     for (const vertex of expected) {
       expect(markup).toContain(`data-vertex-id="${vertex.id}"`);
     }

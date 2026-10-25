@@ -50,7 +50,16 @@ export const ENGINE_VERSION = "0.1.0";
  *  zero by default, and the ruleset carries the game's length in years. Older pinned
  *  rulesets carry `baseFood` and no length, so older saves are rejected. Commands are
  *  unchanged. */
-export const STATE_SCHEMA_VERSION = 17;
+/** v18 (board modes, slice 1): the layouts are renamed, `shuffled` to `continental` and
+ *  `classic` to `scenario`. Older saves name a layout this engine no longer reads, so
+ *  they are rejected, not aliased. Commands are unchanged. */
+/** v19 (board modes, slice 2): the `archipelago` layout, and the ruleset's placement block
+ *  carries the sea reach. Older pinned rulesets cannot answer it, so older saves are
+ *  rejected. Commands are unchanged. */
+/** v20 (board modes, Q81): Silphium makes seven luxury goods, and an Archipelago board
+ *  deals the oracle onto an island. The same seed lays a different board and seats the
+ *  goods elsewhere, so older saves are rejected. Commands are unchanged. */
+export const STATE_SCHEMA_VERSION = 20;
 export const COMMAND_SCHEMA_VERSION = 7;
 
 export const SAVE_FORMAT_VERSION = 2;

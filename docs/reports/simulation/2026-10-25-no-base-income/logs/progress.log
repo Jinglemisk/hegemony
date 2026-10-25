@@ -1,0 +1,5 @@
+03:11:21 code 28c2c79
+03:11:21 start mixed: batch --turns 56 --seed 1000 --jobs 2 --board shuffled --games 10 --seats slaver,civic,trader,master --rotate
+03:32:54 done mixed
+03:32:54 start masters: batch --turns 56 --seed 1000 --jobs 2 --board shuffled --games 40 --policy master --without-ideas all
+03:43:53 done masters

@@ -643,7 +643,7 @@ const luxuries: RuleChapter = {
   id: "luxuries",
   title: "Luxury Goods",
   icon: "resources/luxury",
-  blurb: "Six coastal goods, claimed by Ports, that raise your happiness.",
+  blurb: "Seven coastal goods, claimed by Ports, that raise your happiness.",
   keywords: [
     "luxury",
     "luxuries",
@@ -659,11 +659,12 @@ const luxuries: RuleChapter = {
     "glassware",
     "incense",
     "linen",
+    "silphium",
   ],
   entries: [
     { id: anchor("luxuries", "claim"), label: "The Port & the claim" },
     { id: anchor("luxuries", "offset"), label: "The standing offset" },
-    { id: anchor("luxuries", "roster"), label: "The six goods" },
+    { id: anchor("luxuries", "roster"), label: "The seven goods" },
   ],
   Body: ({ G }) => {
     const lux = G.ruleset.economy.luxury;
@@ -687,7 +688,7 @@ const luxuries: RuleChapter = {
             Beloved of the People laurel both read it. A Blockade year counts none of them.
           </Note>
         </Entry>
-        <Entry id={anchor("luxuries", "roster")} title="The six goods">
+        <Entry id={anchor("luxuries", "roster")} title="The seven goods">
           <ul className="compendiumCostList">
             {getLuxuryGoods(G.definition.content).map((good) => (
               <li className="compendiumCostRow" key={good.id}>

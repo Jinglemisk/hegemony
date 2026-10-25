@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { enumerateLegalCommands, transition } from "../game/legalMoves";
+import type { GameCommand } from "../game/legalMoves";
 import { RESOLUTION_CARDS } from "../game/assembly/deck";
 import { PLAYER_IDS, PLAYER_EVENT_CARDS } from "../game/data";
 import { projectForPlayer } from "../game/projection";
@@ -34,7 +35,7 @@ import { playTurn, runGame } from "./runner";
 import { buildNewGame } from "./setup";
 import { getTile } from "../game/core/query";
 import { victoryCardsHeld, voiceHolder } from "../game/victory";
-import { hexDistance } from "../game/map";
+import { hexDistance } from "../game/mapTopology";
 import { isAdjacentToCity } from "../game/settlement";
 import { createGameDefinition } from "../game/definition";
 import { getAuthoredGameContent } from "../game/content";
@@ -787,7 +788,7 @@ describe("political policy", () => {
     const voices = new Set<string>();
     let capped = 0;
     const years = yearDeckSize(scenario().build());
-    for (const seed of [2, 3, 4]) {
+    for (const seed of [2, 3, 5]) {
       const G = runGame({
         seed,
         mode: "standard",
@@ -985,7 +986,7 @@ describe("opening placement", () => {
   ];
 
   it("seats the first metropolis on food land with enough slave work slots", () => {
-    const G = createInitialStateFromDefinition(definition, 5, "classic");
+    const G = createInitialStateFromDefinition(definition, 5, "scenario");
     const commands = enumerateLegalCommands(G, G.currentPlayer);
     const command = smartPolicy.choose(observe(G), commands, createSimRng(1));
 
@@ -997,7 +998,7 @@ describe("opening placement", () => {
   });
 
   it("every search policy places identically — openings are a held constant in A/Bs", () => {
-    const G = createInitialStateFromDefinition(definition, 5, "classic");
+    const G = createInitialStateFromDefinition(definition, 5, "scenario");
     const commands = enumerateLegalCommands(G, G.currentPlayer);
     const choices = searchPolicies.map((policy) =>
       JSON.stringify(policy.choose(observe(G), commands, createSimRng(1))),
@@ -1012,7 +1013,7 @@ describe("opening placement", () => {
         seed,
         mode: "standard",
         opening: "policy",
-        boardLayout: "shuffled",
+        boardLayout: "continental",
         simRng: createSimRng(seed),
       });
       expect(G.phase).toBe("gameplay");
@@ -1031,7 +1032,7 @@ describe("opening placement", () => {
   });
 
   it("founds the setup colony away from a city when a comparable site is open", () => {
-    let G = createInitialStateFromDefinition(definition, 5, "classic");
+    let G = createInitialStateFromDefinition(definition, 5, "scenario");
     const capitals = { "0": "-2,0", "1": "0,-2", "2": "2,0", "3": "0,2" } as const;
     while (G.phase === "setupCapital") {
       const placed = transition(G.definition, G, G.currentPlayer, {
@@ -1055,6 +1056,42 @@ describe("opening placement", () => {
     expect(isAdjacentToCity(G, getTile(G, "0,-3")!)).toBe(true);
   });
 
+  it("scores the last colony as setup, whether or not an Idea draft follows it", () => {
+    // Without Ideas, seat 0's colony is the last placement and its transition opens
+    // year 1. Scored there, the forecast saw a stone site starve in year 7 that no other
+    // seat's forecast reached, and seat 0 took a second plains in 37 of 40 games.
+    const content = getAuthoredGameContent();
+    const ruleset = GAME_MODES.standard.ruleset;
+    const noIdeas = createGameDefinition({ ruleset, content: { ...content, nationalIdeas: [] } });
+    let G = createInitialStateFromDefinition(noIdeas, 1000, "continental");
+    let withIdeas = createInitialStateFromDefinition(
+      createGameDefinition({ ruleset, content }),
+      1000,
+      "continental",
+    );
+    const choose = (state: HegemonyState) =>
+      masterPolicy.choose(
+        observe(state),
+        enumerateLegalCommands(state, state.currentPlayer),
+        createSimRng(1),
+      );
+    const apply = (state: HegemonyState, command: GameCommand) => {
+      const result = transition(state.definition, state, state.currentPlayer, command);
+      if (!result.ok) throw new Error(result.reasons.join());
+      return result.state;
+    };
+    while (!(G.phase === "setupColony" && G.currentPlayer === "0")) {
+      const command = choose(G);
+      G = apply(G, command);
+      withIdeas = apply(withIdeas, command);
+    }
+
+    const last = choose(G);
+    expect(apply(G, last).phase).toBe("gameplay");
+    expect(apply(withIdeas, last).phase).toBe("setupIdeas");
+    expect(last).toEqual(choose(withIdeas));
+  });
+
   it("counts a hill's slots in the frontier once Land Reform lets its slaves grow food", () => {
     // From the forest at 0,-1 the best three sites are plains (5), forest (4) and,
     // under Land Reform, the four-slot hill instead of a three-slot mountain.
@@ -1068,8 +1105,8 @@ describe("opening placement", () => {
   });
 
   it("discounts frontier a rival can also reach", () => {
-    const G = createInitialStateFromDefinition(definition, 5, "classic");
-    const site = getTile(G, "-2,1")!; // six-slot plains, the second-best seat on the classic board
+    const G = createInitialStateFromDefinition(definition, 5, "scenario");
+    const site = getTile(G, "-2,1")!; // six-slot plains, the second-best seat on the scenario board
     const legalCapitals = G.board.tiles.filter(
       (tile) =>
         tile.terrain !== "oracle" &&

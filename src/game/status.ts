@@ -32,7 +32,7 @@ import {
   settlementSlots,
 } from "./settlement";
 import { claimableLuxuriesAt } from "./luxury";
-import { isCoastalTile } from "./map";
+import { isCoastalTile } from "./mapTopology";
 import { getAdjustedActionCost, getGrowPopCost } from "./economy/cost";
 
 export function getFoundColonyStatus(

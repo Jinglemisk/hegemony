@@ -4,7 +4,7 @@ import {
   settlementPopCapacity,
   tileSlaveColumn,
 } from "../../../game/rules";
-import { isCoastalTile } from "../../../game/map";
+import { isCoastalTile } from "../../../game/mapTopology";
 import type { HexTile, LuxuryAsset } from "../../../game/types";
 import { BUILDING_RASTERS, LUXURY_RASTER, RESOURCE_RASTERS } from "../../../ui/iconRegistry";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";

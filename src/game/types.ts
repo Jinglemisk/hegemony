@@ -29,8 +29,10 @@ export type SettlementKind = "capital" | "city" | "colony";
 export type Phase =
   "setupIdeas" | "setupCapital" | "setupCity" | "setupColony" | "gameplay" | "gameOver";
 
-/** How the terrain deck is laid onto the board: the fixed authored layout, or a seeded shuffle. */
-export type BoardLayout = "classic" | "shuffled";
+/** How the terrain deck is laid onto the board: a seeded shuffle over one disc
+ *  (`continental`), seeded islands in groups (`archipelago`, game/archipelago.ts), or the
+ *  fixed authored layout the tests and the scripted opening use (`scenario`). */
+export type BoardLayout = "continental" | "archipelago" | "scenario";
 
 /** The scoreboard metrics victory cards race on (see game/victory.ts). `voice` is the
  *  count of standing Laws a player authored. */
@@ -42,9 +44,9 @@ export type GameOverReason = "victoryRace" | "deckExhausted";
 
 export type BuildingId = "marketplace" | "estate" | "forum" | "temple" | "granary" | "port";
 
-/** The six coastal luxury goods (docs/plans/luxury-goods.md §6, Q32). */
+/** The seven coastal luxury goods (docs/plans/luxury-goods.md §6): 2n − 1 for four seats. */
 export type LuxuryGoodId =
-  "tyrian-dye" | "pearls" | "coral" | "glassware" | "incense" | "fine-linen";
+  "tyrian-dye" | "pearls" | "coral" | "glassware" | "incense" | "fine-linen" | "silphium";
 
 export interface LuxuryGoodDefinition {
   id: LuxuryGoodId;

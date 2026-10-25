@@ -1,6 +1,7 @@
 import {
   ACTION_COSTS,
   GROW_POP_COSTS,
+  PLAYER_IDS,
   SETTLEMENT_RULES,
   STARTING_RESOURCES,
   VENTURE_COST,
@@ -8,6 +9,7 @@ import {
 import { PLACEMENT_POP_COUNTS } from "./core/pops";
 import type { PoliticianId } from "./assembly/types";
 import type {
+  BoardLayout,
   GrowablePop,
   PopType,
   Resource,
@@ -126,7 +128,7 @@ export interface EconomyRules {
 }
 
 export interface LuxuryRules {
-  /** How many coastal luxury goods the board seats (Q32: six). */
+  /** How many coastal luxury goods the board seats: 2n − 1 for n seats (owner, Q81). */
   coastalGoods: number;
   /** Marker distribution: false = evenly spaced around the coast, true = a seeded
    *  random draw. A `?tune` A/B dial today, a game-setup option later. */
@@ -163,6 +165,11 @@ export interface PlacementRules {
   /** Coastal leapfrog (roadmap-appendix Q13a): holding any settlement on a coastal
    *  tile lets you found colonies on any other coastal tile — sailing, not teleporting. */
   coastalLeapfrog: boolean;
+  /** Island hopping (board-modes plan, Q81): founding across water reaches only coastal
+   *  tiles within this many hexes of one of the seat's own coastal settlements, in play
+   *  and on the founding voyage, where the capital is the only one. Null is any shore to
+   *  any shore. Founding beside an own settlement is never limited. */
+  seaReach: number | null;
   /** A tile holds at most this many colonies (and no city may share). Two colonies may
    *  work one chora; the third is refused (post-sprint-debt §2.6 — was inline `>= 2`). */
   maxColoniesPerTile: number;
@@ -245,6 +252,7 @@ export const DEFAULT_RULESET: Ruleset = {
   placement: {
     colonyContiguity: true,
     coastalLeapfrog: true,
+    seaReach: null,
     maxColoniesPerTile: 2,
     cityExclusionRadius: 1,
   },
@@ -291,7 +299,7 @@ export const DEFAULT_RULESET: Ruleset = {
     // (core/resources `applyIncome`), and turn end settles the shortfall as hunger.
     stockpileFloors: { food: 0, wood: 0, stone: 0, gold: 0, influence: 0 },
     luxury: {
-      coastalGoods: 6,
+      coastalGoods: 2 * PLAYER_IDS.length - 1,
       randomPlacement: false,
       happinessPerGood: 2,
     },
@@ -373,6 +381,27 @@ export function mergeRulesetPatches(
   if (!a) return b;
   if (!b) return a;
   return deepMerge(a, b);
+}
+
+/**
+ * What a board brings to the rules, as a ruleset patch: a game's settings resolve to a
+ * ruleset patch and a board (docs/plans/game-settings.md). Archipelago hops 3 hexes across
+ * water (owner, Q81); Continental and Scenario keep any shore. No rule reads the board's
+ * name, so this patch is the one way a board changes a rule.
+ */
+const BOARD_RULESET_PATCHES: Record<BoardLayout, RulesetPatch | null> = {
+  continental: null,
+  archipelago: { placement: { seaReach: 3 } },
+  scenario: null,
+};
+
+/** The board's patch with `patch` over it: a value the given patch sets, such as
+ *  `placement.seaReach`, wins over the board's. Null when neither has anything. */
+export function boardRulesetPatch(
+  board: BoardLayout,
+  patch: RulesetPatch | null = null,
+): RulesetPatch | null {
+  return mergeRulesetPatches(BOARD_RULESET_PATCHES[board], patch);
 }
 
 /** How many capitals lead the setup sequence — the settlement count that ends the setupCapital phase. */

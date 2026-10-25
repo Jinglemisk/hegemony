@@ -4,6 +4,12 @@ Date: 2026-10-25. Code: `main` at `449656c`, whose engine and bots are those of 
 Two batches ran one after the other on two workers at the lowest CPU priority, 8 and 10
 minutes. The setup and founding replays below took about 25 minutes more.
 
+**Read with** [the last colony pick](2026-10-25-last-colony-pick.md), written later the same
+day: every batch here ran with a bot bug that sent seat 0's last setup colony onto a second
+plains in games without Ideas. Seat 3's lead without base food was that bug. Seat 0's edge with
+1 base food survives the fix (16 of 40), so the leapfrog's part in it likely stands, though it
+was measured with the bug in place.
+
 ## Question
 
 On the shuffled board, four master bots, seeds 1000 to 1039, no National Ideas and 1 base food,

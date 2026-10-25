@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "4"
-updated: 2026-09-01
+updated: 2026-10-25
 ---
 
 # Luxury Goods — feature plan & open decisions
@@ -23,6 +23,10 @@ updated: 2026-09-01
 > actions and market trade, so the Port stays cheap (Q46). The roster is the **six**
 > coastal goods (Q32). Ship **stable claims + the suppression/derived-activity seam now**; add
 > suppression Directives later via the Assembly (Q48). All owner questions resolved.
+>
+> **Folded 2026-10-25 (Q81):** the count is **2n − 1 for n seats** on every board, seven
+> for today's four. **Silphium** is the seventh good. The ruleset's default reads the seat
+> list, so the number is `2 * PLAYER_IDS.length - 1`.
 >
 > **Architecture reconciliation 2026-08-03:** Phase 3.6 is now a prerequisite. Luxury
 > goods use stable asset and settlement ids, one universal ownership-transfer operation,
@@ -320,7 +324,7 @@ luxury: {
   happinessPerGood: 2,
   activeCapPerPlayer: 3,
   countsTowardBelovedCard: true,   // Q44 — luxuries DO count
-  coastalGoods: 6,                 // Q32 — six, accepted
+  coastalGoods: 7,                 // Q81 — 2n − 1 for n seats; seven for four
   portCost: { wood: 20, stone: 5, gold: 10 }   // Q46 — stays cheap; not a gold sink
 }
 ```
@@ -329,8 +333,9 @@ luxury: {
 
 ## 6. The named roster
 
-**Six** unique coastal goods (Q32, accepted) — the PDF's coastal set; the three former land
-goods are dropped.
+**Seven** unique coastal goods: 2n − 1 for four seats (Q81, 2026-10-25). The first six are the
+PDF's coastal set (Q32); the three former land goods are dropped. Silphium, the Cyrenaic herb
+worth its weight in silver, is the seventh.
 
 | Good           | Flavour             |
 | -------------- | ------------------- |
@@ -340,6 +345,7 @@ goods are dropped.
 | **Glassware**  | eastern kilns       |
 | **Incense**    | the southern routes |
 | **Fine Linen** | riverine weaving    |
+| **Silphium**   | the Cyrenaic steppe |
 
 ---
 

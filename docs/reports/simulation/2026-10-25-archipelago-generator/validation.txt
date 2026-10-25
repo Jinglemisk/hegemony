@@ -1,0 +1,84 @@
+Archipelago generator validation: seeds 1 to 1000, default limits
+{"islands":{"min":6,"max":9},"islandSize":{"min":3,"max":7},"islet":false,"islandSpan":4,"islandShapes":{"round":1,"line":1,"bent":1},"groups":{"min":3,"max":4},"islandsPerGroup":{"min":2,"max":3},"groupGap":{"min":1,"max":1},"channelGap":{"min":2,"max":3},"groupRadius":4,"mapRadius":6,"aspect":{"min":0.8,"max":1.35},"maxGroupAngle":150,"draws":40}
+
+boards breaking a limit: 0
+fallback boards: 0
+random setups without four legal starts: 0
+bot setups: seats without a colony: 0 of 4000
+bot setups: seats without room to grow: 0 of 4000
+bot setups: colonies on the capital's island: 341 of 4000
+bot setups: colonies elsewhere in the capital's group: 734 of 4000
+bot setups: colonies in another group: 2925 of 4000
+bot setups: founding sites after setup: mean 25.79, min 23, p10 25, median 26, p90 26, max 26 (n 4000)
+generation: 5.47 ms a board on average
+ms per board: mean 5.47, min 1.07, p10 1.86, median 3.90, p90 11.42, max 40.14 (n 1000)
+draws per board: 1×464, 2×267, 3×117, 4×69, 5×36, 6×19, 7×11, 8×9, 9×3, 10×1, 11×1, 12×1, 13×1, 17×1
+draws per board, round islands only: 1×548, 2×246, 3×123, 4×49, 5×19, 6×11, 7×3, 8×1
+draws per board, round islands only: mean 1.79, min 1, p10 1, median 1, p90 3, max 8 (n 1000)
+draws per board: mean 2.16, min 1, p10 1, median 2, p90 4, max 17 (n 1000)
+
+tiles: 37×1000
+islands: 6×126, 7×112, 8×379, 9×383
+groups: 3×540, 4×460
+islands per group: 2×2361, 3×1099
+island size: 3×1809, 4×2697, 5×1940, 6×926, 7×647
+islands drawn round: 2900 of 8019 (36.2%); island size, round: 3×582, 4×940, 5×680, 6×352, 7×346; island span, round: 1×423, 2×2477
+islands drawn line: 2391 of 8019 (29.8%); island size, line: 3×609, 4×873, 5×617, 6×292; island span, line: 1×252, 2×933, 3×770, 4×436
+islands drawn bent: 2728 of 8019 (34.0%); island size, bent: 3×618, 4×884, 5×643, 6×282, 7×301; island span, bent: 1×295, 2×973, 3×911, 4×549
+island span: 1×970, 2×4383, 3×1681, 4×985
+tiles per group: mean 10.40, min 6, p10 8, median 10, p90 13, max 19 (n 3460)
+plains per group: mean 2.31, min 1, p10 1, median 2, p90 4, max 6 (n 3460)
+food slots per group: mean 10.98, min 3, p10 5, median 11, p90 17, max 31 (n 3460)
+coastal tiles: mean 36.65, min 34, p10 36, median 37, p90 37, max 37 (n 1000)
+moorings: mean 45.13, min 34, p10 41, median 45, p90 49, max 56 (n 1000)
+goods per group: mean 1.73, min 0, p10 1, median 2, p90 2, max 3 (n 3460)
+aspect: mean 1.02, min 0.82, p10 0.91, median 1.03, p90 1.17, max 1.34 (n 1000)
+farthest tile from centre: mean 6, min 6, p10 6, median 6, p90 6, max 6 (n 1000)
+drawn width / disc: mean 1.60, min 1.29, p10 1.43, median 1.57, p90 1.79, max 1.86 (n 1000)
+drawn height / disc: mean 1.73, min 1.41, p10 1.55, median 1.82, p90 1.82, max 1.82 (n 1000)
+plains per group: 1×758, 2×1360, 3×925, 4×343, 5×69, 6×5
+goods per group: 0×6, 1×1172, 2×2018, 3×264
+groups without a good: 6 of 3460
+islands without plains: 2261 of 8019
+islands with food, wood and stone: 3444 of 8019
+plain shuffle instead: groups without plains 221 of 3460, groups missing a resource 442 of 3460
+Continental for reference: 37 tiles, 18 coastal, 18 moorings
+
+Sea rules: the bots' capital picks, seat 0 (first) against seat 3 (fourth)
+replica of choosePlacement disagreeing with it under today's rule: 0 picks
+replica disagreeing with the real master bot's capitals on Continental, seeds 1 to 20: 0 games
+board, rule | pick score seat 0 | pick score seat 3 | after four capitals: seat 0 | seat 3 | gap 0-3 (median) | of which sea | of which tile | seat 0 best of four | seat 3 best of four | founding sites seat 0 | seat 3 | seats with no site | capital slots 0 / 3
+arch no leapfrog | 220.66 | 208.65 | 220.46 | 208.65 | 11.81 (12.00) | 9.22 | 2.59 | 98.2% | 0% | 2.78 | 1.78 | 5 | 4.90 / 4.80
+arch hop 2 | 227.45 | 215.22 | 225.34 | 215.22 | 10.12 (10) | 6.29 | 3.83 | 84.4% | 0% | 4.61 | 3.72 | 0 | 4.94 / 4.76
+arch hop 3 | 230.88 | 215.48 | 225.23 | 215.48 | 9.75 (10) | 5.71 | 4.04 | 64.8% | 0% | 6.94 | 6.03 | 0 | 4.93 / 4.80
+arch hop 4 | 233.20 | 213.83 | 221.72 | 213.83 | 7.89 (7.00) | 4.38 | 3.51 | 47.1% | 0.4% | 9.88 | 8.89 | 0 | 4.95 / 4.98
+arch own group | 231.89 | 214.95 | 225.06 | 214.95 | 10.11 (9.00) | 5.98 | 4.13 | 61.2% | 0% | 8.21 | 7.77 | 0 | 4.93 / 4.89
+arch unlimited (today) | 238.97 | 213.78 | 218.85 | 213.78 | 5.08 (6) | 0.04 | 5.04 | 91.8% | 3% | 26.75 | 26.77 | 0 | 4.94 / 5.25
+cont no leapfrog | 227.16 | 214.99 | 225.06 | 214.99 | 10.07 (10.00) | 7.82 | 2.25 | 81.7% | 0.8% | 4.16 | 3.75 | 0 | 5.01 / 4.70
+cont hop 2 | 229.33 | 216.03 | 224.96 | 216.03 | 8.93 (9.00) | 5.82 | 3.11 | 68.2% | 1% | 4.76 | 4.51 | 0 | 4.99 / 4.81
+cont hop 3 | 230.78 | 215.60 | 224.14 | 215.60 | 8.53 (9.00) | 5.14 | 3.40 | 60.8% | 1.7% | 5.86 | 5.28 | 0 | 4.94 / 4.82
+cont hop 4 | 232.21 | 214.61 | 222.10 | 214.61 | 7.49 (8.00) | 4.07 | 3.43 | 51.5% | 2.5% | 7.69 | 6.44 | 0 | 4.86 / 4.89
+cont own group | 234.78 | 213.80 | 219.29 | 213.80 | 5.49 (5.00) | 1.69 | 3.80 | 44.8% | 3.3% | 13.64 | 10.65 | 0 | 4.83 / 4.80
+cont unlimited (today) | 234.78 | 213.80 | 219.29 | 213.80 | 5.49 (5.00) | 1.69 | 3.80 | 44.8% | 3.3% | 13.64 | 10.65 | 0 | 4.83 / 4.80
+
+arch no leapfrog: boards with two capitals on one island 109 of 1000; arch no leapfrog groups holding a capital: 1×1, 2×195, 3×666, 4×138
+arch hop 2: boards with two capitals on one island 63 of 1000; arch hop 2 groups holding a capital: 2×68, 3×697, 4×235
+arch hop 3: boards with two capitals on one island 112 of 1000; arch hop 3 groups holding a capital: 2×27, 3×662, 4×311
+arch hop 4: boards with two capitals on one island 133 of 1000; arch hop 4 groups holding a capital: 2×52, 3×707, 4×241
+arch own group: boards with two capitals on one island 107 of 1000; arch own group groups holding a capital: 2×3, 3×559, 4×438
+arch unlimited (today): boards with two capitals on one island 234 of 1000; arch unlimited (today) groups holding a capital: 1×3, 2×206, 3×676, 4×115
+
+Founding voyage under the same rule (capital and colony by the bots), archipelago
+voyage replica disagreeing with the bots' colonies under today's rule, seeds 1 to 50: 0
+no leapfrog: colonies on the capital's island 4000, elsewhere in the group 0, in another group 0 (of 4000); setups where a voyage reached nothing 0; voyage no leapfrog founding sites after setup: mean 1.84, min 0, p10 1, median 2, p90 3, max 5 (n 4000); seats with no founding site 191
+hop 2: colonies on the capital's island 2500, elsewhere in the group 1500, in another group 0 (of 4000); setups where a voyage reached nothing 0; voyage hop 2 founding sites after setup: mean 4.47, min 0, p10 3, median 4, p90 7, max 10 (n 4000); seats with no founding site 3
+hop 3: colonies on the capital's island 1509, elsewhere in the group 2083, in another group 408 (of 4000); setups where a voyage reached nothing 0; voyage hop 3 founding sites after setup: mean 7.35, min 2, p10 5, median 7, p90 10, max 16 (n 4000); seats with no founding site 0
+hop 4: colonies on the capital's island 1102, elsewhere in the group 1970, in another group 928 (of 4000); setups where a voyage reached nothing 0; voyage hop 4 founding sites after setup: mean 11.13, min 2, p10 7, median 11, p90 15, max 24 (n 4000); seats with no founding site 0
+own group: colonies on the capital's island 1115, elsewhere in the group 2885, in another group 0 (of 4000); setups where a voyage reached nothing 0; voyage own group founding sites after setup: mean 6.97, min 2, p10 4, median 7, p90 10, max 14 (n 4000); seats with no founding site 0
+
+seconds in random setups: 2
+seconds in archipelago capitals: 179
+seconds in continental capitals: 125
+seconds in founding voyages: 248
+seconds in bot colonies: 162
+run time: 735 s

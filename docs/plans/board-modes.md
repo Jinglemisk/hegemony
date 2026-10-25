@@ -1,7 +1,7 @@
 ---
 status: proposed
 phase: "post-v2"
-updated: 2026-10-24
+updated: 2026-10-25
 ---
 
 # Board modes: Continental and Archipelago
@@ -30,6 +30,19 @@ A game is played on one of two boards, chosen before setup:
     affect play.
   - The shuffled board is the sim's default (done on `feat/game-settings-engine`).
   - Archipelago is its own spec and branch, built by another agent in its own worktree.
+- **Q81, answered by the owner on 2026-10-25:**
+  - **The sea rule.** Island hopping at 3 hexes on Archipelago, `placement.seaReach: 3`: a
+    colony across water needs a coastal tile within 3 hexes of one of the seat's coastal
+    settlements, and the founding voyage at setup the same from the capital. Continental
+    keeps any shore (`seaReach: null`). Choosing the board applies the reach as a ruleset
+    patch, the way the [game settings plan](game-settings.md) resolves settings, so a patch
+    that sets the reach keeps its own and no rule reads the board's name.
+  - **Goods.** 2n − 1 on every board, n being the seats: seven for four. Silphium is the
+    seventh. See the [luxury plan](luxury-goods.md).
+  - **The oracle** is dealt like any other card and lands on an island as part of it. It only
+    blocks a tile (no slots, never settled), so a place at the centre buys no balance. The
+    island that holds it keeps at least two settleable tiles. The generator keeps every other
+    limit.
 - The [2026-10-24 balance batches](../reports/simulation/2026-10-24-balance-lines.md) showed
   that the board alone moves balance a lot. Moving from the authored board to the shuffled
   one:
@@ -67,28 +80,33 @@ A game is played on one of two boards, chosen before setup:
   oracle.
 - The map builder indexes the deck by the disc's coordinates, so a deck of another length
   breaks it.
-- Shuffled is a seeded shuffle of that deck over the same 37 cells. Nothing is constrained:
-  landmarks can cluster or land on the rim.
+- Continental (named `shuffled` until slice 1) is a seeded shuffle of that deck over the same
+  37 cells. Nothing is constrained: landmarks can cluster or land on the rim.
 - The sea is any cell that holds no tile. There is no sea tile type.
 
 **Rules that read the sea today**
 
 - **Founding colony at setup.** It may go on any coastal tile (the founding voyage), or next to
-  the seat's own settlements.
+  the seat's own settlements. On Archipelago the voyage reaches 3 hexes from the capital.
 - **Founding in play** (coastal leapfrog). A seat that holds any coastal tile may found on any
-  other coastal tile. Any shore reaches any shore.
+  other coastal tile. Any shore reaches any shore on Continental; on Archipelago, a coastal
+  tile within 3 hexes of one of the seat's coastal settlements.
 - **The Port** needs a coastal tile and an unclaimed luxury good beside it.
-- **Luxury moorings.** A good sits on a vertex shared by two tiles and one sea cell. Six goods
-  are spread evenly around the coast, or placed at random from the seed.
+- **Luxury moorings.** A good sits on a vertex shared by two tiles and one sea cell. Seven goods
+  (2n − 1 for four seats) are spread evenly around the coast, or placed at random from the
+  seed.
 - **Everything else ignores the sea:** pop moves, trade, ventures and city spacing. Distance is
   plain hex distance, with sea cells counted like land.
+- Since slice 1, every rule here that reads the coast, a neighbour or a distance asks the board
+  topology, never the layout's name.
 
 **Bots, maps and tests**
 
 - The bots' placement scoring reads the board through three things: the tiles the seat could
   found on, the luxury goods within reach, and colonies that could later become cities.
-- The 2D map draws one shape per tile and fits whatever tiles exist, so gaps would render. Moving
-  between tiles with the arrow keys would jump across gaps.
+- The 2D map draws one shape per tile and fits whatever tiles exist, so gaps would render.
+  The arrow keys move to the nearest drawn tile in the pressed direction, not by the
+  topology, so they would jump across gaps.
 - The 3D living map is a showcase, not part of the app. It assumes one disc centred on the
   origin.
 - 32 test files use the scripted opening and 23 hard-code tile ids of the authored board. They
@@ -160,11 +178,22 @@ The game's rules for the sea, the map, the bots and the sim flag wait for that a
 
    Name which rules change and which stay.
 
+   **Settled (Q81): hop 3,** in play and on the founding voyage; Continental keeps any shore.
+
 5. **Starts.** Every seat gets a legal capital and colony with room to grow. Say whether seats
    start on separate islands or share them. Equal starts are not required.
+
+   **Settled (Q81):** seats may share an island, with no new rule, and the founding voyage
+   reaches 3 hexes from the capital. Over 1,000 boards at hop 3 every seat got a capital, a
+   colony and a site to found on next
+   ([addendum](../reports/simulation/2026-10-25-archipelago-defaults.md)).
+
 6. **Landmarks and goods.**
    - Where the oracle and the landmarks may fall.
    - Islands have more coast, which means more moorings: keep six goods, or scale them.
+
+   **Settled (Q81):** the oracle is dealt onto an island like any card; each landmark keeps an
+   island of its own; seven goods (2n − 1) on every board, spaced evenly round the coast.
 
 ## Three-axis parity
 
@@ -179,12 +208,14 @@ The game's rules for the sea, the map, the bots and the sim flag wait for that a
 - **Per-match setting.**
   - The board mode stays on the state (`boardLayout`), generated from the game seed and
     recorded in saves and scripts.
-  - Renaming `shuffled` to `continental` either keeps reading the old name in older scripts,
-    or rejects them under the versioning rule.
-  - The authored board's id, `classic`, clashes with the default settings preset the owner
-    calls Classic. Owner, 2026-10-25: rename the board to `scenario`.
+  - Slice 1 renamed `shuffled` to `continental`, and the authored board `classic` to
+    `scenario`, since `classic` clashed with the default settings preset the owner calls
+    Classic (owner, 2026-10-25). State schema 18: older saves and scripts are rejected under
+    the versioning rule, with no aliases.
 - **Topology.** One board topology (land cells, neighbours, coast, water distance) that every
-  rule and renderer reads. No rule branches on the mode's name.
+  rule and renderer reads. No rule branches on the mode's name. Slice 1 built it with the
+  land cells, neighbours and coast that today's rules read; water distance comes with the
+  sea rules.
 - **Determinism.** The generator draws from the seeded RNG chain. Today the year and event
   decks shuffle before the terrain and the politician decks after it, so a change here moves
   the politician decks.
@@ -194,16 +225,43 @@ The game's rules for the sea, the map, the bots and the sim flag wait for that a
 
 0. **The generator and its validation**, delivered as above. It may run alongside slice 1, using
    today's map helpers, and is rebased onto the topology module once that merges.
-1. **Topology and the Continental rename.**
+   **Delivered 2026-10-25:** the generator, its test and the
+   [validation report](../reports/simulation/2026-10-25-archipelago-generator.md); the owner's
+   call is Q81.
+1. **Topology and the Continental rename** (#139).
    - One topology module, with every coast and adjacency reader moved onto it.
    - `shuffled` becomes `continental`, and `classic` becomes `scenario`.
    - No behaviour change: batches match byte for byte.
 2. **Archipelago in the game.** The approved generator wired into setup, the sea rules the owner
    picked, the 2D map, the bots and the sim flag.
+   **Engine and sim, 2026-10-25 (#145),** built while the owner was out so batches can run
+   before Q81 is answered:
+   - The `archipelago` layout: match creation lays it with the generator from the game's rng
+     chain, then derives the goods and bank rates from its tiles. State schema 19.
+   - Island hopping as one ruleset number, `placement.seaReach`, `null` by default (any shore
+     to any shore), so Continental and Scenario play as before. With N, founding across
+     water needs a coastal tile within N plain hexes of one of the seat's coastal
+     settlements, in play and on the founding voyage (from the capital). The founding
+     status says when the sea is too wide. It matches the validation script's hop rule.
+   - The bots need no change: their placement scoring and frontier ask the founding rule.
+   - `--board archipelago` for `new` and `batch`; `?board=archipelago` in the browser, where
+     the 2D map draws the islands and the arrow keys jump the gaps to the nearest tile.
+   - **Q81's answer, 2026-10-25:** `?board=archipelago` and `--board archipelago` apply
+     `{"placement":{"seaReach":3}}` unless the patch given sets the reach, and batch reports
+     record it; seven goods with Silphium on every board; the oracle dealt onto an island.
+     State schema 20. The generator's numbers again, with these defaults, are in the
+     [defaults addendum](../reports/simulation/2026-10-25-archipelago-defaults.md).
+   - Left for this slice: `rules.md` and the rulebook on islands, once the live game offers
+     the board.
 3. **Batches.**
    - Mixed and masters tables, Continental against Archipelago, on the same seeds.
    - Run with base income at 0, as the game now plays.
    - A dated report.
+   - **First batches, 2026-10-25:** masters and mixed at hop 4, masters with any shore, and the
+     Continental controls, in the
+     [Archipelago batches report](../reports/simulation/2026-10-25-archipelago-batches.md). Hop 4
+     works and no seat or build stands out beyond the noise. Still to measure, now at hop 3 with
+     seven goods: how many foundings cross water, and the first pick's worth in wins.
 
 ## Acceptance and validation
 

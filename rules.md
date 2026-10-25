@@ -156,8 +156,9 @@ city, your metropolis included, can never be upgraded: only one founded on the o
 coast can become a city. (Some modes change the opening — _deathmatch_ places three
 colonies.)
 
-By default the island is shuffled from the game seed, so each game has its own layout;
-start the game with `?board=classic` in the address bar for the fixed authored layout.
+By default the island is the continental board, shuffled from the game seed, so each game
+has its own layout; start the game with `?board=scenario` in the address bar for the fixed
+authored layout.
 
 ## Taking a turn
 
@@ -318,11 +319,11 @@ instead of 1. The other three state one fact.
 
 ## Luxury goods
 
-Six named goods — Tyrian Dye, Pearls, Coral, Glassware, Incense, Fine Linen — sit
-moored off the coast, each at a point shared by **two** coastal tiles. A **Port**
-raised in a settlement on either tile claims the good; **the first Port wins**, and
-the good stays claimed for the rest of the game. Each good is unique: one copy, one
-owner.
+Seven named goods — Tyrian Dye, Pearls, Coral, Glassware, Incense, Fine Linen,
+Silphium — sit moored off the coast, each at a point shared by **two** coastal
+tiles. A **Port** raised in a settlement on either tile claims the good; **the first
+Port wins**, and the good stays claimed for the rest of the game. Each good is
+unique: one copy, one owner.
 
 Every good you hold adds **+2 to your happiness** for as long as you hold it, and
 there is no limit on how many count. The riot and revolt lines and the **Beloved of

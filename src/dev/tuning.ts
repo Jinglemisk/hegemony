@@ -313,15 +313,22 @@ export function resolveTuning(
 }
 
 /**
- * The one browser integration point: called from the controller at game creation.
- * It returns one immutable package without mutating module-level content. Production
- * packages the authored content with `base` unchanged.
+ * The one browser integration point: called from the controller at game creation, with
+ * the board's ruleset patch. It returns one immutable package without mutating
+ * module-level content. Production packages the authored content with `base` and the
+ * patch alone.
  */
-export function resolveTunedDefinition(base: Ruleset): GameDefinition {
+export function resolveTunedDefinition(
+  base: Ruleset,
+  patch: RulesetPatch | null = null,
+): GameDefinition {
   if (!import.meta.env.DEV) {
-    return createGameDefinition({ ruleset: base, content: getAuthoredGameContent() });
+    return createGameDefinition({
+      ruleset: patch ? deriveRuleset(base, patch) : base,
+      content: getAuthoredGameContent(),
+    });
   }
   const map = loadOverrides();
-  const resolved = resolveTuning(base, loadTuningPresetId(), map);
+  const resolved = resolveTuning(base, loadTuningPresetId(), map, patch);
   return resolved.definition;
 }

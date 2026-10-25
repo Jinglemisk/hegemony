@@ -604,7 +604,7 @@ Self-play data reflects the policies that created it. Apply all of these control
 2. **Frozen opponents:** retain every promoted milestone agent in evaluation leagues.
 3. **Exploration:** sample near-equivalent moves and uncommon plans during data generation.
 4. **Seat rotation:** evaluate every policy in every seat on the same seeds.
-5. **Board diversity:** use Shuffled boards for representative campaigns and Classic only for fixed fixtures.
+5. **Board diversity:** use Continental boards for representative campaigns and the scenario board only for fixed fixtures.
 6. **Opening diversity:** include policy-controlled, randomized, and adversarial opening sets.
 7. **State curriculum:** generate early-, mid-, late-game, Assembly, unrest, and near-victory positions.
 8. **Holdout scenarios:** never tune directly on the complete capability suite.
@@ -717,7 +717,7 @@ Roadmap scheduling for these internal phases:
 **Deliverables**
 
 - Preserve the existing `random`, `greedy`, `smart`, `beam`, `political`, and `master` policies.
-- Record representative baseline tournaments on Shuffled boards with seat rotation.
+- Record representative baseline tournaments on Continental boards with seat rotation.
 - Add the feature/capability manifest required by the parity audit.
 - Add move counts by type and per-policy behavior attribution.
 - Store fixed regression seeds and canonical positions without treating their outcomes as tuning data.
@@ -814,7 +814,7 @@ Roadmap scheduling for these internal phases:
 - The outcome policy improves finished-game results against the frozen league without increasing rules
   failures, action-cap hits, or collapse pathologies.
 - Required feature behaviors remain covered.
-- Gains hold across seats, seeds, Shuffled boards, and multiple rival policies.
+- Gains hold across seats, seeds, Continental boards, and multiple rival policies.
 
 ### Phase 5 — MCTS
 
@@ -944,7 +944,7 @@ Always include:
 
 - Use identical seeds for candidate and baseline comparisons.
 - Rotate every policy through every seat.
-- Use Shuffled boards for representative strength claims.
+- Use Continental boards for representative strength claims.
 - Run to real game termination with a high safety ceiling; report turn-cap share separately.
 - Keep ruleset/content constant within a policy experiment.
 - Record the full policy version, observation schema, rollout profile, and league composition.
