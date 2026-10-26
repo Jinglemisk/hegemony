@@ -211,15 +211,18 @@
 .lm-chip {
   font-size: max(var(--t-12), calc(var(--lab) * 0.95));
 }
-.lm-eco {
+.lm-eco,
+.lm-tokens {
   font-size: max(var(--t-12), calc(var(--lab) * 0.92));
 }
-.lm-eco .pips i {
-  font-size: var(--lab);
+/* A flat mark's disc is sized in --lab, its kind's multiple in map3d.css; where the
+   hexes are drawn small (a phone) it shrinks with them. It holds no text. */
+.lm-disc {
+  font-size: min(var(--lab), calc(var(--hex, 100px) * 0.19));
 }
 /* The map's key, in the shell. */
 .map-key li > span,
-.map-key .pips i {
+.map-key-readout {
   font-size: var(--t-12);
 }
 /* The corner dock: a mode's name at the floor, the Chronicle's deeds at reading size. */

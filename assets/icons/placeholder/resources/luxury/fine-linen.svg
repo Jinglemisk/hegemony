@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Fine Linen — placeholder: a stack of folded linen</title>
+<defs><linearGradient id="g-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.5" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient></defs>
+<rect x="8" y="44" width="48" height="13" rx="4" fill="url(#g-linen)" stroke="#181210" stroke-width="2.5"/>
+<rect x="11" y="29" width="42" height="13" rx="4" fill="url(#g-linen)" stroke="#181210" stroke-width="2.5"/>
+<rect x="14" y="14" width="36" height="13" rx="4" fill="url(#g-linen)" stroke="#181210" stroke-width="2.5"/>
+<path d="M22 20H42M19 35H45M16 50H48" fill="none" stroke="#aa9572" stroke-width="1.75" stroke-linecap="round"/>
+</svg>

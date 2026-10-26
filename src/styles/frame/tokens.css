@@ -227,14 +227,8 @@
   --map-ship-rule: rgb(255 248 231 / 30%);
   --map-numeral-shadow: 0 2px 4px rgb(24 18 16 / 75%);
   --map-compass: rgb(23 80 92 / 55%);
-  /* The map modes: an Economy card's paper, and the rule round a realm's Unrest chip
-     by its tier (a revolt's chip darkens too). */
+  /* The map modes: an Economy card's paper. */
   --map-card: rgb(255 248 231 / 92%);
-  --map-calm: #a8b877;
-  --map-discontent: #e2a558;
-  --map-unrest: #e8846b;
-  --map-revolt: #ff5a3c;
-  --map-revolt-chip: rgb(60 14 6 / 92%);
 
   /* ---- fired artwork values --------------------------------------------------- */
   /* The seal's fired gradient names a curved clay surface, not a state. */

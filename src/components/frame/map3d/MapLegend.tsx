@@ -7,16 +7,13 @@ import { outputRules } from "../../../game/economy/income";
 import { calculateEconomyProjection } from "../../../game/economy/preview";
 import { activeClaims, claimableLuxuriesAt, luxuryHappinessBonus } from "../../../game/luxury";
 import type { HegemonyState, PopType } from "../../../game/types";
-import { unrestBands } from "../../../game/unrest";
-import type { UnrestTier } from "../../../game/unrest";
-import { presentUnrestOutcome } from "../../../ui/effects";
 import { sign } from "../../../ui/frameFormat";
 import { RESOURCE_LABELS, formatNumber } from "../../../ui/formatters";
 import {
   BUILDING_RASTERS,
+  LUXURY_GOOD_RASTERS,
   POP_RASTERS,
   RESOURCE_RASTERS,
-  UNREST_TIER_RASTERS,
 } from "../../../ui/iconRegistry";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { settlementNames } from "../../../ui/settlementNames";
@@ -24,7 +21,7 @@ import { Prose } from "../../AnnotatedText";
 import { Chips, Ico } from "../parts";
 import { MAP_MODES, mapRealms } from "./modes";
 import type { MapMode } from "./modes";
-import { TIER, TRADE_ROUTE, css } from "./palette";
+import { TRADE_ROUTE, css } from "./palette";
 
 /**
  * The key to the map's mode: what its models, colours, marks and numbers mean, after
@@ -38,6 +35,12 @@ type Row = { key: string; mark: ReactNode; name: ReactNode; text: ReactNode };
 
 const swatch = (colour: string) => (
   <i className="map-key-swatch" style={{ "--swatch": colour } as CSSProperties} />
+);
+/** A flat mark as the map draws it: an icon on its owner's colour, or a plain disc. */
+const disc = (path: string, colour?: string) => (
+  <i className="map-key-disc" style={colour ? ({ "--own": colour } as CSSProperties) : undefined}>
+    <Ico path={path} size="ui" />
+  </i>
 );
 const count = (n: number, one: string, many: string) =>
   `${formatNumber(n)} ${n === 1 ? one : many}`;
@@ -53,7 +56,7 @@ function terrainRows(G: HegemonyState): Row[] {
       key: "city",
       mark: icon("settlements/city"),
       name: "City",
-      text: "Stone walls, marble towers, clay roofs. The capital is an acropolis with a temple.",
+      text: "Stone walls, marble towers, clay roofs, the owner's standard. The capital is an acropolis with a temple, its standard the tallest.",
     },
     {
       key: "colony",
@@ -131,20 +134,35 @@ function terrainRows(G: HegemonyState): Row[] {
 }
 
 function politicalRows(G: HegemonyState): Row[] {
-  return mapRealms(G)
-    .filter((realm) => realm.tiles)
-    .map(({ owner, census, tiles }) => {
-      const seat = PLAYER_GLAZES[owner];
-      const pops = totalPops(census);
-      return {
-        key: owner,
-        mark: swatch(seat.color),
-        name: `${seat.blazon} ${seat.name} · ${seat.glaze}`,
-        text:
-          `${count(census.cities, "city", "cities")} and ${count(census.colonies, "colony", "colonies")} ` +
-          `on ${count(tiles, "tile", "tiles")}; ${count(pops, "pop", "pops")}.`,
-      };
-    });
+  return [
+    {
+      key: "seals",
+      mark: disc("settlements/capital"),
+      name: "Settlements",
+      text: "Each as its icon on its owner's colour, the capital's the largest; a Port's icon by its pier, and the Oracle's.",
+    },
+    {
+      key: "tokens",
+      mark: <Ico path="unrest/unrest" size="ui" />,
+      name: "Unrest tokens",
+      text: "Beside each settlement of a realm that holds any, with their count. They lower its happiness; a riot or a revolt clears them.",
+    },
+    ...mapRealms(G)
+      .filter((realm) => realm.tiles)
+      .map(({ owner, census, tiles, tokens }) => {
+        const seat = PLAYER_GLAZES[owner];
+        const pops = totalPops(census);
+        return {
+          key: owner,
+          mark: swatch(seat.color),
+          name: `${seat.blazon} ${seat.name} · ${seat.glaze}`,
+          text:
+            `${count(census.cities, "city", "cities")} and ${count(census.colonies, "colony", "colonies")} ` +
+            `on ${count(tiles, "tile", "tiles")}; ${count(pops, "pop", "pops")}` +
+            (tokens ? `; ${count(tokens, "Unrest token", "Unrest tokens")}.` : "."),
+        };
+      }),
+  ];
 }
 
 function economyRows(G: HegemonyState): Row[] {
@@ -178,15 +196,9 @@ function economyRows(G: HegemonyState): Row[] {
   return [
     {
       key: "slots",
-      mark: (
-        <span className="pips">
-          <i className="b" />
-          <i className="w" />
-          <i />
-        </span>
-      ),
-      name: "Slots",
-      text: "Square: a building. Filled: a slave works it. Ring: open.",
+      mark: <span className="map-key-readout">+1 / 2</span>,
+      name: "Output / free",
+      text: "What a settlement's worked slots make a turn, then its slots neither built on nor worked. An open tile reads 0 / its slots.",
     },
     {
       key: "materials",
@@ -234,68 +246,6 @@ function economyRows(G: HegemonyState): Row[] {
   ];
 }
 
-function unrestRows(G: HegemonyState): Row[] {
-  /** Each tier's levels, said: "0 or higher", "−1 to −2", "−6 or lower". */
-  const band = Object.fromEntries(
-    unrestBands(G).map(({ tier, top, bottom }) => [
-      tier,
-      top === null
-        ? `${sign(bottom!)} or higher`
-        : bottom === null
-          ? `${sign(top)} or lower`
-          : top === bottom
-            ? sign(top)
-            : `${sign(top)} to ${sign(bottom)}`,
-    ]),
-  ) as Record<UnrestTier, string>;
-  const { share } = presentUnrestOutcome(G.ruleset, "revolt");
-  // Temples, goods, slaves and tokens are always said; the rest when they count.
-  const said = ["temples", "luxuries", "slaves", "tokens"];
-  return [
-    { key: "calm", mark: swatch(css(TIER.calm)), name: "Calm", text: `${band.calm}.` },
-    {
-      key: "discontent",
-      mark: swatch(css(TIER.discontent)),
-      name: "Discontent",
-      text: `${band.discontent}.`,
-    },
-    {
-      key: "unrest",
-      mark: swatch(css(TIER.unrest)),
-      name: "Riot",
-      text: `${band.unrest}: a riot when the realm's turn ends.`,
-    },
-    {
-      key: "revolt",
-      mark: swatch(css(TIER.revolt)),
-      name: "Revolt",
-      text: `${band.revolt}: ${share.toLowerCase()} the slaves leave.`,
-    },
-    ...mapRealms(G)
-      .filter((realm) => realm.tiles)
-      .map((realm) => ({
-        key: realm.owner,
-        mark: (
-          <Ico
-            path={
-              realm.tier === "calm" ? RESOURCE_RASTERS.happiness : UNREST_TIER_RASTERS[realm.tier]
-            }
-            size="ui"
-          />
-        ),
-        name: `${PLAYER_GLAZES[realm.owner].name} ${sign(realm.happiness)}`,
-        text: `${realm.terms
-          .filter((term) => term.amount || said.includes(term.id))
-          .map((term) =>
-            term.id === "tokens" && !term.amount
-              ? "no Unrest tokens"
-              : `${capitalize(term.detail)} ${sign(term.amount)}`,
-          )
-          .join(", ")}.`,
-      })),
-  ];
-}
-
 function tradeRows(G: HegemonyState): Row[] {
   const names = settlementNames(G.board.tiles);
   const titled = (name: string) => capitalize(name.toLowerCase());
@@ -310,7 +260,7 @@ function tradeRows(G: HegemonyState): Row[] {
         activeClaims(G, asset.owner).some((held) => held.id === asset.id);
       return {
         key: asset.id,
-        mark: swatch(seat.color),
+        mark: disc(LUXURY_GOOD_RASTERS[asset.goodId], seat.color),
         name,
         text:
           `${seat.name}'s` +
@@ -328,7 +278,7 @@ function tradeRows(G: HegemonyState): Row[] {
       );
     return {
       key: asset.id,
-      mark: <Ico path="resources/luxury" size="ui" />,
+      mark: disc(LUXURY_GOOD_RASTERS[asset.goodId]),
       name,
       text: `Unclaimed; a Port ${places.join(" or ")} takes it.`,
     };
@@ -359,16 +309,14 @@ function tradeRows(G: HegemonyState): Row[] {
 
 const HEADS: Record<MapMode, string> = {
   terrain: "Models, slots and pops",
-  political: "Realms",
+  political: "Realms and their unrest",
   economy: "Yields, from the ledger",
-  unrest: "Happiness and its lines",
   trade: "Goods, Ports and routes",
 };
 const ROWS = {
   terrain: terrainRows,
   political: politicalRows,
   economy: economyRows,
-  unrest: unrestRows,
   trade: tradeRows,
 };
 

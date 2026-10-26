@@ -62,9 +62,15 @@ describe("the living map's camera", () => {
     // Hexes too small for chips (a phone) keep the far numerals and the capitals' plates.
     const small = bandAlphas(T_FIT, 50).html;
     expect([small.plates, small.cityplate, small.yield, small.faryield]).toEqual([1, 0, 0, 1]);
-    // Economy's chips keep their slots' pips only where the hexes are drawn wide.
-    expect(bandAlphas(T_FIT, 90, "economy").html.pips).toBe(0);
-    expect(bandAlphas(T_FIT, 110, "economy").html.pips).toBe(1);
+    // Political's flat seals stand in for the town models, and Trade's discs for the
+    // goods' rafts.
+    const mark = (mode: "terrain" | "political" | "trade") => {
+      const { layers, html } = bandAlphas(T_FIT, Infinity, mode);
+      return [layers.towns, html.seal, layers.goods, html.goodicon];
+    };
+    expect(mark("terrain")).toEqual([1, 0, 1, 0]);
+    expect(mark("political")).toEqual([0, 1, 1, 0]);
+    expect(mark("trade")).toEqual([1, 0, 0, 1]);
   });
 
   it("opens with every tile on screen and clear of the chrome", () => {

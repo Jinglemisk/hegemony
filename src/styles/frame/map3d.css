@@ -163,7 +163,7 @@
   margin: 0 2px;
   background: var(--ink-45);
 }
-.living-map:not(.pips-on) :is(.lm-plate, .lm-eco.compact) .pips,
+.living-map:not(.pips-on) .lm-plate .pips,
 .living-map:not(.pops-on) .lm-plate .pl-pops {
   display: none;
 }
@@ -300,6 +300,13 @@
   pointer-events: none;
   opacity: 0;
 }
+/* In Trade the good's disc sits on its raft: the name keeps clear of it. */
+.lm-moor[data-hang~="down"] {
+  padding-top: calc(var(--a-goodicon, 0) * 0.9em);
+}
+.lm-moor[data-hang~="up"] {
+  padding-bottom: calc(var(--a-goodicon, 0) * 0.9em);
+}
 .lm-moor:focus-visible {
   outline: var(--rule-2) solid var(--ochre);
   outline-offset: var(--rule-2);
@@ -365,13 +372,13 @@
 
 /* ---- the map modes' labels: each fades with its mode through --a-<key> ---------- */
 
-/* Political: a realm's name over its land. */
+/* Political: a realm's name, under its capital's seal. */
 .lm-realm {
   display: grid;
   justify-items: center;
   gap: 2px;
   text-align: center;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, 0);
   opacity: var(--a-realm, 0);
 }
 .lm-realm b {
@@ -394,6 +401,69 @@
   text-shadow:
     0 0 3px var(--ink),
     0 0 6px var(--ink);
+}
+
+/* Political's and Trade's flat marks, upright to the camera: an icon on a disc in its
+   owner's colour (--own), plain where nobody holds it. A capital's disc is the largest. */
+.lm-disc {
+  display: grid;
+  place-items: center;
+  width: 2.3em;
+  height: 2.3em;
+  background: var(--own, var(--ivory));
+  border: var(--rule-2) solid var(--ink);
+  border-radius: var(--r-round);
+  box-shadow:
+    0 0 0 var(--rule-2) var(--ivory),
+    var(--map-label-shadow);
+  transform: translate(-50%, -50%);
+}
+.lm-disc > img {
+  width: 80%;
+  height: 80%;
+}
+.lm-disc.capital {
+  width: 3.2em;
+  height: 3.2em;
+}
+.lm-disc.city {
+  width: 2.7em;
+  height: 2.7em;
+}
+.lm-disc.port {
+  width: 1.7em;
+  height: 1.7em;
+}
+.lm-disc.seal {
+  opacity: var(--a-seal, 0);
+}
+.lm-disc.good {
+  opacity: var(--a-goodicon, 0);
+  cursor: pointer;
+  pointer-events: auto;
+}
+/* A realm's Unrest tokens, beside each of its settlements in Political. */
+.lm-tokens {
+  position: absolute;
+  left: calc(100% - 0.35em);
+  top: 50%;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 6px 1px 2px;
+  font-family: var(--f-sans);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--ivory);
+  background: var(--map-ship);
+  border: var(--rule) solid var(--map-ship-rule);
+  border-radius: 2px;
+  white-space: nowrap;
+  transform: translateY(-50%);
+}
+.lm-tokens img {
+  width: 1.4em;
+  height: 1.4em;
 }
 
 /* Economy: a settled tile's card, compact far out and full close in, and an open
@@ -424,10 +494,6 @@
 }
 .lm-eco.compact .row {
   gap: 4px;
-}
-/* Where the hexes are drawn narrow the pips fade out, and then leave (bandAlphas). */
-.lm-eco.compact .pips {
-  opacity: var(--a-pips, 1);
 }
 .lm-eco.empty {
   display: flex;
@@ -470,28 +536,13 @@
   align-items: center;
   gap: 5px;
 }
-.lm-eco .pips {
-  display: flex;
-  gap: 3px;
-  align-items: center;
-}
-.lm-eco .pips i {
-  display: block;
-  width: 0.62em;
-  height: 0.62em;
-  border-radius: var(--r-round);
-  border: 1.5px solid var(--ink);
-}
-.lm-eco .pips i.b {
-  background: var(--ink);
-  border-radius: 1px;
-}
-.lm-eco .pips i.w {
-  background: var(--ink-45);
+/* The slot readout, "output / free". */
+.lm-eco .rd {
+  font-variant-numeric: tabular-nums;
 }
 
-/* A dark chip over the board: a realm's level (Unrest), a Port's good (Trade), a
-   riot or the titles (Terrain's events). */
+/* A dark chip over the board: a Port's good (Trade), a riot or the titles (Terrain's
+   events). */
 .lm-chip {
   display: flex;
   align-items: center;
@@ -521,20 +572,6 @@
 .lm-chip[data-alpha="port"] {
   opacity: var(--a-port, 0);
 }
-.lm-chip[data-alpha="unrest"] {
-  border-width: var(--rule-2);
-  opacity: var(--a-unrest, 0);
-}
-.lm-chip[data-tier="calm"] {
-  border-color: var(--map-calm);
-}
-.lm-chip[data-tier="discontent"] {
-  border-color: var(--map-discontent);
-}
-.lm-chip[data-tier="unrest"] {
-  border-color: var(--map-unrest);
-}
-.lm-chip[data-tier="revolt"] {
-  border-color: var(--map-revolt);
-  background: var(--map-revolt-chip);
+.lm-chip[data-hang="down"] {
+  transform: translate(-50%, 4px);
 }

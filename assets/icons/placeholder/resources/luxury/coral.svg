@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Coral — placeholder: a branch of red coral</title>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+<path d="M32 58V38M32 38L20 26L14 10M20 26L26 12M32 38L44 24L50 8M44 24L38 12M32 46L46 40L54 30" stroke="#181210" stroke-width="10.5"/>
+<path d="M32 58V38M32 38L20 26L14 10M20 26L26 12M32 38L44 24L50 8M44 24L38 12M32 46L46 40L54 30" stroke="#d2553e" stroke-width="5.5"/>
+<path d="M19 23L15 12M43 21L48 10" stroke="#f3a189" stroke-width="1.75"/>
+</g>
+</svg>

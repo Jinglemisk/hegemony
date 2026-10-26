@@ -445,7 +445,7 @@ export function HegemonyBoard({
   });
 
   // `?` toggles the codex from anywhere: the same act as pressing its consult icon. 1 to
-  // 5 switch the map's mode.
+  // 4 switch the map's mode.
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") restoreSitting();

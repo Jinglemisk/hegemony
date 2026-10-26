@@ -106,7 +106,7 @@ export type MapSettlement = {
   open: number;
   /** What it makes and eats a turn, as its ledger prints it (`settlementNetYield`). */
   net: Resources;
-  /** What its slots make: the slave column (`settlementClassColumn`). */
+  /** What its worked slots make: the slave column (`settlementClassColumn`). */
   worksFor: number;
 };
 
@@ -144,6 +144,7 @@ export type MapMooring = {
   /** The open-sea cell's centre: a Port that claims the good faces it. */
   sx: number;
   sy: number;
+  goodId: LuxuryGoodId;
   name: string;
   owner: PlayerId | null;
   /** The settlement whose Port claimed it. */
@@ -254,21 +255,30 @@ export function mapModel(
 
     // Each mode adds its number: what the tile makes, its realm's level, the goods a
     // Port here would take.
+    // Economy's readout, said: what the worked slots make, then the free slots.
+    const readout = (output: number, free: number) =>
+      `its slots make ${formatSignedNumber(output)}` +
+      (resource ? ` ${RESOURCE_LABELS[resource].toLowerCase()}` : "") +
+      ` with ${count(free, "slot", "slots")} free`;
     const economy = settlements.length
-      ? settlements.map((s) => `${s.name} makes ${amounts(s.net) || "nothing"}`)
+      ? settlements.map(
+          (s) => `${s.name} makes ${amounts(s.net) || "nothing"}; ${readout(s.worksFor, s.open)}`,
+        )
       : tile.terrain === "oracle"
         ? []
         : [
             resource && perPop
               ? `a slave here makes ${perPop} ${RESOURCE_LABELS[resource].toLowerCase()}`
               : "slaves make nothing here",
+            `${count(tile.slots, "slot", "slots")} free`,
           ];
-    const unrest = [...new Set(settlements.map((s) => s.owner))].map((owner) => {
-      const realm = realms.find((r) => r.owner === owner)!;
-      const tokens = realm.tokens
-        ? `, ${count(realm.tokens, "Unrest token", "Unrest tokens")}`
-        : "";
-      return `${PLAYER_GLAZES[owner].name}'s realm at happiness ${formatSignedNumber(realm.happiness)}, ${realm.tier}${tokens}`;
+    const unrest = [...new Set(settlements.map((s) => s.owner))].flatMap((owner) => {
+      const { tokens } = realms.find((r) => r.owner === owner)!;
+      return tokens
+        ? [
+            `${PLAYER_GLAZES[owner].name}'s realm holds ${count(tokens, "Unrest token", "Unrest tokens")}`,
+          ]
+        : [];
     });
     const trade = claimable.length ? [`a Port here would claim ${claimable.join(" or ")}`] : [];
     const say = (extra: string[]) => [label, ...extra].join("; ");
@@ -287,9 +297,8 @@ export function mapModel(
       perSlave: perPop,
       labels: {
         terrain: label,
-        political: label,
+        political: say(unrest),
         economy: say(economy),
-        unrest: say(unrest),
         trade: say(trade),
       },
       settlements,
@@ -315,6 +324,7 @@ export function mapModel(
         vy: v.y - oy,
         sx: sea.x - ox,
         sy: sea.y - oy,
+        goodId: asset.goodId,
         name,
         owner: asset.owner,
         claimedBy: asset.claimedAtSettlementId,

@@ -6,15 +6,16 @@ import {
 } from "../../../game/economy/income";
 import { happinessLevel } from "../../../game/happiness";
 import { claimableLuxuriesAt } from "../../../game/luxury";
+import { settlementUnworkedSlots } from "../../../game/settlement";
 import { scenario } from "../../../game/testing/scenario";
-import { unrestOutcome, unrestStatus } from "../../../game/unrest";
+import { unrestOutcome } from "../../../game/unrest";
 import { publicCensus } from "../../../ui/frameSelectors";
 import { settlementNames } from "../../../ui/settlementNames";
 import { layoutMap } from "./layout";
 import { boardShape, mapModel, shapeKey } from "./mapModel";
 
 describe("the map modes", () => {
-  it("show the engine's numbers: the ledger's yields, the realms' levels, the open goods", () => {
+  it("show the engine's numbers: the ledger's yields, the realms' tokens, the open goods", () => {
     const G = structuredClone(scenario().opening().build());
     // An Estate raises a worked town's slave column; Unrest tokens push one realm past
     // the riot line.
@@ -26,11 +27,13 @@ describe("the map modes", () => {
 
     for (const tile of G.board.tiles) {
       const drawn = model.tiles.find((t) => t.id === tile.id)!;
-      // Economy: an open tile's slave column, each settlement's net and slot yield.
+      // Economy: an open tile's slave column; each settlement's net, and its readout:
+      // what its worked slots make over its free slots.
       expect(drawn.perSlave).toBe(tileSlaveColumn(G, tile).perPop);
       for (const s of tile.settlements) {
         const card = drawn.settlements.find((d) => d.id === s.id)!;
         expect(card.net).toEqual(settlementNetYield(tile, s, G));
+        expect(card.open).toBe(settlementUnworkedSlots(tile, s, G));
         if (drawn.resource)
           expect(card.worksFor).toBe(
             settlementClassColumn(tile, s, "slaves", G).income[drawn.resource],
@@ -51,14 +54,17 @@ describe("the map modes", () => {
       `${estate.name} makes`,
     );
 
-    // Political and Unrest: each realm's counts, level and tier, and the riot it is at.
+    // Political: each realm's counts, level, Unrest tokens and the riot it is at; the
+    // rioting realm's tiles say its tokens.
     for (const realm of model.realms) {
       expect(realm.census).toEqual(publicCensus(G, realm.owner));
       expect(realm.happiness).toBe(happinessLevel(G, realm.owner));
-      expect(realm.tier).toBe(unrestStatus(G, realm.owner).tier);
+      expect(realm.tokens).toBe(unrestOutcome(G, realm.owner).tokens);
       expect(realm.riot ?? "none").toBe(unrestOutcome(G, realm.owner).tier);
     }
     expect(model.realms.find((r) => r.owner === "2")!.riot).not.toBeNull();
+    const held = model.tiles.find((t) => t.settlements.some((s) => s.owner === "2"))!;
+    expect(held.labels.political).toContain("holds 9 Unrest tokens");
 
     // The rioting realm's cities burn torches and smoke; the others' hearths smoke.
     const layout = layoutMap(model, G.seed);

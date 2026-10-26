@@ -15,7 +15,7 @@ import {
   Vector3,
 } from "three";
 import { H_TILE } from "./camera";
-import { ART_SEED, FIELD_SHAPES, rng } from "./layout";
+import { ART_SEED, FIELD_SHAPES, POLE_TOP, rng } from "./layout";
 import type { ModelName, Town } from "./layout";
 import type { MaterialName } from "./palette";
 
@@ -262,6 +262,20 @@ function template(build: (add: Add) => void): Template {
 
 // ---- the parts the models share ---------------------------------------------------
 
+/** A town's flagpole, from `foot` up to its top. */
+function pole(
+  add: Add,
+  mat: MaterialName,
+  top: { x: number; y: number; z: number },
+  foot: number,
+  r: number,
+) {
+  add(mat, part.cyl(r * 0.8, r, top.y - foot, 5), top.x, foot, top.z, quiet);
+}
+
+/** A rectangular flag hanging from its hoist's top corner, at the origin. */
+const standard = (l: number, h: number) => part.box(l, h, 0.012).translate(l / 2, -h, 0);
+
 function temple(add: Add, x: number, y: number, z: number, k: number) {
   add("stone", part.box(0.27 * k, 0.016 * k, 0.19 * k), x, y, z);
   add("marble", part.box(0.24 * k, 0.028 * k, 0.16 * k), x, y + 0.016 * k, z);
@@ -417,11 +431,11 @@ export function createTemplates(): Record<ModelName, Template> {
       house(add, -0.34, 0.2, 0.5, 0.07, 0.06, "clay", 0.07);
       house(add, 0.34, 0.2, -0.5, 0.07, 0.06, "clay", 0.07);
       house(add, -0.31, -0.24, 0.9, 0.065, 0.055, "clay", 0.07);
-      add("bronze", part.cyl(0.006, 0.007, 0.32, 5), 0.21, 0.16, 0.1, quiet);
+      pole(add, "bronze", POLE_TOP.capital, 0.16, 0.009);
     }),
-    capitalFlag: template((add) => {
-      add("owner", part.box(0.1, 0.055, 0.008).translate(0.05, 0, 0), 0.21, 0.42, 0.1);
-    }),
+    // The flags, in world units from their pole's top (see `POLE_TOP`): the capital's
+    // standard is the city's, larger; a colony flies a pennant.
+    capitalFlag: template((add) => add("owner", standard(0.34, 0.21))),
     // A city: stone walls and marble towers round its houses and hall.
     city: template((add) => {
       const R = 0.33;
@@ -442,11 +456,9 @@ export function createTemplates(): Record<ModelName, Template> {
       house(add, 0.15, 0.1, 0.35, 0.09, 0.075);
       add("marble", part.box(0.12, 0.11, 0.1), 0, 0, -0.01);
       add("clay", part.gable(0.13, 0.12, 0.055), 0, 0.11, -0.01);
-      add("bronze", part.cyl(0.005, 0.006, 0.13, 5), -R, 0.16, 0, quiet);
+      pole(add, "bronze", POLE_TOP.city, 0.16, 0.008);
     }),
-    cityFlag: template((add) => {
-      add("owner", part.box(0.075, 0.042, 0.007).translate(0.0375, 0, 0), -0.33, 0.245, 0);
-    }),
+    cityFlag: template((add) => add("owner", standard(0.24, 0.15))),
     // A colony: timber-roofed houses behind a bark palisade.
     colony: template((add) => {
       house(add, -0.05, -0.02, 0.25, 0.13, 0.1, "timber");
@@ -456,11 +468,9 @@ export function createTemplates(): Record<ModelName, Template> {
         const stake = part.cyl(0.011, 0.013, 0.085, 5);
         add("bark", stake, 0.22 * Math.cos(a), 0, -0.03 + 0.22 * Math.sin(a), quiet);
       }
-      add("bark", part.cyl(0.007, 0.008, 0.3, 5), 0.13, 0, -0.12, quiet);
+      pole(add, "bark", POLE_TOP.colony, 0, 0.009);
     }),
-    colonyFlag: template((add) => {
-      add("owner", part.pennant(0.1, 0.06), 0.137, 0.235, -0.12);
-    }),
+    colonyFlag: template((add) => add("owner", part.pennant(0.24, 0.15).translate(0, -0.15, 0))),
     // The buildings, each fronting on +z: the lane it stands on.
     temple: template((add) => temple(add, 0, 0, 0, 1)),
     granary: template((add) => {

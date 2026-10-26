@@ -1,10 +1,9 @@
 import { Fragment, memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { sign } from "../../../ui/frameFormat";
-import { hexDistance } from "../../../game/mapTopology";
-import type { HegemonyState } from "../../../game/types";
-import { RESOURCE_LABELS, formatNumber } from "../../../ui/formatters";
-import { BUILDING_RASTERS, RESOURCE_RASTERS, UNREST_TIER_RASTERS } from "../../../ui/iconRegistry";
+import type { HegemonyState, PlayerId } from "../../../game/types";
+import { RESOURCE_LABELS } from "../../../ui/formatters";
+import { BUILDING_RASTERS, LUXURY_GOOD_RASTERS, RESOURCE_RASTERS } from "../../../ui/iconRegistry";
 import { rasterIcon } from "../../../ui/icons/placeholders";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
@@ -46,6 +45,9 @@ type BoardProps = {
 };
 
 const icon = (path: string) => <img alt="" src={rasterIcon(path)} />;
+/** A flat mark's disc in its owner's colour; without an owner it stays plain. */
+const own = (owner: PlayerId | null) =>
+  owner ? ({ "--own": PLAYER_GLAZES[owner].color } as CSSProperties) : undefined;
 
 /** A settlement's slots as pips: built, worked by a slave, or open. */
 function Pips({ built, worked, slots }: { built: number; worked: number; slots: number }) {
@@ -158,31 +160,34 @@ function Badges({
   });
 }
 
-/** Economy's cards on a settled tile: compact (what its slots make, and the slots)
- *  far and middle; full close in (the settlement's net a turn, as its ledger prints
- *  it, and its buildings). Two colonies sharing the tile share the card, a row each,
- *  so it keeps to its hex. */
+/** Economy's slot readout, "output / free": what the worked slots make a turn, signed,
+ *  and the slots neither built on nor worked. */
+function Readout({ output, free }: { output: number; free: number }) {
+  return (
+    <span className="rd">
+      {sign(output)} / {free}
+    </span>
+  );
+}
+
+/** Economy's cards on a settled tile: compact (the slot readout) far and middle; full
+ *  close in (the readout, the settlement's net a turn as its ledger prints it, and its
+ *  buildings). Two colonies sharing the tile share the card, a row each, so it keeps to
+ *  its hex. */
 function EcoCards({ tile }: { tile: MapTile }) {
-  const makes = (s: MapSettlement) =>
-    tile.resource ? (
-      <>
-        {icon(RESOURCE_RASTERS[tile.resource])}+{formatNumber(s.worksFor)}
-      </>
-    ) : (
-      <em>no yield</em>
-    );
+  const slots = (s: MapSettlement) => (
+    <span className="row">
+      {tile.resource ? icon(RESOURCE_RASTERS[tile.resource]) : null}
+      <Readout free={s.open} output={s.worksFor} />
+    </span>
+  );
   return (
     <>
       <div className="lm-eco compact" data-alpha="ecoC" data-wx={tile.x} data-wy={tile.y + 0.05}>
         {tile.settlements.map((s, i) => (
           <Fragment key={s.id}>
             {i ? <hr /> : null}
-            <span className="row">
-              {makes(s)}
-              <span className="pips">
-                <Pips built={s.built} slots={s.slots} worked={s.worked} />
-              </span>
-            </span>
+            {slots(s)}
           </Fragment>
         ))}
       </div>
@@ -193,9 +198,7 @@ function EcoCards({ tile }: { tile: MapTile }) {
             <Fragment key={s.id}>
               {i ? <hr /> : null}
               <span className="en">{s.name}</span>
-              <span className="pips">
-                <Pips built={s.built} slots={s.slots} worked={s.worked} />
-              </span>
+              {slots(s)}
               {net.length ? (
                 <span className="row">
                   {net.map((k) => (
@@ -221,7 +224,7 @@ function EcoCards({ tile }: { tile: MapTile }) {
   );
 }
 
-/** Economy's card on an open tile: its slots, and what a slave would make there. */
+/** Economy's card on an open tile: what a slave would make there, and its slots. */
 function EcoEmpty({ tile, dimmed }: { tile: MapTile; dimmed: boolean }) {
   const oracle = tile.terrain === "oracle";
   return (
@@ -236,16 +239,15 @@ function EcoEmpty({ tile, dimmed }: { tile: MapTile; dimmed: boolean }) {
       ) : (
         <>
           {tile.resource && tile.perSlave ? icon(RESOURCE_RASTERS[tile.resource]) : null}
-          {tile.slots} slots
-          {tile.resource && tile.perSlave ? null : <em>no yield</em>}
+          <Readout free={tile.slots} output={0} />
         </>
       )}
     </div>
   );
 }
 
-/** What each realm shows over its land: its name (Political), its level and tier
- *  (Unrest), its riot over each burning city and its titles (the events, in Terrain). */
+/** What each realm shows over its land: its name (Political), its riot over each
+ *  burning city and its titles (the events, in Terrain). */
 function RealmLabels({ model, layout }: { model: MapModel; layout: Layout }) {
   return model.realms.flatMap((realm: MapRealm) => {
     const tiles = model.tiles.filter((t) => t.settlements.some((s) => s.owner === realm.owner));
@@ -253,10 +255,8 @@ function RealmLabels({ model, layout }: { model: MapModel; layout: Layout }) {
       t.settlements.some((s) => s.owner === realm.owner && s.capital),
     );
     if (!tiles.length) return [];
-    // The name sits over the capital's own stretch of land: the tiles joined to it.
-    const home = [capital ?? tiles[0]];
-    for (const t of home)
-      for (const n of tiles) if (!home.includes(n) && hexDistance(n, t) === 1) home.push(n);
+    // The name hangs under its capital's seal.
+    const home = capital ?? tiles[0];
     const seat = PLAYER_GLAZES[realm.owner];
     const { cities, colonies } = realm.census;
     const at = (t: { x: number; y: number }, h: number) => ({
@@ -268,8 +268,8 @@ function RealmLabels({ model, layout }: { model: MapModel; layout: Layout }) {
       <div
         className="lm-realm"
         data-alpha="realm"
-        data-wx={home.reduce((n, t) => n + t.x, 0) / home.length}
-        data-wy={home.reduce((n, t) => n + t.y, 0) / home.length}
+        data-wx={home.x}
+        data-wy={home.y + 0.3}
         key={`realm-${realm.owner}`}
       >
         <b>{seat.name.toUpperCase()}</b>
@@ -278,27 +278,6 @@ function RealmLabels({ model, layout }: { model: MapModel; layout: Layout }) {
           {colonies === 1 ? "colony" : "colonies"}
         </small>
       </div>,
-      capital ? (
-        <div
-          className="lm-chip"
-          data-alpha="unrest"
-          data-tier={realm.tier}
-          {...at(capital, 0.95)}
-          key={`unrest-${realm.owner}`}
-        >
-          {icon(
-            realm.tier === "calm" ? RESOURCE_RASTERS.happiness : UNREST_TIER_RASTERS[realm.tier],
-          )}
-          {seat.name} {sign(realm.happiness)}
-          {/* At the riot or revolt line, the chip says what ending the turn sets off. */}
-          <small>
-            · {realm.riot ?? realm.tier}
-            {realm.tokens
-              ? ` · ${realm.tokens} Unrest ${realm.tokens === 1 ? "token" : "tokens"}`
-              : ""}
-          </small>
-        </div>
-      ) : null,
       capital && realm.titles ? (
         <div
           className="lm-chip"
@@ -327,23 +306,78 @@ function RealmLabels({ model, layout }: { model: MapModel; layout: Layout }) {
   });
 }
 
-/** Trade's chip over each Port: the good it holds. */
+/**
+ * Political's flat marks, upright to the camera in place of the 3D models: each
+ * settlement's icon on its owner's colour, its realm's Unrest tokens beside it when it
+ * holds any; each Port's icon; and the Oracle's on a plain disc.
+ */
+function Seals({ model, towns }: { model: MapModel; towns: Town[] }) {
+  const tokens = new Map(model.realms.map((realm) => [realm.owner, realm.tokens]));
+  const settlements = new Map(model.tiles.flatMap((t) => t.settlements.map((s) => [s.id, s])));
+  const seal = (kind: string, at: { x: number; z: number }) => ({
+    className: `lm-disc seal ${kind}`,
+    "data-alpha": "seal",
+    "data-wh": H_TILE,
+    "data-wx": at.x,
+    "data-wy": at.z,
+  });
+  return (
+    <>
+      {towns.map((town) => {
+        const s = settlements.get(town.settlementId)!;
+        const kind = s.capital ? "capital" : s.kind;
+        const held = tokens.get(s.owner) ?? 0;
+        const port = town.sites.find((site) => site.building === "port");
+        return (
+          <Fragment key={`seal-${town.settlementId}`}>
+            <div {...seal(kind, town.centre)} style={own(s.owner)}>
+              {icon(`settlements/${kind}`)}
+              {held ? (
+                <span className="lm-tokens">
+                  {icon("unrest/unrest")}
+                  {held}
+                </span>
+              ) : null}
+            </div>
+            {port ? (
+              <div {...seal("port", port)} style={own(s.owner)}>
+                {icon(BUILDING_RASTERS.port)}
+              </div>
+            ) : null}
+          </Fragment>
+        );
+      })}
+      {model.tiles
+        .filter((t) => t.terrain === "oracle")
+        .map((t) => (
+          <div {...seal("oracle", { x: t.x, z: t.y - 0.08 })} key={`seal-${t.id}`}>
+            {icon("terrain/oracle")}
+          </div>
+        ))}
+    </>
+  );
+}
+
+/** Trade's chip on each Port: the good it holds. It hangs off the Port away from the
+ *  good, whose disc it would cover. */
 function PortChips({ towns, model }: { towns: Town[]; model: MapModel }) {
   return towns.flatMap((town) =>
     town.sites
       .filter((site) => site.building === "port")
       .map((site) => {
         const good = model.moorings.find((m) => m.claimedBy === town.settlementId);
+        const below = good ? good.y < site.z : false;
         return (
           <div
             className="lm-chip"
             data-alpha="port"
-            data-wh={H_TILE + 0.3}
+            data-hang={below ? "down" : undefined}
+            data-wh={below ? H_TILE : H_TILE + 0.3}
             data-wx={site.x}
             data-wy={site.z}
             key={`port-${town.settlementId}`}
           >
-            {icon("resources/luxury")}
+            {icon(good ? LUXURY_GOOD_RASTERS[good.goodId] : BUILDING_RASTERS.port)}
             {good ? `Port · ${good.name}` : "Port"}
           </div>
         );
@@ -435,8 +469,11 @@ function LivingMap({
       className="living-map"
       onClick={(event) => {
         // A drag that ends on the sea is a pan; a click on a tile or a good is theirs.
-        if (dragged() || (event.target as Element).closest("[data-tile-id], .lm-moor")) return;
-        const raft = runtime.current?.pickMooring(event.clientX, event.clientY);
+        const target = event.target as Element;
+        if (dragged() || target.closest("[data-tile-id], .lm-moor")) return;
+        const raft =
+          target.closest<HTMLElement>("[data-good]")?.dataset.good ??
+          runtime.current?.pickMooring(event.clientX, event.clientY);
         if (raft) onMooringAction?.(raft);
         else onBackgroundAction?.();
       }}
@@ -445,7 +482,7 @@ function LivingMap({
       tabIndex={0}
     >
       <p className="visuallyHidden" id="lm-help">
-        Drag to pan. Wheel or pinch to zoom toward the pointer. Keys 1 to 5 switch the map mode. Q
+        Drag to pan. Wheel or pinch to zoom toward the pointer. Keys 1 to 4 switch the map mode. Q
         and E turn the map up to 15° either way. With the map focused, arrows pan, + and − zoom, 0
         returns to the opening view. Tab once more to walk the tiles with the arrow keys; Enter
         picks one.
@@ -523,6 +560,22 @@ function LivingMap({
           );
         })}
         <RealmLabels layout={layout} model={model} />
+        <Seals model={model} towns={layout.towns} />
+        {/* Trade's goods, flat in place of their rafts: a disc picks its good too. */}
+        {model.moorings.map((m) => (
+          <div
+            className="lm-disc good"
+            data-alpha="goodicon"
+            data-good={m.vertexId}
+            data-wh="0.05"
+            data-wx={m.x}
+            data-wy={m.y}
+            key={`good-${m.vertexId}`}
+            style={own(m.owner)}
+          >
+            {icon(LUXURY_GOOD_RASTERS[m.goodId])}
+          </div>
+        ))}
         <PortChips model={model} towns={layout.towns} />
         <Badges model={model} selected={selectedTileId} towns={layout.towns} />
         {layout.ships.map((ship, i) => (

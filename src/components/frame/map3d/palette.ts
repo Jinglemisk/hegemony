@@ -1,5 +1,4 @@
 import type { PlayerId, Terrain } from "../../../game/types";
-import type { UnrestTier } from "../../../game/unrest";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 
 /**
@@ -28,16 +27,6 @@ export const VAPOUR = 0xf6f1e6;
 export const SMOKE = { hearth: 0xe6ddcc, riot: 0x3f3832 };
 /** A trade ship's dotted route. */
 export const TRADE_ROUTE = 0xf2d28a;
-
-/** The Unrest mode's wash: each settled tile takes its realm's tier (`unrestStatus`);
- *  an open tile is bone, lightened toward `OPEN`. */
-export const TIER: Record<UnrestTier, number> = {
-  calm: 0xe3d8bd,
-  discontent: 0xd9b48b,
-  unrest: 0xc66a45,
-  revolt: 0x7a3218,
-};
-export const OPEN = 0xf6efe0;
 
 export const SEA = {
   lit: 0x2e8a9a,

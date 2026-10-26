@@ -92,7 +92,7 @@ The 3D map's own open calls are [Q83](../questions.md).
 them:
 
 - **The board is a fixed frame.** _Superseded 2026-10-26: the 3D map pans, zooms, turns
-  and has five map modes. A popover pinned to a tile closes when the view moves, which
+  and has four map modes. A popover pinned to a tile closes when the view moves, which
   answers the worry below._ No pan, no zoom, no map modes. The island is 37
   hexes meant to be seen at once, and a board you can drag is a board no other
   surface can point at. It re-fits on resize into the sea the chrome does not

@@ -154,13 +154,11 @@ export function stepCamera(cam: Cam, goal: Goal, frame: Frame, reach: number, ra
  *  chip needs about this much room. A narrow fade, so no opening view sits mid-way. */
 const ROOM_LO = 56;
 const ROOM_HI = 64;
-/** Hexes drawn narrower than this keep Economy's compact chips to the icon and the
- *  number: with their slots' pips, neighbours' chips run into each other. */
-const ECO_LO = 96;
-const ECO_HI = 104;
 
 /** Every layer and label kind, unseen: each mode shows what it names. */
 const NO_LAYERS = {
+  towns: 0,
+  goods: 0,
   landmark: 0,
   landmarkVapour: 0,
   slots: 0,
@@ -190,7 +188,8 @@ const NO_HTML = {
   ecoC: 0,
   ecoF: 0,
   ecoE: 0,
-  unrest: 0,
+  seal: 0,
+  goodicon: 0,
   port: 0,
   building: 0,
 };
@@ -200,13 +199,13 @@ const NO_HTML = {
  * hangs on. `html` drives the overlay through `--a-<key>` variables, `layers` the 3D
  * layers' opacity. In Terrain, far: the owner wash and each tile's numeral; middle:
  * names, slots and yield chips; close: the living detail. The other modes are the
- * prototype's: Political the realms alone, Economy the yield cards over dimmed land,
- * Unrest the realms' levels, Trade the Ports, goods and ships.
+ * prototype's: Political the realms, their settlements flat and upright in place of the
+ * town models; Economy the yield cards over dimmed land; Trade the Ports, the goods (flat
+ * too) and the ships.
  *
  * `hexPx` is a hex's drawn width. Where hexes are small (a phone), the middle
  * band's labels would crowd them, so the overlay keeps the far band's labels (the
- * numerals) and the capitals' plates until the hexes have room. Economy's chips need
- * more: they keep their pips only where the hexes are drawn wider (`pips`).
+ * numerals) and the capitals' plates until the hexes have room.
  */
 export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain") {
   const mid = smooth(E1 - BW, E1 + BW, t);
@@ -217,6 +216,8 @@ export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain
   const names = smooth(T_FIT + 0.02, T_FIT + 0.1, t);
   const layers: Record<MapMode, Record<string, number>> = {
     terrain: {
+      towns: 1,
+      goods: 1,
       landmark: close,
       landmarkVapour: close,
       slots: mid,
@@ -231,9 +232,11 @@ export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain
       events: 1,
       tradeRoutes: 0,
     },
-    political: NO_LAYERS,
+    political: { ...NO_LAYERS, goods: 1 },
     economy: {
       ...NO_LAYERS,
+      towns: 1,
+      goods: 1,
       landmark: close,
       landmarkVapour: close,
       slots: 1,
@@ -242,8 +245,15 @@ export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain
       pops: close * 0.3,
       ports: 1,
     },
-    unrest: { ...NO_LAYERS, events: 1 },
-    trade: { ...NO_LAYERS, passengers: 1, lifeShips: 1, ports: 1, moves: 1, tradeRoutes: 1 },
+    trade: {
+      ...NO_LAYERS,
+      towns: 1,
+      passengers: 1,
+      lifeShips: 1,
+      ports: 1,
+      moves: 1,
+      tradeRoutes: 1,
+    },
   };
   const html: Record<MapMode, Record<string, number>> = {
     terrain: {
@@ -259,19 +269,26 @@ export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain
       ship: mid * room,
       event: mid,
     },
-    political: { ...NO_HTML, realm: 1 },
+    political: { ...NO_HTML, realm: 1, seal: 1 },
     economy: {
       ...NO_HTML,
       ecoC: 1 - close,
-      pips: smooth(ECO_LO, ECO_HI, hexPx),
       ecoF: close,
       ecoE: 1,
       goodname: mid * room,
       building: close,
     },
-    unrest: { ...NO_HTML, plates: 1, cityplate: room, colony: names * room, unrest: 1 },
     // A held good's Port chip names it beside its raft: its own name would sit on the chip.
-    trade: { ...NO_HTML, plates: 1, cityplate: room, goodname: 1, heldgood: 0, ship: 1, port: 1 },
+    trade: {
+      ...NO_HTML,
+      plates: 1,
+      cityplate: room,
+      goodname: 1,
+      heldgood: 0,
+      goodicon: 1,
+      ship: 1,
+      port: 1,
+    },
   };
   return { mid, close, layers: layers[mode], html: html[mode] };
 }

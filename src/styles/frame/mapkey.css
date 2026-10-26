@@ -57,23 +57,25 @@
   width: 70%;
   border-top: var(--rule-2) dotted var(--route);
 }
-/* The slot pips, as the map draws them. */
-.map-key .pips {
-  display: flex;
-  gap: 2px;
-  align-items: center;
-}
-.map-key .pips i {
-  display: block;
-  width: 0.62em;
-  height: 0.62em;
+/* A flat mark, as Political and Trade draw it: an icon on its owner's colour. */
+.map-key-disc {
+  display: grid;
+  place-items: center;
+  width: var(--s-6);
+  height: var(--s-6);
   border-radius: var(--r-round);
-  border: 1.5px solid var(--ink);
+  background: var(--own, var(--ivory));
+  border: var(--rule) solid var(--ink);
 }
-.map-key .pips i.b {
-  background: var(--ink);
-  border-radius: 1px;
-}
-.map-key .pips i.w {
-  background: var(--ink-45);
+/* Economy's slot readout, as the map's cards print it. */
+.map-key-readout {
+  padding: 0 3px;
+  font-family: var(--f-sans);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink);
+  background: var(--map-card);
+  border: var(--rule) solid var(--ink);
+  border-radius: 2px;
+  white-space: nowrap;
 }

@@ -6,6 +6,7 @@ import type {
   BuildingId,
   EventEffect,
   EventTableId,
+  LuxuryGoodId,
   PopType,
   Stat,
   SettlementKind,
@@ -283,8 +284,20 @@ export const RESOURCE_RASTERS = {
   happiness: "resources/happiness",
 } as const satisfies Record<Stat, string>;
 
-/** Every luxury good wears the one picture. */
+/** Luxury goods as a kind wear the one picture. */
 export const LUXURY_RASTER = "resources/luxury";
+
+/** Each good's own picture, on the map's Trade mode and its key. Hand-drawn placeholder
+ *  glyphs until the bronze set draws them at these paths. */
+export const LUXURY_GOOD_RASTERS = {
+  "tyrian-dye": "resources/luxury/tyrian-dye",
+  pearls: "resources/luxury/pearls",
+  coral: "resources/luxury/coral",
+  glassware: "resources/luxury/glassware",
+  incense: "resources/luxury/incense",
+  "fine-linen": "resources/luxury/fine-linen",
+  silphium: "resources/luxury/silphium",
+} as const satisfies Record<LuxuryGoodId, string>;
 
 /** The unrest disc's tier; a calm realm shows none. */
 export const UNREST_TIER_RASTERS = {
@@ -356,6 +369,7 @@ export const ACTIVE_EFFECT_MECHANIC_RASTERS = {
 export const RASTER_REGISTRY_FAMILIES = {
   resource: RESOURCE_RASTERS,
   luxury: { good: LUXURY_RASTER },
+  luxuryGood: LUXURY_GOOD_RASTERS,
   unrestTier: UNREST_TIER_RASTERS,
   pop: POP_RASTERS,
   building: BUILDING_RASTERS,

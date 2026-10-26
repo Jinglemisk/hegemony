@@ -19,4 +19,5 @@ Wiring: `src/ui/icons/placeholders.ts` maps a glyph id (or a concept the glyph
 set does not distinguish) to a file here; `Icon` renders the raster when one is
 mapped and the vector glyph otherwise.
 
-104 files.
+104 files, and seven more that are not Imperator's: `resources/luxury/<good-id>.svg`,
+simple hand-drawn glyphs for the luxury goods until the bronze set draws them.

@@ -46,16 +46,21 @@ you zoom in: flat far out, 20° at the opening view, 45° close in.
 
 Detail comes in with the zoom. Far out you see each tile's owner colour and slots; in the
 middle, names, slots and yield chips; close in, buildings, fields, trees, rocks and a figure
-for every pop.
+for every pop. Every settlement flies its owner's flag: a colony a pennant, a city a
+rectangular standard, and the capital a larger standard on a taller pole, so it reads first
+from far out.
 
-Keys **1** to **5** switch the map mode:
+Keys **1** to **4** switch the map mode:
 
 1. **Terrain** — the whole board, as above.
-2. **Political** — each tile in its owner's colour, and the realms' names.
-3. **Economy** — what every settlement makes and eats a turn, its slots and its buildings.
-4. **Unrest** — each realm's happiness, its tier at the riot and revolt lines, and its
-   Unrest tokens.
-5. **Trade** — Ports, claimed and open goods, ship routes and pops on the move.
+2. **Political** — each tile in its owner's colour and the realms' names. The towns, Ports
+   and the Oracle are flat icons; each settlement's sits on its owner's colour, with its
+   realm's Unrest tokens and their count beside it when the realm holds any.
+3. **Economy** — each settlement's slots as **output / free**: what its worked slots make a
+   turn, and how many slots are neither built on nor worked. An open tile with 3 slots reads
+   "0 / 3". Close in, what each settlement makes and eats a turn, and its buildings.
+4. **Trade** — each luxury good as its own icon, on its holder's colour or a plain disc
+   while unclaimed; Ports, ship routes and pops on the move.
 
 Hover a tile for its tooltip; click it and the realm sheet shows it. Click the sea to return
 to your realm. Each luxury good floats on a raft off the coast with its name and its holder's
@@ -63,7 +68,7 @@ mark, or "unclaimed"; click it to read it. When an action asks for a tile, the t
 take are ringed and the rest dim. With the keyboard, Tab onto the tiles, walk them with the
 arrow keys and press Enter to pick one.
 
-**The corner dock** sits at the bottom right. Its bottom row holds the five mode buttons, and
+**The corner dock** sits at the bottom right. Its bottom row holds the four mode buttons, and
 End turn spans the two bottom rows on the right. Above the mode buttons is the newest line of
 the **Chronicle**, the game's log: press it to open the whole Chronicle upward, and press it
 again or Escape to close it. The top row is the **map key**, shut until you press it; open, it
