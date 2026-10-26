@@ -14,12 +14,13 @@ The [code-health plan](plans/code-health.md)'s five cleanup PRs are merged. v2, 
 shallow-economy rules in the Hybrid arc shell, merged into `main` on 2026-10-18 (#121); its
 [plan](archive/plans/v2-migration.md) is archived.
 
-**Owner blockers:** none. On 2026-10-24 the owner set base income to 0 and asked for three
-specs: [board modes](plans/board-modes.md), [recurring deals](plans/recurring-deals.md) and
+**Owner blockers:** [Q84](questions.md), two balance-check rules: a hunger limit, and the
+stock ratio. On 2026-10-24 the owner set base income to 0 and asked for three specs:
+[board modes](plans/board-modes.md), [recurring deals](plans/recurring-deals.md) and
 [game settings](plans/game-settings.md). On 2026-10-25 the owner set the shape of
 [the balance check](plans/player-trade.md#the-balance-check) (Q80). Its
 [first report](reports/simulation/2026-10-26-balance-check.md): the stock ratio fails on every
-table, Beloved within noise, and win rates sit in range; it ends with five open points.
+table, Beloved within noise, and win rates sit in range.
 
 **Next (owner, 2026-10-25), in waves of at most three agents with an owner checkpoint after
 each:**

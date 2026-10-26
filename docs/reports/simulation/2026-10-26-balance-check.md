@@ -148,23 +148,23 @@ table riots about as often as v1 did; the masters tables riot less.
 
 ## Open points for the owner
 
+Both are [Q84](../../questions.md):
+
 1. **Hunger has no limit in any plan.** It is recorded only. The trader's 5.36 pops a seat-game
-   is the largest figure in the check. A limit, or a call that it is a bot matter, is the
-   owner's.
-2. **The stock-ratio rule fails on every table by how it is defined.** Options:
-   - keep it as written;
-   - measure pops instead (1.6× and 2.2× here);
-   - drop it and keep the year-5 rule alone.
-3. **When the year-5 leader is read.** The rule reads each seat after its own year-5 turn. The
-   year's last seat is read after the next year card is turned, so its income already carries
-   that card. Read at the start of each seat's turn instead, the leader wins 32% on Continental
-   (37% after), 43% on Archipelago (42%) and 26% on the mixed table (25%). On these batches the
-   timing moves no verdict. On the 40-game batch of
-   [2026-10-25](2026-10-25-archipelago-batches.md) it moved Continental from 50% to 65%.
-4. **The development-deck plan's wording.** It says the balance check "runs after both plans",
-   while the control plane (owner, 2026-10-25) runs it before the deck. Left unchanged here.
-5. **Legibility** is the one rule not checked: it needs a desk recount against the paper's
-   section 5.11.
+   is the largest figure in the check. A limit, or a call that it is a bot matter, is Q84 (a).
+2. **The stock-ratio rule fails on every table by how it is defined.** Keep it, measure pops
+   instead (1.6× and 2.2× here), or drop it: Q84 (b).
+
+## Other findings
+
+- **When the year-5 leader is read moves no verdict.** The rule reads each seat after its own
+  year-5 turn. The year's last seat is read after the next year card is turned, so its income
+  already carries that card. Read at the start of each seat's turn instead, the leader wins 32%
+  on Continental (37% after), 43% on Archipelago (42%) and 26% on the mixed table (25%). On the
+  40-game batch of [2026-10-25](2026-10-25-archipelago-batches.md) it moved Continental from 50%
+  to 65%.
+- **Legibility** is the one rule not checked: it needs a desk recount against the paper's section
+  5.11, a to-do in the [plan](../../plans/player-trade.md#the-balance-check).
 
 ## Earlier figures: Q80's same-policy batches
 

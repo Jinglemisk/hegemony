@@ -246,6 +246,10 @@ node docs/reports/simulation/2026-10-26-balance-check/tools/check.mjs <report> [
 The audit showed the first draft of these rules could not measure what they asked: a
 linear influence pile passed, and no card could meet the draw rule.
 
+**Still to do.** The legibility recount, which the first run did not do: count the reads per
+decision in the paper's section 5.11 against the built game. The hunger limit and the stock
+ratio wait for [Q84](../questions.md#q84--two-balance-check-rules-a-hunger-limit-and-the-stock-ratio).
+
 ## Three-axis parity
 
 | Axis             | Applies? | Required representation and proof                                                                                                                                                                                                                                                                       |
