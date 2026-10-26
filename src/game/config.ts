@@ -9,16 +9,14 @@ export const GAME_CONFIG = {
   // Which game mode a new game starts in (see GAME_MODES). The seam a future mode
   // picker plugs into; the scripted preload only fits the two-city "standard".
   mode: "standard" as GameModeId,
-  // "continental" = seeded random layout (owner call 2026-07-18: the board should vary
-  // each game — the oracle and landmarks land wherever the shuffle drops them);
-  // "archipelago" = seeded islands in groups (board-modes plan);
-  // "scenario" = the authored fixed board. The UI overrides via ?board=, and
-  // ?dev=preload always forces scenario (its scripted opening is tied to fixed tiles).
-  // NOTE: the shuffle is still UNCONSTRAINED — landmarks can cluster and seats can be
-  // uneven; the constrained shuffle (landmarks non-adjacent, breadbasket off-rim, fair
-  // seats) is the deferred proper version. Sims default to continental too; the shuffle
-  // is seeded, so a batch stays reproducible.
-  boardLayout: "continental" as BoardLayout,
+  // "archipelago" = seeded islands in groups (board-modes plan), the default since the
+  // owner's call of 2026-10-26; "continental" = one seeded random landmass (owner call
+  // 2026-07-18: the board should vary each game — the oracle and landmarks land wherever
+  // the shuffle drops them); "scenario" = the authored fixed board. The UI overrides via
+  // ?board=, and ?dev=preload always forces scenario (its scripted opening is tied to
+  // fixed tiles). Sims keep their own default, continental; both boards are seeded, so a
+  // batch stays reproducible.
+  boardLayout: "archipelago" as BoardLayout,
   // Dev testing default: auto-play the opening with the sim's placement policy so a
   // reload lands straight in a sanely placed game. ?setup=manual restores hand
   // placement; ?opening=random restores the old uniform draw.

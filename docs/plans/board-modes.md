@@ -10,9 +10,10 @@ updated: 2026-10-26
 
 A game is played on one of two boards, chosen before setup:
 
-- **Continental**: one landmass. This is today's shuffled board, renamed, and the default.
+- **Continental**: one landmass. This is the old shuffled board, renamed.
 - **Archipelago**: islands and groups of islands with sea between them. The sea changes where
-  a seat can settle, who it can reach and what it has to trade for.
+  a seat can settle, who it can reach and what it has to trade for. The game's default board
+  since 2026-10-26 (owner); the sim keeps Continental as its default.
 
 ## Non-goals
 
