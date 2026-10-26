@@ -1,0 +1,9 @@
+20:57:24 code d2a5e34
+20:57:24 start continental-masters-60: --board continental --games 60 --policy master --without-ideas all
+21:23:36 code d2a5e34, efficiency cores, 4 workers
+21:23:36 start continental-masters-60: --board continental --games 60 --policy master --without-ideas all
+22:14:25 done continental-masters-60
+22:14:25 start archipelago-masters-60: --board archipelago --games 60 --policy master --without-ideas all
+23:15:53 done archipelago-masters-60
+23:15:53 start continental-mixed-160: --board continental --games 40 --seats slaver,civic,trader,master --rotate
+03:39:43 done continental-mixed-160

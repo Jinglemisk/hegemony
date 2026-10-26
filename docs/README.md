@@ -17,8 +17,9 @@ shallow-economy rules in the Hybrid arc shell, merged into `main` on 2026-10-18 
 **Owner blockers:** none. On 2026-10-24 the owner set base income to 0 and asked for three
 specs: [board modes](plans/board-modes.md), [recurring deals](plans/recurring-deals.md) and
 [game settings](plans/game-settings.md). On 2026-10-25 the owner set the shape of
-[the balance check](plans/player-trade.md#the-balance-check) (Q80); its script is ready and
-its three batches wait for the owner's run.
+[the balance check](plans/player-trade.md#the-balance-check) (Q80). Its
+[first report](reports/simulation/2026-10-26-balance-check.md): the stock ratio fails on every
+table, Beloved within noise, and win rates sit in range; it ends with five open points.
 
 **Next (owner, 2026-10-25), in waves of at most three agents with an owner checkpoint after
 each:**

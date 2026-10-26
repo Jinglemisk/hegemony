@@ -278,7 +278,7 @@ function check(batch) {
   {
     const d = rep.drawSwingSummary.total;
     add('Draws: swing against what the seat collected', 'report only', 'pct', NaN, null, games.length, 'record',
-      `resource cards ${thousands(d.resourceCards)}: median ${pct(d.collectedRatio.median)}, p90 ${pct(d.collectedRatio.p90)}; pop cards ${d.popCards}, token cards ${d.tokenCards}, unchanged ${d.unchanged} of ${thousands(d.draws)} draws`);
+      `resource cards ${thousands(d.resourceCards)}: median ${pct(d.collectedRatio.median)}, p90 ${pct(d.collectedRatio.p90)}; pop cards ${thousands(d.popCards)}, token cards ${d.tokenCards}, unchanged ${d.unchanged} of ${thousands(d.draws)} draws`);
   }
 
   // Length and endings: fourteen years, the share ending by the race recorded.

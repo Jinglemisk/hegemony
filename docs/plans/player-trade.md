@@ -204,8 +204,8 @@ report says what fails and what might explain it.
 | Four masters, no Ideas                          | Archipelago | 60                          | The same as Continental's masters      |
 
 On the owner's fanless MacBook Air, two workers at normal priority reached 100°C. The batches run
-on the efficiency cores only, through `taskpolicy -b`, with four workers, in about 4.5 hours for
-all three:
+on the efficiency cores only, through `taskpolicy -b`, with four workers, in 6 hours 16 minutes for
+all three on 2026-10-25 ([report](../reports/simulation/2026-10-26-balance-check.md)):
 
 ```bash
 taskpolicy -b node --import tsx src/sim/cli.ts batch --turns 56 --seed 1000 --jobs 4 --board continental --games 60 --policy master --without-ideas all --report <out>.json --csv <out>.csv
