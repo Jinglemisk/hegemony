@@ -56,13 +56,13 @@ function terrainRows(G: HegemonyState): Row[] {
       key: "city",
       mark: icon("settlements/city"),
       name: "City",
-      text: "Stone walls, marble towers, clay roofs, the owner's standard. The capital is an acropolis with a temple, its standard the tallest.",
+      text: "Stone walls, marble towers, clay roofs. The capital is an acropolis with a temple.",
     },
     {
       key: "colony",
       mark: icon("settlements/colony"),
       name: "Colony",
-      text: "Timber-roofed houses, a bark palisade, the owner's pennant.",
+      text: "Timber-roofed houses behind a bark palisade.",
     },
     {
       key: "buildings",
