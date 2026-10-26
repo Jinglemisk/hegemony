@@ -178,8 +178,10 @@ come back the other way, so whoever picked last picks first in the second round:
    never adjacent to another city, with **4 starting pops**: exactly **1 citizen**,
    and 3 more split between freemen and slaves as you choose.
 2. In reverse order, each player places their **founding colony** (2 pops, freemen
-   or slaves) — on **any coastal tile** (the great colonization: your settlers
-   sail), or on a tile beside your metropolis.
+   or slaves) — on a **coastal tile** (the great colonization: your settlers
+   sail), or on a tile beside your metropolis. On the Archipelago the voyage reaches
+   only coastal tiles within 3 hexes of a coastal metropolis; on the continental board
+   it reaches any shore.
 
 Then the game begins. Your metropolis is your only city at the start — your seat of
 building and population; it carries no special bonuses, only its head start. The
@@ -189,9 +191,10 @@ city, your metropolis included, can never be upgraded: only one founded on the o
 coast can become a city. (Some modes change the opening — _deathmatch_ places three
 colonies.)
 
-By default the island is the continental board, shuffled from the game seed, so each game
-has its own layout; start the game with `?board=scenario` in the address bar for the fixed
-authored layout.
+By default the board is the **Archipelago**: islands and groups of islands with sea
+between them, drawn from the game seed, so each game has its own layout. Start the game
+with `?board=continental` in the address bar for one shuffled landmass, or
+`?board=scenario` for the fixed authored layout.
 
 ## Taking a turn
 
@@ -208,9 +211,10 @@ before income. On your turn:
    - **Found a colony** — 4 wood, 1 food and a colony piece. Sends one pop out to
      settle a new tile; that pop moves free. The tile must **border one of your
      settlements** (colonies count, so your frontier chains outward tile by tile) —
-     **or lie on the coast, if you already hold any coastal settlement**: the sea
-     connects every shore, so a coastal power may sail to found colonies anywhere
-     along the rim.
+     **or lie on the coast, if you already hold any coastal settlement**: a coastal
+     power may sail to found colonies. On the Archipelago a sail reaches at most 3
+     hexes from one of your coastal settlements, so you hop from island to island; on
+     the continental board the sea connects every shore.
    - **Upgrade a colony into a city** — 3 wood, 3 stone and a city piece. The
      colony must not stand beside a city: cities are never adjacent. The city
      keeps the colony's pops and buildings, drives off any enemy colony sharing
