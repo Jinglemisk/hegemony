@@ -1,0 +1,77 @@
+
+## continental-masters-60
+
+continental · four masters · 60 games on 60 seeds from 1000 · no Ideas · patch none · 56 turns · 1:2bce9ca1a534e4f4/1:2740cdad5fbc5b8a
+CSV readings match the report's counts.
+
+| Rule | Limit | Measured | 95% interval | Games | Verdict |
+| --- | --- | --- | --- | --- | --- |
+| Riots stay rare: riot turns from year 8 | ≤ 10% | 4% (61 of 1,500 turns; 0 revolts in all) | 3% to 5% | 60 | pass |
+| Influence plateaus: median stock, year 10 to 14 | ≤ +5.0 a year | +4.5 a year (median 16 → 34) | +3.8 to +5.5 | 50 | pass, within noise |
+| Hunger: pops lost a seat-game | none set | 0.48 | 0.35 to 0.64 | 60 | record |
+| Hunger: turns begun short of food | none set | 20% (625 of 3,162) | 19% to 21% | 60 | record |
+| Luxuries do not decide Beloved: holder is sole luxury leader | ≤ 60% of turns held | 62% of 65 turns held (100% counting a tie) | 21% to 98% | 60 | fail, within noise |
+| Leader does not run away: year-5 income leader wins | ≤ 40% | 37% (19 of 51; 8 games with a tied leader left out) | 24% to 50% | 51 | pass, within noise |
+| Leader does not run away: year-10 stock, leader ÷ laggard (median game) | ≤ 2.5× | 5.0× (6 of 55 games at or under 2.5×) | 4.0× to 6.7× | 55 | fail |
+| Draws: swing against what the seat collected | report only | resource cards 2,044: median 22%, p90 50%; pop cards 478, token cards 273, unchanged 362 of 3,162 draws | – | 60 | record |
+| Length: games ending by the race | report only | 17% (race 10, deck 50, turn cap 0); 52.7 turns a game; 24 won on a tiebreak | 8% to 27% | 60 | record |
+| Legibility: reads per decision against the paper's 5.11 | report only | not from a batch | – | – | by hand |
+
+Fails and flags: Luxuries do not decide Beloved: holder is sole luxury leader (fail, within noise); Leader does not run away: year-10 stock, leader ÷ laggard (median game) (fail).
+
+## archipelago-masters-60
+
+archipelago · four masters · 60 games on 60 seeds from 1000 · no Ideas · patch {"placement":{"seaReach":3}} · 56 turns · 1:31428642a5b21c18/1:2740cdad5fbc5b8a
+CSV readings match the report's counts.
+
+| Rule | Limit | Measured | 95% interval | Games | Verdict |
+| --- | --- | --- | --- | --- | --- |
+| Riots stay rare: riot turns from year 8 | ≤ 10% | 5% (80 of 1,535 turns; 0 revolts in all) | 4% to 7% | 60 | pass |
+| Influence plateaus: median stock, year 10 to 14 | ≤ +5.0 a year | +3.1 a year (median 12 → 24.5) | +2.5 to +4.0 | 51 | pass |
+| Hunger: pops lost a seat-game | none set | 0.55 | 0.40 to 0.70 | 60 | record |
+| Hunger: turns begun short of food | none set | 22% (701 of 3,215) | 20% to 23% | 60 | record |
+| Luxuries do not decide Beloved: holder is sole luxury leader | ≤ 60% of turns held | 63% of 174 turns held (97% counting a tie) | 29% to 91% | 60 | fail, within noise |
+| Leader does not run away: year-5 income leader wins | ≤ 40% | 42% (19 of 45; 15 games with a tied leader left out) | 28% to 57% | 45 | fail, within noise |
+| Leader does not run away: year-10 stock, leader ÷ laggard (median game) | ≤ 2.5× | 7.0× (1 of 56 games at or under 2.5×) | 6.0× to 9.0× | 56 | fail |
+| Draws: swing against what the seat collected | report only | resource cards 2,075: median 22%, p90 50%; pop cards 479, token cards 294, unchanged 361 of 3,215 draws | – | 60 | record |
+| Length: games ending by the race | report only | 15% (race 9, deck 51, turn cap 0); 53.6 turns a game; 24 won on a tiebreak | 7% to 25% | 60 | record |
+| Legibility: reads per decision against the paper's 5.11 | report only | not from a batch | – | – | by hand |
+
+Fails and flags: Luxuries do not decide Beloved: holder is sole luxury leader (fail, within noise); Leader does not run away: year-5 income leader wins (fail, within noise); Leader does not run away: year-10 stock, leader ÷ laggard (median game) (fail).
+
+## continental-mixed-160
+
+continental · mixed (slaver, civic, trader, master, 4 seatings a seed) · 160 games on 40 seeds from 1000 · all Ideas · patch none · 56 turns · 1:2bce9ca1a534e4f4/1:67ea757c639a305f
+CSV readings match the report's counts.
+
+| Rule | Limit | Measured | 95% interval | Games | Verdict |
+| --- | --- | --- | --- | --- | --- |
+| Riots stay rare: riot turns from year 8 | ≤ 10% | 9% (356 of 4,180 turns; 10 revolts in all); slaver 20%, civic 4%, trader 5%, master 6% | 7% to 10% | 160 | pass |
+| Influence plateaus: median stock, year 10 to 14 | ≤ +5.0 a year | +2.5 a year (median 4 → 14); slaver +0.3, civic +6.3, trader +0.3, master +5.5 | +1.8 to +3.3 | 141 | pass |
+| Hunger: pops lost a seat-game | none set | 1.79; slaver 1.11, civic 0.10, trader 5.36, master 0.59 | 1.54 to 2.07 | 160 | record |
+| Hunger: turns begun short of food | none set | 19% (1,629 of 8,640) | 18% to 20% | 160 | record |
+| Luxuries do not decide Beloved: holder is sole luxury leader | ≤ 60% of turns held | 68% of 487 turns held (88% counting a tie) | 49% to 83% | 160 | fail, within noise |
+| Leader does not run away: year-5 income leader wins | ≤ 40% | 25% (39 of 155; 4 games with a tied leader left out) | 19% to 32% | 155 | reference (mixed table) |
+| Leader does not run away: year-10 stock, leader ÷ laggard (median game) | ≤ 2.5× | 17.1× (1 of 152 games at or under 2.5×) | 15.3× to 18.8× | 152 | fail |
+| Every build is viable: slaver wins | 20% to 45% | 26% (41 of 160; 2 on a tiebreak) | 18% to 34% | 160 | benchmark: in range |
+| Every build is viable: civic wins | 20% to 45% | 19% (30 of 160; 15 on a tiebreak) | 12% to 26% | 160 | benchmark: under 20%, within noise |
+| Every build is viable: trader wins | 20% to 45% | 34% (55 of 160; 29 on a tiebreak) | 26% to 43% | 160 | benchmark: in range |
+| Every build is viable: master wins | 20% to 45% | 21% (34 of 160; 13 on a tiebreak) | 15% to 28% | 160 | benchmark: in range |
+| Draws: swing against what the seat collected | report only | resource cards 5,650: median 18%, p90 50%; pop cards 1,268, token cards 799, unchanged 882 of 8,640 draws | – | 160 | record |
+| Length: games ending by the race | report only | 12% (race 19, deck 141, turn cap 0); 54.0 turns a game; 59 won on a tiebreak | 7% to 18% | 160 | record |
+| Legibility: reads per decision against the paper's 5.11 | report only | not from a batch | – | – | by hand |
+
+Fails and flags: Luxuries do not decide Beloved: holder is sole luxury leader (fail, within noise); Leader does not run away: year-10 stock, leader ÷ laggard (median game) (fail).
+
+## v1 against v2: the figures both record
+
+| | v1 smart (10) | v1 master (3) | continental-masters-60 | archipelago-masters-60 | continental-mixed-160 |
+| --- | --- | --- | --- | --- | --- |
+| Wins by seat, first to fourth | 40 / 30 / 30 / 0% | 33 / 0 / 67 / 0% | 33 / 17 / 18 / 32% | 20 / 23 / 35 / 22% | 23 / 23 / 34 / 21% |
+| Wins slaver / civic / trader / master | – | – | – | – | 26 / 19 / 34 / 21% |
+| Player-turns a game | 103.7 | 83.0 | 52.7 | 53.6 | 54.0 |
+| Ended by the race | 8 of 10 | 3 of 3 | 10 of 60 | 9 of 60 | 19 of 160 |
+| Riots a game | 8.6 | 8.3 | 3.4 (+0.0 revolts) | 3.8 (+0.0 revolts) | 5.4 (+0.1 revolts) |
+| Riots and revolts per 100 player-turns | 8.3 | 10.0 | 6.5 | 7.0 | 10.1 |
+
+v1 counts riots at both tiers (a v1 revolt-tier riot rolled the table); v2 revolts roll none and are shown apart. v1 games ran to the race at 83 to 104 turns, v2 stops at 56.
