@@ -9,7 +9,7 @@ updated: 2026-10-26
 ## Outcome
 
 Gold buys development cards. A realm that sells its resources, or runs freemen, turns its gold
-into small yields (foraging, a fishing creek, a smallholding) that land the moment they are
+into small yields (foraging, a fishing creek, a timber raft) that land the moment they are
 drawn, and into a hand of cards it plays one a turn: settlers, calm, and moves against rivals.
 Held cards are face down and can be traded, honestly or not. A realm at happiness +3 or higher
 draws one free at the end of its turn, the mirror of the riot at −3, so happiness pays above
@@ -24,6 +24,9 @@ without a trading partner.
 - Victory-point cards (owner, 2026-10-26). No card gives or takes a title.
 - Cards that give gold or influence. Gold buys the deck, and influence has its own uses.
 - Bots that bluff or read table talk.
+- Split decks, by kind and each at its own price (owner, 2026-10-26). The table would see which
+  deck a seat bought from, so hand counts and card trades would give away what a hand holds, and
+  a resource deck at a fixed price would bring back the bank.
 
 ## Settled inputs
 
@@ -50,6 +53,8 @@ without a trading partner.
   - The number of held cards each seat has is public; the cards are not.
   - Many cards resolve the moment they are drawn ("+1 wood", used at once) and are never held.
   - No victory-point cards.
+  - One deck at one price.
+  - Food, wood and stone each have the same ladder of yields: +1 cards, one +2, one +3.
 - The bank is removed ([player trade](player-trade.md), D9). Base food was set to 0 on
   2026-10-24, so food comes from the land, trade, the Dole and these cards.
 
@@ -91,18 +96,21 @@ Informer against an empty hand is not a legal play.
 ## The card list
 
 A common card is worth about one slave's output for one turn: +1 of a resource, a pop grown, an
-Unrest token cleared. +2 and +3 are rare (6 of 40). No card gives gold or influence. Names and
-counts are a draft for the owner's review; number tuning may change the counts, not the kinds.
+Unrest token cleared. +2 and +3 are rare (6 of 40). Food, wood and stone have the same ladder:
++1 cards, one +2 and one +3, so no resource lacks a big card. Food has the most +1 cards, since
+base food is 0. No card gives gold or influence. Names and counts are a draft for the owner's
+review; number tuning may change the counts, not the kinds.
 
 | Card              | Kind  | Count | Effect                                                                 | Engine effect today                 |
 | ----------------- | ----- | ----- | ---------------------------------------------------------------------- | ----------------------------------- |
 | Foraging          | Yield | 6     | +1 food                                                                | `resourceDelta`                     |
 | Woodcutters       | Yield | 4     | +1 wood                                                                | `resourceDelta`                     |
 | Quarry gang       | Yield | 4     | +1 stone                                                               | `resourceDelta`                     |
-| Fishing creek     | Yield | 2     | +2 food                                                                | `resourceDelta`                     |
+| Fishing creek     | Yield | 1     | +2 food                                                                | `resourceDelta`                     |
 | Timber raft       | Yield | 1     | +2 wood                                                                | `resourceDelta`                     |
-| Smallholding      | Yield | 1     | +1 food and +1 wood                                                    | `resourceDelta` twice               |
+| Fieldstones       | Yield | 1     | +2 stone                                                               | `resourceDelta`                     |
 | Bountiful harvest | Yield | 1     | +3 food                                                                | `resourceDelta`                     |
+| Felled grove      | Yield | 1     | +3 wood                                                                | `resourceDelta`                     |
 | Rich seam         | Yield | 1     | +3 stone                                                               | `resourceDelta`                     |
 | Caravan           | Held  | 4     | +1 wood, stone or food, your choice when played                        | new: a choice                       |
 | Settlers          | Held  | 3     | A freeman in one of your settlements with room (the Colonists' Voyage) | `addPops`                           |
@@ -112,7 +120,8 @@ counts are a draft for the owner's review; number tuning may change the counts, 
 | Agitators         | Rival | 2     | A rival of your choice places an Unrest token                          | `unrestTokens` placeOne, retargeted |
 | Informer          | Rival | 2     | A rival of your choice discards one held card, drawn at random         | new: a discard from a hand          |
 
-Yields are 20 cards, own held cards 12, rival cards 8. The three Venture tables and the Fund an
+Yields are 20 cards and land 11 food, 9 wood and 9 stone a pass through the deck, 0.73 a draw;
+own held cards are 12, rival cards 8. The three Venture tables and the Fund an
 expedition verb go; the Colonists' Voyage lives on as Settlers.
 
 ## Hotseat now, network later
