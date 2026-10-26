@@ -14,6 +14,9 @@ Owner calls in it: turn up to 15° and stays, tilt 20° rising to 45°, raised e
 discs on the alarms row, there is a compact offer card, and there are new handshake, curia
 and amphitheatre icons.
 
+**Since 2026-10-26:** the 3D map built from the living-map showcase is the game's only board;
+the SVG board is deleted. The showcase stays as the design record.
+
 Produced 2026-07-13 in a brandbook/architecture working session (multi-agent audit → three
 art directions → adversarial judging → owner rulings → controlled icon A/B test). Everything
 here is a **static, self-contained HTML/markdown snapshot** — open any file directly in a

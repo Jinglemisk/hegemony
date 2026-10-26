@@ -2,7 +2,7 @@
 title: UI — what is genuinely left
 status: active
 phase: "—"
-updated: 2026-10-20
+updated: 2026-10-26
 ---
 
 # UI — what is genuinely left
@@ -38,14 +38,15 @@ resource chips, two token tables) are scheduled in the
 | -------- | ---------- | --------------------------------------------- |
 | `TYPE-1` | a decision | Two type sizes sit under spec, on purpose     |
 | `DUP-1`  | nothing    | Four repeated glossary words, judged and left |
-| `V2-3`   | nothing    | A shared tile's second seal has no name plate |
 
-### v2 frame carry-overs (Steps 1–2, 2026-09-30 to 10-01)
-
-- **`V2-3`.** A rival colony sharing a tile draws as a small seal on the tile's
-  shoulder; its name is in the tile tooltip. Two plates side by side do not fit a hex.
+The 3D map's own open calls are [Q83](../questions.md).
 
 ### Shipped or closed
+
+- **`V2-3` · a shared tile's second settlement has a name** (the 3D map, 2026-10-26). The
+  SVG board drew a rival colony sharing a tile as a small seal with no plate, because two
+  plates did not fit a hex. The 3D map's plate names both, a bar between them, each with
+  its own pips and pops.
 
 - **`DELTA-1` · a change shows its direction in colour** (owner note 2026-10-20, built
   2026-10-22 with the tooltip grammar). One `Delta` part draws every "x → y": x in normal
@@ -68,14 +69,18 @@ resource chips, two token tables) are scheduled in the
   consult page; Codex, Victory and Agora drop from a matching strip on the right,
   which replaced the bar's four page icons. The Codex opens on a contents page,
   every chapter a large button with the search above them, and each chapter has a
-  way back to it; that replaced the chapter dropdown.
+  way back to it; that replaced the chapter dropdown. Since the 3D map (2026-10-26)
+  the ticker is gone: the Chronicle is the dock's line above the map modes and opens
+  upward from it, and the right strip's pages drop down to the dock.
 - **`V2-4` · tiles print slots, not a yield** (Step 3, #82). The tile shows its slot
   count beside the terrain emblem, and the fan rows `ui:audit` raised over the old
   printed amount went with it.
 - **`V2-6` · the focus ring beside Nikos's glaze**, closed by the owner on 2026-10-16
   with no change. A tile focused by keyboard gets an ochre ring (`--ochre`, 6px), and
   Nikos's owner ring is Melichron (#dfa437, 5px), so on Nikos's tiles focus barely
-  changes the border. Only keyboard play sees it.
+  changes the border. Only keyboard play sees it. The 3D map draws the same ring on
+  its canvas, where Political washes Nikos's tiles in his colour; Q83 (e) asks whether
+  to make it two-tone.
 - **`V2-5` · the alarms row from one engine list** (2026-10-15). `realmAlarms` returns
   every disc as typed data, and the row adds three the owner asked for on 2026-10-01:
   a rival one title short, the Assembly sitting next year, and a Port that could claim
@@ -86,7 +91,9 @@ resource chips, two token tables) are scheduled in the
 **2026-08-19 — the cleanup pass (owner ask).** Six items, and one bug found under
 them:
 
-- **The board is a fixed frame.** No pan, no zoom, no map modes. The island is 37
+- **The board is a fixed frame.** _Superseded 2026-10-26: the 3D map pans, zooms, turns
+  and has five map modes. A popover pinned to a tile closes when the view moves, which
+  answers the worry below._ No pan, no zoom, no map modes. The island is 37
   hexes meant to be seen at once, and a board you can drag is a board no other
   surface can point at. It re-fits on resize into the sea the chrome does not
   cover, with a proportional margin of open water — which is not decoration: a
@@ -120,6 +127,8 @@ by the tile below it, which puts them outside the tile's own `.svgButton` — an
 anything in that pass that took a pointer swallowed the press. Pressing a city,
 the most obvious thing on the board to press, did nothing at all. The tokens are
 `pointer-events: none` now; the tile's polygon is directly under every one of them.
+The 3D map keeps the rule: its labels over the land take no pointer, and each tile's
+button lies under them.
 
 **Second round, same day, on looking at it:**
 

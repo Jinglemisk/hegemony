@@ -1,7 +1,15 @@
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+
+/** Each walk starts once the map has drawn: without a GPU its first frame stalls the
+ *  animation frames that End turn's hold runs on. */
+async function visit(page: Page, path: string) {
+  await page.goto(path);
+  await page.locator(".living-map[data-ready]").waitFor();
+}
 
 test("setup, forced decision, normal command, and deterministic reload", async ({ page }) => {
-  await page.goto("/?setup=manual&seed=42&board=scenario");
+  await visit(page, "/?setup=manual&seed=42&board=scenario");
 
   await expect(page.getByText("Select a tile for your metropolis", { exact: false })).toBeVisible();
   await page.getByRole("button", { name: /Hex -2,0,/ }).click();
@@ -13,7 +21,7 @@ test("setup, forced decision, normal command, and deterministic reload", async (
   await expect(page.getByRole("img", { name: /Nikos is acting/ })).toBeVisible();
 
   // Seed 311: the scripted opening leaves Damon one Local Unrest short of the riot line.
-  await page.goto("/?dev=preload&seed=311");
+  await visit(page, "/?dev=preload&seed=311");
   const forcedDecision = page.getByRole("dialog");
   await expect(forcedDecision).toBeVisible();
   const decisionTitle = await forcedDecision.getByRole("heading").textContent();
@@ -72,7 +80,7 @@ test("setup, forced decision, normal command, and deterministic reload", async (
 });
 
 test("ending a turn short of food asks who leaves, with a way back", async ({ page }) => {
-  await page.goto("/?dev=hunger-short&seed=42");
+  await visit(page, "/?dev=hunger-short&seed=42");
 
   const endTurn = page.getByRole("button", { name: /^End turn/i });
   await expect(endTurn).toHaveAccessibleName(
@@ -101,7 +109,7 @@ test("ending a turn short of food asks who leaves, with a way back", async ({ pa
 });
 
 test("an offer to the table is countered, then the first accept trades", async ({ page }) => {
-  await page.goto("/?dev=trade&seed=42");
+  await visit(page, "/?dev=trade&seed=42");
 
   // The Trade disc opens the offer card: 2 wood for 1 stone, to the table.
   await page.getByRole("button", { name: /^Trade: Offer/ }).click();
@@ -149,7 +157,7 @@ test("one person plays three bots: they answer at once, and the screen stays wit
       JSON.stringify({ 0: "human", 1: "master", 2: "master", 3: "master" }),
     );
   });
-  await page.goto("/?dev=trade&seed=42");
+  await visit(page, "/?dev=trade&seed=42");
   const seat = page.getByRole("button", { name: /, your seat$/ });
   const person = (await seat.getAttribute("aria-label"))!.split(",")[0];
 

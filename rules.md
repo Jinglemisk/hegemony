@@ -36,6 +36,39 @@ Slots run from 2 to 7. The big tiles are the landmarks: the seven-slot **breadba
 the six-slot **quarry**, the five-slot old-growth forests. So the map asks who lives
 where: fill a big plains with slaves and export food, or build on it and import.
 
+## The map
+
+The island is drawn in 3D. Drag to pan, and scroll or pinch to zoom toward the pointer.
+**0** returns to the opening view. Click the sea to give the map focus; then **Q** and **E**
+turn it up to 15° either way, the arrow keys pan, and **+** and **−** zoom. The map stays
+turned where you leave it, and the compass at the top left turns with it. The view tilts as
+you zoom in: flat far out, 20° at the opening view, 45° close in.
+
+Detail comes in with the zoom. Far out you see each tile's owner colour and slots; in the
+middle, names, slots and yield chips; close in, buildings, fields, trees, rocks and a figure
+for every pop.
+
+Keys **1** to **5** switch the map mode:
+
+1. **Terrain** — the whole board, as above.
+2. **Political** — each tile in its owner's colour, and the realms' names.
+3. **Economy** — what every settlement makes and eats a turn, its slots and its buildings.
+4. **Unrest** — each realm's happiness, its tier at the riot and revolt lines, and its
+   Unrest tokens.
+5. **Trade** — Ports, claimed and open goods, ship routes and pops on the move.
+
+Hover a tile for its tooltip; click it and the realm sheet shows it. Click the sea to return
+to your realm. Each luxury good floats on a raft off the coast with its name and its holder's
+mark, or "unclaimed"; click it to read it. When an action asks for a tile, the tiles it can
+take are ringed and the rest dim. With the keyboard, Tab onto the tiles, walk them with the
+arrow keys and press Enter to pick one.
+
+**The corner dock** sits at the bottom right. Its bottom row holds the five mode buttons, and
+End turn spans the two bottom rows on the right. Above the mode buttons is the newest line of
+the **Chronicle**, the game's log: press it to open the whole Chronicle upward, and press it
+again or Escape to close it. The top row is the **map key**, shut until you press it; open, it
+says what the current mode's colours, marks and numbers mean.
+
 ## Resources
 
 You keep track of five resources:
@@ -221,7 +254,7 @@ card waits as a disc in the alarms row, after any title alarms, until the year t
 click it to read it again. The **first player moves on one seat** each year. The game
 lasts at most **fourteen years**; the next year card stays hidden.
 
-**The alarms row.** A row of discs beside the Chronicle lists what bears on your realm
+**The alarms row.** A row of discs hanging from the top bar lists what bears on your realm
 now: a seat holding three titles, a rival one title short, each open trade offer, the year's card, your
 happiness while it is below zero, hunger, a General Strike or Isonomia aimed at you, an
 Assembly sitting next year, and a free luxury one of your settlements could claim with
@@ -389,7 +422,7 @@ adding **+1 to your roll**: a **bread dole** (4 food), a **concession** (demote
 one citizen, free), or **patronage** (3 influence). Declare all three and a riot can
 cost you a pop only through the bribe, when you cannot pay its 3 gold in full. The
 riot sheet strikes the rows each declaration puts out of reach; after the roll a card
-lists what the riot cost, and the other seats see it as a note under the Chronicle.
+lists what the riot cost, and the other seats see it as a note under the compass.
 
 Pops lost to a riot are **slaves first**, then freemen, then citizens, each from the
 settlement holding the most of them.

@@ -8,7 +8,7 @@ import { VictoryTab } from "./VictoryTab";
 /**
  * The consult page dropped from the right strip: the Codex (rules reference), Victory
  * (the race table) or the Agora (the Assembly's standing record). The strip names the
- * open page, so the page carries no title of its own. The Chronicle is the ticker's.
+ * open page, so the page carries no title of its own. The Chronicle is the dock's.
  */
 function ConsultPanelComponent({
   activeTab,

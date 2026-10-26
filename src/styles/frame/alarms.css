@@ -1,11 +1,11 @@
 /* ============================================================================
-   Alarms: the discs beside the ticker tab, the year card and the threat
+   Alarms: the discs hanging from the bar, the year card and the threat
    ========================================================================== */
-/* ---- alarms: a disc per standing effect, beside the ticker tab ------------- */
+/* ---- alarms: a disc per standing effect, a strip's width in from the left --- */
 .alarms {
   position: absolute;
   top: var(--bar-h);
-  left: calc(var(--ticker-w) + var(--fillet) + var(--s-2));
+  left: calc(var(--strip-w) + var(--fillet) + var(--s-2));
   margin: 0;
   padding: 0;
   display: flex;

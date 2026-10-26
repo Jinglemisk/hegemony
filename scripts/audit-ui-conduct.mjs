@@ -221,7 +221,10 @@ const PROBE = () => {
     }
 
     // ── TINY ─────────────────────────────────────────────────────────────────
-    if (!exemptInline(el) && (rect.width < MIN_TARGET || rect.height < MIN_TARGET)) {
+    // A box placed by a fractional transform (the living map's labels) measures a
+    // hair under its size in floating point: 23.99997 is a 24px target.
+    const short = (n) => n < MIN_TARGET - 0.01;
+    if (!exemptInline(el) && (short(rect.width) || short(rect.height))) {
       out.push({
         kind: "TINY",
         el: describe(el),
@@ -289,13 +292,12 @@ const PROBE = () => {
  *   focused, so a control that happened to be focused when we arrived was
  *   compared against its own focused self and always came back "identical".
  *   That is the whole of the tune fab and the armed Grow verb. Blur first.
- * · A ring is often painted on a CHILD — the board's hex is a <g> whose focus
- *   stroke lands on the polygon inside it — and an element-only seal cannot see
- *   it. The seal now covers the control and its first few descendants, and
- *   carries SVG paint (stroke, stroke-width, fill) as well as CSS box paint,
- *   because on the board a stroke IS the ring.
- * · The v2 board draws a focused tile's ring in a layer over all the tiles, not
- *   inside the tile, so a tile's seal also carries that layer's focus ring.
+ * · A ring is often painted on a CHILD, and an element-only seal cannot see it.
+ *   The seal now covers the control and its first few descendants, and carries
+ *   SVG paint (stroke, stroke-width, fill) as well as CSS box paint, because on
+ *   an icon a stroke can be the ring.
+ * · The map draws a focused tile's ring on its canvas, not on the tile's button,
+ *   so a tile's seal also reads which tile the stage rings.
  */
 const INSTALL_SEAL = () => {
   const props = (style) => [
@@ -318,10 +320,9 @@ const INSTALL_SEAL = () => {
     for (const child of [...el.querySelectorAll("*")].slice(0, 8)) {
       parts.push(...props(getComputedStyle(child)));
     }
-    const ring = el.classList.contains("tile-btn")
-      ? el.ownerSVGElement?.querySelector(".ring.is-focus")
-      : null;
-    if (ring) parts.push(...props(getComputedStyle(ring)));
+    // The map draws its focus ring on the canvas; the stage names the ringed tile.
+    if (el.classList.contains("lm-tile"))
+      parts.push(el.closest(".living-map")?.dataset.focusRing === el.dataset.tileId);
     return parts.join("|");
   };
 };

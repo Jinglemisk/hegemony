@@ -4,7 +4,7 @@ import type { Toast } from "./moments";
 import { Prose } from "../AnnotatedText";
 import { Ico } from "./parts";
 
-/** The lane under the ticker that shows the head of the moment queue (moments.tsx). */
+/** The lane under the compass that shows the head of the moment queue (moments.tsx). */
 export function ToastLane({ toast, onDismiss }: { toast: Toast | null; onDismiss: () => void }) {
   if (!toast) return null;
   const glaze = PLAYER_GLAZES[toast.about];

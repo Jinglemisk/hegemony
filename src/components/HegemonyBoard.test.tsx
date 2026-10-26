@@ -16,8 +16,8 @@ import { createSimRng, deriveBotSeed } from "../sim/rng";
 import { buildNewGame } from "../sim/setup";
 import { HegemonyBoard } from "./HegemonyBoard";
 
-// The island's SVG measurements need a browser; this test exercises the dialogs.
-vi.mock("./frame/island/Island", () => ({ Island: () => null }));
+// The map draws with WebGL, which jsdom lacks; this test exercises the dialogs.
+vi.mock("./frame/map3d/LivingMap", () => ({ default: () => null }));
 
 let container: HTMLDivElement;
 let root: Root;

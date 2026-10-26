@@ -18,7 +18,7 @@ import { settlementNameOf } from "../../ui/settlementNames";
 import { titleValue } from "../../ui/frameFormat";
 
 /**
- * The toast lane: one card under the ticker for a moment another seat had (a bot's
+ * The toast lane: one card under the compass for a moment another seat had (a bot's
  * moment never waits for a click). Moments queue in the order the engine wrote
  * them and one holds the lane at a time.
  *

@@ -60,7 +60,8 @@ victory standings.
 
 ## Play Locally
 
-Hegemony currently supports four-player local hotseat play in a desktop browser.
+Hegemony currently supports four-player local hotseat play in a desktop browser. The board is
+drawn in 3D with WebGL, so the game does not load in a browser without it.
 [Download the repository](https://github.com/Jinglemisk/hegemony/archive/refs/heads/main.zip), or clone it, then
 run:
 

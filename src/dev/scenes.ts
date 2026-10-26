@@ -12,7 +12,8 @@ import { lastYear } from "../game/year";
 import { getOwnedSettlement, isCapital } from "../game/core/query";
 import { totalPops } from "../game/core/pops";
 import { settlementCapacity } from "../game/settlement";
-import { choosePlacement } from "../sim/policies";
+import { choosePlacement, resolvePolicy } from "../sim/policies";
+import { playTurn } from "../sim/runner";
 import { createSimRng, deriveBotSeed } from "../sim/rng";
 
 /**
@@ -34,7 +35,8 @@ import { createSimRng, deriveBotSeed } from "../sim/rng";
  * and the seat with gold and stone for a Port), `?dev=assembly-ballot`, `-vote` and
  * `-rises` (the fourth sitting's ballot), `?dev=trade` (the seat holding wood to offer,
  * each rival holding stone) and `?dev=assembly-trade` (the first sitting's preparation,
- * every seat sealed and none Ready).
+ * every seat sealed and none Ready). For the board: `?dev=mid-game` and `?dev=late-game`
+ * (the sim's smart bots play every seat to the start of Year 6 or Year 12).
  */
 
 /** What a scene asks of the board's first render, beside its state. */
@@ -176,7 +178,22 @@ export const DEV_SCENES: Record<string, (G: HegemonyState) => DevScene> = {
       }
     }),
   }),
+  "mid-game": (G) => ({ G: botsToYear(G, 6) }),
+  "late-game": (G) => ({ G: botsToYear(G, 12) }),
 };
+
+/** A board as a real game leaves it: the sim's smart bots play every seat until the
+ *  year opens (past any sitting), in a few seconds. */
+function botsToYear(initial: HegemonyState, year: number): HegemonyState {
+  const rng = createSimRng(deriveBotSeed(initial.seed));
+  const smart = resolvePolicy("smart");
+  let G = initial;
+  for (let turn = 0; turn < 400; turn++) {
+    if (G.phase !== "gameplay" || (G.year >= year && !G.assembly)) break;
+    G = playTurn(G, smart, rng);
+  }
+  return G;
+}
 
 /** Reach the fourth sitting and seal a Directive, a repeal, a Law and a silence, so the
  *  ballot carries every kind of item. */

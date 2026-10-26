@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "post-v2"
-updated: 2026-10-21
+updated: 2026-10-26
 ---
 
 # Code health after v2
@@ -14,16 +14,18 @@ engine's reasons through the shared primitives; the stylesheets run on one token
 [v2 merge audit](../reports/audits/2026-10-19-v2-merge-code-health.md) lists what drifted, by ID;
 this plan schedules it.
 
-This is v2's Step 16, the refactor, except the island map, which the living map replaces.
+This is v2's Step 16, the refactor, except the SVG island map, which the 3D map has since
+replaced.
 
 ## Non-goals
 
 - Code that a later plan deletes: the bank and Exchange screens and the bank's copies of the
   pending-decision check (trade's second PR); Ventures, the Colonists' Voyage, the bots' venture
   valuation and the manifest's `ventureOutcomes` entry (deck slice 1).
-- The island renderer, its labels, tips and CSS (living map): F7's `BoardTip`, F10's label
-  layout, C7. The verb disc menu waits for the living map plan to say whether it survives: F2,
-  F10's disc half, and the fans in F1 and F7.
+- The SVG island renderer, its labels and CSS: the 3D map deleted them on 2026-10-26, and C7
+  and F10's label layout went with them. F7's `BoardTip` moved to the map unchanged. The verb
+  discs stay under the 3D map, so F2, F10's disc half and the fans in F1 and F7 stay in the
+  audit, unscheduled.
 - Behaviour changes beyond the bugs below. Tuning waits for trade, as before.
 - Year cards as data (E10), the search cache key (S10) and bots typed on the projection (S13,
   which belongs to the [outcome-driven AI](outcome-driven-ai.md) plan's fair-observation
@@ -135,13 +137,13 @@ means lifting that state into the board. They now read the dev settings passed i
 
 ### 5. CSS cleanup
 
-| Part            | Before                                                                                                                                    | After                                                                                     |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Tokens          | Two token tables that disagree, 77 dead tokens, ~76 declarations undoing v1 (C1, C2, C3)                                                  | One table (the frame's); the v1 block and v1 base styles deleted                          |
-| Shared styles   | Caps label ~20×, four kickers, four buttons, copied card and scrim; ceremony.css off the tokens; "you" in player 4's colour (C4, C5, C10) | One caps, kicker, button, card and scrim; ceremony on the tokens; the viewer's own colour |
-| Stacking        | Half the z-index values off the scale (C6, bug 3)                                                                                         | All on the scale; the setup picker checked in the browser                                 |
-| Main stylesheet | 2.8k lines ordered by history; dead classes and keyframes (C8, C9)                                                                        | Split by component, island styles left for the living map; dead rules deleted             |
-| UI check script | Counts `font-size:` and hex only (C12)                                                                                                    | Also counts `font:` sizes, `rgb()`/`hsl()` and literal z-index                            |
+| Part            | Before                                                                                                                                    | After                                                                                         |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Tokens          | Two token tables that disagree, 77 dead tokens, ~76 declarations undoing v1 (C1, C2, C3)                                                  | One table (the frame's); the v1 block and v1 base styles deleted                              |
+| Shared styles   | Caps label ~20×, four kickers, four buttons, copied card and scrim; ceremony.css off the tokens; "you" in player 4's colour (C4, C5, C10) | One caps, kicker, button, card and scrim; ceremony on the tokens; the viewer's own colour     |
+| Stacking        | Half the z-index values off the scale (C6, bug 3)                                                                                         | All on the scale; the setup picker checked in the browser                                     |
+| Main stylesheet | 2.8k lines ordered by history; dead classes and keyframes (C8, C9)                                                                        | Split by component, island styles left for the 3D map, which deleted them; dead rules deleted |
+| UI check script | Counts `font-size:` and hex only (C12)                                                                                                    | Also counts `font:` sizes, `rgb()`/`hsl()` and literal z-index                                |
 
 Kept on purpose: two type scales, because type.css's rem roles shrink with `--ui-scale` and the
 frame's px sizes do not; `.sit-btn` as its own button (its fill differs, and C11 decides the

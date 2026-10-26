@@ -1,5 +1,6 @@
-import { useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import type { HegemonyState, LogEntry, PlayerId } from "../../../game/types";
+import { deedSeat } from "../../../ui/frameSelectors";
 import { yearLabel } from "../../../ui/formatters";
 import { PLAYER_GLAZE_LIST } from "../../../ui/playerGlazes";
 import { AnnotatedText } from "../../AnnotatedText";
@@ -9,7 +10,7 @@ type Filter = PlayerId | "all";
 type TaggedEntry = { entry: LogEntry; player: PlayerId | null };
 
 /**
- * The chronicle — what happened, newest first, in the game's own voice, as a ledger
+ * The chronicle — what happened, in the game's own voice, as a ledger
  * like the realm's pages: a caps rule per year, a line per deed with its seat's seal.
  *
  * Three things were wrong with it and all three are fixed here:
@@ -27,20 +28,13 @@ type TaggedEntry = { entry: LogEntry; player: PlayerId | null };
  * Filtering reads `entry.about`, the engine's own answer. The old prefix
  * heuristic survives only as a fallback for saves written before that field
  * existed.
+ *
+ * It opens upward, above its line in the corner dock, so it runs oldest first and
+ * keeps its foot in view: the newest deed sits next to the line it opened from.
  */
 export function ActionLogPanel({ G }: { G: HegemonyState }) {
   const [filter, setFilter] = useState<Filter>("all");
-
-  // Longest name first, so no player's name can be a prefix of another's.
-  const nameToId = useMemo(
-    () =>
-      (
-        Object.values(G.players).map((player) => [player.name, player.id]) as Array<
-          [string, PlayerId]
-        >
-      ).sort((a, b) => b[0].length - a[0].length),
-    [G.players],
-  );
+  const list = useRef<HTMLDivElement>(null);
 
   const tagged = useMemo<TaggedEntry[]>(() => {
     const rows: TaggedEntry[] = [];
@@ -52,17 +46,37 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
       }
 
       previousMessage = entry.message;
-      rows.push({
-        entry,
-        player:
-          entry.about ?? nameToId.find(([name]) => entry.message.startsWith(name))?.[1] ?? null,
-      });
+      rows.push({ entry, player: deedSeat(G, entry) });
     }
 
-    return rows.reverse();
-  }, [G.log, nameToId]);
+    return rows;
+  }, [G]);
 
   const visible = filter === "all" ? tagged : tagged.filter((row) => row.player === filter);
+
+  // The foot comes into view as deeds land and as the filter changes, and stays
+  // there when the list is resized under it (a page dropped above it), unless the
+  // reader has scrolled away from it.
+  useLayoutEffect(() => {
+    if (list.current) list.current.scrollTop = list.current.scrollHeight;
+  }, [filter, tagged.length]);
+  useEffect(() => {
+    const el = list.current;
+    if (!el) return;
+    let atFoot = true;
+    const read = () => {
+      atFoot = el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
+    };
+    const keep = new ResizeObserver(() => {
+      if (atFoot) el.scrollTop = el.scrollHeight;
+    });
+    el.addEventListener("scroll", read);
+    keep.observe(el);
+    return () => {
+      el.removeEventListener("scroll", read);
+      keep.disconnect();
+    };
+  }, []);
 
   // Fold consecutive entries from the same year under one heading.
   const groups: Array<{ year: number; rows: TaggedEntry[] }> = [];
@@ -110,7 +124,7 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
         ))}
       </div>
 
-      <div className="chronicleList" tabIndex={0}>
+      <div className="chronicleList" ref={list} tabIndex={0}>
         {groups.length === 0 ? <p className="page-empty">No deeds recorded here yet.</p> : null}
         {groups.map((group) => (
           <div key={`${group.year}-${group.rows[0].entry.id}`}>

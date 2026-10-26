@@ -18,8 +18,8 @@
      narrows — identical layout, only smaller — so 600px of left+right chrome stays
      in proportion and never reflows (the board is covered, never reshaped). Full
      size at ≥1440px, floored at 0.82 by ≤1024px, linear between. rem text rides
-     this one factor through the scaled root font-size (base.css). The map is SVG
-     in its own viewBox, so it is untouched. Per-element minimums are a later pass. */
+     this one factor through the scaled root font-size (base.css). The map sizes
+     itself by its camera, so it is untouched. Per-element minimums are a later pass. */
   --ui-scale: clamp(0.82, calc(0.82 + (100vw - 1024px) * 0.18 / 416px), 1);
 
   /* ---- gate contract ---------------------------------------------------- */
@@ -97,16 +97,17 @@
   --fan-w: calc(var(--u) * 24); /* 96: an option's slot: its name and price */
   --endturn-w: calc(var(--u) * 24); /* 96: the end-turn column, flush to the right edge */
   --endturn-h: calc(var(--u) * 24); /* 96 */
+  --dock-line-h: calc(var(--u) * 10); /* 40: the dock's Chronicle line; its modes take the rest */
   --res-w: calc(var(--u) * 18); /* 72 */
   --level-w: calc(var(--u) * 32); /* 128 */
   --purse-w: calc(var(--res-w) * 5 + var(--s-4) + var(--level-w)); /* 504 */
   --clock-w: calc(var(--u) * 89); /* 356: 16 short of the purse at 1280 */
-  --ticker-w: calc(var(--u) * 90); /* 360 */
+  --strip-w: calc(var(--u) * 90); /* 360: the consult strip, the column under it, the toasts */
   --gauge-floor: 6; /* the gauge runs −6 … +6, one unit per step */
   --gauge-w: calc(var(--u) * var(--gauge-floor) * 2); /* 48 */
   --gauge-h: calc(var(--u) * 2); /* 8 */
   --tip-w: calc(var(--u) * 72); /* 288 */
-  --fillet: var(--s-4); /* the concave join of the ticker tab and the bar */
+  --fillet: var(--s-4); /* the concave join of the consult strip and the bar */
   --board-gap: 8px; /* = --s-2; clearance between the island and the chrome, read by the fit */
   --ideas-w: calc(var(--u) * 256); /* 1024: two columns of printed rules */
   --idea-row-h: calc(var(--u) * 20); /* 80: name and two rule lines */
@@ -157,7 +158,6 @@
   --aegean: #1f6977;
   --terrain-neutral: #d8c8a8;
   --terrain-neutral-shade: #9f8e70;
-  --terrain-neutral-line: #5f4a35;
   --accent: var(--clay);
   --accent-2: var(--aegean);
 
@@ -210,16 +210,6 @@
   /* the light scrim: a card over it leaves the map readable behind */
   --scrim-light: rgb(24 18 16 / 38%);
 
-  /* ---- terrain ramp --------------------------------------------------------------
-     Deliberately near-identical values. Terrain KIND is carried by the engraved
-     emblem, never by hue; the ramp only says "this ground is a little harder". */
-  --t-plains: #e2d4b6;
-  --t-hill: #d5c5a4;
-  --t-forest: #cabb97;
-  --t-mountain: #bfae8c;
-  --t-oracle: #ede4cd;
-  --tile-rule: var(--terrain-neutral-line);
-
   /* ---- the sea -------------------------------------------------------------------
      --sea is the water; --sea-lit and --sea-deep are the same water nearer and
      further from the light; --sea-shade is the shadow chrome casts on it. */
@@ -227,6 +217,24 @@
   --sea-lit: #2e8a9a;
   --sea-deep: #17505c;
   --sea-shade: rgb(10 34 41 / 35%);
+  /* The living map's labels over the water: a plate's drop, a yield chip's paper,
+     a building badge's paper, a ship's dark chip and its rule, the far numerals'
+     shadow and the compass's glass. */
+  --map-label-shadow: 0 1px 3px rgb(10 34 41 / 40%);
+  --map-chip: rgb(255 248 231 / 82%);
+  --map-badge: rgb(255 248 231 / 91%);
+  --map-ship: rgb(24 18 16 / 84%);
+  --map-ship-rule: rgb(255 248 231 / 30%);
+  --map-numeral-shadow: 0 2px 4px rgb(24 18 16 / 75%);
+  --map-compass: rgb(23 80 92 / 55%);
+  /* The map modes: an Economy card's paper, and the rule round a realm's Unrest chip
+     by its tier (a revolt's chip darkens too). */
+  --map-card: rgb(255 248 231 / 92%);
+  --map-calm: #a8b877;
+  --map-discontent: #e2a558;
+  --map-unrest: #e8846b;
+  --map-revolt: #ff5a3c;
+  --map-revolt-chip: rgb(60 14 6 / 92%);
 
   /* ---- fired artwork values --------------------------------------------------- */
   /* The seal's fired gradient names a curved clay surface, not a state. */
@@ -293,7 +301,7 @@
   --shadow-placement: 0 28px 70px rgb(0 0 0 / 48%); /* the v1 placement card */
   --shadow-placement-pop: 0 22px 50px rgb(0 0 0 / 42%); /* the v1 found-colony popover */
   --at-rest: opacity(0.85); /* an unselected icon tab */
-  --dim: 0.45; /* an empty tile's emblem, an unaffordable verb */
+  --dim: 0.45; /* an unaffordable verb, a tile a placement does not ask for */
 
   /* ---- motion: the verb fans ------------------------------------------------ */
   --fan-dwell: 500ms; /* hover this long before a fan opens */
@@ -302,21 +310,6 @@
   --t-stagger: 40ms;
   --fan-from: 0.4; /* a sub-circle grows out of its disc from this scale */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
-
-  /* ---- board (SVG user units: one hex is 100 from centre to corner) -------- */
-  --b-rule: 1.2;
-  --b-own: 5;
-  --b-sel: 6;
-  --b-pip: 1.4;
-  --b-glyph: 1.6;
-  --b-seal: 3;
-  --b-ring: 5;
-  --b-ring-cap: 8;
-  --b-plate: 18px;
-  --b-pops: 16px;
-  --b-moor: 16px;
-  /* the fit publishes --b-scale (screen px per user unit); board text never drops below the floor */
-  --b-floor: var(--t-12);
 
   color-scheme: light;
 }
@@ -337,6 +330,7 @@
     --disc-end: calc(var(--u) * 20); /* 80 */
     --endturn-w: calc(var(--u) * 28); /* 112 */
     --endturn-h: calc(var(--u) * 30); /* 120 */
+    --dock-line-h: calc(var(--u) * 12); /* 48 */
     --chip-h: calc(var(--u) * 6); /* 24 */
     --price-h: var(--ic-24);
     --ic-disc: var(--ic-48);

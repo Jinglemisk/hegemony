@@ -39,8 +39,11 @@ const PROBE = () => {
   //
   // · Screen-reader-only text is clipped to 1px BY DESIGN. Reporting it as
   //   TRUNCATED would train us to ignore the class that matters.
-  // · Inside an SVG the viewBox is the coordinate system; a <g> "escaping" its
-  //   <svg> is how a map pans, not a bug. Only HTML boxes are audited.
+  // · Inside an SVG icon the viewBox is the coordinate system, not the page's
+  //   layout.
+  // · The map's labels ride its camera over the canvas: a label "escaping" the
+  //   screen is how a map pans, not a bug. Only HTML boxes off the map are
+  //   audited.
   // · When a modal is open the board sits under it. Every label on the board
   //   then "collides" with the dialog, which is what a modal is for. With a
   //   dialog up we audit the dialog and the fixed chrome, nothing beneath.
@@ -124,11 +127,15 @@ const PROBE = () => {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
 
+  // The map's labels ride the camera over a canvas: they are the map, panned, not
+  // boxes in a layout.
+  const onIsland = (el) => Boolean(el.closest(".living-map"));
+
   for (const [el, { style, rect }] of info) {
     // Inside an <svg> the viewBox is the coordinate system, so the three box
     // checks below are meaningless there. COLLISION still applies — it is pure
-    // screen geometry — so SVG text stays in `info` for the pass after this one.
-    if (el.ownerSVGElement) continue;
+    // screen geometry — so these stay in `info` for the pass after this one.
+    if (el.ownerSVGElement || (onIsland(el) && !el.matches(".living-map"))) continue;
 
     // ── OFFSCREEN ────────────────────────────────────────────────────────────
     // Only leaves and small boxes: a full-bleed container legitimately bleeds.
@@ -296,9 +303,8 @@ const PROBE = () => {
       // text beneath a floating layer is covered, not colliding, and is counted
       // apart. Except under a fan: an open fan must never cover a settlement's
       // mark or a mooring. An empty tile's slot count is ground like any other.
-      const onIsland = (el) => Boolean(el.closest("svg.island"));
       const [land, chrome] = onIsland(a) ? [a, b] : [b, a];
-      const fanOverMark = chrome.closest(".fan") && !land.closest(".tile-slots");
+      const fanOverMark = chrome.closest(".fan") && !land.closest(".lm-yield, .lm-far");
       if (onIsland(a) !== onIsland(b) && !fanOverMark) {
         out.push({
           kind: "COVERED",

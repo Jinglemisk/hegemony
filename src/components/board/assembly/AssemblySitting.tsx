@@ -180,7 +180,7 @@ function SittingHead({ G, sitting }: { G: HegemonyState; sitting: Sitting }) {
   );
 }
 
-/** Folded to a bar under the ticker: where the sitting stands, and the way back. Escape
+/** Folded to a bar under the compass: where the sitting stands, and the way back. Escape
  *  also restores it, through the shell's keys. */
 export function AssemblyDock({ sitting }: { sitting: Sitting }) {
   const { G, viewerId } = useGameUi();

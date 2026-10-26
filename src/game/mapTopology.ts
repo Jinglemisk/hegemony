@@ -72,6 +72,16 @@ export function isCoastalTile(tile: AxialCell, tiles: readonly AxialCell[]) {
   return AXIAL_DIRECTIONS.some(({ q, r }) => !land.has(`${tile.q + q},${tile.r + r}`));
 }
 
+/** Which of a tile's six sides have open sea behind them, as indices into the axial
+ *  steps: side i faces the neighbour one step `i` away, and on the drawn board runs
+ *  from the corner at 60i − 30° to the one at 60i + 30°. The living map's surf. */
+export function openSeaSides(tile: AxialCell, tiles: readonly AxialCell[]) {
+  const land = landCells(tiles);
+  return AXIAL_DIRECTIONS.flatMap(({ q, r }, side) =>
+    land.has(`${tile.q + q},${tile.r + r}`) ? [] : [side],
+  );
+}
+
 /** A geometric vertex of the board: the three hex cells that meet at one point.
  *  Cells that hold no tile are open sea. */
 export interface BoardVertex {
@@ -161,7 +171,7 @@ export function luxuryEligibleVertices(tiles: readonly AxialCell[]): LuxuryVerte
 }
 
 /** Axial → planar embedding at unit hex size. The renderer's `hexCenter` is this
- *  times its pixel size — one formula, owned here, so the engine's angular order
+ *  times its hex size — one formula, owned here, so the engine's angular order
  *  and the drawn board can never disagree about where a cell sits. */
 export function axialToPlane(q: number, r: number) {
   return { x: Math.sqrt(3) * (q + r / 2), y: 1.5 * r };

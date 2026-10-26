@@ -22,7 +22,7 @@ import { Ico, Tip, TipBody, Turns } from "./parts";
 
 /**
  * The realm's alarms, after a Paradox title's alerts: one disc per entry of the
- * engine's alarm list (`realmAlarms`), beside the ticker tab. A standing effect's disc
+ * engine's alarm list (`realmAlarms`), hanging from the bar. A standing effect's disc
  * shows the resource it moves, tinted by which way it moves it; every tooltip says
  * what it is and how long it lasts.
  */

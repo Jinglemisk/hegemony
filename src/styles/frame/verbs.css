@@ -48,10 +48,10 @@
 .verb-group.is-short .verb-disc .ico {
   opacity: var(--dim);
 }
-/* hotkey bottom-right, pieces left top-right: badges on the disc's rim */
-.verb-key,
+/* pieces left: a badge on the disc's rim, top right */
 .verb-count {
   position: absolute;
+  top: 0;
   right: 0;
   min-width: var(--badge);
   height: var(--badge);
@@ -59,15 +59,6 @@
   border-radius: calc(var(--badge) / 2);
   font: 700 var(--t-12) / var(--badge) var(--f-sans);
   text-align: center;
-}
-.verb-key {
-  bottom: 0;
-  background: var(--bone);
-  color: var(--ink-66);
-  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
-}
-.verb-count {
-  top: 0;
   background: var(--ink);
   color: var(--ivory);
 }

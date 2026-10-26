@@ -13,7 +13,7 @@ import { playerDole } from "../game/ideaRules";
 import { presentUnrestOutcome } from "./effects";
 import { sign } from "./frameFormat";
 import type { HappinessContribution } from "../game/rules";
-import type { HegemonyState, PlayerId } from "../game/types";
+import type { HegemonyState, LogEntry, PlayerId } from "../game/types";
 
 /** The committed turn's consequences, using the engine's current stock, level and
  *  thresholds. Hunger is settled first, then the riot or revolt: the label names the
@@ -205,4 +205,13 @@ export function publicCensus(G: HegemonyState, playerID: PlayerId): Census {
   }
 
   return census;
+}
+
+/** Whose deed a Chronicle line is: the engine's `about`, or, in saves from before that
+ *  field, the seat whose name the line opens with (longest name first, so no name can
+ *  be a prefix of another's). */
+export function deedSeat(G: HegemonyState, entry: LogEntry): PlayerId | null {
+  if (entry.about) return entry.about;
+  const players = Object.values(G.players).sort((a, b) => b.name.length - a.name.length);
+  return players.find((player) => entry.message.startsWith(player.name))?.id ?? null;
 }

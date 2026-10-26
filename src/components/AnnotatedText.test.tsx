@@ -96,7 +96,7 @@ describe("AnnotatedText", () => {
       </CodexLinkProvider>,
     );
 
-    // The ticker and the chronicle share this rendering; neither may add a tab stop.
+    // The dock's line and the chronicle share this rendering; neither may add a tab stop.
     expect(markup).not.toContain('role="button"');
     expect(markup).not.toContain("tabindex");
     expect(markup).toContain("Wood");
