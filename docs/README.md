@@ -9,31 +9,26 @@ Last updated: 2026-10-26.
 
 ## Now
 
-**Current initiative:** [player trade](plans/player-trade.md), on `main`, in two PRs.
-The [code-health plan](plans/code-health.md)'s five cleanup PRs are merged. v2, the
-shallow-economy rules in the Hybrid arc shell, merged into `main` on 2026-10-18 (#121); its
-[plan](archive/plans/v2-migration.md) is archived.
+**Current initiative:** the [development deck](plans/development-deck.md), whose card list
+waits on the owner's review. [Player trade](plans/player-trade.md)'s two PRs, the
+[code-health plan](plans/code-health.md)'s five, and v2 (#121, its
+[plan](archive/plans/v2-migration.md) archived) are merged.
 
-**Owner blockers:** [Q84](questions.md), two balance-check rules: a hunger limit, and the
-stock ratio. On 2026-10-24 the owner set base income to 0 and asked for three specs:
-[board modes](plans/board-modes.md), [recurring deals](plans/recurring-deals.md) and
-[game settings](plans/game-settings.md). On 2026-10-25 the owner set the shape of
-[the balance check](plans/player-trade.md#the-balance-check) (Q80). Its
-[first report](reports/simulation/2026-10-26-balance-check.md): the stock ratio fails on every
-table, Beloved within noise, and win rates sit in range.
+**Owner blockers:** the development deck's card list. Base income is 0 (owner, 2026-10-24). The
+[balance check](plans/player-trade.md#the-balance-check)'s
+[first report](reports/simulation/2026-10-26-balance-check.md) has win rates in range and Beloved
+within noise; Q84 (2026-10-26) retired the stock ratio for pops and income ratios and left hunger
+to the bots.
 
-**Next (owner, 2026-10-25), in waves of at most three agents with an owner checkpoint after
-each:**
+**Next:**
 
-1. A confirming batch without base income, the Archipelago generator and its validation, the
-   recurring-deals proposal, and board slice 1 (topology; shuffled becomes `continental`,
-   classic becomes `scenario`). Then, in sequence overnight:
-   - a batch with the coastal leapfrog off, to test whether it causes seat 0's lead;
-   - one starting-bonus test, built on a single stated hypothesis rather than a sweep.
-2. The Archipelago build, and recurring deals between people.
-3. Bots for deals, the game-settings model and setup screen, then batches one at a time.
+1. The development deck, slice 1 once the owner signs off the card list.
+2. The mixed table on the Archipelago, the default board since 2026-10-26 (#150), on the owner's
+   go; then length batches.
+3. [Recurring deals](plans/recurring-deals.md) as a box on an ordinary trade (#138 parked), bots
+   for deals, and the [game settings](plans/game-settings.md) setup screen.
 
-Then the balance check, the development deck, length batches; the full-game browser test waits.
+The full-game browser test waits.
 
 **The board:** 3D only, no 2D fallback (owner, 2026-10-26); open calls in [Q83](questions.md).
 

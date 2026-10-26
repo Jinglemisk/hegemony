@@ -220,10 +220,11 @@ node docs/reports/simulation/2026-10-26-balance-check/tools/check.mjs <report> [
 | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
 | Do riots stay rare?             | The riot table is reached on at most 10% of turns from year 8                                                                                                                                                                                                                                                                                 | Both                                                                                                                      | Retune the level's terms or the token cards       |
 | Does influence plateau?         | The median influence stock grows by at most 5 a year from year 10 to year 14                                                                                                                                                                                                                                                                  | Both                                                                                                                      | Raise the draw and repeal prices first            |
-| How often do realms go hungry?  | Pops lost to hunger a seat-game and turns begun short of food are recorded; no limit is set                                                                                                                                                                                                                                                   | Both                                                                                                                      | Report only                                       |
+| How often do realms go hungry?  | Pops lost to hunger a seat-game and turns begun short of food are recorded; no limit is set: hunger is a bot matter (owner, Q84)                                                                                                                                                                                                              | Both                                                                                                                      | Report only                                       |
 | Do luxuries decide Beloved?     | Beloved's holder is the sole luxury leader in at most 60% of the turns it is held; the share counting a tie is printed beside it                                                                                                                                                                                                              | Both                                                                                                                      | Raise the Port price or cap what luxuries add     |
 | Does the leader run away?       | The year-5 income leader wins at most 40% of games                                                                                                                                                                                                                                                                                            | Four masters, where a lead is a lead; the mixed table's slaver always leads year-5 income, so its figure is for reference | Report, with a proposed catch-up rule             |
-|                                 | In the median game the leader holds at most 2.5 times the laggard's stock at year 10                                                                                                                                                                                                                                                          | Both                                                                                                                      | Report, with a proposed catch-up rule             |
+|                                 | In the median game the leader holds at most 2.5 times the laggard's pops at year 10 (owner, Q84: pops, not stock)                                                                                                                                                                                                                             | Both                                                                                                                      | Report, with a proposed catch-up rule             |
+|                                 | In the median game the leader's income is at most 2.5 times the laggard's at year 10 (owner, Q84)                                                                                                                                                                                                                                             | Both                                                                                                                      | Report, with a proposed catch-up rule             |
 | Is every build viable?          | Each personality wins 20% to 45% of games. A benchmark while the bots and mechanics are unfinished; but a personality consistently over 45% (the whole interval above it) with no bug or missing feature to explain it, such as the development deck, gold uses or freemen, does not pass: the report flags it and says what could explain it | Mixed                                                                                                                     | Rework the weakest build                          |
 | Is it legible?                  | Recount the paper's section 5.11 reads per decision against the built game                                                                                                                                                                                                                                                                    | –                                                                                                                         | Report only                                       |
 | Do draws matter?                | The spread of draw swings against income is recorded                                                                                                                                                                                                                                                                                          | Both                                                                                                                      | Report only; cutting the deck is the owner's call |
@@ -232,13 +233,18 @@ node docs/reports/simulation/2026-10-26-balance-check/tools/check.mjs <report> [
 
 **How the figures are read.**
 
-- 60 games for the rules that measure a level (riots, influence, hunger, Beloved, the stock
-  ratio), 160 for win rates. At 60 games a measured 20% could be anything from 12% to 32%. Win
+- 60 games for the rules that measure a level (riots, influence, hunger, Beloved, the pops and
+  income ratios), 160 for win rates. At 60 games a measured 20% could be anything from 12% to 32%. Win
   rates are a benchmark, so about ±7 points at 160 games is enough (owner, 2026-10-25); 480 games
   ran too long and too hot.
-- Year-5 income and year-10 stock are read after each seat's own turn that year. Income is the
-  baseline's gross income: wood, stone, gold, and food when positive. Stock is wood, stone, gold
-  and food, with the laggard counted as at least 1. A game with a tied income lead is left out.
+- Year-5 income and the year-10 pops and income are read after each seat's own turn that year.
+  Income is the baseline's gross income: wood, stone, gold, and food when positive. The laggard
+  is counted as at least 1. A game with a tied income lead is left out of the year-5 rule.
+- The stock ratio (wood, stone, gold and food in store) is retired (owner, Q84): v2 realms spend
+  what they earn, so the laggard held 1 to 3 units and the ratio read an empty store. On the first
+  run's batches the pops ratio reads 1.60×, 1.58× and 2.20× (Continental masters, Archipelago
+  masters, mixed), and the income ratio 3.5×, 4.0× and 12×, with the laggard's income a median 2,
+  2 and 1.5 a turn; small incomes swell that ratio as small stocks did.
 - Influence is read after each seat's own year-10 and year-14 turns, in games that reach year 14.
 - Intervals are bootstraps over seeds, since the four seatings of a seed share a board. A pass or
   fail whose interval crosses the limit is marked "within noise".
@@ -247,8 +253,9 @@ The audit showed the first draft of these rules could not measure what they aske
 linear influence pile passed, and no card could meet the draw rule.
 
 **Still to do.** The legibility recount, which the first run did not do: count the reads per
-decision in the paper's section 5.11 against the built game. The hunger limit and the stock
-ratio wait for [Q84](../questions.md#q84--two-balance-check-rules-a-hunger-limit-and-the-stock-ratio).
+decision in the paper's section 5.11 against the built game. The next run's check script reads the
+pops and income ratios in place of the stock ratio; the mixed table on the Archipelago, the default board since
+2026-10-26, has not been run.
 
 ## Three-axis parity
 
