@@ -145,7 +145,7 @@ The camera moves, so anything placed by a tile's screen position goes stale. A p
 pinned to a tile closes when the view moves, while the armed pick stays armed, and no tile
 tooltip opens while the view is still moving.
 
-Keys 1 to 5 switch the map mode from anywhere but a field or a dialog, so the verb discs
+Keys 1 to 4 switch the map mode from anywhere but a field or a dialog, so the verb discs
 take no number keys and each key has one job (Q83 asks whether to keep that). The scene
 draws only while the camera eases or ambient motion is allowed: the page visible, the map
 on screen, no reduced motion, and a GPU rather than software rendering.

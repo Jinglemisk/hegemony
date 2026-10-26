@@ -38,7 +38,7 @@ test("the living map: a tile's button places the metropolis, and arrows walk the
   await page.keyboard.press("ArrowLeft");
   await expect(from).toBeFocused();
 
-  // Keys 1 to 5 switch the map mode, and the tile says what it makes. The map key stays
+  // Keys 1 to 4 switch the map mode, and the tile says what it makes. The map key stays
   // shut until its row is pressed, then follows the mode; Escape shuts it again.
   await page.keyboard.press("3");
   await expect(from).toHaveAccessibleName(/; .+ makes .+$/);

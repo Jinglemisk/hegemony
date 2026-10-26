@@ -47,9 +47,9 @@ choices for the owner. Each is built one way so the map works today; nothing wai
 
 **Options:** what is built first, then the other way.
 
-- **(a) Number keys.** Built: 1 to 5 switch the map mode, and the verb discs have no number
+- **(a) Number keys.** Built: 1 to 4 switch the map mode, and the verb discs have no number
   keys, so each key does one thing. Other: the discs keep 1 to 6 and the modes move to
-  Shift+1 to 5, or take 1 to 5 only while the map has focus.
+  Shift+1 to 4, or take 1 to 4 only while the map has focus.
 - **(b) Names during a pick.** Built: when a pick asks for a settlement (Grow, the ladder,
   Build, Move, placing traded pops), the map rings the candidates, but at the opening zoom a
   colony's name stays hidden until you zoom in a notch. Other: show the name plates of the
@@ -68,14 +68,13 @@ choices for the owner. Each is built one way so the map works today; nothing wai
 - **(f) Trade key wording.** Built: an open good beside unsettled land reads "a Port on hex
   −3,0 takes it", though the board shows no coordinates. Other: name the place by what is
   there ("the 3-wood forest by Pearls"), or say "a Port founded beside it".
-- **(g) Unrest chip over a name.** Built: in Unrest, late in a game, a capital's chip can
-  cover half of a neighbouring colony's name a notch or two past the opening zoom. Other:
-  leave colony plates out of Unrest, as Trade does, or push the covered plate down.
+- **(g) Unrest chip over a name.** Moot: the owner folded Unrest into Political on
+  2026-10-26, so the Unrest mode and its chip are gone. A realm's Unrest tokens now show
+  beside each of its settlements' icons in Political, where no name plates are drawn.
 
 **Recommendation:** keep (a): the modes are the map's own controls and the discs are a click
 away. Build (b), (c) and (e): each is small, and each fixes something a player can miss.
 (d): 30 frames a second while the camera is still, which keeps the sea moving at half the
-cost. (f): "a Port founded beside it". (g): leave colony plates out of Unrest; the chip
-already names the realm.
+cost. (f): "a Port founded beside it". (g): nothing left to decide.
 
 **Answer:**

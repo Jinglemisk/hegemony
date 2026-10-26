@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Tyrian Dye — placeholder: a drop of purple dye over its bowl</title>
+<defs><linearGradient id="g-dye" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c46fb4"/><stop offset="0.5" stop-color="#8e3a82"/><stop offset="1" stop-color="#4e1846"/></linearGradient>
+<linearGradient id="g-dye-bowl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e5a268"/><stop offset="0.48" stop-color="#c08243"/><stop offset="1" stop-color="#8b4d28"/></linearGradient></defs>
+<path d="M32 5C24 18 16 27 16 37A16 16 0 0 0 48 37C48 27 40 18 32 5Z" fill="url(#g-dye)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M23 34Q23 26 29 18" fill="none" stroke="#f2c9e8" stroke-width="2" stroke-linecap="round"/>
+<path d="M10 49H54L49 58H15Z" fill="url(#g-dye-bowl)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round"/>
+</svg>

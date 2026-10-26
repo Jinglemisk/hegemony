@@ -19,3 +19,12 @@ New icons follow this spec so the set stays one set. Codex drew them from it.
 - Plus badge fill: `#7d8f51 / #5e6e3a / #48542c`; minus badges are red with a cream bar; its prescribed ring reaches 63.5, beyond the ordinary live area. The subject shifts toward the upper left.
 - At 16 px, broad masses carry identity: round traveller head and wide stride, torch and knuckles, drooping wheat beside an empty bowl, and a pennant above the colony roof. Texture and the wheel/meander stamps recede; all silhouettes exceed 60% coverage in local raster checks.
 - No borrowed artwork, embedded raster data, filters, external references, player glazes or Assembly teal.
+
+## Still to draw
+
+- **The seven luxury goods,** one per good, for the map's Trade mode and its key:
+  `resources/luxury/tyrian-dye`, `pearls`, `coral`, `glassware`, `incense`, `fine-linen` and
+  `silphium`. Each path holds a simple hand-drawn placeholder glyph in
+  `assets/icons/placeholder/`; a bronze SVG at `assets/icons/bronze/resources/luxury/<good-id>.svg`
+  replaces it with no code change. The map draws them on a disc in the holder's colour, or a
+  plain ivory one while the good is unclaimed.

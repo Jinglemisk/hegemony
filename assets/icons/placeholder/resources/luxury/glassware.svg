@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Glassware — placeholder: a blown-glass flask</title>
+<defs><linearGradient id="g-glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b9e4dd"/><stop offset="0.5" stop-color="#5fa9a6"/><stop offset="1" stop-color="#2b6a6c"/></linearGradient></defs>
+<path d="M27 6H37V10H35V24C46 28 52 36 52 44A20 14 0 0 1 12 44C12 36 18 28 29 24V10H27Z" fill="url(#g-glass)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M20 40Q22 32 30 29" fill="none" stroke="#eafaf6" stroke-width="2.5" stroke-linecap="round"/>
+<path d="M14 50Q32 56 50 50" fill="none" stroke="#2b6a6c" stroke-width="1.75" stroke-linecap="round"/>
+</svg>

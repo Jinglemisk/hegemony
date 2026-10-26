@@ -16,9 +16,10 @@ import type { GlyphId } from "./glyphs";
  *
  * Painted bronze (`assets/icons/bronze/`, SVG) is the owner's chosen house style
  * (2026-10-16): a bronze icon at the same `family/concept` path wins over the
- * placeholder, so the two sets mix until bronze covers everything.
+ * placeholder, so the two sets mix until bronze covers everything. The seven luxury
+ * goods' placeholders (`resources/luxury/<good-id>`) are simple hand-drawn SVG glyphs.
  */
-const FILES = import.meta.glob("../../../assets/icons/placeholder/**/*.png", {
+const FILES = import.meta.glob("../../../assets/icons/placeholder/**/*.{png,svg}", {
   eager: true,
   query: "?url",
   import: "default",
@@ -33,7 +34,8 @@ const BRONZE = import.meta.glob("../../../assets/icons/bronze/**/*.svg", {
 function placeholder(path: string): string | undefined {
   return (
     BRONZE[`../../../assets/icons/bronze/${path}.svg`] ??
-    FILES[`../../../assets/icons/placeholder/${path}.png`]
+    FILES[`../../../assets/icons/placeholder/${path}.png`] ??
+    FILES[`../../../assets/icons/placeholder/${path}.svg`]
   );
 }
 

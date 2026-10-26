@@ -12,7 +12,7 @@ import { Ico, SeatMark } from "./parts";
 /**
  * The corner dock, after the living-map prototype: one paper at the bottom right. Its
  * top row is the Chronicle's newest line, which opens the whole Chronicle upward out
- * of the dock; its bottom row is the five map modes; End turn spans both rows on the
+ * of the dock; its bottom row is the four map modes; End turn spans both rows on the
  * right. Over them, the key to the map's mode: a row that opens it upward the same way.
  */
 export function CornerDock({

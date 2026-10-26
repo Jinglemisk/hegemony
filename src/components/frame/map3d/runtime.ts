@@ -21,7 +21,7 @@ import { fitIsland, tokenPx } from "./fit";
 import type { Layout } from "./layout";
 import type { BoardShape, MapModel } from "./mapModel";
 import type { MapMode } from "./modes";
-import { BONE, GLAZE, OPEN, SEA, TIER, glazeOf } from "./palette";
+import { BONE, GLAZE, SEA, glazeOf } from "./palette";
 import { createScene } from "./scene";
 import type { Ring } from "./scene";
 import { nextTileInDirection } from "./tileTip";
@@ -180,7 +180,7 @@ export function createRuntime({
   }
 
   // ---- what the tiles look like: the mode's wash, the owner's far out, placement --
-  /** A tile's colour in the mode: its terrain, its owner's glaze, its realm's tier. */
+  /** A tile's colour in the mode: its terrain, or its owner's glaze. */
   function wash(tile: MapModel["tiles"][number], far: number) {
     const [lead] = tile.settlements;
     const near = mix(GLAZE[tile.terrain], BONE, 0.5);
@@ -188,10 +188,6 @@ export function createRuntime({
     const political = lead ? mix(BONE, glazeOf(lead.owner), 0.74) : BONE;
     if (mode === "political") return political;
     if (mode === "trade") return mix(near, BONE, 0.7);
-    if (mode === "unrest") {
-      const realm = lead && model?.realms.find((r) => r.owner === lead.owner);
-      return realm ? TIER[realm.tier] : mix(BONE, OPEN, 0.4);
-    }
     // Far out, owned tiles take their owner's glaze: the political map.
     return mix(near, political, far);
   }
@@ -357,6 +353,8 @@ export function createRuntime({
     for (const [k, a] of Object.entries(B.html)) stage.style.setProperty(`--a-${k}`, a.toFixed(3));
     // Board text grows a little as the map comes closer, never under the 12px floor.
     stage.style.setProperty("--lab", `${Math.max(12, 11 + 4 * v.t).toFixed(2)}px`);
+    // A hex's drawn width: the flat marks shrink to fit small hexes (a phone).
+    stage.style.setProperty("--hex", `${(HEX_W * v.z).toFixed(1)}px`);
     stage.classList.toggle("pips-on", B.html.pips > 0.01);
     stage.classList.toggle("pops-on", B.html.popsline > 0.01);
     placeLabels(v, B.html);

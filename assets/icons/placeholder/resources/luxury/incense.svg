@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Incense — placeholder: a bronze censer and its smoke</title>
+<defs><linearGradient id="g-censer" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient></defs>
+<g fill="none" stroke-linecap="round">
+<path d="M27 32C21 26 31 22 25 15C21 11 25 7 27 5M38 32C44 25 34 21 40 14" stroke="#181210" stroke-width="6"/>
+<path d="M27 32C21 26 31 22 25 15C21 11 25 7 27 5M38 32C44 25 34 21 40 14" stroke="#efe7da" stroke-width="2.5"/>
+</g>
+<path d="M12 34H52C52 44 44 50 32 50C20 50 12 44 12 34Z" fill="url(#g-censer)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M27 50H37L40 58H24Z" fill="url(#g-censer)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M18 39Q32 43 46 39" fill="none" stroke="#795025" stroke-width="1.75" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Silphium — placeholder: the stalk and its flower heads</title>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+<path d="M32 58V14M32 40Q22 36 16 26M32 32Q42 28 48 18M32 50Q22 50 14 44M32 48Q42 48 50 42" stroke="#181210" stroke-width="6.5"/>
+<path d="M32 58V14M32 40Q22 36 16 26M32 32Q42 28 48 18M32 50Q22 50 14 44M32 48Q42 48 50 42" stroke="#7d8f51" stroke-width="3"/>
+</g>
+<g fill="#d8be73" stroke="#181210" stroke-width="2.5">
+<circle cx="32" cy="11" r="7"/><circle cx="15" cy="23" r="6"/><circle cx="49" cy="15" r="6"/>
+</g>
+<g fill="#f3dda0"><circle cx="30" cy="9" r="2"/><circle cx="13.5" cy="21.5" r="1.7"/><circle cx="47.5" cy="13.5" r="1.7"/></g>
+</svg>

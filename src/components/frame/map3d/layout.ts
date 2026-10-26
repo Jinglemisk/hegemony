@@ -112,6 +112,7 @@ export type Site = {
 export type Town = {
   tileId: string;
   settlementId: string;
+  centre: XZ;
   sites: Site[];
   ground: { centre: XZ; ring: XZ[]; y: number }[];
   lanes: XZ[][];
@@ -660,7 +661,7 @@ function settle(
     sites,
     items,
     cuts,
-    town: { tileId: t.id, settlementId: s.id, sites, ground, lanes },
+    town: { tileId: t.id, settlementId: s.id, centre, sites, ground, lanes },
   };
 }
 
@@ -682,6 +683,14 @@ const hillItem = (p: Point, i: number) => {
 /** The scale of the town model on its tile. */
 const townScale = (side: number, s: MapSettlement) =>
   side || s.capital ? 0.64 : s.kind === "city" ? 0.72 : 0.9;
+
+/** The top of each town's flagpole, in its model's units: its flag hangs from there.
+ *  The capital's stands tallest, so its standard reads first from far out. */
+export const POLE_TOP = {
+  capital: { x: 0.21, y: 0.98, z: 0.1 },
+  city: { x: -0.33, y: 0.62, z: 0 },
+  colony: { x: 0.13, y: 0.5, z: -0.12 },
+} as const;
 
 /**
  * Which way a Port faces, by the open-sea side it stands on: toward the good it
@@ -756,7 +765,13 @@ export function layoutMap(model: MapModel, seed: number): Layout {
       const kind = s.capital ? "capital" : s.kind;
       const base = { x: plan.centre.x, y: H_TILE + 0.003, z: plan.centre.z, s: townScale(side, s) };
       put(kind, base);
-      put(`${kind}Flag`, { ...base, color: glazeOf(s.owner) });
+      const pole = POLE_TOP[kind];
+      put(`${kind}Flag`, {
+        x: base.x + pole.x * base.s,
+        y: base.y + pole.y * base.s,
+        z: base.z + pole.z * base.s,
+        color: glazeOf(s.owner),
+      });
       for (const n of plan.sites) {
         if (n.building === "port" && bearing) {
           put("port", { x: n.x, y: H_TILE, z: n.z, ry: n.ry });
