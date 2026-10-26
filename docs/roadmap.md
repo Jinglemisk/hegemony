@@ -137,9 +137,10 @@ and the final mechanical enforcement slice. The living
 The [archived v2 plan](archive/plans/v2-migration.md) rebuilt the economy on the
 shallow-economy [direction paper](reports/balance/2026-09-05-shallow-economy.md) and replaced
 the in-match shell with the Hybrid arc layout, on `feat/v2` through #79 to #120. The owner
-merged it into `main` on 2026-10-18 (#121). Its Step 11, the sim gate, moved to the
-[player trade plan](plans/player-trade.md); its Step 16, the refactor, is the
-[code-health plan](plans/code-health.md), except the island code the living map replaces.
+merged it into `main` on 2026-10-18 (#121). Its Step 11, the sim gate, is now
+[the balance check](plans/player-trade.md#the-balance-check) in the player trade plan; its
+Step 16, the refactor, is the [code-health plan](plans/code-health.md), except the island code
+the living map replaces.
 
 ## Current initiative — code health and player trade, then the living map
 
@@ -148,7 +149,8 @@ gives every settlement 1 food. The [code-health plan](plans/code-health.md), fro
 [v2 merge audit](reports/audits/2026-10-19-v2-merge-code-health.md), went first: five cleanup
 PRs before trade, kept apart from feature work so each could show the game unchanged. Trade's
 second PR carries its telemetry rewrite and the bot forecast's bank-adjacent code. The [development deck](plans/development-deck.md) follows trade and replaces
-Ventures. Step 11 and number tuning follow both. The 3D living map, in three.js after the
+Ventures. The balance check follows trade (owner, 2026-10-25); number tuning follows trade and
+the deck. The 3D living map, in three.js after the
 [showcase](reference/design/showcases/living-map.html), is the next track; its plan is
 written when it starts.
 

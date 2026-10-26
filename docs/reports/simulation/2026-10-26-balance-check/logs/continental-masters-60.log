@@ -1,0 +1,113 @@
+Playing 60 games on 4 worker processes.
+seed 10/60 done (seed 1009)
+seed 20/60 done (seed 1020)
+seed 30/60 done (seed 1029)
+seed 40/60 done (seed 1040)
+seed 50/60 done (seed 1050)
+seed 60/60 done (seed 1059)
+
+Report written to /private/tmp/claude-501/-Users-jinglemisk-Desktop-hegemony/74b57959-97b9-42a6-b78c-aab6135376df/scratchpad/balance-check/continental-masters-60.json.
+Turn snapshots written to /private/tmp/claude-501/-Users-jinglemisk-Desktop-hegemony/74b57959-97b9-42a6-b78c-aab6135376df/scratchpad/balance-check/continental-masters-60.csv.
+
+Batch: 60 games × 56 turns, master policy, standard mode, continental board (base seed 1000)
+Definition: 1:2bce9ca1a534e4f4/1:2740cdad5fbc5b8a
+Final victory cards (finished seat-games): mean 0.7 · p10 0 · median 1 · p90 2
+Terminations: victoryRace 10 · deckExhausted 50 · turnCap 0 (win rate is over finished games only)
+Seats: P0 win 33% · lead@cap 0% (cards 0.8) · P1 win 17% · lead@cap 0% (cards 0.6) · P2 win 18% · lead@cap 0% (cards 0.6) · P3 win 32% · lead@cap 0% (cards 0.7)
+Played without these National Ideas: good-harvest, public-dole, urban-planning, capital-works, civic-tradition, frontier-charter, new-settlers, city-pioneers, slave-colonies, harbour-planning, treasury-grant, assembly-brokers
+Win by policy (finished games): master 25% (60/240)
+master: 60/240 seat wins (25.0%); final cards mean 0.7; capped seats 0
+  Wins by: the title race 10 · titles after the last year 26 · the tiebreak 24 (happiness 18, pops 6, seat 0)
+  Final titles: polis-builder 31 · demos 50 · civic-elite 44 · treasurer 3 · beloved 5 · voice 34
+Year 14: pops mean 14.3 · food mean 0.3 · happiness mean -0.2 · unrest shares calm 49% / discontent 49% / unrest 3% / revolt 0%
+Food under work slots: P0 hunger turns 0.4/game, pops lost 0.6/game, idle slaves 0.1 (1%) · P1 hunger turns 0.3/game, pops lost 0.5/game, idle slaves 0.1 (1%) · P2 hunger turns 0.3/game, pops lost 0.5/game, idle slaves 0.1 (2%) · P3 hunger turns 0.2/game, pops lost 0.3/game, idle slaves 0.1 (2%)
+  table: turns begun short 625 · food bought to cover a shortfall 1298 (0 gold, 3894 influence), ahead 833 (0 gold, 2499 influence)
+  master: hunger turns 0.32/seat-game, pops lost 0.47/seat-game (freemen 66, citizens 48), idle slaves 0.1 (1%) · turns begun short 625 · food bought to cover a shortfall 1298 (0 gold, 3894 influence), ahead 833 (0 gold, 2499 influence)
+Riots: 3.4/game · the riot table opens 6.5% of player-turns · revolts 0/game · from year 8: riots 61/1500 turns (4.1%), revolts 0
+  master: riots 0.85/seat-game, revolts 0.00/seat-game · from year 8: riots 61/1500 turns (4.1%), revolts 0
+Beloved against the luxury leader: 65 turns held, the holder the sole luxury leader in 62%, leader or tied in 100%
+  held by master: 65 turns held, the holder the sole luxury leader in 62%, leader or tied in 100%
+Influence stock, median at the year's last turn: y10 17 · y11 22 · y12 24 · y13 31 · y14 34
+  master: y10 17 · y11 22 · y12 24 · y13 31 · y14 34
+Influence spent (per game): dole 106.5 · ideas 0 · calm 6.4 · votes 3.9 · patronage 0.1 · draws 27.0 · repeals 20.2 · demotions 1.6
+  master (per seat-game): dole 26.6 · ideas 0 · calm 1.6 · votes 1.0 · patronage 0.0 · draws 6.8 · repeals 5.0 · demotions 0.4
+Draw swings: 3162 draws · 2044 moved a resource, against the income collected that turn median 0.22, p90 0.50, max 2.00 · 478 moved 478 pops · 273 moved 273 Unrest tokens · 362 changed nothing · 5 discarded for no room
+Active effects (share of seat snapshots): incomeSuppression 0% · food warning 27% · yearCard 71% · standingLaw 82% · nextAssembly 2%
+National Ideas (setup / bought / holder win rate, then by the holder's personality):
+  good-harvest: 0 / 0 / 0.0% (0/0)
+  public-dole: 0 / 0 / 0.0% (0/0)
+  urban-planning: 0 / 0 / 0.0% (0/0)
+  capital-works: 0 / 0 / 0.0% (0/0)
+  civic-tradition: 0 / 0 / 0.0% (0/0)
+  frontier-charter: 0 / 0 / 0.0% (0/0)
+  new-settlers: 0 / 0 / 0.0% (0/0)
+  city-pioneers: 0 / 0 / 0.0% (0/0)
+  slave-colonies: 0 / 0 / 0.0% (0/0)
+  harbour-planning: 0 / 0 / 0.0% (0/0)
+  treasury-grant: 0 / 0 / 0.0% (0/0)
+  assembly-brokers: 0 / 0 / 0.0% (0/0)
+Low reach (under 0.2/game; master): 48 items
+  command:placeCity: 0 total (0)
+  command:bankSell: 0 total (0)
+  command:bankBuy: 0 total (0)
+  command:pickIdea: 0 total (0)
+  command:buyIdea: 0 total (0)
+  command:buyRiotInsurance: 6 total (6)
+  building:marketplace: 6 total (6)
+  venture:grandEmbassy: 6 total (6)
+  law:manumission: 0 total (0)
+  lawProposed:public-works: 11 total (11)
+  law:public-works: 9 total (9)
+  law:colonial-charter: 5 total (5)
+  law:harbour-dues: 9 total (9)
+  ideaSetup:good-harvest: 0 total (0)
+  ideaBought:good-harvest: 0 total (0)
+  ideaSetup:public-dole: 0 total (0)
+  ideaBought:public-dole: 0 total (0)
+  ideaSetup:urban-planning: 0 total (0)
+  ideaBought:urban-planning: 0 total (0)
+  ideaSetup:capital-works: 0 total (0)
+  ideaBought:capital-works: 0 total (0)
+  ideaSetup:civic-tradition: 0 total (0)
+  ideaBought:civic-tradition: 0 total (0)
+  ideaSetup:frontier-charter: 0 total (0)
+  ideaBought:frontier-charter: 0 total (0)
+  ideaSetup:new-settlers: 0 total (0)
+  ideaBought:new-settlers: 0 total (0)
+  ideaSetup:city-pioneers: 0 total (0)
+  ideaBought:city-pioneers: 0 total (0)
+  ideaSetup:slave-colonies: 0 total (0)
+  ideaBought:slave-colonies: 0 total (0)
+  ideaSetup:harbour-planning: 0 total (0)
+  ideaBought:harbour-planning: 0 total (0)
+  ideaSetup:treasury-grant: 0 total (0)
+  ideaBought:treasury-grant: 0 total (0)
+  ideaSetup:assembly-brokers: 0 total (0)
+  ideaBought:assembly-brokers: 0 total (0)
+  bankBuy:wood: 0 total (0)
+  bankBuy:stone: 0 total (0)
+  bankBuy:food: 0 total (0)
+  bankSell:wood: 0 total (0)
+  bankSell:stone: 0 total (0)
+  bankSell:food: 0 total (0)
+  demote:citizens: 9 total (9)
+  votes:gold: 4 total (4)
+  insurance:breadDole: 3 total (3)
+  insurance:concession: 1 total (1)
+  insurance:patronage: 2 total (2)
+Buildings: temple 5.8/game · forum 4.2/game · port 3.2/game · estate 2.3/game · granary 2.0/game · marketplace 0.1/game
+Currency verbs (per game): bankSell 0 · bankBuy 0 · dole 35.5 · civicCalm 4.0 · promotePop 24.3 · demotePop 1.6 · fundExpedition 9.3 · buyRiotInsurance 0.1 · resolveRiot 3.4
+Colony→city upgrades: 3.9/game (231 total)
+Trade (per game): 6.4 settled (0.4 in a sitting), 20.7 withdrawn, 0 closed with the turn or the preparation · answers: accept 4.4, counter 5.1, decline 32.1 · a title changed holder after 0
+  Units given (per game): wood 11.3 · stone 8.3 · food 2.7 · gold 3.7 · influence 7.9 · goods 0 · citizens 0 · freemen 0 · slaves 0
+  Prices, a unit in the other (median, p10–p90, trades): wood in stone 1 (0.5–2, 74) · wood in food 0.5 (0.5–1, 41) · wood in gold 1 (1–2, 44) · wood in influence 1 (0.6–1.5, 78) · stone in wood 1 (0.5–2, 74) · stone in food 0.5 (0.5–1, 26) · stone in gold 1.3 (1–2, 13) · stone in influence 1 (0.7–1, 61) · food in wood 2 (1–2, 41) · food in stone 2 (1–2, 26) · food in gold 2 (1–2, 10) · food in influence 1 (0.5–2, 22)
+  Who exports, units sent a game by the seat whose land makes the most / the least: wood +4.0 / -2.4 (60 games) · stone +3.4 / -2.7 (60 games) · food +0.8 / -0.2 (60 games)
+  master (per seat-game): settled 1.61, withdrawn 5.17, closed 0.00 · answers accept 1.10, counter 1.28, decline 8.04 · net sent wood +0.00, stone +0.00, food +0.00
+Assembly: 6.6 held/game · laws enacted 5.9/game · removed 3.1/game · standing at end 2.8 · directives 3.0/game · authored passes 8.9/game · Voice claims 2.3/game · held at end 57% · top authored share 43% · influence sunk 51.2/game
+  Seat 0: Laws proposed 2, passed 1.4, standing 0.8 · Directives 0.7 · votes bought 0.6 · Voice claims 0.3, held 1.9 table-turns/game
+  Seat 1: Laws proposed 2.3, passed 1.4, standing 0.5 · Directives 0.7 · votes bought 0.5 · Voice claims 0.6, held 4.1 table-turns/game
+  Seat 2: Laws proposed 2.3, passed 1.4, standing 0.7 · Directives 0.9 · votes bought 0.4 · Voice claims 0.5, held 4.9 table-turns/game
+  Seat 3: Laws proposed 2.5, passed 1.8, standing 0.8 · Directives 0.7 · votes bought 0.6 · Voice claims 0.8, held 6.0 table-turns/game
+  master (per seat-game): Laws proposed 2.27, passed 1.48, standing 0.70 · Directives 0.75 · repeals filed 1.68, passed 0.53 · votes bought 0.51 · Voice claims 0.56, held 4.22 table-turns · Directives aimed at it 181
+Repeals: 404 filed · 126 passed · 278 failed
+Assembly verbs (per game): draw 13.5 · propose 12.1 · proposerepeal 6.7 · pass 7.5 · bribe 2.0 · vote 75.4

@@ -1,0 +1,17 @@
+
+continental-masters-60
+  year-5 income leader wins: start of its own turn 15/47 (32%); after it 19/51 (37%)
+  year-10 stock: leader median 16, laggard median 3; laggard at 1 or less in 16/55
+  year-10 pops, leader ÷ laggard: median game 1.60×
+
+archipelago-masters-60
+  year-5 income leader wins: start of its own turn 17/40 (43%); after it 19/45 (42%)
+  year-10 stock: leader median 10, laggard median 1; laggard at 1 or less in 34/56
+  year-10 pops, leader ÷ laggard: median game 1.58×
+
+continental-mixed-160
+  year-5 income leader wins: start of its own turn 40/153 (26%); after it 39/155 (25%)
+  year-10 stock: leader median 57, laggard median 3; laggard at 1 or less in 31/152
+  year-10 pops, leader ÷ laggard: median game 2.20×
+  year-5 income leader by personality: {"slaver":140,"trader":15}
+  year-10 stock leader by personality: {"trader":26,"slaver":124,"civic":2}

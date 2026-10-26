@@ -1,7 +1,7 @@
 ---
 status: proposed
 phase: "post-v2"
-updated: 2026-10-21
+updated: 2026-10-26
 ---
 
 # Development deck
@@ -128,8 +128,9 @@ deck against Ventures, then the free card on and off, read against the [rotated 
    received; bots trade cards. Needs player trade's first PR.
 4. **Close-out.** The rules guide, the Codex and the owner's hotseat playtest.
 
-Both player trade PRs come first, since they remove the bank and add base food. Step 11
-runs after both plans.
+Both player trade PRs come first, since they remove the bank and add base food. The
+[balance check](player-trade.md#the-balance-check) runs after trade and before this plan
+(owner, 2026-10-25).
 
 The [code-health plan](code-health.md) leaves the Venture code alone, so slice 1 deletes it
 whole: the Colonists' Voyage (and its room bug), the bots' `ventureOutcomes`, the venture verb,

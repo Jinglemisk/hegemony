@@ -14,11 +14,13 @@ The [code-health plan](plans/code-health.md)'s five cleanup PRs are merged. v2, 
 shallow-economy rules in the Hybrid arc shell, merged into `main` on 2026-10-18 (#121); its
 [plan](archive/plans/v2-migration.md) is archived.
 
-**Owner blockers:** Q80, now that trade's
-[paired batches](reports/simulation/2026-10-22-trade-paired.md) and the
-[balance batches](reports/simulation/2026-10-24-balance-lines.md) are in. On 2026-10-24 the
-owner set base income to 0 and asked for three specs: [board modes](plans/board-modes.md),
-[recurring deals](plans/recurring-deals.md) and [game settings](plans/game-settings.md).
+**Owner blockers:** [Q84](questions.md), two balance-check rules: a hunger limit, and the
+stock ratio. On 2026-10-24 the owner set base income to 0 and asked for three specs:
+[board modes](plans/board-modes.md), [recurring deals](plans/recurring-deals.md) and
+[game settings](plans/game-settings.md). On 2026-10-25 the owner set the shape of
+[the balance check](plans/player-trade.md#the-balance-check) (Q80). Its
+[first report](reports/simulation/2026-10-26-balance-check.md): the stock ratio fails on every
+table, Beloved within noise, and win rates sit in range.
 
 **Next (owner, 2026-10-25), in waves of at most three agents with an owner checkpoint after
 each:**
@@ -31,7 +33,7 @@ each:**
 2. The Archipelago build, and recurring deals between people.
 3. Bots for deals, the game-settings model and setup screen, then batches one at a time.
 
-Then Step 11 on Q80's shape, the development deck, length batches, and the 3D living map,
+Then the balance check, the development deck, length batches, and the 3D living map,
 whose plan is written after Archipelago lands. The full-game browser test still waits.
 
 **Locked sequence:** V1 includes luxury goods, full Catan-style player trade, all twelve
@@ -46,7 +48,7 @@ precedes full multiplayer.
 | [Luxury goods](plans/luxury-goods.md)               | 4        | `active`   | Slices 1–2 shipped on `main`; the v2 migration carries them unchanged             |
 | [UI — what is left](plans/ui-remaining.md)          | —        | `active`   | The one UI ledger; the KYKLOS triage ledgers are archived                         |
 | [Code health](plans/code-health.md)                 | post-v2  | `active`   | Five cleanup PRs before trade; all merged, trade next                             |
-| [Player trade](plans/player-trade.md)               | post-v2  | `active`   | PRs #131 and #132 merged; batches reported; the owner plays trade next            |
+| [Player trade](plans/player-trade.md)               | post-v2  | `active`   | PRs #131 and #132 merged; the owner plays trade next; holds the balance check     |
 | [Development deck](plans/development-deck.md)       | post-v2  | `proposed` | Replaces Ventures; follows both trade PRs                                         |
 | [Board modes](plans/board-modes.md)                 | post-v2  | `proposed` | Engine and sim (#145); Q81 answered: hop 3, seven goods, the oracle on an island  |
 | [Recurring deals](plans/recurring-deals.md)         | post-v2  | `proposed` | Yearly standing trades; the builder proposes the settlement timing first          |
