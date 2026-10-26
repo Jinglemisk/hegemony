@@ -32,7 +32,7 @@ import {
   WebGLRenderer,
 } from "three";
 import type { Material } from "three";
-import { FOV, H_TILE, R_TOP, T_FIT, clamp, smooth } from "./camera";
+import { FOV, H_TILE, R_TOP, clamp } from "./camera";
 import type { View } from "./camera";
 import type { Circling, Figure, FigureModel, Floating, Layout, ModelName, Place } from "./layout";
 import { walkAt } from "./life";
@@ -73,11 +73,8 @@ const R_OWN = 0.84;
 const LAYER: Partial<Record<ModelName, string>> = {
   // Political draws the towns and the Oracle flat (LivingMap's seals), Trade the goods.
   capital: "towns",
-  capitalFlag: "towns",
   city: "towns",
-  cityFlag: "towns",
   colony: "towns",
-  colonyFlag: "towns",
   oracleCore: "towns",
   good: "goods",
   goodFlag: "goods",
@@ -118,13 +115,9 @@ const LAYER: Partial<Record<ModelName, string>> = {
   laurel: "events",
   gull: "lifeAmb",
 };
-/** A town's flag: it hangs from its pole's top. Out to the opening view it leans back
- *  to face the camera, so it reads from far out, where the camera looks straight down;
- *  closer in it stands upright again and shrinks toward its pole. */
-const FLAGS = new Set<ModelName>(["capitalFlag", "cityFlag", "colonyFlag"]);
-/** Figures cast no shadow: at their size it is only a smudge. Ships, gulls, the
- *  laurel and the towns' flags move on, and the shadow map is drawn only when the
- *  casters change; so do the sea life's boats (their layer's) and a flame, which glows. */
+/** Figures cast no shadow: at their size it is only a smudge. Ships, gulls and the
+ *  laurel move on, and the shadow map is drawn only when the casters change; so do
+ *  the sea life's boats (their layer's) and a flame, which glows. */
 const SHADOWLESS = new Set<ModelName>([
   "oraclePythia",
   "oraclePriest",
@@ -137,7 +130,6 @@ const SHADOWLESS = new Set<ModelName>([
   "shipBand",
   "laurel",
   "gull",
-  ...FLAGS,
 ]);
 /** Pops at sea ride their ship, drawn with it from the middle band. */
 const RIDERS = ["citizen", "freeman", "slave"] as const;
@@ -401,15 +393,11 @@ export function createScene(canvas: HTMLCanvasElement, shape: BoardShape) {
       mesh.instanceMatrix.needsUpdate = true;
     }
   };
-  /** How far the flags lean back from upright, and their size (see `FLAGS`). */
-  let lean = 0;
-  let flagSize = 1;
   /** A model's instances where they stand. */
   const stand = (model: Model) => {
     model.places.forEach((p, i) => {
-      const flag = FLAGS.has(model.name);
-      const k = (p.s ?? 1) * (flag ? flagSize : 1);
-      euler.set(flag ? lean : 0, p.ry ?? 0, 0);
+      const k = p.s ?? 1;
+      euler.set(0, p.ry ?? 0, 0);
       m4.compose(
         at.set(p.x, p.y, p.z),
         quat.setFromEuler(euler),
@@ -744,14 +732,6 @@ export function createScene(canvas: HTMLCanvasElement, shape: BoardShape) {
       camera.position.set(v.tx + v.d * v.sp * v.s, v.d * v.cp, v.ty + v.d * v.sp * v.c);
       camera.up.set(-v.s * v.cp, v.sp, -v.c * v.cp);
       camera.lookAt(v.tx, 0, v.ty);
-      const near = smooth(T_FIT, 1, v.t);
-      const tilt = (v.phi - Math.PI / 2) * (1 - near);
-      const size = 1 - 0.55 * near;
-      if (Math.abs(tilt - lean) + Math.abs(size - flagSize) > 1e-3) {
-        lean = tilt;
-        flagSize = size;
-        for (const model of models) if (FLAGS.has(model.name)) stand(model);
-      }
     },
     resize(W: number, H: number) {
       renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));

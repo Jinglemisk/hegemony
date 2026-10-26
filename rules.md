@@ -46,9 +46,7 @@ you zoom in: flat far out, 20° at the opening view, 45° close in.
 
 Detail comes in with the zoom. Far out you see each tile's owner colour and slots; in the
 middle, names, slots and yield chips; close in, buildings, fields, trees, rocks and a figure
-for every pop. Every settlement flies its owner's flag: a colony a pennant, a city a
-rectangular standard, and the capital a larger standard on a taller pole, so it reads first
-from far out.
+for every pop.
 
 Keys **1** to **4** switch the map mode:
 
