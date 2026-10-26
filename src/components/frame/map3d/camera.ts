@@ -270,7 +270,8 @@ export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain
       building: close,
     },
     unrest: { ...NO_HTML, plates: 1, cityplate: room, colony: names * room, unrest: 1 },
-    trade: { ...NO_HTML, plates: 1, cityplate: room, goodname: 1, ship: 1, port: 1 },
+    // A held good's Port chip names it beside its raft: its own name would sit on the chip.
+    trade: { ...NO_HTML, plates: 1, cityplate: room, goodname: 1, heldgood: 0, ship: 1, port: 1 },
   };
   return { mid, close, layers: layers[mode], html: html[mode] };
 }

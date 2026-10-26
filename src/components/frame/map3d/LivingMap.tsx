@@ -15,7 +15,7 @@ import { H_TILE } from "./camera";
 import { MAIN_Z, layoutMap } from "./layout";
 import type { Layout, Town } from "./layout";
 import { boardShape, mapModel, shapeKey } from "./mapModel";
-import type { MapModel, MapSettlement, MapTile } from "./mapModel";
+import type { MapModel, MapMooring, MapSettlement, MapTile } from "./mapModel";
 import { MAP_MODES } from "./modes";
 import type { MapMode, MapRealm } from "./modes";
 import { createRuntime } from "./runtime";
@@ -544,11 +544,12 @@ function LivingMap({
           <button
             aria-label={m.label}
             className="lm-moor"
-            data-alpha="goodname"
+            data-alpha={m.owner ? "goodname heldgood" : "goodname"}
+            data-hang={hangToSea(m)}
             data-vertex-id={m.vertexId}
             data-wh="0"
             data-wx={m.x}
-            data-wy={m.y + 0.12}
+            data-wy={m.sy < m.vy ? m.y - 0.12 : m.y + 0.12}
             key={m.vertexId}
             onClick={() => {
               if (!dragged()) onMooringAction?.(m.vertexId);
@@ -580,6 +581,15 @@ function LivingMap({
       ) : null}
     </div>
   );
+}
+
+/** Which way a good's name hangs off its raft: toward the open sea, clear of the two
+ *  tiles it is moored between. Between islands a name always hung below lands on land. */
+function hangToSea(m: MapMooring) {
+  const east = m.sx - m.vx;
+  return [m.sy < m.vy ? "up" : "down", east > 0.3 ? "east" : east < -0.3 ? "west" : ""]
+    .join(" ")
+    .trim();
 }
 
 export default memo(LivingMap);

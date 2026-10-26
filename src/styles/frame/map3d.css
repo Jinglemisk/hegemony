@@ -270,7 +270,7 @@
   opacity: var(--a-ship, 1);
 }
 
-/* A luxury good's name, out on the water under its raft. The button reaches below
+/* A luxury good's name, out on the water beside its raft. The button reaches past
    the name, so it is a target a finger can hit. */
 .lm-moor {
   display: flex;
@@ -282,11 +282,23 @@
   white-space: nowrap;
   cursor: pointer;
   pointer-events: auto;
-  transform: translate(-50%, 0);
+  transform: translate(var(--hang-x, -50%), var(--hang-y, 0%));
   opacity: var(--a-goodname, 1);
+}
+/* The name hangs toward the open sea (hangToSea), never back over the land. */
+.lm-moor[data-hang~="up"] {
+  --hang-y: -100%;
+  align-items: flex-end;
+}
+.lm-moor[data-hang~="east"] {
+  --hang-x: 0%;
+}
+.lm-moor[data-hang~="west"] {
+  --hang-x: -100%;
 }
 .lm-moor.is-faded {
   pointer-events: none;
+  opacity: 0;
 }
 .lm-moor:focus-visible {
   outline: var(--rule-2) solid var(--ochre);
