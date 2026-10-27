@@ -5,7 +5,7 @@ tree. The roadmap establishes sequence and exit gates; plans define unshipped
 work; references describe the game that exists; reports preserve dated evidence;
 and the archive is historical context, never current authority.
 
-Last updated: 2026-10-26.
+Last updated: 2026-10-27.
 
 ## Now
 
@@ -23,10 +23,10 @@ to the bots.
 **Next:**
 
 1. The development deck, slice 1 once the owner signs off the card list.
-2. The mixed table on the Archipelago, the default board since 2026-10-26 (#150), on the owner's
-   go; then length batches.
-3. [Recurring deals](plans/recurring-deals.md) as a box on an ordinary trade (#138 parked), bots
-   for deals, and the [game settings](plans/game-settings.md) setup screen.
+2. Balance batches wait until the bots play the deck (owner, 2026-10-26): the mixed table on the
+   Archipelago, the default board since 2026-10-26 (#150), then length batches.
+3. Parked until card balance is done (owner, 2026-10-27): [recurring deals](plans/recurring-deals.md)
+   (#138), bots for deals, and the [game settings](plans/game-settings.md) setup screen.
 
 The full-game browser test waits.
 
@@ -34,7 +34,8 @@ The full-game browser test waits.
 
 **Locked sequence:** V1 includes luxury goods, full Catan-style player trade, all twelve
 National Ideas, and the intended typed Resolution/Idea effects. The v1 mechanics freeze
-precedes full multiplayer.
+precedes full multiplayer. The mechanics are effectively frozen (owner, 2026-10-27): no new
+features. What remains is balance: the development deck, the player events and the year cards.
 
 ## Active plans
 
@@ -47,8 +48,8 @@ precedes full multiplayer.
 | [Player trade](plans/player-trade.md)               | post-v2  | `active`   | PRs #131 and #132 merged; the owner plays trade next; holds the balance check     |
 | [Development deck](plans/development-deck.md)       | post-v2  | `proposed` | Replaces Ventures; follows both trade PRs                                         |
 | [Board modes](plans/board-modes.md)                 | post-v2  | `proposed` | Engine and sim (#145); Q81 answered: hop 3, seven goods, the oracle on an island  |
-| [Recurring deals](plans/recurring-deals.md)         | post-v2  | `proposed` | Yearly standing trades; the builder proposes the settlement timing first          |
-| [Game settings](plans/game-settings.md)             | post-v2  | `proposed` | Classic plus per-game settings; length and base income built in the engine        |
+| [Recurring deals](plans/recurring-deals.md)         | post-v2  | `proposed` | Parked until card balance is done (owner, 2026-10-27)                             |
+| [Game settings](plans/game-settings.md)             | post-v2  | `proposed` | Length and base income built in the engine; the setup screen is parked            |
 | [National Ideas](plans/national-ideas.md)           | v2       | `active`   | Step 9 shipped (#88); twelve v2 rules, open setup draft (#95), influence purchase |
 | [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked`  | Final typed Resolution/Idea effects and evidence before multiplayer               |
 
