@@ -83,7 +83,7 @@
 
   /* ---- controls and regions (grid multiples) ----------------------------- */
   --hit: calc(var(--u) * 8); /* 32: every control's short edge */
-  --bar-h: var(--hit); /* 32: the bar is one control tall */
+  --bar-h: calc(var(--u) * 12); /* 48: a control and a half, so the bar's icons read at 32 */
   --row-h: calc(var(--u) * 10); /* 40: realm tabs */
   --chip-h: calc(var(--u) * 5); /* 20: the end-turn label */
   --name-h: var(--lh-20); /* 20: a verb's name under its disc */
@@ -98,10 +98,14 @@
   --endturn-w: calc(var(--u) * 24); /* 96: the end-turn column, flush to the right edge */
   --endturn-h: calc(var(--u) * 24); /* 96 */
   --dock-line-h: calc(var(--u) * 10); /* 40: the dock's Chronicle line; its modes take the rest */
-  --res-w: calc(var(--u) * 18); /* 72 */
+  --res-w: calc(var(--u) * 22); /* 88: icon, store, next turn's change */
   --level-w: calc(var(--u) * 32); /* 128 */
-  --purse-w: calc(var(--res-w) * 5 + var(--s-4) + var(--level-w)); /* 504 */
-  --clock-w: calc(var(--u) * 89); /* 356: 16 short of the purse at 1280 */
+  --pop-w: calc(var(--u) * 14); /* 56: a class of people, a count and no delta */
+  /* The purse is three plates, goods, people and the mood, each padded and a gap apart. */
+  --purse-w: calc(
+    var(--pop-w) * 3 + var(--res-w) * 5 + var(--level-w) + var(--s-1) * 6 + var(--s-4) * 2
+  ); /* 792 */
+  --clock-w: calc(var(--u) * 58); /* 232 */
   --strip-w: calc(var(--u) * 90); /* 360: the consult strip, the column under it, the toasts */
   --gauge-floor: 6; /* the gauge runs −6 … +6, one unit per step */
   --gauge-w: calc(var(--u) * var(--gauge-floor) * 2); /* 48 */
@@ -309,6 +313,17 @@
 }
 
 /* 1920-class viewports: the realm and end turn step up a tier */
+/* Inside the top bar a control is 40 tall and its icons 32, so the bar reads at a
+   glance; the bar's numbers and the seats' discs step up with them. */
+.topbar {
+  --hit: calc(var(--u) * 10); /* 40 */
+  --ic-ui: var(--ic-32);
+  --t-num: var(--t-20);
+  --l-num: var(--lh-24);
+  --t-cap: var(--t-14);
+  --l-cap: var(--lh-20);
+}
+
 @media (min-width: 1680px) {
   :root {
     --area-w: calc(var(--u) * 156); /* 624 */

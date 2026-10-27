@@ -4,16 +4,14 @@ import type { HegemonyState } from "../../game/types";
 import { deedSeat } from "../../ui/frameSelectors";
 import { AnnotatedText } from "../AnnotatedText";
 import { ActionLogPanel } from "../board/command/ActionLogPanel";
-import { MapLegend } from "./map3d/MapLegend";
 import { MAP_MODES } from "./map3d/modes";
 import type { MapMode } from "./map3d/modes";
 import { Ico, SeatMark } from "./parts";
 
 /**
  * The corner dock, after the living-map prototype: one paper at the bottom right. Its
- * top row is the Chronicle's newest line, which opens the whole Chronicle upward out
- * of the dock; its bottom row is the four map modes; End turn spans both rows on the
- * right. Over them, the key to the map's mode: a row that opens it upward the same way.
+ * top row is the Chronicle's newest line across the dock, which opens the whole
+ * Chronicle upward out of it; under it, the four map modes and End turn at the right.
  */
 export function CornerDock({
   G,
@@ -49,7 +47,6 @@ export function CornerDock({
       data-exclude
       onKeyDown={closeOnEscape}
     >
-      <MapLegend G={G} mode={mode} />
       {/* The line is cut to fit; its name carries the whole of it. */}
       <button
         aria-controls={open ? logId : undefined}

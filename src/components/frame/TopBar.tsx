@@ -1,27 +1,27 @@
-import { playerNationalIdeas } from "../../game/ideas";
-import type { CSSProperties } from "react";
-import { PLAYER_IDS } from "../../game/data";
-import { currentVoteWeight } from "../../game/assembly";
-import { victoryMetricValue, voiceHolder } from "../../game/victory";
-import { happinessLevel } from "../../game/happiness";
+import type { CSSProperties, ReactNode } from "react";
 import { unrestOutcome } from "../../game/unrest";
 import type { UnrestOutcome } from "../../game/unrest";
 import { lastYear } from "../../game/year";
 import type { IncomeContribution } from "../../game/economy/income";
 import type { Ruleset } from "../../game/ruleset";
-import type { HegemonyState, PlayerId, Resource, Resources } from "../../game/types";
+import { getOwnedSettlement, popsInTransit } from "../../game/rules";
+import type { HegemonyState, PlayerId, PopType, Resource, Resources } from "../../game/types";
 import { presentUnrestOutcome } from "../../ui/effects";
 import { RESOURCE_LABELS, toRoman } from "../../ui/formatters";
-import { gaugeStops, publicCensus } from "../../ui/frameSelectors";
+import { gaugeStops } from "../../ui/frameSelectors";
 import type { HappinessDisplay } from "../../ui/frameSelectors";
 import { sign, tone } from "../../ui/frameFormat";
 import { POP_RASTERS, RESOURCE_RASTERS } from "../../ui/iconRegistry";
-import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { settlementNames } from "../../ui/settlementNames";
 import { Tooltip } from "../overlays/Tooltip";
 import { Ico, Tip, TipBody, TipLedger, TipWarn, Turns } from "./parts";
 
 const PURSE: Resource[] = ["wood", "stone", "food", "gold", "influence"];
+const PEOPLE: Array<{ pop: PopType; label: string }> = [
+  { pop: "citizens", label: "Citizens" },
+  { pop: "freemen", label: "Freemen" },
+  { pop: "slaves", label: "Slaves" },
+];
 
 /** Pips the gauge has room for; the tooltip prints the true count. */
 const MAX_TOKEN_PIPS = 6;
@@ -106,6 +106,51 @@ function ResourceCell({
       <Ico path={RESOURCE_RASTERS[resource]} size="ui" />
       <span className="res-val num">{owed ? sign(value) : value}</span>
       <span className={`res-delta ${tone(delta)}`}>{sign(delta)}</span>
+    </Tooltip>
+  );
+}
+
+/** One class of the realm's people: the count, and where they live in the tooltip. */
+function PopCell({
+  G,
+  viewerId,
+  pop,
+  label,
+}: {
+  G: HegemonyState;
+  viewerId: PlayerId;
+  pop: PopType;
+  label: string;
+}) {
+  const names = settlementNames(G.board.tiles);
+  const rows = G.players[viewerId].settlements.flatMap((tileId) => {
+    const settlement = getOwnedSettlement(G, tileId, viewerId);
+    const count = settlement?.pops[pop] ?? 0;
+    return settlement && count > 0
+      ? [{ key: settlement.id, label: names.get(settlement.id) ?? "Polis", value: count }]
+      : [];
+  });
+  const atSea = popsInTransit(G, viewerId)[pop];
+  if (atSea > 0) rows.push({ key: "sea", label: "At sea", value: atSea });
+  const total = rows.reduce((sum, row) => sum + row.value, 0);
+
+  return (
+    <Tooltip
+      ariaLabel={`${label} ${total}`}
+      content={
+        <Tip title={label}>
+          {rows.length > 0 ? (
+            <TipLedger rows={[...rows, { key: "total", label, value: total, total: true }]} />
+          ) : (
+            <TipBody>None in the realm.</TipBody>
+          )}
+        </Tip>
+      }
+      focusable
+      triggerClassName="res pop"
+    >
+      <Ico path={POP_RASTERS[pop]} size="ui" />
+      <span className="res-val num">{total}</span>
     </Tooltip>
   );
 }
@@ -196,86 +241,6 @@ export function HappinessGauge({
   );
 }
 
-function Rival({
-  G,
-  id,
-  acting,
-  viewing,
-  threat,
-  onSelect,
-}: {
-  G: HegemonyState;
-  id: PlayerId;
-  acting: boolean;
-  viewing: boolean;
-  /** Holds enough titles to win when its next turn starts. */
-  threat: boolean;
-  onSelect: (id: PlayerId) => void;
-}) {
-  const glaze = PLAYER_GLAZES[id];
-  const census = publicCensus(G, id);
-
-  return (
-    <Tooltip
-      content={
-        <Tip title={glaze.name}>
-          <TipLedger
-            rows={[
-              { key: "s", label: "Slaves", value: census.slaves, icon: POP_RASTERS.slaves },
-              { key: "f", label: "Freemen", value: census.freemen, icon: POP_RASTERS.freemen },
-              { key: "c", label: "Citizens", value: census.citizens, icon: POP_RASTERS.citizens },
-              { key: "ci", label: "Cities", value: census.cities, icon: "settlements/city" },
-              { key: "co", label: "Colonies", value: census.colonies, icon: "settlements/colony" },
-              {
-                key: "hap",
-                label: "Happiness",
-                value: sign(happinessLevel(G, id)),
-                icon: RESOURCE_RASTERS.happiness,
-              },
-              {
-                key: "laws",
-                label: "Standing Laws authored",
-                value: victoryMetricValue(G, id, "voice"),
-                icon: "assembly/law",
-              },
-              {
-                key: "votes",
-                label: "Votes",
-                value: currentVoteWeight(G, id),
-                icon: "assembly/vote",
-              },
-              {
-                key: "voice",
-                label: "Voice",
-                value: voiceHolder(G) === id ? "held" : "unheld",
-                icon: "victory/voice",
-              },
-            ]}
-          />
-          {playerNationalIdeas(G, id).map((idea) => (
-            <TipBody key={idea.id}>
-              <strong>{idea.name}</strong> · {idea.text}
-            </TipBody>
-          ))}
-        </Tip>
-      }
-      preferredPlacement="below"
-    >
-      <button
-        aria-label={`${glaze.name}${acting ? ", acting" : ""}${viewing ? ", your seat" : ", take this seat"}`}
-        aria-pressed={viewing}
-        className={`rival${acting ? " is-acting" : ""}${threat ? " is-threat" : ""}${viewing ? " is-viewing" : ""}`}
-        data-c="rival"
-        onClick={() => onSelect(id)}
-        style={{ "--owner": glaze.color } as CSSProperties}
-        type="button"
-      >
-        <span className={`rival-disc${glaze.inkDark ? " ink-dark" : ""}`}>{glaze.blazon}</span>
-      </button>
-    </Tooltip>
-  );
-}
-
 /** Income lines for one resource, merged by where they come from. */
 function linesFor(
   resource: Resource,
@@ -296,22 +261,18 @@ function linesFor(
 export function TopBar({
   G,
   viewerId,
-  actingId,
   income,
   breakdown,
   happiness,
-  threats,
-  onSeat,
+  children,
 }: {
   G: HegemonyState;
   viewerId: PlayerId;
-  actingId: PlayerId;
   income: Resources;
   breakdown: readonly IncomeContribution[];
   happiness: HappinessDisplay;
-  /** Seats one turn start from winning the race. */
-  threats: readonly PlayerId[];
-  onSeat: (id: PlayerId) => void;
+  /** The bar's right end: the consult pages' names. */
+  children: ReactNode;
 }) {
   const store = G.players[viewerId].resources;
   const names = settlementNames(G.board.tiles);
@@ -320,35 +281,32 @@ export function TopBar({
     <header className="topbar" data-c="topbar" data-exclude data-gate-flex>
       <Clock G={G} />
       <div className="purse" data-c="purse">
-        {PURSE.map((resource) => (
-          <ResourceCell
-            delta={income[resource]}
-            key={resource}
-            lines={linesFor(resource, breakdown, names)}
-            resource={resource}
-            value={store[resource]}
-          />
-        ))}
-        <HappinessGauge
-          display={happiness}
-          outcome={unrestOutcome(G, viewerId)}
-          ruleset={G.ruleset}
-        />
-      </div>
-      <div className="court" data-c="court">
-        <div aria-label="Rulers" className="rivals" data-c="rivals" role="group">
-          {PLAYER_IDS.map((id) => (
-            <Rival
-              G={G}
-              acting={id === actingId}
-              id={id}
-              key={id}
-              onSelect={onSeat}
-              threat={threats.includes(id)}
-              viewing={id === viewerId}
+        <div aria-label="Goods" className="purse-seg" role="group">
+          {PURSE.map((resource) => (
+            <ResourceCell
+              delta={income[resource]}
+              key={resource}
+              lines={linesFor(resource, breakdown, names)}
+              resource={resource}
+              value={store[resource]}
             />
           ))}
         </div>
+        <div aria-label="People" className="purse-seg" role="group">
+          {PEOPLE.map(({ pop, label }) => (
+            <PopCell G={G} key={pop} label={label} pop={pop} viewerId={viewerId} />
+          ))}
+        </div>
+        <div className="purse-seg">
+          <HappinessGauge
+            display={happiness}
+            outcome={unrestOutcome(G, viewerId)}
+            ruleset={G.ruleset}
+          />
+        </div>
+      </div>
+      <div className="court" data-c="court">
+        {children}
       </div>
     </header>
   );

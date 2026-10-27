@@ -78,6 +78,7 @@ import type { PickTradePlaces, TradePickRequest } from "./frame/trade/tradePick"
 import { TradePopsPopover } from "./board/map/TradePopsPopover";
 import { Popover } from "./overlays/Popover";
 import { CornerDock } from "./frame/CornerDock";
+import { Seats } from "./frame/Seats";
 import { MAP_MODES } from "./frame/map3d/modes";
 import type { MapMode } from "./frame/map3d/modes";
 
@@ -596,23 +597,21 @@ export function HegemonyBoard({
                 <div className="hud hud-top">
                   <TopBar
                     G={G}
-                    actingId={currentPlayerId}
                     breakdown={projectedIncomeBreakdown}
                     happiness={happinessDisplay(G, viewerId)}
                     income={projectedIncome}
-                    onSeat={onPlayerIDChange}
-                    threats={threats.map((threat) => threat.seat)}
                     viewerId={viewerId}
-                  />
-                  <ConsultStrip
-                    onClose={() => setConsultTab(null)}
-                    onConsult={(tab) => {
-                      // Only a term link opens the Codex at a chapter; the strip opens its contents.
-                      setCodexTarget(null);
-                      setConsultTab((open) => (open === tab ? null : tab));
-                    }}
-                    open={consultTab}
-                  />
+                  >
+                    <ConsultStrip
+                      onClose={() => setConsultTab(null)}
+                      onConsult={(tab) => {
+                        // Only a term link opens the Codex at a chapter; the strip opens its contents.
+                        setCodexTarget(null);
+                        setConsultTab((open) => (open === tab ? null : tab));
+                      }}
+                      open={consultTab}
+                    />
+                  </TopBar>
                   {sitting?.minimised ? (
                     <AssemblyDock sitting={sitting} />
                   ) : (
@@ -676,9 +675,10 @@ export function HegemonyBoard({
                   />
                 </div>
 
-                {/* The corner dock: the right column under the consult strip, where a
-                    dropped page stops above the dock. */}
-                <div className={`dock-col${consultTab ? " has-sheet" : ""}`}>
+                {/* The right column under the consult names: a dropped page, the seats,
+                    then the corner dock. Its pages scroll at the window's edge, so the
+                    map does not edge-scroll under it. */}
+                <div className={`dock-col${consultTab ? " has-sheet" : ""}`} data-no-edge-pan>
                   {consultTab ? (
                     <aside
                       aria-label="Consult"
@@ -695,6 +695,13 @@ export function HegemonyBoard({
                       <ConsultPanel activeTab={consultTab} codexTarget={codexTarget} />
                     </aside>
                   ) : null}
+                  <Seats
+                    G={G}
+                    actingId={currentPlayerId}
+                    onSeat={onPlayerIDChange}
+                    threats={threats.map((threat) => threat.seat)}
+                    viewerId={viewerId}
+                  />
                   <CornerDock G={G} mode={mapMode} onMode={setMapMode}>
                     <EndTurn
                       actingId={currentPlayerId}

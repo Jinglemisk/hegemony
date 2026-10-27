@@ -41,6 +41,9 @@ const DEG = Math.PI / 180;
 const SIDES = Array.from({ length: 6 }, (_, i) => (60 * i - 30) * DEG);
 /** A drag starts this far from where the pointer went down; before it, a press is a click. */
 const DRAG_PX = 5;
+/** The mouse this close to the window's edge pans the map that way, this fast (px/s). */
+const EDGE_PX = 8;
+const EDGE_SPEED = 900;
 type Point2 = { x: number; y: number };
 /** A hex's drawn width, flat side to flat side, in world units. */
 const HEX_W = Math.sqrt(3) * R_TOP;
@@ -374,6 +377,10 @@ export function createRuntime({
     const rate = reduceMotion.matches ? 1 : 1 - Math.pow(0.76, Math.min(0.25, dt) * 60);
     const pose = () => `${cam.tx},${cam.ty},${cam.z},${cam.rot}`;
     const before = pose();
+    if (edge.x || edge.y) {
+      const step = EDGE_SPEED * Math.min(0.05, dt);
+      nudge(edge.x * step, edge.y * step);
+    }
     moving = stepCamera(cam, goal, frame, shape.reach, rate);
     if (pose() !== before) camDirty = true;
     const v = viewOf(cam, frame);
@@ -397,7 +404,7 @@ export function createRuntime({
     }
     scene.render();
     if (stage.dataset.ready === undefined) stage.dataset.ready = "";
-    if (moving || live) kick();
+    if (moving || live || edge.x || edge.y) kick();
     else last = 0;
   }
 
@@ -417,15 +424,50 @@ export function createRuntime({
     onViewChange();
     kick();
   }
-  function panScreen(px: number, py: number) {
+  /** Moves the goal by screen pixels, the view's turn and zoom taken into account. */
+  function nudge(px: number, py: number) {
     const v = view();
     goal.anchor = null;
     goal.tx += (px * v.c + py * v.s) / v.z;
     goal.ty += (-px * v.s + py * v.c) / v.z;
     clampTarget(goal, shape.reach);
+  }
+  function panScreen(px: number, py: number) {
+    nudge(px, py);
     onViewChange();
     kick();
   }
+
+  // Edge scrolling: the mouse at the window's edge pans the map that way, each frame,
+  // while it stays there. Never behind a dialog, during a press or a drag, or over
+  // chrome that asks not to (the right column, whose pages scroll at that edge).
+  const NO_EDGE = { x: 0, y: 0 };
+  let edge = NO_EDGE;
+  const hover = (e: PointerEvent) => {
+    const was = edge;
+    edge =
+      e.pointerType !== "mouse" ||
+      e.buttons ||
+      gesture ||
+      (e.target as Element).closest?.("[data-no-edge-pan]") ||
+      document.querySelector('[aria-modal="true"]')
+        ? NO_EDGE
+        : {
+            x: e.clientX < EDGE_PX ? -1 : e.clientX >= window.innerWidth - EDGE_PX ? 1 : 0,
+            y: e.clientY < EDGE_PX ? -1 : e.clientY >= window.innerHeight - EDGE_PX ? 1 : 0,
+          };
+    if ((edge.x || edge.y) && !was.x && !was.y) {
+      onViewChange();
+      kick();
+    }
+  };
+  // Out of the window, or the window left: the edge lets go.
+  const leave = (e: PointerEvent) => {
+    if (!e.relatedTarget) edge = NO_EDGE;
+  };
+  const blur = () => {
+    edge = NO_EDGE;
+  };
   function reset() {
     Object.assign(goal, { tx: 0, ty: 0, z: frame.zFit, rot: 0, anchor: null });
     onViewChange();
@@ -566,6 +608,9 @@ export function createRuntime({
 
   stage.addEventListener("pointerdown", down);
   window.addEventListener("pointermove", move);
+  window.addEventListener("pointermove", hover);
+  window.addEventListener("pointerout", leave);
+  window.addEventListener("blur", blur);
   window.addEventListener("pointerup", up);
   window.addEventListener("pointercancel", up);
   stage.addEventListener("wheel", wheel, { passive: false });
@@ -703,6 +748,9 @@ export function createRuntime({
       cancelAnimationFrame(raf);
       stage.removeEventListener("pointerdown", down);
       window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointermove", hover);
+      window.removeEventListener("pointerout", leave);
+      window.removeEventListener("blur", blur);
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", up);
       stage.removeEventListener("wheel", wheel);

@@ -220,11 +220,6 @@
 .lm-disc {
   font-size: min(var(--lab), calc(var(--hex, 100px) * 0.19));
 }
-/* The map's key, in the shell. */
-.map-key li > span,
-.map-key-readout {
-  font-size: var(--t-12);
-}
 /* The corner dock: a mode's name at the floor, the Chronicle's deeds at reading size. */
 .dock-mode {
   font-size: var(--t-12);

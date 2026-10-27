@@ -71,7 +71,8 @@ const R_OWN = 0.84;
 
 /** The zoom-band layer each model fades with (see `bandAlphas`); the rest always show. */
 const LAYER: Partial<Record<ModelName, string>> = {
-  // Political draws the towns and the Oracle flat (LivingMap's seals), Trade the goods.
+  // Outside Terrain the towns, Ports and the Oracle are drawn flat (LivingMap's seals);
+  // Trade draws the goods flat too.
   capital: "towns",
   city: "towns",
   colony: "towns",

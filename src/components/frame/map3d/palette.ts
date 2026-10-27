@@ -82,8 +82,5 @@ export const GLOW = { flame: 0xe8ad50, flameCore: 0xfff0b0 };
 
 export type MaterialName = keyof typeof MATERIAL | keyof typeof GLOW;
 
-/** A colour as CSS takes it, for a swatch that must match the scene. */
-export const css = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
-
 /** A seat's glaze, as a number. */
 export const glazeOf = (owner: PlayerId) => parseInt(PLAYER_GLAZES[owner].color.slice(1), 16);

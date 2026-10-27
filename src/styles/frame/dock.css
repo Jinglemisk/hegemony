@@ -1,15 +1,15 @@
 /* ============================================================================
    The corner dock, after the living-map prototype: the right column under the
-   consult strip. A dropped page (bar.css) runs down it as far as it needs and
-   stops above the dock. The dock is one paper at the foot: the map's key when open
-   over its row, the Chronicle when open, then the Chronicle's newest line over
-   the five map modes, with End turn spanning both rows on the right.
+   bar. A dropped page (bar.css) runs down it as far as it needs and stops above
+   the seats and the dock. The dock is one paper at the foot: the Chronicle when open,
+   then its newest line across the dock, then the map modes with End turn at the
+   right.
    ========================================================================== */
 .dock-col {
-  --col-h: calc(100vh - var(--bar-h) - var(--hit));
+  --col-h: calc(100vh - var(--bar-h));
   position: fixed;
   z-index: var(--z-bar);
-  top: calc(var(--bar-h) + var(--hit));
+  top: var(--bar-h);
   right: 0;
   bottom: 0;
   width: min(var(--strip-w), 100%);
@@ -20,61 +20,73 @@
 .dock-col > * {
   pointer-events: auto;
 }
+/* ---- the seats over the dock's right end, on a paper of their own: a ruler's glaze
+   disc inside a full-height hit box, its outer ring saying who is acting (ink) or
+   who is one condition from winning (clay) */
+.seats {
+  flex: none;
+  align-self: flex-end;
+  margin: auto var(--s-2) var(--s-2) 0;
+  padding: 0 var(--s-1);
+  display: flex;
+  gap: var(--s-1);
+  background: var(--bone);
+  border-radius: var(--r-round);
+  filter: var(--shadow-chrome);
+}
+.rival {
+  --ring: transparent;
+  position: relative;
+  width: var(--hit);
+  height: var(--hit);
+  display: grid;
+  place-items: center;
+}
+.rival.is-acting {
+  --ring: var(--ink);
+}
+.rival.is-threat {
+  --ring: var(--clay);
+}
+.rival-disc {
+  width: var(--rival-d);
+  height: var(--rival-d);
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-round);
+  background: var(--owner);
+  color: var(--owner-ink);
+  font: 700 var(--t-body) / var(--l-body) var(--f-name);
+  box-shadow:
+    inset 0 0 0 var(--rule-2) var(--ivory-45),
+    0 0 0 var(--rule-2) var(--ring);
+}
+.rival:hover .rival-disc,
+.rival.is-viewing .rival-disc {
+  box-shadow:
+    inset 0 0 0 var(--rule-2) var(--ivory),
+    0 0 0 var(--rule-2) var(--ring);
+}
+.rival-disc.ink-dark {
+  color: var(--ink);
+}
+
 .dock {
   flex: none;
-  margin-top: auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--endturn-w);
-  grid-template-rows:
-    auto var(--hit) auto var(--dock-line-h)
-    calc(var(--endturn-h) - var(--dock-line-h));
+  grid-template-rows: auto var(--dock-line-h) var(--endturn-h);
   grid-template-areas:
-    "key key"
-    "keyhead keyhead"
     "log log"
-    "line end"
+    "line line"
     "modes end";
   background: var(--bone);
   border-top-left-radius: var(--fillet);
   filter: var(--shadow-chrome);
 }
 
-/* The map key's row: the mode's name and an up-caret, under the Chronicle's caret;
-   pressed, the key rises over it. */
-.map-key-head {
-  grid-area: keyhead;
-  min-width: 0;
-  padding: 0 calc(var(--endturn-w) + var(--s-3)) 0 var(--s-4);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s-2);
-  color: var(--ink-66);
-  text-align: left;
-  box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--ink-12);
-}
-.map-key-head:hover,
-.map-key-head[aria-expanded="true"] {
-  color: var(--ink);
-}
-.map-key-head:hover {
-  background: var(--ivory-45);
-}
-
-/* The map's key over its row, and the Chronicle under it when open: each as tall
-   as it needs up to its share of the column, then scrolling. They give way to an
-   open page and to each other. */
-.dock .map-key {
-  grid-area: key;
-  max-height: calc(var(--col-h) * 0.45);
-  box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--ink-12);
-}
-.has-sheet .dock .map-key {
-  max-height: calc(var(--col-h) * 0.3);
-}
-.dock.is-open .map-key {
-  max-height: calc(var(--col-h) * 0.2);
-}
+/* The Chronicle when open: as tall as it needs up to its share of the column, then
+   scrolling; less under an open page. */
 .dock-log {
   grid-area: log;
   position: relative;
@@ -84,12 +96,8 @@
   max-height: calc(var(--col-h) * 0.7);
   box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--ink-12);
 }
-.has-sheet .dock-log,
-.dock:has(.map-key) .dock-log {
+.has-sheet .dock-log {
   max-height: calc(var(--col-h) * 0.45);
-}
-.has-sheet .dock:has(.map-key) .dock-log {
-  max-height: calc(var(--col-h) * 0.3);
 }
 /* The log's head: its name at the left, the seat filters at the right. */
 .dock-log-title {
@@ -145,8 +153,7 @@
 .dock-line:hover {
   background: var(--ivory-45);
 }
-.dock-line::after,
-.map-key-head::after {
+.dock-line::after {
   content: "";
   flex: none;
   width: var(--caret);
@@ -154,8 +161,7 @@
   background: var(--ink-66);
   clip-path: polygon(50% 0, 100% 100%, 0 100%);
 }
-.dock-line[aria-expanded="true"]::after,
-.map-key-head[aria-expanded="true"]::after {
+.dock-line[aria-expanded="true"]::after {
   rotate: 180deg;
 }
 .dock-seal {
@@ -189,7 +195,9 @@
 }
 
 /* ---- the five map modes: icon over name, the shown one underlined in clay ---- */
+/* The row is End turn's height, so its icons are the top bar's size. */
 .dock-modes {
+  --ic-ui: var(--ic-32);
   grid-area: modes;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));

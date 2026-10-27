@@ -10,6 +10,21 @@
    a disc or card stops shrinking — are a later pass; below ~1024px the scale simply
    holds at its 0.82 floor and the panels float over the (never-reflowed) sea. */
 
+/* Below about 1180px the purse (goods, then people) reaches the clock: the year's
+   total leaves the bar for the clock's tooltip, which already says it. */
+@media (max-width: 1179px) {
+  .year .caps {
+    display: none;
+  }
+}
+/* Below 1240px the consult names would reach the purse: the icons stay, each name in
+   its tooltip. */
+@media (max-width: 1239px) {
+  .consult-label {
+    display: none;
+  }
+}
+
 @media (max-width: 760px) {
   .popChoiceGrid {
     grid-template-columns: 1fr;

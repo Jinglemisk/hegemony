@@ -199,9 +199,9 @@ const NO_HTML = {
  * hangs on. `html` drives the overlay through `--a-<key>` variables, `layers` the 3D
  * layers' opacity. In Terrain, far: the owner wash and each tile's numeral; middle:
  * names, slots and yield chips; close: the living detail. The other modes are the
- * prototype's: Political the realms, their settlements flat and upright in place of the
- * town models; Economy the yield cards over dimmed land; Trade the Ports, the goods (flat
- * too) and the ships.
+ * prototype's, and in each the settlements, Ports and the Oracle stand flat and upright
+ * in place of their models: Political the realms; Economy the yield cards over dimmed
+ * land; Trade the goods (flat too) and the ships.
  *
  * `hexPx` is a hex's drawn width. Where hexes are small (a phone), the middle
  * band's labels would crowd them, so the overlay keeps the far band's labels (the
@@ -235,22 +235,16 @@ export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain
     political: { ...NO_LAYERS, goods: 1 },
     economy: {
       ...NO_LAYERS,
-      towns: 1,
       goods: 1,
-      landmark: close,
-      landmarkVapour: close,
       slots: 1,
       detail: close,
       terrain: 0.35,
       pops: close * 0.3,
-      ports: 1,
     },
     trade: {
       ...NO_LAYERS,
-      towns: 1,
       passengers: 1,
       lifeShips: 1,
-      ports: 1,
       moves: 1,
       tradeRoutes: 1,
     },
@@ -272,6 +266,7 @@ export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain
     political: { ...NO_HTML, realm: 1, seal: 1 },
     economy: {
       ...NO_HTML,
+      seal: 1,
       ecoC: 1 - close,
       ecoF: close,
       ecoE: 1,
@@ -281,6 +276,7 @@ export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain
     // A held good's Port chip names it beside its raft: its own name would sit on the chip.
     trade: {
       ...NO_HTML,
+      seal: 1,
       plates: 1,
       cityplate: room,
       goodname: 1,
