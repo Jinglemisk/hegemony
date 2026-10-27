@@ -491,8 +491,9 @@ function Drawn({ G, session }: { G: HegemonyState; session: AssemblySession }) {
   const [target, setTarget] = useState<PlayerId | null>(null);
   const blocked = proposalReason(G, viewerId, card, target ?? undefined);
 
-  // The private draw at ceremony size, then its deck line and what only its drawer
-  // reads: the prize, and that the card stays hidden until the ballot.
+  // The private draw at ceremony size; beside it, in the draw's order, its deck line,
+  // what only its drawer reads (the prize, and that the card stays hidden until the
+  // ballot), then the choice and the commit. All of it lands at once, so nothing moves.
   return (
     <>
       <div className="sit-body sit-drawn">
@@ -502,6 +503,8 @@ function Drawn({ G, session }: { G: HegemonyState; session: AssemblySession }) {
             face={resolutionCardFace(card, G.ruleset, G.definition.content)}
             size="ceremony"
           />
+        </div>
+        <div className="sit-col">
           <DeckLine line={deckLine(G, { kind: "politician", politician: card.politician })}>
             <span>
               drawn for <b className="num">{nextDrawCost(G)}</b> influence
@@ -515,8 +518,6 @@ function Drawn({ G, session }: { G: HegemonyState; session: AssemblySession }) {
             <Ico path="unrest/locked" size="chip" />
             Only you can see this card until the ballot is read
           </span>
-        </div>
-        <div className="sit-col">
           {card.kind === "directive" ? (
             <>
               <h3 className="kicker sit-sec">Aim it at one rival</h3>

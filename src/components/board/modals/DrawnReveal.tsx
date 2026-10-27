@@ -4,7 +4,9 @@ import { ModalShell } from "./ModalShell";
 
 /**
  * The table a drawn card lands on, in one order for every deck: the card, then the deck
- * line, then the slip (anything the card asks or tells each realm), then the commit.
+ * line, then the slip (anything the card asks or tells), then the commit. The whole
+ * stack is laid out at its final size from the first frame; what shows later (`waiting`,
+ * the tray of a card still on its back) only fades in place, so the card never moves.
  * Blocking unless `onDismiss` is given, as every ModalShell.
  */
 export function DrawnReveal({
@@ -16,6 +18,7 @@ export function DrawnReveal({
   deck,
   slip,
   caption,
+  waiting = false,
   children,
 }: {
   mood: CeremonyMood;
@@ -28,6 +31,8 @@ export function DrawnReveal({
   /** What the card asks or tells beyond its face, on a paper slip. */
   slip?: ReactNode;
   caption?: ReactNode;
+  /** Hold the tray hidden, in its place, until the card is face up. */
+  waiting?: boolean;
   /** The commit. */
   children?: ReactNode;
 }) {
@@ -43,7 +48,10 @@ export function DrawnReveal({
       {card}
       {deck}
       {slip || caption || children ? (
-        <div className="drawn-tray">
+        <div
+          aria-hidden={waiting || undefined}
+          className={`drawn-tray${waiting ? " is-waiting" : ""}`}
+        >
           {slip ? <div className="drawn-slip">{slip}</div> : null}
           {caption ? <div className="drawn-caption caption">{caption}</div> : null}
           {children}

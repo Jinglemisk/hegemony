@@ -257,8 +257,8 @@ before income. On your turn:
    happens, and the plain choice to face it.
 
 A **year** is one turn for every seat. After all four have played, the next year
-begins and its card is revealed: the card turns over mid-screen and shows what it
-does to each realm. In an Assembly year its button convenes the Assembly. Closed, the
+begins and its card is revealed: the card turns over mid-screen, with the year deck's
+line under it. In an Assembly year its button convenes the Assembly. Closed, the
 card waits as a disc in the alarms row, after any title alarms, until the year turns;
 click it to read it again. The **first player moves on one seat** each year. The game
 lasts at most **fourteen years**; the next year card stays hidden.

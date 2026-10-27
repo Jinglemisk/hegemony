@@ -310,52 +310,6 @@
   color: var(--ink-63);
 }
 
-/* ── The year card's slip ────────────────────────────────────────────────────
-   The card itself is a GameCard (frame/cards.css); the slip under it holds what
-   the year does to each realm and the year's foot. */
-.yearImpact {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--s-1);
-  margin: 0 0 var(--s-2);
-  padding: 6px 0 0;
-  list-style: none;
-}
-
-.yearImpact li {
-  display: grid;
-  justify-items: center;
-  gap: var(--rule-2);
-  padding: var(--s-1) 0;
-  border-radius: 6px;
-}
-
-.yearImpact li.is-you {
-  background: var(--mood-band);
-}
-
-.yearImpact-lv {
-  font-size: var(--t-16);
-  line-height: var(--lh-24);
-}
-
-.yearImpact .caption {
-  color: var(--ink-63);
-}
-
-.yearImpact .yearImpact-warn {
-  color: var(--neg);
-  font-weight: 700;
-}
-
-.yearFoot {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--s-3);
-  margin: var(--s-1) 0 var(--s-3);
-  color: var(--ink-63);
-}
-
 .ceremonyCommit.is-dark {
   display: flex;
   align-items: center;

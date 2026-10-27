@@ -109,6 +109,15 @@ face from the engine's typed card, so the face cannot disagree with the rules:
   selector for what a deck makes public: the year deck's cards left and what is left of
   each kind, the fates' count with the kinds on hover, an Assembly draw's politician
   deck. It reads only the projected state, so it never shows an order or a next card.
+  The year card has no slip: card, deck line, commit.
+- **Nothing moves** (owner, 2026-10-28). A card lands at its final place: it turns over
+  or fades in where it lies, never sliding or scaling. The stack under it is laid out at
+  its final size from the first frame, and what shows later only fades in place (the
+  year's commit waits, hidden, while its card is on its back).
+- **Fixed rows.** Every card of a size has one layout: the band, the window, the name
+  (two lines held) and, at ceremony size, the voice (two lines held), then the panel,
+  which takes the room left, then the foot. Every panel starts at the same place, so a
+  long effect never pushes a name up.
 
 A mini card carries no text and is decoration beside a name printed elsewhere. A card is
 a button only where it can be picked (an Idea, a Law armed for repeal).
@@ -136,9 +145,8 @@ One moment owns the screen at a time, in the engine's order: the last seat's rio
 or revolt card, the year card, the game's end, then the turn notice; the Assembly
 and the fate card wait behind them (`HegemonyBoard`). The hunger card belongs to End turn:
 a seat that is short of food gets it when it holds End turn, with Go back to return to the
-turn, and the turn ends only when it confirms who leaves. The year card's face reads what
-the engine recorded as the card turned (the `yearCard` moment), and the riot and revolt
-cards read their moments, so nothing on them is recomputed after the turn has passed. End
+turn, and the turn ends only when it confirms who leaves. The riot and revolt cards read
+their moments, so nothing on them is recomputed after the turn has passed. End
 turn's confirm at the riot and revolt lines reads `turnEndUnrest`, which tries calm through
 the real action on a draft. Bots never wait on any of these: against bots the year card,
 the cover and the seat's own cards do not show.

@@ -404,13 +404,6 @@ export type HungerLeave = { tileId: string; pop: HungerPop };
 /** One pop of any class leaving one settlement: a riot's or a revolt's loss. */
 export type PopLeave = { tileId: string; pop: PopType };
 
-/** Each seat's happiness level just before and just after a year card turned, and the
- *  income its card takes from the seat's realm this year. */
-export type YearCardImpact = Record<
-  PlayerId,
-  { before: number; after: number; loss: Partial<Resources> }
->;
-
 /**
  * A public moment the shell shows a rival as a toast, beside the Chronicle line.
  * Add a kind where the engine writes the line; the shell's toast lane names it.
@@ -435,8 +428,8 @@ export type LogMoment =
   | { kind: "revolt"; slaves: number; left: PopLeave[]; tokensCleared: number; level: number }
   /** A settled trade, its terms read from the offering seat. */
   | { kind: "trade"; from: PlayerId; partner: PlayerId; terms: TradeTerms }
-  /** The year's card, turned: no toast, read by the year card's face. */
-  | { kind: "yearCard"; cardId: string; impact: YearCardImpact };
+  /** The year's card, turned: it tags the Chronicle line and raises no toast. */
+  | { kind: "yearCard"; cardId: string };
 
 export interface LogEntry {
   id: string;

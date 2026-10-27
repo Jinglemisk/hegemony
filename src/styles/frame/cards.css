@@ -95,12 +95,17 @@
 }
 
 /* ── The face: fired ivory with a faint laid-paper grain ───────────────────── */
-/* At least 63:88; cards set in a row stretch to the tallest, so their feet line up. */
+/* Fixed rows, the same on every card of a size: the band, the window, the name and voice,
+   then the panel, which takes the room left, and the foot. The rows above the panel have
+   one height whatever the card says, so every panel starts at the same place and a long
+   effect never pushes the name up. At least 63:88; a card with more to say grows at the
+   foot, and cards set in a row stretch to the tallest, so their feet line up. */
 .gc-face {
   position: relative;
-  display: flex;
+  display: grid;
   flex: 1 0 auto;
-  flex-direction: column;
+  grid-template-rows: auto auto auto 1fr auto;
+  row-gap: var(--gc-gap);
   aspect-ratio: 63 / 88;
   padding: var(--gc-pad);
   color: var(--ink);
@@ -184,7 +189,6 @@
   display: grid;
   place-items: center;
   aspect-ratio: 2 / 1;
-  margin-top: var(--gc-gap);
   overflow: hidden;
   border-radius: calc(var(--gc-r) / 2);
   background:
@@ -222,20 +226,24 @@
   filter: drop-shadow(0 var(--s-1) var(--s-1) color-mix(in srgb, var(--ink) 30%, transparent));
 }
 
-/* The name, its voice and the rule sit in whatever room the panel leaves. */
+/* The name and its voice each hold two lines, filled or not: the name centred in its
+   two, the voice under it. */
 .gc-words {
-  display: grid;
-  justify-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: var(--s-1);
-  margin-block: auto;
-  padding-block: var(--gc-gap);
 }
 .gc-name {
+  display: grid;
+  place-content: center;
+  min-height: 2lh;
   margin: 0;
   text-wrap: balance;
 }
 .gc-voice {
   display: -webkit-box;
+  min-height: 2lh;
   overflow: hidden;
   color: var(--ink-66);
   -webkit-box-orient: vertical;
@@ -265,6 +273,7 @@
 /* The black glaze: the only place it is spent, the ceremony register's own. */
 .gc-panel {
   display: grid;
+  align-content: center;
   gap: var(--s-2);
   padding: var(--s-2) var(--s-3);
   border-radius: calc(var(--gc-r) * 2 / 3);
@@ -371,7 +380,6 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--s-2);
-  margin-top: var(--gc-gap);
 }
 /* The meander key: the vase's border, kept as a thin line on the foot and the back. */
 .gc-key,
@@ -418,10 +426,10 @@
   justify-content: start;
 }
 .gc-mini .gc-window {
-  flex: 1;
   aspect-ratio: auto;
 }
 .gc-mini .gc-face {
+  grid-template-rows: auto 1fr;
   box-shadow:
     0 0 0 var(--rule) color-mix(in srgb, var(--ink) 40%, transparent),
     0 var(--rule) var(--rule-2) color-mix(in srgb, var(--vase-black) 30%, transparent);
@@ -515,27 +523,25 @@
 }
 
 /* ── Arrivals ──────────────────────────────────────────────────────────────── */
-/* Drawn: it comes off the deck on its back and turns over as it lands. */
+/* A card lands at its place and stays there: nothing translates or scales it, so the
+   stack under it never moves either. Drawn, it turns over in place; dealt or laid
+   down, it fades in where it lies. */
 .gc.arrive-turn .gc-flip {
   animation: gcTurn 760ms cubic-bezier(0.22, 0.8, 0.25, 1) both;
 }
-/* Dealt or laid down: it slides in off-axis and squares up, still on its side. */
 .gc.arrive-deal {
-  animation: gcDeal 420ms cubic-bezier(0.17, 0.84, 0.35, 1.02) both;
+  animation: gcDeal 420ms ease-out both;
 }
 @keyframes gcTurn {
   0% {
-    transform: translate3d(0, calc(var(--u) * 12), 0) rotateZ(-5deg) rotateY(180deg) scale(0.86);
+    transform: rotateY(180deg);
     opacity: 0;
   }
   20% {
     opacity: 1;
   }
-  55% {
-    transform: translate3d(0, calc(var(--u) * -2.5), 0) rotateZ(1deg) rotateY(90deg) scale(1.04);
-  }
   80% {
-    transform: translate3d(0, var(--rule-2), 0) rotateY(-6deg);
+    transform: rotateY(-6deg);
   }
   100% {
     transform: none;
@@ -544,14 +550,9 @@
 }
 @keyframes gcDeal {
   from {
-    transform: translate3d(0, calc(var(--u) * 8), 0) rotate(-3deg) scale(0.94);
     opacity: 0;
   }
-  60% {
-    opacity: 1;
-  }
   to {
-    transform: none;
     opacity: 1;
   }
 }
@@ -592,10 +593,13 @@
     0 var(--s-6) var(--s-12) color-mix(in srgb, var(--vase-black) 60%, transparent);
 }
 
-/* The deck line: the deck and what is left of it, on the table, never on the card. */
+/* The deck line: the deck and what is left of it, on the table, never on the card. It
+   holds one line whatever the face, so the stack's height is the same before and after
+   the web fonts land; only a phone-narrow screen lets it wrap. */
 .deck-line {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  white-space: nowrap;
   align-items: center;
   justify-content: center;
   gap: var(--s-1) var(--s-3);
@@ -637,7 +641,7 @@
 }
 .deck-kinds {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
   gap: var(--s-1) var(--s-2);
   margin: 0;
@@ -663,11 +667,18 @@
   cursor: help;
 }
 
+/* The tray is laid out from the first frame; it only fades in, in place. Under a card
+   still on its back it waits, hidden, and fades in once the card is face up. */
 .drawn-tray {
   display: grid;
   gap: var(--s-3);
   width: 100%;
+}
+.drawn-tray:not(.is-waiting) {
   animation: drawnTray 320ms ease-out 480ms both;
+}
+.drawn-tray.is-waiting {
+  visibility: hidden;
 }
 .drawn-slip {
   padding: var(--s-3) var(--s-4);
@@ -688,9 +699,6 @@
 .ceremony .drawn-slip .fateTarget .placementPickerChip {
   padding-inline: var(--s-4);
 }
-.drawn-slip .yearFoot {
-  margin-bottom: 0;
-}
 .drawn-caption {
   display: grid;
   gap: var(--s-1);
@@ -705,12 +713,18 @@
 }
 @keyframes drawnTray {
   from {
-    transform: translate3d(0, var(--s-2), 0);
     opacity: 0;
   }
   to {
-    transform: none;
     opacity: 1;
+  }
+}
+
+@media (max-width: 560px) {
+  .deck-line,
+  .deck-kinds {
+    flex-wrap: wrap;
+    white-space: normal;
   }
 }
 

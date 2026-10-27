@@ -225,7 +225,7 @@
   flex: 1;
   flex-direction: column;
   align-items: center;
-  gap: var(--s-2);
+  gap: var(--s-1);
   padding: 0;
   border: 0;
   background: none;
@@ -288,7 +288,12 @@
 .sit-card .gc-ceremony {
   --gc-w: min(var(--card-ceremony), 34vh);
 }
-/* On the sitting's paper the deck line is printed in ink. */
+/* On the sitting's paper the deck line is printed in ink, at the head of the column
+   beside the card. */
+.sitting .deck-line,
+.sit-col > .sit-lock {
+  align-self: flex-start;
+}
 .sitting .deck-line {
   color: var(--ink-66);
   background: var(--bone);

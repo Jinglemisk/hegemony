@@ -73,8 +73,12 @@ export function GameCard({
             <Name className={`gc-name ${ceremony ? "display" : "title"}`} id={titleId}>
               {face.name}
             </Name>
-            {ceremony && face.voice ? (
-              <span className="gc-voice body-em">“{face.voice}”</span>
+            {/* At ceremony size the voice's two lines are held even when a card has none,
+                so every card's panel starts at the same place. */}
+            {ceremony ? (
+              <span aria-hidden={face.voice ? undefined : true} className="gc-voice body-em">
+                {face.voice ? `“${face.voice}”` : null}
+              </span>
             ) : null}
             <i className="gc-rule" />
           </div>
