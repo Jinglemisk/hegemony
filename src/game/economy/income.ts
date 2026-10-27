@@ -9,7 +9,6 @@ import type {
   Resource,
   Resources,
   Settlement,
-  SettlementKind,
   Terrain,
   YearTerm,
 } from "../types";
@@ -25,7 +24,6 @@ import type { Ruleset } from "../ruleset";
 import { hungerMouths } from "../hunger";
 import {
   buildingIdle,
-  getLawEffects,
   getLawIncomeContributions,
   effectiveRuleset,
   getStandingEffectSources,
@@ -513,57 +511,6 @@ export function settlementClassColumn(
   }
 
   return { perPop, raisedBy, income: summarizeIncome(lines.map(({ line }) => line)) };
-}
-
-/** What one pop of a class makes and eats, for no settlement in particular. */
-export type ClassRule = {
-  /** What one pop makes before any building: its fixed resource, or its tile's. */
-  perPop: number;
-  /** The building that raises it, and what each pop then makes. */
-  raise: { by: string; perPop: number } | null;
-  /** The food one pop eats a turn. */
-  eats: number;
-};
-
-/**
- * The output rules as the table's Laws leave them, for a key to the map: each class's
- * yield, the building that raises it and its upkeep in food, and the buildings that
- * grow food, less those a Law idles. A Law scoped to cities or colonies counts for
- * that `kind` alone; a seat's Ideas show in its own ledger.
- */
-export function outputRules(G: HegemonyState, kind?: SettlementKind) {
-  const ruleset = effectiveRuleset(G, kind);
-  const laws = getLawEffects(G);
-  const standing = getBuildings(G.definition.content).filter(
-    (b) => !laws.some((effect) => effect.type === "buildingIdle" && effect.building === b.id),
-  );
-  const rule = (pop: PopType): ClassRule => {
-    const perPop =
-      classOutputs(pop, null, ruleset)[0]?.[1] ?? ruleset.popIncome[pop].primaryResource;
-    // A building raises what a class makes; where it makes nothing, there is nothing to raise.
-    const raise = standing.flatMap((b) =>
-      b.effects.flatMap((effect) =>
-        effect.type === "classOutput" && effect.pop === pop && perPop > 0 && effect.amount > perPop
-          ? [{ by: b.name, perPop: effect.amount }]
-          : [],
-      ),
-    );
-    return { perPop, raise: raise[0] ?? null, eats: -(ruleset.popIncome[pop].flat.food ?? 0) };
-  };
-  const food = standing.flatMap((b) =>
-    [
-      ...b.effects.flatMap((effect) =>
-        effect.type === "income" && effect.resource === "food" ? [effect.amount] : [],
-      ),
-      ...laws.flatMap((effect) =>
-        effect.type === "buildingFood" && effect.building === b.id ? [effect.amount] : [],
-      ),
-    ].map((amount) => ({ by: b.name, amount })),
-  );
-  return {
-    classes: { slaves: rule("slaves"), freemen: rule("freemen"), citizens: rule("citizens") },
-    food,
-  };
 }
 
 export function addIncomeContribution(

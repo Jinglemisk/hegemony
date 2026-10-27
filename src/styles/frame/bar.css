@@ -1,6 +1,5 @@
 /* ============================================================================
-   Top bar: the clock, the purse, the rivals, and the consult strip that hangs
-   from its right end
+   Top bar: the clock, the purse, and the consult pages' names at its right end
    ========================================================================== */
 .topbar {
   position: absolute;
@@ -10,6 +9,9 @@
   height: var(--bar-h);
   background: var(--bone);
 }
+/* The three groups ride --ui-scale together, as the rest of the chrome does: under
+   1440 the bar's contents shrink in place, each from its own anchor, so the clock,
+   the purse and the consult names keep clear of each other down to 1024. */
 .clock,
 .purse,
 .court {
@@ -18,19 +20,36 @@
   height: var(--hit);
   display: flex;
   align-items: center;
+  transform: scale(var(--ui-scale));
 }
 .clock {
   left: var(--s-4);
   width: var(--clock-w);
   gap: var(--s-4);
+  transform-origin: left center;
 }
 .purse {
   left: calc(50% - var(--purse-w) / 2);
   width: var(--purse-w);
+  justify-content: center;
+  gap: var(--s-4);
 }
 .court {
   right: var(--s-4);
   gap: var(--s-4);
+  transform-origin: right center;
+}
+/* Goods, people and the mood each sit in a plate pressed into the bar. */
+.purse-seg {
+  height: var(--hit);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--s-1);
+  border-radius: var(--r-8);
+  background: var(--ink-07);
+  box-shadow:
+    inset 0 var(--rule) var(--rule-2) var(--ink-12),
+    inset 0 calc(var(--rule) * -1) 0 var(--ivory-70);
 }
 /* Bar controls are flat until hovered: the bar is one control tall. */
 .res:hover,
@@ -59,16 +78,6 @@
   font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
   color: var(--ink-66);
 }
-.rivals::before {
-  content: "";
-  position: absolute;
-  left: calc(var(--s-2) * -1);
-  top: var(--s-1);
-  bottom: var(--s-1);
-  width: var(--rule);
-  background: var(--ink-30);
-}
-
 .res,
 .level {
   height: var(--hit);
@@ -78,6 +87,13 @@
 }
 .res {
   width: var(--res-w);
+}
+.res.pop {
+  width: var(--pop-w);
+}
+.res,
+.level {
+  border-radius: var(--r-4);
 }
 .res-val {
   font-size: var(--t-num);
@@ -98,7 +114,6 @@
 }
 .level {
   width: var(--level-w);
-  margin-left: var(--s-4);
 }
 /* The happiness gauge: its ends are the display's floor and ceiling; revolt is clay,
    the riot band ochre, calm above. --g-revolt, --g-riot and --g-value are fractions
@@ -139,11 +154,6 @@
   background: var(--ink);
 }
 
-.rivals {
-  display: flex;
-  gap: var(--s-1);
-  position: relative;
-}
 .consult-btn .ico {
   filter: var(--at-rest);
 }
@@ -152,80 +162,17 @@
   filter: none;
 }
 
-/* A ruler: a glaze disc inside a full-height hit box. The outer ring says who is
-   acting (ink) or who is one condition from winning (clay). */
-.rival {
-  --ring: transparent;
-  position: relative;
-  width: var(--hit);
-  height: var(--hit);
-  display: grid;
-  place-items: center;
-}
-.rival.is-acting {
-  --ring: var(--ink);
-}
-.rival.is-threat {
-  --ring: var(--clay);
-}
-.rival-disc {
-  width: var(--rival-d);
-  height: var(--rival-d);
-  display: grid;
-  place-items: center;
-  border-radius: var(--r-round);
-  background: var(--owner);
-  color: var(--owner-ink);
-  font: 700 var(--t-body) / var(--l-body) var(--f-name);
-  box-shadow:
-    inset 0 0 0 var(--rule-2) var(--ivory-45),
-    0 0 0 var(--rule-2) var(--ring);
-}
-.rival:hover .rival-disc,
-.rival.is-viewing .rival-disc {
-  box-shadow:
-    inset 0 0 0 var(--rule-2) var(--ivory),
-    0 0 0 var(--rule-2) var(--ring);
-}
-.rival-disc.ink-dark {
-  color: var(--ink);
-}
-
 /* Inline icons in the bar's text take the chip size. */
 .hud .richIcon {
   width: var(--ic-chip);
   height: var(--ic-chip);
 }
 
-/* ---- consult strip: a tab hanging from the bar's right end -------------------- */
+/* ---- the consult names at the bar's right end ---------------------------------- */
 .consult-strip {
-  position: absolute;
-  top: var(--bar-h);
-  right: 0;
-  width: var(--strip-w);
-  height: var(--hit);
-  padding: 0 var(--s-4);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  background: var(--bone);
-  border-bottom-left-radius: var(--fillet);
-}
-.consult-strip::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 100%;
-  width: var(--fillet);
-  height: var(--fillet);
-  background: radial-gradient(
-    circle at 0 100%,
-    transparent calc(var(--fillet) - var(--rule)),
-    var(--bone) var(--fillet)
-  );
-}
-.consult-strip.is-open {
-  border-bottom-left-radius: 0;
+  gap: var(--s-4);
 }
 /* Words, like the realm's page tabs: the open page's name underlined in clay. */
 .consult-btn {
@@ -244,13 +191,14 @@
   box-shadow: inset 0 calc(var(--rule-2) * -1) 0 var(--clay);
 }
 
-/* The consult page, dropped out of the right strip into the column under it (see
-   dock.css): the same paper and width, one hairline under the strip, the strip's
-   rounded corner moved down to its foot. It sits outside the HUD, so it carries the
-   HUD's shadow itself, clipped at the top where it joins the strip. As tall as it
-   needs, and shorter, scrolling, when the dock grows under it; the Codex takes the
-   whole drop, so turning a chapter never moves its foot. */
+/* The consult page, dropped from the bar's right end into the column under it (see
+   dock.css): one hairline under the bar, a concave join to it at the left and a
+   rounded foot. It sits outside the HUD, so it carries the HUD's shadow itself,
+   clipped at the top where it joins the bar. As tall as it needs, and shorter,
+   scrolling, when the dock grows under it; the Codex takes the whole drop, so turning
+   a chapter never moves its foot. */
 .consult-sheet {
+  position: relative;
   z-index: var(--z-bar);
   flex: 0 1 auto;
   min-height: 0;
@@ -263,6 +211,19 @@
   border-bottom-left-radius: var(--fillet);
   filter: var(--shadow-chrome);
   clip-path: inset(0 calc(-1 * var(--s-6)) calc(-1 * var(--s-6)) calc(-1 * var(--s-6)));
+}
+.consult-sheet::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 100%;
+  width: var(--fillet);
+  height: var(--fillet);
+  background: radial-gradient(
+    circle at 0 100%,
+    transparent calc(var(--fillet) - var(--rule)),
+    var(--bone) var(--fillet)
+  );
 }
 .consult-sheet[data-tab="codex"] {
   flex-grow: 1;

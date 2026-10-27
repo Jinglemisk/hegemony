@@ -38,8 +38,8 @@ where: fill a big plains with slaves and export food, or build on it and import.
 
 ## The map
 
-The island is drawn in 3D. Drag to pan, and scroll or pinch to zoom toward the pointer.
-**0** returns to the opening view. Click the sea to give the map focus; then **Q** and **E**
+The island is drawn in 3D. Drag to pan, or rest the mouse at the window's edge to pan that
+way; scroll or pinch to zoom toward the pointer. **0** returns to the opening view. Click the sea to give the map focus; then **Q** and **E**
 turn it up to 15° either way, the arrow keys pan, and **+** and **−** zoom. The map stays
 turned where you leave it, and the compass at the top left turns with it. The view tilts as
 you zoom in: flat far out, 20° at the opening view, 45° close in.
@@ -52,8 +52,9 @@ Keys **1** to **4** switch the map mode:
 
 1. **Terrain** — the whole board, as above.
 2. **Political** — each tile in its owner's colour and the realms' names. The towns, Ports
-   and the Oracle are flat icons; each settlement's sits on its owner's colour, with its
-   realm's Unrest tokens and their count beside it when the realm holds any.
+   and the Oracle are flat icons, as in Economy and Trade; each settlement's sits on its
+   owner's colour, with its realm's Unrest tokens and their count beside it when the realm
+   holds any.
 3. **Economy** — each settlement's slots as **output / free**: what its worked slots make a
    turn, and how many slots are neither built on nor worked. An open tile with 3 slots reads
    "0 / 3". Close in, what each settlement makes and eats a turn, and its buildings.
@@ -66,11 +67,9 @@ mark, or "unclaimed"; click it to read it. When an action asks for a tile, the t
 take are ringed and the rest dim. With the keyboard, Tab onto the tiles, walk them with the
 arrow keys and press Enter to pick one.
 
-**The corner dock** sits at the bottom right. Its bottom row holds the four mode buttons, and
-End turn spans the two bottom rows on the right. Above the mode buttons is the newest line of
-the **Chronicle**, the game's log: press it to open the whole Chronicle upward, and press it
-again or Escape to close it. The top row is the **map key**, shut until you press it; open, it
-says what the current mode's colours, marks and numbers mean.
+**The corner dock** sits at the bottom right. Its bottom row holds the four mode buttons and
+End turn. Above them, across the dock, is the newest line of the **Chronicle**, the game's log:
+press it to open the whole Chronicle upward, and press it again or Escape to close it.
 
 ## Resources
 

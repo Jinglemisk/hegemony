@@ -38,24 +38,16 @@ test("the living map: a tile's button places the metropolis, and arrows walk the
   await page.keyboard.press("ArrowLeft");
   await expect(from).toBeFocused();
 
-  // Keys 1 to 4 switch the map mode, and the tile says what it makes. The map key stays
-  // shut until its row is pressed, then follows the mode; Escape shuts it again.
+  // Keys 1 to 4 switch the map mode, and the tile says what it makes.
   await page.keyboard.press("3");
   await expect(from).toHaveAccessibleName(/; .+ makes .+$/);
-  await page.getByRole("button", { name: "Economy key" }).click();
-  await expect(page.getByRole("region", { name: "Economy map key" })).toBeVisible();
   await page.keyboard.press("1");
-  await expect(page.getByRole("region", { name: "Terrain map key" })).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("region", { name: /map key/ })).toBeHidden();
-  await expect(page.getByRole("button", { name: "Terrain key" })).toBeFocused();
 
   // The corner dock: a mode's button switches the map, and the Chronicle's line opens
   // the log upward out of the dock; Escape closes it and leaves focus on the line.
   const political = modes.getByRole("button", { name: "Political" });
   await political.click();
   await expect(political).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByRole("button", { name: "Political key" })).toBeVisible();
   const line = page.getByRole("button", { name: /^Chronicle: / });
   await line.click();
   await expect(line).toHaveAttribute("aria-expanded", "true");

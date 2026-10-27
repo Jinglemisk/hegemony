@@ -9,11 +9,11 @@ import type { Census } from "../../../ui/frameSelectors";
 /**
  * The living map's four modes, after the prototype (the owner folded Unrest into
  * Political on 2026-10-26). Each is a view of the same board: what fades in and out
- * (`bandAlphas`), how the tiles are washed, which labels show and what the map key
- * says. Keys 1 to 4 pick them, in this order. The mode is the shell's view state;
+ * (`bandAlphas`), how the tiles are washed and which labels show. Keys 1 to 4 pick
+ * them, in this order. The mode is the shell's view state;
  * nothing here touches the game.
  *
- * Nothing here imports three.js: the shell reads it too, for the key and the keys.
+ * Nothing here imports three.js: the shell reads it too, for the dock's buttons and the keys.
  */
 
 export type MapMode = "terrain" | "political" | "economy" | "trade";
@@ -36,13 +36,13 @@ export const MAP_MODES: readonly { id: MapMode; label: string; icon: string; not
     id: "economy",
     label: "Economy",
     icon: "market/income",
-    note: "What each settlement's worked slots make and how many slots are free, what it makes and eats a turn, and its buildings; the land dimmed.",
+    note: "Each settlement as its icon on its owner's colour; what its worked slots make and how many slots are free, what it makes and eats a turn, and its buildings; the land dimmed.",
   },
   {
     id: "trade",
     label: "Trade",
     icon: "market/handshake",
-    note: "Each luxury good as its icon, in its holder's colour or unclaimed; Ports, ship routes and pops on the move.",
+    note: "Each settlement and Port as its icon on its owner's colour; each luxury good as its icon, in its holder's colour or unclaimed; ship routes and pops on the move.",
   },
 ];
 

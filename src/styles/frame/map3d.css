@@ -403,13 +403,29 @@
     0 0 6px var(--ink);
 }
 
-/* Political's and Trade's flat marks, upright to the camera: an icon on a disc in its
-   owner's colour (--own), plain where nobody holds it. A capital's disc is the largest. */
+/* The flat marks of every mode but Terrain, upright to the camera: an icon on a disc
+   in its owner's colour (--own), plain where nobody holds it. --d is the disc's
+   width in its own em; a capital's is the largest. */
+.lm-disc,
+.lm-eco.under-colony {
+  --d: 2.3;
+}
+.lm-disc.capital,
+.lm-eco.under-capital {
+  --d: 3.2;
+}
+.lm-disc.city,
+.lm-eco.under-city {
+  --d: 2.7;
+}
+.lm-disc.port {
+  --d: 1.7;
+}
 .lm-disc {
   display: grid;
   place-items: center;
-  width: 2.3em;
-  height: 2.3em;
+  width: calc(var(--d) * 1em);
+  height: calc(var(--d) * 1em);
   background: var(--own, var(--ivory));
   border: var(--rule-2) solid var(--ink);
   border-radius: var(--r-round);
@@ -421,18 +437,6 @@
 .lm-disc > img {
   width: 80%;
   height: 80%;
-}
-.lm-disc.capital {
-  width: 3.2em;
-  height: 3.2em;
-}
-.lm-disc.city {
-  width: 2.7em;
-  height: 2.7em;
-}
-.lm-disc.port {
-  width: 1.7em;
-  height: 1.7em;
 }
 .lm-disc.seal {
   opacity: var(--a-seal, 0);
@@ -487,6 +491,16 @@
 .lm-eco.full {
   opacity: var(--a-ecoF, 0);
 }
+/* A settled tile's cards, and the Oracle's, hang from the foot of its seal: half the
+   seal's width down, in the seal's own size (type.css sizes .lm-disc). */
+.lm-eco.compact,
+.lm-eco.full,
+.lm-eco.oracle {
+  transform: translate(
+    -50%,
+    calc(min(var(--lab), var(--hex, 100px) * 0.19) * var(--d) / 2 + var(--rule-2))
+  );
+}
 .lm-eco.compact {
   gap: 1px;
   padding: 2px 6px;
@@ -506,9 +520,6 @@
 }
 .lm-eco.empty.is-dimmed {
   --dimmed: var(--dim);
-}
-.lm-eco.empty.oracle {
-  transform: translate(-50%, 0);
 }
 .lm-eco img {
   width: 1.5em;

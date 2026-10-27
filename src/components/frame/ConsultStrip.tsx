@@ -2,8 +2,8 @@ import { CONSULT } from "../../ui/frameFormat";
 import type { ConsultTab } from "../board/types";
 import { Ico } from "./parts";
 
-/** A tab hanging from the bar's right end, naming the consult pages. A page drops down
- *  out of it; pressing its name again closes it. */
+/** The consult pages' names at the bar's right end. A page drops down under them;
+ *  pressing its name again closes it. */
 export function ConsultStrip({
   open,
   onConsult,
@@ -34,10 +34,11 @@ export function ConsultStrip({
           data-c="consult-btn"
           key={tab}
           onClick={() => onConsult(tab)}
+          title={label}
           type="button"
         >
-          <Ico path={icon} size="chip" />
-          {label}
+          <Ico path={icon} size="ui" />
+          <span className="consult-label">{label}</span>
         </button>
       ))}
     </nav>

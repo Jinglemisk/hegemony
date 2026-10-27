@@ -173,8 +173,13 @@ function Readout({ output, free }: { output: number; free: number }) {
 /** Economy's cards on a settled tile: compact (the slot readout) far and middle; full
  *  close in (the readout, the settlement's net a turn as its ledger prints it, and its
  *  buildings). Two colonies sharing the tile share the card, a row each, so it keeps to
- *  its hex. */
+ *  its hex. The card hangs from the foot of the tile's largest seal. */
 function EcoCards({ tile }: { tile: MapTile }) {
+  const under = tile.settlements.some((s) => s.capital)
+    ? "capital"
+    : tile.settlements.some((s) => s.kind === "city")
+      ? "city"
+      : "colony";
   const slots = (s: MapSettlement) => (
     <span className="row">
       {tile.resource ? icon(RESOURCE_RASTERS[tile.resource]) : null}
@@ -183,7 +188,12 @@ function EcoCards({ tile }: { tile: MapTile }) {
   );
   return (
     <>
-      <div className="lm-eco compact" data-alpha="ecoC" data-wx={tile.x} data-wy={tile.y + 0.05}>
+      <div
+        className={`lm-eco compact under-${under}`}
+        data-alpha="ecoC"
+        data-wx={tile.x}
+        data-wy={tile.y + MAIN_Z}
+      >
         {tile.settlements.map((s, i) => (
           <Fragment key={s.id}>
             {i ? <hr /> : null}
@@ -191,7 +201,12 @@ function EcoCards({ tile }: { tile: MapTile }) {
           </Fragment>
         ))}
       </div>
-      <div className="lm-eco full" data-alpha="ecoF" data-wx={tile.x} data-wy={tile.y - 0.02}>
+      <div
+        className={`lm-eco full under-${under}`}
+        data-alpha="ecoF"
+        data-wx={tile.x}
+        data-wy={tile.y + MAIN_Z}
+      >
         {tile.settlements.map((s, i) => {
           const net = RESOURCE_ORDER.filter((k) => s.net[k]);
           return (
@@ -224,18 +239,19 @@ function EcoCards({ tile }: { tile: MapTile }) {
   );
 }
 
-/** Economy's card on an open tile: what a slave would make there, and its slots. */
+/** Economy's card on an open tile: what a slave would make there, and its slots. The
+ *  Oracle's hangs from its seal, which names it. */
 function EcoEmpty({ tile, dimmed }: { tile: MapTile; dimmed: boolean }) {
   const oracle = tile.terrain === "oracle";
   return (
     <div
-      className={`lm-eco empty${oracle ? " oracle" : ""}${dimmed ? " is-dimmed" : ""}`}
+      className={`lm-eco empty${oracle ? " oracle under-colony" : ""}${dimmed ? " is-dimmed" : ""}`}
       data-alpha="ecoE"
       data-wx={tile.x}
-      data-wy={tile.y + (oracle ? 0.42 : 0.05)}
+      data-wy={tile.y + (oracle ? MAIN_Z : 0.05)}
     >
       {oracle ? (
-        <em>Oracle · 0 slots, never settled</em>
+        <em>Never settled</em>
       ) : (
         <>
           {tile.resource && tile.perSlave ? icon(RESOURCE_RASTERS[tile.resource]) : null}
@@ -307,11 +323,12 @@ function RealmLabels({ model, layout }: { model: MapModel; layout: Layout }) {
 }
 
 /**
- * Political's flat marks, upright to the camera in place of the 3D models: each
- * settlement's icon on its owner's colour, its realm's Unrest tokens beside it when it
- * holds any; each Port's icon; and the Oracle's on a plain disc.
+ * The flat marks every mode but Terrain draws, upright to the camera in place of the 3D
+ * models: each settlement's icon on its owner's colour; each Port's icon; and the
+ * Oracle's on a plain disc. Political adds a realm's Unrest tokens beside each of its
+ * settlements when it holds any.
  */
-function Seals({ model, towns }: { model: MapModel; towns: Town[] }) {
+function Seals({ model, towns, unrest }: { model: MapModel; towns: Town[]; unrest: boolean }) {
   const tokens = new Map(model.realms.map((realm) => [realm.owner, realm.tokens]));
   const settlements = new Map(model.tiles.flatMap((t) => t.settlements.map((s) => [s.id, s])));
   const seal = (kind: string, at: { x: number; z: number }) => ({
@@ -326,7 +343,7 @@ function Seals({ model, towns }: { model: MapModel; towns: Town[] }) {
       {towns.map((town) => {
         const s = settlements.get(town.settlementId)!;
         const kind = s.capital ? "capital" : s.kind;
-        const held = tokens.get(s.owner) ?? 0;
+        const held = unrest ? (tokens.get(s.owner) ?? 0) : 0;
         const port = town.sites.find((site) => site.building === "port");
         return (
           <Fragment key={`seal-${town.settlementId}`}>
@@ -560,7 +577,7 @@ function LivingMap({
           );
         })}
         <RealmLabels layout={layout} model={model} />
-        <Seals model={model} towns={layout.towns} />
+        <Seals model={model} towns={layout.towns} unrest={mode === "political"} />
         {/* Trade's goods, flat in place of their rafts: a disc picks its good too. */}
         {model.moorings.map((m) => (
           <div
