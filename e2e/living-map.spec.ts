@@ -55,4 +55,16 @@ test("the living map: a tile's button places the metropolis, and arrows walk the
   await page.keyboard.press("Escape");
   await expect(page.getByRole("region", { name: "Action log" })).toBeHidden();
   await expect(line).toBeFocused();
+
+  // The compass is a button: turned and zoomed in, a click brings back the opening view.
+  const stage = page.locator(".living-map");
+  const pose = () =>
+    stage.evaluate((el) => ["--turn", "--hex"].map((k) => el.style.getPropertyValue(k)));
+  const opening = await pose();
+  await stage.focus();
+  await page.keyboard.press("e");
+  await page.keyboard.press("+");
+  await expect.poll(pose).not.toEqual(opening);
+  await page.getByRole("button", { name: "Compass: back to the opening view" }).click();
+  await expect.poll(pose).toEqual(opening);
 });

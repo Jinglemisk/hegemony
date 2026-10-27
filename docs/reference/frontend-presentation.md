@@ -168,9 +168,28 @@ pinned to a tile closes when the view moves, while the armed pick stays armed, a
 tooltip opens while the view is still moving.
 
 Keys 1 to 4 switch the map mode from anywhere but a field or a dialog, so the verb discs
-take no number keys and each key has one job (Q83 asks whether to keep that). The scene
-draws only while the camera eases or ambient motion is allowed: the page visible, the map
-on screen, no reduced motion, and a GPU rather than software rendering.
+take no number keys and each key has one job; the owner kept that on 2026-10-27, since the
+modes are the map's own controls and the discs are a click away. The scene draws only while
+the camera eases or ambient motion is allowed: the page visible, the map on screen, no
+reduced motion, and a GPU rather than software rendering. With the camera still, only the
+sea and its life move, and they draw at 30 frames a second, where 60 cost 7 to 15% of the
+main thread in a dev build; a pan, a zoom or a turn draws every frame.
+
+The owner's other map calls of 2026-10-27:
+
+- **A pick names its candidates.** While a pick is armed (Grow, the ladder, Build, Move,
+  placing traded pops), each ringed settlement shows its name plate at any zoom. Without
+  that, at the opening zoom a colony's name waited a notch further in, and on a small screen
+  every name did. Political and Economy draw no plates, and a pick leaves them so.
+- **The compass is a button.** A click returns to the opening view, as 0 does; its tooltip
+  names Q and E for turning and 0 for the reset. It is a real button with a label, so the
+  keyboard reaches it, and it has no turn arrows. Without it a mouse player had no way back.
+- **The keyboard's focus ring is two-tone:** an ochre band edged in ink on both sides. The
+  ochre alone was 1.17:1 on the ochre seat's tiles in Political, where the ink edge measures
+  7.3:1.
+- **The trade key's wording** ("a Port on hex −3,0 takes it", naming a coordinate the board
+  never shows) was to become "a Port founded beside it"; the map key had already gone in
+  #155, so nothing was left to change.
 
 ## Assembly presentation
 

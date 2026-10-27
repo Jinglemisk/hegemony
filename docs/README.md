@@ -30,7 +30,9 @@ to the bots.
 
 The full-game browser test waits.
 
-**The board:** 3D only, no 2D fallback (owner, 2026-10-26); open calls in [Q83](questions.md).
+**The board:** 3D only, no 2D fallback (owner, 2026-10-26). The owner settled its last open
+calls on 2026-10-27; the [frontend presentation reference](reference/frontend-presentation.md#map-presentation)
+holds them.
 
 **Locked sequence:** V1 includes luxury goods, full Catan-style player trade, all twelve
 National Ideas, and the intended typed Resolution/Idea effects. The v1 mechanics freeze

@@ -109,9 +109,13 @@
 .lm-plate.colony {
   --kind: var(--a-colony, 1);
 }
-/* A placement is asking: the tiles that are not an answer recede. */
+/* A placement is asking: the tiles that are not an answer recede, and each answer's
+   plate shows at any zoom. */
 .lm-plate.is-dimmed {
   --dimmed: var(--dim);
+}
+.lm-plate.is-asked {
+  opacity: var(--a-asked, 1);
 }
 .lm-plate .pl-row {
   display: flex;
@@ -337,20 +341,28 @@
   opacity: 0.8;
 }
 
-/* The compass: the top left, under the bar. */
-.lm-compass {
+/* The compass: the top left, under the bar. It turns with the map; a click brings
+   back the opening view. */
+.lm-compass-anchor {
   position: absolute;
   left: var(--s-3);
   top: calc(var(--bar-h) + var(--s-3));
+}
+.lm-compass {
+  position: relative;
   display: grid;
   place-items: start center;
   width: 40px;
   height: 40px;
+  padding: 0;
   border-radius: var(--r-round);
   border: var(--rule) solid var(--ivory-45);
   background: var(--map-compass);
-  pointer-events: none;
+  cursor: pointer;
   rotate: var(--turn, 0rad);
+}
+.lm-compass:hover {
+  border-color: var(--ivory);
 }
 .lm-compass b {
   margin-top: 3px;

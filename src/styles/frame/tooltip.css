@@ -42,6 +42,12 @@
 .tip-body {
   font: 400 var(--t-body) / var(--l-body) var(--f-body);
 }
+/* A key to press: bold, with lining figures, so 0 never reads as o. */
+.tip-body kbd {
+  font-family: inherit;
+  font-weight: 700;
+  font-variant-numeric: lining-nums;
+}
 .tip-title {
   display: flex;
   align-items: baseline;

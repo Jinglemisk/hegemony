@@ -8,7 +8,8 @@ import { rasterIcon } from "../../../ui/icons/placeholders";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
 import { settlementNames } from "../../../ui/settlementNames";
-import { Tip, TipLedger } from "../parts";
+import { Tooltip } from "../../overlays/Tooltip";
+import { Tip, TipBody, TipLedger } from "../parts";
 import { BoardTip } from "./BoardTip";
 import { H_TILE } from "./camera";
 import { MAIN_Z, layoutMap } from "./layout";
@@ -60,18 +61,20 @@ function Pips({ built, worked, slots }: { built: number; worked: number; slots: 
   );
 }
 
-/** A tile's name plate: the settlements on it, their slots, and their pops close in. */
-function Plate({ tile, dimmed }: { tile: MapTile; dimmed: boolean }) {
+/** A tile's name plate: the settlements on it, their slots, and their pops close in.
+ *  A pick's candidate shows its plate at any zoom (`asked`). */
+function Plate({ tile, dimmed, asked }: { tile: MapTile; dimmed: boolean; asked: boolean }) {
   const [lead] = tile.settlements;
-  const alpha =
-    lead.kind === "capital"
+  const alpha = asked
+    ? "asked"
+    : lead.kind === "capital"
       ? "plates"
       : lead.kind === "city"
         ? "plates cityplate"
         : "plates colony";
   return (
     <div
-      className={`lm-plate ${lead.kind}${lead.capital ? " capital" : ""}${dimmed ? " is-dimmed" : ""}`}
+      className={`lm-plate ${lead.kind}${lead.capital ? " capital" : ""}${dimmed ? " is-dimmed" : ""}${asked ? " is-asked" : ""}`}
       data-alpha={alpha}
       data-wx={tile.x}
       data-wy={tile.y + 0.42}
@@ -455,11 +458,12 @@ function LivingMap({
   // The heavy work (the fit, the shaders) waits for the passive pass; see `start`.
   useEffect(() => runtime.current?.start(), [shape]);
 
-  // The badges follow the selection, so the labels are collected again with it.
+  // The badges follow the selection and the plates a pick's candidates, so the labels
+  // are collected again with them.
   useLayoutEffect(() => {
     runtime.current?.setModel(model, layout);
     runtime.current?.collect();
-  }, [model, layout, selectedTileId]);
+  }, [model, layout, selectedTileId, candidates]);
 
   useLayoutEffect(() => {
     runtime.current?.setMode(mode);
@@ -487,7 +491,7 @@ function LivingMap({
       onClick={(event) => {
         // A drag that ends on the sea is a pan; a click on a tile or a good is theirs.
         const target = event.target as Element;
-        if (dragged() || target.closest("[data-tile-id], .lm-moor")) return;
+        if (dragged() || target.closest("[data-tile-id], .lm-moor, .lm-compass")) return;
         const raft =
           target.closest<HTMLElement>("[data-good]")?.dataset.good ??
           runtime.current?.pickMooring(event.clientX, event.clientY);
@@ -501,8 +505,8 @@ function LivingMap({
       <p className="visuallyHidden" id="lm-help">
         Drag to pan. Wheel or pinch to zoom toward the pointer. Keys 1 to 4 switch the map mode. Q
         and E turn the map up to 15° either way. With the map focused, arrows pan, + and − zoom, 0
-        returns to the opening view. Tab once more to walk the tiles with the arrow keys; Enter
-        picks one.
+        or the compass returns to the opening view. Tab once more to walk the tiles with the arrow
+        keys; Enter picks one.
       </p>
       {/* A mode switched by its key is said, with what it shows. */}
       <p className="visuallyHidden" role="status">
@@ -566,7 +570,7 @@ function LivingMap({
           const dimmed = Boolean(candidates && !candidates.has(tile.id));
           return tile.settlements.length ? (
             <Fragment key={tile.id}>
-              <Plate dimmed={dimmed} tile={tile} />
+              <Plate asked={Boolean(candidates?.has(tile.id))} dimmed={dimmed} tile={tile} />
               <EcoCards tile={tile} />
             </Fragment>
           ) : (
@@ -638,10 +642,31 @@ function LivingMap({
           </button>
         ))}
       </div>
-      <div aria-hidden="true" className="lm-compass">
-        <b>N</b>
-        <i />
-      </div>
+      {/* The compass turns with the map, and a click brings back the opening view. */}
+      <Tooltip
+        content={
+          <Tip title="Compass">
+            <TipBody>
+              Click it or press <kbd>0</kbd> for the opening view. With the map focused,{" "}
+              <kbd>Q</kbd> and <kbd>E</kbd> turn it.
+            </TipBody>
+          </Tip>
+        }
+        triggerClassName="lm-compass-anchor"
+      >
+        <button
+          aria-keyshortcuts="0"
+          aria-label="Compass: back to the opening view"
+          className="lm-compass"
+          onClick={() => {
+            if (!dragged()) runtime.current?.reset();
+          }}
+          type="button"
+        >
+          <b aria-hidden="true">N</b>
+          <i aria-hidden="true" />
+        </button>
+      </Tooltip>
       {hover && tip ? (
         <BoardTip anchor={hover.rect}>
           <Tip title={tip.title}>
