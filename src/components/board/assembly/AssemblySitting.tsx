@@ -27,6 +27,7 @@ import { happinessLevel } from "../../../game/happiness";
 import { votePurchaseLimit } from "../../../game/ideaRules";
 import { victoryMetricValue, voiceHolder } from "../../../game/victory";
 import type { HegemonyState, PlayerId, Resources } from "../../../game/types";
+import { deckLine, resolutionCardFace } from "../../../ui/cardFace";
 import { tieRule } from "../../../ui/effects";
 import { sign } from "../../../ui/frameFormat";
 import { turnsUntilYear } from "../../../ui/frameSelectors";
@@ -39,6 +40,8 @@ import { ComposeCard } from "../../frame/trade/OfferCard";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
 import { ActionButton } from "../../ActionButton";
 import { AnnotatedText, Prose } from "../../AnnotatedText";
+import { DeckLine } from "../../cards/DeckLine";
+import { GameCard } from "../../cards/GameCard";
 import { Chips, Delta, Ico, SeatMark, Turns } from "../../frame/parts";
 import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
@@ -283,43 +286,44 @@ function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }
               : undefined
           }
           year={session.year}
-        />
-        {done ? (
-          <p className="sit-note">
-            {sealed ? "Your proposal is sealed." : "You hold your peace."} {waitingWords(session)}
-          </p>
-        ) : (
-          <div className="sit-acts">
-            <ActionButton
-              aria-pressed={repealing}
-              blockedReason={repeal.reason}
-              className="kicker sit-btn"
-              effectiveCost={repeal.cost}
-              enabled={repeal.can}
-              heading="Repeal a Law"
-              onClick={() => setRepealing((on) => !on)}
-              triggerClassName="sit-tip"
-            >
-              <Ico path="assembly/repeal" size="ui" />
-              {repealing ? "Choose a Law above" : "Repeal a Law"}
-              <Chips amounts={repeal.cost} short={influence < repeal.price} />
-            </ActionButton>
-            <button
-              className="kicker sit-btn"
-              onClick={() => moves.assemblyPass(viewerId)}
-              type="button"
-            >
-              <Ico path="assembly/pass" size="ui" />
-              Hold your peace
-            </button>
-            <span className="sit-note">
-              <AnnotatedText
-                links={false}
-                text={`Your votes this sitting: ${votesWords(G, viewerId)}`}
-              />
-            </span>
-          </div>
-        )}
+        >
+          {done ? (
+            <p className="sit-note">
+              {sealed ? "Your proposal is sealed." : "You hold your peace."} {waitingWords(session)}
+            </p>
+          ) : (
+            <>
+              <ActionButton
+                aria-pressed={repealing}
+                blockedReason={repeal.reason}
+                className="kicker sit-btn"
+                effectiveCost={repeal.cost}
+                enabled={repeal.can}
+                heading="Repeal a Law"
+                onClick={() => setRepealing((on) => !on)}
+                triggerClassName="sit-tip"
+              >
+                <Ico path="assembly/repeal" size="ui" />
+                {repealing ? "Choose a Law" : "Repeal a Law"}
+                <Chips amounts={repeal.cost} short={influence < repeal.price} />
+              </ActionButton>
+              <button
+                className="kicker sit-btn"
+                onClick={() => moves.assemblyPass(viewerId)}
+                type="button"
+              >
+                <Ico path="assembly/pass" size="ui" />
+                Hold your peace
+              </button>
+              <span className="sit-note">
+                <AnnotatedText
+                  links={false}
+                  text={`Your votes this sitting: ${votesWords(G, viewerId)}`}
+                />
+              </span>
+            </>
+          )}
+        </Laws>
         {G.ruleset.trade.enabled && session.voteOrder.every((id) => session.proposalDone[id]) ? (
           <Trade G={G} session={session} />
         ) : null}
@@ -387,16 +391,20 @@ function Trade({ G, session }: { G: HegemonyState; session: AssemblySession }) {
   );
 }
 
-/** The standing Laws in their slots. Armed for a repeal, a Law past its tenure is the
- *  button that names it. */
+/** The standing Laws in their slots, each a hand-size card on its stele with its author,
+ *  year and tenure under it. Armed for a repeal, a Law past its tenure is the button
+ *  that names it. The stage's own actions (`children`) stand beside the stelae, so the
+ *  sheet keeps its height. */
 function Laws({
   G,
   year,
   onRepeal,
+  children,
 }: {
   G: HegemonyState;
   year: number;
   onRepeal?: (cardId: string) => void;
+  children?: ReactNode;
 }) {
   const { viewerId } = useGameUi();
   const lawCap = G.ruleset.assembly.lawCap;
@@ -409,57 +417,67 @@ function Laws({
         <Ico path="assembly/stele" size="chip" />
         Standing Laws
       </h3>
-      <div className="sit-laws">
-        {laws.map((law) => {
-          const card = getResolutionCard(G.definition.content, law.cardId);
-          const protectedNow = !lawCanBeRemoved(G, law.cardId);
-          // A Law raised this sitting is ringed; the recap above says it is new.
-          const fresh = law.enactedYear === year && G.assembly?.phase === "closing";
-          const body = (
-            <>
-              <b className="name sit-name">{card?.name ?? law.cardId}</b>
-              {card ? <AnnotatedText className="sit-text" links={false} text={card.text} /> : null}
+      <div className="sit-stelae">
+        <div className={`sit-laws${laws.length ? "" : " is-bare"}`}>
+          {laws.map((law) => {
+            const card = getResolutionCard(G.definition.content, law.cardId);
+            if (!card) return null;
+            const protectedNow = !lawCanBeRemoved(G, law.cardId);
+            // A Law raised this sitting is ringed; the recap above says it is new.
+            const fresh = law.enactedYear === year && G.assembly?.phase === "closing";
+            const by = (
               <span className="kicker sit-by">
                 <SeatMark playerID={law.author} />
                 {seatName(G, law.author, viewerId)} · Year {toRoman(law.enactedYear)}
-                {protectedNow ? " · protected" : ""}
+                {protectedNow ? (
+                  <span className="sit-lock-mark" title="Protected">
+                    <Ico path="unrest/locked" size="chip" />
+                    <span className="visuallyHidden">protected</span>
+                  </span>
+                ) : null}
               </span>
-            </>
-          );
-          return onRepeal && !protectedNow ? (
-            <button
-              aria-label={`Repeal ${card?.name ?? law.cardId}`}
-              className="sit-law is-target"
-              key={law.cardId}
-              onClick={() => onRepeal(law.cardId)}
-              type="button"
-            >
-              {body}
-            </button>
-          ) : (
-            <Tooltip
-              content={card ? <StandingLawDetails G={G} card={card} law={law} /> : null}
-              focusable
-              key={law.cardId}
-              triggerAs="div"
-              triggerClassName="sit-law-tip"
-            >
-              <div className={`sit-law${fresh ? " is-new" : ""}`}>{body}</div>
-            </Tooltip>
-          );
-        })}
-        {empty > 0 ? (
-          <div className="sit-law is-empty" style={{ gridColumn: `span ${empty}` }}>
-            <AnnotatedText
-              links={false}
-              text={
-                empty === lawCap
-                  ? "No Law stands yet"
-                  : `${capitalize(numberWord(empty))} ${empty === 1 ? "stele stands" : "stelae stand"} empty`
-              }
-            />
-          </div>
-        ) : null}
+            );
+            const face = resolutionCardFace(card, G.ruleset, G.definition.content);
+            return onRepeal && !protectedNow ? (
+              <button
+                aria-label={`Repeal ${card.name}`}
+                className="sit-law is-target"
+                key={law.cardId}
+                onClick={() => onRepeal(law.cardId)}
+                type="button"
+              >
+                <GameCard className="is-picked" face={face} size="hand" />
+                {by}
+              </button>
+            ) : (
+              <Tooltip
+                content={<StandingLawDetails G={G} card={card} law={law} />}
+                focusable
+                key={law.cardId}
+                triggerAs="div"
+                triggerClassName="sit-law-tip"
+              >
+                <div className="sit-law">
+                  <GameCard className={fresh ? "is-new" : undefined} face={face} size="hand" />
+                  {by}
+                </div>
+              </Tooltip>
+            );
+          })}
+          {empty > 0 ? (
+            <div className="sit-law is-empty" style={{ gridColumn: `span ${empty}` }}>
+              <AnnotatedText
+                links={false}
+                text={
+                  empty === lawCap
+                    ? "No Law stands yet"
+                    : `${capitalize(numberWord(empty))} ${empty === 1 ? "stele stands" : "stelae stand"} empty`
+                }
+              />
+            </div>
+          ) : null}
+        </div>
+        {children ? <div className="sit-col sit-aside">{children}</div> : null}
       </div>
     </>
   );
@@ -473,22 +491,22 @@ function Drawn({ G, session }: { G: HegemonyState; session: AssemblySession }) {
   const [target, setTarget] = useState<PlayerId | null>(null);
   const blocked = proposalReason(G, viewerId, card, target ?? undefined);
 
+  // The private draw at ceremony size, then its deck line and what only its drawer
+  // reads: the prize, and that the card stays hidden until the ballot.
   return (
     <>
       <div className="sit-body sit-drawn">
         <div className="sit-card">
-          <span className="sit-item-name">
-            <Ico path={kindIcon(card)} size="ui" />
-            <Tooltip
-              content={
-                <ResolutionDetails card={card} content={G.definition.content} ruleset={G.ruleset} />
-              }
-              focusable
-            >
-              <b className="name sit-card-name">{card.name}</b>
-            </Tooltip>
-          </span>
-          <AnnotatedText className="sit-text" links={false} text={card.text} />
+          <GameCard
+            arrive="turn"
+            face={resolutionCardFace(card, G.ruleset, G.definition.content)}
+            size="ceremony"
+          />
+          <DeckLine line={deckLine(G, { kind: "politician", politician: card.politician })}>
+            <span>
+              drawn for <b className="num">{nextDrawCost(G)}</b> influence
+            </span>
+          </DeckLine>
           <span className="sit-note">
             If it passes you take the author’s prize:{" "}
             <Chips amounts={G.ruleset.assembly.prizes[card.politician]} signed />
@@ -641,13 +659,14 @@ function Ballot({
   return (
     <>
       <div className="sit-body">
-        <ol className="sit-items">
+        <ol className="sit-items has-cards">
           {session.ballot.map((item, index) => {
             const card = itemCard(G, item);
             return (
               <li className="sit-item" key={index}>
                 <span className="sit-no">{index + 1}</span>
                 <SeatMark playerID={item.proposer} />
+                <MiniCard G={G} card={card} />
                 <span className="sit-item-words">
                   <span className="sit-item-name">
                     <Ico path={itemIcon(item)} size="ui" />
@@ -680,6 +699,7 @@ function Ballot({
               <li className="sit-item is-quiet" key={id}>
                 <span className="sit-no">–</span>
                 <SeatMark playerID={id} />
+                <MiniCard G={G} card={null} />
                 <b className="name sit-name">
                   {id === viewerId
                     ? "You held your peace"
@@ -696,6 +716,16 @@ function Ballot({
       </div>
       <SeatStrip G={G} session={session} votes />
     </>
+  );
+}
+
+/** The card a ballot row moves, at mini size beside its printed name; an empty slot
+ *  keeps the rows aligned where a seat held its peace. */
+function MiniCard({ G, card }: { G: HegemonyState; card: ResolutionCard | null }) {
+  return card ? (
+    <GameCard face={resolutionCardFace(card, G.ruleset, G.definition.content)} size="mini" />
+  ) : (
+    <span aria-hidden="true" className="sit-mini-gap" />
   );
 }
 
@@ -938,9 +968,13 @@ function Result({
             focusable
             triggerAs="div"
           >
-            <div className={`sit-law ${result.item.kind === "repeal" ? "is-gone" : "is-new"}`}>
-              <b className="name sit-name">{card.name}</b>
-              <AnnotatedText className="sit-text" links={false} text={card.text} />
+            <div className="sit-law">
+              <GameCard
+                arrive="deal"
+                className={result.item.kind === "repeal" ? "is-dim" : "is-new"}
+                face={resolutionCardFace(card, G.ruleset, G.definition.content)}
+                size="hand"
+              />
             </div>
           </Tooltip>
         ) : null}
@@ -1018,8 +1052,7 @@ function Rises({ G, session }: { G: HegemonyState; session: AssemblySession }) {
           })}
         </ol>
       )}
-      <Laws G={G} year={session.year} />
-      <div className="sit-acts is-split">
+      <Laws G={G} year={session.year}>
         <span className="sit-note">
           <Ico path="victory/voice" size="ui" />
           Voice of the Assembly:{" "}
@@ -1043,7 +1076,7 @@ function Rises({ G, session }: { G: HegemonyState; session: AssemblySession }) {
           Return to Year {toRoman(session.year)} ·{" "}
           {opener === viewerId ? "you open" : `${G.players[opener].name} opens`}
         </button>
-      </div>
+      </Laws>
     </div>
   );
 }

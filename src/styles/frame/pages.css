@@ -218,8 +218,13 @@ button.link {
   height: auto;
   padding-block: var(--s-3) var(--s-1);
 }
+/* A standing Law: its card at mini size beside its name, rule and author. */
 .a-law {
-  padding-block: var(--s-1);
+  display: grid;
+  grid-template-columns: var(--card-mini) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-3);
+  padding-block: var(--s-2);
 }
 .a-law + .a-law {
   box-shadow: inset 0 var(--rule) 0 var(--ink-12);

@@ -3,9 +3,11 @@ import { getResolutionCard, nextAssemblyYear, politicianStandings } from "../../
 import type { PoliticianStanding } from "../../../game/assembly";
 import { victoryStandings } from "../../../game/victory";
 import type { HegemonyState, PlayerId } from "../../../game/types";
+import { resolutionCardFace } from "../../../ui/cardFace";
 import { turnsUntilYear } from "../../../ui/frameSelectors";
 import { numberWord, yearLabel } from "../../../ui/formatters";
 import { AnnotatedText, Prose } from "../../AnnotatedText";
+import { GameCard } from "../../cards/GameCard";
 import { Ico, SeatMark, Tip, TipBody, Turns } from "../../frame/parts";
 import { Tooltip } from "../../overlays/Tooltip";
 import { StandingLawDetails } from "../assembly/AssemblyPresentation";
@@ -47,22 +49,28 @@ export function AgoraTab({ G, playerID }: { G: HegemonyState; playerID: PlayerId
         const card = getResolutionCard(G.definition.content, law.cardId);
         return card ? (
           <div className="a-law" key={`${law.cardId}-${law.order}`}>
-            <span className="r-place">
-              <Ico path="assembly/law" size="chip" />
-              <Tooltip
-                content={<StandingLawDetails G={G} card={card} law={law} />}
-                focusable
-                triggerClassName="name v-name"
-              >
-                {card.name}
-              </Tooltip>
-            </span>
-            <p className="a-law-text">
-              <AnnotatedText linkContext={card.name} text={card.text} />
-            </p>
-            <p className="a-law-meta">
-              carried by {PLAYER_NAMES[law.author]} · {yearLabel(law.enactedYear)}
-            </p>
+            <GameCard
+              face={resolutionCardFace(card, G.ruleset, G.definition.content)}
+              size="mini"
+            />
+            <div>
+              <span className="r-place">
+                <Ico path="assembly/law" size="chip" />
+                <Tooltip
+                  content={<StandingLawDetails G={G} card={card} law={law} />}
+                  focusable
+                  triggerClassName="name v-name"
+                >
+                  {card.name}
+                </Tooltip>
+              </span>
+              <p className="a-law-text">
+                <AnnotatedText linkContext={card.name} text={card.text} />
+              </p>
+              <p className="a-law-meta">
+                carried by {PLAYER_NAMES[law.author]} · {yearLabel(law.enactedYear)}
+              </p>
+            </div>
           </div>
         ) : null;
       })}
