@@ -39,10 +39,11 @@ where: fill a big plains with slaves and export food, or build on it and import.
 ## The map
 
 The island is drawn in 3D. Drag to pan, or rest the mouse at the window's edge to pan that
-way; scroll or pinch to zoom toward the pointer. **0** returns to the opening view. Click the sea to give the map focus; then **Q** and **E**
+way; scroll or pinch to zoom toward the pointer. **0**, or a click on the compass at the top
+left, returns to the opening view. Click the sea to give the map focus; then **Q** and **E**
 turn it up to 15° either way, the arrow keys pan, and **+** and **−** zoom. The map stays
-turned where you leave it, and the compass at the top left turns with it. The view tilts as
-you zoom in: flat far out, 20° at the opening view, 45° close in.
+turned where you leave it, and the compass turns with it. The view tilts as you zoom in: flat
+far out, 20° at the opening view, 45° close in.
 
 Detail comes in with the zoom. Far out you see each tile's owner colour and slots; in the
 middle, names, slots and yield chips; close in, buildings, fields, trees, rocks and a figure
@@ -64,8 +65,9 @@ Keys **1** to **4** switch the map mode:
 Hover a tile for its tooltip; click it and the realm sheet shows it. Click the sea to return
 to your realm. Each luxury good floats on a raft off the coast with its name and its holder's
 mark, or "unclaimed"; click it to read it. When an action asks for a tile, the tiles it can
-take are ringed and the rest dim. With the keyboard, Tab onto the tiles, walk them with the
-arrow keys and press Enter to pick one.
+take are ringed and the rest dim; in Terrain and Trade, each ringed settlement shows its name
+at any zoom. With the keyboard, Tab onto the tiles, walk them with the arrow keys and press
+Enter to pick one; the tile you are on wears an ochre ring edged in ink.
 
 **The corner dock** sits at the bottom right. Its bottom row holds the four mode buttons and
 End turn. Above them, across the dock, is the newest line of the **Chronicle**, the game's log:

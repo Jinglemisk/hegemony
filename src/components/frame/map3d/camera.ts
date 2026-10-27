@@ -175,6 +175,8 @@ const NO_LAYERS = {
 };
 const NO_HTML = {
   plates: 0,
+  /** A pick's candidate's plate: shown at any zoom in the modes that draw plates. */
+  asked: 0,
   cityplate: 0,
   colony: 0,
   pips: 0,
@@ -201,7 +203,8 @@ const NO_HTML = {
  * names, slots and yield chips; close: the living detail. The other modes are the
  * prototype's, and in each the settlements, Ports and the Oracle stand flat and upright
  * in place of their models: Political the realms; Economy the yield cards over dimmed
- * land; Trade the goods (flat too) and the ships.
+ * land; Trade the goods (flat too) and the ships. While a pick is armed, its candidates'
+ * plates (`asked`) show at any zoom in the two modes that draw plates.
  *
  * `hexPx` is a hex's drawn width. Where hexes are small (a phone), the middle
  * band's labels would crowd them, so the overlay keeps the far band's labels (the
@@ -253,6 +256,7 @@ export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain
     terrain: {
       ...NO_HTML,
       plates: mid,
+      asked: 1,
       cityplate: room,
       colony: names * room,
       pips: mid * (1 - close) * room,
@@ -278,6 +282,7 @@ export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain
       ...NO_HTML,
       seal: 1,
       plates: 1,
+      asked: 1,
       cityplate: room,
       goodname: 1,
       heldgood: 0,

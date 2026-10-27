@@ -2,7 +2,7 @@
 title: UI — what is genuinely left
 status: active
 phase: "—"
-updated: 2026-10-26
+updated: 2026-10-27
 ---
 
 # UI — what is genuinely left
@@ -39,9 +39,15 @@ resource chips, two token tables) are scheduled in the
 | `TYPE-1` | a decision | Two type sizes sit under spec, on purpose     |
 | `DUP-1`  | nothing    | Four repeated glossary words, judged and left |
 
-The 3D map's own open calls are [Q83](../questions.md).
-
 ### Shipped or closed
+
+- **`MAP-1` · the 3D map's seven calls** (Q83, answered 2026-10-27). The number keys stay
+  with the map modes. A pick shows its candidates' names at any zoom, the compass is a
+  button that returns to the opening view, the sea draws at 30 frames a second while the
+  camera is still, and the keyboard's focus ring is ochre edged in ink. The trade key's
+  wording and the Unrest chip had nothing left to change. The
+  [frontend presentation reference](../reference/frontend-presentation.md#map-presentation)
+  holds the rules.
 
 - **`V2-3` · a shared tile's second settlement has a name** (the 3D map, 2026-10-26). The
   SVG board drew a rival colony sharing a tile as a small seal with no plate, because two
@@ -78,9 +84,8 @@ The 3D map's own open calls are [Q83](../questions.md).
 - **`V2-6` · the focus ring beside Nikos's glaze**, closed by the owner on 2026-10-16
   with no change. A tile focused by keyboard gets an ochre ring (`--ochre`, 6px), and
   Nikos's owner ring is Melichron (#dfa437, 5px), so on Nikos's tiles focus barely
-  changes the border. Only keyboard play sees it. The 3D map draws the same ring on
-  its canvas, where Political washes Nikos's tiles in his colour; Q83 (e) asks whether
-  to make it two-tone.
+  changes the border. Only keyboard play sees it. The 3D map's ring on its canvas, where
+  Political washes Nikos's tiles in his colour, became two-tone on 2026-10-27 (`MAP-1`).
 - **`V2-5` · the alarms row from one engine list** (2026-10-15). `realmAlarms` returns
   every disc as typed data, and the row adds three the owner asked for on 2026-10-01:
   a rival one title short, the Assembly sitting next year, and a Port that could claim

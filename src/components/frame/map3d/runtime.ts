@@ -32,12 +32,15 @@ import { nextTileInDirection } from "./tileTip";
  * places them each time the camera moves, so a frame never re-renders React.
  *
  * The loop runs on demand: while the camera eases, and while ambient motion is
- * allowed (the page visible, the map on screen, no reduced motion, a GPU). Nothing
- * heavy happens until `start`: then the opening view is fitted and the shaders
+ * allowed (the page visible, the map on screen, no reduced motion, a GPU). With the
+ * camera still, only the sea and its life move, and they draw at 30 frames a second.
+ * Nothing heavy happens until `start`: then the opening view is fitted and the shaders
  * compile off the page's clock, and the map shows (`data-ready`) with its first frame.
  */
 
 const DEG = Math.PI / 180;
+/** A still camera's frame: 30 a second, less a few ms so a 60 Hz screen draws every other. */
+const IDLE_MS = 1000 / 30 - 4;
 const SIDES = Array.from({ length: 6 }, (_, i) => (60 * i - 30) * DEG);
 /** A drag starts this far from where the pointer went down; before it, a press is a click. */
 const DRAG_PX = 5;
@@ -368,6 +371,21 @@ export function createRuntime({
   function draw(now: number) {
     raf = 0;
     if (!frame.W || !model) return;
+    // Nothing but the sea and its life is moving: wait for the next 30th of a second.
+    const still =
+      !camDirty &&
+      !gesture &&
+      !edge.x &&
+      !edge.y &&
+      !goal.anchor &&
+      cam.z === goal.z &&
+      cam.rot === goal.rot &&
+      cam.tx === goal.tx &&
+      cam.ty === goal.ty;
+    if (still && last && now - last < IDLE_MS) {
+      kick();
+      return;
+    }
     const dt = last ? (now - last) / 1000 : 1 / 60;
     last = now;
     const live = ambient() && ready;
@@ -676,6 +694,8 @@ export function createRuntime({
         });
       });
     },
+    /** Back to the opening view: the compass, 0 and Home. */
+    reset,
     setMarks(next: Marks) {
       if (next.candidates !== marks.candidates) coloursDirty = true;
       marks = next;
