@@ -1,0 +1,725 @@
+/* ============================================================================
+   The card: one face for every deck (GameCard, cardFace.ts). Fired ivory; a band
+   in the deck's colour holding the kind and reach corners; a 2:1 picture window;
+   the name and its voice; the black-glaze panel with the icon equation over the
+   card's sentence; the timing and duration corners at the foot. Then the table a
+   drawn card lands on: the card, the deck line, the slip, the commit.
+
+   Three printed widths (--card-*). Inside a card every length is a token or a
+   step of the size's own scale below; sizes of type come from the roles only.
+   ========================================================================== */
+
+.gc {
+  --deck: var(--deck-fate);
+  --deck-ink: var(--deck-fate-ink);
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  width: var(--gc-w);
+  max-width: 100%;
+  perspective: calc(var(--u) * 400);
+  text-align: center;
+}
+
+.gc-ceremony {
+  --gc-w: var(--card-ceremony);
+  --gc-pad: var(--s-3);
+  --gc-r: var(--s-3);
+  --gc-gap: var(--s-2);
+  --gc-band: calc(var(--u) * 9); /* 36 */
+  --gc-corner: var(--s-8);
+  --gc-corner-ic: var(--ic-24);
+  --gc-plate: calc(var(--u) * 24); /* 96 */
+  --gc-e: var(--ic-24);
+}
+
+.gc-hand {
+  --gc-w: var(--card-hand);
+  --gc-pad: calc(var(--u) * 1.5); /* 6 */
+  --gc-r: var(--s-2);
+  --gc-gap: var(--s-1);
+  --gc-band: var(--s-6);
+  --gc-corner: calc(var(--u) * 5); /* 20 */
+  --gc-corner-ic: var(--ic-16);
+  --gc-plate: var(--ic-48);
+  --gc-e: var(--ic-16);
+}
+
+.gc-mini {
+  --gc-w: var(--card-mini);
+  --gc-pad: calc(var(--u) * 0.75); /* 3 */
+  --gc-r: var(--s-1);
+  --gc-gap: var(--rule-2);
+  --gc-band: var(--s-4);
+  --gc-corner: var(--s-4);
+  --gc-corner-ic: calc(var(--u) * 3); /* 12 */
+  --gc-plate: var(--ic-32);
+}
+
+/* One colour per deck, from the palette. */
+.deck-year {
+  --deck: var(--deck-year);
+  --deck-ink: var(--deck-year-ink);
+}
+.deck-law {
+  --deck: var(--deck-law);
+  --deck-ink: var(--deck-law-ink);
+}
+.deck-directive {
+  --deck: var(--deck-directive);
+  --deck-ink: var(--deck-directive-ink);
+}
+.deck-idea {
+  --deck: var(--deck-idea);
+  --deck-ink: var(--deck-idea-ink);
+}
+
+/* ── Turning over ──────────────────────────────────────────────────────────── */
+.gc-flip {
+  position: relative;
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  transform-style: preserve-3d;
+  transition: transform 700ms cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+.gc.is-back .gc-flip {
+  transform: rotateY(180deg);
+}
+.gc-face,
+.gc-back {
+  border-radius: var(--gc-r);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* ── The face: fired ivory with a faint laid-paper grain ───────────────────── */
+/* At least 63:88; cards set in a row stretch to the tallest, so their feet line up. */
+.gc-face {
+  position: relative;
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  aspect-ratio: 63 / 88;
+  padding: var(--gc-pad);
+  color: var(--ink);
+  background:
+    repeating-linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--ink) 3%, transparent) 0 var(--rule),
+      transparent var(--rule) calc(var(--u) * 0.6)
+    ),
+    radial-gradient(130% 90% at 25% 0%, var(--ivory-lit), transparent 55%),
+    linear-gradient(180deg, var(--ivory), var(--ivory-settled));
+  box-shadow:
+    inset 0 var(--rule) 0 var(--ivory-lit),
+    0 0 0 var(--rule) color-mix(in srgb, var(--ink) 40%, transparent),
+    0 var(--rule-2) 0 var(--ivory-settled),
+    0 calc(var(--rule-2) + var(--rule)) 0 color-mix(in srgb, var(--ink) 35%, transparent),
+    0 var(--s-2) var(--s-4) color-mix(in srgb, var(--vase-black) 30%, transparent);
+}
+
+/* The printed frame: a hairline in the deck's colour, inset from the cut edge. */
+.gc-face::before {
+  content: "";
+  position: absolute;
+  inset: calc(var(--gc-pad) / 2);
+  border: var(--rule) solid color-mix(in srgb, var(--deck) 50%, transparent);
+  border-radius: calc(var(--gc-r) - var(--gc-pad) / 2);
+  pointer-events: none;
+}
+
+.gc-band {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-1);
+  height: var(--gc-band);
+  padding-inline: calc((var(--gc-band) - var(--gc-corner)) / 2);
+  border-radius: calc(var(--gc-r) / 2);
+  color: var(--deck-ink);
+  background: var(--deck);
+  box-shadow:
+    inset 0 var(--rule) 0 color-mix(in srgb, var(--ivory) 25%, transparent),
+    inset 0 calc(var(--rule) * -1) 0 color-mix(in srgb, var(--vase-black) 18%, transparent);
+}
+.deck-law .gc-band {
+  background: linear-gradient(180deg, var(--stele-face), var(--stele-shade));
+}
+.gc-word {
+  min-width: 0;
+  overflow: hidden;
+  letter-spacing: 0.16em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gc-corner {
+  display: grid;
+  place-items: center;
+  width: var(--gc-corner);
+  height: var(--gc-corner);
+  border-radius: var(--r-round);
+  color: var(--ink);
+  background: radial-gradient(circle at 35% 30%, var(--ivory-lit), var(--ivory-settled));
+  box-shadow:
+    0 0 0 var(--rule-2) color-mix(in srgb, var(--deck) 70%, var(--vase-black)),
+    0 var(--rule) var(--rule-2) color-mix(in srgb, var(--vase-black) 30%, transparent);
+}
+.gc-corner img {
+  display: block;
+  width: var(--gc-corner-ic);
+  height: var(--gc-corner-ic);
+}
+.gc-corner-text {
+  line-height: 1;
+}
+
+/* The picture window: printed into the card, its picture sinking at the edge. The
+   year and fate paintings carry their own printed border, so they are cropped in. */
+.gc-window {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 2 / 1;
+  margin-top: var(--gc-gap);
+  overflow: hidden;
+  border-radius: calc(var(--gc-r) / 2);
+  background:
+    radial-gradient(closest-side, color-mix(in srgb, var(--deck) 26%, transparent), transparent),
+    var(--ivory-settled);
+}
+.deck-year .gc-window {
+  background:
+    radial-gradient(closest-side, color-mix(in srgb, var(--ochre) 26%, transparent), transparent),
+    var(--ivory-settled);
+}
+.gc-window::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 var(--rule) color-mix(in srgb, var(--ink) 38%, transparent),
+    inset 0 0 var(--s-3) color-mix(in srgb, var(--ink) 22%, transparent);
+  pointer-events: none;
+}
+.gc-painting {
+  position: absolute;
+  top: -9%;
+  left: -7%;
+  width: 114%;
+  height: 118%;
+  max-width: none;
+  object-fit: cover;
+  object-position: center 62%;
+}
+.gc-plate {
+  width: var(--gc-plate);
+  height: var(--gc-plate);
+  filter: drop-shadow(0 var(--s-1) var(--s-1) color-mix(in srgb, var(--ink) 30%, transparent));
+}
+
+/* The name, its voice and the rule sit in whatever room the panel leaves. */
+.gc-words {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-1);
+  margin-block: auto;
+  padding-block: var(--gc-gap);
+}
+.gc-name {
+  margin: 0;
+  text-wrap: balance;
+}
+.gc-voice {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--ink-66);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.gc-rule {
+  position: relative;
+  width: 42%;
+  height: var(--rule);
+  margin-top: var(--s-1);
+  background: color-mix(in srgb, var(--deck) 60%, transparent);
+}
+.gc-rule::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--u) * 1.5);
+  height: calc(var(--u) * 1.5);
+  background: var(--deck);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.deck-law .gc-rule {
+  background: var(--ink-30);
+}
+
+/* The black glaze: the only place it is spent, the ceremony register's own. */
+.gc-panel {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  border-radius: calc(var(--gc-r) * 2 / 3);
+  color: var(--ivory);
+  background: radial-gradient(120% 120% at 30% 0%, var(--lacquer-lit), var(--vase-black));
+  box-shadow:
+    inset 0 var(--rule) 0 color-mix(in srgb, var(--ivory) 14%, transparent),
+    0 var(--rule-2) var(--s-1) color-mix(in srgb, var(--vase-black) 25%, transparent);
+}
+.gc-text {
+  display: block;
+  padding-top: var(--s-2);
+  border-top: var(--rule) solid color-mix(in srgb, var(--ivory) 16%, transparent);
+  color: color-mix(in srgb, var(--ivory) 88%, transparent);
+  text-wrap: pretty;
+}
+
+/* ── The equation: icons first, one row per effect ─────────────────────────── */
+.gc-eq {
+  display: grid;
+  gap: calc(var(--gc-e) * 0.22);
+}
+.gc-row {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--gc-e) * 0.16) calc(var(--gc-e) * 0.2);
+  min-height: calc(var(--gc-e) * 1.12);
+  padding-inline: calc(var(--gc-e) * 0.4);
+}
+/* A gain row's leaf notch, a cost row's clay one; the sign says it too. */
+.gc-row::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: calc(var(--gc-e) * 0.14);
+  height: calc(var(--gc-e) * 0.8);
+  border-radius: var(--rule-2);
+  transform: translateY(-50%);
+}
+.gc-row.is-gain::before {
+  background: var(--leaf);
+}
+.gc-row.is-cost::before {
+  background: var(--clay);
+}
+.gc-ic {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+.gc-ic img {
+  display: block;
+  width: var(--gc-e);
+  height: var(--gc-e);
+}
+/* Struck: none, may not, does nothing. */
+.gc-ic.is-struck::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -6%;
+  left: -6%;
+  height: calc(var(--gc-e) * 0.11);
+  border-radius: var(--r-round);
+  background: var(--clay);
+  box-shadow: 0 0 0 var(--rule) var(--vase-black);
+  transform: rotate(-38deg);
+}
+.gc-n {
+  line-height: 1;
+}
+.gc-op {
+  line-height: 1;
+  opacity: 0.8;
+}
+.gc-cond {
+  max-width: calc(var(--gc-e) * 4.6);
+  color: var(--ivory-70);
+  letter-spacing: 0.1em;
+  text-align: left;
+}
+.gc-but {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--ivory-70);
+  letter-spacing: 0.18em;
+}
+.gc-but::before,
+.gc-but::after {
+  content: "";
+  flex: 1;
+  height: var(--rule);
+  background: currentColor;
+  opacity: 0.5;
+}
+
+.gc-foot {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--gc-gap);
+}
+/* The meander key: the vase's border, kept as a thin line on the foot and the back. */
+.gc-key,
+.gc-back::before,
+.gc-back::after {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10' viewBox='0 0 16 10'%3E%3Cpath d='M0 9H16M12 9V1H4V6H8V4' fill='none' stroke='black' stroke-width='1.6'/%3E%3C/svg%3E")
+    repeat-x 0 50% / calc(var(--u) * 4) calc(var(--u) * 2.5);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10' viewBox='0 0 16 10'%3E%3Cpath d='M0 9H16M12 9V1H4V6H8V4' fill='none' stroke='black' stroke-width='1.6'/%3E%3C/svg%3E")
+    repeat-x 0 50% / calc(var(--u) * 4) calc(var(--u) * 2.5);
+}
+.gc-key {
+  height: calc(var(--u) * 2.5);
+  background: color-mix(in srgb, var(--deck) 70%, var(--ink));
+  opacity: 0.5;
+}
+.deck-law .gc-key {
+  background: var(--ink);
+  opacity: 0.35;
+}
+
+/* ── Hand size: the sentence moves to the tooltip, the voice is dropped ────── */
+.gc-hand .gc-word {
+  letter-spacing: 0.08em;
+}
+.gc-hand .gc-panel {
+  gap: var(--s-1);
+  padding: var(--s-1);
+}
+.gc-hand .gc-foot {
+  gap: var(--s-1);
+}
+
+/* ── Mini: the band's kind mark over the picture, nothing else ─────────────── */
+.gc-mini .gc-words,
+.gc-mini .gc-panel,
+.gc-mini .gc-foot,
+.gc-mini .gc-word,
+.gc-mini .gc-band .gc-corner:last-child,
+.gc-mini .gc-face::before {
+  display: none;
+}
+.gc-mini .gc-band {
+  grid-template-columns: auto;
+  justify-content: start;
+}
+.gc-mini .gc-window {
+  flex: 1;
+  aspect-ratio: auto;
+}
+.gc-mini .gc-face {
+  box-shadow:
+    0 0 0 var(--rule) color-mix(in srgb, var(--ink) 40%, transparent),
+    0 var(--rule) var(--rule-2) color-mix(in srgb, var(--vase-black) 30%, transparent);
+}
+
+/* ── States: a ring, a badge or a fade around the face, which never changes ── */
+.gc.is-picked .gc-face,
+.gc.is-new .gc-face {
+  box-shadow:
+    0 0 0 var(--rule) color-mix(in srgb, var(--ink) 40%, transparent),
+    0 0 0 calc(var(--u) * 1.5) var(--ochre),
+    0 var(--s-2) var(--s-4) color-mix(in srgb, var(--vase-black) 30%, transparent);
+}
+.gc.is-dim .gc-face {
+  filter: saturate(0.5);
+  opacity: var(--dim);
+}
+
+/* ── The back: lacquer, a key border top and bottom, a ring for the mark ───── */
+.gc-back {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--bone);
+  background: radial-gradient(
+    120% 80% at 50% 40%,
+    color-mix(in srgb, var(--deck) 55%, var(--vase-black)),
+    var(--vase-black)
+  );
+  box-shadow:
+    inset 0 var(--rule) 0 color-mix(in srgb, var(--bone) 20%, transparent),
+    0 0 0 var(--rule) color-mix(in srgb, var(--ink) 60%, transparent),
+    0 var(--s-6) var(--s-12) color-mix(in srgb, var(--vase-black) 55%, transparent);
+  transform: rotateY(180deg);
+}
+.deck-year .gc-back {
+  background: radial-gradient(
+    120% 80% at 50% 40%,
+    color-mix(in srgb, var(--clay-deep) 60%, var(--vase-black)),
+    var(--vase-black)
+  );
+}
+.gc-back::before,
+.gc-back::after {
+  content: "";
+  position: absolute;
+  right: var(--s-4);
+  left: var(--s-4);
+  height: calc(var(--u) * 2.5);
+  background: color-mix(in srgb, var(--clay) 80%, var(--bone));
+}
+.gc-back::before {
+  top: var(--s-4);
+}
+.gc-back::after {
+  bottom: var(--s-4);
+  transform: scaleY(-1);
+}
+.gc-ring {
+  display: grid;
+  place-items: center;
+  width: 44%;
+  aspect-ratio: 1;
+  border-radius: var(--r-round);
+  box-shadow: inset 0 0 0 var(--rule-2) color-mix(in srgb, var(--bone) 40%, transparent);
+}
+.gc-ring img {
+  width: 60%;
+  height: 60%;
+}
+/* The year's numeral, carved: the display role, scaled, so no size is set here. */
+.gc-ring .display {
+  letter-spacing: 0.06em;
+  transform: scale(1.9);
+}
+
+/* A card still on its back is one button: click it to turn it over. */
+.gc-turn {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--gc-r);
+  background: none;
+  cursor: pointer;
+}
+.gc-turn:focus-visible {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: var(--s-1);
+}
+
+/* ── Arrivals ──────────────────────────────────────────────────────────────── */
+/* Drawn: it comes off the deck on its back and turns over as it lands. */
+.gc.arrive-turn .gc-flip {
+  animation: gcTurn 760ms cubic-bezier(0.22, 0.8, 0.25, 1) both;
+}
+/* Dealt or laid down: it slides in off-axis and squares up, still on its side. */
+.gc.arrive-deal {
+  animation: gcDeal 420ms cubic-bezier(0.17, 0.84, 0.35, 1.02) both;
+}
+@keyframes gcTurn {
+  0% {
+    transform: translate3d(0, calc(var(--u) * 12), 0) rotateZ(-5deg) rotateY(180deg) scale(0.86);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  55% {
+    transform: translate3d(0, calc(var(--u) * -2.5), 0) rotateZ(1deg) rotateY(90deg) scale(1.04);
+  }
+  80% {
+    transform: translate3d(0, var(--rule-2), 0) rotateY(-6deg);
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes gcDeal {
+  from {
+    transform: translate3d(0, calc(var(--u) * 8), 0) rotate(-3deg) scale(0.94);
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* ── The table under a drawn card ──────────────────────────────────────────── */
+/* A lighter vignette than the other ceremonies, so the board still reads under the
+   card. The column scrolls on a screen too short for it. */
+.modalBackdrop.ceremonyScrim.drawnScrim {
+  overflow-y: auto;
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    color-mix(in srgb, var(--vase-black) 62%, transparent),
+    color-mix(in srgb, var(--vase-black) 90%, transparent)
+  );
+}
+
+/* The column: the card, the deck line, then the tray, wider than the card so four
+   realms fit on the year's slip. The card follows the screen's height, so card and
+   tray fit at 800 tall. */
+.drawnReveal {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-3);
+  width: min(calc(var(--u) * 100), calc(100vw - var(--s-8))); /* 400 */
+  margin: auto;
+}
+.drawnReveal:focus {
+  outline: none;
+}
+.drawnReveal .gc-ceremony {
+  --gc-w: min(var(--card-ceremony), 40vh);
+}
+.drawnReveal .gc-ceremony .gc-face {
+  box-shadow:
+    inset 0 var(--rule) 0 var(--ivory-lit),
+    0 0 0 var(--rule) color-mix(in srgb, var(--ink) 40%, transparent),
+    0 0 calc(var(--u) * 18) var(--mood-glow),
+    0 var(--s-6) var(--s-12) color-mix(in srgb, var(--vase-black) 60%, transparent);
+}
+
+/* The deck line: the deck and what is left of it, on the table, never on the card. */
+.deck-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-1) var(--s-3);
+  max-width: 100%;
+  padding: var(--s-1) var(--s-4) var(--s-1) var(--s-3);
+  border-radius: var(--r-16);
+  color: var(--ivory-70);
+  background: color-mix(in srgb, var(--vase-black) 86%, transparent);
+  box-shadow: inset 0 0 0 var(--rule) color-mix(in srgb, var(--ivory) 14%, transparent);
+}
+.deck-line b {
+  color: var(--ivory);
+}
+.deck-stack {
+  position: relative;
+  flex: none;
+  width: calc(var(--u) * 4.5);
+  height: var(--s-6);
+}
+.deck-stack i {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-4);
+  background: var(--vase-black);
+  box-shadow:
+    inset 0 0 0 var(--rule-2) var(--clay),
+    0 0 0 var(--rule) color-mix(in srgb, var(--ivory) 30%, transparent);
+}
+.deck-stack i:nth-child(1) {
+  transform: translate(calc(var(--u) * -0.75), calc(var(--u) * 0.75)) rotate(-6deg);
+}
+.deck-stack i:nth-child(2) {
+  transform: translate(calc(var(--u) * -0.25), calc(var(--u) * 0.25)) rotate(-2deg);
+}
+.deck-sep {
+  width: var(--rule);
+  height: var(--s-4);
+  background: color-mix(in srgb, var(--ivory) 25%, transparent);
+}
+.deck-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-1) var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.deck-kinds li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rule-2);
+}
+.deck-kinds li.is-out {
+  opacity: var(--dim);
+}
+.deck-who {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+.deck-hover {
+  text-decoration: underline dotted color-mix(in srgb, var(--ivory) 45%, transparent);
+  text-underline-offset: var(--s-1);
+  cursor: help;
+}
+
+.drawn-tray {
+  display: grid;
+  gap: var(--s-3);
+  width: 100%;
+  animation: drawnTray 320ms ease-out 480ms both;
+}
+.drawn-slip {
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-8);
+  color: var(--ink);
+  text-align: center;
+  background: linear-gradient(180deg, var(--ivory), var(--ivory-settled));
+  box-shadow:
+    0 0 0 var(--rule) color-mix(in srgb, var(--ink) 40%, transparent),
+    0 var(--s-3) var(--s-8) color-mix(in srgb, var(--vase-black) 45%, transparent);
+}
+/* The settlement rows run to the slip's edge, as they ran to the card's. */
+.drawn-slip .fateTarget {
+  margin: 0 calc(var(--s-4) * -1);
+}
+.drawn-slip .fateTarget > .label,
+.drawn-slip .fateTarget > .caption,
+.ceremony .drawn-slip .fateTarget .placementPickerChip {
+  padding-inline: var(--s-4);
+}
+.drawn-slip .yearFoot {
+  margin-bottom: 0;
+}
+.drawn-caption {
+  display: grid;
+  gap: var(--s-1);
+  color: var(--ivory-70);
+  text-align: center;
+}
+.drawn-caption p {
+  margin: 0;
+}
+.drawn-wait {
+  color: var(--ochre);
+}
+@keyframes drawnTray {
+  from {
+    transform: translate3d(0, var(--s-2), 0);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* Stillness: the finished card on the first frame, turned or not. */
+@media (prefers-reduced-motion: reduce) {
+  .gc,
+  .gc .gc-flip,
+  .drawn-tray {
+    animation: none;
+    transition: none;
+  }
+}

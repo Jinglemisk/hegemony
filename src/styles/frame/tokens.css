@@ -113,9 +113,8 @@
   --tip-w: calc(var(--u) * 72); /* 288 */
   --fillet: var(--s-4); /* the concave join of the consult strip and the bar */
   --board-gap: 8px; /* = --s-2; clearance between the island and the chrome, read by the fit */
-  --ideas-w: calc(var(--u) * 256); /* 1024: two columns of printed rules */
-  --idea-row-h: calc(var(--u) * 20); /* 80: name and two rule lines */
-  --draft-w: calc(var(--u) * 60); /* 240: the draft order beside the Idea rows */
+  --ideas-w: calc(var(--u) * 256); /* 1024: six Idea cards to a row */
+  --draft-w: calc(var(--u) * 60); /* 240: the draft order beside the Idea cards */
 
   /* The realm sheet: a fixed box whose top-right corner is one large
      quarter-circle. Its edge is one path from the screen's left edge to the
@@ -254,6 +253,25 @@
   --nay-shade: #6e2410;
   --ledger-rule: rgb(36 25 16 / 14%);
   --ledger-accent: rgb(192 70 28 / 70%);
+
+  /* The card faces (cards.css). A card is an object and keeps its colours in every
+     theme: one band colour per deck with the ink its word clears 4.5:1 on (the
+     Directive takes clay's ink step for that), and the gain notch read on the
+     black glaze. Three printed widths; the height follows at 63:88. */
+  --deck-year: var(--vase-black);
+  --deck-year-ink: var(--bone);
+  --deck-fate: var(--ochre);
+  --deck-fate-ink: var(--vase-black);
+  --deck-law: var(--stele-shade);
+  --deck-law-ink: var(--vase-black);
+  --deck-directive: var(--clay-ink);
+  --deck-directive-ink: var(--ivory);
+  --deck-idea: var(--olive);
+  --deck-idea-ink: var(--ivory);
+  --leaf: #a8b976;
+  --card-ceremony: calc(var(--u) * 80); /* 320 */
+  --card-hand: calc(var(--u) * 44); /* 176 */
+  --card-mini: calc(var(--u) * 14); /* 56 */
 
   /* ---- the z ladder ------------------------------------------------------------
      Named rungs replacing 21 ad-hoc values (34, 95, 180, 950 among them).
