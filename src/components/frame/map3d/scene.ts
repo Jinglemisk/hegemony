@@ -9,6 +9,7 @@ import {
   DirectionalLight,
   Euler,
   Float32BufferAttribute,
+  Group,
   HemisphereLight,
   InstancedMesh,
   LineBasicMaterial,
@@ -298,6 +299,10 @@ export function createScene(canvas: HTMLCanvasElement, shape: BoardShape) {
   // and the keyboard's focus covers the pick.
   const flat = (color: number) => own(new MeshBasicMaterial({ color, depthWrite: false }));
   const edgeRing = ringGeo(R_TOP - 0.075, R_TOP);
+  // The keyboard's focus is two-tone, an ochre band inside an ink one, so it reads on
+  // every wash: alone, the ochre all but vanished on the ochre seat's Political tiles.
+  const focusInk = new Mesh(ringGeo(R_TOP - 0.12, R_TOP), flat(INK));
+  const focusOchre = new Mesh(ringGeo(R_TOP - 0.09, R_TOP - 0.03), flat(OCHRE));
   const owners = own(
     new InstancedMesh(ringGeo(R_OWN - 0.03, R_OWN + 0.03), flat(0xffffff), shape.cells.length * 2),
   );
@@ -308,9 +313,11 @@ export function createScene(canvas: HTMLCanvasElement, shape: BoardShape) {
   owners.setColorAt(0, colour);
   owners.count = candidates.count = 0;
   const selected = new Mesh(edgeRing, flat(INK));
-  const focus = new Mesh(edgeRing, flat(OCHRE));
+  const focus = new Group().add(focusInk, focusOchre);
   selected.visible = focus.visible = false;
-  [owners, candidates, selected, focus].forEach((ring, i) => (ring.renderOrder = i + 1));
+  [owners, candidates, selected, focusInk, focusOchre].forEach(
+    (ring, i) => (ring.renderOrder = i + 1),
+  );
   scene.add(owners, candidates, selected, focus);
 
   // The models, instanced: one mesh per material plus the keyline hull. Every model

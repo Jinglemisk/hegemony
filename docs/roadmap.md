@@ -5,7 +5,7 @@ before planning, implementing, or declaring work complete. Implementation detail
 belongs in linked plans; unresolved owner decisions belong only in
 [questions.md](questions.md).
 
-Last updated: 2026-10-26.
+Last updated: 2026-10-27.
 
 ## Mandatory three-axis parity contract
 
@@ -154,8 +154,8 @@ the deck.
 
 The 3D map, in three.js after the [showcase](reference/design/showcases/living-map.html), is
 the only board. On 2026-10-26 the owner ruled out going back to 2D: no 2D board, no flag and
-no fallback without WebGL, so the SVG board survives only in old commits. Its seven open
-calls are [Q83](questions.md); further map work gets a plan when it starts.
+no fallback without WebGL, so the SVG board survives only in old commits. The owner settled
+its seven open calls (Q83) on 2026-10-27; further map work gets a plan when it starts.
 
 ## Locked v1 finish line
 

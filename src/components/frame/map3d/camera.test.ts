@@ -53,10 +53,14 @@ describe("the living map's camera", () => {
     expect(T_FIT).toBeLessThan(E2);
     const open = bandAlphas(T_FIT).html;
     expect([open.plates, open.yield, open.faryield, open.popsline]).toEqual([1, 1, 0, 0]);
-    // Colony names wait one notch past the opening view.
+    // Colony names wait one notch past the opening view, except a pick's candidates,
+    // whose plates show at any zoom where plates are drawn.
     expect(open.colony).toBe(0);
     const far = bandAlphas(0).html;
     expect([far.plates, far.faryield]).toEqual([0, 1]);
+    expect([open.asked, far.asked, bandAlphas(0, 40).html.asked]).toEqual([1, 1, 1]);
+    expect(bandAlphas(0, Infinity, "trade").html.asked).toBe(1);
+    expect(bandAlphas(T_FIT, Infinity, "political").html.asked).toBe(0);
     const close = bandAlphas(1).html;
     expect([close.popsline, close.pips]).toEqual([1, 0]);
     // Hexes too small for chips (a phone) keep the far numerals and the capitals' plates.
