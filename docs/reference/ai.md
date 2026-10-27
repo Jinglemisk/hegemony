@@ -163,6 +163,37 @@ land feeds is charged nothing.
 Influence uses projected income too, so a Forum pays back
 through its actual citizen column; Civic Tradition needs no duplicate future bonus.
 
+Every search bot but greedy also forecasts the next sitting (`lawRisks`). A Law can be
+repealed at any sitting after the one that follows its own, so a realm a Law feeds has
+to be ready before that sitting. For each standing Law the next sitting may strike, the
+seat asks what the Assembly handler would do: whether any seat, itself included, would
+file the repeal (the one it values most, past the repeal threshold, with the influence
+for the speech by then: what it holds and a year's income for each year until the
+sitting) and whether the house would carry it, every seat voting by the handler's rule
+and the seats other than this one buying votes where the outcome moves them enough. A
+seat that will move a repeal readies for it too: on seed 1000's mixed table the civic
+moved Grain Levy's repeal and was four food short the year it fell. The seat's own bought
+votes are left out: they are its answer at the sitting, and counting them would let it
+spend that gold now. A repeal that carries whatever is bought counts as certain, one
+that falls whatever is bought as nothing, and one the bought votes decide as even.
+Every seat is read by the public political score, as personalities are hidden.
+
+The seat then scores each state in both futures: the forecast runs again with the Law
+gone from the sitting's year on, and the score moves toward that forecast by the chance
+the Law falls. With no Law at risk the score is computed exactly as before, to the last
+bit, so seeded games and the comparisons between policies are unchanged until a
+forecast fires. Each Law at risk adds one forecast to every state scored, and the
+forecast itself scores every seat once with each exposed Law struck: seed 1000's mixed
+table took 60 seconds against 48 without it. The engine says what losing the Law costs, so no Law is named: Grain
+Levy's freemen eat again, a price Law's Dole or calm costs its old price. A realm that
+would go short without the Law buys or keeps the food it needs, and one that would not
+does nothing. Before this the trader grew freemen Grain Levy fed, kept its income in
+gold, which buys no food without a bank, and starved when the Law fell: about 370 of
+the 857 pops it lost to hunger on the 2026-10-26 balance check's mixed table. The
+forecast does not adapt in the future without the Law: a realm that could only stay fed
+by demoting its freemen is seen to lose them. A Law pushed out by a fifth Law or by a
+new price Law is not forecast, and neither is a seat buying votes to defend a Law.
+
 Engine queries reuse immutable Law/Idea effects and tile indexes. Changed drafts
 and mutable fixtures still read their current inputs. Definition checks unwrap
 unchanged draft aliases before hashing. These caches remove repeated work from
