@@ -70,49 +70,43 @@
   padding: 0 var(--s-4);
   font-size: var(--t-16);
 }
+/* Twelve Ideas as hand-size cards, six to a row, each with its holder's mark under it. */
 .ideas-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: minmax(var(--idea-row-h), auto);
-  column-gap: var(--s-6);
+  grid-template-columns: repeat(6, minmax(0, var(--card-hand)));
+  justify-content: center;
+  gap: var(--s-4) var(--s-3);
 }
-/* A row in its tooltip trigger still fills its cell. */
+.ideas-list .gc-hand {
+  --gc-w: 100%;
+}
+/* A card in its tooltip trigger still fills its cell, and a row's cards stand level. */
+.idea-tip {
+  display: flex;
+}
 .idea-tip > .idea-choice {
   flex: 1;
 }
 .idea-choice {
-  display: grid;
-  grid-template-columns: var(--ic-tile) minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--s-3);
-  padding: var(--s-1) var(--s-3);
-  min-height: var(--idea-row-h);
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: inset 0 calc(-1 * var(--rule)) var(--line);
-  text-align: left;
-  white-space: normal;
-}
-.idea-words {
   display: flex;
   flex-direction: column;
-  gap: var(--s-1);
-  min-width: 0;
+  align-items: stretch;
+  gap: var(--s-2);
+  padding: 0;
+  border: 0;
+  border-radius: var(--s-2);
+  background: transparent;
+  white-space: normal;
 }
-.idea-words strong {
-  font-size: var(--t-20);
-  line-height: var(--lh-24);
-}
-.idea-words span {
-  font-size: var(--t-14);
-  line-height: var(--lh-20);
+.idea-choice > .gc {
+  flex-grow: 1;
 }
 .idea-hold {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: center;
   gap: var(--s-2);
+  min-height: var(--ic-ui);
 }
 .idea-mark {
   white-space: nowrap;
@@ -124,30 +118,21 @@
 .idea-mark.is-own {
   color: var(--ink);
 }
-/* A taken Idea keeps its holder's mark at full strength; the rest of it dims. */
+/* A taken Idea keeps its holder's mark at full strength; its card fades (`is-dim`). The
+   one chosen, or just taken, is ringed (`is-picked`). */
 .idea-choice.is-taken[aria-disabled="true"] {
   opacity: 1;
 }
-.idea-choice.is-taken .idea-icon,
-.idea-choice.is-taken .idea-words {
-  opacity: var(--dim);
-}
-.idea-choice[aria-pressed="true"],
-.idea-choice.is-fresh {
-  background: var(--bone);
-  box-shadow:
-    inset var(--s-1) 0 var(--clay),
-    inset 0 calc(-1 * var(--rule)) var(--line);
-}
-.ideas-setup .idea-choice[aria-pressed="true"],
-.ideas-setup .idea-choice.is-fresh {
-  background: var(--ivory);
-}
-.idea-choice:hover:not([aria-disabled="true"]) {
-  color: var(--clay-ink);
+.idea-choice:hover:not([aria-disabled="true"]) > .gc {
+  transform: translateY(calc(var(--s-1) * -1));
 }
 .idea-choice[aria-disabled="true"] {
   opacity: var(--dim);
+}
+@media (prefers-reduced-motion: reduce) {
+  .idea-choice:hover:not([aria-disabled="true"]) > .gc {
+    transform: none;
+  }
 }
 /* Read back with no controls (a rival choosing, the finished draft), an untaken
    Idea is not unavailable: only the taken ones dim. */
@@ -158,7 +143,7 @@
 }
 .idea-choice:focus-visible {
   outline: var(--rule-2) solid var(--clay);
-  outline-offset: calc(-1 * var(--rule-2));
+  outline-offset: var(--s-1);
 }
 /* A seat's mark: its glaze and blazon. A bought Idea's mark carries the year. */
 .idea-seat {
@@ -274,9 +259,11 @@
   color: var(--clay-ink);
 }
 @media (max-width: 760px) {
-  .draft,
-  .ideas-list {
+  .draft {
     grid-template-columns: 1fr;
+  }
+  .ideas-list {
+    grid-template-columns: repeat(3, minmax(0, var(--card-hand)));
   }
   .idea-target {
     flex-basis: 100%;
