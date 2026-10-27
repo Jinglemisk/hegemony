@@ -2,7 +2,7 @@
 title: UI — what is genuinely left
 status: active
 phase: "—"
-updated: 2026-10-26
+updated: 2026-10-27
 ---
 
 # UI — what is genuinely left
@@ -42,6 +42,16 @@ resource chips, two token tables) are scheduled in the
 The 3D map's own open calls are [Q83](../questions.md).
 
 ### Shipped or closed
+
+- **`CARD-1` · one card face for every deck** (card-face study, owner 2026-10-27). Year
+  cards, fates, Laws, Directives and National Ideas print one way (`GameCard`): the
+  deck's band, four corner marks (kind, reach, timing, duration), a 2:1 picture window,
+  the name, and a black-glaze panel with the effect as an icon equation over the card's
+  sentence. Three sizes: the drawn card and the Assembly's private draw at ceremony
+  size, standing Laws and the Idea draft at hand size, the ballot and the Agora's Laws at
+  mini size. Deck counts left the card for a deck line on the table under it. Five
+  corner marks wear the closest bronze icon until theirs is drawn (`cardFace.ts`); the
+  development deck's reveal, hand and seat counts build on the same face in its slice 1.
 
 - **`V2-3` · a shared tile's second settlement has a name** (the 3D map, 2026-10-26). The
   SVG board drew a rival colony sharing a tile as a small seal with no plate, because two
