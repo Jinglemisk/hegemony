@@ -101,6 +101,37 @@ describe("bots trade", () => {
     expect(answer(G, terms({ stone: 2 }, { food: 1 }), "civic")).toBe("accept");
   });
 
+  it("the trader buys food with gold before a sitting that would repeal the Law feeding its freemen", () => {
+    // Grain Levy feeds seat 0's three freemen: its city grows two food more than it
+    // eats, and one less without the Law. Seat 1 holds the influence to move the repeal
+    // at the sitting in year 6, and the house would carry it. The trader holds no
+    // influence for the Dole: food in store is its only cover.
+    const levied = (food: number, enactedYear: number) => {
+      const G = table("1", {
+        "0": {
+          tile: PLAINS,
+          pops: { citizens: 1, freemen: 3, slaves: 3 },
+          resources: { food, gold: 20 },
+        },
+        "1": {
+          tile: FOREST,
+          pops: { citizens: 0, freemen: 1, slaves: 3 },
+          resources: { food: 10, influence: 3 },
+        },
+      });
+      G.year = 5;
+      G.activeLaws = [{ cardId: "grain-levy", author: "1", enactedYear, order: G.lawOrder++ }];
+      return G;
+    };
+    const deal = terms({ food: 4 }, { gold: 4 });
+
+    expect(answer(levied(0, 2), deal, "trader")).toBe("accept");
+    // A Law passed in year 4 still stands after the sitting in year 6: it keeps its gold.
+    expect(answer(levied(0, 4), deal, "trader")).toBe("decline");
+    // Four food in store and this year's harvest feed the freemen to the forecast's end.
+    expect(answer(levied(4, 2), deal, "trader")).toBe("decline");
+  });
+
   it("refuses a deal that hands its partner Treasurer", () => {
     // Seat 0 eats more than it grows. At 29 gold seat 1 is one short of Treasurer's 30,
     // so no counter a unit off keeps the title from it either.
