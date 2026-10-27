@@ -419,6 +419,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Good Stores",
     count: 4,
     text: "Gain 2 food.",
+    flavor: "The storehouse jars are full to the shoulder.",
     effects: [{ type: "resourceDelta", resource: "food", amount: 2 }],
   },
   {
@@ -426,6 +427,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Timber",
     count: 4,
     text: "Gain 2 wood.",
+    flavor: "A storm brought down the old oaks on the ridge.",
     effects: [{ type: "resourceDelta", resource: "wood", amount: 2 }],
   },
   {
@@ -433,6 +435,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Shipment",
     count: 4,
     text: "Gain 2 stone.",
+    flavor: "The barge from the quarry comes in a day early.",
     effects: [{ type: "resourceDelta", resource: "stone", amount: 2 }],
   },
   {
@@ -440,6 +443,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Profit",
     count: 4,
     text: "Gain 2 gold.",
+    flavor: "A cargo of oil sold high in the harbour market.",
     effects: [{ type: "resourceDelta", resource: "gold", amount: 2 }],
   },
   {
@@ -447,6 +451,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Patronage",
     count: 4,
     text: "Gain 2 influence.",
+    flavor: "A rich family wants its name cut beside yours.",
     effects: [{ type: "resourceDelta", resource: "influence", amount: 2 }],
   },
   {
@@ -454,6 +459,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Free Settlers",
     count: 3,
     text: "Gain a freeman in a settlement with room.",
+    flavor: "A family from the hills asks for a plot and a hearth.",
     effects: [
       { type: "addPops", pop: "freemen", amount: 1, target: "ownedSettlementWithCapacity" },
     ],
@@ -463,6 +469,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Captured Laborers",
     count: 3,
     text: "Gain a slave in a settlement with room.",
+    flavor: "Captives from a border skirmish are led through the gate.",
     effects: [{ type: "addPops", pop: "slaves", amount: 1, target: "ownedSettlementWithCapacity" }],
   },
   {
@@ -470,6 +477,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Rats",
     count: 3,
     text: "Lose 2 food.",
+    flavor: "Something has been at the grain in the night.",
     effects: [{ type: "resourceDelta", resource: "food", amount: -2 }],
   },
   {
@@ -477,6 +485,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Bandits",
     count: 3,
     text: "Lose 2 gold.",
+    flavor: "The tax mule never reached the treasury.",
     effects: [{ type: "resourceDelta", resource: "gold", amount: -2 }],
   },
   {
@@ -484,6 +493,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Fire",
     count: 3,
     text: "Lose 2 wood.",
+    flavor: "A lamp tipped over in the timber yard.",
     effects: [{ type: "resourceDelta", resource: "wood", amount: -2 }],
   },
   {
@@ -491,6 +501,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Local Unrest",
     count: 3,
     text: "Place an Unrest token.",
+    flavor: "Angry voices in the market, and a stone through a shutter.",
     effects: [{ type: "unrestTokens", change: "placeOne" }],
   },
   {
@@ -498,6 +509,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Public Calm",
     count: 2,
     text: "Clear one Unrest token.",
+    flavor: "The quarrel is settled over wine, and the street goes quiet.",
     effects: [{ type: "unrestTokens", change: "clearOne" }],
   },
 ];

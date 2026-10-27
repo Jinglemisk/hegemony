@@ -110,74 +110,6 @@
     0 0 120px var(--mood-glow);
 }
 
-.fateArt {
-  position: relative;
-  height: 300px;
-}
-
-.fateArt img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* The painting dissolves into the card it is printed on. The terminal stop is
-   TRANSLUCENT and it is the card's own ivory, so the art ghosts through the last
-   few percent instead of hitting an opaque line in a slightly different cream.
-   The year card's painting dissolves the same way. */
-.fateArt::after,
-.yearArt::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    rgb(36 25 16 / 22%),
-    transparent 30%,
-    transparent 62%,
-    rgb(255 248 231 / 94%) 96%
-  );
-}
-
-/* The seat that drew it, on a lacquer tag over the art. */
-.fateSeat {
-  position: absolute;
-  z-index: var(--z-lift);
-  top: 14px;
-  left: 14px;
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  padding: 5px 13px 5px 6px;
-  border-radius: 20px;
-  color: var(--ivory);
-  background: rgb(24 18 16 / 78%);
-}
-
-.fateSeat .seatGlaze {
-  width: 22px;
-  height: 22px;
-  color: var(--ivory);
-  box-shadow: inset 0 0 0 1.4px rgb(255 248 231 / 85%);
-}
-
-.fateSeat b {
-  color: var(--ivory);
-  letter-spacing: 0.14em;
-}
-
-/* The body is pulled UP into the dissolve, so painting and type interlock. When
-   it started below the art band the bottom third of the fade rendered as an
-   empty ivory gap — a card with a hole in the middle of it. */
-.fateBody {
-  position: relative;
-  z-index: var(--z-lift);
-  margin-top: -26px;
-  padding: 0 34px 26px;
-}
-
 .fateKicker {
   display: block;
   color: var(--mood-ink);
@@ -191,18 +123,6 @@
 .fateVoice {
   margin: 0;
   color: var(--ink-66);
-}
-
-/* The 15px that parts the name (or the voice under it) from the blow lives on
-   the band, not on the line above it — the voice is only sometimes there. */
-.fateBody > .blowBand {
-  margin-top: 15px;
-}
-
-.fateWait {
-  display: block;
-  margin: 0 0 var(--s-3);
-  color: var(--neg);
 }
 
 /* ── Picking the settlement ──────────────────────────────────────────────────
@@ -387,98 +307,6 @@
 }
 
 .lossLines li.is-muted {
-  color: var(--ink-63);
-}
-
-/* ── The year card ───────────────────────────────────────────────────────────
-   The fate card's frame. Its back carries the year's numeral; its face a shorter
-   painting, so the four seats' row and the footer fit at 720 tall. The art is a
-   background: a painting, not an icon. */
-.yearBack {
-  background: none;
-  box-shadow: none;
-}
-
-.yearBack-face {
-  display: grid;
-  place-items: center;
-  width: 280px;
-  height: 400px;
-  padding: 0;
-  border: 0;
-  border-radius: var(--r-8);
-  color: var(--bone);
-  background:
-    radial-gradient(
-      circle at 50% 50%,
-      transparent 0 96px,
-      rgb(244 230 200 / 35%) 97px 99px,
-      transparent 100px
-    ),
-    linear-gradient(160deg, var(--clay-deep), var(--vase-black));
-  box-shadow: var(--card-edge), var(--shadow-deal);
-  animation: yearTurn 400ms ease-out both;
-}
-
-.yearBack-n {
-  font: 700 var(--t-72) / 1 var(--f-name);
-  letter-spacing: 0.06em;
-}
-
-/* The deck turns its top card: it comes in edge-on and squares up. */
-@keyframes yearTurn {
-  from {
-    transform: rotateY(-90deg) scale(0.94);
-  }
-}
-
-.yearArt {
-  position: relative;
-  height: clamp(140px, 22vh, 220px);
-  background-position: center 30%;
-  background-size: cover;
-}
-
-.yearImpact {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--s-1);
-  margin: 0 0 var(--s-2);
-  padding: 6px 0 0;
-  list-style: none;
-}
-
-.yearImpact li {
-  display: grid;
-  justify-items: center;
-  gap: var(--rule-2);
-  padding: var(--s-1) 0;
-  border-radius: 6px;
-}
-
-.yearImpact li.is-you {
-  background: var(--mood-band);
-}
-
-.yearImpact-lv {
-  font-size: var(--t-16);
-  line-height: var(--lh-24);
-}
-
-.yearImpact .caption {
-  color: var(--ink-63);
-}
-
-.yearImpact .yearImpact-warn {
-  color: var(--neg);
-  font-weight: 700;
-}
-
-.yearFoot {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--s-3);
-  margin: var(--s-1) 0 var(--s-3);
   color: var(--ink-63);
 }
 
@@ -1129,27 +957,6 @@
   gap: 12px;
 }
 
-/* ── The deck the fate came out of ───────────────────────────────────────────
-   Outside the card, because it is a fact about the table rather than about this
-   card — but STACKED under it, not pinned to the chrome. Pinned, it landed on
-   the command dock's line regardless of how tall the card was: 170px adrift of
-   a short card at 1920, and straight through the middle of a 659px one at
-   1440×900 and below, where it rendered chopped in half behind the card.
-
-   The scrim becomes a column and centres the pair, so the note is always the
-   card's own footnote at 16px and can never meet it. */
-.modalBackdrop.scrimNoted {
-  flex-direction: column;
-  gap: var(--s-4);
-}
-
-.deckEcho {
-  margin: 0;
-  color: var(--ivory-45);
-  letter-spacing: 0.28em;
-  text-align: center;
-}
-
 /* A fate is DEALT: it comes in off the deck, off-axis, and squares up. */
 @keyframes fateDeal {
   from {
@@ -1324,7 +1131,6 @@
 @media (prefers-reduced-motion: reduce) {
   .modalBackdrop.ceremonyScrim,
   .fateCard,
-  .yearBack-face,
   .ceremonyTablet,
   .lacquerDie,
   .dramaOutcome .label,

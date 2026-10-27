@@ -100,8 +100,9 @@ snake (in the standard game: Damon, Nikos, Theron, Kyros). Every pick is public 
 moment it is made and takes effect at once, and **an Idea belongs to one seat only**:
 once taken, nobody else can pick or buy it. During your turn, **Civic → Ideas** buys a
 second Idea for **6 influence**, from the Ideas no seat holds. You cannot replace an
-Idea. The picker shows each holder's mark (tagged with the year if bought), and your
-realm page and rivals' tooltips list them.
+Idea. The draft and the purchase lay the Ideas out as cards, each with its holder's mark
+under it (tagged with the year if bought), and your realm page and rivals' tooltips list
+them.
 
 Fast starts choose the setup Idea automatically for every seat, including the human,
 using the bots' scorer, deterministically for the game seed. This applies to URL quick
@@ -256,8 +257,8 @@ before income. On your turn:
    happens, and the plain choice to face it.
 
 A **year** is one turn for every seat. After all four have played, the next year
-begins and its card is revealed: the card turns over mid-screen and shows what it
-does to each realm. In an Assembly year its button convenes the Assembly. Closed, the
+begins and its card is revealed: the card turns over mid-screen, with the year deck's
+line under it. In an Assembly year its button convenes the Assembly. Closed, the
 card waits as a disc in the alarms row, after any title alarms, until the year turns;
 click it to read it again. The **first player moves on one seat** each year. The game
 lasts at most **fourteen years**; the next year card stays hidden.
@@ -494,6 +495,21 @@ it never grants a citizen. Twelve of the forty copies are harmful.
 
 The top bar shows the year and the cards left; the year's card is a disc in the alarms
 row. The **Codex** consult has the year deck, player deck, dice tables and base costs.
+
+**Reading a card.** Year cards, fates, Laws, Directives and National Ideas all print the
+same way. The band is the deck's colour: black for the year, ochre for fates, stone for
+Laws, clay for Directives, olive for Ideas. The four corners say which deck it comes from
+(top left; a year card shows the year's numeral), who it reaches (top right: you, a rival
+you pick, or every realm), when it acts (bottom left: at once, or at the sitting by vote)
+and how long it lasts (bottom right: once, this year, next turn, till the next sitting,
+until repealed, or for good). Hover a corner for its word. The black panel shows the
+effect in icons, then says it in words; a Law's cost sits under a **but**. Smaller cards,
+such as the standing Laws and the Idea draft, keep the words in their tooltip.
+
+How many cards are left is never on the card. A drawn card lands with its **deck line**
+under it: the year deck's shows the cards left and how many of each kind remain, since
+every year card is turned face up; the fates' shows the count, with each kind on hover;
+an Assembly draw's shows its politician's cards left and what the draw cost.
 
 ## The Assembly
 

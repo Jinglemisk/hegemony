@@ -2,7 +2,7 @@
 
 Status: living reference for the implemented frontend.
 
-Last updated: 2026-10-26.
+Last updated: 2026-10-27.
 
 This contract defines how the frontend explains gameplay mechanics without creating a
 second rules engine. Engine selectors, action statuses, and content manifests are the
@@ -91,6 +91,37 @@ Three rules, each owned by one shared part so a new surface gets it by using the
 
 Changes read "x → y" through `Delta`: y is green when it helps and red when it hurts.
 
+### Card faces
+
+Every card prints through one `GameCard` (owner, 2026-10-27): year cards, fates, Laws,
+Directives and National Ideas. A presenter per deck (`src/ui/cardFace.ts`) builds the
+face from the engine's typed card, so the face cannot disagree with the rules:
+
+- **Corners** are a closed vocabulary: kind, reach, timing and duration. Each mark's word
+  is its accessible name and its hover title. Nothing else goes in a corner.
+- **The equation** is built from the card's typed effects, one row per effect, three at
+  most; a row's tone (a leaf or clay notch, and a sign) comes from the effect presenters,
+  and a Law's costs sit under a "but" rule. It is hidden from screen readers.
+- **The sentence** is the card's authored `text`, always in the DOM: printed at ceremony
+  size, visually hidden at hand size, where the card's tooltip carries it.
+- **Deck counts are never on the card.** A drawn card lands on a table in one order:
+  the card, the deck line, the slip, the commit (`DrawnReveal`). `deckLine` is the one
+  selector for what a deck makes public: the year deck's cards left and what is left of
+  each kind, the fates' count with the kinds on hover, an Assembly draw's politician
+  deck. It reads only the projected state, so it never shows an order or a next card.
+  The year card has no slip: card, deck line, commit.
+- **Nothing moves** (owner, 2026-10-28). A card lands at its final place: it turns over
+  or fades in where it lies, never sliding or scaling. The stack under it is laid out at
+  its final size from the first frame, and what shows later only fades in place (the
+  year's commit waits, hidden, while its card is on its back).
+- **Fixed rows.** Every card of a size has one layout: the band, the window, the name
+  (two lines held) and, at ceremony size, the voice (two lines held), then the panel,
+  which takes the room left, then the foot. Every panel starts at the same place, so a
+  long effect never pushes a name up.
+
+A mini card carries no text and is decoration beside a name printed elsewhere. A card is
+a button only where it can be picked (an Idea, a Law armed for repeal).
+
 ## Required decisions and multi-seat workflows
 
 Do not add one unrelated boolean/modal/controller method for every new forced choice.
@@ -114,9 +145,8 @@ One moment owns the screen at a time, in the engine's order: the last seat's rio
 or revolt card, the year card, the game's end, then the turn notice; the Assembly
 and the fate card wait behind them (`HegemonyBoard`). The hunger card belongs to End turn:
 a seat that is short of food gets it when it holds End turn, with Go back to return to the
-turn, and the turn ends only when it confirms who leaves. The year card's face reads what
-the engine recorded as the card turned (the `yearCard` moment), and the riot and revolt
-cards read their moments, so nothing on them is recomputed after the turn has passed. End
+turn, and the turn ends only when it confirms who leaves. The riot and revolt cards read
+their moments, so nothing on them is recomputed after the turn has passed. End
 turn's confirm at the riot and revolt lines reads `turnEndUnrest`, which tries calm through
 the real action on a draft. Bots never wait on any of these: against bots the year card,
 the cover and the seat's own cards do not show.

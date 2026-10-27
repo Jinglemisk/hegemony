@@ -11,11 +11,6 @@ export function ceremonyMood(tone: EffectTone): CeremonyMood {
   return tone === "negative" ? "wound" : tone === "positive" ? "gift" : "rite";
 }
 
-/** The kicker over the title — the deck's own verdict on what it just dealt. */
-export function moodKicker(mood: CeremonyMood): string {
-  return mood === "wound" ? "A dark fate" : mood === "gift" ? "A kind wind" : "A fate";
-}
-
 /**
  * The commit verb is the OUTCOME, not a navigation instruction. You do not
  * "Continue" out of a riot; you endure it. Where the moment hands you something

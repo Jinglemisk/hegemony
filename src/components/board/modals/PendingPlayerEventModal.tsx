@@ -6,17 +6,18 @@ import {
   getTile,
 } from "../../../game/rules";
 import type { HegemonyState, PlayerId } from "../../../game/types";
+import { deckLine, fateCardFace } from "../../../ui/cardFace";
 import { presentEventEffects } from "../../../ui/effects";
-import { PLAYER_GLAZES, glazeOf } from "../../../ui/playerGlazes";
 import { settlementNameOf } from "../../../ui/settlementNames";
-import { SETTLEMENT_GLYPHS, eventBlowGlyph } from "../../../ui/iconRegistry";
-import { Icon } from "../../../ui/icons/Icon";
+import { SETTLEMENT_GLYPHS } from "../../../ui/iconRegistry";
 import { Prose } from "../../AnnotatedText";
+import { DeckLine } from "../../cards/DeckLine";
+import { GameCard } from "../../cards/GameCard";
+import { SeatMark } from "../../frame/parts";
 import { eventCardArtUrl } from "../events";
 import { capitalize } from "../helpers";
-import { CeremonyBlow } from "./CeremonyBlow";
-import { ceremonyMood, commitVerb, moodKicker } from "./ceremonyMood";
-import { ModalShell } from "./ModalShell";
+import { ceremonyMood, commitVerb } from "./ceremonyMood";
+import { DrawnReveal } from "./DrawnReveal";
 import { useGameUi } from "../GameUiContext";
 import { TileListbox } from "../TileListbox";
 
@@ -106,53 +107,35 @@ export function PendingPlayerEventModal() {
       : commitVerb(mood, blow.subject);
 
   return (
-    // Blocking on purpose: a drawn event must be resolved, never dismissed.
-    <ModalShell
-      backdropClassName="eventModalBackdrop"
-      ceremony={mood}
-      className="fateCard"
-      labelledBy="pending-event-title"
-      scrimNote={
-        <p className="deckEcho label">The deck of fates · {G.playerDrawPile.length} remain</p>
+    // Blocking on purpose: a drawn event must be resolved, never dismissed. The card,
+    // the fates' deck line, the settlement slip when it asks for one, then the commit.
+    <DrawnReveal
+      caption={
+        !isActive ? (
+          <p className="drawn-wait">
+            <Prose links={false}>Only the active player can resolve this event.</Prose>
+          </p>
+        ) : null
       }
-    >
-      <div className="fateArt">
-        <img alt={`${card.name} card art`} src={eventCardArtUrl(card)} />
-        <span className="fateSeat">
-          <span className="seatGlaze label" style={{ background: glazeOf(playerID) }}>
-            {PLAYER_GLAZES[playerID].blazon}
-          </span>
-          <b className="label">{G.players[playerID].name} draws</b>
-        </span>
-      </div>
-
-      <div className="fateBody">
-        <span className="fateKicker label">{moodKicker(mood)}</span>
-        <h2 className="display display-xl" id="pending-event-title">
-          {card.name}
-        </h2>
-
-        {/* PAR-CER-1: the card's VOICE, and only that. `card.text` is the rules
-            sentence and belongs in the blow band, which never fails to render it
-            — a presenter with no single number to carve falls back to the flat
-            sentence. So
-            this slot never repeats mechanics, and a card with no authored line
-            simply does not render it: the 15px that parts the title from the
-            band lives on the band, so nothing leaves a gap.
-
-            Deliberately NOT run through `AnnotatedText` — glossary chips down
-            the middle of a quoted line would make prose read as a rules index,
-            which is the register this slot exists to escape. */}
-        {card.flavor ? <p className="fateVoice body-em">“{card.flavor}”</p> : null}
-
-        <CeremonyBlow
-          className="blowBand"
-          icon={effects.length > 0 ? <Icon glyph={eventBlowGlyph(effects[0])} size="rail" /> : null}
-          links={false}
-          presentation={blow}
+      card={
+        <GameCard
+          arrive="turn"
+          face={fateCardFace(card, eventCardArtUrl(card))}
+          titleId="pending-event-title"
         />
-
-        {popEffect ? (
+      }
+      deck={
+        <DeckLine kinds="hover" line={deckLine(G, { kind: "fate" })} noun="fates left">
+          <span className="deck-who">
+            <SeatMark playerID={playerID} />
+            {G.players[playerID].name} draws
+          </span>
+        </DeckLine>
+      }
+      labelledBy="pending-event-title"
+      mood={mood}
+      slip={
+        popEffect ? (
           <div className="fieldGroup fateTarget">
             <span className="label">Settlement target</span>
             {/* A list, not the map: this dialog blocks by design (a drawn card
@@ -181,22 +164,16 @@ export function PendingPlayerEventModal() {
               </em>
             ) : null}
           </div>
-        ) : null}
-
-        {!isActive ? (
-          <p className="fateWait caption">
-            <Prose links={false}>Only the active player can resolve this event.</Prose>
-          </p>
-        ) : null}
-
-        <button
-          className="ceremonyCommit verb verb-lg"
-          disabled={!canConfirm}
-          onClick={() => moves.resolvePendingPlayerEvent(popEffect ? targetTileId : undefined)}
-        >
-          {actionLabel}
-        </button>
-      </div>
-    </ModalShell>
+        ) : null
+      }
+    >
+      <button
+        className="ceremonyCommit verb verb-lg"
+        disabled={!canConfirm}
+        onClick={() => moves.resolvePendingPlayerEvent(popEffect ? targetTileId : undefined)}
+      >
+        {actionLabel}
+      </button>
+    </DrawnReveal>
   );
 }

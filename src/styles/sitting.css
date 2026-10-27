@@ -181,21 +181,17 @@
   min-width: 0;
 }
 
-.sit-pols,
-.sit-laws {
+.sit-pols {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--s-3);
 }
-.sit-pol,
-.sit-law {
+.sit-pol {
   display: flex;
   flex-direction: column;
   gap: var(--s-1);
   padding: var(--s-3);
   border-radius: var(--r-4);
-}
-.sit-pol {
   box-shadow: inset 0 0 0 var(--rule) var(--line);
 }
 .sit-pol .sit-prize {
@@ -205,40 +201,65 @@
   margin-top: var(--s-1);
 }
 
-/* A standing Law is a stele: dark stone, light letters. */
+/* The stelae: each standing Law a hand-size card, its author and year under it, and
+   the stage's actions in the room beside them. */
+.sit-stelae {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: end;
+  gap: var(--s-6);
+}
+.sit-laws {
+  display: grid;
+  grid-template-columns: repeat(4, var(--card-hand));
+  gap: var(--s-4);
+}
+.sit-aside {
+  align-items: flex-start;
+}
+.sit-aside .sit-btn.is-primary {
+  align-self: stretch;
+}
 .sit-law {
-  color: var(--ivory);
-  background: var(--lacquer-lit);
-  text-align: left;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-1);
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.sit-law > .gc {
+  flex-grow: 1;
 }
 .sit-law .sit-by {
   display: flex;
   align-items: center;
   gap: var(--s-2);
-  margin-top: auto;
-  color: var(--ivory-70);
+  color: var(--ink-66);
 }
+/* Armed for a repeal: the card is ringed and lifts under the pointer. */
 .sit-law.is-target {
   cursor: pointer;
-  box-shadow: 0 0 0 var(--rule-2) var(--clay);
 }
-.sit-law.is-target:hover {
-  background: var(--ink);
+.sit-law.is-target:hover .gc,
+.sit-law.is-target:focus-visible .gc {
+  transform: translateY(calc(var(--s-1) * -1));
 }
-.sit-law.is-new {
-  box-shadow: 0 0 0 var(--rule-2) var(--clay);
-}
-.sit-law.is-gone {
-  opacity: 0.6;
-  text-decoration: line-through;
-}
+/* An empty stele stands as tall as a card beside one; with none standing it is a line. */
 .sit-law.is-empty {
-  align-items: center;
   justify-content: center;
+  min-height: calc(var(--card-hand) * 88 / 63);
+  padding: var(--s-3);
+  border-radius: var(--s-2);
   color: var(--ink-63);
-  background: none;
   box-shadow: inset 0 0 0 var(--rule) var(--ink-45);
   font: italic var(--t-14) / var(--lh-20) var(--f-body);
+  text-align: center;
+}
+.sit-laws.is-bare .sit-law.is-empty {
+  min-height: 0;
 }
 .sit-law-tip {
   display: flex;
@@ -249,23 +270,37 @@
 
 /* ── The drawn card ────────────────────────────────────────────────────────── */
 
+/* The private draw at ceremony size, its deck line and notes under it; the choice
+   beside it. The card follows the screen's height so the sheet fits at 800 tall. */
 .sit-drawn {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: start;
-  gap: var(--s-6);
+  gap: var(--s-8);
 }
 .sit-card {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--s-2);
-  padding: var(--s-4);
-  border-radius: var(--r-4);
+  width: min(var(--card-ceremony), 34vh);
+}
+.sit-card .gc-ceremony {
+  --gc-w: min(var(--card-ceremony), 34vh);
+}
+/* On the sitting's paper the deck line is printed in ink, at the head of the column
+   beside the card. */
+.sitting .deck-line,
+.sit-col > .sit-lock {
+  align-self: flex-start;
+}
+.sitting .deck-line {
+  color: var(--ink-66);
+  background: var(--bone);
   box-shadow: inset 0 0 0 var(--rule) var(--line);
 }
-.sit-card-name {
-  --name-size: var(--t-24);
-  --name-lh: var(--lh-32);
+.sitting .deck-line b {
+  color: var(--ink);
 }
 /* "Only you can see this card": in ink, since a light glaze fails as text. */
 .sit-lock {
@@ -333,6 +368,13 @@
 }
 .sit-item.is-quiet {
   background: var(--bone);
+}
+/* The ballot: a mini card beside each item, the card it moves. */
+.sit-items.has-cards .sit-item {
+  grid-template-columns: var(--s-6) auto var(--card-mini) minmax(0, 1fr) auto;
+}
+.sit-lock-mark {
+  display: inline-flex;
 }
 .sit-no {
   color: var(--ink-63);
@@ -492,9 +534,6 @@
   --name-size: var(--t-28);
   --name-lh: var(--lh-32);
   margin: 0;
-}
-.sit-result .sit-law {
-  width: calc(var(--u) * 80);
 }
 .sit-fx {
   display: flex;

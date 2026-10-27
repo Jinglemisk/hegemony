@@ -85,16 +85,15 @@
    only touch it at narrow widths. */
 .hungerCard .label,
 .lossCard .label,
-.yearCard .label,
+.drawnReveal .label,
 .riotSheet .label,
-.ageEnd .label,
-.yearBack + .deckEcho {
+.ageEnd .label {
   font-size: var(--t-12);
 }
 
 .hungerCard .caption,
 .lossCard .caption,
-.yearCard .caption,
+.drawnReveal .caption,
 .riotSheet .caption,
 .ageEnd .caption {
   font-size: max(var(--t-12), 0.78125rem);
@@ -104,14 +103,14 @@
 .riotSheet .verb,
 .lossCard .verb,
 .hungerCard .verb,
-.yearCard .verb {
+.drawnReveal .verb {
   font-size: var(--t-12);
 }
 
 .ageEnd .verb.verb-lg,
 .riotSheet .verb.verb-lg,
 .lossCard .verb.verb-lg,
-.yearCard .verb.verb-lg {
+.drawnReveal .verb.verb-lg {
   font-size: max(var(--t-12), 0.8125rem);
 }
 
