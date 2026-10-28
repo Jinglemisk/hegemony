@@ -304,7 +304,8 @@ const PROBE = () => {
       // apart. Except under a fan: an open fan must never cover a settlement's
       // mark or a mooring. An empty tile's slot count is ground like any other.
       const [land, chrome] = onIsland(a) ? [a, b] : [b, a];
-      const fanOverMark = chrome.closest(".fan") && !land.closest(".lm-yield, .lm-far");
+      const fanOverMark =
+        chrome.closest(".fan") && !land.closest(".lm-res:not(.held), .lm-eco.empty");
       if (onIsland(a) !== onIsland(b) && !fanOverMark) {
         out.push({
           kind: "COVERED",

@@ -87,40 +87,138 @@
   top: 0;
 }
 
-.lm-plate {
-  --kind: 1;
+/* Each tile's tag, anchored on the near half of its hex: the resource badge centred on
+   the anchor (the camera sizes it to the hex through font-size), what the mode hangs
+   under it, and Trade's hint beside a capital's. A placement is asking: the tiles that
+   are not an answer recede. */
+.lm-tag {
   --dimmed: 1;
+  line-height: 1;
+  transform: translate(-50%, -50%);
+}
+.lm-tag.is-dimmed {
+  --dimmed: var(--dim);
+}
+
+/* The resource badge: the slots in white numerals, the land's resource in bronze, and
+   each settlement's icon on its owner's colour joined at the resource's corner. */
+.lm-res {
+  /* Positioned, so it lies over what hangs under it (drawn first). */
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.1em;
+  padding: 2px;
+  font-family: var(--f-name);
+  font-weight: 700;
+  color: var(--ivory);
+  white-space: nowrap;
+  opacity: var(--dimmed);
+}
+.lm-res b {
+  /* Cinzel's numeral ink is about .72em high; match it to the requested height. */
+  line-height: 0.72;
+  font-weight: inherit;
+  -webkit-text-stroke: max(2px, 0.075em) var(--vase-black);
+  paint-order: stroke fill;
+  text-shadow: var(--map-numeral-shadow);
+}
+.lm-res .ic {
+  position: relative;
+  display: flex;
+}
+.lm-res .ic > img {
+  flex: none;
+  box-sizing: border-box;
+  width: 1cap;
+  height: 1cap;
+  padding: 0.04em;
+  background: var(--ivory);
+  border: var(--rule) solid var(--ink);
+  border-radius: 0.14em;
+  box-shadow: var(--map-label-shadow);
+}
+/* A held tile's resource, framed in its holder's colour: who holds what, at a glance. */
+.lm-res.held .ic > img {
+  border: max(2px, 0.07em) solid var(--own);
+  box-shadow:
+    0 0 0 var(--rule) var(--ink),
+    var(--map-label-shadow);
+}
+/* Each settlement's icon on its owner's colour, at the frame's top corner; out of the
+   badge's flow, so a held badge is as large as an open one. */
+.lm-res .own {
+  position: absolute;
+  right: -0.32em;
+  top: -0.36em;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 0.62em;
+  height: 0.62em;
+  background: var(--own);
+  border: max(1px, 0.04em) solid var(--ink);
+  border-radius: var(--r-round);
+  box-shadow:
+    0 0 0 max(1px, 0.04em) var(--ivory),
+    var(--map-label-shadow);
+}
+.lm-res .own.capital {
+  width: 0.72em;
+  height: 0.72em;
+  top: -0.44em;
+}
+.lm-res .own + .own {
+  right: 0.3em;
+}
+.lm-res .own img {
+  width: 84%;
+  height: 84%;
+}
+
+/* What hangs under the badge: each mode's kind stacked in one cell, so they cross in
+   place as the mode or the band changes. It tucks a little under the badge, so a row
+   of hexes as small as a laptop's opening view still holds a badge and a name. */
+.lm-under {
+  position: absolute;
+  left: 50%;
+  top: 100%;
   display: grid;
   justify-items: center;
-  gap: 2px;
-  padding: 5px 9px 4px;
+  align-items: start;
+  margin-top: -0.14em;
+  transform: translateX(-50%);
+}
+.lm-under > * {
+  grid-area: 1 / 1;
+}
+
+/* A name plate, one line: each settlement's name, and close in its pips and pops. */
+.lm-plate {
+  --show: var(--a-plates, 1);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 3px 8px 2px;
   background: var(--ivory);
   color: var(--ink);
   border: var(--rule) solid var(--ink);
   border-radius: 1px;
   box-shadow: var(--map-label-shadow);
   white-space: nowrap;
-  transform: translate(-50%, 0);
-  opacity: calc(var(--a-plates, 1) * var(--kind) * var(--dimmed));
+  opacity: calc(var(--show) * var(--dimmed));
 }
-.lm-plate.city {
-  --kind: var(--a-cityplate, 1);
+.lm-plate.capital {
+  --show: var(--a-capital, 1);
 }
-.lm-plate.colony {
-  --kind: var(--a-colony, 1);
-}
-/* A placement is asking: the tiles that are not an answer recede, and each answer's
-   plate shows at any zoom. */
-.lm-plate.is-dimmed {
-  --dimmed: var(--dim);
-}
+/* A pick's candidate shows its plate at any zoom; under a capital, in place of the
+   realm's name while the pick lasts. */
 .lm-plate.is-asked {
-  opacity: var(--a-asked, 1);
+  --show: var(--a-asked, 1);
 }
-.lm-plate .pl-row {
-  display: flex;
-  align-items: center;
-  gap: 0.45em;
+.lm-under:has(.is-asked) .lm-realm {
+  opacity: 0;
 }
 .lm-plate .pl-name {
   font-family: var(--f-name);
@@ -128,23 +226,31 @@
   line-height: 1;
   letter-spacing: var(--track-name);
 }
-.lm-plate :is(.pl-name, .pl-pops) i {
-  font-style: normal;
-  opacity: var(--dim);
-  margin: 0 0.35em;
+/* Two settlements on a tile: a rule between them. */
+.lm-plate > u {
+  align-self: stretch;
+  width: 1px;
+  background: var(--ink-45);
 }
+.lm-plate .pips,
 .lm-plate .pl-pops {
-  font-family: var(--f-sans);
-  font-weight: 700;
-  line-height: 1.1;
-  color: var(--ink-66);
-  opacity: var(--a-popsline, 0);
-}
-.lm-plate .pips {
   display: flex;
-  gap: 3px;
   align-items: center;
   opacity: var(--a-pips, 1);
+}
+.lm-plate .pips {
+  gap: 3px;
+}
+.lm-plate .pl-pops {
+  gap: 1px;
+  font-family: var(--f-sans);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink-66);
+}
+.lm-plate .pl-pops img {
+  width: 1.25em;
+  height: 1.25em;
 }
 .lm-plate .pips i {
   display: block;
@@ -160,74 +266,63 @@
 .lm-plate .pips i.w {
   background: var(--ink-45);
 }
-.lm-plate .pips u {
-  display: block;
-  width: 1px;
-  height: 0.8em;
-  margin: 0 2px;
-  background: var(--ink-45);
-}
-.living-map:not(.pips-on) .lm-plate .pips,
-.living-map:not(.pops-on) .lm-plate .pl-pops {
+.living-map:not(.pips-on) .lm-plate :is(.pips, .pl-pops) {
   display: none;
 }
 
-.lm-yield {
+/* The Oracle's chip close in, where another tile's badge would stand. */
+.lm-oracle {
   padding: 0 0.4em;
-  font-family: var(--f-sans);
-  font-weight: 700;
+  font-family: var(--f-body);
+  font-style: italic;
+  font-weight: 500;
   line-height: 1.25;
   color: var(--ink);
   background: var(--map-chip);
   border-radius: 1px;
   white-space: nowrap;
-  transform: translate(-50%, -50%);
-  opacity: calc(var(--a-yield, 1) * var(--dimmed, 1));
-}
-.lm-yield.is-dimmed,
-.lm-far.is-dimmed {
-  --dimmed: var(--dim);
-}
-.lm-yield.oracle {
-  font-family: var(--f-body);
-  font-style: italic;
-  font-weight: 500;
-  transform: translate(-50%, 0);
+  opacity: var(--a-oracle, 0);
 }
 
-/* Far out, each tile's slot count and what it makes, sized to the hex. */
-.lm-far {
+/* Trade's hint beside a realm's capital, off its plate's right end: what it exports (↑)
+   and imports (↓), edged in the realm's colour. Out of the plate's flow, so the plate
+   keeps its size across the modes. It takes the pointer only in Trade, for its tip. */
+.lm-hint {
+  position: absolute;
+  left: 100%;
+  top: 50%;
   display: flex;
-  align-items: baseline;
-  gap: 0.1em;
-  padding: 2px;
-  font-family: var(--f-name);
+  align-items: center;
+  gap: 5px;
+  margin-left: 3px;
+  padding: 2px 6px 2px 4px;
+  font-family: var(--f-sans);
   font-weight: 700;
   line-height: 1;
   color: var(--ivory);
-  white-space: nowrap;
-  transform-origin: 0 0;
-  transform: translate(-50%, -50%);
-  opacity: calc(var(--a-faryield, 0) * var(--dimmed, 1));
-}
-.lm-far b {
-  /* Cinzel's numeral ink is about .72em high; match it to the requested height. */
-  line-height: 0.72;
-  font-weight: inherit;
-  -webkit-text-stroke: max(2px, 0.075em) var(--vase-black);
-  paint-order: stroke fill;
-  text-shadow: var(--map-numeral-shadow);
-}
-.lm-far img {
-  flex: none;
-  box-sizing: border-box;
-  width: 1cap;
-  height: 1cap;
-  padding: 0.04em;
-  background: var(--ivory);
-  border: var(--rule) solid var(--ink);
-  border-radius: 0.14em;
+  background: var(--map-ship);
+  border: var(--rule-2) solid var(--own);
+  border-radius: 2px;
   box-shadow: var(--map-label-shadow);
+  white-space: nowrap;
+  transform: translateY(-50%);
+  opacity: var(--a-hint, 0);
+}
+.living-map:not(.hint-on) .lm-hint {
+  display: none;
+}
+.living-map.hint-on .lm-hint {
+  pointer-events: auto;
+  cursor: pointer;
+}
+.lm-hint .lean {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+.lm-hint img {
+  width: 1.45em;
+  height: 1.45em;
 }
 
 /* A selected tile's buildings: each a bronze icon on a stem over its building. */
@@ -304,13 +399,6 @@
   pointer-events: none;
   opacity: 0;
 }
-/* In Trade the good's disc sits on its raft: the name keeps clear of it. */
-.lm-moor[data-hang~="down"] {
-  padding-top: calc(var(--a-goodicon, 0) * 0.9em);
-}
-.lm-moor[data-hang~="up"] {
-  padding-bottom: calc(var(--a-goodicon, 0) * 0.9em);
-}
 .lm-moor:focus-visible {
   outline: var(--rule-2) solid var(--ochre);
   outline-offset: var(--rule-2);
@@ -325,15 +413,23 @@
     0 0 2px var(--sea-deep),
     0 0 5px var(--sea-deep);
 }
+/* The good's icon on an ivory disc, ringed in its holder's colour once claimed. */
 .lm-moor .m-name b {
-  display: inline-block;
-  width: 0.7em;
-  height: 0.7em;
-  margin-right: 0.35em;
+  display: inline-grid;
+  place-items: center;
+  width: 1.35em;
+  height: 1.35em;
+  margin-right: 0.3em;
   border-radius: var(--r-round);
-  background: var(--own);
-  box-shadow: 0 0 0 1.5px var(--ivory);
-  vertical-align: -0.05em;
+  background: var(--ivory);
+  box-shadow:
+    0 0 0 var(--rule-2) var(--own, var(--ink-45)),
+    var(--map-label-shadow);
+  vertical-align: middle;
+}
+.lm-moor .m-name b img {
+  width: 82%;
+  height: 82%;
 }
 .lm-moor .m-name small {
   margin-left: 0.3em;
@@ -384,14 +480,23 @@
 
 /* ---- the map modes' labels: each fades with its mode through --a-<key> ---------- */
 
-/* Political: a realm's name, under its capital's seal. */
+/* Political: a realm's name under its capital's badge, with its Unrest tokens; its
+   glaze and counts close in, where there is room. */
 .lm-realm {
   display: grid;
   justify-items: center;
   gap: 2px;
+  margin-top: 4px;
   text-align: center;
-  transform: translate(-50%, 0);
   opacity: var(--a-realm, 0);
+}
+.lm-realm .rn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.lm-realm small {
+  opacity: var(--a-realmline, 0);
 }
 .lm-realm b {
   font-family: var(--f-name);
@@ -410,59 +515,12 @@
   line-height: 1.2;
   letter-spacing: 0.04em;
   color: var(--ivory);
+  white-space: nowrap;
   text-shadow:
     0 0 3px var(--ink),
     0 0 6px var(--ink);
 }
-
-/* The flat marks of every mode but Terrain, upright to the camera: an icon on a disc
-   in its owner's colour (--own), plain where nobody holds it. --d is the disc's
-   width in its own em; a capital's is the largest. */
-.lm-disc,
-.lm-eco.under-colony {
-  --d: 2.3;
-}
-.lm-disc.capital,
-.lm-eco.under-capital {
-  --d: 3.2;
-}
-.lm-disc.city,
-.lm-eco.under-city {
-  --d: 2.7;
-}
-.lm-disc.port {
-  --d: 1.7;
-}
-.lm-disc {
-  display: grid;
-  place-items: center;
-  width: calc(var(--d) * 1em);
-  height: calc(var(--d) * 1em);
-  background: var(--own, var(--ivory));
-  border: var(--rule-2) solid var(--ink);
-  border-radius: var(--r-round);
-  box-shadow:
-    0 0 0 var(--rule-2) var(--ivory),
-    var(--map-label-shadow);
-  transform: translate(-50%, -50%);
-}
-.lm-disc > img {
-  width: 80%;
-  height: 80%;
-}
-.lm-disc.seal {
-  opacity: var(--a-seal, 0);
-}
-.lm-disc.good {
-  opacity: var(--a-goodicon, 0);
-  cursor: pointer;
-  pointer-events: auto;
-}
-/* A realm's Unrest tokens, beside each of its settlements in Political. */
 .lm-tokens {
-  position: absolute;
-  left: calc(100% - 0.35em);
-  top: 50%;
   display: flex;
   align-items: center;
   gap: 2px;
@@ -471,24 +529,23 @@
   font-weight: 700;
   line-height: 1.1;
   color: var(--ivory);
+  text-shadow: none;
   background: var(--map-ship);
   border: var(--rule) solid var(--map-ship-rule);
   border-radius: 2px;
-  white-space: nowrap;
-  transform: translateY(-50%);
 }
 .lm-tokens img {
   width: 1.4em;
   height: 1.4em;
 }
 
-/* Economy: a settled tile's card, compact far out and full close in, and an open
-   tile's slots. */
+/* Economy: a settled tile's card, compact in the overview and full close in, and an
+   open tile's readout. */
 .lm-eco {
   display: grid;
   justify-items: center;
   gap: 3px;
-  padding: 4px 7px;
+  padding: 2px 6px 1px;
   font-family: var(--f-sans);
   font-weight: 700;
   line-height: 1.1;
@@ -498,49 +555,26 @@
   border-radius: 2px;
   box-shadow: var(--map-label-shadow);
   white-space: nowrap;
-  transform: translate(-50%, -50%);
 }
 .lm-eco.full {
   opacity: var(--a-ecoF, 0);
 }
-/* A settled tile's cards, and the Oracle's, hang from the foot of its seal: half the
-   seal's width down, in the seal's own size (type.css sizes .lm-disc). */
-.lm-eco.compact,
-.lm-eco.full,
-.lm-eco.oracle {
-  transform: translate(
-    -50%,
-    calc(min(var(--lab), var(--hex, 100px) * 0.19) * var(--d) / 2 + var(--rule-2))
-  );
-}
+/* The compact card is the full card's first row, so the readout stays put. */
 .lm-eco.compact {
   gap: 1px;
-  padding: 2px 6px;
   opacity: var(--a-ecoC, 0);
-}
-.lm-eco.compact .row {
-  gap: 4px;
 }
 .lm-eco.empty {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 1px 6px;
   background: var(--ivory-70);
   border-color: var(--ink-45);
-  opacity: calc(var(--a-ecoE, 0) * var(--dimmed, 1));
-}
-.lm-eco.empty.is-dimmed {
-  --dimmed: var(--dim);
+  opacity: calc(var(--a-ecoE, 0) * var(--dimmed));
 }
 .lm-eco img {
-  width: 1.5em;
-  height: 1.5em;
-}
-.lm-eco em {
-  font-style: normal;
-  font-weight: 500;
-  color: var(--ink-66);
+  width: 1.4em;
+  height: 1.4em;
 }
 .lm-eco hr {
   width: 100%;

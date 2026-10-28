@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { fitIsland } from "./fit";
 import {
-  E1,
-  E2,
   H_TILE,
+  T_CLOSE,
   T_FIT,
   bandAlphas,
   boxesAt,
+  detailAt,
   project,
   stepCamera,
   tiltAt,
@@ -48,34 +48,42 @@ describe("the living map's camera", () => {
     expect(after.y).toBeCloseTo(300, 0);
   });
 
-  it("opens in the middle band, and fades each layer in its own band", () => {
-    expect(T_FIT).toBeGreaterThan(E1);
-    expect(T_FIT).toBeLessThan(E2);
+  it("has two bands: the opening view in the overview, one press of + past the threshold", () => {
+    expect(bandAlphas(T_FIT).close).toBe(0);
+    expect(T_FIT).toBeLessThan(T_CLOSE);
+    const [lo] = zoomRange(frame.zFit);
+    expect(bandAlphas(detailAt(lo, frame.zFit)).close).toBe(0);
+    expect(bandAlphas(detailAt(1.4 * frame.zFit, frame.zFit)).close).toBe(1);
+
+    // The overview names the capitals; close in, every settlement, with its pips and
+    // pops. A pick's candidates are named at any zoom.
     const open = bandAlphas(T_FIT).html;
-    expect([open.plates, open.yield, open.faryield, open.popsline]).toEqual([1, 1, 0, 0]);
-    // Colony names wait one notch past the opening view, except a pick's candidates,
-    // whose plates show at any zoom where plates are drawn.
-    expect(open.colony).toBe(0);
-    const far = bandAlphas(0).html;
-    expect([far.plates, far.faryield]).toEqual([0, 1]);
-    expect([open.asked, far.asked, bandAlphas(0, 40).html.asked]).toEqual([1, 1, 1]);
-    expect(bandAlphas(0, Infinity, "trade").html.asked).toBe(1);
-    expect(bandAlphas(T_FIT, Infinity, "political").html.asked).toBe(0);
+    expect([open.capital, open.plates, open.pips, open.asked]).toEqual([1, 0, 0, 1]);
     const close = bandAlphas(1).html;
-    expect([close.popsline, close.pips]).toEqual([1, 0]);
-    // Hexes too small for chips (a phone) keep the far numerals and the capitals' plates.
-    const small = bandAlphas(T_FIT, 50).html;
-    expect([small.plates, small.cityplate, small.yield, small.faryield]).toEqual([1, 0, 0, 1]);
-    // Outside Terrain the flat seals stand in for the town and Port models, and Trade's
-    // discs for the goods' rafts.
-    const mark = (mode: "terrain" | "political" | "economy" | "trade") => {
-      const { layers, html } = bandAlphas(T_FIT, Infinity, mode);
-      return [layers.towns, layers.ports, html.seal, layers.goods, html.goodicon];
-    };
-    expect(mark("terrain")).toEqual([1, expect.any(Number), 0, 1, 0]);
-    expect(mark("political")).toEqual([0, 0, 1, 1, 0]);
-    expect(mark("economy")).toEqual([0, 0, 1, 1, 0]);
-    expect(mark("trade")).toEqual([0, 0, 1, 0, 1]);
+    expect([close.capital, close.plates, close.pips, close.asked]).toEqual([1, 1, 1, 1]);
+    // Hexes too small for every plate keep the overview's labels close in; a phone's,
+    // too small for any, keep the badges alone. A pick still names its candidates.
+    const small = bandAlphas(1, 50).html;
+    expect([small.capital, small.plates, small.pips]).toEqual([1, 0, 0]);
+    const phone = bandAlphas(T_FIT, 30).html;
+    expect([phone.capital, phone.plates, phone.asked]).toEqual([0, 0, 1]);
+  });
+
+  it("draws the same 3D board in every mode at both bands, under the mode's filter", () => {
+    for (const t of [0, T_FIT, 1])
+      for (const mode of ["terrain", "political", "economy", "trade"] as const) {
+        const { layers } = bandAlphas(t, Infinity, mode);
+        expect([layers.towns, layers.ports, layers.goods]).toEqual([1, 1, 1]);
+        // Economy fades the land's trees, rocks and fields; no mode hides them.
+        expect(layers.terrain).toBe(mode === "economy" ? 0.35 : 1);
+      }
+    // Each mode hangs its own labels under the badge: Political the realm's name in
+    // place of its capital's plate, Economy its readout, Trade its hint by the capital.
+    const html = (mode: "terrain" | "political" | "economy" | "trade") =>
+      bandAlphas(T_FIT, Infinity, mode).html;
+    expect([html("political").realm, html("political").capital]).toEqual([1, 0]);
+    expect([html("economy").ecoC, html("economy").ecoF, html("economy").plates]).toEqual([1, 0, 0]);
+    expect([html("trade").hint, html("terrain").hint]).toEqual([1, 0]);
   });
 
   it("opens with every tile on screen and clear of the chrome", () => {

@@ -153,12 +153,52 @@ reduced motion, and a GPU rather than software rendering. With the camera still,
 sea and its life move, and they draw at 30 frames a second, where 60 cost 7 to 15% of the
 main thread in a dev build; a pan, a zoom or a turn draws every frame.
 
+**Two zoom levels (owner, 2026-10-28).** The zoom stays smooth, but the map's look changes
+once, at one threshold (`T_CLOSE` in `bandAlphas`), with a short crossfade. The opening view
+is the overview, and one press of + crosses the threshold. Three bands with their own label
+rules read as three different maps; the owner asked for consistency, two levels and many
+anchored entities.
+
+- **3D in every mode.** Every mode draws the same board at both levels: the terrain in its
+  own colours, the towns, Ports, goods and Oracle as models. A mode is a light filter over
+  it. Political tints each owned tile and every model on it toward the owner's glaze (35%),
+  through each instance's colour, so the tint adds no draw call, and draws each realm's
+  border in place of the owner rings. Economy fades the trees, rocks and fields. Trade adds
+  the trading ships and their routes. The flat seals that stood in for the towns and Ports
+  outside Terrain, and Trade's flat discs for the goods, are gone: the models and the badges
+  carry what they said. The anchored chips stay, because no model says it: a Port's good
+  (Trade), a ship's pops and destination, a riot or the titles, and a building's icon on its
+  stem.
+- **One anchor per tile.** Each tile's badge (its slots in white numerals and its land's
+  resource as an icon, never words) stands on the near half of its hex, clear of the town, in
+  every mode at both levels. A settled tile frames the icon in its owner's colour and joins
+  each settlement's icon on that colour at the frame's corner: who holds which resource, read
+  at a glance. What hangs under the badge is the mode's (a plate, the realm's name, Economy's
+  readout), so nothing jumps when the zoom or the mode changes.
+- **The overview names only the capitals.** Every other settlement is its owner-coloured
+  icon on its badge; close in, every settlement's plate, one line with its pips and pops.
+  The realm's name in Political, with its Unrest tokens, hangs under its capital in place of
+  the capital's plate; the tokens moved there from the seals.
+- **Sizes.** The badge's numeral is 0.55 of the hex's drawn width (it was 0.5), up to 32px,
+  and never wider than 0.92 of the hex; the board's label size (`--lab`) is about 13% larger
+  at every zoom. Each label waits until the hexes are drawn wide enough to hold it under its
+  badge: a short label 44–50px, every plate 56–64px, Economy's three-row card and a realm's
+  glaze and counts 110–120px. A
+  phone's opening view shows the badges alone.
+- **Trade's hint** (`tradeLean`, in the engine) stands off each capital's plate in Trade: ↑
+  the realm's export, the wood, stone or food it makes most of beyond its needs a turn; ↓ its
+  import, of those it makes nothing of beyond its needs, the one it will hold least of once
+  the turn's income lands. Both read only public income and stocks. Hovering the hint shows
+  the numbers; clicking it picks the capital. The capital's accessible name in Trade says
+  the same.
+
 The owner's other map calls of 2026-10-27:
 
 - **A pick names its candidates.** While a pick is armed (Grow, the ladder, Build, Move,
-  placing traded pops), each ringed settlement shows its name plate at any zoom. Without
-  that, at the opening zoom a colony's name waited a notch further in, and on a small screen
-  every name did. Political and Economy draw no plates, and a pick leaves them so.
+  placing traded pops), each ringed settlement shows its name plate at any zoom; under a
+  capital in Political, in place of the realm's name. Without that, in the overview a
+  colony's name waits for the close level, and on a small screen every name does. Economy
+  draws no plates, and a pick leaves it so.
 - **The compass is a button.** A click returns to the opening view, as 0 does; its tooltip
   names Q and E for turning and 0 for the reset. It is a real button with a label, so the
   keyboard reaches it, and it has no turn arrows. Without it a mouse player had no way back.

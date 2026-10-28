@@ -45,28 +45,40 @@ turn it up to 15° either way, the arrow keys pan, and **+** and **−** zoom. T
 turned where you leave it, and the compass turns with it. The view tilts as you zoom in: flat
 far out, 20° at the opening view, 45° close in.
 
-Detail comes in with the zoom. Far out you see each tile's owner colour and slots; in the
-middle, names, slots and yield chips; close in, buildings, fields, trees, rocks and a figure
-for every pop.
+The map has two zoom levels, and its look changes once between them. The opening view is the
+**overview**: the towns, Ports, goods, fields, trees and rocks in 3D, and on every tile its
+**badge**: its number of slots in white beside its resource's icon (a slot's icon where the
+land makes nothing). On a settled tile the icon is framed in its owner's colour, and each
+settlement's icon sits on its owner's colour at the frame's corner, so you can read at a glance
+who holds what. Only the capitals are named. One press of **+** goes **close in**: every
+settlement's name plate with its slots as pips and its pops, the buildings, a figure for every
+pop, and the sea's life. The badge stands in the same spot at both levels and in every mode. On
+a small screen, the labels under the badges wait until the hexes are drawn large enough to
+hold them.
 
-Keys **1** to **4** switch the map mode:
+Keys **1** to **4** switch the map mode. Every mode draws the same 3D board, the land in its
+own colours, and lays a light layer over it:
 
 1. **Terrain** — the whole board, as above.
-2. **Political** — each tile in its owner's colour and the realms' names. The towns, Ports
-   and the Oracle are flat icons, as in Economy and Trade; each settlement's sits on its
-   owner's colour, with its realm's Unrest tokens and their count beside it when the realm
-   holds any.
-3. **Economy** — each settlement's slots as **output / free**: what its worked slots make a
-   turn, and how many slots are neither built on nor worked. An open tile with 3 slots reads
-   "0 / 3". Close in, what each settlement makes and eats a turn, and its buildings.
-4. **Trade** — each luxury good as its own icon, on its holder's colour or a plain disc
-   while unclaimed; Ports, ship routes and pops on the move.
+2. **Political** — each owned tile and its town tinted in its owner's colour, each realm's
+   border, and each realm's name under its capital, with its Unrest tokens and their count
+   when it holds any.
+3. **Economy** — the fields, trees and rocks faded, and under each badge its slots as
+   **output / free**: what its worked slots make a turn, and how many slots are neither built
+   on nor worked. An open tile with 3 slots reads "0 / 3". Close in, where there is room, what
+   each settlement makes and eats a turn, and its buildings.
+4. **Trade** — each luxury good's raft and name, with its holder's colour; each Port's good;
+   ship routes and pops on the move; and beside each capital its realm's **trade hint**: ↑
+   the material it has to export, ↓ the one it needs to import. Hover the hint for its
+   numbers. The export is the wood, stone or food it makes most of beyond its needs a turn;
+   the import is, of those it makes nothing of beyond its needs, the one it will hold least
+   of once the turn's income lands. Both read only what the whole table can see.
 
 Hover a tile for its tooltip; click it and the realm sheet shows it. Click the sea to return
 to your realm. Each luxury good floats on a raft off the coast with its name and its holder's
 mark, or "unclaimed"; click it to read it. When an action asks for a tile, the tiles it can
-take are ringed and the rest dim; in Terrain and Trade, each ringed settlement shows its name
-at any zoom. With the keyboard, Tab onto the tiles, walk them with the arrow keys and press
+take are ringed and the rest dim; in Terrain, Political and Trade, each ringed settlement
+shows its name at any zoom. With the keyboard, Tab onto the tiles, walk them with the arrow keys and press
 Enter to pick one; the tile you are on wears an ochre ring edged in ink.
 
 **The corner dock** sits at the bottom right. Its bottom row holds the four mode buttons and
