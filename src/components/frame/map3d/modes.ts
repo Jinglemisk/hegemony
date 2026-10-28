@@ -44,7 +44,7 @@ export const MAP_MODES: readonly { id: MapMode; label: string; icon: string; not
     id: "trade",
     label: "Trade",
     icon: "market/handshake",
-    note: "Each luxury good's name and holder, each Port's good, ship routes and pops on the move, and beside each capital what its realm has to export and needs to import.",
+    note: "Each luxury good's name and holder, each Port's good, ship routes and pops on the move, and under each capital what its realm has to export and needs to import.",
   },
 ];
 

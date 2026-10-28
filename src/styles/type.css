@@ -191,11 +191,11 @@
 .lm-ship {
   font-size: max(var(--t-12), calc(var(--lab) * 0.95));
 }
-.lm-moor .m-name {
+.lm-moor {
   font-size: max(var(--t-12), calc(var(--lab) * 0.92));
 }
 .lm-res b,
-.lm-res .ic > img {
+.lm-res img {
   font-size: 1.39em;
 }
 .lm-compass b {
@@ -211,9 +211,15 @@
 .lm-eco {
   font-size: max(var(--t-12), calc(var(--lab) * 0.98));
 }
-.lm-tokens,
-.lm-hint {
+.lm-tokens {
   font-size: max(var(--t-12), calc(var(--lab) * 0.92));
+}
+/* Trade's hint, larger than the plate it hangs from, its arrows larger still. */
+.lm-hint {
+  font-size: calc(var(--lab) * 1.15);
+}
+.lm-hint b {
+  font-size: 1.5em;
 }
 /* The corner dock: a mode's name at the floor, the Chronicle's deeds at reading size. */
 .dock-mode {

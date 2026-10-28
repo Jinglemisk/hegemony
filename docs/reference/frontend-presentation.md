@@ -191,7 +191,7 @@ anchored entities.
 
 - **3D in every mode.** Every mode draws the same board at both levels: the terrain in its
   own colours, the towns, Ports, goods and Oracle as models. A mode is a light filter over
-  it. Political tints each owned tile and every model on it toward the owner's glaze (35%),
+  it. Political tints each owned tile and every model on it toward the owner's glaze (50%),
   through each instance's colour, so the tint adds no draw call, and draws each realm's
   border in place of the owner rings. Economy fades the trees, rocks and fields. Trade adds
   the trading ships and their routes. The flat seals that stood in for the towns and Ports
@@ -199,14 +199,23 @@ anchored entities.
   carry what they said. The anchored chips stay, because no model says it: a Port's good
   (Trade), a ship's pops and destination, a riot or the titles, and a building's icon on its
   stem.
-- **One anchor per tile.** Each tile's badge (its slots in white numerals and its land's
-  resource as an icon, never words) stands on the near half of its hex, clear of the town, in
-  every mode at both levels. A settled tile frames the icon in its owner's colour and joins
-  each settlement's icon on that colour at the frame's corner: who holds which resource, read
-  at a glance. What hangs under the badge is the mode's (a plate, the realm's name, Economy's
-  readout), so nothing jumps when the zoom or the mode changes.
-- **The overview names only the capitals.** Every other settlement is its owner-coloured
-  icon on its badge; close in, every settlement's plate, one line with its pips and pops.
+- **Goods where they float.** Each luxury good's icon is centred on its raft, never offset,
+  at every zoom and in every mode; under it, once held, the holder's seat mark, then the
+  good's name on a dark chip, which reads where a raft off the coast puts the name over a
+  tile.
+- **One anchor per tile.** Each tile's badge (its slots and its land's resource as an icon,
+  never words, on one ivory plate, the icon as tall as the numeral) stands on its hex's
+  centre in every mode at both levels; close in it stands over the front of the town, which
+  the owner accepted to keep the resources centred. What hangs under the badge is the mode's
+  (a plate, the realm's name, Economy's readout), so nothing jumps when the zoom or the mode
+  changes.
+- **Owner paint.** In the overview each settled tile is painted solid in its lead owner's
+  colour, in the 3D board itself, so the town still stands on it: who holds which resource,
+  read at a glance. The paint gives way over the threshold to the mode's own look (the
+  terrain and the owner rings, or Political's 50% tint). It replaced round owner discs
+  behind the badges (owner, 2026-10-28: the tile's own shape, not a circle).
+- **The overview names only the capitals.** Every other settlement is its owner's paint;
+  close in, every settlement's plate, one line with its pips and pops.
   The realm's name in Political, with its Unrest tokens, hangs under its capital in place of
   the capital's plate; the tokens moved there from the seals.
 - **Sizes.** The badge's numeral is 0.55 of the hex's drawn width (it was 0.5), up to 32px,
@@ -215,12 +224,17 @@ anchored entities.
   badge: a short label 44–50px, every plate 56–64px, Economy's three-row card and a realm's
   glaze and counts 110–120px. A
   phone's opening view shows the badges alone.
-- **Trade's hint** (`tradeLean`, in the engine) stands off each capital's plate in Trade: ↑
-  the realm's export, the wood, stone or food it makes most of beyond its needs a turn; ↓ its
-  import, of those it makes nothing of beyond its needs, the one it will hold least of once
-  the turn's income lands. Both read only public income and stocks. Hovering the hint shows
-  the numbers; clicking it picks the capital. The capital's accessible name in Trade says
-  the same.
+- **Trade's hint** (`tradeLean`, in the engine) hangs under each capital's plate in Trade, a
+  box larger than the plate's text: a red ↑ and the realm's export, the wood, stone or food
+  it makes most of beyond its needs a turn; a green ↓ and its import, of those it makes
+  nothing of beyond its needs, the one it will hold least of once the turn's income lands.
+  Both read only public income and stocks. In the overview the box reaches the next row, so
+  in Trade a capital's tag stands over the tags below it. Hovering the hint shows the
+  numbers; clicking it picks the capital. The capital's accessible name in Trade says the
+  same.
+- **No seat shares a hue with the board.** Nikos's seat was Melichron (honey), which read as
+  the plains' wheat; since 2026-10-28 it is Melas, the black-figure glaze. Every seat is now
+  dark enough for an ivory blazon.
 
 The owner's other map calls of 2026-10-27:
 

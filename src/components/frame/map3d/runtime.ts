@@ -4,7 +4,6 @@ import {
   R_TOP,
   ROT_MAX,
   ROT_STEP,
-  T_FIT,
   bandAlphas,
   boxesAt,
   clamp,
@@ -54,7 +53,7 @@ const HEX_W = Math.sqrt(3) * R_TOP;
 const SQ3 = Math.sqrt(3);
 /** How far Political tints an owned tile and its town toward the owner's glaze: enough
  *  to read the realm, not so much that the terrain goes. */
-const TINT = 0.35;
+const TINT = 0.5;
 
 export type Marks = {
   selected: string | null;
@@ -80,11 +79,13 @@ type Placed = {
   y: number;
   h: number;
   keys: string[];
-  /** A tile's resource badge, sized to its hex, whose centre is at (x, cy); `w20` is
-   *  its width at 20px, once measured. */
+  /** A tile's resource badge, on its hex's centre and sized to it; `w20` is its width
+   *  at 20px, once measured. */
   far: boolean;
-  cy: number;
   w20?: number;
+  /** A capital's tag, which carries Trade's hint: while the hint shows, it stands over
+   *  the tags below it, whose badges its hint reaches in the overview. */
+  hint: boolean;
   /** A button, not a label: never taken out of the page. */
   control: boolean;
   /** A ship's chip follows its ship, by the ship's index. */
@@ -160,7 +161,7 @@ export function createRuntime({
           [cell.x + Math.cos(a), cell.y + Math.sin(a), 0],
         ]),
       ),
-      ...(model?.moorings ?? []).map((m): Point[] => [[m.x, m.y + 0.12, 0]]),
+      ...(model?.moorings ?? []).map((m): Point[] => [[m.x, m.y, 0]]),
     ];
     const names = (model?.moorings ?? []).map((m) => m.name.length);
     const result = fitIsland({
@@ -168,17 +169,15 @@ export function createRuntime({
       height: H,
       gap: tokenPx("--board-gap") || 8,
       exclusions,
-      boxesAt: (s) => {
-        // A good's name hangs under it, about this wide in px at the opening size,
-        // where the hexes are drawn large enough for it to show at all.
-        const named = bandAlphas(T_FIT, HEX_W * s).html.goodname > 0.01;
-        return boxesAt(s, H, shapes).map((box, i) => {
+      // A good's icon stands on its raft and its name under it, about this big in px at
+      // the opening size.
+      boxesAt: (s) =>
+        boxesAt(s, H, shapes).map((box, i) => {
           const n = i - shape.cells.length;
-          if (n < 0 || !named) return box;
-          const half = (names[n] * 7 + 24) / 2 / s;
-          return [box[0] - half, box[1] + half, box[2] - 0.25, box[3] + 18 / s] as const;
-        });
-      },
+          if (n < 0) return box;
+          const half = Math.max(18, names[n] * 3.5 + 10) / s;
+          return [box[0] - half, box[1] + half, box[2] - 18 / s, box[3] + 48 / s] as const;
+        }),
     });
     frame = result
       ? { W, H, cx: result.cx, cy: result.cy, zFit: result.s }
@@ -191,12 +190,18 @@ export function createRuntime({
     return true;
   }
 
-  // ---- what the tiles look like: their terrain, Political's tint, placement --------
-  /** A tile's colour: its terrain's, which Political tints toward its owner's glaze. */
+  // ---- what the tiles look like: their terrain, the owners' paint, placement --------
+  /** How far the overview paints a settled tile in its owner's glaze: all the way, giving
+   *  way to the mode's own look as the map comes close (1 − the close band). */
+  let overview = 1;
+  /** A tile's colour: its terrain's; settled, its owner's glaze in the overview, and
+   *  close in Political's tint toward it. */
   function wash(tile: MapModel["tiles"][number]) {
     const [lead] = tile.settlements;
     const land = mix(GLAZE[tile.terrain], BONE, 0.5);
-    return mode === "political" && lead ? mix(land, glazeOf(lead.owner), TINT) : land;
+    if (!lead) return land;
+    const tint = mode === "political" ? TINT : 0;
+    return mix(land, glazeOf(lead.owner), overview + (1 - overview) * tint);
   }
 
   /** Political's borders: each owned tile's sides that face another realm, open land
@@ -290,9 +295,8 @@ export function createRuntime({
       if (L.far) {
         // A tile's resource badge: its numeral 0.55 of the hex's drawn width up to 32px,
         // and the badge never wider than 0.92 of it, so neighbours' badges never meet.
-        // Measured round the tile's centre, which its badge stands south of.
         const hex = SIDES.map(
-          (a) => project(v, L.x + Math.cos(a) * R_TOP, L.cy + Math.sin(a) * R_TOP, H_TILE).x,
+          (a) => project(v, L.x + Math.cos(a) * R_TOP, L.y + Math.sin(a) * R_TOP, H_TILE).x,
         );
         const w = Math.max(...hex) - Math.min(...hex);
         if (L.w20 === undefined) {
@@ -303,7 +307,8 @@ export function createRuntime({
         L.el.style.fontSize = `${size.toFixed(1)}px`;
       }
       L.el.style.translate = `${q.x.toFixed(1)}px ${q.y.toFixed(1)}px`;
-      L.el.style.zIndex = String(Math.round(q.y));
+      const lift = L.hint && (html.hint ?? 0) > 0 ? 100_000 : 0;
+      L.el.style.zIndex = String(Math.round(q.y) + lift);
     }
   }
 
@@ -430,8 +435,13 @@ export function createRuntime({
     if (pose() !== before) camDirty = true;
     const v = viewOf(cam, frame);
     if (camDirty) {
-      const { layers } = bands(v);
+      const { layers, close } = bands(v);
       scene.applyLayers(layers, layers.terrain >= 0.99);
+      // The owners' paint changes only while the zoom crosses the threshold.
+      if (1 - close !== overview) {
+        overview = 1 - close;
+        coloursDirty = true;
+      }
     }
     if (live) scene.animate(clock);
     if (camDirty) {
@@ -743,7 +753,7 @@ export function createRuntime({
         h: Number(el.dataset.wh ?? H_TILE),
         keys: (el.dataset.alpha ?? "").split(" ").filter(Boolean),
         far: el.dataset.far !== undefined,
-        cy: Number(el.dataset.far || el.dataset.wy),
+        hint: el.querySelector(".lm-hint") !== null,
         control: el.tagName === "BUTTON",
         ship: el.dataset.ship === undefined ? undefined : Number(el.dataset.ship),
         chip:

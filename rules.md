@@ -47,12 +47,12 @@ far out, 20° at the opening view, 45° close in.
 
 The map has two zoom levels, and its look changes once between them. The opening view is the
 **overview**: the towns, Ports, goods, fields, trees and rocks in 3D, and on every tile its
-**badge**: its number of slots in white beside its resource's icon (a slot's icon where the
-land makes nothing). On a settled tile the icon is framed in its owner's colour, and each
-settlement's icon sits on its owner's colour at the frame's corner, so you can read at a glance
-who holds what. Only the capitals are named. One press of **+** goes **close in**: every
-settlement's name plate with its slots as pips and its pops, the buildings, a figure for every
-pop, and the sea's life. The badge stands in the same spot at both levels and in every mode. On
+**badge** on its centre: its number of slots beside its resource's icon on a white plate (a
+slot's icon where the land makes nothing). A settled tile is painted in its owner's colour, so
+you can read at a glance who holds what. Only the capitals are named. One press of **+** goes
+**close in**: the paint gives way to the land, and every settlement's name plate shows with its slots as pips and its
+pops, the buildings, a figure for every pop, and the sea's life. The badge stands in the same
+spot at both levels and in every mode. On
 a small screen, the labels under the badges wait until the hexes are drawn large enough to
 hold them.
 
@@ -67,16 +67,17 @@ own colours, and lays a light layer over it:
    **output / free**: what its worked slots make a turn, and how many slots are neither built
    on nor worked. An open tile with 3 slots reads "0 / 3". Close in, where there is room, what
    each settlement makes and eats a turn, and its buildings.
-4. **Trade** — each luxury good's raft and name, with its holder's colour; each Port's good;
-   ship routes and pops on the move; and beside each capital its realm's **trade hint**: ↑
-   the material it has to export, ↓ the one it needs to import. Hover the hint for its
+4. **Trade** — each Port's good;
+   ship routes and pops on the move; and under each capital its realm's **trade hint**: a red
+   ↑ and the material it has to export, a green ↓ and the one it needs to import. Hover the
+   hint for its
    numbers. The export is the wood, stone or food it makes most of beyond its needs a turn;
    the import is, of those it makes nothing of beyond its needs, the one it will hold least
    of once the turn's income lands. Both read only what the whole table can see.
 
 Hover a tile for its tooltip; click it and the realm sheet shows it. Click the sea to return
-to your realm. Each luxury good floats on a raft off the coast with its name and its holder's
-mark, or "unclaimed"; click it to read it. When an action asks for a tile, the tiles it can
+to your realm. Each luxury good floats on a raft off the coast, its icon on the raft at every
+zoom, with its holder's mark under it once held, and its name; click it to read it. When an action asks for a tile, the tiles it can
 take are ringed and the rest dim; in Terrain, Political and Trade, each ringed settlement
 shows its name at any zoom. With the keyboard, Tab onto the tiles, walk them with the arrow keys and press
 Enter to pick one; the tile you are on wears an ochre ring edged in ink.

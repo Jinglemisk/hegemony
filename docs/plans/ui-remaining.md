@@ -93,8 +93,8 @@ resource chips, two token tables) are scheduled in the
   printed amount went with it.
 - **`V2-6` · the focus ring beside Nikos's glaze**, closed by the owner on 2026-10-16
   with no change. A tile focused by keyboard gets an ochre ring (`--ochre`, 6px), and
-  Nikos's owner ring is Melichron (#dfa437, 5px), so on Nikos's tiles focus barely
-  changes the border. Only keyboard play sees it. The 3D map's ring on its canvas, where
+  Nikos's owner ring was Melichron (#dfa437, 5px), so on Nikos's tiles focus barely
+  changed the border; the seat became Melas (vase black) on 2026-10-28. Only keyboard play sees it. The 3D map's ring on its canvas, where
   Political washes Nikos's tiles in his colour, became two-tone on 2026-10-27 (`MAP-1`).
 - **`V2-5` · the alarms row from one engine list** (2026-10-15). `realmAlarms` returns
   every disc as typed data, and the row adds three the owner asked for on 2026-10-01:

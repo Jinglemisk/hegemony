@@ -166,17 +166,19 @@ const CARD_ROOM = [110, 120] as const;
  * (T_CLOSE) between them.
  *
  * Every mode draws the same 3D board, the terrain in its own colours and the towns,
- * Ports and goods as models, and lays a light filter over it: Political tints each
- * owned tile and the models on it toward the owner's colour (the runtime's paint);
- * Economy fades the land's trees, rocks and fields; Trade adds the trading ships and
- * their routes, and each realm's trade hint by its capital. Each tile's resource
- * badge stands in one spot in every mode at both bands; what hangs under it is the
- * mode's: a name plate (Terrain, Political, Trade), the realm's name under its capital
- * (Political), or Economy's readout.
+ * Ports and goods as models. In the overview each settled tile is painted solid in its
+ * owner's colour; close in, the paint gives way to the mode's light filter (the
+ * runtime's paint, by `close`): Political tints each owned tile and the models on it
+ * toward the owner's colour; Economy fades the land's trees, rocks and fields; Trade
+ * adds the trading ships and their routes, and each realm's trade hint by its capital.
+ * Each tile's resource badge stands on its centre in every mode at both bands; what
+ * hangs under it is the mode's: a name plate (Terrain, Political, Trade), the realm's
+ * name under its capital (Political), or Economy's readout.
  *
  * The overview names only the capitals. Close in come every settlement's plate with
- * its slots and pops, the buildings, the figures and the sea's life. While a pick is
- * armed, its candidates' plates (`asked`) show at any zoom in the modes that draw them.
+ * its slots and pops, the buildings, the figures and the sea's life. Each good's icon
+ * and name show at every zoom. While a pick is armed, its candidates' plates (`asked`)
+ * show at any zoom in the modes that draw them.
  *
  * `hexPx` is a hex's drawn width. Where hexes are small (a phone), the labels under the
  * badges would crowd them, so each waits until the hexes have room for it.
@@ -211,15 +213,13 @@ export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain
     trade: { ...board, lifeShips: 1, tradeRoutes: 1 },
   };
   // Every mode's labels: the capitals' plates at both bands, every plate close in, a
-  // pick's candidates' at any zoom, the goods' names where the hexes have room.
+  // pick's candidates' at any zoom. The goods' icons and names show at every zoom.
   const labels = {
     capital: fits,
     plates: near,
     asked: 1,
     pips: near,
     oracle: near,
-    goodname: room,
-    heldgood: 1,
     ship: near,
     event: 0,
     realm: 0,
@@ -247,9 +247,9 @@ export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain
       ecoE: fits,
       building: near,
     },
-    // A held good's Port chip names it beside its raft: its own name would sit on the
-    // chip. Each realm's trade hint stands beside its capital.
-    trade: { ...labels, goodname: 1, heldgood: 0, ship: 1, port: 1, hint: 1 },
+    // Each Port's chip names the good it holds; each realm's trade hint hangs under its
+    // capital.
+    trade: { ...labels, ship: 1, port: 1, hint: 1 },
   };
   return { close, layers: layers[mode], html: html[mode] };
 }

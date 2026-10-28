@@ -16,7 +16,7 @@ import { H_TILE } from "./camera";
 import { MAIN_Z, layoutMap } from "./layout";
 import type { Layout, Town } from "./layout";
 import { boardShape, mapModel, shapeKey } from "./mapModel";
-import type { MapModel, MapMooring, MapSettlement, MapTile } from "./mapModel";
+import type { MapModel, MapSettlement, MapTile } from "./mapModel";
 import { MAP_MODES } from "./modes";
 import type { MapMode, MapRealm } from "./modes";
 import { createRuntime } from "./runtime";
@@ -46,15 +46,10 @@ type BoardProps = {
   onViewChange?: () => void;
 };
 
-/** Where a tile's badge stands, in world units south of its centre: on the near half of
- *  the hex, clear of the town, which stands just north of the centre (MAIN_Z). */
-const BADGE_Y = 0.55;
-
 const icon = (path: string) => <img alt="" src={rasterIcon(path)} />;
 /** A mark in its owner's colour; without an owner it stays plain. */
 const own = (owner: PlayerId | null) =>
   owner ? ({ "--own": PLAYER_GLAZES[owner].color } as CSSProperties) : undefined;
-const kindOf = (s: MapSettlement) => (s.capital ? "capital" : s.kind);
 
 /** A settlement's slots as pips: built, worked by a slave, or open. */
 function Pips({ built, worked, slots }: { built: number; worked: number; slots: number }) {
@@ -67,33 +62,21 @@ function Pips({ built, worked, slots }: { built: number; worked: number; slots: 
   );
 }
 
-/** A tile's resource badge: its slots and its land's resource (a slot where the land
- *  makes nothing). On a settled tile the resource is framed in its holder's colour, and
- *  each settlement's icon sits on its owner's colour at the frame's corner. The same at
- *  both bands and in every mode. */
+/** A tile's resource badge on its centre, one ivory plate: its slots and its land's
+ *  resource (a slot where the land makes nothing). The same at both bands and in every
+ *  mode; who holds the tile is its paint (the runtime's). */
 function ResBadge({ tile }: { tile: MapTile }) {
-  const [lead] = tile.settlements;
   return (
-    <div className={`lm-res${lead ? " held" : ""}`} style={own(lead?.owner ?? null)}>
+    <div className="lm-res">
       <b>{tile.slots}</b>
-      <span className="ic">
-        <img
-          alt=""
-          src={rasterIcon(tile.land ? RESOURCE_RASTERS[tile.land] : "settlements/slot")}
-        />
-        {tile.settlements.slice(0, 2).map((s) => (
-          <i className={`own ${kindOf(s)}`} key={s.id} style={own(s.owner)}>
-            {icon(`settlements/${kindOf(s)}`)}
-          </i>
-        ))}
-      </span>
+      {icon(tile.land ? RESOURCE_RASTERS[tile.land] : "settlements/slot")}
     </div>
   );
 }
 
 /** A tile's name plate, one line: the settlements on it and, close in, each one's slots
  *  as pips and its pops. A capital's shows at both bands, the rest close in; a pick's
- *  candidate's at any zoom (`asked`). Trade's hint hangs off a capital's right end. */
+ *  candidate's at any zoom (`asked`). Trade's hint hangs under a capital's. */
 function Plate({ tile, asked, hint }: { tile: MapTile; asked: boolean; hint?: ReactNode }) {
   const [lead] = tile.settlements;
   return (
@@ -220,15 +203,16 @@ function RealmName({ realm }: { realm: MapRealm }) {
   );
 }
 
-/** Trade's hint beside a realm's capital: what it has to export (↑) and what it needs
- *  to import (↓). Its tip says why; hovering it is hovering the capital. */
+/** Trade's hint under a realm's capital: what it has to export (a red arrow out) and
+ *  what it needs to import (a green arrow in). Its tip says why; hovering it is hovering
+ *  the capital. */
 function Hint({ realm, onHover }: { realm: MapRealm; onHover: (rect: DOMRect | null) => void }) {
   const { exports, imports } = realm.lean;
   if (!exports && !imports) return null;
-  const side = (arrow: string, s: LeanSide | null) =>
+  const side = (way: "out" | "in", s: LeanSide | null) =>
     s ? (
-      <span className="lean">
-        {arrow}
+      <span className={`lean ${way}`}>
+        <b>{way === "out" ? "↑" : "↓"}</b>
         {icon(RESOURCE_RASTERS[s.resource])}
       </span>
     ) : null;
@@ -238,10 +222,9 @@ function Hint({ realm, onHover }: { realm: MapRealm; onHover: (rect: DOMRect | n
       data-hint-tile={realm.home ?? undefined}
       onPointerEnter={(event) => onHover(event.currentTarget.getBoundingClientRect())}
       onPointerLeave={() => onHover(null)}
-      style={own(realm.owner)}
     >
-      {side("↑", exports)}
-      {side("↓", imports)}
+      {side("out", exports)}
+      {side("in", imports)}
     </div>
   );
 }
@@ -263,9 +246,9 @@ function hintRows({ lean }: MapRealm) {
 }
 
 /**
- * Each tile's tag, anchored on the near half of its hex: its resource badge, and under
- * it what the mode hangs there (a plate, the realm's name, Economy's card; the Oracle's
- * chip). Beside a realm's capital, Trade's hint. One anchor, so nothing jumps when the
+ * Each tile's tag, anchored on its hex's centre: its resource badge, and under it what
+ * the mode hangs there (a plate, the realm's name, Economy's card; the Oracle's chip).
+ * Under a realm's capital's plate, Trade's hint. One anchor, so nothing jumps when the
  * zoom crosses the threshold or the mode changes.
  */
 function TileTag({
@@ -285,11 +268,11 @@ function TileTag({
   return (
     <div
       className={`lm-tag${dimmed ? " is-dimmed" : ""}`}
-      data-far={tile.y}
+      data-far=""
       data-wx={tile.x}
-      data-wy={tile.y + BADGE_Y}
+      data-wy={tile.y}
     >
-      {/* First, so the badge, drawn after it, lies over its tucked top edge. */}
+      {/* Before the badge, so the badge, drawn after it, lies over its tucked top edge. */}
       <div className="lm-under">
         {oracle ? (
           <div className="lm-oracle">Oracle · never settled</div>
@@ -330,7 +313,7 @@ function Badges({
         className="lm-badge"
         data-alpha={town.tileId === selected ? undefined : "building"}
         data-chip-x={tile.x}
-        data-chip-y={tile.y + BADGE_Y}
+        data-chip-y={tile.y}
         data-wh={H_TILE + (site.building === "port" ? 0.19 : 0.24)}
         data-wx={site.x}
         data-wy={site.z}
@@ -603,26 +586,21 @@ function LivingMap({
           <button
             aria-label={m.label}
             className="lm-moor"
-            data-alpha={m.owner ? "goodname heldgood" : "goodname"}
-            data-hang={hangToSea(m)}
             data-vertex-id={m.vertexId}
             data-wh="0"
             data-wx={m.x}
-            data-wy={m.sy < m.vy ? m.y - 0.12 : m.y + 0.12}
+            data-wy={m.y}
             key={m.vertexId}
             onClick={() => {
               if (!dragged()) onMooringAction?.(m.vertexId);
             }}
             type="button"
           >
-            <span className="m-name">
-              {/* The good's icon, ringed in its holder's colour once claimed. */}
-              <b style={own(m.owner)}>{icon(LUXURY_GOOD_RASTERS[m.goodId])}</b>
-              <span>
-                {m.name}
-                {m.owner ? null : <small>unclaimed</small>}
-              </span>
-            </span>
+            {/* The good's icon on its raft, ringed in its holder's colour once claimed,
+                the holder's seat mark under it; its name under that. */}
+            <b style={own(m.owner)}>{icon(LUXURY_GOOD_RASTERS[m.goodId])}</b>
+            {m.owner ? <i style={own(m.owner)}>{PLAYER_GLAZES[m.owner].blazon}</i> : null}
+            <span className="m-name">{m.name}</span>
           </button>
         ))}
       </div>
@@ -670,15 +648,6 @@ function LivingMap({
       ) : null}
     </div>
   );
-}
-
-/** Which way a good's name hangs off its raft: toward the open sea, clear of the two
- *  tiles it is moored between. Between islands a name always hung below lands on land. */
-function hangToSea(m: MapMooring) {
-  const east = m.sx - m.vx;
-  return [m.sy < m.vy ? "up" : "down", east > 0.3 ? "east" : east < -0.3 ? "west" : ""]
-    .join(" ")
-    .trim();
 }
 
 export default memo(LivingMap);

@@ -122,7 +122,7 @@ function Rival({
         style={{ "--owner": glaze.color } as CSSProperties}
         type="button"
       >
-        <span className={`rival-disc${glaze.inkDark ? " ink-dark" : ""}`}>{glaze.blazon}</span>
+        <span className="rival-disc">{glaze.blazon}</span>
       </button>
     </Tooltip>
   );
