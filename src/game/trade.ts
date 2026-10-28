@@ -1,5 +1,7 @@
 import { produce } from "immer";
 import { currentWorkflow } from "./actors";
+import { TRADABLE_MATERIALS } from "./bank";
+import { calculateIncome } from "./economy/income";
 import { standingHappiness } from "./happiness";
 import { getLuxuryGood } from "./content";
 import { PLAYER_IDS } from "./data";
@@ -16,6 +18,7 @@ import type {
   PlayerId,
   Pops,
   Resource,
+  TradableMaterial,
   TradeAnswer,
   TradeBundle,
   TradeOffer,
@@ -516,4 +519,37 @@ export function describeBundle(G: HegemonyState, bundle: TradeBundle): string {
     ...(totalPops(bundle.pops) > 0 ? [formatPops(bundle.pops)] : []),
   ];
   return parts.length === 0 ? "nothing" : parts.join(", ");
+}
+
+/** One side of a realm's lean: the material, its net a turn and the stock it holds. */
+export type LeanSide = { resource: TradableMaterial; income: number; stock: number };
+
+/**
+ * What a realm has to trade and what it wants, read from what the whole table sees: its
+ * net income a turn and its stock of the land's three materials (gold is what pays,
+ * influence is civic). Its export is the one it makes most beyond its needs: the highest
+ * net above 0, the larger stock breaking a tie. Its import is the one it lacks most: of
+ * those it makes nothing of beyond its needs (a net of 0 or less), the one it will hold
+ * least of once this turn's income lands, the larger deficit breaking a tie. Either is
+ * null when there is none. The map shows both beside each realm's capital in Trade, to
+ * point sellers at buyers.
+ */
+export function tradeLean(
+  G: HegemonyState,
+  seat: PlayerId,
+): { exports: LeanSide | null; imports: LeanSide | null } {
+  const income = calculateIncome(G, seat);
+  const sides = TRADABLE_MATERIALS.map((resource) => ({
+    resource,
+    income: income[resource],
+    stock: Math.max(0, G.players[seat].resources[resource]),
+  }));
+  const after = (side: LeanSide) => side.stock + side.income;
+  const [exports = null] = sides
+    .filter((side) => side.income > 0)
+    .sort((a, b) => b.income - a.income || b.stock - a.stock);
+  const [imports = null] = sides
+    .filter((side) => side.income <= 0)
+    .sort((a, b) => after(a) - after(b) || a.income - b.income);
+  return { exports, imports };
 }

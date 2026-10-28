@@ -157,9 +157,6 @@
   background: var(--owner);
   font: 700 var(--t-28) / 1 var(--f-name);
 }
-.turn-disc.ink-dark {
-  color: var(--ink);
-}
 .turn-title {
   --name-size: var(--t-28);
   --name-lh: var(--lh-32);

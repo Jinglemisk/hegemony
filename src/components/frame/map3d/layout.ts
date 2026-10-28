@@ -67,6 +67,8 @@ export type Place = {
   sy?: number;
   sz?: number;
   color?: number;
+  /** On a settled tile: its owner's glaze, which Political tints the model toward. */
+  tint?: number;
 };
 
 /** Something afloat that bobs on the swell: a good's raft, its pennant, a boat. */
@@ -752,11 +754,18 @@ export function layoutMap(model: MapModel, seed: number): Layout {
       taken = bearing?.at ?? taken;
       const plan = settle(d, t, s, side, bearing?.a ?? null);
       const kind = s.capital ? "capital" : s.kind;
-      const base = { x: plan.centre.x, y: H_TILE + 0.003, z: plan.centre.z, s: townScale(side, s) };
+      const tint = glazeOf(s.owner);
+      const base = {
+        x: plan.centre.x,
+        y: H_TILE + 0.003,
+        z: plan.centre.z,
+        s: townScale(side, s),
+        tint,
+      };
       put(kind, base);
       for (const n of plan.sites) {
         if (n.building === "port" && bearing) {
-          put("port", { x: n.x, y: H_TILE, z: n.z, ry: n.ry });
+          put("port", { x: n.x, y: H_TILE, z: n.z, ry: n.ry, tint });
           // Its boat rides off the pier, on the side away from the good.
           const [ux, uz] = [Math.cos(bearing.a), Math.sin(bearing.a)];
           const g = bearing.good;
@@ -764,10 +773,10 @@ export function layoutMap(model: MapModel, seed: number): Layout {
           const x = t.x + ux * 1.2 - uz * 0.14 * away;
           const z = t.y + uz * 1.2 + ux * 0.14 * away;
           boats.push({ x, y: 0, z, ry: n.ry, s: 1.3, phase: x * 2.1 + z });
-        } else put(n.building, { x: n.x, y: H_TILE + 0.004, z: n.z, ry: n.ry, s: 0.78 });
+        } else put(n.building, { x: n.x, y: H_TILE + 0.004, z: n.z, ry: n.ry, s: 0.78, tint });
       }
-      if (t.resource) for (const cut of plan.cuts) put(CUT[t.resource], cut);
-      for (const it of plan.items) put(it.model, decorPlace(t, it));
+      if (t.resource) for (const cut of plan.cuts) put(CUT[t.resource], { ...cut, tint });
+      for (const it of plan.items) put(it.model, { ...decorPlace(t, it), tint });
       towns.push(plan.town);
       // A city's hearths smoke; a rioting realm's cities burn torches instead.
       if (s.kind !== "colony") {

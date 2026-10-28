@@ -64,7 +64,7 @@ function Glaze({ seat, size = "lg" }: { seat: PlayerId; size?: "lg" | "sm" }) {
   const glaze = PLAYER_GLAZES[seat];
   return (
     <span
-      className={`name trade-glaze is-${size}${glaze.inkDark ? " ink-dark" : ""}`}
+      className={`name trade-glaze is-${size}`}
       style={{ "--owner": glaze.color } as CSSProperties}
       title={glaze.name}
     >
@@ -346,7 +346,7 @@ export function ComposeCard({ seat, onClose }: { seat: PlayerId; onClose: () => 
               <button
                 aria-label={on ? `Take ${glaze.name} off the offer` : `Offer to ${glaze.name}`}
                 aria-pressed={on}
-                className={`name trade-seat${to.length === 0 ? "" : on ? " is-on" : " is-off"}${glaze.inkDark ? " ink-dark" : ""}`}
+                className={`name trade-seat${to.length === 0 ? "" : on ? " is-on" : " is-off"}`}
                 key={id}
                 onClick={() => toggle(id)}
                 style={{ "--owner": glaze.color } as CSSProperties}

@@ -8,6 +8,7 @@ import {
 } from "../../../game/economy/income";
 import { occupiedBuildingSlots } from "../../../game/ideaRules";
 import { claimableLuxuriesAt } from "../../../game/luxury";
+import type { LeanSide } from "../../../game/trade";
 import { axialToPlane, luxuryEligibleVertices, openSeaSides } from "../../../game/mapTopology";
 import {
   settlementOpenSlots,
@@ -212,6 +213,18 @@ export function mapModel(
       .map((k) => `${formatSignedNumber(r[k])} ${RESOURCE_LABELS[k].toLowerCase()}`)
       .join(", ");
 
+  /** Trade's hint by a realm's capital, said: "Nikos's realm exports wood (+3 a turn,
+   *  holds 5); it imports food (−2 a turn, holds 1)". */
+  const leanSaid = ({ owner, lean }: MapRealm) => {
+    const side = (verb: string, s: LeanSide) =>
+      `${verb} ${RESOURCE_LABELS[s.resource].toLowerCase()} (${formatSignedNumber(s.income)} a turn, holds ${s.stock})`;
+    const said = [
+      lean.exports ? side("exports", lean.exports) : null,
+      lean.imports ? side("imports", lean.imports) : null,
+    ].filter(Boolean);
+    return said.length ? [`${PLAYER_GLAZES[owner].name}'s realm ${said.join(" and ")}`] : [];
+  };
+
   const tiles = G.board.tiles.map((tile) => {
     const cell = cells.get(tile.id)!;
     const resource = settlementSlaveResource(tile, G);
@@ -280,7 +293,10 @@ export function mapModel(
           ]
         : [];
     });
-    const trade = claimable.length ? [`a Port here would claim ${claimable.join(" or ")}`] : [];
+    const trade = [
+      ...(claimable.length ? [`a Port here would claim ${claimable.join(" or ")}`] : []),
+      ...realms.filter((realm) => realm.home === tile.id).flatMap(leanSaid),
+    ];
     const say = (extra: string[]) => [label, ...extra].join("; ");
 
     return {

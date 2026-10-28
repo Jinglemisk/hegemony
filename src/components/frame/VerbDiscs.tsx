@@ -148,7 +148,9 @@ function placeFan(host: HTMLElement, fanAt: WeakMap<Element, [number, number]>) 
       }
     }
   }
+  // A plate the zoom or the mode fades out is not a mark.
   const marks = [...document.querySelectorAll(".lm-plate, .lm-moor:not(.is-faded)")]
+    .filter((el) => Number(getComputedStyle(el).opacity) > 0.01)
     .map((el) => el.getBoundingClientRect())
     .filter((r) => r.width > 0)
     .map(pad);

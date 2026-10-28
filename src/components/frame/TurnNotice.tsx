@@ -31,10 +31,7 @@ export function TurnNotice({
       labelledBy="turn-notice-title"
       onDismiss={onBegin}
     >
-      <span
-        className={`turn-disc${glaze.inkDark ? " ink-dark" : ""}`}
-        style={{ "--owner": glaze.color } as CSSProperties}
-      >
+      <span className="turn-disc" style={{ "--owner": glaze.color } as CSSProperties}>
         {glaze.blazon}
       </span>
       <span className="kicker">Pass the screen</span>

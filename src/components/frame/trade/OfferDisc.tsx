@@ -64,10 +64,7 @@ export function OfferDisc({ offer }: { offer: TradeOffer }) {
         >
           <span aria-hidden="true" className="offer-ring" />
           <Ico path="market/handshake" size="ui" />
-          <span
-            aria-hidden="true"
-            className={`name offer-badge${glaze.inkDark ? " ink-dark" : ""}`}
-          >
+          <span aria-hidden="true" className="name offer-badge">
             {glaze.blazon}
           </span>
           {mine ? (

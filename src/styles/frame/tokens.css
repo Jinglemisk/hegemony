@@ -221,14 +221,13 @@
   --sea-deep: #17505c;
   --sea-shade: rgb(10 34 41 / 35%);
   /* The living map's labels over the water: a plate's drop, a yield chip's paper,
-     a building badge's paper, a ship's dark chip and its rule, the far numerals'
-     shadow and the compass's glass. */
+     a building badge's paper, a ship's dark chip and its rule, and the compass's
+     glass. */
   --map-label-shadow: 0 1px 3px rgb(10 34 41 / 40%);
   --map-chip: rgb(255 248 231 / 82%);
   --map-badge: rgb(255 248 231 / 91%);
   --map-ship: rgb(24 18 16 / 84%);
   --map-ship-rule: rgb(255 248 231 / 30%);
-  --map-numeral-shadow: 0 2px 4px rgb(24 18 16 / 75%);
   --map-compass: rgb(23 80 92 / 55%);
   /* The map modes: an Economy card's paper. */
   --map-card: rgb(255 248 231 / 92%);

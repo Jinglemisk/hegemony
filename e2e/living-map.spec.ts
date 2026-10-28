@@ -57,14 +57,20 @@ test("the living map: a tile's button places the metropolis, and arrows walk the
   await expect(line).toBeFocused();
 
   // The compass is a button: turned and zoomed in, a click brings back the opening view.
+  // The map has two zoom levels: the opening view is the overview, which names only the
+  // capitals, and one press of + goes close in, where every settlement's plate shows.
   const stage = page.locator(".living-map");
   const pose = () =>
     stage.evaluate((el) => ["--turn", "--hex"].map((k) => el.style.getPropertyValue(k)));
+  const plates = () => stage.evaluate((el) => el.style.getPropertyValue("--a-plates"));
   const opening = await pose();
+  expect(await plates()).toBe("0.000");
   await stage.focus();
   await page.keyboard.press("e");
   await page.keyboard.press("+");
   await expect.poll(pose).not.toEqual(opening);
+  await expect.poll(plates).toBe("1.000");
   await page.getByRole("button", { name: "Compass: back to the opening view" }).click();
   await expect.poll(pose).toEqual(opening);
+  await expect.poll(plates).toBe("0.000");
 });

@@ -12,7 +12,7 @@ import { luxuryHappinessBonus } from "./luxury";
 import { projectForPlayer } from "./projection";
 import { settlementCapacity } from "./settlement";
 import { owned, scenario } from "./testing/scenario";
-import { TRADE_RESOURCES } from "./trade";
+import { TRADE_RESOURCES, tradeLean } from "./trade";
 import { titleHolders } from "./victory";
 import { calculateIncome } from "./economy/income";
 import { realmPops } from "./core/query";
@@ -442,5 +442,24 @@ describe("trade in the Assembly's preparation", () => {
       G.assembly!.results[0].votes.map((vote) => [vote.playerID, vote.weight]),
     );
     expect([cast["0"], cast["1"]]).toEqual([votes[0] + 1, votes[1] - 1]);
+  });
+});
+
+describe("the map's trade hint", () => {
+  it("names what a realm makes most beyond its needs, and what it will hold least of", () => {
+    const G = scenario().opening().build();
+    // Seat 0 makes 1 stone a turn beyond its needs and eats 3 food more than it makes:
+    // its 9 food falls to 6, under the 8 wood it makes none of.
+    expect(calculateIncome(G, "0")).toMatchObject({ wood: 0, stone: 1, food: -3 });
+    expect(tradeLean(G, "0")).toEqual({
+      exports: { resource: "stone", income: 1, stock: 5 },
+      imports: { resource: "food", income: -3, stock: 9 },
+    });
+    // Its stock is public, and counts: with 30 food in store it lacks wood most.
+    const stocked = scenario().opening().withResources("0", { food: 30 }).build();
+    expect(tradeLean(stocked, "0").imports?.resource).toBe("wood");
+    // A realm that makes nothing beyond its needs has nothing to export.
+    expect(calculateIncome(G, "1")).toMatchObject({ wood: 0, stone: 0, food: 0 });
+    expect(tradeLean(G, "1").exports).toBeNull();
   });
 });

@@ -24,10 +24,11 @@ const Z_MIN = 0.6;
 const Z_MAX = 4.8;
 /** The opening view on the 0..1 detail scale that drives the tilt and the bands. */
 export const T_FIT = Math.log(1 / Z_MIN) / Math.log(Z_MAX / Z_MIN);
-/** The band edges on the same scale, far | middle | close; detail fades across ±BW. */
-export const E1 = 0.16;
-export const E2 = 0.42;
-const BW = 0.05;
+/** The one threshold on the same scale: the overview below it, close in above it. The
+ *  opening view sits in the overview, and one press of + (×1.4) crosses it. The look
+ *  changes there once, crossfading across ±BW. */
+export const T_CLOSE = 0.36;
+const BW = 0.04;
 /** A tile's top above the sea, and the radius of its drawn top (the rest is grout). */
 export const H_TILE = 0.2;
 export const R_TOP = 0.955;
@@ -150,148 +151,107 @@ export function stepCamera(cam: Cam, goal: Goal, frame: Frame, reach: number, ra
   return !settled;
 }
 
-/** Hexes drawn narrower than this (px, flat to flat) keep the far labels: a yield
- *  chip needs about this much room. A narrow fade, so no opening view sits mid-way. */
-const ROOM_LO = 56;
-const ROOM_HI = 64;
-
-/** Every layer and label kind, unseen: each mode shows what it names. */
-const NO_LAYERS = {
-  towns: 0,
-  goods: 0,
-  landmark: 0,
-  landmarkVapour: 0,
-  slots: 0,
-  detail: 0,
-  terrain: 0,
-  pops: 0,
-  passengers: 0,
-  lifeShips: 0,
-  lifeAmb: 0,
-  ports: 0,
-  moves: 0,
-  events: 0,
-  tradeRoutes: 0,
-};
-const NO_HTML = {
-  plates: 0,
-  /** A pick's candidate's plate: shown at any zoom in the modes that draw plates. */
-  asked: 0,
-  cityplate: 0,
-  colony: 0,
-  pips: 0,
-  popsline: 0,
-  yield: 0,
-  faryield: 0,
-  goodname: 0,
-  ship: 0,
-  event: 0,
-  realm: 0,
-  ecoC: 0,
-  ecoF: 0,
-  ecoE: 0,
-  seal: 0,
-  goodicon: 0,
-  port: 0,
-  building: 0,
-};
+/** How wide a hex must be drawn (px, flat to flat, each a narrow fade) for what hangs
+ *  under its badge: one short label (a capital's name, Economy's readout), every
+ *  settlement's plate, and Economy's full card, three rows. Narrower, they would reach
+ *  the next row's badges, so a phone keeps the badges alone until it zooms in. */
+const LABEL_ROOM = [44, 50] as const;
+const ROOM = [56, 64] as const;
+const CARD_ROOM = [110, 120] as const;
 
 /**
  * The zoom bands: one function of the camera and the mode that every layer's fade
  * hangs on. `html` drives the overlay through `--a-<key>` variables, `layers` the 3D
- * layers' opacity. In Terrain, far: the owner wash and each tile's numeral; middle:
- * names, slots and yield chips; close: the living detail. The other modes are the
- * prototype's, and in each the settlements, Ports and the Oracle stand flat and upright
- * in place of their models: Political the realms; Economy the yield cards over dimmed
- * land; Trade the goods (flat too) and the ships. While a pick is armed, its candidates'
- * plates (`asked`) show at any zoom in the two modes that draw plates.
+ * layers' opacity. There are two bands, the overview and close in, with one threshold
+ * (T_CLOSE) between them.
  *
- * `hexPx` is a hex's drawn width. Where hexes are small (a phone), the middle
- * band's labels would crowd them, so the overlay keeps the far band's labels (the
- * numerals) and the capitals' plates until the hexes have room.
+ * Every mode draws the same 3D board, the terrain in its own colours and the towns,
+ * Ports and goods as models. In the overview each settled tile is painted solid in its
+ * owner's colour; close in, the paint gives way to the mode's light filter (the
+ * runtime's paint, by `close`): Political tints each owned tile and the models on it
+ * toward the owner's colour; Economy fades the land's trees, rocks and fields; Trade
+ * adds the trading ships and their routes, and each realm's trade hint by its capital.
+ * Each tile's resource badge stands on its centre in every mode at both bands; what
+ * hangs under it is the mode's: a name plate (Terrain, Political, Trade), the realm's
+ * name under its capital (Political), or Economy's readout.
+ *
+ * The overview names only the capitals. Close in come every settlement's plate with
+ * its slots and pops, the buildings, the figures and the sea's life. Each good's icon
+ * and name show at every zoom. While a pick is armed, its candidates' plates (`asked`)
+ * show at any zoom in the modes that draw them.
+ *
+ * `hexPx` is a hex's drawn width. Where hexes are small (a phone), the labels under the
+ * badges would crowd them, so each waits until the hexes have room for it.
  */
 export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain") {
-  const mid = smooth(E1 - BW, E1 + BW, t);
-  const close = smooth(E2 - BW, E2 + BW, t);
-  const room = smooth(ROOM_LO, ROOM_HI, hexPx);
-  // Colony names wait one notch past the opening zoom: on a full late-game board
-  // they crowd the cities.
-  const names = smooth(T_FIT + 0.02, T_FIT + 0.1, t);
+  const close = smooth(T_CLOSE - BW, T_CLOSE + BW, t);
+  const fits = smooth(...LABEL_ROOM, hexPx);
+  const room = smooth(...ROOM, hexPx);
+  // The close band's labels, where the hexes have room for them.
+  const near = close * room;
+  const card = close * smooth(...CARD_ROOM, hexPx);
+  const board = {
+    towns: 1,
+    goods: 1,
+    ports: 1,
+    terrain: 1,
+    moves: 1,
+    passengers: 1,
+    events: 1,
+    detail: close,
+    landmark: close,
+    landmarkVapour: close,
+    pops: close,
+    lifeShips: close,
+    lifeAmb: close,
+    tradeRoutes: 0,
+  };
   const layers: Record<MapMode, Record<string, number>> = {
-    terrain: {
-      towns: 1,
-      goods: 1,
-      landmark: close,
-      landmarkVapour: close,
-      slots: mid,
-      detail: close,
-      terrain: 1,
-      pops: close,
-      passengers: mid,
-      lifeShips: close,
-      lifeAmb: close,
-      ports: mid,
-      moves: mid,
-      events: 1,
-      tradeRoutes: 0,
-    },
-    political: { ...NO_LAYERS, goods: 1 },
-    economy: {
-      ...NO_LAYERS,
-      goods: 1,
-      slots: 1,
-      detail: close,
-      terrain: 0.35,
-      pops: close * 0.3,
-    },
-    trade: {
-      ...NO_LAYERS,
-      passengers: 1,
-      lifeShips: 1,
-      moves: 1,
-      tradeRoutes: 1,
-    },
+    terrain: board,
+    political: board,
+    economy: { ...board, terrain: 0.35, pops: close * 0.3 },
+    trade: { ...board, lifeShips: 1, tradeRoutes: 1 },
+  };
+  // Every mode's labels: the capitals' plates at both bands, every plate close in, a
+  // pick's candidates' at any zoom. The goods' icons and names show at every zoom.
+  const labels = {
+    capital: fits,
+    plates: near,
+    asked: 1,
+    pips: near,
+    oracle: near,
+    ship: near,
+    event: 0,
+    realm: 0,
+    realmline: 0,
+    ecoC: 0,
+    ecoF: 0,
+    ecoE: 0,
+    building: 0,
+    port: 0,
+    hint: 0,
   };
   const html: Record<MapMode, Record<string, number>> = {
-    terrain: {
-      ...NO_HTML,
-      plates: mid,
-      asked: 1,
-      cityplate: room,
-      colony: names * room,
-      pips: mid * (1 - close) * room,
-      popsline: close,
-      yield: mid * room,
-      faryield: 1 - mid * room,
-      goodname: mid * room,
-      ship: mid * room,
-      event: mid,
-    },
-    political: { ...NO_HTML, realm: 1, seal: 1 },
+    terrain: { ...labels, event: 1 },
+    // The realm's name hangs under its capital, in place of the capital's plate.
+    // Its glaze and counts, a second line, wait for the room of Economy's full card.
+    political: { ...labels, capital: 0, event: 1, realm: fits, realmline: card },
+    // Economy's cards hang under every tile instead.
     economy: {
-      ...NO_HTML,
-      seal: 1,
-      ecoC: 1 - close,
-      ecoF: close,
-      ecoE: 1,
-      goodname: mid * room,
-      building: close,
+      ...labels,
+      capital: 0,
+      plates: 0,
+      asked: 0,
+      ecoC: fits - card,
+      ecoF: card,
+      ecoE: fits,
+      building: near,
     },
-    // A held good's Port chip names it beside its raft: its own name would sit on the chip.
-    trade: {
-      ...NO_HTML,
-      seal: 1,
-      plates: 1,
-      asked: 1,
-      cityplate: room,
-      goodname: 1,
-      heldgood: 0,
-      goodicon: 1,
-      ship: 1,
-      port: 1,
-    },
+    // Each Port's chip names the good it holds; each realm's trade hint hangs under its
+    // capital.
+    trade: { ...labels, ship: 1, port: 1, hint: 1 },
   };
-  return { mid, close, layers: layers[mode], html: html[mode] };
+  return { close, layers: layers[mode], html: html[mode] };
 }
 
 /**

@@ -7,6 +7,7 @@ import {
   CylinderGeometry,
   DataTexture,
   DirectionalLight,
+  DoubleSide,
   Euler,
   Float32BufferAttribute,
   Group,
@@ -72,8 +73,6 @@ const R_OWN = 0.84;
 
 /** The zoom-band layer each model fades with (see `bandAlphas`); the rest always show. */
 const LAYER: Partial<Record<ModelName, string>> = {
-  // Outside Terrain the towns, Ports and the Oracle are drawn flat (LivingMap's seals);
-  // Trade draws the goods flat too.
   capital: "towns",
   city: "towns",
   colony: "towns",
@@ -141,6 +140,9 @@ const SAILS = new Set<ModelName>(["ship", "shipBand"]);
 const LIVING = new Set<ModelName>([...RIDERS, "oraclePilgrim", "oracleOffering", ...SAILS]);
 /** A transfer's ship, and a trader's. */
 const SHIP_SCALE = { moves: 1.6, lifeShips: 1.25 } as Record<string, number>;
+/** The layers whose models stand on a tile: on a settled tile, Political tints them
+ *  toward the owner's glaze, per instance (`Place.tint`). */
+const TINTED = new Set(["towns", "detail", "ports", "terrain"]);
 /** What bobs on the swell. */
 const AFLOAT = new Set<ModelName>(["good", "goodFlag", "boat"]);
 const FIELDS = new Set<ModelName>(["field0", "field1", "field2", "field3", "field4", "field5"]);
@@ -160,6 +162,7 @@ type Model = {
 };
 
 export type Ring = { x: number; y: number; inner: boolean; colour: number };
+export type Border = { x: number; y: number; side: number; colour: number };
 
 export function createScene(canvas: HTMLCanvasElement, shape: BoardShape) {
   // The look is the prototype's, drawn with three.js r128 defaults: colours as given,
@@ -304,21 +307,38 @@ export function createScene(canvas: HTMLCanvasElement, shape: BoardShape) {
   const focusInk = new Mesh(ringGeo(R_TOP - 0.12, R_TOP), flat(INK));
   const focusOchre = new Mesh(ringGeo(R_TOP - 0.09, R_TOP - 0.03), flat(OCHRE));
   const owners = own(
-    new InstancedMesh(ringGeo(R_OWN - 0.03, R_OWN + 0.03), flat(0xffffff), shape.cells.length * 2),
+    new InstancedMesh(ringGeo(R_OWN - 0.04, R_OWN + 0.04), flat(0xffffff), shape.cells.length * 2),
   );
   const candidates = own(new InstancedMesh(edgeRing, flat(OCHRE), shape.cells.length));
-  owners.frustumCulled = candidates.frustumCulled = false;
+  // Political's realm borders: a band inside each owned tile's side that faces another
+  // realm, open land or the sea. One segment, turned to each side by its instance.
+  const r0 = R_TOP - 0.1 / Math.cos(30 * DEG);
+  const corner = (r: number, a: number) => [r * Math.cos(a * DEG), H_TILE, r * Math.sin(a * DEG)];
+  const sideGeo = own(new BufferGeometry());
+  sideGeo.setAttribute(
+    "position",
+    new Float32BufferAttribute(
+      [corner(R_TOP, -30), corner(R_TOP, 30), corner(r0, 30), corner(r0, -30)].flat(),
+      3,
+    ),
+  );
+  sideGeo.setIndex([0, 2, 1, 0, 3, 2]);
+  const borderMat = flat(0xffffff);
+  borderMat.side = DoubleSide;
+  const borders = own(new InstancedMesh(sideGeo, borderMat, shape.cells.length * 6));
+  owners.frustumCulled = candidates.frustumCulled = borders.frustumCulled = false;
   // Colour every instanced mesh now: a colour attribute added later is a new shader
   // program, compiled mid-game in one long frame.
   owners.setColorAt(0, colour);
-  owners.count = candidates.count = 0;
+  borders.setColorAt(0, colour);
+  owners.count = candidates.count = borders.count = 0;
   const selected = new Mesh(edgeRing, flat(INK));
   const focus = new Group().add(focusInk, focusOchre);
   selected.visible = focus.visible = false;
-  [owners, candidates, selected, focusInk, focusOchre].forEach(
+  [owners, borders, candidates, selected, focusInk, focusOchre].forEach(
     (ring, i) => (ring.renderOrder = i + 1),
   );
-  scene.add(owners, candidates, selected, focus);
+  scene.add(owners, borders, candidates, selected, focus);
 
   // The models, instanced: one mesh per material plus the keyline hull. Every model
   // has its meshes from the start, empty, so the warm-up builds every shader.
@@ -335,12 +355,13 @@ export function createScene(canvas: HTMLCanvasElement, shape: BoardShape) {
     const made = model.tpl.meshes.map(([mat, geo]) => {
       const mesh = new InstancedMesh(geo, layerMat(mat, model.layer), capacity);
       mesh.castShadow = !SHADOWLESS.has(model.name) && model.layer !== "lifeAmb" && !(mat in GLOW);
-      // What may cast: Terrain's land does only in Terrain (see `applyLayers`).
+      // What may cast: the land's decor does only while drawn whole (see `applyLayers`).
       mesh.userData.cast = mesh.castShadow;
       mesh.receiveShadow = true;
-      // Colour the owner's glaze now: a colour attribute added later is a new shader
-      // program, compiled mid-game in one long frame.
-      if (mat === "owner") mesh.setColorAt(0, colour.set(0xffffff));
+      // Colour the owner's glaze, and a settlement's tint, now: a colour attribute added
+      // later is a new shader program, compiled mid-game in one long frame.
+      if (mat === "owner" || TINTED.has(model.layer ?? ""))
+        mesh.setColorAt(0, colour.set(0xffffff));
       return mesh;
     });
     if (model.tpl.outline)
@@ -385,6 +406,19 @@ export function createScene(canvas: HTMLCanvasElement, shape: BoardShape) {
     }
   };
 
+  /** How far a settlement's models lean toward their owner's glaze (Political's tint). */
+  let tinting = 0;
+  const glaze = new Color();
+  /** Tint a settlement's models, every material but the keyline, one colour each. */
+  const tint = (model: Model) => {
+    for (const [k, mesh] of model.meshes.entries()) {
+      if (!model.tpl.meshes[k]) continue;
+      model.places.forEach((p, i) =>
+        mesh.setColorAt(i, colour.set(0xffffff).lerp(glaze.set(p.tint ?? 0xffffff), tinting)),
+      );
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    }
+  };
   /** Write one instance's pose into every mesh of its model. */
   const pose = (model: Model, i: number) => {
     for (const mesh of model.meshes) mesh.setMatrixAt(i, m4);
@@ -764,6 +798,27 @@ export function createScene(canvas: HTMLCanvasElement, shape: BoardShape) {
       owners.instanceMatrix.needsUpdate = true;
       if (owners.instanceColor) owners.instanceColor.needsUpdate = true;
     },
+    /** Political's realm borders: each a tile's side, 0 to 5 as `SIDES` counts them,
+     *  in its realm's glaze. */
+    setBorders(sides: readonly Border[]) {
+      sides.forEach((b, i) => {
+        euler.set(0, (-60 * b.side * Math.PI) / 180, 0);
+        borders.setMatrixAt(
+          i,
+          m4.compose(at.set(b.x, 0.004, b.y), quat.setFromEuler(euler), size.set(1, 1, 1)),
+        );
+        borders.setColorAt(i, colour.set(b.colour));
+      });
+      borders.count = sides.length;
+      borders.instanceMatrix.needsUpdate = true;
+      if (borders.instanceColor) borders.instanceColor.needsUpdate = true;
+    },
+    /** How far each settlement's models lean toward its owner's glaze: Political's tint. */
+    setTint(k: number) {
+      if (k === tinting) return;
+      tinting = k;
+      for (const model of models) if (TINTED.has(model.layer ?? "")) tint(model);
+    },
     setMarks(marks: {
       candidates: readonly { x: number; y: number }[];
       selected: { x: number; y: number } | null;
@@ -830,6 +885,7 @@ export function createScene(canvas: HTMLCanvasElement, shape: BoardShape) {
           tints.forEach((p, i) => mesh.setColorAt(i, colour.set(p.color ?? 0xffffff)));
           mesh.instanceColor!.needsUpdate = true;
         });
+        if (TINTED.has(model.layer ?? "")) tint(model);
         (motion(model) ?? stand)(model, time);
         for (const mesh of model.meshes) mesh.boundingSphere = null;
       }
@@ -849,8 +905,8 @@ export function createScene(canvas: HTMLCanvasElement, shape: BoardShape) {
       return ray.intersectObjects(goods.meshes, false)[0]?.instanceId ?? null;
     },
     /** One opacity per layer, from the zoom bands. A layer faded out is not drawn, and
-     *  casts no shadow; the land's trees, rocks and fields cast only while `land` (in
-     *  Terrain: Economy shows them faded). */
+     *  casts no shadow; the land's trees, rocks and fields cast only while `land`, drawn
+     *  whole (Economy shows them faded). */
     applyLayers(next: Record<string, number>, land: boolean) {
       alphas = next;
       for (const [layer, mats] of layered) {
