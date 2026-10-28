@@ -14,13 +14,14 @@ import type {
 } from "../../../game/ideaTypes";
 import { enumerateLegalOptions } from "../../../game/legalMoves";
 import type { HegemonyState } from "../../../game/types";
+import { ideaCardFace } from "../../../ui/cardFace";
 import { presentLawEffect } from "../../../ui/effects";
-import { IDEA_RASTERS } from "../../../ui/iconRegistry";
 import { formatNumber } from "../../../ui/formatters";
 import { settlementNames } from "../../../ui/settlementNames";
 import { ActionButton } from "../../ActionButton";
 import { Prose } from "../../AnnotatedText";
 import { EffectLine } from "../../EffectLine";
+import { GameCard } from "../../cards/GameCard";
 import { useGameUi } from "../GameUiContext";
 import { Chips, Ico, SeatMark } from "../../frame/parts";
 import { ModalShell } from "./ModalShell";
@@ -130,13 +131,20 @@ export function IdeasModal({
                 : holder
                   ? "Taken"
                   : null;
+        // A hand-size card: its sentence is the tooltip's, and the button reads by name.
         return (
           <ActionButton
+            aria-label={mark ? `${idea.name}, ${mark.toLowerCase()}` : idea.name}
             aria-pressed={selected === idea.id}
             blockedReason={legal(idea.id) || draftDone ? undefined : rowReason(idea)}
             className={`idea-choice${taken ? " is-taken" : ""}${own ? " is-own" : ""}${idea.id === fresh ? " is-fresh" : ""}`}
             {...gate("idea-choice")}
             enabled={legal(idea.id) && !draftDone}
+            explanation={
+              <p className="mechanicsExplanation">
+                <Prose links={false}>{idea.text}</Prose>
+              </p>
+            }
             heading={idea.name}
             key={idea.id}
             onClick={() => {
@@ -145,11 +153,17 @@ export function IdeasModal({
             }}
             triggerClassName="idea-tip"
           >
-            <Ico className="idea-icon" path={IDEA_RASTERS[idea.id]} size="tile" />
-            <span className="idea-words">
-              <strong>{idea.name}</strong>
-              {effectLines(idea)}
-            </span>
+            <GameCard
+              className={
+                selected === idea.id || idea.id === fresh
+                  ? "is-picked"
+                  : taken
+                    ? "is-dim"
+                    : undefined
+              }
+              face={ideaCardFace(idea, G.ruleset, G.definition.content)}
+              size="hand"
+            />
             <span className="idea-hold">
               {holder ? (
                 <SeatMark

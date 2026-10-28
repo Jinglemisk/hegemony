@@ -41,6 +41,16 @@ resource chips, two token tables) are scheduled in the
 
 ### Shipped or closed
 
+- **`CARD-1` · one card face for every deck** (card-face study, owner 2026-10-27). Year
+  cards, fates, Laws, Directives and National Ideas print one way (`GameCard`): the
+  deck's band, four corner marks (kind, reach, timing, duration), a 2:1 picture window,
+  the name, and a black-glaze panel with the effect as an icon equation over the card's
+  sentence. Three sizes: the drawn card and the Assembly's private draw at ceremony
+  size, standing Laws and the Idea draft at hand size, the ballot and the Agora's Laws at
+  mini size. Deck counts left the card for a deck line on the table under it. Five
+  corner marks wear the closest bronze icon until theirs is drawn (`cardFace.ts`); the
+  development deck's reveal, hand and seat counts build on the same face in its slice 1.
+
 - **`MAP-1` · the 3D map's seven calls** (Q83, answered 2026-10-27). The number keys stay
   with the map modes. A pick shows its candidates' names at any zoom, the compass is a
   button that returns to the opening view, the sea draws at 30 frames a second while the

@@ -28,12 +28,6 @@ type ModalShellProps = {
    * payment — stay plain, because if every dialog is a rite then none of them is.
    */
   ceremony?: "gift" | "wound" | "rite";
-  /**
-   * A line pinned to the foot of the SCRIM, outside the surface — the deck a
-   * fate was dealt from, and nothing else so far. It belongs to the table, not
-   * to the card, which is why it cannot simply be the last child of the dialog.
-   */
-  scrimNote?: ReactNode;
 };
 
 /** Everything the browser will let a player reach with Tab. */
@@ -57,7 +51,6 @@ export function ModalShell({
   onDismiss,
   dismissOnBackdrop = true,
   ceremony,
-  scrimNote,
 }: ModalShellProps) {
   const surfaceRef = useRef<HTMLElement>(null);
 
@@ -139,15 +132,7 @@ export function ModalShell({
 
   return (
     <div
-      className={[
-        "modalBackdrop",
-        ceremony ? "ceremonyScrim" : null,
-        // The note is a real sibling of the dialog, so the scrim has to STACK the
-        // two. It used to be pinned to the chrome independently of the card,
-        // which put it behind any card tall enough to reach that line.
-        scrimNote ? "scrimNoted" : null,
-        backdropClassName,
-      ]
+      className={["modalBackdrop", ceremony ? "ceremonyScrim" : null, backdropClassName]
         .filter(Boolean)
         .join(" ")}
       role="presentation"
@@ -178,8 +163,6 @@ export function ModalShell({
       >
         {children}
       </section>
-
-      {scrimNote}
     </div>
   );
 }
