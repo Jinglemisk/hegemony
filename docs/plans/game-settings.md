@@ -75,17 +75,15 @@ or base income. Every setting is part of the game's recorded rules, so a game re
 
 ## The first list of settings
 
-| Setting                      | Classic         | Choices                                                                                 | State                                    |
-| ---------------------------- | --------------- | --------------------------------------------------------------------------------------- | ---------------------------------------- |
-| Board                        | Continental     | Continental, Archipelago                                                                | [Board modes](board-modes.md)            |
-| Length                       | 14 years        | 6, 12, 14, 18 years, Open                                                               | Built in the engine                      |
-| Base income per settlement   | 0 everywhere    | Per resource, for example +1 food                                                       | Built in the engine                      |
-| Recurring deals              | On, once built  | On, off                                                                                 | [Recurring deals](recurring-deals.md)    |
-| Luxury goods placement       | Even            | Even, random                                                                            | Exists                                   |
-| Turn order                   | Rotating opener | Rotating; a yearly roll where the last seat may not open next; an influence bid to open | Proposed (owner, 2026-10-25)             |
-| Starting bonus by pick order | None            | A bonus for seats that place later                                                      | Proposed; an overnight test proposes one |
-| Starting resources           | Standard        | Standard, rich                                                                          | Exists as the Fast Start mode            |
-| Founding colonies at setup   | 1               | 1, 3                                                                                    | Exists as the Deathmatch mode            |
+| Setting                    | Classic         | Choices                                                                                 | State                         |
+| -------------------------- | --------------- | --------------------------------------------------------------------------------------- | ----------------------------- |
+| Board                      | Continental     | Continental, Archipelago                                                                | [Board modes](board-modes.md) |
+| Length                     | 14 years        | 6, 12, 14, 18 years, Open                                                               | Built in the engine           |
+| Base income per settlement | 0 everywhere    | Per resource, for example +1 food                                                       | Built in the engine           |
+| Luxury goods placement     | Even            | Even, random                                                                            | Exists                        |
+| Turn order                 | Rotating opener | Rotating; a yearly roll where the last seat may not open next; an influence bid to open | Proposed (owner, 2026-10-25)  |
+| Starting resources         | Standard        | Standard, rich                                                                          | Exists as the Fast Start mode |
+| Founding colonies at setup | 1               | 1, 3                                                                                    | Exists as the Deathmatch mode |
 
 **Turn order.** The owner, 2026-10-25, wants influence to play a bigger part in the Assembly's
 laws first. An influence bid for who opens the year is a candidate game mode: the highest bid

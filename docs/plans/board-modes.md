@@ -160,8 +160,8 @@ The game's rules for the sea, the map, the bots and the sim flag wait for that a
    - **A bounded redraw:** a fixed number of tries, then a fallback that always passes, so
      setup never hangs.
 3. **Resources.** Whether each island can feed and build for itself, or each lacks something.
-   An island without plains must buy its food, which ties in with
-   [recurring deals](recurring-deals.md) and the removal of base income.
+   An island without plains must buy its food, which ties in with player trade and the
+   removal of base income.
 4. **What the sea limits.** Today any shore reaches any shore. On an archipelago nearly every
    tile is coastal, so this rule decides both whether islands mean anything and how much the
    first pick is worth. Weigh at least these:
