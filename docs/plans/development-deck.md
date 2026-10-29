@@ -56,7 +56,7 @@ without a trading partner.
   - No victory-point cards.
   - One deck at one price.
   - Food, wood and stone each have the same ladder of yields: +1 cards, one +2, one +3. (The
-    rungs changed on 2026-10-29, below; the same-ladder rule stands.)
+    rungs changed on 2026-10-29, below, and food alone has a per-pop card.)
 - Owner, 2026-10-29, answering Q86 ("the development cards feel lackluster"; the owner, the day
   before: "i pay 2 gold to buy a devcard and it gives me 1 wood?"):
   - "Yes let us add more cards like +1 food per settlement or even per pop, food per pop should
@@ -68,6 +68,14 @@ without a trading partner.
   - The problem Q86 put: the common card cost 2 gold, two turns of a freeman who eats a food
     each turn, and gave +1 of a material, one turn of a slave. The old yields averaged 0.73 a
     draw.
+- Owner, 2026-10-29, on the reworked list's four open points: "1) per pop counts slaves. 2) yes
+  food per pop only resource per pop card although it could be influence etc. too i think 3) i
+  like these versions 4) its nice like this"
+  - Per pop counts every pop, slaves included.
+  - Food per pop is the only per-pop card among the materials; wood and stone have none.
+    Influence per pop is a maybe, held under suggestions, not in the list.
+  - Caravan counts settlements and Raiders takes up to 3, as reworked.
+  - The scaling cards stay as they are, though they favour the largest realm.
 - The bank is removed ([player trade](player-trade.md), D9). Base food was set to 0 on
   2026-10-24, so food comes from the land, trade, the Dole and these cards.
 
@@ -111,22 +119,21 @@ Informer against an empty hand is not a legal play.
 
 Reworked on 2026-10-29 from Q86's answer (settled inputs, above). A yield counts the realm: +1
 of a resource for each of your settlements, or for each pop. Flat yields are rare and give 5. No
-card gives +1 of a resource. Food, wood and stone have the same ladder: per-settlement cards, one
-per-pop card and one +5. Food has the most per-settlement cards, since base food is 0. No card
-gives gold or influence. Names and counts are a draft for the owner's sign-off; number tuning may
-change the counts, not the kinds.
+card gives +1 of a resource. Food, wood and stone each have per-settlement cards and one +5; food
+alone also has a per-pop card, the rare big draw (owner, 2026-10-29). Food has the most
+per-settlement cards, since base food is 0. No card gives gold or influence. The owner settled
+the four open points on 2026-10-29 (settled inputs, above); number tuning may change the counts,
+not the kinds.
 
 Settlements are your capital, cities and colonies. Pops are every slave, freeman and citizen in
-your realm, those on the move included (an open point, below).
+your realm, those on the move included (owner, 2026-10-29).
 
 | Card              | Kind  | Count | Effect                                                                                 | Engine effect today                   |
 | ----------------- | ----- | ----- | -------------------------------------------------------------------------------------- | ------------------------------------- |
 | Foraging          | Yield | 6     | +1 food for each of your settlements                                                   | new: a yield that counts settlements  |
-| Woodcutters       | Yield | 4     | +1 wood for each of your settlements                                                   | new: a yield that counts settlements  |
-| Quarry gang       | Yield | 4     | +1 stone for each of your settlements                                                  | new: a yield that counts settlements  |
+| Woodcutters       | Yield | 5     | +1 wood for each of your settlements                                                   | new: a yield that counts settlements  |
+| Quarry gang       | Yield | 5     | +1 stone for each of your settlements                                                  | new: a yield that counts settlements  |
 | Bountiful harvest | Yield | 1     | +1 food for each pop in your realm                                                     | new: a yield that counts pops         |
-| Felled grove      | Yield | 1     | +1 wood for each pop in your realm                                                     | new: a yield that counts pops         |
-| Rich seam         | Yield | 1     | +1 stone for each pop in your realm                                                    | new: a yield that counts pops         |
 | Tunny run         | Yield | 1     | +5 food                                                                                | `resourceDelta`                       |
 | Timber raft       | Yield | 1     | +5 wood                                                                                | `resourceDelta`                       |
 | Marble block      | Yield | 1     | +5 stone                                                                               | `resourceDelta`                       |
@@ -139,7 +146,7 @@ your realm, those on the move included (an open point, below).
 | Informer          | Rival | 2     | A rival of your choice discards one held card, drawn at random                         | new: a discard from a hand            |
 
 **What changed.** Flat yields go from 20 cards (fourteen +1s, three +2s, three +3s) to 3, all
-+5. Scaling yields go from none to 17: 14 per settlement, 3 per pop. Caravan and Raiders were +1
++5. Scaling yields go from none to 17: 16 per settlement, 1 per pop. Caravan and Raiders were +1
 cards too, so the same rule moved them: Caravan counts settlements, Raiders takes up to 3. The
 held cards and the split (20 yields, 12 own held, 8 rival) are unchanged, so the deck keeps its
 40 cards. The three Venture tables and the Fund an expedition verb go; the Colonists' Voyage
@@ -155,28 +162,29 @@ three batches (280 games, 1,120 seats).
 
 | Stage         | Settlements | Pops | Yields alone, a draw | Whole deck, a draw | Old list, a draw |
 | ------------- | ----------: | ---: | -------------------: | -----------------: | ---------------: |
-| Early, year 2 |         3.8 |  9.4 |                  2.4 |                3.5 |              1.3 |
-| Mid, year 7   |         4.4 | 11.7 |                  2.8 |                3.9 |              1.3 |
-| Late, year 12 |         5.0 | 14.5 |                  3.2 |                4.4 |              1.3 |
+| Early, year 2 |         3.8 |  9.4 |                  2.1 |                3.2 |              1.3 |
+| Mid, year 7   |         4.4 | 11.7 |                  2.4 |                3.6 |              1.3 |
+| Late, year 12 |         5.0 | 14.5 |                  2.7 |                3.9 |              1.3 |
 
-A pass through the deck lands 14 × settlements, plus 3 × pops, plus 15 from the yields, and 4 ×
+A pass through the deck lands 16 × settlements, plus the pops, plus 15 from the yields, and 4 ×
 settlements, plus 28, from the held and rival cards. The old list's yields were 0.73 a draw at
 every stage.
 
 - **Against 2 gold.** At the table's trade prices (the
   [trade batches](../reports/simulation/2026-10-22-trade-paired.md): a material about 1 gold,
   food sold for gold at 2), 2 gold buys about 2 wood or stone, or 1 food. The old list paid less
-  than that; the new one pays about twice it.
+  than that; the new one pays 1.6 to 2 times it.
 - **Against the freeman chain.** Two freemen make 2 gold a turn and eat 2 food. On the old list
-  a draw returned 1.3 for the 2 food eaten, a loss. On the new list it nets 1.5 early and 2.4
-  late, about one material a freeman-turn: a slave's output without the slave's happiness cost.
-  One buy a turn caps this at the first two freemen.
-- **Single draws, mid-game.** Foraging 4.4 food, Bountiful harvest 11.7 food, a +5 card 5.
+  a draw returned 1.3 for the 2 food eaten, a loss. On the new list it nets 1.2 early and 1.9
+  late, 0.6 to 1 material a freeman-turn: close to a slave's output, without the slave's
+  happiness cost. One buy a turn caps this at the first two freemen.
+- **Single draws, mid-game.** Foraging or Woodcutters 4.4, Bountiful harvest 11.7 food, a +5
+  card 5.
 - **Leader and laggard, late.** In the median game at year 12 the largest realm has 6
-  settlements and 19 pops, the smallest 4 and 10: a draw is worth 5.2 against 3.6. The +5 cards
-  are worth the most to the small realm.
+  settlements and 19 pops, the smallest 4 and 10: a draw is worth 4.6 against 3.3, 1.4 times as
+  much. The +5 cards are worth the most to the small realm.
 
-**The price.** Keep 2 gold. At 3 gold an early draw (3.5) is barely more than 3 gold buys at the
+**The price.** Keep 2 gold. At 3 gold an early draw (3.2) is barely more than 3 gold buys at the
 table, which is the lackluster card again. The one-buy-a-turn rule caps the deck more than the
 price does. If slice 1's batch shows every seat buying every turn and trade volume falling under
 the 2026-10-22 batches, raise the price to 3 first, then cut Caravan.
@@ -184,40 +192,54 @@ the 2026-10-22 batches, raise the price to 3 first, then cut Caravan.
 **The two fears.**
 
 - _A deck that beats player trade brings the bank back._ By value it does beat trade: a draw is
-  worth about twice what its gold buys at the table. It does not work like the bank. A seat buys
-  once a turn, so a store of 40 gold still goes in 2 at a time. The kind is drawn, not chosen:
+  worth 1.6 to 2 times what its gold buys at the table. It does not work like the bank. A seat
+  buys once a turn, so a store of 40 gold still goes in 2 at a time. The kind is drawn, not chosen:
   only Caravan (4 of 40) picks one, so a seat short of wood gets wood on about a quarter of its
   draws and trades the rest. Gold only goes in: the bank bought and sold every material for gold,
   which fixed a price for each; the deck puts a floor under gold's worth and prices no material.
   Slice 1's batch compares trade volume with the 2026-10-22 batches.
 - _Strong free cards at +3 make "hold luxuries, keep no slaves, farm cards" the best plan._ A
-  free card is worth 3.5 to 4.4 a turn. Reaching +3 from a level of L costs 2 × (3 − L) working
-  slaves, one material each a turn. From +2 it pays (2 slaves for about 4); from +1 it is about
-  even (4 for 4); from 0, where realms sit today, it loses (6 for 4). So the free card rewards a
-  realm already near +3 and does not pay a realm to empty its slave stack. Under the old list it
-  never paid for even two slaves. Late, for the largest realm (5.2 a card), the gap from 0 nearly
-  closes; slice 2's batches read slaves held and turns at +3 by personality.
+  free card is worth 3.2 to 3.9 a turn. Reaching +3 from a level of L costs 2 × (3 − L) working
+  slaves, one material each a turn. From +2 it pays (2 slaves for about 3.5); from +1 it is about
+  even (4 for 3.5); from 0, where realms sit today, it loses (6 for 3.5). So the free card rewards
+  a realm already near +3 and does not pay a realm to empty its slave stack. Under the old list it
+  never paid for even two slaves. Late, for the largest realm (4.6 a card), the gap from 0
+  narrows; slice 2's batches read slaves held and turns at +3 by personality.
 
-### Open points for the owner
+### Decided (owner, 2026-10-29)
 
-1. **Per pop counts every pop**, slaves included, as the owner's words read. Counting only
-   freemen and citizens would make Bountiful harvest exactly one turn's food bill (4.8 food at
-   year 7 instead of 11.7) and stop it paying for slave stacks.
-2. **Wood and stone have a per-pop card too**, by the same-ladder rule. If food per pop should
-   be the only one, Felled grove and Rich seam become a Woodcutters and a Quarry gang.
-3. **Caravan and Raiders changed** under "no +1 resources". If the rule was meant for yields
-   only, both go back to +1.
-4. **Scaling cards feed the leader**: late, the largest realm's draw is worth about 1.4 times
-   the smallest's. Rival cards aim at the leader and the +5 cards help the small realm; the
-   batches read the year-5 income leader rule with the deck in.
+1. **Per pop counts every pop**, slaves included. Bountiful harvest is 11.7 food at year 7, not
+   the 4.8 that freemen and citizens alone would give.
+2. **Food per pop is the only per-pop card** among the materials. The draft's Felled grove and
+   Rich seam (wood and stone per pop) became a fifth Woodcutters and a fifth Quarry gang.
+3. **Caravan and Raiders stay as reworked**: Caravan counts settlements, Raiders takes up to 3.
+4. **The scaling stays**, though a late draw is worth about 1.4 times as much to the largest
+   realm as to the smallest. Rival cards aim at the leader and the +5 cards help the small realm;
+   the batches read the year-5 income leader rule with the deck in.
 
 ### Suggestions, not in the list
 
-Q86's option B, more held cards played at a chosen moment, was not taken up. If the owner wants
-one later, this one adds a choice of when to build and needs one new engine effect, a discount:
+- **Civic feast** (yield): +1 influence for each pop in your realm. The owner floated influence
+  per pop on 2026-10-29 and wants influence to matter more in the Assembly (2026-10-25). It would
+  undo the non-goal "cards that give gold or influence".
+
+  | Year | Influence when drawn | In materials at the Dole | At trade prices | One copy's share of a draw |
+  | ---: | -------------------: | -----------------------: | --------------: | -------------------------: |
+  |    2 |                  9.4 |                      3.1 |             9.4 |               0.08 to 0.24 |
+  |    7 |                 11.7 |                      3.9 |            11.7 |               0.10 to 0.29 |
+  |   12 |                 14.5 |                      4.8 |            14.5 |               0.12 to 0.36 |
+
+  The Dole, 3 influence for 1 food, is the only fixed rate, so the table counts influence at a
+  third of a material; that is a floor. The trade batches' median put 1 influence at about 1
+  material, the upper figure. The share column is the card's worth over 40 cards at the two
+  rates. At the Dole rate it is about a Foraging; at trade prices it ties Bountiful harvest as the
+  deck's biggest card. The balance check caps median influence growth at +5 a year from year 10,
+  and one late draw is 14.5, so a copy would need that check rerun.
 
 - **Master builder** (held): your next building or colony upgrade this turn costs 2 less wood or
-  stone. It would replace a Captives, which feeds the slaver's riot habit.
+  stone. Q86's option B, more held cards played at a chosen moment, was not taken up; this one
+  adds a choice of when to build and needs one new engine effect, a discount. It would replace a
+  Captives, which feeds the slaver's riot habit.
 
 ## Hotseat now, network later
 
