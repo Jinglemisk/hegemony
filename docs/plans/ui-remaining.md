@@ -38,6 +38,8 @@ resource chips, two token tables) are scheduled in the
 | -------- | ---------- | --------------------------------------------- |
 | `TYPE-1` | a decision | Two type sizes sit under spec, on purpose     |
 | `DUP-1`  | nothing    | Four repeated glossary words, judged and left |
+| `MAP-2`  | a decision | Trade names a held good twice (Q85)           |
+| `MAP-3`  | a fix      | Labels that cover a neighbour's on the map    |
 
 ### Shipped or closed
 
@@ -423,3 +425,19 @@ disambiguates it.
 Numbering them ("Gold, second mention") would make the prose unreadable when read
 linearly, to fix an ambiguity that only exists if you tab the page as a list of
 controls. Judged and left.
+
+## MAP-2 — Trade names a held good twice
+
+Since #160 (2026-10-28) a good's icon stays on its raft in every mode, the holder's seat
+mark under it. Trade still hangs a chip off each Port naming the good it holds, so a held
+good shows twice there, and near Kydonia the Port's chip crowds the good's name. The owner
+decides whether the Port chips go (Q85).
+
+## MAP-3 — labels that cover a neighbour's
+
+Two overlaps on the 3D map, seen 2026-10-28:
+
+- In Trade's overview, a capital's hint box reaches the row below and, standing over it,
+  covers part of that tile's badge.
+- Close in, two neighbouring tiles that each hold two settlements have plates wider than
+  a hex, and the plates overlap. This was already true before #160.
