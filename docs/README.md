@@ -14,7 +14,8 @@ waits on the owner's review. [Player trade](plans/player-trade.md)'s two PRs, th
 [code-health plan](plans/code-health.md)'s five, and v2 (#121, its
 [plan](archive/plans/v2-migration.md) archived) are merged.
 
-**Owner blockers:** the development deck's card list. Base income is 0 (owner, 2026-10-24). The
+**Owner blockers:** the development deck's card list, which the owner finds lackluster
+([Q86](questions.md#q86--the-development-cards-feel-lackluster)). Base income is 0 (owner, 2026-10-24). The
 [balance check](plans/player-trade.md#the-balance-check)'s
 [first report](reports/simulation/2026-10-26-balance-check.md) has win rates in range and Beloved
 within noise; Q84 (2026-10-26) retired the stock ratio for pops and income ratios and left hunger
