@@ -204,13 +204,20 @@ There is no food reserve. Hunger is settled at turn end, so a seat that income
 leaves short buys food on that turn at the same price: food held ahead of the
 shortfall buys no safety, and the forecast buys the same food in the year it is
 needed, so buying it early scores nothing. Each food a seat is short of now also
-costs 74, on top of the pop the forecast sees leave. The forecast counts pops lost
+costs 434, on top of the pop the forecast sees leave. The forecast counts pops lost
 and not when. So a seat whose gold could not feed everyone through the forecast
 let pops go while it could still pay. At the old charge of 14, with 20 gold and
 six short, it bought four food and kept 12 gold for the others; with no charge,
-with 4 gold and three short, it bought wood. The charge outweighs one more pop
-lost in a later year, 60, and the dearest food a build can buy, the civic's Dole
-at 9, so a seat that can pay feeds its pops first. From zero food its search can
+with 4 gold and three short, it bought wood. The charge outweighs the most one
+food bought now can cost the rest of the score. The forecast buys each year's food
+until the stocks run out, and the pop fed now eats in every later year, so the food
+he eats and the price paid now can each be one more pop lost the year the stocks
+run out: a pop a year, 360. The lean-year charge moves twice, for the mouth fed and
+the cover spent: at most 60, for the civic's citizens. The dearest price is the
+civic's Dole, 9. At 74, which counted one pop and the Dole, three citizens one food
+short with 30 influence were fed only until the store ran out and then all three
+left, so every build ended its turn and let one go. A seat that can pay now feeds
+its pops first. From zero food its search can
 reach the slave that would feed them; from six short it cannot. A short seat also
 funds the Colonists' Voyage: its 2 gold bring 1.5 food on average. There is no
 hard-coded order between the Dole, a trade and the Voyage.
