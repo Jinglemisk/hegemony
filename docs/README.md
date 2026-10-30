@@ -5,26 +5,25 @@ tree. The roadmap establishes sequence and exit gates; plans define unshipped
 work; references describe the game that exists; reports preserve dated evidence;
 and the archive is historical context, never current authority.
 
-Last updated: 2026-10-29.
+Last updated: 2026-10-31.
 
 ## Now
 
-**Current initiative:** the [development deck](plans/development-deck.md), whose reworked card
-list waits on the owner's sign-off. [Player trade](plans/player-trade.md)'s two PRs, the
-[code-health plan](plans/code-health.md)'s five, and v2 (#121, its
-[plan](archive/plans/v2-migration.md) archived) are merged.
+**Current initiative:** the [agency package](plans/agency-package.md) (owner, 2026-10-31), with
+the [development deck](plans/development-deck.md), card list signed off 2026-10-31 (#163).
+[Player trade](plans/player-trade.md)'s two PRs, the [code-health plan](plans/code-health.md)'s
+five, and v2 (#121, its [plan](archive/plans/v2-migration.md) archived) are merged.
 
-**Owner blockers:** the owner's sign-off on the development deck's
-[reworked card list](plans/development-deck.md#the-card-list): Q86's answer (2026-10-29) made
-yields count settlements and pops and the flat ones rare +5s. Base income is 0 (owner,
-2026-10-24). The [balance check](plans/player-trade.md#the-balance-check)'s
+**Owner blockers:** the luxury Port rule: a good whose Port is lost, and a good received by trade
+([Q87](questions.md#q87--what-happens-to-a-luxury-good-when-its-port-is-gone)). Base income is 0
+(owner, 2026-10-24). The [balance check](plans/player-trade.md#the-balance-check)'s
 [first report](reports/simulation/2026-10-26-balance-check.md) has win rates in range and Beloved
 within noise; Q84 (2026-10-26) retired the stock ratio for pops and income ratios and left hunger
 to the bots.
 
 **Next:**
 
-1. The development deck, slice 1 once the owner signs off the card list.
+1. The [agency package](plans/agency-package.md)'s order, from a fresh baseline to a combined check.
 2. Balance batches wait until the bots play the deck (owner, 2026-10-26): the mixed table on the
    Archipelago, the default board since 2026-10-26 (#150), then length batches.
 3. The [game settings](plans/game-settings.md) setup screen waits until after card balance
@@ -38,8 +37,8 @@ holds them.
 
 **Locked sequence:** V1 includes luxury goods, full Catan-style player trade, all twelve
 National Ideas, and the intended typed Resolution/Idea effects. The v1 mechanics freeze
-precedes full multiplayer. The mechanics are effectively frozen (owner, 2026-10-27): no new
-features. What remains is balance: the development deck, the player events and the year cards.
+precedes full multiplayer. The mechanics are frozen (owner, 2026-10-27) but for the
+[agency package](plans/agency-package.md). What remains is balance: the deck, events and year cards.
 
 ## Active plans
 
@@ -50,10 +49,11 @@ features. What remains is balance: the development deck, the player events and t
 | [UI — what is left](plans/ui-remaining.md)          | —        | `active`   | The one UI ledger; the KYKLOS triage ledgers are archived                         |
 | [Code health](plans/code-health.md)                 | post-v2  | `active`   | Five cleanup PRs before trade; all merged, trade next                             |
 | [Player trade](plans/player-trade.md)               | post-v2  | `active`   | PRs #131 and #132 merged; the owner plays trade next; holds the balance check     |
-| [Development deck](plans/development-deck.md)       | post-v2  | `proposed` | Replaces Ventures; card list reworked (Q86), waits on the owner's sign-off        |
+| [Development deck](plans/development-deck.md)       | post-v2  | `proposed` | Replaces Ventures; the owner signed off the card list on 2026-10-31               |
 | [Board modes](plans/board-modes.md)                 | post-v2  | `proposed` | Engine and sim (#145); Q81 answered: hop 3, seven goods, the oracle on an island  |
 | [Game settings](plans/game-settings.md)             | post-v2  | `proposed` | Length and base income built in the engine; the setup screen is parked            |
 | [National Ideas](plans/national-ideas.md)           | v2       | `active`   | Step 9 shipped (#88); twelve v2 rules, open setup draft (#95), influence purchase |
+| [Agency package](plans/agency-package.md)           | post-v2  | `proposed` | Owner rulings of 2026-10-31 on the luck study; Q87 (the Port rule) is open        |
 | [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked`  | Final typed Resolution/Idea effects and evidence before multiplayer               |
 
 Every file in `docs/plans/` must appear in this table. Start a substantial feature

@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "v2"
-updated: 2026-10-06
+updated: 2026-10-31
 ---
 
 # National Ideas
@@ -48,6 +48,9 @@ Each row is the full player-facing sentence, also stored in the match content.
 | 10  | Harbour Planning | Your Ports take no work slot.                                                       |
 | 11  | Treasury Grant   | When you take this Idea, gain 4 gold.                                               |
 | 12  | Assembly Brokers | You may buy a third vote at each Assembly.                                          |
+
+Capital Works leaves the roster under the [agency package](agency-package.md) (owner,
+2026-10-31; not built yet), so eleven remain. Urban Planning is unchanged.
 
 ## Defaults and interactions
 

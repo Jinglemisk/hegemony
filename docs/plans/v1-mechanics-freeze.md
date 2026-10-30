@@ -1,7 +1,7 @@
 ---
 status: blocked
 phase: "5.5"
-updated: 2026-10-19
+updated: 2026-10-31
 ---
 
 # V1 mechanics and content freeze
@@ -22,6 +22,8 @@ core systems.
 ## Settled inputs
 
 - Luxury goods, Catan-style player trade, and all twelve drafted National Ideas are in v1.
+  The [agency package](agency-package.md) (owner, 2026-10-31) takes Capital Works out, leaving
+  eleven, and adds its own mechanics before the freeze.
 - Full multiplayer begins after this mechanics freeze, on the command/projection/version
   foundations established in Phase 3.6.
 - V1 includes the specifically selected Resolution and National Idea effects needed for the
