@@ -204,11 +204,21 @@ anchored entities.
   good's name on a dark chip, which reads where a raft off the coast puts the name over a
   tile.
 - **One anchor per tile.** Each tile's badge (its slots and its land's resource as an icon,
-  never words, on one ivory plate, the icon as tall as the numeral) stands on its hex's
-  centre in every mode at both levels; close in it stands over the front of the town, which
-  the owner accepted to keep the resources centred. What hangs under the badge is the mode's
-  (a plate, the realm's name, Economy's readout), so nothing jumps when the zoom or the mode
-  changes.
+  never words, on one dark chip, the icon as tall as the numeral) stands on its hex's centre
+  in every mode. What hangs under the badge is the mode's (a plate, the realm's name,
+  Economy's readout), so nothing jumps when the zoom or the mode changes.
+- **Quiet badges (owner, 2026-10-30).** The badges were the loudest thing on the board, and
+  close in they covered the towns. Close in they fade (the camera's `res`), since the land's
+  trees, rocks and fields say the same, except in Economy, where the readout needs them. The
+  tile hovered or selected, a pick's candidates, and every tile while Alt is held keep
+  theirs, the way Old World's held key and Civ VII's placement preview show yields only when
+  asked. The badge keeps a numeral rather than repeated icons: slots run 2 to 7, past what
+  the eye takes in without counting, and repeated icons read as yield a turn.
+- **The Plates menu.** After the map modes in the dock, a display choice rather than a mode:
+  the badge's look (dark chip, ivory plate, or the slots as dots in a hex, dice-like), its
+  size, and whether it fades close in. It is kept in the browser until a settings screen
+  takes it (owner, 2026-10-31: keep every option and decide later). Ivory, large and kept is
+  the badge as it stood from 2026-10-28.
 - **Owner paint.** In the overview each settled tile is painted solid in its lead owner's
   colour, in the 3D board itself, so the town still stands on it: who holds which resource,
   read at a glance. The paint gives way over the threshold to the mode's own look (the
@@ -218,8 +228,8 @@ anchored entities.
   close in, every settlement's plate, one line with its pips and pops.
   The realm's name in Political, with its Unrest tokens, hangs under its capital in place of
   the capital's plate; the tokens moved there from the seals.
-- **Sizes.** The badge's numeral is 0.55 of the hex's drawn width (it was 0.5), up to 32px,
-  and never wider than 0.92 of the hex; the board's label size (`--lab`) is about 13% larger
+- **Sizes.** The badge's numeral is 0.3 of the hex's drawn width, up to 24px (Large: 0.55,
+  up to 32px), and never wider than 0.92 of the hex; the board's label size (`--lab`) is about 13% larger
   at every zoom. Each label waits until the hexes are drawn wide enough to hold it under its
   badge: a short label 44–50px, every plate 56–64px, Economy's three-row card and a realm's
   glaze and counts 110–120px. A

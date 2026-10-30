@@ -171,9 +171,10 @@ const CARD_ROOM = [110, 120] as const;
  * runtime's paint, by `close`): Political tints each owned tile and the models on it
  * toward the owner's colour; Economy fades the land's trees, rocks and fields; Trade
  * adds the trading ships and their routes, and each realm's trade hint by its capital.
- * Each tile's resource badge stands on its centre in every mode at both bands; what
- * hangs under it is the mode's: a name plate (Terrain, Political, Trade), the realm's
- * name under its capital (Political), or Economy's readout.
+ * Each tile's resource badge stands on its centre in the overview; close in it fades,
+ * the land's own trees, rocks and fields saying the same, except in Economy (`res`).
+ * What hangs under it is the mode's: a name plate (Terrain, Political, Trade), the
+ * realm's name under its capital (Political), or Economy's readout.
  *
  * The overview names only the capitals. Close in come every settlement's plate with
  * its slots and pops, the buildings, the figures and the sea's life. Each good's icon
@@ -215,6 +216,7 @@ export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain
   // Every mode's labels: the capitals' plates at both bands, every plate close in, a
   // pick's candidates' at any zoom. The goods' icons and names show at every zoom.
   const labels = {
+    res: 1 - close,
     capital: fits,
     plates: near,
     asked: 1,
@@ -239,6 +241,7 @@ export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain
     // Economy's cards hang under every tile instead.
     economy: {
       ...labels,
+      res: 1,
       capital: 0,
       plates: 0,
       asked: 0,

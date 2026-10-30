@@ -92,31 +92,63 @@
    under it. A placement is asking: the tiles that are not an answer recede. */
 .lm-tag {
   --dimmed: 1;
+  --show-res: var(--a-res, 1);
   line-height: 1;
   transform: translate(-50%, -50%);
 }
 .lm-tag.is-dimmed {
   --dimmed: var(--dim);
 }
+/* Close in the badges fade, but the tile hovered or selected, a pick's candidates, and
+   every tile while Alt is held keep theirs; a player who chose Keep keeps them all. */
+.lm-tag:is(.is-lit, .is-asked),
+.living-map.is-peek .lm-tag,
+.living-map[data-plates-close="keep"] .lm-tag {
+  --show-res: 1;
+}
 
-/* The resource badge: the slots and the land's resource on one ivory plate, the icon as
-   tall as the numeral. */
+/* The resource badge: the slots and the land's resource on one dark chip, the goods'
+   name chip's, so it recedes behind the tile's paint; the icon as tall as the numeral. */
 .lm-res {
   /* Positioned, so it lies over what hangs under it (drawn first). */
   position: relative;
   display: flex;
   align-items: center;
   gap: 0.12em;
-  padding: 0.1em 0.14em;
+  padding: 0.12em 0.16em;
   font-family: var(--f-name);
   font-weight: 700;
-  color: var(--ink);
-  background: var(--ivory);
-  border: var(--rule) solid var(--ink);
-  border-radius: 1px;
+  color: var(--ivory);
+  background: var(--map-ship);
+  border: var(--rule) solid var(--map-ship-rule);
+  border-radius: 2px;
   box-shadow: var(--map-label-shadow);
   white-space: nowrap;
-  opacity: var(--dimmed);
+  opacity: calc(var(--show-res) * var(--dimmed));
+  transition: opacity 120ms;
+}
+.lm-res.is-ivory {
+  color: var(--ink);
+  background: var(--ivory);
+  border-color: var(--ink);
+  border-radius: 1px;
+}
+/* The slots as dots (the Dots look), the plate's pips: built, worked, open. */
+.lm-res .slots {
+  flex: none;
+  width: 1.3em;
+  height: 1.3em;
+}
+.lm-res .slots > * {
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: 0.15;
+}
+.lm-res .slots .w {
+  fill-opacity: 0.5;
+}
+.lm-res .slots .o {
+  fill: none;
 }
 .lm-res b {
   /* Cinzel's numeral ink is about .72em high; match it to the requested height. */
