@@ -81,6 +81,8 @@ import { CornerDock } from "./frame/CornerDock";
 import { Seats } from "./frame/Seats";
 import { MAP_MODES } from "./frame/map3d/modes";
 import type { MapMode } from "./frame/map3d/modes";
+import { loadPlates, savePlates } from "./frame/map3d/plates";
+import type { Plates } from "./frame/map3d/plates";
 
 /** The map loads on its own, so three.js stays out of the main bundle. */
 const LivingMap = lazy(() => import("./frame/map3d/LivingMap"));
@@ -157,6 +159,12 @@ export function HegemonyBoard({
 }: BoardProps) {
   // What the map shows: the shell's view state, never the game's.
   const [mapMode, setMapMode] = useState<MapMode>("terrain");
+  // How the map draws the resource badges: the player's choice, kept in the browser.
+  const [plates, setPlates] = useState(loadPlates);
+  const changePlates = (next: Plates) => {
+    setPlates(next);
+    savePlates(next);
+  };
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
   // `?dev=ideas` opens on the purchase list.
   const [activeModal, setActiveModal] = useState<ActiveModal | null>(
@@ -586,6 +594,7 @@ export function HegemonyBoard({
                       setRealmTab("subject");
                     }}
                     onTileAction={handleTileAction}
+                    plates={plates}
                     // A popover pinned to a tile's old spot closes when the map moves;
                     // the mode stays armed, so the next click re-opens it in place.
                     onViewChange={() => setMapSelectionTarget(null)}
@@ -702,7 +711,13 @@ export function HegemonyBoard({
                     threats={threats.map((threat) => threat.seat)}
                     viewerId={viewerId}
                   />
-                  <CornerDock G={G} mode={mapMode} onMode={setMapMode}>
+                  <CornerDock
+                    G={G}
+                    mode={mapMode}
+                    onMode={setMapMode}
+                    onPlates={changePlates}
+                    plates={plates}
+                  >
                     <EndTurn
                       actingId={currentPlayerId}
                       canEndTurn={turnOpen}

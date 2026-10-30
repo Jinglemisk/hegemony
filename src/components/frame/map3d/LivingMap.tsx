@@ -19,6 +19,7 @@ import { boardShape, mapModel, shapeKey } from "./mapModel";
 import type { MapModel, MapSettlement, MapTile } from "./mapModel";
 import { MAP_MODES } from "./modes";
 import type { MapMode, MapRealm } from "./modes";
+import type { Plates } from "./plates";
 import { createRuntime } from "./runtime";
 import type { Runtime } from "./runtime";
 import { ARROWS, tileTip } from "./tileTip";
@@ -35,6 +36,8 @@ import "../../../styles/frame/map3d.css";
 type BoardProps = {
   G: HegemonyState;
   mode: MapMode;
+  /** How the resource badges are drawn: the player's choice. */
+  plates: Plates;
   selectedTileId: string | null;
   highlightTileIds?: readonly string[];
   placementActive?: boolean;
@@ -62,13 +65,68 @@ function Pips({ built, worked, slots }: { built: number; worked: number; slots: 
   );
 }
 
-/** A tile's resource badge on its centre, one ivory plate: its slots and its land's
- *  resource (a slot where the land makes nothing). The same at both bands and in every
- *  mode; who holds the tile is its paint (the runtime's). */
-function ResBadge({ tile }: { tile: MapTile }) {
+type Dot = readonly [number, number];
+/** A pointy-top hex of seven places, like a tile: the ring from the top, clockwise. */
+const RING: readonly Dot[] = [
+  [0, -1],
+  [0.87, -0.5],
+  [0.87, 0.5],
+  [0, 1],
+  [-0.87, 0.5],
+  [-0.87, -0.5],
+];
+const [, UR, LR, , LL, UL] = RING;
+const MID: Dot = [0, 0];
+/** Where each count's dots fall: dice faces up to five, the ring at six, the full hex
+ *  at seven, so a count reads as a shape rather than being counted. */
+const FACES: readonly (readonly Dot[])[] = [
+  [],
+  [MID],
+  [UR, LL],
+  [UR, MID, LL],
+  [UL, UR, LR, LL],
+  [UL, UR, MID, LR, LL],
+  RING,
+  [MID, ...RING],
+];
+
+/** A tile's slots as dots, the settlement plate's pips: built (square), worked by a
+ *  slave, or open. */
+function SlotDots({ slots, built, worked }: { slots: number; built: number; worked: number }) {
   return (
-    <div className="lm-res">
-      <b>{tile.slots}</b>
+    <svg className="slots" viewBox="-1.45 -1.45 2.9 2.9">
+      {FACES[slots].map(([x, y], i) =>
+        i < built ? (
+          <rect className="b" height={0.7} key={i} width={0.7} x={x - 0.35} y={y - 0.35} />
+        ) : (
+          <circle className={i < built + worked ? "w" : "o"} cx={x} cy={y} key={i} r={0.34} />
+        ),
+      )}
+    </svg>
+  );
+}
+
+/** A tile's resource badge on its centre, a dark chip or an ivory plate (the player's
+ *  `Plates`): its slots and its land's resource (a slot where the land makes nothing).
+ *  It shows in the overview; close in the land says the same, so by default it fades
+ *  but in Economy (the camera's `res`). Who holds the tile is its paint (the runtime's). */
+function ResBadge({ tile, look }: { tile: MapTile; look: Plates["look"] }) {
+  const held = tile.settlements;
+  const slots = Math.max(
+    tile.slots,
+    held.reduce((n, s) => n + s.slots, 0),
+  );
+  return (
+    <div className={`lm-res${look === "ivory" ? " is-ivory" : ""}`}>
+      {look === "dots" && slots < FACES.length ? (
+        <SlotDots
+          built={held.reduce((n, s) => n + s.built, 0)}
+          slots={slots}
+          worked={held.reduce((n, s) => n + s.worked, 0)}
+        />
+      ) : (
+        <b>{tile.slots}</b>
+      )}
       {icon(tile.land ? RESOURCE_RASTERS[tile.land] : "settlements/slot")}
     </div>
   );
@@ -249,25 +307,30 @@ function hintRows({ lean }: MapRealm) {
  * Each tile's tag, anchored on its hex's centre: its resource badge, and under it what
  * the mode hangs there (a plate, the realm's name, Economy's card; the Oracle's chip).
  * Under a realm's capital's plate, Trade's hint. One anchor, so nothing jumps when the
- * zoom crosses the threshold or the mode changes.
+ * zoom crosses the threshold or the mode changes. A tile hovered or selected (`lit`)
+ * or a pick's candidate shows its badge close in too.
  */
 function TileTag({
   tile,
   realm,
   dimmed,
   asked,
+  lit,
+  look,
   onHint,
 }: {
   tile: MapTile;
   realm: MapRealm | undefined;
   dimmed: boolean;
   asked: boolean;
+  lit: boolean;
+  look: Plates["look"];
   onHint: (realm: MapRealm, rect: DOMRect | null) => void;
 }) {
   const oracle = tile.terrain === "oracle";
   return (
     <div
-      className={`lm-tag${dimmed ? " is-dimmed" : ""}`}
+      className={`lm-tag${dimmed ? " is-dimmed" : ""}${asked ? " is-asked" : ""}${lit ? " is-lit" : ""}`}
       data-far=""
       data-wx={tile.x}
       data-wy={tile.y}
@@ -290,7 +353,7 @@ function TileTag({
           <EcoEmpty tile={tile} />
         )}
       </div>
-      {oracle ? null : <ResBadge tile={tile} />}
+      {oracle ? null : <ResBadge look={look} tile={tile} />}
     </div>
   );
 }
@@ -396,6 +459,7 @@ function PortChips({ towns, model }: { towns: Town[]; model: MapModel }) {
 function LivingMap({
   G,
   mode,
+  plates,
   selectedTileId,
   highlightTileIds,
   placementActive = false,
@@ -457,16 +521,35 @@ function LivingMap({
   // The heavy work (the fit, the shaders) waits for the passive pass; see `start`.
   useEffect(() => runtime.current?.start(), [shape]);
 
+  // Holding Alt shows every tile's badge, close in where they fade.
+  useEffect(() => {
+    const stage = stageRef.current!;
+    const peek = (e: KeyboardEvent) => stage.classList.toggle("is-peek", e.altKey);
+    const stop = () => stage.classList.remove("is-peek");
+    window.addEventListener("keydown", peek);
+    window.addEventListener("keyup", peek);
+    window.addEventListener("blur", stop);
+    return () => {
+      window.removeEventListener("keydown", peek);
+      window.removeEventListener("keyup", peek);
+      window.removeEventListener("blur", stop);
+    };
+  }, []);
+
   // The badges follow the selection and the plates a pick's candidates, so the labels
-  // are collected again with them.
+  // are collected again with them; a badge's look changes its width, measured anew.
   useLayoutEffect(() => {
     runtime.current?.setModel(model, layout);
     runtime.current?.collect();
-  }, [model, layout, selectedTileId, candidates]);
+  }, [model, layout, selectedTileId, candidates, plates.look]);
 
   useLayoutEffect(() => {
     runtime.current?.setMode(mode);
   }, [shape, mode]);
+
+  useLayoutEffect(() => {
+    runtime.current?.setPlateSize(plates.size);
+  }, [shape, plates.size]);
 
   useLayoutEffect(() => {
     runtime.current?.setMarks({ selected: selectedTileId, focus: focusRing, candidates });
@@ -487,6 +570,7 @@ function LivingMap({
       aria-label="The island"
       aria-roledescription="map"
       className="living-map"
+      data-plates-close={plates.close}
       onClick={(event) => {
         // A drag that ends on the sea is a pan; a click on a tile or a good is theirs.
         const target = event.target as Element;
@@ -508,8 +592,8 @@ function LivingMap({
       <p className="visuallyHidden" id="lm-help">
         Drag to pan. Wheel or pinch to zoom toward the pointer. Keys 1 to 4 switch the map mode. Q
         and E turn the map up to 15° either way. With the map focused, arrows pan, + and − zoom, 0
-        or the compass returns to the opening view. Tab once more to walk the tiles with the arrow
-        keys; Enter picks one.
+        or the compass returns to the opening view. Hold Alt to show every tile's slots. Tab once
+        more to walk the tiles with the arrow keys; Enter picks one.
       </p>
       {/* A mode switched by its key is said, with what it shows. */}
       <p className="visuallyHidden" role="status">
@@ -559,6 +643,8 @@ function LivingMap({
             asked={Boolean(candidates?.has(tile.id))}
             dimmed={Boolean(candidates && !candidates.has(tile.id))}
             key={tile.id}
+            lit={tile.id === hover?.tileId || tile.id === selectedTileId}
+            look={plates.look}
             onHint={onHint}
             realm={homes.get(tile.id)}
             tile={tile}

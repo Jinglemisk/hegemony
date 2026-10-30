@@ -20,6 +20,7 @@ import { fitIsland, tokenPx } from "./fit";
 import type { Layout } from "./layout";
 import type { BoardShape, MapModel } from "./mapModel";
 import type { MapMode } from "./modes";
+import type { Plates } from "./plates";
 import { BONE, GLAZE, SEA, glazeOf } from "./palette";
 import { createScene } from "./scene";
 import type { Border, Ring } from "./scene";
@@ -117,6 +118,7 @@ export function createRuntime({
   const goal: Goal = { ...cam, anchor: null };
   let model: MapModel | null = null;
   let mode: MapMode = "terrain";
+  let plateSize: Plates["size"] = "small";
   let marks: Marks = { selected: null, focus: null, candidates: null };
   let placed: Placed[] = [];
   let tileEls: (HTMLElement | undefined)[] = [];
@@ -293,8 +295,9 @@ export function createRuntime({
         if (!on) continue;
       }
       if (L.far) {
-        // A tile's resource badge: its numeral 0.55 of the hex's drawn width up to 32px,
-        // and the badge never wider than 0.92 of it, so neighbours' badges never meet.
+        // A tile's resource badge: its numeral 0.3 of the hex's drawn width up to 24px,
+        // small enough that the tile's paint reads first (large: 0.55, up to 32px), and
+        // the badge never wider than 0.92 of it, so neighbours' badges never meet.
         const hex = SIDES.map(
           (a) => project(v, L.x + Math.cos(a) * R_TOP, L.y + Math.sin(a) * R_TOP, H_TILE).x,
         );
@@ -303,7 +306,8 @@ export function createRuntime({
           L.el.style.fontSize = "20px";
           L.w20 = L.el.offsetWidth || 1;
         }
-        const size = Math.min(clamp(0.55 * w, 15.4, 32), (0.92 * w * 20) / L.w20);
+        const [k, lo, hi] = plateSize === "large" ? [0.55, 15.4, 32] : [0.3, 13, 24];
+        const size = Math.min(clamp(k * w, lo, hi), (0.92 * w * 20) / L.w20);
         L.el.style.fontSize = `${size.toFixed(1)}px`;
       }
       L.el.style.translate = `${q.x.toFixed(1)}px ${q.y.toFixed(1)}px`;
@@ -710,6 +714,13 @@ export function createRuntime({
       if (next === mode) return;
       mode = next;
       coloursDirty = camDirty = true;
+      kick();
+    },
+    /** Size the resource badges: the player's choice. */
+    setPlateSize(next: Plates["size"]) {
+      if (next === plateSize) return;
+      plateSize = next;
+      camDirty = true;
       kick();
     },
     /**
