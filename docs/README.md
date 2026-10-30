@@ -5,18 +5,19 @@ tree. The roadmap establishes sequence and exit gates; plans define unshipped
 work; references describe the game that exists; reports preserve dated evidence;
 and the archive is historical context, never current authority.
 
-Last updated: 2026-10-27.
+Last updated: 2026-10-29.
 
 ## Now
 
-**Current initiative:** the [development deck](plans/development-deck.md), whose card list
-waits on the owner's review. [Player trade](plans/player-trade.md)'s two PRs, the
+**Current initiative:** the [development deck](plans/development-deck.md), whose reworked card
+list waits on the owner's sign-off. [Player trade](plans/player-trade.md)'s two PRs, the
 [code-health plan](plans/code-health.md)'s five, and v2 (#121, its
 [plan](archive/plans/v2-migration.md) archived) are merged.
 
-**Owner blockers:** the development deck's card list, which the owner finds lackluster
-([Q86](questions.md#q86--the-development-cards-feel-lackluster)). Base income is 0 (owner, 2026-10-24). The
-[balance check](plans/player-trade.md#the-balance-check)'s
+**Owner blockers:** the owner's sign-off on the development deck's
+[reworked card list](plans/development-deck.md#the-card-list): Q86's answer (2026-10-29) made
+yields count settlements and pops and the flat ones rare +5s. Base income is 0 (owner,
+2026-10-24). The [balance check](plans/player-trade.md#the-balance-check)'s
 [first report](reports/simulation/2026-10-26-balance-check.md) has win rates in range and Beloved
 within noise; Q84 (2026-10-26) retired the stock ratio for pops and income ratios and left hunger
 to the bots.
@@ -49,7 +50,7 @@ features. What remains is balance: the development deck, the player events and t
 | [UI — what is left](plans/ui-remaining.md)          | —        | `active`   | The one UI ledger; the KYKLOS triage ledgers are archived                         |
 | [Code health](plans/code-health.md)                 | post-v2  | `active`   | Five cleanup PRs before trade; all merged, trade next                             |
 | [Player trade](plans/player-trade.md)               | post-v2  | `active`   | PRs #131 and #132 merged; the owner plays trade next; holds the balance check     |
-| [Development deck](plans/development-deck.md)       | post-v2  | `proposed` | Replaces Ventures; follows both trade PRs                                         |
+| [Development deck](plans/development-deck.md)       | post-v2  | `proposed` | Replaces Ventures; card list reworked (Q86), waits on the owner's sign-off        |
 | [Board modes](plans/board-modes.md)                 | post-v2  | `proposed` | Engine and sim (#145); Q81 answered: hop 3, seven goods, the oracle on an island  |
 | [Game settings](plans/game-settings.md)             | post-v2  | `proposed` | Length and base income built in the engine; the setup screen is parked            |
 | [National Ideas](plans/national-ideas.md)           | v2       | `active`   | Step 9 shipped (#88); twelve v2 rules, open setup draft (#95), influence purchase |
