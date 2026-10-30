@@ -983,16 +983,27 @@ const IDLE_SLAVE_SHARE = 0.5;
 
 /**
  * Each food the seat is short of right now costs this much, on top of the pop the
- * forecast sees leave. The forecast counts pops lost and not when. So a seat whose gold
- * cannot feed everyone through the forecast would let a pop go now and keep the gold
- * for the others, and a pop that leaves in a later year anyway would not be fed today.
- * A seat that can pay feeds its pops first: from zero food the search can reach the
- * slave that would feed them, and from six short it cannot. The charge has to outweigh
- * one more pop lost later and the dearest food a build can buy, the civic's Dole at 9.
+ * forecast sees leave. A seat that can pay feeds its pops first: from zero food the
+ * search can reach the slave that would feed them, and from six short it cannot.
  * Nothing is held ahead of need: food is below zero only on the seat's own turn, after
  * income, and that is when it buys.
+ *
+ * The charge outweighs the most one food bought now can cost the rest of the score, so
+ * no seat keeps the price and lets a pop go:
+ * - the forecast, at most a pop a year: 6 × 60. It counts pops lost and not when, and
+ *   buys each year's food until the stocks run out. The pop fed now eats in every later
+ *   year, and his food and the price paid now come out of the stocks that would have
+ *   fed the others, so each can be one more pop lost in the year they run out;
+ * - the lean-year charge, which a food bought now moves twice: the pop it feeds is a
+ *   mouth next year, and what paid for it no longer covers a lean year. Each is 4 cards
+ *   in 14 of a pop lost and the eater's weight, the civic's citizen at 45 the highest:
+ *   2 × 4/14 × (60 + 45) = 60;
+ * - the food's price at the seat's weights, the civic's Dole the dearest: 3 influence
+ *   at 3, 9.
+ * With 5 to spare, 434. At 74, which counted one pop and the Dole, every build one food
+ * short let a citizen go with 30 influence in hand (see the personality tests).
  */
-const FOOD_SHORT_WEIGHT = HEURISTIC_SCALE * STARVED_POP_WEIGHT + 14;
+const FOOD_SHORT_WEIGHT = INCOME_HORIZON * HEURISTIC_SCALE * STARVED_POP_WEIGHT + 60 + 9 + 5;
 
 /** What a lean year stops: the food, or the gold that buys it. */
 const LEAN_RESOURCES: Resource[] = ["food", "gold"];

@@ -208,6 +208,31 @@ describe("shared personality search", () => {
   );
 
   it.each([...names, "master"] as const)(
+    "%s buys the Dole before it lets a pop starve",
+    (name) => {
+      // Three citizens on a mountain eat three food a year and make three influence. One
+      // food short with 30 in store: fed now, all three live on the store until it runs
+      // out in the forecast's fifth year, and then all three leave; let one go now, and
+      // the store feeds the other two nearly to the last year. The forecast counts pops
+      // lost and not when, so the Dole read as two pops more lost, and at 74 for each
+      // food short every build ended its turn and let a citizen go.
+      const G = realm({ citizens: 3, freemen: 0, slaves: 0 });
+      G.year = 6;
+      Object.assign(G.players["0"].resources, {
+        food: -1,
+        wood: 0,
+        stone: 0,
+        gold: 0,
+        influence: 30,
+      });
+      const turn = playOwnTurn(name, G);
+      expect(turn.moves).toContainEqual({ type: "dole" });
+      expect(turn.G.players["0"].resources.food).toBeGreaterThanOrEqual(0);
+    },
+    30000,
+  );
+
+  it.each([...names, "master"] as const)(
     "%s grows a freeman past its food line only when its gold feeds him to the last year",
     (name) => {
       // Three freemen and one plains slave: two food short every year, bought from the
