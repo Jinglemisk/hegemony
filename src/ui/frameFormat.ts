@@ -8,10 +8,15 @@ export const sign = formatSignedNumber;
 export const tone = (n: number) => (n > 0 ? "pos" : n < 0 ? "neg" : "");
 
 /** The consult pages the right strip opens, in order. The Chronicle is the dock's. */
-export const CONSULT: Array<{ tab: "codex" | "victory" | "agora"; label: string; icon: string }> = [
+export const CONSULT: Array<{
+  tab: "codex" | "victory" | "agora" | "costs";
+  label: string;
+  icon: string;
+}> = [
   { tab: "codex", label: "Codex", icon: "chrome/codex" },
   { tab: "victory", label: "Victory", icon: "victory/laurel" },
   { tab: "agora", label: "Agora", icon: "assembly/agora" },
+  { tab: "costs", label: "Costs", icon: "market/treasury" },
 ];
 
 /** Whether a store covers a price: a price is short only when it cannot be paid. */

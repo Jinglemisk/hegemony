@@ -228,7 +228,9 @@ before income. On your turn:
    Happiness and food).
 2. **Resolve your event card**, if one was drawn for you (see Events below) — you
    must do this before anything else.
-3. **Take actions**, in any order you can afford:
+3. **Take actions**, in any order you can afford. The **Costs** consult lists every
+   price on one card, one icon per unit, at what it costs you now: a line a Law or
+   an Idea has repriced is marked, and its tooltip gives the base price.
    - **Found a colony** — 4 wood, 1 food and a colony piece. Sends one pop out to
      settle a new tile; that pop moves free. The tile must **border one of your
      settlements** (colonies count, so your frontier chains outward tile by tile) —

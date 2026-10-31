@@ -3,11 +3,12 @@ import type { ConsultTab } from "../types";
 import { useGameUi } from "../GameUiContext";
 import { AgoraTab } from "./AgoraTab";
 import { CodexTab } from "./CodexTab";
+import { CostsTab } from "./CostsTab";
 import { VictoryTab } from "./VictoryTab";
 
 /**
  * The consult page dropped from the right strip: the Codex (rules reference), Victory
- * (the race table) or the Agora (the Assembly's standing record). The strip names the
+ * (the race table), the Agora (the Assembly's standing record) or Costs (every price). The strip names the
  * open page, so the page carries no title of its own. The Chronicle is the dock's.
  */
 function ConsultPanelComponent({
@@ -26,6 +27,7 @@ function ConsultPanelComponent({
         {activeTab === "codex" ? <CodexTab G={G} target={codexTarget} /> : null}
         {activeTab === "victory" ? <VictoryTab G={G} playerID={viewerId} /> : null}
         {activeTab === "agora" ? <AgoraTab G={G} playerID={viewerId} /> : null}
+        {activeTab === "costs" ? <CostsTab G={G} playerID={viewerId} /> : null}
       </div>
     </div>
   );

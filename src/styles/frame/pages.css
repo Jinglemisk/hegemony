@@ -552,3 +552,89 @@ button.link {
   flex: none;
   height: var(--hit);
 }
+
+/* ---- Costs: the cost card, every priced act one line, its price as one icon per
+   unit (Catan's pips), so the weight of a price reads before its number ---------- */
+.costsPage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.cost-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+  margin: 0;
+  padding-block: var(--s-2) var(--rule-2);
+  box-shadow: inset 0 calc(var(--rule) * -1) 0 var(--ink-30);
+}
+.cost-head .caps {
+  color: var(--ink);
+  font-weight: 700;
+}
+.cost-sub {
+  font: italic 500 var(--t-cap) / var(--l-cap) var(--f-body);
+  color: var(--ink-66);
+  text-transform: none;
+}
+.cost-line {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--ic-ui) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--ln);
+}
+.cost-line + .cost-line {
+  box-shadow: inset 0 var(--rule) 0 var(--ink-12);
+}
+.cost-name {
+  font: 500 var(--t-body) / var(--l-body) var(--f-sans);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cost-pips,
+.cost-option,
+.cost-res {
+  display: inline-flex;
+  align-items: center;
+}
+.cost-pips,
+.cost-option {
+  gap: var(--s-2);
+}
+.cost-res {
+  gap: var(--rule);
+}
+.cost-or {
+  font: italic 500 var(--t-cap) / var(--l-cap) var(--f-body);
+  color: var(--ink-66);
+}
+.cost-free {
+  color: var(--olive);
+  font-weight: 700;
+}
+/* A Law or an Idea reprices the act: the line washes olive when it is cheaper, clay
+   when dearer, ochre for the same weight in another good, with a notch at its edge.
+   The tooltip names the base price. */
+.cost-line[data-delta] {
+  --mark: var(--ochre);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--mark) 16%, transparent), transparent);
+}
+.cost-line[data-delta="better"] {
+  --mark: var(--olive);
+}
+.cost-line[data-delta="worse"] {
+  --mark: var(--clay-ink);
+}
+.cost-line[data-delta]::before {
+  content: "";
+  position: absolute;
+  top: var(--s-1);
+  bottom: var(--s-1);
+  left: 0;
+  width: var(--rule-2);
+  border-radius: var(--rule);
+  background: var(--mark);
+}
