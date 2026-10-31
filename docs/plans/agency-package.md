@@ -10,11 +10,11 @@ updated: 2026-10-31
 
 A player sees the next shock coming and chooses more of what lands on them. Next year's card is
 public a year ahead. A pop offered by an event card can be turned down. A Law that cannot pass yet
-is kept, not lost. Utility actions can be bought two or three at a time. A luxury good counts only
-while its holder's own Port stands beside it. Manumission softens, Forum Rites becomes Rural
-Messengers, and Capital Works leaves the Ideas. The development deck goes in as its plan says. The
-decks keep their counts and effects: luck stays, and the change is in what a player can see and
-refuse.
+is kept, not lost. Utility actions can be bought two or three at a time. A luxury good is held
+through its Port: lose the Port and the good goes back to the board. Manumission softens, Forum
+Rites becomes Rural Messengers, and Capital Works leaves the Ideas. The development deck goes in as
+its plan says. The decks keep their counts and effects: luck stays, and the change is in what a
+player can see and refuse.
 
 The rulings come from the [agency and luck study](../reports/product/2026-10-30-agency-and-luck/README.md)
 of 2026-10-30, ruled on by the owner on 2026-10-30 and 2026-10-31.
@@ -32,6 +32,7 @@ Dropped by the owner (2026-10-31), though the study raised them:
 - A separate happiness deck.
 - A public contracts deck.
 - The study's refund of an Assembly draw that cannot be proposed. Ruling 6 replaces it.
+- Tiers on moving pops (owner, 2026-10-31): one move already carries any number of pops.
 
 Kept fixed: base income 0, no bank, and the Dole at 3 influence for 1 food. Riot insurance and
 bought votes keep their caps. The development deck's card list lives in [its plan](development-deck.md)
@@ -82,15 +83,23 @@ ruled in after the 2026-10-27 freeze ruling ("no new features").
    always kept for the next sitting.
 
 7. **Luxury goods need their own Port, always.** A good counts only while its holder has a Port
-   beside it, in a settlement on one of the good's two tiles. If that Port is destroyed for any
-   reason (a riot's fire, a rival's city driving off the colony), the good's +2 happiness goes; a
-   Port elsewhere does not help. The study dropped this because a riot that burns the Port also
-   cuts happiness; the owner overrode that. Today a good stays its holder's for the game and counts
-   with no Port, and a traded good counts at once. Read as: any Port of the holder's on either of
-   the good's tiles counts. Open: [Q87](../questions.md#q87--what-happens-to-a-luxury-good-when-its-port-is-gone).
-8. **Tiered utility actions.** Each utility action bought in units gets 1×, 2× and 3× options at
-   a linear price; the owner's example is 2 for 1, 4 for 2, 6 for 3. Read as: one use carries 1
-   to 3 units of one kind, at n times the unit price. The owner said yes to all five:
+   beside it, in a settlement on one of the good's two tiles. The study dropped this because a
+   riot that burns the Port also cuts happiness; the owner overrode that. Today a good stays its
+   holder's for the game and counts with no Port, and a traded good counts at once.
+   - **A lost Port releases its good** (owner, 2026-10-31, Q87 option B). If the Port that claimed
+     a good is destroyed for any reason (a riot's fire, a rival's city driving off the colony), the
+     good goes back to the board unclaimed. The first Port built beside it claims it, and that can
+     be the former holder rebuilding first. A Port elsewhere does not help.
+   - **No change to Port building for this.** Today a Port may be built in a coastal settlement
+     beside an unclaimed good, which is exactly what a released good is. A settlement holds one
+     Port, and a destroyed one leaves room for another, so the former holder can rebuild there if
+     the settlement still stands. Read as: only a newly built Port claims; a Port already standing
+     beside a released good does not take it.
+   - **Traded goods are open:** [Q87](../questions.md#q87--does-a-traded-luxury-good-need-the-receivers-own-port).
+     If the answer is that a traded good counts once the receiver has a Port beside it, that is the
+     one place the Port-building rule widens: a Port beside a good its holder owns.
+8. **Tiered utility actions.** One action buys 1, 2 or 3 units at a linear price; the owner's
+   example is 2 for 1, 4 for 2, 6 for 3 (confirmed 2026-10-31). Four actions get tiers:
 
    | Action        | Today                                                                 | With tiers                     |
    | ------------- | --------------------------------------------------------------------- | ------------------------------ |
@@ -98,20 +107,18 @@ ruled in after the 2026-10-27 freeze ruling ("no new features").
    | Civic calm    | +2 this year for 2 influence or 2 gold, once a turn                   | +2, +4 or +6 for 2, 4 or 6     |
    | Social ladder | One move a turn: promote for 2 food or 2 gold, demote for 1 influence | Up to 3 pops in the one move   |
    | Grow a pop    | Once per settlement a turn                                            | Up to 3 pops in one settlement |
-   | Move pops     | One move a turn, 1 food a pop                                         | See below                      |
 
-   Tiers on calm, the ladder, growing and moving are new mechanics that loosen today's per-turn
-   limits, and each needs its own sim batch before it ships. Calm most of all: +6 for 6 gold lifts
-   any riot level (−3 to −5) above zero and a revolt level of −6 to −8 out of unrest, so gold buys
-   out of most riots. Calm still never counts toward standing happiness, so it reaches neither
-   Beloved of the People nor the free development card. Three facts go to the owner before their
-   slices are built:
-   - **Moving.** One move already carries any number of pops between two settlements at 1 food a
-     pop. A tier adds something only if it means more than one move a turn.
-   - **Ladder.** Under Manumission promotion is free, so a 3× promotion frees three slaves a turn
-     for nothing.
+   Tiers on calm, the ladder and growing are new mechanics that loosen today's per-turn limits,
+   and each needs its own sim comparison. Calm most of all: +6 for 6 gold lifts any riot level
+   (−3 to −5) above zero and a revolt level of −6 to −8 out of unrest, so gold buys out of most
+   riots. Calm still never counts toward standing happiness, so it reaches neither Beloved of the
+   People nor the free development card.
+   - **Ladder.** Manumission's free promotion stays free under tiers, so three free promotions a
+     turn is accepted (owner, 2026-10-31).
+   - **Moving** gets no tiers (owner, 2026-10-31): one move already carries any number of pops
+     between two settlements at 1 food a pop.
    - **Growing.** Guild Charter sets the same per-settlement limit (the capital twice, colonies
-     never), so the slice has to say how the two combine.
+     never), so the growing slice has to say how the two combine before it is built.
 
 9. **Development deck** as in [its plan](development-deck.md) (PR #163); the owner signed off the
    card list on 2026-10-31. A riot's card stays the player's choice, pop by pop. The free card
@@ -120,20 +127,20 @@ ruled in after the 2026-10-27 freeze ruling ("no new features").
 
 ## Open owner questions
 
-- [Q87](../questions.md#q87--what-happens-to-a-luxury-good-when-its-port-is-gone): whether a good
-  stays its holder's when its Port is lost, and whether a traded good needs the receiver's Port.
+- [Q87](../questions.md#q87--does-a-traded-luxury-good-need-the-receivers-own-port): whether a
+  traded good counts only once the receiver has their own Port beside it, or goods stop trading.
 
 ## Three-axis parity
 
-| Axis             | Applies? | Required representation and proof                                                                                                                                                                                                                   |
-| ---------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Engine / backend | Yes      | Forecast exposed at each year boundary; decline with a return to the bottom of the deck; the content changes; ballot order, blocked proposals and kept Laws; luxury activity derived from the holder's Port; tier counts with derived prices; tests |
-| Frontend         | Yes      | Next year's card beside this year's disc; Decline on the event card; a blocked Law the sheet still lets you seal, the ballot order and a kept card; an inactive good with its reason; 1×/2×/3× choices with prices; Codex and Chronicle             |
-| Simulation & AI  | Yes      | Bots read the forecast from their projection, accept or decline pops, value and propose kept Laws, value goods by Port presence, and pick tiers as legal moves; telemetry and a paired batch for each change                                        |
+| Axis             | Applies? | Required representation and proof                                                                                                                                                                                                        |
+| ---------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Engine / backend | Yes      | Forecast exposed at each year boundary; decline with a return to the bottom of the deck; the content changes; ballot order, blocked proposals and kept Laws; a lost Port releasing its good; tier counts with derived prices; tests      |
+| Frontend         | Yes      | Next year's card beside this year's disc; Decline on the event card; a blocked Law the sheet still lets you seal, the ballot order and a kept card; a released good back on the board; 1×/2×/3× choices with prices; Codex and Chronicle |
+| Simulation & AI  | Yes      | Bots read the forecast from their projection, accept or decline pops, value and propose kept Laws, value a Port as the hold on its good, and pick tiers as legal moves; telemetry and a paired batch for each change                     |
 
 Sibling consumers: income and happiness forecasts (ledger, alarms, the End-turn confirm, bot
 evaluation) read next year's card through one selector. Every happiness surface and Beloved read
-luxury activity from the one luxury selector. The Assembly sheet, recap and bots read one ballot
+luxury holdings from the one luxury selector. The Assembly sheet, recap and bots read one ballot
 order. The End-turn confirm offers the smallest calm tier that changes the outcome.
 
 ## Architecture impact
@@ -141,18 +148,20 @@ order. The End-turn confirm offers the smallest calm tier that changes the outco
 - **Content and versions.** Manumission's weight, Rural Messengers (new name and id), the
   eleven-Idea roster and the tier limit are pinned content and ruleset data. State and command
   schemas bump; older saves are rejected, as today.
-- **Commands.** Resolving an event pop gains a decline. Calm, the ladder, growing, moving and the
-  Dole take a count of 1 to 3, and the engine derives each tier's price and legality. Proposing
+- **Commands.** Resolving an event pop gains a decline. Calm, the ladder, growing and the Dole
+  take a count of 1 to 3, and the engine derives each tier's price and legality. Proposing
   accepts a blocked Law. All of it goes through the one transition.
 - **State.** Calm is a flag today; tiered calm needs a count. Each seat may hold one kept Law
-  across sittings. Luxury activity stays derived, never stored: owned, unsuppressed, no Blockade,
-  and a Port of the holder's on one of the good's tiles.
+  across sittings. Destroying a Port clears its good's owner and claim origin in the same
+  transition, through the one ownership seam; activity stays derived, never stored.
 - **Projections.** The forecast card is public; the rest of the year pile stays hidden. A kept Law
   was read out on the ballot, so it is public. A decline is logged, so the table knows the event
   pile's last card; the pile's order stays hidden in projections.
 - **Year deck.** A game longer than the deck reshuffles a year earlier, so the next card can show.
-- **Port legality.** Under Q87's recommended answers a Port may also be built beside a good its
-  holder owns with no Port; today a Port needs an unclaimed good beside it.
+- **Port legality.** Unchanged for a released good. It widens only if Q87 makes a traded good
+  need the receiver's Port.
+- **Comparison switches.** Each change keeps a sim-only way to turn it off until its comparison is
+  read, since the comparisons run with everything in.
 - **Invariants.** Politician decks, discards, standing Laws and kept Laws hold every card once. The
   event deck keeps its forty cards through a bottom insert.
 - No feature-private workflow: the decline and the tiers are options on existing decisions, and the
@@ -160,26 +169,29 @@ order. The End-turn confirm offers the smallest calm tier that changes the outco
 
 ## PR slices
 
-The order comes from the synthesis. Each change is its own vertical slice with its own paired
-batch, so its effect reads alone. Every batch runs only on the owner's go. The owner's hold on
-balance batches until the bots play the development deck (2026-10-26) stands; steps 1 and 2 run
-their batches only once the owner lifts it for them.
+The owner's hold stands (2026-10-26, restated 2026-10-31): no balance or comparison batches until
+everything in this package and the development deck is in the engine and the bots play it. So the
+slices build first, each with its engine tests, UI, bots and telemetry, and the comparisons all
+run at the end. Every batch then runs on the owner's go.
 
-1. **Refresh the baseline.** Current bots and rules. Telemetry first: shortages of food, wood,
-   stone, gold and influence kept apart; shortages that delay a build kept apart from those that
-   cost pops; Assembly draws blocked when drawn; event pops placed; happiness lines crossed;
-   recovery after named shocks (Blockade, Drought, Manumission passing); Ports lost, by cause.
-2. **The narrow changes, one at a time,** each against the baseline: optional event pops,
-   Manumission, Rural Messengers, Capital Works, the Assembly order with kept Laws, the Port rule
-   (after Q87), then the tiers one action per slice (calm, the ladder, growing, moving). The Dole's
-   tiers ride with any of them and need no batch. Judge Manumission alone, before the ladder tiers
-   make freeing slaves cheaper.
+1. **Measurement.** Telemetry first: shortages of food, wood, stone, gold and influence kept apart;
+   shortages that delay a build kept apart from those that cost pops; Assembly draws blocked when
+   drawn; event pops placed and declined; happiness lines crossed; recovery after named shocks
+   (Blockade, Drought, Manumission passing); Ports lost, by cause, and goods released.
+2. **The narrow changes, one slice each:** optional event pops, Manumission, Rural Messengers,
+   Capital Works, the Assembly order with kept Laws, the Port rule, then the tiers one action per
+   slice (the Dole, calm, the ladder, growing).
 3. **The year forecast, with bots that use it.** Today's bot forecast expires the active card and
    treats later cards as unknown. A forecast the bots ignore tests nothing.
 4. **The development deck** in its plan's slices: the deck replaces Ventures; the free card and
-   the riot's card, read apart and together; card trading; close-out.
-5. **The combined check.** Everything accepted, together. The changes must not jointly erase
-   scarcity, favour one build, or add too much decision time. Then the owner's hotseat game.
+   the riot's card; card trading; close-out.
+5. **The comparisons.** The full package against a pinned `main` commit from before slice 1, on
+   the same seeds. Then each change switched off against the full package, one at a time: the
+   free card and the riot's card apart and together, Manumission with the ladder tiers on and off.
+   The development deck plan's batch against Ventures is the first of these: Ventures survives
+   only at the pinned commit.
+6. **The combined check.** The changes must not jointly erase scarcity, favour one build, or add
+   too much decision time. Then the owner's hotseat game.
 
 Each material comparison: 40 seeds × four seat rotations, 160 mixed-build games a board, on the
 Archipelago and the Continental board, Ideas on, plus equal-master runs for leader persistence.
@@ -194,11 +206,10 @@ intervals; an interval across a line is neither a pass nor a fail. Commands are 
 | Manumission                     | Draws that can be proposed, proposal and passage rates, immediate losses and turns to recover                         |
 | Rural Messengers, Capital Works | Forum value, where citizens sit, which Ideas are picked, influence spent                                              |
 | Assembly order, kept Laws       | Draws blocked when drawn, kept Laws that pass later, repeals carried, influence spent on draws that went nowhere      |
-| Port rule                       | Ports lost by cause, happiness lost with them, riots that follow a lost Port, goods traded and goods inactive         |
+| Port rule                       | Ports lost by cause, happiness lost with them, riots that follow a lost Port, who claims a released good next         |
 | Calm tiers                      | Riots and revolts avoided, gold and influence spent on calm, whether any riot still lands on a rich seat              |
 | Ladder tiers                    | Pops moved up or down a turn, slaves held, Manumission years with and without tiers                                   |
 | Growing tiers                   | Pops grown a year, hunger losses, game length, the year-5 leader                                                      |
-| Moving tiers                    | Moves a turn and what they are for                                                                                    |
 | Year forecast                   | Whether warning changes reserves, building or trade and cuts permanent losses; Blockade read by goods held and slaves |
 | Development deck                | As its plan says; the free card's reach by build, year and size; pops a riot's card saved; rival-card targets         |
 | Combined                        | Win rates by personality, the leader benchmark, scarcity kept, decision time                                          |
@@ -206,9 +217,10 @@ intervals; an interval across a line is neither a pass nor a fail. Commands are 
 ## Acceptance and validation
 
 - Each slice has engine tests for its rule (forecast timing, the decline's return to the bottom,
-  ballot order and kept-card conservation, luxury activity from Ports, tier prices and limits), its
-  UI, bots that use it, and a dated batch report.
-- The combined check meets both benchmarks, with policy limits stated.
+  ballot order and kept-card conservation, a lost Port releasing its good, tier prices and
+  limits), its UI, bots that use it, telemetry, and its switch for the comparisons.
+- Each comparison has a dated batch report. The combined check meets both benchmarks, with policy
+  limits stated.
 - In the owner's hotseat game the table uses the forecast, a decline, a kept Law, the tiers and the
   card hand without help.
 - `rules.md` and the Codex change in the slice that ships each rule, not before.

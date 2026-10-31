@@ -29,7 +29,8 @@ updated: 2026-10-31
 > list, so the number is `2 * PLAYER_IDS.length - 1`.
 >
 > **Ruled 2026-10-31, not built:** a good counts only while its holder's own Port stands beside
-> it; see the [agency package](agency-package.md), ruling 7, and Q87 for what a lost Port does.
+> it, and a destroyed Port sends its good back to the board unclaimed; see the
+> [agency package](agency-package.md), ruling 7. Q87 holds traded goods.
 >
 > **Architecture reconciliation 2026-08-03:** Phase 3.6 is now a prerequisite. Luxury
 > goods use stable asset and settlement ids, one universal ownership-transfer operation,
@@ -358,7 +359,7 @@ worth its weight in silver, is the seventh.
 
 ## 7. Open owner questions
 
-[Q87](../questions.md#q87--what-happens-to-a-luxury-good-when-its-port-is-gone) (2026-10-31),
+[Q87](../questions.md#q87--does-a-traded-luxury-good-need-the-receivers-own-port) (2026-10-31),
 from the [agency package](agency-package.md)'s Port rule. All earlier luxury questions are
 resolved (folded above). The Phase 4 opening PR is fully scoped and active. The opening PR establishes topology and canonical shared-vertex
 geometry without introducing assets or Port mechanics prematurely.
