@@ -47,12 +47,15 @@ far out, 20° at the opening view, 45° close in.
 
 The map has two zoom levels, and its look changes once between them. The opening view is the
 **overview**: the towns, Ports, goods, fields, trees and rocks in 3D, and on every tile its
-**badge** on its centre: its number of slots beside its resource's icon on a white plate (a
+**badge** on its centre: its number of slots beside its resource's icon on a small dark chip (a
 slot's icon where the land makes nothing). A settled tile is painted in its owner's colour, so
 you can read at a glance who holds what. Only the capitals are named. One press of **+** goes
 **close in**: the paint gives way to the land, and every settlement's name plate shows with its slots as pips and its
-pops, the buildings, a figure for every pop, and the sea's life. The badge stands in the same
-spot at both levels and in every mode. On
+pops, the buildings, a figure for every pop, and the sea's life. Close in the badges fade, since
+the trees, rocks and fields show the land's resource, except in Economy. The tile you hover or
+select keeps its badge, and so does every tile a pick asks you to choose from; hold **Alt**
+(Option on a Mac) to show them all. The **Plates** button beside the map modes changes the
+badges: dark, ivory or the slots as dots, small or large, and fading or kept close in. On
 a small screen, the labels under the badges wait until the hexes are drawn large enough to
 hold them.
 
@@ -225,7 +228,9 @@ before income. On your turn:
    Happiness and food).
 2. **Resolve your event card**, if one was drawn for you (see Events below) — you
    must do this before anything else.
-3. **Take actions**, in any order you can afford:
+3. **Take actions**, in any order you can afford. The **Costs** consult lists every
+   price on one card, one icon per unit, at what it costs you now: a line a Law or
+   an Idea has repriced is marked, and its tooltip gives the base price.
    - **Found a colony** — 4 wood, 1 food and a colony piece. Sends one pop out to
      settle a new tile; that pop moves free. The tile must **border one of your
      settlements** (colonies count, so your frontier chains outward tile by tile) —

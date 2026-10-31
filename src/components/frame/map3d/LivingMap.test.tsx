@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import LivingMap from "./LivingMap";
+import { PLATE_DEFAULTS } from "./plates";
 import { getLuxuryGood } from "../../../game/content";
 import { createInitialState } from "../../../game/state";
 import { selectLuxuryVertices } from "../../../game/mapTopology";
@@ -24,7 +25,13 @@ describe("luxury moorings on the rendered map", () => {
   });
   const render = (state: HegemonyState) =>
     renderToStaticMarkup(
-      <LivingMap G={state} mode="terrain" onTileAction={() => undefined} selectedTileId={null} />,
+      <LivingMap
+        G={state}
+        mode="terrain"
+        onTileAction={() => undefined}
+        plates={PLATE_DEFAULTS}
+        selectedTileId={null}
+      />,
     );
 
   it("draws one mooring per selected vertex, addressed by canonical id", () => {

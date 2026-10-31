@@ -3,7 +3,7 @@ import { addLog, getOwnedSettlement, getPlayerName, getTile } from "./core/query
 import { canAfford, payCost } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
 import type { ActionStatus, MoveResult } from "./core/results";
-import type { HegemonyState, PlayerId, PopType } from "./types";
+import type { HegemonyState, PlayerId, PopType, Resources } from "./types";
 import { applyLawActionCost, getStandingEffects } from "./assembly/laws";
 import { pendingDecisionReasons } from "./status";
 
@@ -28,21 +28,49 @@ export function demotionTarget(from: PopType): PopType {
   return from === "citizens" ? "freemen" : "slaves";
 }
 
+/** One calm payment's price: Festival Calendar turns the gold payment into food. */
+export function getCalmCost(
+  G: HegemonyState,
+  playerID: PlayerId,
+  payment: CivicCalmPayment,
+): Partial<Resources> {
+  const rules = G.ruleset.civicCalm;
+  const foodPayment = getStandingEffects(G, playerID).find(
+    (effect) => effect.type === "calmPayment",
+  );
+  return payment === "influence"
+    ? { influence: rules.influenceCost }
+    : foodPayment
+      ? { food: foodPayment.amount }
+      : { gold: rules.goldCost };
+}
+
+/** A promotion's price under standing Laws: Manumission makes a slave's free. */
+export function getPromoteCost(
+  G: HegemonyState,
+  playerID: PlayerId,
+  from: PopType,
+): Partial<Resources> {
+  const baseCost = G.ruleset.ladder.promoteCosts[from as "slaves" | "freemen"] ?? {};
+  return applyLawActionCost(G, playerID, "promotePop", { ...baseCost }, { pop: from });
+}
+
+/** A demotion's price under standing Laws, outside the seat's own riot. */
+export function getDemoteCost(
+  G: HegemonyState,
+  playerID: PlayerId,
+  from: PopType,
+): Partial<Resources> {
+  const baseCost = G.ruleset.ladder.demoteCosts[from as "citizens" | "freemen"] ?? {};
+  return applyLawActionCost(G, playerID, "demotePop", { ...baseCost }, { pop: from });
+}
+
 export function getCivicCalmStatus(
   G: HegemonyState,
   playerID: PlayerId,
   payment: CivicCalmPayment,
 ): ActionStatus {
-  const rules = G.ruleset.civicCalm;
-  const foodPayment = getStandingEffects(G, playerID).find(
-    (effect) => effect.type === "calmPayment",
-  );
-  const cost =
-    payment === "influence"
-      ? { influence: rules.influenceCost }
-      : foodPayment
-        ? { food: foodPayment.amount }
-        : { gold: rules.goldCost };
+  const cost = getCalmCost(G, playerID, payment);
   const reasons: string[] = [];
 
   if (G.phase !== "gameplay") reasons.push("Calm is a gameplay action.");
@@ -90,9 +118,7 @@ export function getPromotePopStatus(
   from: PopType,
 ): ActionStatus {
   const settlement = getOwnedSettlement(G, tileId, playerID);
-  const baseCost = G.ruleset.ladder.promoteCosts[from as "slaves" | "freemen"] ?? {};
-  // The Assembly's standing Laws reprice it: Manumission makes a slave's promotion free.
-  const cost = applyLawActionCost(G, playerID, "promotePop", { ...baseCost }, { pop: from });
+  const cost = getPromoteCost(G, playerID, from);
   const reasons: string[] = [];
 
   if (G.phase !== "gameplay") reasons.push("The ladder is a gameplay action.");
@@ -116,15 +142,7 @@ export function getDemotePopStatus(
   // Demotion is FREE during your own riot (D8 — the mob forces it), and doesn't
   // burn the ladder throttle: the concession insurance rides on this rule.
   const duringOwnRiot = G.pendingRiot?.playerID === playerID;
-  const cost = duringOwnRiot
-    ? {}
-    : applyLawActionCost(
-        G,
-        playerID,
-        "demotePop",
-        G.ruleset.ladder.demoteCosts[from as "citizens" | "freemen"] ?? {},
-        { pop: from },
-      );
+  const cost = duringOwnRiot ? {} : getDemoteCost(G, playerID, from);
   const reasons: string[] = [];
   const settlement = getOwnedSettlement(G, tileId, playerID);
 

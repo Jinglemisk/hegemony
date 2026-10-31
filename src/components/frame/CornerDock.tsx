@@ -4,24 +4,32 @@ import type { HegemonyState } from "../../game/types";
 import { deedSeat } from "../../ui/frameSelectors";
 import { AnnotatedText } from "../AnnotatedText";
 import { ActionLogPanel } from "../board/command/ActionLogPanel";
+import { Popover } from "../overlays/Popover";
 import { MAP_MODES } from "./map3d/modes";
 import type { MapMode } from "./map3d/modes";
+import { PLATE_CHOICES } from "./map3d/plates";
+import type { Plates } from "./map3d/plates";
 import { Ico, SeatMark } from "./parts";
 
 /**
  * The corner dock, after the living-map prototype: one paper at the bottom right. Its
  * top row is the Chronicle's newest line across the dock, which opens the whole
- * Chronicle upward out of it; under it, the four map modes and End turn at the right.
+ * Chronicle upward out of it; under it, the four map modes, the Plates menu, and End
+ * turn at the right.
  */
 export function CornerDock({
   G,
   mode,
   onMode,
+  plates,
+  onPlates,
   children,
 }: {
   G: HegemonyState;
   mode: MapMode;
   onMode: (mode: MapMode) => void;
+  plates: Plates;
+  onPlates: (plates: Plates) => void;
   /** End turn, housed in the dock's right column. */
   children: ReactNode;
 }) {
@@ -84,9 +92,61 @@ export function CornerDock({
             {m.label}
           </button>
         ))}
+        <PlatesMenu onPlates={onPlates} plates={plates} />
       </div>
       <div className="dock-end">{children}</div>
     </div>
+  );
+}
+
+/** How the map draws each tile's resource badge: its look, its size, and whether it
+ *  fades close in. A display choice, not a map mode, so it sits after the modes. */
+function PlatesMenu({ plates, onPlates }: { plates: Plates; onPlates: (plates: Plates) => void }) {
+  const [open, setOpen] = useState(false);
+  const opener = useRef<HTMLButtonElement>(null);
+  return (
+    <>
+      <button
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        className="dock-mode dock-plates"
+        onClick={() => setOpen((value) => !value)}
+        ref={opener}
+        title="How the map draws each tile's slots and resource"
+        type="button"
+      >
+        <Ico path="settlements/slot" size="ui" />
+        Plates
+      </button>
+      {open ? (
+        <Popover
+          anchor={opener}
+          ariaLabel="Resource plates"
+          className="plates-pop"
+          dismissOnOutside
+          onDismiss={() => setOpen(false)}
+          preferredPlacement="above"
+        >
+          <p className="caps plates-title">Resource plates</p>
+          {PLATE_CHOICES.map((choice) => (
+            <div aria-label={choice.label} className="plates-row" key={choice.key} role="group">
+              <span className="caps">{choice.label}</span>
+              {choice.options.map((option) => (
+                <button
+                  aria-pressed={plates[choice.key] === option.value}
+                  key={option.value}
+                  onClick={() => onPlates({ ...plates, [choice.key]: option.value } as Plates)}
+                  type="button"
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          ))}
+          <p className="plates-note">Hold Alt to show every plate.</p>
+        </Popover>
+      ) : null}
+    </>
   );
 }
 
