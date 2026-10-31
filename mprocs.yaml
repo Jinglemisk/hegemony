@@ -28,7 +28,10 @@ procs:
   # --- scratch shells -----------------------------------------------------
   # Headless engine driver. Prints a cheatsheet, then hands you a real prompt.
   # Ctrl+a to type here; `z` to zoom, since `show` output is tall.
+  # Interactive zsh ignores SIGTERM (mprocs' default stop), so `x` and `q`
+  # hang on these shells; SIGKILL closes them and anything running inside.
   sim:
+    stop: SIGKILL
     shell: |
       printf '\033[1m HEGEMONY SIM \033[0m  full reference: docs/reference/simulation.md\n\n'
       printf '  npm run sim -- new --seed 42          new game (seed drives everything)\n'
@@ -44,6 +47,7 @@ procs:
       exec "${SHELL:-/bin/zsh}"
 
   git:
+    stop: SIGKILL
     shell: exec "${SHELL:-/bin/zsh}"
 
   # --- on-demand gates (press `s` to run) ---------------------------------

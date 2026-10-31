@@ -6,7 +6,6 @@ docs/archive/
 docs/reports/
 package-lock.json
 *.html
-Hegemony.pdf
 
 # The overhaul's reference prototypes are verbatim artefacts — the whole point of
 # a reference is that it is not rewritten. Screenshot-verified as authored.
