@@ -2,125 +2,75 @@
 
 # Hegemony
 
-### Build a city-state. Command its people. Become the island's hegemon.
+### Build a city-state. Command its people. Become the hegemon.
 
-A strategy board game for four players, set in an ancient Greek world of
-expansion, scarcity, political influence, and shifting fortune.
+A strategy game for four players, set in an ancient Greek world of expansion,
+scarcity, politics and shifting fortune.
 
 </div>
 
-![Hegemony — statesmen gathered around the island board](docs/reference/assets/codex-showcase/light-hero-tableau.png)
+![Hegemony — statesmen gathered around the board](docs/reference/assets/codex-showcase/light-hero-tableau.png)
 
-In **Hegemony**, every player leads a growing city-state across a shared island.
-Settle valuable land, turn colonies into cities, shape a productive population,
-and keep your people fed and loyal while seasonal events disrupt even the best
-plans. Victory belongs to the ruler who can build power across several fronts—not
-just the one with the largest treasury.
+Each player leads a city-state across a shared map of islands. Settle land, raise
+cities, keep your people fed and content, trade with your rivals and pass Laws in the
+Assembly. The winner is the first to hold three of six victory titles, not just the
+richest.
 
-## Features
+## Game features
 
-- **Expand across a contested hex island.** Found coastal and overland colonies,
-  claim productive terrain, and compete for the limited building space at the
-  island's centre.
-- **Build an interconnected economy.** Gather wood, stone, food, gold, and
-  influence; trade through the bank; and develop cities with specialised
-  buildings.
-- **Shape your society.** Grow, move, promote, and demote citizens, freemen, and
-  slaves, each with different production, upkeep, and political consequences.
-- **Rule in the Assembly.** Court politicians, propose resolutions, cast votes,
-  and reshape the island with laws that remain in force after the debate ends.
-- **Survive fortune and race for victory.** Adapt to seasonal events, yearly
-  omens, expeditions, hunger, and unrest while pursuing six public achievements;
-  hold three at the start of your turn to win.
+- **Board & Setup.** By default the board is an Archipelago of islands drawn fresh
+  from the game seed; a continental landmass and a fixed authored map are options.
+  Players place a capital and a founding colony in snake order, then draft one
+  National Idea each. A game runs fourteen years, and each year turns a card that
+  helps or hurts every realm.
+- **Settlements.** Colonies hold up to 4 pops and work their tile's slots; cities and
+  your capital hold 8 and raise buildings. Two rivals' colonies can share a tile and
+  split its slots, and a Port on the coast claims a luxury good.
+- **Resources.** Wood, stone, food, gold and influence. Slaves work the land, freemen
+  make gold, citizens make influence, and every free pop eats a food. There is no
+  bank: the Dole (3 influence for 1 food) is the only fixed exchange.
+- **Pops.** Grow, move, promote and demote slaves, freemen and citizens. Slaves cost
+  happiness, luxury goods and Temples restore it, and a realm that falls too low
+  riots or revolts.
+- **Trade.** On your turn, offer any mix of resources, luxury goods and pops to one
+  rival or the whole table. Trade is the main way to turn what you have into what you
+  need.
+- **Assembly.** Every other year the players draw politicians' cards, propose Laws or
+  repeals, and vote with one vote plus one per citizen. Up to four Laws stand at once
+  and change the economy for everyone.
+- **Victory.** Six titles (most cities, pops, citizens, gold, happiness and Laws
+  authored) each go to the sole leader above a minimum. Hold three at the start of
+  your turn to win; otherwise the most titles after the final year wins.
 
-## How to Play
+The full rules are in the [player guide](rules.md). In the game, the consult menu has
+the Codex, every price on the Costs page and the race on the Victory page.
 
-1. **Found your state.** In snake order, each player places a metropolis and a
-   founding colony, then divides their starting population.
-2. **Collect income.** At the beginning of your turn, settlements, terrain,
-   population, and buildings produce resources and consume food.
-3. **Take actions.** Found colonies, upgrade cities, grow or move pops, construct
-   buildings, trade at the bank, stabilise the province, climb the social ladder,
-   or fund an expedition.
-4. **Contest the year.** Weather the events of spring, summer, autumn, and winter,
-   then enter the Assembly to propose, debate, and vote on laws that can transform
-   every player's strategy.
-5. **Claim hegemony.** Become the sole leader of public victory races. Hold any
-   three victory cards at the start of your turn—or lead when the seasonal deck
-   runs out—to win.
+## Play locally
 
-The island rewards trade-offs. A breadbasket can sustain a large population but
-offers little room to build; a hilltop can become a powerful civic centre but
-produces nothing from the land. Expansion without food creates unrest, while a
-safe economy can still lose the race to a bolder rival.
-
-Read the [player guide](rules.md), or open the in-game **Compendium**
-with the Codex button (or `?`) for costs, events, dice tables, bank rates, and
-victory standings.
-
-## Play Locally
-
-Hegemony currently supports four-player local hotseat play in a desktop browser. The board is
-drawn in 3D with WebGL, so the game does not load in a browser without it.
-[Download the repository](https://github.com/Jinglemisk/hegemony/archive/refs/heads/main.zip), or clone it, then
-run:
+Four-player hotseat in a desktop browser with WebGL. Node.js 22 or newer.
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open the local address printed by Vite. Node.js 22 or newer is required.
+Open the address Vite prints. URL options: `?board=continental` or `?board=scenario`
+for another map, `?seed=N` to replay a setup, `?dev=bots` to watch bots play. On the
+dev server, the TUNE panel (`?tune`) seats bots and adjusts balance values.
 
-The continental island, shuffled from the game seed, is used by default. Add
-`?board=scenario` to the URL for the fixed authored island, and use `?seed=YOUR_SEED`
-to replay a particular setup.
+## Contributing
 
-## For Contributors
-
-The game is a React and TypeScript client over a deterministic, serialisable rules
-engine. Browser controls, simulation policies, and replay now submit intent-only
-`GameCommand` values through one atomic transition; effective costs remain engine-owned.
-The shipped [runtime architecture contract](docs/reference/architecture.md)
-supplies explicit workflow actors and player/spectator-safe views shared by the browser
-and AI, stable settlement/transfer identities, versioned save and replay recipes, and
-post-transition integrity checks. Import boundaries, behavioral parity, dead-code analysis,
-formatting, bounded tests, and a deterministic browser smoke path enforce that contract.
-
-Engine calculators remain authoritative. `src/game/activeEffects.ts#getActiveEffects`
-reads those calculations and persistent state into typed source/scope/duration/expiry
-descriptors; the board and ledger UI, CLI output, reference policies, and simulation
-telemetry consume that shared projection rather than reconstructing the rules.
-Frontend wording and semantic tone continue through `src/ui/effects.ts` and
-`src/components/EffectLine.tsx`.
-
-```bash
-npm run check        # TypeScript type-check
-npm run test:parity  # engine, frontend, and simulation/AI parity gate
-npm run lint         # ESLint
-npm run format:check # active source and living documentation
-npm run dead-code    # unused files, exports, and dependencies
-npm run test:run     # Vitest suite
-npm run test:browser # deterministic Chromium smoke journey
-npm run build        # production build
-```
-
-For day-to-day work, `npm start` opens an [mprocs](https://github.com/pvolok/mprocs)
-dashboard (`brew install mprocs`) that runs the Vite server, a TypeScript watcher,
-and Vitest side by side, plus scratch shells for `npm run sim` and git. The parity
-gate, linter, and doc check sit idle until you select them and press `s`. Select a
-pane with `j`/`k`, press `Ctrl+a` to type into it and `z` to zoom it full-screen.
-Config lives in `mprocs.yaml`.
-
-Start with the [documentation control plane](docs/README.md), then use the
-[simulation guide](docs/reference/simulation.md) for headless play and balance
-testing or the [player guide](rules.md) for detailed gameplay instructions.
+A React and TypeScript client over a deterministic rules engine in `src/game`; the UI
+and the bots in `src/sim` only send commands and read projections. `npm start` opens
+an [mprocs](https://github.com/pvolok/mprocs) dashboard with the dev server, type
+checker and tests. Before a PR: `npm run check`, `npm run lint`, `npm run test:run`
+and `npm run docs:check`. The [docs index](docs/README.md) holds the plans and open
+questions, and the [simulation guide](docs/reference/simulation.md) covers headless
+games and balance batches.
 
 ## Status
 
-Hegemony's core is playable now as a four-player local hotseat game. The remaining
-v1 mechanics are explicitly scoped: six coastal luxury goods and Ports, full
-Catan-style player trade, twelve drafted National Ideas, and the intended typed
-Resolution/Idea effects. After those pass the
-[v1 mechanics freeze](docs/plans/v1-mechanics-freeze.md), work moves to final balance,
-server-authoritative multiplayer, and release hardening rather than more core systems.
+Playable today as local hotseat, with luxury goods, player trade and National Ideas
+in. Next: the development deck replaces Ventures, then the
+[agency package](docs/plans/agency-package.md) (a year forecast, optional event pops,
+bulk buys, Port-held goods), then balance and networked multiplayer.
