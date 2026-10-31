@@ -34,7 +34,8 @@ Dropped by the owner (2026-10-31), though the study raised them:
 - The study's refund of an Assembly draw that cannot be proposed. Ruling 6 replaces it.
 - Tiers on moving pops (owner, 2026-10-31): one move already carries any number of pops.
 
-Kept fixed: base income 0, no bank, and the Dole at 3 influence for 1 food. Riot insurance and
+Kept fixed: base income 0, no bank, and the Dole at 3 influence for 1 food. Luxury goods stay at
++2 happiness each and a Port at 4 gold and 2 stone (owner, 2026-10-31). Riot insurance and
 bought votes keep their caps. The development deck's card list lives in [its plan](development-deck.md)
 (PR #163) and is not restated here.
 
