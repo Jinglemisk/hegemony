@@ -21,22 +21,3 @@ so a held good is named twice in Trade, and the chip can crowd the good's name
 **Recommendation:** A.
 
 **Answer:**
-
-## Q87 — Does a traded luxury good need the receiver's own Port?
-
-**Context:** The owner ruled on 2026-10-31 that a luxury good counts only while its holder has a
-Port of their own beside it, on one of the good's two tiles, and that a good whose Port is
-destroyed goes back to the board unclaimed ([agency package](plans/agency-package.md), ruling 7).
-Trade can still hand a good to a seat with no Port beside it. Today a traded good counts for the
-receiver at once, and a Port can only be built beside an unclaimed good.
-
-**Options:**
-
-- C. A traded good counts once the receiver has their own Port beside it. A Port may then be built
-  beside a good its holder owns, the one place the Port-building rule widens.
-- D. Goods stop being tradable.
-
-**Recommendation:** C. It applies the ruling with no exception and keeps goods in trade. A good is
-worth most to a seat with a settlement beside it, so goods would trade mostly between neighbours.
-
-**Answer:**

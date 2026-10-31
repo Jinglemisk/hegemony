@@ -10,8 +10,8 @@ updated: 2026-10-31
 
 A player sees the next shock coming and chooses more of what lands on them. Next year's card is
 public a year ahead. A pop offered by an event card can be turned down. A Law that cannot pass yet
-is kept, not lost. Utility actions can be bought two or three at a time. A luxury good is held
-through its Port: lose the Port and the good goes back to the board. Manumission softens, Forum
+is kept, not lost. Utility actions can be bought two or three at a time. A luxury good counts
+while its holder has a Port beside it: lose every such Port and the good goes back to the board. Manumission softens, Forum
 Rites becomes Rural Messengers, and Capital Works leaves the Ideas. The development deck goes in as
 its plan says. The decks keep their counts and effects: luck stays, and the change is in what a
 player can see and refuse.
@@ -71,33 +71,35 @@ ruled in after the 2026-10-27 freeze ruling ("no new features").
    at its turn on the ballot, after the repeals. If a repeal freed the room, it goes to the vote.
    If it is still blocked, the seat keeps the card and may propose it at the next sitting. Today
    the ballot runs in seat order, a blocked Law cannot be proposed, and an unproposed draw is
-   discarded when voting starts. Read as:
+   discarded when voting starts. Confirmed by the owner, 2026-10-31:
    - Directives are voted after the repeals, with the new Laws, in seat order.
    - A Law still blocked at its turn is not voted.
-   - At the next sitting the kept card is the seat's one proposal, with no new draw price. If the
-     seat passes, draws or repeals instead, the card goes to its politician's discards.
+   - At the next sitting the seat may propose the kept card as its one proposal, with no new draw
+     price, or draw a new card if it is not satisfied with it. If the seat draws, repeals or passes
+     instead, the kept card goes to its politician's discards.
    - A Law blocked by an earlier item on the same ballot is kept the same way.
 
    A repeal can only strike a Law past its tenure, and only a protected Law blocks a draw, so
    under today's tenure no repeal can free the room for a Law blocked when drawn: that Law is
    always kept for the next sitting.
 
-7. **Luxury goods need their own Port, always.** A good counts only while its holder has a Port
-   beside it, in a settlement on one of the good's two tiles. The study dropped this because a
-   riot that burns the Port also cuts happiness; the owner overrode that. Today a good stays its
-   holder's for the game and counts with no Port, and a traded good counts at once.
-   - **A lost Port releases its good** (owner, 2026-10-31, Q87 option B). If the Port that claimed
-     a good is destroyed for any reason (a riot's fire, a rival's city driving off the colony), the
-     good goes back to the board unclaimed. The first Port built beside it claims it, and that can
-     be the former holder rebuilding first. A Port elsewhere does not help.
-   - **No change to Port building for this.** Today a Port may be built in a coastal settlement
-     beside an unclaimed good, which is exactly what a released good is. A settlement holds one
-     Port, and a destroyed one leaves room for another, so the former holder can rebuild there if
-     the settlement still stands. Read as: only a newly built Port claims; a Port already standing
-     beside a released good does not take it.
-   - **Traded goods are open:** [Q87](../questions.md#q87--does-a-traded-luxury-good-need-the-receivers-own-port).
-     If the answer is that a traded good counts once the receiver has a Port beside it, that is the
-     one place the Port-building rule widens: a Port beside a good its holder owns.
+7. **Luxury goods need a Port, always** (owner, 2026-10-31). A good counts only while its holder
+   has a Port beside it, in a settlement on one of the good's two tiles. A second Port beside the
+   same good is a backup: the good stays active while either stands. The study dropped this
+   because a riot that burns the Port also cuts happiness; the owner overrode that. Today a good
+   stays its holder's for the game and counts with no Port, and a traded good counts at once.
+   - **Losing the last Port releases the good** (Q87). If every Port the holder has beside the good
+     is destroyed, for any reason (a riot's fire, a rival's city driving off the colony), the good
+     goes back to the board unclaimed. The first Port built beside it claims it, and that can be
+     the former holder rebuilding first. A Port elsewhere on the map does not help. Read as: a
+     Port already standing beside a released good does not take it; only a newly built one claims.
+   - **Traded goods** (Q87, owner 2026-10-31): a good counts for whoever holds it only while they
+     have a Port beside it. Read as: a good can be offered only to a seat that has a Port beside it,
+     so a trade never hands over a good that would be released at once.
+   - **Port building widens.** Today a Port may be built only beside an unclaimed good. It may now
+     be built in any coastal settlement beside a good: it claims the good if the good is unclaimed,
+     and otherwise stands as its holder's backup or as a receiver's way to take the good in trade.
+     A settlement still holds one Port.
 8. **Tiered utility actions.** One action buys 1, 2 or 3 units at a linear price; the owner's
    example is 2 for 1, 4 for 2, 6 for 3 (confirmed 2026-10-31). Four actions get tiers:
 
@@ -117,8 +119,10 @@ ruled in after the 2026-10-27 freeze ruling ("no new features").
      turn is accepted (owner, 2026-10-31).
    - **Moving** gets no tiers (owner, 2026-10-31): one move already carries any number of pops
      between two settlements at 1 food a pop.
-   - **Growing.** Guild Charter sets the same per-settlement limit (the capital twice, colonies
-     never), so the growing slice has to say how the two combine before it is built.
+   - **Growing.** Guild Charter, a Law, sets how many times a settlement may grow a turn (the
+     capital twice, colonies never); tiers set how many pops one growth buys. Read as: they
+     multiply, so under Guild Charter the capital grows up to 6 pops a turn and colonies none,
+     and without it every settlement grows up to 3. Pop capacity still caps all of it.
 
 9. **Development deck** as in [its plan](development-deck.md) (PR #163); the owner signed off the
    card list on 2026-10-31. A riot's card stays the player's choice, pop by pop. The free card
@@ -127,8 +131,7 @@ ruled in after the 2026-10-27 freeze ruling ("no new features").
 
 ## Open owner questions
 
-- [Q87](../questions.md#q87--does-a-traded-luxury-good-need-the-receivers-own-port): whether a
-  traded good counts only once the receiver has their own Port beside it, or goods stop trading.
+None.
 
 ## Three-axis parity
 
@@ -158,10 +161,10 @@ order. The End-turn confirm offers the smallest calm tier that changes the outco
   was read out on the ballot, so it is public. A decline is logged, so the table knows the event
   pile's last card; the pile's order stays hidden in projections.
 - **Year deck.** A game longer than the deck reshuffles a year earlier, so the next card can show.
-- **Port legality.** Unchanged for a released good. It widens only if Q87 makes a traded good
-  need the receiver's Port.
-- **Comparison switches.** Each change keeps a sim-only way to turn it off until its comparison is
-  read, since the comparisons run with everything in.
+- **Port legality.** A Port may be built in a coastal settlement beside any good, claimed or not;
+  it claims only an unclaimed one. Offering a good in trade needs a Port of the receiver's beside it.
+- **Comparison switches** (approved by the owner, 2026-10-31). Each change keeps a sim-only way
+  to turn it off until its comparison is read, since the comparisons run with everything in.
 - **Invariants.** Politician decks, discards, standing Laws and kept Laws hold every card once. The
   event deck keeps its forty cards through a bottom insert.
 - No feature-private workflow: the decline and the tiers are options on existing decisions, and the

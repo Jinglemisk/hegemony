@@ -14,8 +14,7 @@ the [development deck](plans/development-deck.md), card list signed off 2026-10-
 [Player trade](plans/player-trade.md)'s two PRs, the [code-health plan](plans/code-health.md)'s
 five, and v2 (#121, its [plan](archive/plans/v2-migration.md) archived) are merged.
 
-**Owner blockers:** whether a traded luxury good needs the receiver's own Port
-([Q87](questions.md#q87--does-a-traded-luxury-good-need-the-receivers-own-port)). Base income is 0
+**Owner blockers:** none. Base income is 0
 (owner, 2026-10-24). The [balance check](plans/player-trade.md#the-balance-check)'s
 [first report](reports/simulation/2026-10-26-balance-check.md) has win rates in range and Beloved
 within noise; Q84 (2026-10-26) retired the stock ratio for pops and income ratios and left hunger
@@ -53,7 +52,7 @@ precedes full multiplayer. The mechanics are frozen (owner, 2026-10-27) but for 
 | [Board modes](plans/board-modes.md)                 | post-v2  | `proposed` | Engine and sim (#145); Q81 answered: hop 3, seven goods, the oracle on an island  |
 | [Game settings](plans/game-settings.md)             | post-v2  | `proposed` | Length and base income built in the engine; the setup screen is parked            |
 | [National Ideas](plans/national-ideas.md)           | v2       | `active`   | Step 9 shipped (#88); twelve v2 rules, open setup draft (#95), influence purchase |
-| [Agency package](plans/agency-package.md)           | post-v2  | `proposed` | Owner rulings of 2026-10-31 on the luck study; Q87 (traded goods) is open         |
+| [Agency package](plans/agency-package.md)           | post-v2  | `proposed` | Owner rulings of 2026-10-31 on the luck study; nothing open                       |
 | [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked`  | Final typed Resolution/Idea effects and evidence before multiplayer               |
 
 Every file in `docs/plans/` must appear in this table. Start a substantial feature
