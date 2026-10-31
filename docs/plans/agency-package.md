@@ -99,7 +99,7 @@ ruled in after the 2026-10-27 freeze ruling ("no new features").
    - **Port building widens.** Today a Port may be built only beside an unclaimed good. It may now
      be built in any coastal settlement beside a good: it claims the good if the good is unclaimed,
      and otherwise stands as its holder's backup or as a receiver's way to take the good in trade.
-     A settlement still holds one Port.
+     A good has one holder at a time, whoever has Ports beside it (owner, 2026-10-31). A settlement still holds one Port.
 8. **Tiered utility actions.** One action buys 1, 2 or 3 units at a linear price; the owner's
    example is 2 for 1, 4 for 2, 6 for 3 (confirmed 2026-10-31). Four actions get tiers:
 
