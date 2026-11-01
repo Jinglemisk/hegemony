@@ -5,7 +5,9 @@ import { totalPops } from "./core/pops";
 import { happinessLevel } from "./happiness";
 import { enactForEval } from "./assembly";
 import { getAuthoredResolutionCard } from "./assembly/deck";
+import { collectInvariantViolations } from "./invariants";
 import { enumerateLegalCommands, transition } from "./legalMoves";
+import { projectForPlayer, projectForSpectator } from "./projection";
 import { settlementCapacity } from "./settlement";
 import { revealYearCard } from "./year";
 import { owned, scenario } from "./testing/scenario";
@@ -106,6 +108,7 @@ describe("v2 player deck", () => {
       drawPlayerEvent(G, "0");
       expect(enumerateLegalCommands(G, "0")).toEqual([
         { type: "resolveEvent", targetTileId: "0,0" },
+        { type: "resolveEvent", decline: true },
       ]);
       expect(resolvePendingPlayerEvent(G, "1", "-2,0").ok).toBe(false);
       expect(resolvePendingPlayerEvent(G, "0", "3,0").ok).toBe(false);
@@ -139,7 +142,10 @@ describe("v2 player deck", () => {
     expect(G.pendingPlayerEvent).toBeNull();
     expect(G.lastPlayerEvent?.id).toBe("player-free-settlers");
     expect(G.playerDiscardPile).toEqual([card("free-settlers")]);
+    expect(G.playerDrawPile).toEqual([]);
     expect(G.yearDrawPile).toEqual(years);
+    // Nothing is left to decline: the card is gone to the discards, not the deck.
+    expect(enumerateLegalCommands(G, "0").some((move) => move.type === "resolveEvent")).toBe(false);
   });
 
   it("skips a settlement whose last room is held by a pop on the move", () => {
@@ -191,5 +197,80 @@ describe("v2 player deck", () => {
     G.pendingPlayerEvent = { card: card("public-calm"), playerID: "0" };
     resolvePendingPlayerEvent(G, "0");
     expect(G.players["0"].unrestTokens).toBe(0);
+  });
+});
+
+describe("declining a pop card", () => {
+  const popCards = ["player-free-settlers", "player-captured-laborers"];
+
+  it.each(popCards)("declines %s to the bottom of the player deck, for nothing", (cardId) => {
+    const G = scenario().stackPlayerEvent(cardId).opening().build();
+    expect(G.pendingPlayerEvent?.card.id).toBe(cardId);
+    const moves = enumerateLegalCommands(G, "0");
+    expect(moves.at(-1)).toEqual({ type: "resolveEvent", decline: true });
+    expect(moves.slice(0, -1).every((move) => "targetTileId" in move)).toBe(true);
+
+    const result = transition(G.definition, G, "0", { type: "resolveEvent", decline: true });
+    if (!result.ok) throw new Error(result.reasons.join());
+    const after = result.state;
+    expect(after.pendingPlayerEvent).toBeNull();
+    expect(after.playerDrawPile).toHaveLength(G.playerDrawPile.length + 1);
+    expect(after.playerDrawPile.slice(0, -1)).toEqual(G.playerDrawPile);
+    expect(after.playerDrawPile.at(-1)?.id).toBe(cardId);
+    expect(after.playerDiscardPile).toEqual(G.playerDiscardPile);
+    expect(after.players["0"].resources).toEqual(G.players["0"].resources);
+    expect(after.players["0"].popsGainedFromEvents).toBe(0);
+    for (const tileId of G.players["0"].settlements)
+      expect(owned(after, tileId, "0").pops).toEqual(owned(G, tileId, "0").pops);
+    expect(after.log.at(-1)?.message).toMatch(/declined .+\. It goes to the bottom/);
+    // The deck still holds all forty cards, every copy once.
+    expect(collectInvariantViolations(after, { strictCardConservation: true })).toEqual([]);
+  });
+
+  it("declines only a pop card, and never with a target", () => {
+    const flat = scenario().stackPlayerEvent("player-good-stores").opening().build();
+    expect(transition(flat.definition, flat, "0", { type: "resolveEvent", decline: true }).ok).toBe(
+      false,
+    );
+    const pop = scenario().stackPlayerEvent("player-free-settlers").opening().build();
+    expect(
+      transition(pop.definition, pop, "0", {
+        type: "resolveEvent",
+        targetTileId: "-2,0",
+        decline: true,
+      }).ok,
+    ).toBe(false);
+  });
+
+  it("names the declined card to the table and keeps the pile's order hidden", () => {
+    const G = scenario().stackPlayerEvent("player-free-settlers").opening().build();
+    const result = transition(G.definition, G, "0", { type: "resolveEvent", decline: true });
+    if (!result.ok) throw new Error(result.reasons.join());
+    const after = result.state;
+    for (const view of [
+      projectForPlayer(after.definition, after, "0"),
+      projectForPlayer(after.definition, after, "1"),
+      projectForSpectator(after.definition, after),
+    ]) {
+      expect(view.state.playerDrawPile).toHaveLength(after.playerDrawPile.length);
+      expect(view.state.playerDrawPile.every((hidden) => hidden.id === "__hidden_event__")).toBe(
+        true,
+      );
+      expect(view.state.log.at(-1)?.message).toContain("declined Free Settlers");
+    }
+  });
+
+  it("is forced placement again with the rule switched off", () => {
+    const G = scenario({ patch: { events: { optionalPops: false } } })
+      .stackPlayerEvent("player-captured-laborers")
+      .opening()
+      .build();
+    expect(enumerateLegalCommands(G, "0")).toEqual([
+      { type: "resolveEvent", targetTileId: "-2,0" },
+      { type: "resolveEvent", targetTileId: "3,0" },
+    ]);
+    expect(transition(G.definition, G, "0", { type: "resolveEvent", decline: true }).ok).toBe(
+      false,
+    );
   });
 });

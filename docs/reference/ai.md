@@ -257,6 +257,14 @@ never weighs the card that would go. The last answer passes the committed turn. 
 forecast still charges a riot's pops at the pop's weight: it does not yet price a card
 standing in.
 
+## Event pops
+
+A pop card's answers are legal resolutions: each settlement with room, and the decline.
+A bot scores each with its scorer, one ply, and keeps the best; nothing else is added.
+So it declines a slave that puts it on the riot line with nothing left to buy calm, and a
+freeman its food cannot feed, and it takes a pop that pays. A declined card goes to the
+deck's bottom, which no score reads.
+
 ## Hunger
 
 When it ends a turn short of food, a bot weighs each legal split of the loss

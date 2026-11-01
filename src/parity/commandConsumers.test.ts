@@ -159,6 +159,10 @@ describe("behavioral command-consumer parity", () => {
     expect(calls.map(({ command }) => command.type)).toEqual(
       GAME_COMMAND_TYPES.filter((type) => COMMAND_PARITY[type].frontend.kind === "interactive"),
     );
+    // Declining a pop card is an option on resolving the event, not a command of its own.
+    const declined: GameCommand[] = [];
+    createCommandMoves((command) => declined.push(command)).declinePendingPlayerEvent();
+    expect(declined).toEqual([{ type: "resolveEvent", decline: true }]);
   });
 
   it("publishes byte-identical state through browser, simulator, replay, and engine seams", () => {

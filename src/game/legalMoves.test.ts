@@ -123,10 +123,11 @@ describe("pending-event enumeration", () => {
     expect(G.pendingPlayerEvent?.card.id).toBe("player-free-settlers");
     const moves = expectSound(G, "0");
 
-    // Player 0's capital and colony both have room.
+    // Player 0's capital and colony both have room, and the card may be declined.
     expect(moves).toEqual([
       { type: "resolveEvent", targetTileId: "-2,0" },
       { type: "resolveEvent", targetTileId: "3,0" },
+      { type: "resolveEvent", decline: true },
     ]);
   });
 
@@ -147,7 +148,10 @@ describe("pending-event enumeration", () => {
       .build();
 
     const moves = enumerateLegalCommands(G, "0");
-    expect(moves).toEqual([{ type: "resolveEvent", targetTileId: "-2,0" }]);
+    expect(moves).toEqual([
+      { type: "resolveEvent", targetTileId: "-2,0" },
+      { type: "resolveEvent", decline: true },
+    ]);
   });
 });
 

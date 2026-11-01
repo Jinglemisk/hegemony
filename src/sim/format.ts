@@ -482,6 +482,13 @@ export function renderBatchReport(report: BatchReport, years: number): string {
       `${draws.tokenCards} moved ${draws.tokensMoved} Unrest tokens · ` +
       `${draws.unchanged} changed nothing · ${draws.discarded} discarded for no room`,
   );
+  const eventPops = (summary: BatchReport["drawSwingSummary"]["total"]) =>
+    Object.entries(summary.eventPops)
+      .map(([id, { placed, declined }]) => `${id} ${placed}/${declined}`)
+      .join(" · ");
+  lines.push(`Event pops (placed / declined): ${eventPops(draws)}`);
+  for (const [name, summary] of Object.entries(report.drawSwingSummary.perPolicy))
+    lines.push(`  ${name}: ${eventPops(summary)}`);
 
   // The `hunger` effect is the food warning (food income or stock below zero), not a
   // hunger turn, and the share is over every seat in every snapshot.

@@ -29,6 +29,18 @@ export const PARITY_BEHAVIOR_FIXTURES = {
     evidence:
       "places only slaves or freemen in an owned settlement with room, through legal commands",
   },
+  eventPopDecline: {
+    implementation: "src/game/deck.test.ts",
+    evidence: "to the bottom of the player deck, for nothing",
+  },
+  botEventPops: {
+    implementation: "src/sim/policies.test.ts",
+    evidence: "declines a pop that clearly hurts and takes one that clearly helps",
+  },
+  eventPopTelemetry: {
+    implementation: "src/sim/telemetry.test.ts",
+    evidence: "counts event pops placed and declined, by card, seat and personality",
+  },
   eventTokens: {
     implementation: "src/game/deck.test.ts",
     evidence: "token cards place one, clear one and clear all through their real paths",
@@ -267,7 +279,7 @@ const event = (...fixtures: NonEmptyList<ParityBehaviorFixtureId>) =>
 export const EVENT_EFFECT_PARITY = {
   resourceDelta: event("eventImmediate"),
   unrestTokens: event("eventTokens"),
-  addPops: event("eventPops"),
+  addPops: event("eventPops", "eventPopDecline", "botEventPops", "eventPopTelemetry"),
 } as const satisfies Record<EventEffect["type"], EffectParityCoverage>;
 
 // The riot table's effects are priced by the forecast's expected riot.
@@ -670,7 +682,15 @@ export const CONTENT_MANIFEST = {
     },
     simulation: { implementation: "src/sim/policies.ts", evidence: "onePlyLookahead" },
     telemetry: { implementation: "src/sim/telemetry.ts", evidence: "countPlayerDraw" },
-    behaviorFixtures: ["eventImmediate", "eventPops", "eventTokens", "contentTelemetry"],
+    behaviorFixtures: [
+      "eventImmediate",
+      "eventPops",
+      "eventPopDecline",
+      "botEventPops",
+      "eventPopTelemetry",
+      "eventTokens",
+      "contentTelemetry",
+    ],
   },
   eventTables: {
     ids: EVENT_TABLE_CONTENT_IDS,

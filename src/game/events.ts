@@ -34,13 +34,31 @@ export function drawPlayerEvent(G: HegemonyState, playerID: PlayerId) {
   G.pendingPlayerEvent = { card, playerID };
 }
 
+/**
+ * Resolve the seat's pending card, or decline a pop card. A declined card goes to the
+ * bottom of the player deck and gives nothing; the Chronicle names it, so the table
+ * knows the pile's last card while the pile's order stays hidden.
+ */
 export function resolvePendingPlayerEvent(
   G: HegemonyState,
   playerID: PlayerId,
   targetTileId?: string,
+  decline = false,
 ): MoveResult {
   const pending = G.pendingPlayerEvent;
   if (!pending || pending.playerID !== playerID) return invalid();
+  if (decline) {
+    if (targetTileId || !canDeclinePlayerEvent(G, playerID))
+      return invalid("Only a pop card can be declined.");
+    G.playerDrawPile.push(pending.card);
+    G.pendingPlayerEvent = null;
+    addLog(
+      G,
+      `${getPlayerName(G, playerID)} declined ${pending.card.name}. It goes to the bottom of the player deck.`,
+      playerID,
+    );
+    return MOVE_OK;
+  }
   const popEffect = getAddPopsEffect(pending.card.effects);
   if (
     popEffect &&
@@ -51,6 +69,16 @@ export function resolvePendingPlayerEvent(
   G.playerDiscardPile.push(pending.card);
   G.pendingPlayerEvent = null;
   return MOVE_OK;
+}
+
+/** Whether the seat may decline its pending card: a pop card, with the rule on. */
+export function canDeclinePlayerEvent(G: HegemonyState, playerID: PlayerId): boolean {
+  const pending = G.pendingPlayerEvent;
+  return (
+    G.ruleset.events.optionalPops &&
+    pending?.playerID === playerID &&
+    getAddPopsEffect(pending.card.effects) !== undefined
+  );
 }
 
 export function getAddPopsEffect(effects: readonly EventEffect[]) {

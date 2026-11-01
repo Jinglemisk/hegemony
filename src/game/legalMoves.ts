@@ -53,7 +53,12 @@ import { formatPopName, formatPops } from "./core/format";
 import { getOwnedSettlement, getTile } from "./core/query";
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
-import { getAddPopsEffect, getEventPopTargetTileIds, resolvePendingPlayerEvent } from "./events";
+import {
+  canDeclinePlayerEvent,
+  getAddPopsEffect,
+  getEventPopTargetTileIds,
+  resolvePendingPlayerEvent,
+} from "./events";
 import { hungerLeaveOptions, resolveHunger } from "./hunger";
 import { setupCapitalCount } from "./ruleset";
 import {
@@ -167,7 +172,8 @@ export type GameCommand =
     }
   | { type: "growPop"; tileId: string; pop: PopType }
   | { type: "movePops"; sourceTileId: string; targetTileId: string; pops: Pops }
-  | { type: "resolveEvent"; targetTileId?: string }
+  /** Resolve the drawn card, or decline a pop card: it goes to the bottom of the deck. */
+  | { type: "resolveEvent"; targetTileId?: string; decline?: boolean }
   /** Hunger: which freemen or citizens leave, one entry per pop. */
   | { type: "resolveHunger"; leave: HungerLeave[] }
   | { type: "bankSell"; material: TradableMaterial }
@@ -356,7 +362,7 @@ function applyCommandMutable(G: HegemonyState, playerID: PlayerId, move: GameCom
     case "movePops":
       return movePops(G, playerID, move.sourceTileId, move.targetTileId, move.pops);
     case "resolveEvent":
-      return resolvePendingPlayerEvent(G, playerID, move.targetTileId);
+      return resolvePendingPlayerEvent(G, playerID, move.targetTileId, move.decline === true);
     case "resolveHunger":
       return resolveHunger(G, playerID, move.leave);
     case "bankSell":
@@ -612,7 +618,9 @@ export function describeCommand(
     case "movePops":
       return `move ${formatPops(move.pops)} from ${move.sourceTileId} to ${move.targetTileId}${formatCost(cost)}`;
     case "resolveEvent":
-      return `resolve pending event${move.targetTileId ? ` targeting ${move.targetTileId}` : ""}`;
+      return move.decline
+        ? "decline the pending event, to the bottom of the deck"
+        : `resolve pending event${move.targetTileId ? ` targeting ${move.targetTileId}` : ""}`;
     case "resolveHunger":
       return `send away ${move.leave.map((l) => `1 ${formatPopName(l.pop, 1)} from ${l.tileId}`).join(", ")}`;
     case "bankSell":
@@ -740,10 +748,16 @@ function enumerateEventResolutions(G: HegemonyState, playerID: PlayerId): Derive
 
   const popEffect = getAddPopsEffect(pending.card.effects);
   if (!popEffect) return [{ type: "resolveEvent" }];
-  return getEventPopTargetTileIds(G, playerID, popEffect).map((targetTileId) => ({
-    type: "resolveEvent",
-    targetTileId,
-  }));
+  // The decline comes last, so a forced resolution still places the pop.
+  return [
+    ...getEventPopTargetTileIds(G, playerID, popEffect).map((targetTileId) => ({
+      type: "resolveEvent" as const,
+      targetTileId,
+    })),
+    ...(canDeclinePlayerEvent(G, playerID)
+      ? [{ type: "resolveEvent" as const, decline: true }]
+      : []),
+  ];
 }
 
 function enumerateCapitalPlacements(G: HegemonyState, playerID: PlayerId): DerivedCommand[] {

@@ -30,6 +30,7 @@ export type GameMoves = {
   growPop: (tileId: string, pop: PopType) => void;
   movePops: (sourceTileId: string, targetTileId: string, pops: Pops) => void;
   resolvePendingPlayerEvent: (targetTileId?: string) => void;
+  declinePendingPlayerEvent: () => void;
   resolveHunger: (leave: HungerLeave[]) => void;
   dole: () => void;
   civicCalm: (payment: CivicCalmPayment) => void;
@@ -94,6 +95,7 @@ export function createCommandMoves(dispatch: DispatchGameCommand): GameMoves {
       dispatch({ type: "movePops", sourceTileId, targetTileId, pops }),
     resolvePendingPlayerEvent: (targetTileId) =>
       dispatch({ type: "resolveEvent", ...(targetTileId ? { targetTileId } : {}) }),
+    declinePendingPlayerEvent: () => dispatch({ type: "resolveEvent", decline: true }),
     resolveHunger: (leave) => dispatch({ type: "resolveHunger", leave }),
     dole: () => dispatch({ type: "dole" }),
     pickIdea: (playerID, ideaId, target) =>

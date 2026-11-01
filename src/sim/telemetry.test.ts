@@ -776,6 +776,44 @@ describe("the Step 11 report fields", () => {
     });
   });
 
+  it("counts event pops placed and declined, by card, seat and personality", () => {
+    // Seat 0 declines Captured Laborers; seat 1 then places Free Settlers.
+    const game = drive(
+      scenario()
+        .stackPlayerEvent("player-free-settlers")
+        .stackPlayerEvent("player-captured-laborers")
+        .opening()
+        .build(),
+    );
+    game.take("0", { type: "resolveEvent", decline: true });
+    game.take("0", { type: "endTurn" });
+    game.take("1", {
+      type: "resolveEvent",
+      targetTileId: game.G.players["1"].settlements[0],
+    });
+    const report = game.report();
+    const pops = (placed: number, declined: number) => ({ placed, declined });
+
+    // A declined card resolved nothing, so it is no draw swing.
+    expect(report.drawSwings.map((row) => row.card)).toEqual(["player-free-settlers"]);
+    expect(report.drawSwingSummary.total.eventPops).toEqual({
+      "player-free-settlers": pops(1, 0),
+      "player-captured-laborers": pops(0, 1),
+    });
+    expect(report.drawSwingSummary.perSeat["0"].eventPops["player-captured-laborers"]).toEqual(
+      pops(0, 1),
+    );
+    expect(report.drawSwingSummary.perPolicy.civic.eventPops).toEqual({
+      "player-free-settlers": pops(0, 0),
+      "player-captured-laborers": pops(0, 1),
+    });
+    expect(report.drawSwingSummary.perPolicy.slaver.eventPops["player-free-settlers"]).toEqual(
+      pops(1, 0),
+    );
+    expect(report.reach.total.counts["playerDecline:player-captured-laborers"]).toBe(1);
+    expect(report.reach.total.counts["playerResolve:player-captured-laborers"]).toBe(0);
+  });
+
   it("counts repeals filed, passed and failed, per personality", () => {
     const G = scenario().opening().withResources("0", { influence: 3 }).build();
     G.pendingPlayerEvent = null;

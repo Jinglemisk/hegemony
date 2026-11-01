@@ -82,6 +82,13 @@ export interface DevCardRules {
   riotCard: boolean;
 }
 
+/** Player event cards (docs/plans/agency-package.md). A seat may decline a pop card, which
+ *  goes to the bottom of the player deck. On in the game; a batch turns it off to measure
+ *  it, and no screen offers the switch. */
+export interface EventRules {
+  optionalPops: boolean;
+}
+
 /** Player trade (docs/plans/player-trade.md). Off, no seat offers and the Assembly's
  *  preparation has no Ready step: a seat that seals is ready. */
 export interface TradeRules {
@@ -239,6 +246,7 @@ export interface Ruleset {
   ladder: LadderRules;
   ideas: IdeaRules;
   devCards: DevCardRules;
+  events: EventRules;
   /** The Assembly & Politicians layer (Phase 3-B). */
   assembly: AssemblyRules;
   trade: TradeRules;
@@ -324,6 +332,7 @@ export const DEFAULT_RULESET: Ruleset = {
   },
   ideas: { influenceCost: 6, purchases: 1 },
   devCards: { cost: DEV_CARD_COST, freeCard: true, freeCardLevel: 3, riotCard: true },
+  events: { optionalPops: true },
   assembly: {
     // Every other year from Year 2: up to seven sittings in a fourteen-year game.
     firstYear: 2,

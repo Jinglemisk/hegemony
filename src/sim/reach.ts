@@ -1,8 +1,9 @@
 import { VOTE_PAYMENTS } from "../game/assembly";
 import { TRADABLE_MATERIALS } from "../game/bank";
 import { CIVIC_CALM_PAYMENTS, DEMOTE_FROM, PROMOTE_FROM } from "../game/civic";
-import { getAuthoredGameContent, getDevCards } from "../game/content";
+import { getAuthoredGameContent, getDevCards, getPlayerEventCards } from "../game/content";
 import { devCardOf } from "../game/devCards";
+import { getAddPopsEffect } from "../game/events";
 import { GROWABLE_POPS } from "../game/core/pops";
 import { HUNGER_POPS } from "../game/hunger";
 import type { GameCommand } from "../game/legalMoves";
@@ -19,11 +20,18 @@ import {
   POLITICIAN_CONTENT_IDS,
 } from "../parity/featureParity";
 
+/** The player cards that offer a pop, which a seat may decline. */
+export const POP_CARD_IDS = getPlayerEventCards(getAuthoredGameContent())
+  .filter((card) => getAddPopsEffect(card.effects))
+  .map((card) => card.id);
+
 /** Separate acquisition/proposal from successful use; never hide an unused ID. */
 export const REACH_IDS = [
   ...GAME_COMMAND_TYPES.map((id) => `command:${id}`),
   ...BUILDING_CONTENT_IDS.map((id) => `building:${id}`),
+  // A pop card resolved has placed its pop; a declined one went to the deck's bottom.
   ...PLAYER_EVENT_CONTENT_IDS.flatMap((id) => [`playerDraw:${id}`, `playerResolve:${id}`]),
+  ...POP_CARD_IDS.map((id) => `playerDecline:${id}`),
   ...YEAR_CARD_CONTENT_IDS.map((id) => `year:${id}`),
   // A card drawn, by what it was, and a held card played.
   ...getDevCards(getAuthoredGameContent()).flatMap((card) =>
@@ -111,7 +119,7 @@ export function moveReachIds(
       break;
     case "resolveEvent": {
       const card = before?.pendingPlayerEvent?.card ?? G.lastPlayerEvent;
-      if (card) ids.push(`playerResolve:${card.id}`);
+      if (card) ids.push(`${move.decline ? "playerDecline" : "playerResolve"}:${card.id}`);
       break;
     }
     case "assemblyPropose": {

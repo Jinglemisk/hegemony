@@ -362,7 +362,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     id: "player-free-settlers",
     name: "Free Settlers",
     count: 3,
-    text: "Gain a freeman in a settlement with room.",
+    text: "Gain a freeman in a settlement with room. You may decline it: it goes to the bottom of the deck.",
     flavor: "A family from the hills asks for a plot and a hearth.",
     effects: [
       { type: "addPops", pop: "freemen", amount: 1, target: "ownedSettlementWithCapacity" },
@@ -372,7 +372,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     id: "player-captured-laborers",
     name: "Captured Laborers",
     count: 3,
-    text: "Gain a slave in a settlement with room.",
+    text: "Gain a slave in a settlement with room. You may decline it: it goes to the bottom of the deck.",
     flavor: "Captives from a border skirmish are led through the gate.",
     effects: [{ type: "addPops", pop: "slaves", amount: 1, target: "ownedSettlementWithCapacity" }],
   },

@@ -553,9 +553,11 @@ Losses stop at zero. There are no coupons, effect choices or per-pop payouts.
 | Local Unrest      |      3 | Place one Unrest token.                            |
 | Public Calm       |      2 | Clear one Unrest token; zero stays zero.           |
 
-Pick the settlement for a pop card. If all your settlements are full, discard it
-without a reward. The card does not use the settlement's normal growth allowance;
-it never grants a citizen. Twelve of the forty copies are harmful.
+A pop card offers a pop: pick a settlement with room for it, or **Decline**. A declined
+card goes to the bottom of the player deck and gives nothing. The Chronicle names it, so
+the table knows the deck's last card. If all your settlements are full, the card is
+discarded without a reward. The card does not use the settlement's normal growth
+allowance; it never grants a citizen. Twelve of the forty copies are harmful.
 
 The top bar shows the year and the cards left; the year's card is a disc in the alarms
 row. The **Codex** consult has the year deck, player deck, dice tables and base costs.
