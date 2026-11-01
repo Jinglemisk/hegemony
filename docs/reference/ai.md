@@ -283,7 +283,7 @@ neutral placement/Idea scorer. Ordinary purchases enter the seat's normal search
 Immediate grants and permanent income use real transitions/projections. Future
 pieces, founding grants, upgrade grants, Dole savings and extra votes use the
 Step 9 opportunity estimates, scaled by the relevant personality weights. Future
-slave grants also pay their standing-level cost, tripled under Manumission.
+slave grants also pay their standing-level cost, doubled under Manumission.
 Frontier Charter reads the colony limit Master Builders leaves. City Pioneers
 counts only colonies the engine would let upgrade: none beside a city. Public
 Dole's saving is one Dole a year for each of the realm's first two mouths,

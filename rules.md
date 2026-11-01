@@ -456,8 +456,8 @@ Directives place them: any happiness loss a card names places one token, whateve
 its size, and any gain clears one (Festival clears them all). You cannot buy a token
 off. A riot or a revolt clears all of them.
 
-Civic Pride adds one flat +1 happiness line. Manumission counts each slave three
-times in the existing slave term; its extra charge is a separate Law line. Neither
+Civic Pride adds one flat +1 happiness line. Manumission counts each slave twice
+in the existing slave term; its extra charge is a separate Law line. Neither
 stores happiness.
 
 **Hunger** is separate from happiness, and calm cannot buy it off. Your freemen and
@@ -630,7 +630,7 @@ each politician's Laws and monuments by seat, and Voice.
 | ------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | Demosthenes   | Land Reform       | Working slaves make food on any terrain, including hills. No new Estates; existing ones keep working.                     |
 | Demosthenes   | Sacred Fields     | Temples also make 2 food; a Temple costs 6 stone.                                                                         |
-| Demosthenes   | Manumission       | Slave promotion is free; slaves count three times for unrest, rounded after counting.                                     |
+| Demosthenes   | Manumission       | Slave promotion is free; slaves count twice for unrest, rounded after counting.                                           |
 | Demosthenes   | Tenant Rights     | Grow a slave for 2 gold or a freeman for 3 gold.                                                                          |
 | Demosthenes   | Grain Levy        | Freemen eat no food; Marketplaces do nothing.                                                                             |
 | Demosthenes   | Festival Calendar | Calm costs 2 food or 2 influence.                                                                                         |

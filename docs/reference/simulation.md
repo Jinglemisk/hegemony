@@ -197,7 +197,7 @@ npm run sim -- batch --games 50 [--turns 56] [--policy random|greedy|smart|beam|
                      [--mode …] [--board continental|archipelago|scenario] [--ruleset-patch p.json]
                      [--tune-preset low-number-core-v1] [--tune-patch p.json]
                      [--seats p0,p1,p2,p3] [--rotate] [--seed 1000] [--jobs N]
-                     [--without-ideas all|id,id]
+                     [--without-ideas all|id,id] [--restore id,id]
                      [--report .sim/report.json] [--csv .sim/turns.csv]
 ```
 
@@ -337,6 +337,11 @@ same on all four rows) and `activeLuxuries`.
   With `all` the setup draft is skipped and nothing is bought in play. A partial list
   must leave an Idea for every seat. `meta.withoutIdeas` records the list, and the
   definition ID changes with the content.
+- `--restore id,id` — plays the content an [agency package](../plans/agency-package.md)
+  change replaced, for the comparisons that turn each change off one at a time.
+  `manumission` counts each slave three times for unrest again. `meta.restored` records
+  the list, and the definition ID changes with the content. No screen offers it, and
+  each id goes once its comparison is read.
 - `--jobs N` — plays the games on N worker processes and still writes one report and
   one CSV. The default is 1: every game runs in the command's own process. N is capped
   at the machine's cores less one (the help text gives the number) and at the number
@@ -520,6 +525,10 @@ time, for the comparisons that measure each: `devCards.freeCard` (a free card at
 standing level of `devCards.freeCardLevel`, 3, or higher) and `devCards.riotCard` (a
 held card in place of a riot's pop). Both are on by default and no screen offers them;
 `{"devCards":{"freeCard":false}}` under `--ruleset-patch` turns the free card off.
+
+**Content switches.** The agency package's Law and Idea changes are content, which
+`--ruleset-patch` and `--tune-patch` do not reach, so `--restore` turns them off:
+`--restore manumission` plays Manumission at three times.
 
 Identical inputs produce byte-identical reports (minus `meta.generatedAt`), and
 the same CSV, whatever `--jobs` is. Compare two patches by running two batches with

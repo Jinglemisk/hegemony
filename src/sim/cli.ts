@@ -54,6 +54,7 @@ import { POLICIES, resolvePolicy } from "./policies";
 import type { Policy } from "./policies";
 import { createSimRng, deriveBotSeed } from "./rng";
 import { runGame, runTurns } from "./runner";
+import { RESTORES, restoreContent } from "./restore";
 import { replayScript, scriptFromSave } from "./script";
 import type { ScriptFile } from "./script";
 import { buildNewGame } from "./setup";
@@ -313,6 +314,20 @@ function parseWithoutIdeas(flags: Flags, ideas: { id: string }[]): string[] | nu
     fail(`--without-ideas leaves ${kept} Ideas: the draft needs ${PLAYER_IDS.length}, or none`);
   }
   return known.filter((id) => left.includes(id));
+}
+
+/** `--restore id,id` names the agency package's changes a batch plays without: each
+ *  plays the content it replaced. */
+function parseRestore(flags: Flags): string[] | null {
+  const value = flags.restore;
+  if (value === undefined) return null;
+  const known = Object.keys(RESTORES);
+  const asked = String(value).split(",");
+  const unknown = asked.filter((id) => !known.includes(id));
+  if (unknown.length > 0) {
+    fail(`--restore: unknown change ${unknown.join(", ")} (expected: ${known.join(", ")})`);
+  }
+  return known.filter((id) => asked.includes(id));
 }
 
 function parseOpening(flags: Flags, allowed: OpeningKind[]): OpeningKind {
@@ -787,18 +802,19 @@ function cmdBatch(flags: Flags) {
   const presetId = parseTuningPreset(flags);
   const resolved = resolveTuning(GAME_MODES[mode].ruleset, presetId, tune ?? {}, patch);
   const effectivePatch = resolved.rulesetPatch;
-  const withoutIdeas = parseWithoutIdeas(flags, resolved.content.nationalIdeas);
-  const definition = withoutIdeas
-    ? createGameDefinition({
-        ruleset: resolved.ruleset,
-        content: {
-          ...resolved.content,
-          nationalIdeas: resolved.content.nationalIdeas.filter(
-            (idea) => !withoutIdeas.includes(idea.id),
-          ),
-        },
-      })
-    : resolved.definition;
+  const restored = parseRestore(flags);
+  const content = restoreContent(resolved.content, restored ?? []);
+  const withoutIdeas = parseWithoutIdeas(flags, content.nationalIdeas);
+  const definition =
+    restored || withoutIdeas
+      ? createGameDefinition({
+          ruleset: resolved.ruleset,
+          content: {
+            ...content,
+            nationalIdeas: content.nationalIdeas.filter((idea) => !withoutIdeas?.includes(idea.id)),
+          },
+        })
+      : resolved.definition;
   // The default cap plays the whole game: one turn a seat a year.
   const turns =
     flags.turns !== undefined
@@ -900,6 +916,7 @@ function cmdBatch(flags: Flags) {
       rulesetPatch: effectivePatch,
       definition: definition.identity,
       withoutIdeas,
+      restored,
       tunePatch: tune ?? null,
       tunePatchHash: resolved.manualPatchHash,
       tuningPresetId: resolved.presetId,
@@ -1018,6 +1035,8 @@ Save file defaults to ${DEFAULT_SAVE_PATH}.
              [--ruleset-patch p.json] [--years N|open] [--tune-preset low-number-core-v1] [--tune-patch p.json]
              [--seats ${POLICY_IDS}×4] [--rotate]
              [--without-ideas all|id,id]   play without those National Ideas
+             [--restore id,id]             play the content an agency change replaced:
+                                           ${Object.keys(RESTORES).join(", ")}
              [--jobs N]                    worker processes to play the games on: 1 by default,
                                            at most the cores less one (${MAX_JOBS} here); same report
              [--report r.json] [--csv t.csv]
