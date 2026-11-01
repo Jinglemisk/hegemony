@@ -43,7 +43,7 @@ precedes full multiplayer. The mechanics are frozen (owner, 2026-10-27) but for 
 
 | Plan                                                | Phase    | Status     | Position                                                                          |
 | --------------------------------------------------- | -------- | ---------- | --------------------------------------------------------------------------------- |
-| [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`    | Observation/capability prerequisites first; advanced search waits for the freeze  |
+| [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`    | Reopened after the agency package as a bot overhaul (owner, 2026-11-01)           |
 | [Luxury goods](plans/luxury-goods.md)               | 4        | `active`   | Slices 1–2 shipped on `main`; the v2 migration carries them unchanged             |
 | [UI — what is left](plans/ui-remaining.md)          | —        | `active`   | The one UI ledger; the KYKLOS triage ledgers are archived                         |
 | [Code health](plans/code-health.md)                 | post-v2  | `active`   | Five cleanup PRs before trade; all merged, trade next                             |
