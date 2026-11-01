@@ -189,6 +189,9 @@ export type BallotItem =
       proposer: PlayerId;
       /** Required for a Directive and always a rival of its proposer. */
       target?: PlayerId;
+      /** The proposer's kept Law, proposed again with no draw. The Chronicle names it only
+       *  when the ballot is read, like every sealed proposal. */
+      kept?: true;
     }
   | { kind: "repeal"; cardId: string; proposer: PlayerId };
 
@@ -201,9 +204,10 @@ export interface BallotVote {
   bribed: number;
 }
 
-/** What a ballot item came to: carried and took effect, fell on the vote, or carried
- *  but could not take effect because an earlier item on the ballot made it illegal. */
-export type BallotOutcome = "carried" | "fell" | "blocked";
+/** What a ballot item came to: carried and took effect, fell on the vote, carried but
+ *  could not take effect because an earlier item on the ballot made it illegal, or a Law
+ *  still blocked at its turn, kept by its seat without a vote. */
+export type BallotOutcome = "carried" | "fell" | "blocked" | "kept";
 
 export interface AssemblyResult {
   item: BallotItem;
@@ -248,7 +252,8 @@ export interface AssemblySession {
   /** Draws each seat has made this assembly — zero or one per seat. */
   draws: Record<PlayerId, number>;
   /** Each seat's finalized proposal (an enact or a repeal), or null if they passed —
-   *  kept secret until voting, then folded into {@link ballot} in turn order. */
+   *  kept secret until voting, then folded into {@link ballot}: repeals first, then the
+   *  rest, each in turn order. */
   proposals: Record<PlayerId, BallotItem | null>;
   /** Whether each seat has finalized its proposal decision. */
   proposalDone: Record<PlayerId, boolean>;

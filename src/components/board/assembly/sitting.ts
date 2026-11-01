@@ -57,10 +57,13 @@ export function stageOf(
   seen: number,
 ): SittingStage {
   if (session.phase === "proposal") return session.held[viewer] ? "drawn" : "proposal";
+  // The ballot is read before any result, including a Law kept unvoted at its turn.
+  const untouched =
+    session.votes.length === 0 && session.results.every((result) => result.outcome === "kept");
+  if (untouched && !read && session.ballot.length > 0) return "ballot";
   if (seen < session.results.length) return "result";
   if (session.phase === "closing") return "rises";
-  const untouched = session.ballotIndex === 0 && session.votes.length === 0;
-  return untouched && !read ? "ballot" : "vote";
+  return "vote";
 }
 
 /** The sitting's shell state. A new sitting starts open, unread, with nothing seen; a
@@ -121,6 +124,7 @@ export function presentResult(G: HegemonyState, result: AssemblyResult, viewer: 
       ? (getResolutionCard(G.definition.content, item.cardId)?.name ?? item.cardId)
       : item.card.name;
   const blocked = "carried, but could not take effect";
+  const kept = `still blocked · ${seatName(G, item.proposer, viewer)} keep${item.proposer === viewer ? "" : "s"} it for the next sitting`;
   const against =
     item.kind === "enact" && item.target
       ? `carries against ${seatName(G, item.target, viewer)}`
@@ -130,23 +134,27 @@ export function presentResult(G: HegemonyState, result: AssemblyResult, viewer: 
       ? carried
         ? [`${name} is struck from the record`, "struck from the record"]
         : [`${name} still stands`, outcome === "blocked" ? blocked : "the Law still stands"]
-      : outcome === "blocked"
-        ? [`${name} cannot take effect`, blocked]
-        : outcome === "fell"
-          ? [`${name} is voted down`, "voted down"]
-          : item.card.kind === "law"
-            ? [`${name} is enacted`, "enacted · a new stele stands"]
-            : [`${name} ${against}`, against];
+      : outcome === "kept"
+        ? [`${name} is not voted`, kept]
+        : outcome === "blocked"
+          ? [`${name} cannot take effect`, blocked]
+          : outcome === "fell"
+            ? [`${name} is voted down`, "voted down"]
+            : item.card.kind === "law"
+              ? [`${name} is enacted`, "enacted · a new stele stands"]
+              : [`${name} ${against}`, against];
 
   return {
     verdict: carried
       ? "Carried"
-      : outcome === "blocked"
-        ? "Carried, without effect"
-        : yea === nay
-          ? "Tied: it fails"
-          : "Fails",
-    short: `${carried ? "Carried" : "Fails"} ${yea}–${nay}`,
+      : outcome === "kept"
+        ? "Kept, not voted"
+        : outcome === "blocked"
+          ? "Carried, without effect"
+          : yea === nay
+            ? "Tied: it fails"
+            : "Fails",
+    short: outcome === "kept" ? "Kept" : `${carried ? "Carried" : "Fails"} ${yea}–${nay}`,
     tone: carried ? "is-yea" : "is-nay",
     headline,
     line,

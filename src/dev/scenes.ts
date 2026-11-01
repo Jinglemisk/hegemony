@@ -183,6 +183,29 @@ export const DEV_SCENES: Record<string, (G: HegemonyState) => DevScene> = {
   "assembly-ballot": (G) => ({ G: sealProposals(G) }),
   "assembly-vote": (G) => ({ G: castVotes(sealProposals(G), 1) }),
   "assembly-rises": (G) => ({ G: castVotes(sealProposals(G), 0) }),
+  // The first sitting, its first seat holding a Law kept at the one before.
+  "assembly-kept": (G) => ({
+    G: produce(fastForwardToAssembly(G), (draft) => {
+      draft.keptLaws[draft.currentPlayer] = draft.politicianDecks.perdiccas.shift()!;
+    }),
+  }),
+  // The first sitting, Tenant Rights in its tenure and Sacred Fields on top of
+  // Demosthenes's deck: a draw blocked when drawn, which the seat may still seal.
+  "assembly-blocked": (G) => ({
+    G: produce(fastForwardToAssembly(G), (draft) => {
+      const deck = draft.politicianDecks.demosthenes.filter(
+        (id) => id !== "tenant-rights" && id !== "sacred-fields",
+      );
+      draft.politicianDecks.demosthenes = ["sacred-fields", ...deck];
+      draft.players[draft.currentPlayer].resources.influence = 2;
+      draft.activeLaws.push({
+        cardId: "tenant-rights",
+        author: nextPlayer(draft.currentPlayer),
+        enactedYear: draft.year,
+        order: draft.lawOrder++,
+      });
+    }),
+  }),
   "assembly-trade": (G) => {
     let sitting = fastForwardToAssembly(G);
     for (

@@ -8,7 +8,9 @@ import {
   getAssemblyDrawStatus,
   getAssemblyRepealStatus,
   getResolutionCard,
+  keptLaw,
   lawCanBeRemoved,
+  lawProposalReason,
   nextAssemblyYear,
   nextDrawCost,
   POLITICIANS,
@@ -232,49 +234,58 @@ export function AssemblyDock({ sitting }: { sitting: Sitting }) {
 function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }) {
   const { moves, viewerId } = useGameUi();
   const [repealing, setRepealing] = useState(false);
+  const [drawing, setDrawing] = useState(false);
   const influence = G.players[viewerId].resources.influence;
   const repeal = getAssemblyRepealStatus(G, viewerId);
   const done = session.proposalDone[viewerId];
   const sealed = session.proposals[viewerId];
+  const kept = done ? null : keptLaw(G, viewerId);
 
   return (
     <>
       <div className="sit-body">
-        <h3 className="kicker sit-sec">
-          <Ico path="assembly/politician" size="chip" />
-          Draw from a politician
-        </h3>
-        <div className="sit-pols">
-          {POLITICIANS.map((politician) => {
-            const draw = getAssemblyDrawStatus(G, viewerId, politician.id);
-            return (
-              <div className="sit-pol" key={politician.id}>
-                <b className="name sit-name">{politician.name}</b>
-                <span className="kicker">{politician.epithet}</span>
-                <AnnotatedText className="sit-text" links={false} text={politician.creed} />
-                <span className="sit-prize">
-                  <Prose links={false}>
-                    Author’s prize{" "}
-                    <Chips amounts={G.ruleset.assembly.prizes[politician.id]} signed /> ·{" "}
-                    {politician.kind === "law" ? "Laws" : "Directives"}
-                  </Prose>
-                </span>
-                <ActionButton
-                  aria-label={`Draw from ${politician.name}`}
-                  blockedReason={draw.reason}
-                  className="kicker sit-btn"
-                  effectiveCost={draw.cost}
-                  enabled={draw.can}
-                  heading={`Draw from ${politician.name}`}
-                  onClick={() => moves.assemblyDraw(viewerId, politician.id)}
-                  triggerClassName="sit-tip"
-                >
-                  Draw <Chips amounts={draw.cost} short={influence < draw.price} />
-                </ActionButton>
-              </div>
-            );
-          })}
-        </div>
+        {kept ? (
+          <KeptLaw G={G} card={kept} drawing={drawing} onDraw={() => setDrawing((on) => !on)} />
+        ) : null}
+        {kept && !drawing ? null : (
+          <>
+            <h3 className="kicker sit-sec">
+              <Ico path="assembly/politician" size="chip" />
+              Draw from a politician
+            </h3>
+            <div className="sit-pols">
+              {POLITICIANS.map((politician) => {
+                const draw = getAssemblyDrawStatus(G, viewerId, politician.id);
+                return (
+                  <div className="sit-pol" key={politician.id}>
+                    <b className="name sit-name">{politician.name}</b>
+                    <span className="kicker">{politician.epithet}</span>
+                    <AnnotatedText className="sit-text" links={false} text={politician.creed} />
+                    <span className="sit-prize">
+                      <Prose links={false}>
+                        Author’s prize{" "}
+                        <Chips amounts={G.ruleset.assembly.prizes[politician.id]} signed /> ·{" "}
+                        {politician.kind === "law" ? "Laws" : "Directives"}
+                      </Prose>
+                    </span>
+                    <ActionButton
+                      aria-label={`Draw from ${politician.name}`}
+                      blockedReason={draw.reason}
+                      className="kicker sit-btn"
+                      effectiveCost={draw.cost}
+                      enabled={draw.can}
+                      heading={`Draw from ${politician.name}`}
+                      onClick={() => moves.assemblyDraw(viewerId, politician.id)}
+                      triggerClassName="sit-tip"
+                    >
+                      Draw <Chips amounts={draw.cost} short={influence < draw.price} />
+                    </ActionButton>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
         <Laws
           G={G}
           onRepeal={
@@ -329,6 +340,81 @@ function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }
         ) : null}
       </div>
       <SeatStrip G={G} session={session} />
+    </>
+  );
+}
+
+/**
+ * The Law this seat kept at the last sitting, read out then and public since. Proposing it
+ * costs no draw. Drawing a new card, a repeal or holding your peace sends it to its
+ * politician's discards; "Draw a new card" opens the politicians.
+ */
+function KeptLaw({
+  G,
+  card,
+  drawing,
+  onDraw,
+}: {
+  G: HegemonyState;
+  card: ResolutionCard;
+  drawing: boolean;
+  onDraw: () => void;
+}) {
+  const { moves, viewerId } = useGameUi();
+  const reason = proposalReason(G, viewerId, card);
+  const blocked = lawProposalReason(G, card);
+  const politician = POLITICIANS.find((candidate) => candidate.id === card.politician)!;
+
+  return (
+    <>
+      <h3 className="kicker sit-sec">
+        <Ico path={kindIcon(card)} size="chip" />
+        Your kept Law
+      </h3>
+      <div className="sit-drawn">
+        <GameCard face={resolutionCardFace(card, G.ruleset, G.definition.content)} size="hand" />
+        <div className="sit-col">
+          <p className="sit-text">
+            <AnnotatedText links={false} text={lawSlotWords(G, card)} />
+          </p>
+          {blocked ? (
+            <p className="sit-warn">
+              <AnnotatedText
+                links={false}
+                text={`${blocked} If it is still blocked at its turn, after the repeals, you keep it again.`}
+              />
+            </p>
+          ) : null}
+          <div className="sit-acts">
+            <ActionButton
+              blockedReason={reason}
+              className="kicker sit-btn is-primary"
+              enabled={!reason}
+              heading={`Propose ${card.name}`}
+              onClick={() => moves.assemblyPropose(viewerId)}
+              triggerClassName="sit-tip"
+            >
+              <Ico path="assembly/propose" size="ui" />
+              Propose it
+            </ActionButton>
+            <button
+              aria-pressed={drawing}
+              className="kicker sit-btn"
+              onClick={onDraw}
+              type="button"
+            >
+              <Ico path="assembly/politician" size="ui" />
+              Draw a new card
+            </button>
+          </div>
+          <p className="sit-note">
+            <AnnotatedText
+              links={false}
+              text={`Proposing it costs no draw. If you draw, repeal or hold your peace, it goes to ${politician.name}’s discards.`}
+            />
+          </p>
+        </div>
+      </div>
     </>
   );
 }
@@ -490,6 +576,8 @@ function Drawn({ G, session }: { G: HegemonyState; session: AssemblySession }) {
   const card = session.held[viewerId]!.card;
   const [target, setTarget] = useState<PlayerId | null>(null);
   const blocked = proposalReason(G, viewerId, card, target ?? undefined);
+  // Blocked now, yet it may be sealed: it is checked again at its turn on the ballot.
+  const keepable = !blocked && lawProposalReason(G, card);
 
   // The private draw at ceremony size; beside it, in the draw's order, its deck line,
   // what only its drawer reads (the prize, and that the card stays hidden until the
@@ -543,9 +631,15 @@ function Drawn({ G, session }: { G: HegemonyState; session: AssemblySession }) {
               <p className="sit-text">
                 <AnnotatedText links={false} text={lawSlotWords(G, card)} />
               </p>
-              {blocked ? (
+              {blocked || keepable ? (
                 <p className="sit-warn">
-                  <AnnotatedText links={false} text={blocked} />
+                  <AnnotatedText
+                    links={false}
+                    text={
+                      blocked ??
+                      `${keepable} You may still seal it. It is checked again at its turn, after the repeals: if it is still blocked then, it is not voted and you keep it for the next sitting.`
+                    }
+                  />
                 </p>
               ) : null}
             </>
@@ -663,6 +757,7 @@ function Ballot({
         <ol className="sit-items has-cards">
           {session.ballot.map((item, index) => {
             const card = itemCard(G, item);
+            const kept = session.results[index]?.outcome === "kept";
             return (
               <li className="sit-item" key={index}>
                 <span className="sit-no">{index + 1}</span>
@@ -690,7 +785,15 @@ function Ballot({
                     <AnnotatedText className="sit-text" links={false} text={card.text} />
                   ) : null}
                 </span>
-                <span className="sit-item-side">{itemSide(G, item, viewerId)}</span>
+                <span className="sit-item-side">
+                  {kept ? (
+                    <span className="kicker sit-verdict is-nay">
+                      Still blocked · {seatName(G, item.proposer, viewerId)} keep
+                      {item.proposer === viewerId ? "" : "s"} it
+                    </span>
+                  ) : null}
+                  {itemSide(G, item, viewerId)}
+                </span>
               </li>
             );
           })}
@@ -709,9 +812,18 @@ function Ballot({
               </li>
             ))}
         </ol>
+        {G.ruleset.assembly.keptLaws ? (
+          <p className="sit-note">
+            <AnnotatedText
+              links={false}
+              text="Repeals are voted first, then new Laws and Directives in seat order. A Law still blocked at its turn is not voted: its seat keeps it for the next sitting."
+            />
+          </p>
+        ) : null}
         <div className="sit-acts is-end">
           <button className="kicker sit-btn is-primary" onClick={onOpen} type="button">
-            Open the vote · item 1
+            {/* Every item may have been kept unvoted at its turn. */}
+            {session.phase === "voting" ? "Open the vote · item 1" : "Read the results"}
           </button>
         </div>
       </div>
@@ -987,7 +1099,7 @@ function Result({
               <Chips amounts={prize} signed />
             </span>
           ) : null}
-          {result.outcome === "blocked" ? (
+          {result.outcome === "blocked" || result.outcome === "kept" ? (
             <span>
               <AnnotatedText links={false} text={result.summary} />
             </span>
@@ -1129,6 +1241,9 @@ function SeatStrip({
                   {you ? " · you" : ""}
                 </b>
                 <span>{state}</span>
+                {!votes && G.keptLaws[id] ? (
+                  <span>keeps {getResolutionCard(G.definition.content, G.keptLaws[id])?.name}</span>
+                ) : null}
               </span>
               {shared && !session.ready[id] && humans.includes(id) ? (
                 <button

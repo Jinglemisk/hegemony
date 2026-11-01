@@ -960,6 +960,78 @@ describe("political policy", () => {
     expect(choose("citizens")).toBe("assemblyPropose");
     expect(choose("freemen")).toBe("assemblyDiscardHeld");
   });
+
+  /** What the seat does with a drawn Sacred Fields, which the prize makes worth passing,
+   *  while Tenant Rights, a price Law enacted `enactedAgo` years ago, blocks it in its
+   *  tenure. */
+  const chooseBlocked = (keptLaws: boolean, enactedAgo: number) => {
+    const G = scenario({
+      seed: 13,
+      patch: { assembly: { keptLaws, prizes: { demosthenes: { food: 40 } } } },
+    })
+      .opening()
+      .build();
+    playUntilAssembly(G);
+    const me = G.currentPlayer;
+    G.politicianDecks.demosthenes = G.politicianDecks.demosthenes.filter(
+      (id) => id !== "tenant-rights" && id !== "sacred-fields",
+    );
+    G.activeLaws = [
+      {
+        cardId: "tenant-rights",
+        author: "1",
+        enactedYear: G.year - enactedAgo,
+        order: G.lawOrder++,
+      },
+    ];
+    G.assembly!.held[me] = {
+      card: RESOLUTION_CARDS.find((card) => card.id === "sacred-fields")!,
+    };
+    return politicalPolicy.choose(observe(G, me), enumerateLegalCommands(G, me), createSimRng(1))
+      .type;
+  };
+
+  it("seals a blocked Law it can keep for the next sitting, and only with kept Laws", () => {
+    // Tenant Rights's tenure ends before the next sitting.
+    expect(chooseBlocked(true, 2)).toBe("assemblyPropose");
+    expect(chooseBlocked(false, 2)).toBe("assemblyDiscardHeld");
+  });
+
+  it("values a blocked Law at nothing when the block still stands at the next sitting", () => {
+    // Enacted two years ago, Tenant Rights can be replaced at the next sitting, so the
+    // kept Sacred Fields is worth its enactment then. Enacted this year, it is still in its
+    // tenure then, so the Law is worth nothing and the seat lets it go.
+    expect(chooseBlocked(true, 2)).toBe("assemblyPropose");
+    expect(chooseBlocked(true, 0)).toBe("assemblyDiscardHeld");
+  });
+
+  it("values a kept Law against a fresh draw", () => {
+    // A kept Sacred Fields pays Demosthenes's prize for no draw; a Stratokles draw pays his.
+    // Either way the seat could also draw, so each case compares the two.
+    const choose = (food: number, gold: number) => {
+      const G = scenario({
+        seed: 13,
+        patch: { assembly: { prizes: { demosthenes: { food }, stratokles: { gold } } } },
+      })
+        .opening()
+        .build();
+      playUntilAssembly(G);
+      const me = G.currentPlayer;
+      G.players[me].resources.influence = 100;
+      G.politicianDecks.demosthenes = G.politicianDecks.demosthenes.filter(
+        (id) => id !== "sacred-fields",
+      );
+      G.keptLaws[me] = "sacred-fields";
+      const choice = politicalPolicy.choose(
+        observe(G, me),
+        enumerateLegalCommands(G, me),
+        createSimRng(1),
+      );
+      return choice.type === "assemblyDraw" ? choice.politician : choice.type;
+    };
+    expect(choose(40, 0)).toBe("assemblyPropose");
+    expect(choose(10, 60)).toBe("stratokles");
+  });
 });
 
 // The beam search is compute-heavy, so these run short games and lift vitest's default

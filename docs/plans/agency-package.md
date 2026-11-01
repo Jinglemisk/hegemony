@@ -199,7 +199,8 @@ run at the end. Every batch then runs on the owner's go.
    (`feat/drop-capital-works`) and Rural Messengers (`feat/rural-messengers`). Each change's
    comparison switch is `batch --restore <id>`, which plays the content it replaced.
    Optional event pops (`feat/optional-event-pops`) is a rule, not content: its switch is
-   `{"events":{"optionalPops":false}}` under `--ruleset-patch`.
+   `{"events":{"optionalPops":false}}` under `--ruleset-patch`. The Assembly order with kept
+   Laws (`feat/assembly-kept-laws`) is a rule too: `{"assembly":{"keptLaws":false}}`.
 3. **The year forecast, with bots that use it.** Today's bot forecast expires the active card and
    treats later cards as unknown. A forecast the bots ignore tests nothing. Ruling 11's bot
    planning follows in its own PR, since it changes the same forecast.

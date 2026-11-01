@@ -78,8 +78,8 @@ import {
 import { claimableLuxuriesAt } from "./luxury";
 import { advanceSetupTurn, beginGameplayTurn, closeAssembly, endTurn } from "./turn";
 import {
-  activeLawIds,
-  lawProposalReason,
+  keptLaw,
+  proposalReason,
   repealableLawIds,
   assemblyBribe,
   getAssemblyBuyVoteStatus,
@@ -528,21 +528,18 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
   }
 
   const held = session.held[playerID];
+  // The drawn card, or else a kept Law, which the seat proposes with no draw.
+  const card = held?.card ?? keptLaw(G, playerID);
+
+  if (card?.kind === "directive") {
+    for (const target of PLAYER_IDS.filter((rival) => rival !== playerID)) {
+      moves.push({ type: "assemblyPropose", target });
+    }
+  } else if (card && !proposalReason(G, playerID, card)) {
+    moves.push({ type: "assemblyPropose" });
+  }
 
   if (held) {
-    const card = held.card;
-    const standing = activeLawIds(G);
-
-    if (card.kind === "directive" || (!standing.includes(card.id) && !lawProposalReason(G, card))) {
-      if (card.kind === "directive") {
-        for (const target of PLAYER_IDS.filter((rival) => rival !== playerID)) {
-          moves.push({ type: "assemblyPropose", target });
-        }
-      } else {
-        moves.push({ type: "assemblyPropose" });
-      }
-    }
-
     moves.push({ type: "assemblyDiscardHeld" });
   } else {
     for (const politician of POLITICIANS) {
@@ -655,7 +652,7 @@ export function describeCommand(
     case "assemblyDiscardHeld":
       return "set the drawn resolution aside";
     case "assemblyPropose":
-      return `propose the drawn resolution${move.target ? ` against ${move.target}` : ""}`;
+      return `propose the drawn or kept resolution${move.target ? ` against ${move.target}` : ""}`;
     case "assemblyProposeRepeal":
       return `move to repeal ${getResolutionCard(content, move.cardId)?.name ?? move.cardId}${formatCost(cost)}`;
     case "assemblyPass":

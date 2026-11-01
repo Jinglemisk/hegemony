@@ -632,6 +632,9 @@ export interface HegemonyState {
   assemblyPassedByPlayer: Record<PlayerId, number>;
   /** Rival targeted by a passed Isonomia; consumed when the next Assembly convenes. */
   pendingIsonomiaTarget: PlayerId | null;
+  /** Each seat's kept Law, by card id: a Law still blocked at its turn on the ballot, which
+   *  the seat may propose at the next sitting with no draw. Public: it was read out. */
+  keptLaws: Record<PlayerId, string | null>;
   /** How many assemblies have convened — the panel's "Nth of the game" subtitle. */
   assembliesHeld: number;
 }
