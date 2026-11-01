@@ -262,8 +262,8 @@ before income. On your turn:
      **2 food**, or a freeman to citizen for **2 gold**. Demote one step for
      **1 influence**. (A riot's concession demotes a citizen for free; see Happiness
      and food.)
-   - **Fund an expedition** (once per turn) — stake **2 gold** and roll
-     on an expedition table (see Ventures).
+   - **Buy a development card** (once per turn) — **2 gold** draws the top card, and
+     you may **play one held card** a turn (see Development cards).
    - **Buy an Idea** (once per game) — your second National Idea for **6 influence**,
      through Civic → Ideas (see National Ideas).
 4. **End your turn.** Two checks run before the turn passes, in this order.
@@ -343,19 +343,48 @@ or of the materials for what it is saving toward, offers once to the seats that 
 pay; in a sitting it offers once for the influence or votes it wants. When a bot's offer
 names you, play waits for your answer.
 
-## Ventures — Fund an Expedition
+## Development cards
 
-Once per turn, stake **2 gold**, choose an expedition, and roll a d6.
-The stake is spent win or lose; the low rolls simply return nothing:
+Once per turn, after your event card, pay **2 gold** on the Civic disc (**Buy a card**)
+and draw the top card of the development deck. One deck of **40 cards** serves the
+table; when it runs out, the discards are shuffled into a new pile.
 
-- **Merchant Convoy** — 3–5: 2 gold · 6: 4 gold.
-- **Grand Embassy** — 3–4: 1 influence · 5–6: 2 influence.
-- **Colonists' Voyage** — 3–4: 2 food · 5: 3 food · **6: settlers arrive** (+1
-  freeman in a settlement with room, +2 food).
+**Yields** (20 cards) resolve the moment they are drawn: everyone sees the card, you
+take what it gives, and it goes to the discards. Your settlements are your capital,
+cities and colonies; your pops are every slave, freeman and citizen, those on the move
+included.
 
-On the settler jackpot, the destination is drawn among your settlements with room.
-If all are full, gain 2 extra food instead. The Convoy returns 5/3 gold on average
-against the 2-gold stake; the other tables pay in food, influence or a freeman.
+- **Foraging**, **Woodcutters**, **Quarry Gang** (5 each) — 1 food, wood or stone for
+  each of your settlements.
+- **Bountiful Harvest** (1) — 1 food for each pop. **Civic Feast** (1) — 1 influence
+  for each pop.
+- **Tunny Run**, **Timber Raft**, **Marble Block** (1 each) — 5 food, wood or stone.
+
+**Held cards** go into your hand, face down. Everyone sees how many cards each seat
+holds (the count on its disc), never which. On your turn, **Your hand** on the Civic
+disc plays **one held card a turn**, never one you drew this turn. It resolves at once
+and goes to the discards, face up, and the table is told what it did.
+
+- **Caravan** (4) — 1 wood, stone or food for each of your settlements: one kind, chosen
+  when you play it.
+- **Settlers** (3) and **Captives** (1) — a freeman, or a slave, in one of your
+  settlements with room.
+- **Master Builder** (1) — your next building or colony upgrade this turn costs 2 less
+  wood or stone: one kind, chosen when you play it.
+- **Festival Day** (3) — clear one of your Unrest tokens.
+
+**Rival cards** (8) are held cards you play on a rival you pick. They cannot take what
+the rival does not have.
+
+- **Raiders** (4) — take up to 3 wood, stone, food or gold from the rival: one kind, and
+  no more than they hold.
+- **Agitators** (2) — the rival places an Unrest token.
+- **Informer** (2) — the rival discards a held card, drawn at random. It needs a rival
+  who holds one.
+
+Bots buy a card when the average card is worth more to them than its 2 gold and the
+purchases they save toward, play a card when it pays now, and aim rival cards at the
+leader, as they vote in the Assembly.
 
 ## Buildings
 
@@ -651,5 +680,5 @@ shows the year and cards remaining.
 can play against bots; the screen stays on the people, and bot seats get no turn
 notice. Headless sims can seat `slaver`, `civic` and `trader` by name: they favour
 slaves and Estates, citizens and the Assembly, or freemen and coastal trade. They use
-the same legal commands, search Idea purchases and ventures, and trade as above. See
+the same legal commands, search Idea purchases, and trade and play cards as above. See
 the [simulation reference](docs/reference/simulation.md) for mixed and rotated batches.

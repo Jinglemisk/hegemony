@@ -15,7 +15,8 @@ import { Tip, TipBody, TipLedger } from "./parts";
 /**
  * The seats, a disc each, over the corner dock: pressed, a disc takes that seat (the
  * hotseat's switch, which a networked game will not have); its tooltip is that
- * ruler's public census.
+ * ruler's public census. A count on the disc is how many development cards it holds:
+ * public, though the cards are not.
  */
 export function Seats({
   G,
@@ -66,6 +67,7 @@ function Rival({
 }) {
   const glaze = PLAYER_GLAZES[id];
   const census = publicCensus(G, id);
+  const cards = G.devHands[id].length;
 
   return (
     <Tooltip
@@ -102,6 +104,7 @@ function Rival({
                 value: voiceHolder(G) === id ? "held" : "unheld",
                 icon: "victory/voice",
               },
+              { key: "cards", label: "Development cards", value: cards, icon: "events/convoy" },
             ]}
           />
           {playerNationalIdeas(G, id).map((idea) => (
@@ -114,7 +117,7 @@ function Rival({
       preferredPlacement="above"
     >
       <button
-        aria-label={`${glaze.name}${acting ? ", acting" : ""}${viewing ? ", your seat" : ", take this seat"}`}
+        aria-label={`${glaze.name}${acting ? ", acting" : ""}${cards ? `, ${cards} ${cards === 1 ? "card" : "cards"}` : ""}${viewing ? ", your seat" : ", take this seat"}`}
         aria-pressed={viewing}
         className={`rival${acting ? " is-acting" : ""}${threat ? " is-threat" : ""}${viewing ? " is-viewing" : ""}`}
         data-c="rival"
@@ -123,6 +126,11 @@ function Rival({
         type="button"
       >
         <span className="rival-disc">{glaze.blazon}</span>
+        {cards ? (
+          <span aria-hidden="true" className="rival-cards label num">
+            {cards}
+          </span>
+        ) : null}
       </button>
     </Tooltip>
   );

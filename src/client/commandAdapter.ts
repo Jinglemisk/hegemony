@@ -1,10 +1,9 @@
 import type { PoliticianId, VotePayment } from "../game/assembly";
 import { transition } from "../game/legalMoves";
 import type { GameCommand } from "../game/legalMoves";
-import type { CivicCalmPayment } from "../game/rules";
+import type { CivicCalmPayment, DevCardPlay } from "../game/rules";
 import type {
   BuildingId,
-  EventTableId,
   HegemonyState,
   HungerLeave,
   PlayerId,
@@ -35,7 +34,8 @@ export type GameMoves = {
   civicCalm: (payment: CivicCalmPayment) => void;
   promotePop: (tileId: string, from: PopType) => void;
   demotePop: (tileId: string, from: PopType) => void;
-  fundExpedition: (expeditionId: EventTableId) => void;
+  buyDevCard: () => void;
+  playDevCard: (play: DevCardPlay) => void;
   buyRiotInsurance: (
     optionId: RiotInsuranceId,
     demoteTarget?: { tileId: string; from: PopType },
@@ -101,7 +101,8 @@ export function createCommandMoves(dispatch: DispatchGameCommand): GameMoves {
     civicCalm: (payment) => dispatch({ type: "civicCalm", payment }),
     promotePop: (tileId, from) => dispatch({ type: "promotePop", tileId, from }),
     demotePop: (tileId, from) => dispatch({ type: "demotePop", tileId, from }),
-    fundExpedition: (expeditionId) => dispatch({ type: "fundExpedition", expeditionId }),
+    buyDevCard: () => dispatch({ type: "buyDevCard" }),
+    playDevCard: (play) => dispatch({ type: "playDevCard", ...play }),
     buyRiotInsurance: (optionId, demoteTarget) =>
       dispatch({ type: "buyRiotInsurance", optionId, ...(demoteTarget ? { demoteTarget } : {}) }),
     resolveRiot: () => dispatch({ type: "resolveRiot" }),

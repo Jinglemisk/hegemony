@@ -1,7 +1,8 @@
 import { VOTE_PAYMENTS } from "../game/assembly";
 import { TRADABLE_MATERIALS } from "../game/bank";
 import { CIVIC_CALM_PAYMENTS, DEMOTE_FROM, PROMOTE_FROM } from "../game/civic";
-import { getAuthoredGameContent, getExpeditionTables } from "../game/content";
+import { getAuthoredGameContent, getDevCards } from "../game/content";
+import { devCardOf } from "../game/devCards";
 import { GROWABLE_POPS } from "../game/core/pops";
 import { HUNGER_POPS } from "../game/hunger";
 import type { GameCommand } from "../game/legalMoves";
@@ -24,7 +25,10 @@ export const REACH_IDS = [
   ...BUILDING_CONTENT_IDS.map((id) => `building:${id}`),
   ...PLAYER_EVENT_CONTENT_IDS.flatMap((id) => [`playerDraw:${id}`, `playerResolve:${id}`]),
   ...YEAR_CARD_CONTENT_IDS.map((id) => `year:${id}`),
-  ...getExpeditionTables(getAuthoredGameContent()).map((table) => `venture:${table.id}`),
+  // A card drawn, by what it was, and a held card played.
+  ...getDevCards(getAuthoredGameContent()).flatMap((card) =>
+    card.kind === "yield" ? [`devDraw:${card.id}`] : [`devDraw:${card.id}`, `devPlay:${card.id}`],
+  ),
   ...LAW_CONTENT_IDS.flatMap((id) => [`lawProposed:${id}`, `law:${id}`]),
   ...DIRECTIVE_CONTENT_IDS.flatMap((id) => [`directiveProposed:${id}`, `directive:${id}`]),
   ...NATIONAL_IDEA_CONTENT_IDS.flatMap((id) => [`ideaSetup:${id}`, `ideaBought:${id}`]),
@@ -67,9 +71,16 @@ export function moveReachIds(
     case "buyIdea":
       ids.push(`ideaBought:${move.ideaId}`);
       break;
-    case "fundExpedition":
-      ids.push(`venture:${move.expeditionId}`);
+    case "buyDevCard": {
+      const drawn = before && drawnDevCard(before, G, player);
+      if (drawn) ids.push(`devDraw:${drawn}`);
       break;
+    }
+    case "playDevCard": {
+      const card = devCardOf(G, move.card);
+      if (card) ids.push(`devPlay:${card.id}`);
+      break;
+    }
     case "bankBuy":
     case "bankSell":
       ids.push(`${move.type}:${move.material}`);
@@ -110,4 +121,15 @@ export function moveReachIds(
     }
   }
   return ids;
+}
+
+/** The card a buy drew, read off the authoritative states: the one that came into the
+ *  seat's hand, or the yield its line names. */
+function drawnDevCard(before: HegemonyState, G: HegemonyState, player: PlayerId) {
+  const kept = G.devHands[player].find(
+    (held) => !before.devHands[player].some((old) => old.id === held.id),
+  );
+  if (kept) return devCardOf(G, kept.id)?.id;
+  const line = G.log.at(-1)?.moment;
+  return line?.kind === "devCard" ? line.cardId : undefined;
 }

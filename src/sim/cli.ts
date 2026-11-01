@@ -431,7 +431,7 @@ function applyAndSave(save: SaveFile, file: string, command: GameCommand, quiet 
 }
 
 /** Pick the current player's enumerated move matching `predicate` — lets named commands
- *  for payload-heavy actions (bank/civic/venture/riot) reuse the validated move instead
+ *  for payload-heavy actions (bank/civic/card/riot) reuse the validated move instead
  *  of hand-building its cost/option fields. */
 function findLegal(
   G: HegemonyState,
@@ -532,12 +532,8 @@ function cmdMove(positionals: string[], file: string) {
         return findLegal(save.state, (move) => move.type === "dole", "the Dole");
       case "calm":
         return findLegal(save.state, (move) => move.type === "civicCalm", "civic calm");
-      case "venture":
-        return findLegal(
-          save.state,
-          (move) => move.type === "fundExpedition" && move.expeditionId === args[0],
-          `venture ${args[0] ?? "<expeditionId>"}`,
-        );
+      case "buy-card":
+        return findLegal(save.state, (move) => move.type === "buyDevCard", "card to buy");
       case "insure":
         return findLegal(
           save.state,
@@ -667,7 +663,7 @@ function previewLegalCommand(save: SaveFile, move: GameCommand): EconomyPreview 
     case "placeColony":
       return previewPlaceSettlement(G, playerID, "colony", move.tileId, move.pops);
     default:
-      // Many moves (grow, bank, civic, venture, endTurn…) have no economy projection —
+      // Many moves (grow, bank, civic, cards, endTurn…) have no economy projection —
       // that is not an error; the caller reports it and exits cleanly.
       return null;
   }
@@ -1004,7 +1000,7 @@ Save file defaults to ${DEFAULT_SAVE_PATH}.
              pops <srcTile> <dstTile> <popSpec>     popSpec: citizens=1,slaves=2 (or c=1,s=2)
              promote <tile> <pop> | demote <tile> <pop>
              bank-sell <material> | bank-buy <material>
-             calm | dole | venture <expeditionId> | insure [optionId] | resolve-riot
+             calm | dole | buy-card | insure [optionId] | resolve-riot
              place-capital <tile> <popSpec>
              place-colony <tile> <popSpec>
              resolve [targetTile]

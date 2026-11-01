@@ -18,7 +18,7 @@
  * majors.
  *
  * The fix is not more overrides. Every class named below is emitted ONLY by a
- * ceremony (`fateCard`, `ceremonyTablet`, `blow`, `oddsRow`, `ceremonyPick`…),
+ * ceremony (`fateCard`, `ceremonyTablet`, `blow`, `oddsRow`…),
  * so `modals.css` never matches them and has nothing to win. `modals.css` keeps
  * the plain-dialog vocabulary — the calm picker, the placement cards, the
  * compendium's read-only table listings — and no longer has a say in what a fate
@@ -31,10 +31,8 @@
  *
  * ── TWO MATERIALS ───────────────────────────────────────────────────────────
  * A fate is DEALT to you: a card, fired ivory, lit by the mood ring the moment
- * decides. A venture is a tablet you READ and lay back down: bone, chamfered at
- * the top corners, carved along the bottom edge, and wearing no ring at all. The
- * app used to generalise the card's treatment over both, which is why the
- * venture arrived glowing and 130px too narrow.
+ * decides. The age's end is a tablet you READ and lay back down: bone, chamfered
+ * at the top corners, carved along the bottom edge, and wearing no ring at all.
  */
 
 /* ── The table goes dark ─────────────────────────────────────────────────────
@@ -557,28 +555,6 @@
   color: var(--ink);
 }
 
-/* Expedition choices use plain rows. */
-.ceremonyPick {
-  display: grid;
-  gap: 2px;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--ink-12);
-  text-align: left;
-}
-
-.ceremonyPick:not(:disabled):hover {
-  background: var(--ink-07);
-}
-
-.ceremonyPick:disabled {
-  opacity: 0.42;
-}
-
-.ceremonyPickTaken {
-  background: var(--mood-band);
-  box-shadow: inset 3px 0 0 var(--mood-ink);
-}
-
 /* ── The commit ──────────────────────────────────────────────────────────────
    Lit at the top, the mood's own ink through the middle, shaded at the foot:
    three stops, so the button reads as a raised object. It emitted the same value
@@ -617,7 +593,7 @@
   background: var(--ink-07);
 }
 
-/* ── The venture: a tablet you read ──────────────────────────────────────────
+/* ── The tablet: what you read and lay down ──────────────────────────────────
    Bone rather than fired ivory, chamfered at the top corners, and carved along
    the bottom edge. No mood ring: a tablet is not lit by anything, it is laid on
    the table. `clip-path` would swallow an outer box-shadow, so the carved edge
@@ -653,58 +629,6 @@
 .tabletVoice {
   margin: 0 0 var(--s-4);
   color: var(--ink-66);
-}
-
-/* ── The drama row: the die, and what it found ────────────────────────────── */
-
-.drama {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 22px;
-  margin-bottom: 18px;
-}
-
-.dramaOutcome {
-  text-align: left;
-}
-
-.dramaOutcome .label {
-  display: block;
-  color: var(--ink-63);
-  letter-spacing: 0.24em;
-}
-
-.dramaOutcome h3 {
-  margin: 1px 0 3px;
-}
-
-.dramaOutcome .caption {
-  display: block;
-  margin-top: 3px;
-  color: var(--ink-63);
-}
-
-/* The figure the whole dialog is about, beside its own glyph. Before the
-   presenter split this rendered as a body-size sentence next to a die the size
-   of a fist. */
-.dramaGain {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.dramaGain.positive {
-  color: var(--pos);
-}
-
-.dramaGain.negative {
-  color: var(--neg);
-}
-
-.dramaGain .icon {
-  width: 1.875rem;
-  height: 1.875rem;
 }
 
 /* A lacquer cube with ivory pips — an object you rolled, not a number you were
@@ -812,50 +736,12 @@
   box-shadow: inset 3px 0 0 var(--clay);
 }
 
-/* ── What it cost you, and what you do about it ──────────────────────────── */
-
-.tabletVerdict {
-  display: grid;
-  gap: 3px;
-  margin: 0 -34px 18px;
-  padding: 10px 34px;
-  border-top: 1px solid var(--mood-rule);
-  border-bottom: 1px solid var(--mood-rule);
-  background: var(--mood-band);
-  text-align: left;
-}
-
-.ceremonyPicks {
-  display: grid;
-  margin: 0 -34px;
-  border-top: 1px solid var(--ink-12);
-}
-
-/* Two runs of picks — the expedition, then the stake — read as ONE run of
-   hairlined rows. Parting them left a bare strip and a doubled rule. */
-.ceremony .ventureControls {
-  gap: 0;
-  margin-bottom: 18px;
-}
-
-.ceremonyPicks + .ceremonyPicks {
-  border-top: 0;
-}
-
-.ceremonyPicks > .ceremonyPick {
-  padding: 9px 34px;
-}
-
-.ceremonyPick .caption {
-  color: var(--ink-63);
-}
-
 /* ── The age ends ────────────────────────────────────────────────────────────
    The third moment that earns the dark table, and the one that had never been
    given it: the end of the game rendered in the plain log register, with a
    header bar, a secondary button, and a bare colour dot for each seat.
 
-   It is the venture's tablet, wider — the age is READ and laid down — and the
+   It is a tablet — the age is READ and laid down — and the
    standings are the same full-bleed hairlined rows every other list in a
    ceremony uses. Each seat carries its glaze AND its blazon: a glaze never
    travels alone, least of all on the screen where the four are compared. */
@@ -1027,37 +913,6 @@
   }
 }
 
-/* What the die found, read out after it has stopped. */
-@keyframes verdictRise {
-  from {
-    transform: translate3d(0, 7px, 0);
-    opacity: 0;
-  }
-
-  to {
-    transform: none;
-    opacity: 1;
-  }
-}
-
-/* The figure is CARVED, so it arrives large and settles to size rather than
-   sliding in from somewhere. */
-@keyframes figureStrike {
-  from {
-    transform: scale(1.38);
-    opacity: 0;
-  }
-
-  55% {
-    opacity: 1;
-  }
-
-  to {
-    transform: none;
-    opacity: 1;
-  }
-}
-
 .modalBackdrop.ceremonyScrim {
   animation: ceremonyDusk 240ms ease-out both;
 }
@@ -1078,29 +933,6 @@
    comes off the moment the die stops. */
 .lacquerDie.dieRolling .diePips {
   filter: blur(0.6px);
-}
-
-/* The label can come with the throw; the number the die found cannot. */
-.dramaOutcome .label {
-  animation: verdictRise 240ms ease-out both;
-}
-
-.dramaOutcome h3 {
-  animation: verdictRise 280ms ease-out 400ms both;
-}
-
-.dramaGain {
-  animation: figureStrike 300ms cubic-bezier(0.2, 0.9, 0.3, 1.1) 500ms both;
-}
-
-.dramaOutcome .caption {
-  animation: verdictRise 260ms ease-out 560ms both;
-}
-
-/* Only the verdict that FOLLOWS a die waits for it. The pre-roll modifier line
-   sits in the same band with no `.drama` before it, and must not be withheld. */
-.drama ~ .tabletVerdict {
-  animation: verdictRise 300ms ease-out 620ms both;
 }
 
 /* The table dims around the row the die found, rather than arriving dimmed. */
@@ -1132,12 +964,7 @@
   .modalBackdrop.ceremonyScrim,
   .fateCard,
   .ceremonyTablet,
-  .lacquerDie,
-  .dramaOutcome .label,
-  .dramaOutcome h3,
-  .dramaOutcome .caption,
-  .dramaGain,
-  .drama ~ .tabletVerdict {
+  .lacquerDie {
     animation: none;
   }
 

@@ -5,7 +5,7 @@ import { getNationalIdeas } from "../../../game/ideas";
 /* eslint-disable react-refresh/only-export-components */
 import type { ReactNode } from "react";
 import {
-  getExpeditionTables,
+  getDevCards,
   getPlayerEventCards,
   getRiotTable,
   getResolutionCards,
@@ -45,7 +45,7 @@ import { EffectLine } from "../../EffectLine";
 import { ResourceIcon } from "../../Sprites";
 import { eventCardArtUrl } from "../events";
 import { capitalize } from "../helpers";
-import { EventTableRows } from "../modals/EventTableModal";
+import { EventTableRows } from "../modals/EventTableRows";
 
 /**
  * The rulebook — the whole of Hegemony's rules, as chapters in the order you learn
@@ -492,7 +492,7 @@ const turn: RuleChapter = {
     "move",
     "build",
     "calm",
-    "venture",
+    "card",
   ],
   entries: [
     { id: anchor("turn", "flow"), label: "The flow" },
@@ -510,14 +510,16 @@ const turn: RuleChapter = {
         </Note>
         <Note>
           The verbs are Grow, People (promote, demote, move), Expand (found, upgrade), Build, Civic
-          (calm, the Dole, Ideas, venture) and Trade (offers to the other seats). Anything that
-          targets the map — founding, growing, moving, promoting — is a click on the board itself.
+          (calm, the Dole, Ideas, development cards) and Trade (offers to the other seats). Anything
+          that targets the map — founding, growing, moving, promoting — is a click on the board
+          itself.
         </Note>
       </Entry>
       <Entry id={anchor("turn", "throttles")} title="Per-turn limits">
         <Note>
           Some actions are throttled so a turn can't do everything at once: one grow per settlement,
-          one ladder move, one pop move, one civic calm and one venture per turn.{" "}
+          one ladder move, one pop move, one civic calm, and one development card bought and one
+          played per turn.{" "}
           {G.ruleset.ideas.purchases === 1
             ? "An Idea can be bought once per game."
             : `${G.ruleset.ideas.purchases} Ideas can be bought per game.`}{" "}
@@ -929,40 +931,77 @@ const trade: RuleChapter = {
   ),
 };
 
-const ventures: RuleChapter = {
-  id: "ventures",
-  title: "Ventures",
-  icon: "events/venture",
-  blurb: "The three expeditions, their stakes, and the odds.",
+/** How each kind of development card reads in the Codex's card list. */
+const DEV_KIND_WORDS = {
+  yield: "Yield, on the draw",
+  held: "Held",
+  rival: "Held, played on a rival",
+} as const;
+
+const deck: RuleChapter = {
+  id: "deck",
+  title: "Development Cards",
+  icon: "events/convoy",
+  blurb: "Gold buys a card a turn: yields land at once, held cards wait in your hand.",
   keywords: [
-    "venture",
-    "expedition",
-    "merchant",
-    "embassy",
-    "colonists",
-    "stake",
-    "gamble",
-    "dice",
-    "risk",
+    "development",
+    "card",
+    "deck",
+    "hand",
+    "buy",
+    "yield",
+    "held",
+    "rival",
+    "caravan",
+    "settlers",
+    "raiders",
+    "informer",
   ],
-  entries: [{ id: anchor("ventures", "expeditions"), label: "Expeditions" }],
-  Body: ({ G }) => (
-    <div className="compendiumStack">
-      <Entry id={anchor("ventures", "expeditions")} title="Expeditions">
-        <Note>
-          One venture per turn: stake {formatResourceCost(G.ruleset.ventureCost)}, pick an
-          expedition, and roll. The stake is paid win or lose.
-        </Note>
-        {getExpeditionTables(G.definition.content).map((table) => (
-          <div key={table.id} className="ruleVenture">
-            <h3>{table.name}</h3>
-            <p className="compendiumFlavor">{table.flavor}</p>
-            <EventTableRows table={table} result={null} />
-          </div>
-        ))}
-      </Entry>
-    </div>
-  ),
+  entries: [
+    { id: anchor("deck", "buying"), label: "Buying" },
+    { id: anchor("deck", "hand"), label: "The hand" },
+    { id: anchor("deck", "cards"), label: "The cards" },
+  ],
+  Body: ({ G }) => {
+    const cards = getDevCards(G.definition.content);
+    return (
+      <div className="compendiumStack">
+        <Entry id={anchor("deck", "buying")} title="Buying">
+          <Note>
+            Once a turn, after your event card, pay {formatResourceCost(G.ruleset.devCards.cost)}{" "}
+            and draw the top development card. One deck of {countCopies(cards)} serves the table;
+            when it runs out, the discards are shuffled into a new pile.
+          </Note>
+          <Note>
+            A yield resolves the moment it is drawn: the table sees it, you take what it gives, and
+            it goes to the discards. Your settlements are your capital, cities and colonies; your
+            pops are every slave, freeman and citizen, those on the move included.
+          </Note>
+        </Entry>
+        <Entry id={anchor("deck", "hand")} title="The hand">
+          <Note>
+            Every other development card goes into your hand, face down. Everyone sees how many each
+            seat holds, never which. On your turn you may play one you did not draw this turn. It
+            resolves at once and goes to the discards, face up.
+          </Note>
+          <Note>
+            Raiders, Agitators and an Informer name a rival when you play them, and cannot take what
+            that rival does not have: Raiders names a stock the rival holds, and an Informer needs a
+            rival who holds a development card.
+          </Note>
+        </Entry>
+        <Entry id={anchor("deck", "cards")} title="The cards">
+          <DefList>
+            {cards.map((card) => (
+              <DefRow key={card.id} term={`${card.name} ×${card.count}`}>
+                {`${DEV_KIND_WORDS[card.kind]}. ${card.text}`}
+              </DefRow>
+            ))}
+          </DefList>
+        </Entry>
+      </div>
+    );
+  },
 };
 
 const assembly: RuleChapter = {
@@ -1256,7 +1295,7 @@ export const RULEBOOK: RuleChapter[] = [
   unrest,
   years,
   trade,
-  ventures,
+  deck,
   // Last in learn-order: the Assembly reshapes every rule above it, so it only makes
   // sense once you know what it is reshaping.
   assembly,

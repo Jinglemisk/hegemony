@@ -28,8 +28,10 @@ function optionFor(command: GameCommand): string | null {
       return `promote-${command.from}`;
     case "demotePop":
       return `demote-${command.from}`;
-    case "fundExpedition":
-      return "venture";
+    case "buyDevCard":
+      return "buy-card";
+    case "playDevCard":
+      return "hand";
     default:
       return null;
   }
@@ -59,7 +61,6 @@ describe("verb fans", () => {
       canBuild: has("buildBuilding"),
       armedVerb: null,
       calmUsed: G.players["0"].civicCalmUsedThisTurn,
-      ventureUsed: G.players["0"].ventureUsedThisTurn,
     };
     const noop = () => {};
     const groups = discGroups(
@@ -69,7 +70,7 @@ describe("verb fans", () => {
         onMovePopsRequest: noop,
         onFoundColonyRequest: noop,
         onUpgradeCityRequest: noop,
-        onVentureRequest: noop,
+        onCardsRequest: noop,
         onCalm: noop,
         onDole: noop,
         onTrade: noop,

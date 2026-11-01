@@ -492,11 +492,6 @@
   font-size: 0.78rem;
 }
 
-.ventureControls {
-  display: grid;
-  gap: 7px;
-}
-
 /* Table-row effect chips — card-style icon+number summaries with gain/loss color
    signaling (user request 2026-07-13), rendered from the same effect data the
    engine executes so they can never drift. */
@@ -551,7 +546,7 @@
 
 /* A heading is a caps label over a rule, like a realm page's column head. It
    may wrap, so it keeps its own copy of the label rather than `.caps` (which
-   never wraps); nested venture and politician names take it too. */
+   never wraps); nested politician names take it too. */
 .compendiumEntry h3 {
   margin: 0;
   padding-bottom: var(--s-1);
@@ -891,12 +886,6 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-size: 0.66rem;
-}
-
-.ruleVenture {
-  display: grid;
-  gap: 5px;
-  margin-top: 6px;
 }
 
 /* The deck gallery inside the Years chapter: compact one-per-row card faces. */

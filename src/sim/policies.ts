@@ -10,13 +10,19 @@ import { happinessLevel, slaveUnhappiness, standingHappiness } from "../game/hap
 import { TABLE_LOSS_ORDER, removePops } from "../game/tables";
 import { insuranceRollBonus } from "../game/riot";
 import { getAdjustedActionCost } from "../game/economy/cost";
-import { ventureOutcomes } from "./chance";
 import { getActiveEffects } from "../game/activeEffects";
 import { applyIncome } from "../game/core/resources";
 import type { MoveResult } from "../game/core/results";
 import { CIVIC_CALM_PAYMENTS, civicCalm, getCivicCalmStatus } from "../game/civic";
 import type { CivicCalmPayment } from "../game/civic";
-import { getBuilding, getResolutionCard, getResolutionCards, getRiotTable } from "../game/content";
+import {
+  getBuilding,
+  getDevCards,
+  getResolutionCard,
+  getResolutionCards,
+  getRiotTable,
+} from "../game/content";
+import { devCardGain, devCardOf } from "../game/devCards";
 import { totalPops } from "../game/core/pops";
 import { getOwnedSettlement, getTile, popsInTransit, realmPops } from "../game/core/query";
 import { placeCapital, placeCity, placeColony, resolveArrivingPops } from "../game/actions";
@@ -79,6 +85,7 @@ import {
 import type { TitleHolders } from "../game/victory";
 import type {
   BuildingId,
+  DevCard,
   HegemonyState,
   PlayerId,
   Pops,
@@ -230,22 +237,24 @@ function shedsLastCitizen(G: HegemonyState, move: GameCommand): boolean {
 }
 
 /** Trade is played by rule (see the Trade section): the search never weighs an offer's
- *  answers, and an offer is composed, never listed. */
-const TRADE_MOVE_TYPES: ReadonlySet<GameCommand["type"]> = new Set([
+ *  answers, and an offer is composed, never listed. Development cards are played by
+ *  rule too (see the Development cards section): a draw is unseen, so the search could
+ *  only peek at it. */
+const RULE_MOVE_TYPES: ReadonlySet<GameCommand["type"]> = new Set([
   "tradeOffer",
   "tradeAnswer",
   "tradeSettle",
   "tradeWithdraw",
+  "buyDevCard",
+  "playDevCard",
 ]);
 
-/** The moves search may weigh: no riot or trade moves, no endTurn, and none that sheds
- *  the last citizen while another choice remains. */
+/** The moves search may weigh: no riot, trade or card moves, no endTurn, and none that
+ *  sheds the last citizen while another choice remains. */
 function searchable(G: HegemonyState, moves: GameCommand[]): GameCommand[] {
   const optional = moves.filter(
     (move) =>
-      !RIOT_MOVE_TYPES.has(move.type) &&
-      !TRADE_MOVE_TYPES.has(move.type) &&
-      move.type !== "endTurn",
+      !RIOT_MOVE_TYPES.has(move.type) && !RULE_MOVE_TYPES.has(move.type) && move.type !== "endTurn",
   );
   const kept = optional.filter((move) => !shedsLastCitizen(G, move));
   return kept.length || moves.some((move) => move.type === "endTurn") ? kept : optional;
@@ -253,7 +262,6 @@ function searchable(G: HegemonyState, moves: GameCommand[]): GameCommand[] {
 
 type SearchOutcome = { state: HegemonyState; probability: number };
 function searchOutcomes(G: HegemonyState, move: GameCommand): SearchOutcome[] {
-  if (move.type === "fundExpedition") return ventureOutcomes(G, G.currentPlayer, move);
   // The riot check and hand-off after hunger are the projection's: score the loss alone.
   if (move.type === "resolveHunger")
     return [{ state: hungerForEval(G, G.currentPlayer, move.leave), probability: 1 }];
@@ -281,8 +289,8 @@ function searchPositionKey(state: HegemonyState) {
   ]);
 }
 
-/** Local to a decision: repeated bank paths and equivalent venture outcomes
- * share a value across depths without pruning any continuation. */
+/** Local to a decision: repeated bank paths share a value across depths without
+ * pruning any continuation. */
 function searchEvaluation(score: Scorer, player: PlayerId) {
   const keys = new WeakMap<HegemonyState, string>();
   const values = new Map<string, number>();
@@ -1124,6 +1132,7 @@ function evaluateSmart(
   const luxuryValue = weights.luxury * ownedClaims(G, playerID).length;
   const shortfall = foodShortfallValue(G, playerID);
   const opportunity = ideaOpportunityValue(G, playerID, weights);
+  const hand = handValue(G, playerID, weights);
 
   // The score where the forecast keeps the standing Laws, or strikes the one `fall` names.
   const scoreWith = (fall: LawFall | null) => {
@@ -1151,6 +1160,7 @@ function evaluateSmart(
       shortfall +
       leanYearValue(G, playerID, projection.income, weights) +
       opportunity +
+      hand +
       savingValue(G, playerID, wants, projected) -
       projection.unrest.riskPenalty
     );
@@ -1308,7 +1318,7 @@ const BEAM_WIDTH = 3;
 const BEAM_DEPTH = 4;
 
 /**
- * Within-turn beam search over deterministic actions and venture chance leaves. Expands each
+ * Within-turn beam search over deterministic actions. Expands each
  * frontier node by every branchable move, scores the resulting state with `score`, keeps the
  * best W nodes per depth, and tracks the highest-scoring state reachable within BEAM_DEPTH
  * actions. Commits the FIRST action of the best sequence (the bot re-plans next ply), or ends
@@ -1323,7 +1333,7 @@ function beamPlan(
 ): GameCommand {
   const playerID = G.currentPlayer;
 
-  // A forced riot keeps the shared insurance handler; optional ventures are searched.
+  // A forced riot keeps the shared insurance handler.
   const byRule = resolveRiotByRule(G, moves, score);
   if (byRule) {
     return byRule;
@@ -1388,17 +1398,12 @@ function beamSearch(
         const outcomes =
           depth === 0 && soleRootOutcomes ? soleRootOutcomes : searchOutcomes(node.state, move);
         if (!outcomes.length) continue;
-        if (move.type !== "fundExpedition") {
-          const key = evaluation.keyOf(outcomes[0].state);
-          if (seen.has(key)) continue;
-          seen.add(key);
-        }
+        const key = evaluation.keyOf(outcomes[0].state);
+        if (seen.has(key)) continue;
+        seen.add(key);
         const firstMove = node.firstMove ?? move;
         const nextScore = expectedScore(outcomes, evaluation.valueOf);
-        // Ventures are chance leaves inside the search at every depth. Replan
-        // after observing the actual roll, rather than expanding fictional rolls.
-        if (move.type !== "fundExpedition")
-          children.push({ state: outcomes[0].state, firstMove, score: nextScore });
+        children.push({ state: outcomes[0].state, firstMove, score: nextScore });
         if (nextScore > best.score + 1e-8) best = { firstMove, score: nextScore };
       }
     }
@@ -2281,14 +2286,177 @@ function planTurn(G: HegemonyState, moves: GameCommand[], weights: ScoreWeights)
   const answered =
     takeCounter(G, moves, me, (state) => score(state, me)) ?? withdrawAnswered(G, moves, me);
   if (answered) return answered;
-  // The turn's own search is also the best turn without a deal.
+  const played = playCard(G, moves, me, score);
+  if (played) return played;
+  // The turn's own search is also the best turn without a deal, or without a card.
   const evaluation = searchEvaluation(score, me);
   const plan = beamSearch(G, searchable(G, moves), evaluation);
   return (
+    playBuilder(G, moves, me, evaluation, plan.score) ??
     turnOffer(G, me, wants, evaluation, plan.score) ??
     plan.firstMove ??
+    buyCard(G, moves, me, score, weights) ??
     moves.find((move) => move.type === "endTurn")!
   );
+}
+
+// ── Development cards ────────────────────────────────────────────────────────────────
+//
+// Played by rule, outside the search (docs/plans/development-deck.md, Bots). A card in
+// the hand is worth what playing it gives at the seat's weights, a year's wait off: a
+// card held is played a turn later at the soonest, and every turn of the forecast it
+// waits is one it does not pay. So the search plans around the hand, and a card that
+// pays now is played. An unseen card, in the deck or a rival's hand, is worth the
+// average of the cards it could be. A rival card is aimed by the Assembly's rival lens.
+
+/** What one card gives `playerID` when it resolves, at the seat's weights. A rival card
+ *  is counted at what it pays its holder: Raiders the stock it takes, Agitators and an
+ *  Informer nothing (the deck plan's "What a draw is worth"); the rival lens prices the
+ *  harm when the card is aimed. */
+function cardGainValue(
+  G: HegemonyState,
+  playerID: PlayerId,
+  card: DevCard,
+  weights: ScoreWeights,
+): number {
+  const best = (resources: Resource[]) =>
+    Math.max(...resources.map((resource) => stockValue(weights, resource)));
+  const { effect } = card;
+  switch (effect.type) {
+    case "gain":
+      return devCardGain(G, playerID, effect) * best(effect.resources);
+    case "addPop":
+      return popValue(weights, effect.pop);
+    case "buildDiscount":
+      return effect.amount * best(effect.resources);
+    case "unrestTokens":
+      return card.kind === "rival" ? 0 : weights.level;
+    case "raid":
+      return effect.amount * best(effect.resources);
+    case "discardHeld":
+      return 0;
+  }
+}
+
+/** The share of a held card's value the hand keeps: a year of the forecast waited. */
+function holdShare(G: HegemonyState, playerID: PlayerId): number {
+  const years = incomeYearsLeft(G, playerID);
+  return years > 1 ? (years - 1) / years : 0;
+}
+
+/** The average of `cards` by their counts, each valued by `value`. */
+function averageCard(cards: DevCard[], value: (card: DevCard) => number): number {
+  const copies = cards.reduce((sum, card) => sum + card.count, 0);
+  return copies ? cards.reduce((sum, card) => sum + card.count * value(card), 0) / copies : 0;
+}
+
+/** What the seat's hand is worth: its own cards at their value, a rival's unseen ones at
+ *  the average held card, each a year's wait off. */
+function handValue(G: HegemonyState, playerID: PlayerId, weights: ScoreWeights): number {
+  const hand = G.devHands[playerID];
+  const share = hand.length ? holdShare(G, playerID) : 0;
+  if (share === 0) return 0;
+  let unseen: number | null = null;
+  const held = hand.reduce((sum, { id }) => {
+    const card = devCardOf(G, id);
+    if (card) return sum + cardGainValue(G, playerID, card, weights);
+    unseen ??= averageCard(
+      getDevCards(G.definition.content).filter((candidate) => candidate.kind !== "yield"),
+      (candidate) => cardGainValue(G, playerID, candidate, weights),
+    );
+    return sum + unseen;
+  }, 0);
+  return held * share;
+}
+
+/** What an unseen card off the deck is worth to the seat: a yield at what it gives now,
+ *  a held card at what it adds to the hand. */
+function unseenCardValue(G: HegemonyState, playerID: PlayerId, weights: ScoreWeights): number {
+  const share = holdShare(G, playerID);
+  return averageCard(
+    getDevCards(G.definition.content),
+    (card) => cardGainValue(G, playerID, card, weights) * (card.kind === "yield" ? 1 : share),
+  );
+}
+
+/**
+ * Buy a card when the average card beats what its price is worth to the seat, read off
+ * its own score: the gold at its weight, and the purchase it saves toward if the price
+ * would delay it. Asked once the turn's search would end the turn, so the turn's
+ * purchases are paid for first.
+ */
+function buyCard(
+  G: HegemonyState,
+  moves: GameCommand[],
+  me: PlayerId,
+  score: Scorer,
+  weights: ScoreWeights,
+): GameCommand | null {
+  const buy = moves.find((move) => move.type === "buyDevCard");
+  if (!buy) return null;
+  const price: Partial<Resources> = {};
+  for (const [resource, amount] of Object.entries(G.ruleset.devCards.cost) as Array<
+    [Resource, number]
+  >)
+    price[resource] = -amount;
+  const priceValue = score(G, me) - score(withStocks(G, me, price), me);
+  return unseenCardValue(G, me, weights) > priceValue + 1e-8 ? buy : null;
+}
+
+/**
+ * Play the card that pays most now, when that beats holding it. A seat's own card is
+ * weighed on its own score, which counts the card it gives up; a rival card by the
+ * competitive delta the Assembly votes with, so it finds the leader. Master builder
+ * pays only through a building, so the search weighs it ({@link playBuilder}).
+ */
+function playCard(
+  G: HegemonyState,
+  moves: GameCommand[],
+  me: PlayerId,
+  score: Scorer,
+): GameCommand | null {
+  let before: Scores | null = null;
+  let best: { move: GameCommand; value: number } | null = null;
+  for (const move of moves) {
+    if (move.type !== "playDevCard") continue;
+    const card = devCardOf(G, move.card);
+    if (!card || card.effect.type === "buildDiscount") continue;
+    const result = transition(G.definition, G, me, move);
+    if (!result.ok) continue;
+    before ??= scoreEveryone(G, score);
+    const value =
+      card.kind === "rival"
+        ? competitiveDelta(before, result.state, me, score)
+        : score(result.state, me) - before[me];
+    if (value > 1e-8 && (!best || value > best.value)) best = { move, value };
+  }
+  return best?.move ?? null;
+}
+
+/** Play Master builder, on the kind whose turn line is best, when that line beats the
+ *  best line without it (`without`), the card given up counted. */
+function playBuilder(
+  G: HegemonyState,
+  moves: GameCommand[],
+  me: PlayerId,
+  evaluation: SearchEvaluation,
+  without: number,
+): GameCommand | null {
+  let best: { move: GameCommand; score: number } | null = null;
+  for (const move of moves) {
+    if (move.type !== "playDevCard" || devCardOf(G, move.card)?.effect.type !== "buildDiscount")
+      continue;
+    const result = transition(G.definition, G, me, move);
+    if (!result.ok) continue;
+    const after = result.state;
+    const { score } = beamSearch(
+      after,
+      searchable(after, enumerateLegalCommands(after, me)),
+      evaluation,
+    );
+    if (score > (best?.score ?? without) + 1e-8) best = { move, score };
+  }
+  return best?.move ?? null;
 }
 
 // ── Trade ────────────────────────────────────────────────────────────────────────────

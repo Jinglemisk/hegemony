@@ -1,6 +1,6 @@
 import {
   BUILDINGS,
-  EXPEDITION_TABLES,
+  DEV_CARDS,
   LUXURY_GOODS,
   PLAYER_EVENT_CARDS,
   RIOT_TABLE,
@@ -14,6 +14,7 @@ import type { ResolutionCard } from "./assembly/types";
 import type {
   BuildingDefinition,
   BuildingId,
+  DevCard,
   EventCard,
   EventTableDefinition,
   LuxuryGoodDefinition,
@@ -30,7 +31,7 @@ export interface GameContent {
   yearCards: YearCard[];
   playerEvents: EventCard[];
   riotTable: EventTableDefinition;
-  expeditionTables: EventTableDefinition[];
+  devCards: DevCard[];
   resolutions: ResolutionCard[];
   luxuryGoods: LuxuryGoodDefinition[];
 }
@@ -42,7 +43,7 @@ const AUTHORED_CONTENT: GameContent = {
   yearCards: YEAR_CARDS,
   playerEvents: PLAYER_EVENT_CARDS,
   riotTable: RIOT_TABLE,
-  expeditionTables: EXPEDITION_TABLES,
+  devCards: DEV_CARDS,
   resolutions: RESOLUTION_CARDS,
   luxuryGoods: LUXURY_GOODS,
 };
@@ -80,8 +81,8 @@ export function getRiotTable(content: GameContent): EventTableDefinition {
   return content.riotTable;
 }
 
-export function getExpeditionTables(content: GameContent): EventTableDefinition[] {
-  return content.expeditionTables;
+export function getDevCards(content: GameContent): DevCard[] {
+  return content.devCards;
 }
 
 export function getResolutionCards(content: GameContent): ResolutionCard[] {

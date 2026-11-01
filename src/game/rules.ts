@@ -53,7 +53,7 @@ export * from "./luxury";
 export * from "./happiness";
 export * from "./unrest";
 export * from "./hunger";
-export * from "./ventures";
+export * from "./devCards";
 export * from "./score";
 export * from "./victory";
 export * from "./state";

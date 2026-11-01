@@ -15,6 +15,8 @@ import {
   playerPieces,
   demotionTarget,
   promotionTarget,
+  devCardPlays,
+  getBuyDevCardStatus,
 } from "../../game/rules";
 import type { CivicCalmPayment } from "../../game/rules";
 import { offerWindowReason } from "../../game/trade";
@@ -76,8 +78,10 @@ export type DiscGroup = {
 
 export type DiscHandlers = Pick<
   VerbHandlers,
-  "onMovePopsRequest" | "onFoundColonyRequest" | "onUpgradeCityRequest" | "onVentureRequest"
+  "onMovePopsRequest" | "onFoundColonyRequest" | "onUpgradeCityRequest"
 > & {
+  /** Open the development deck: to buy a card, or the hand to play one. */
+  onCardsRequest: (view: "buy" | "hand") => void;
   onArm: (mode: MapSelectionMode) => void;
   onCalm: (payment: CivicCalmPayment) => void;
   onDole: () => void;
@@ -90,7 +94,6 @@ const VERB_ICON: Partial<Record<VerbId, string>> = {
   move: "pops/move",
   found: "settlements/found",
   upgrade: "settlements/upgrade",
-  venture: "events/venture",
 };
 
 /** The class a building's column belongs to; a building with no column is Civic. */
@@ -130,7 +133,6 @@ function verbOption(id: VerbId, context: VerbContext, handlers: DiscHandlers): D
     move: handlers.onMovePopsRequest,
     found: handlers.onFoundColonyRequest,
     upgrade: handlers.onUpgradeCityRequest,
-    venture: handlers.onVentureRequest,
   };
 
   return {
@@ -302,6 +304,35 @@ export function discGroups(
     run: handlers.onDole,
   };
 
+  // The deck: buy one card a turn; the hand opens while the seat holds any, and plays
+  // a card the engine allows.
+  const buyStatus = getBuyDevCardStatus(G, playerID);
+  const buyCard: DiscOption = {
+    id: "buy-card",
+    label: "Buy a card",
+    icon: "events/convoy",
+    prices: [buyStatus.cost ?? {}],
+    enabled: open && buyStatus.can,
+    hint: (open && buyStatus.reasons[0]) || "Draw a development card, once a turn.",
+    run: () => handlers.onCardsRequest("buy"),
+  };
+  const held = G.devHands[playerID].length;
+  const playable = open && devCardPlays(G, playerID).length > 0;
+  const hand: DiscOption = {
+    id: "hand",
+    label: "Your hand",
+    icon: "events/venture",
+    prices: [],
+    text: `${held} held`,
+    enabled: open && held > 0,
+    hint: playable
+      ? "Play one card a turn."
+      : held
+        ? "No card can be played now."
+        : "No cards held.",
+    run: () => handlers.onCardsRequest("hand"),
+  };
+
   const ideasStatus = getTakeIdeaStatus(G, playerID);
   const ideas: DiscOption = {
     id: "ideas",
@@ -361,13 +392,7 @@ export function discGroups(
       icon: "unrest/calm-verb",
       hint: "Pick one",
       primary: "calm-gold",
-      options: [
-        calm("gold"),
-        calm("influence"),
-        dole,
-        ideas,
-        verbOption("venture", context, handlers),
-      ],
+      options: [calm("gold"), calm("influence"), dole, ideas, buyCard, hand],
     },
     {
       id: "trade",

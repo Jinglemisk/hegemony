@@ -1,6 +1,5 @@
 import { getBuildings } from "./content";
-import { POP_TYPES, fullest, totalPops } from "./core/pops";
-import { settlementCapacity } from "./settlement";
+import { POP_TYPES, fullest } from "./core/pops";
 import { formatPopName } from "./core/format";
 import { addLog, getOwnedSettlement, getPlayerName } from "./core/query";
 import { applyResourceDeltaWithFloors, createResourceDelta } from "./core/resources";
@@ -18,7 +17,7 @@ import type {
 
 /**
  * The event-table engine seam (docs/archive/plans/event-tables.md): one function rolls every
- * dice table in the game — riot and the expeditions. Tables are content data
+ * dice table in the game, which is the riot's today. Tables are content data
  * ({@link ./data}); this module owns the die, the modifier/clamp arithmetic, and the
  * effect interpreter. All randomness runs through the game's own mulberry32 state so
  * a table roll is as replayable as a deck shuffle.
@@ -157,37 +156,6 @@ function applyTableEffect(
       addLog(G, `${name} — ${text}`);
       return { outcomes: [text], left: removed.left };
     }
-
-    case "gainResource": {
-      applyResourceDeltaWithFloors(
-        player.resources,
-        createResourceDelta(effect.resource, effect.amount),
-        G.ruleset.economy.stockpileFloors,
-      );
-      const text = `Gained ${effect.amount} ${effect.resource}.`;
-      addLog(G, `${name} — ${text}`);
-      return { outcomes: [text], left: [] };
-    }
-
-    case "gainPop": {
-      const settled = addPopToSettlementWithRoom(G, playerID, effect.pop);
-
-      if (settled) {
-        player.popsGainedFromEvents += 1;
-        const text = `1 ${formatPopName(effect.pop, 1)} settles in ${settled}.`;
-        addLog(G, `${name} — ${text}`);
-        return { outcomes: [text], left: [] };
-      }
-
-      applyResourceDeltaWithFloors(
-        player.resources,
-        createResourceDelta("food", effect.foodFallback),
-        G.ruleset.economy.stockpileFloors,
-      );
-      const text = `No settlement has room — the settlers leave ${effect.foodFallback} food and sail on.`;
-      addLog(G, `${name} — ${text}`);
-      return { outcomes: [text], left: [] };
-    }
   }
 }
 
@@ -273,32 +241,4 @@ function destroyRandomBuilding(G: HegemonyState, playerID: PlayerId): string | n
   return (
     getBuildings(G.definition.content).find((building) => building.id === removed)?.name ?? removed
   );
-}
-
-/** Add one pop to a random owned settlement with spare capacity (seeded). Returns a
- *  human label for the destination, or null when every settlement is full. */
-function addPopToSettlementWithRoom(
-  G: HegemonyState,
-  playerID: PlayerId,
-  pop: PopType,
-): string | null {
-  const candidates: Settlement[] = [];
-
-  for (const tileId of G.players[playerID].settlements) {
-    const settlement = getOwnedSettlement(G, tileId, playerID);
-
-    if (settlement && totalPops(settlement.pops) < settlementCapacity(settlement, G)) {
-      candidates.push(settlement);
-    }
-  }
-
-  if (candidates.length === 0) {
-    return null;
-  }
-
-  const step = mulberry32(G.rng);
-  G.rng = step.state;
-  const target = candidates[Math.floor(step.value * candidates.length)];
-  target.pops[pop] += 1;
-  return `their ${target.kind}`;
 }

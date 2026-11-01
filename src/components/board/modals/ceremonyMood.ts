@@ -17,9 +17,9 @@ export function ceremonyMood(tone: EffectTone): CeremonyMood {
  * with a name, the verb names it — "Take the Gold" — which is why this takes the
  * subject the presenter split now provides.
  *
- * It lives here rather than in the fate modal because the venture and the riot
- * need it too, and the version that stayed local to one modal is exactly why
- * both of them read "Continue".
+ * It lives here rather than in the fate modal because the riot and the drawn
+ * development card need it too; a version local to one modal is how the others
+ * once read "Continue".
  */
 export function commitVerb(mood: CeremonyMood, subject?: string): string {
   if (mood === "gift") {

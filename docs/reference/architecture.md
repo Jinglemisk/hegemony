@@ -36,7 +36,8 @@ recipes replay byte-for-byte. State schema 20 and command schema 7 are current. 
 rejected. Assembly proposals name no replacement; a vote purchase names gold or
 influence. Idea commands name the Idea and New Settlers' optional pop/settlement choice. A hunger
 choice names one settlement and class per pop that leaves. House items and vetoes are gone. Event resolution takes only an optional
-settlement target; ventures take an expedition, with their cost read from the ruleset.
+settlement target; buying a development card takes nothing, its cost read from the
+ruleset, and playing one names the card and only the choice it asks for.
 
 ## Mechanical gates
 

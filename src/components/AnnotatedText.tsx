@@ -95,8 +95,7 @@ const VOCABULARY: Record<string, Term> = {
   ...both("card", "cards", term(null, "years")),
   ...both("event", "events", term(null, "years")),
   ...both("year", "years", term(null, "years")),
-  ...both("venture", "ventures", term("events/venture", "ventures")),
-  ...both("expedition", "expeditions", term("events/venture", "ventures")),
+  ...both("development card", "development cards", term("events/convoy", "deck")),
   // The Assembly's vocabulary. Card text, the chronicle and the Agora page all lean
   // on these nouns, and every one of them is a rule a player will want to look up
   // mid-vote — which is exactly when leaving the game to find it is worst.
@@ -170,7 +169,7 @@ const PROPER_NAMES: string[] = [
   ...content.resolutions,
   ...POLITICIANS,
   content.riotTable,
-  ...content.expeditionTables,
+  ...content.devCards,
 ]
   .map((authored) => authored.name)
   .filter((name) => {

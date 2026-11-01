@@ -23,7 +23,7 @@ import { placeName } from "../../frame/moments";
 import { Ico } from "../../frame/parts";
 import { useGameUi } from "../GameUiContext";
 import { ceremonyMood, commitVerb } from "./ceremonyMood";
-import { EventTableRows } from "./EventTableModal";
+import { EventTableRows } from "./EventTableRows";
 import { LacquerDie } from "./LacquerDie";
 import { LossCard } from "./LossCard";
 import { leaveLines, nextFoot, tokensLine } from "./lossLines";

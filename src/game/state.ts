@@ -10,6 +10,7 @@ import type { GameDefinition } from "./definition";
 import { generateArchipelago } from "./archipelago";
 import { deriveBankRates } from "./bank";
 import { createLuxuryAssets } from "./luxury";
+import { devDeckInstances } from "./devCards";
 import { createInitialMap } from "./map";
 import type { BoardLayout, HegemonyState, HexTile } from "./types";
 import { expandDeck, shuffleWithSeed } from "./core/rng";
@@ -68,6 +69,10 @@ export function createInitialStateFromDefinition(
   // an assembly four years away is still reproducible from the game's seed alone.
   const politicians = createPoliticianDecks(rng, content);
   rng = politicians.rng;
+  // The development deck is shuffled last in the chain, so a seed lays the same board
+  // and deals the same year, event and politician decks as before the deck existed.
+  const devDeck = shuffleWithSeed(devDeckInstances(content), rng);
+  rng = devDeck.state;
 
   // Seat the luxury goods (Phase 4). Uses the initial seed, not the rng chain: the
   // moorings are a fact of the board like the bank rates, not a draw in the deck
@@ -108,8 +113,10 @@ export function createInitialStateFromDefinition(
           popsGainedFromEvents: 0,
           civicCalmUsedThisTurn: false,
           ladderUsedThisTurn: false,
-          ventureUsedThisTurn: false,
+          devCardBoughtThisTurn: false,
+          devCardPlayedThisTurn: false,
           moveUsedThisTurn: false,
+          buildDiscount: {},
           calmActive: false,
           incomeSuppressedTurns: 0,
         },
@@ -123,6 +130,9 @@ export function createInitialStateFromDefinition(
     yearDiscardPile: [],
     playerDrawPile: player.cards,
     playerDiscardPile: [],
+    devDrawPile: devDeck.cards,
+    devDiscardPile: [],
+    devHands: { "0": [], "1": [], "2": [], "3": [] },
     activeYearCard: null,
     lastPlayerEvent: null,
     pendingPlayerEvent: null,

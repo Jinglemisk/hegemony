@@ -54,13 +54,14 @@ import { PendingPlayerEventModal } from "./board/modals/PendingPlayerEventModal"
 import { RiotModal } from "./board/modals/RiotModal";
 import { RevoltModal } from "./board/modals/RevoltModal";
 import { YearCardModal } from "./board/modals/YearCardModal";
-import { VentureModal } from "./board/modals/VentureModal";
+import { DrawnCardModal, HandModal } from "./board/modals/DevCardModal";
 import { AssemblyDock, AssemblySitting } from "./board/assembly/AssemblySitting";
 import { useSitting, type Sitting } from "./board/assembly/sitting";
 import { GameUiProvider } from "./board/GameUiProvider";
 import type { GameUi } from "./board/GameUiContext";
 import { CodexLinkProvider } from "./codexLink";
-import { getOwnedHoldings } from "./board/helpers";
+import { deckMark, getOwnedHoldings } from "./board/helpers";
+import type { DeckMark } from "./board/helpers";
 import { endTurnWarning, happinessDisplay, hungerShortfall } from "../ui/frameSelectors";
 import { isTyping } from "../ui/keys";
 import { TopBar } from "./frame/TopBar";
@@ -120,7 +121,9 @@ const PLACEMENT_LABELS: Record<SetupPlacement, string> = {
 type ActiveModal =
   | { kind: "populationPrompt"; placement: SetupPlacement; tileId: string }
   | { kind: "upgradeCity" }
-  | { kind: "venture" }
+  /** The card a buy drew, found from where the seat stood before it. */
+  | { kind: "drawnCard"; mark: DeckMark }
+  | { kind: "hand" }
   | { kind: "ideas" };
 
 /**
@@ -557,7 +560,6 @@ export function HegemonyBoard({
     canBuild,
     armedVerb: armedVerbOf(mapSelection.selection?.mode),
     calmUsed: viewer.civicCalmUsedThisTurn,
-    ventureUsed: viewer.ventureUsedThisTurn,
   };
   // Found, from a tile's page: arm the mode and open its popover on that tile.
   const foundHere = (tileId: string) => {
@@ -658,7 +660,11 @@ export function HegemonyBoard({
                         onMovePopsRequest: () => armSelection({ kind: "movePops" }),
                         onFoundColonyRequest: () => armSelection({ kind: "foundColony" }),
                         onUpgradeCityRequest: () => setActiveModal({ kind: "upgradeCity" }),
-                        onVentureRequest: () => setActiveModal({ kind: "venture" }),
+                        onCardsRequest: (view) => {
+                          if (view === "hand") return setActiveModal({ kind: "hand" });
+                          setActiveModal({ kind: "drawnCard", mark: deckMark(G, viewerId) });
+                          moves.buyDevCard();
+                        },
                         onCalm: moves.civicCalm,
                         onDole: moves.dole,
                         onIdeasRequest: () => setActiveModal({ kind: "ideas" }),
@@ -897,7 +903,10 @@ export function HegemonyBoard({
                 }}
               />
             ) : null}
-            {activeModal?.kind === "venture" ? <VentureModal onClose={closeModal} /> : null}
+            {activeModal?.kind === "drawnCard" ? (
+              <DrawnCardModal mark={activeModal.mark} onClose={closeModal} />
+            ) : null}
+            {activeModal?.kind === "hand" ? <HandModal onClose={closeModal} /> : null}
             {(() => {
               switch (moment?.kind) {
                 case "draft":

@@ -3,6 +3,7 @@ import type { DirectiveEffect, LawEffect, PoliticianId } from "../game/assembly/
 import type {
   BuildingEffect,
   BuildingId,
+  DevCardId,
   EventEffect,
   EventTableId,
   LuxuryGoodId,
@@ -39,6 +40,30 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   tableFallbacks: {
     implementation: "src/game/tables.test.ts",
     evidence: "destroyBuilding falls back to pop loss",
+  },
+  devCardConservation: {
+    implementation: "src/game/devCards.test.ts",
+    evidence: "pile, discards and hands hold the whole deck",
+  },
+  devCardTurn: {
+    implementation: "src/game/devCards.test.ts",
+    evidence: "buys one card a turn, after the event card, and never plays one the turn it came in",
+  },
+  devCardRedaction: {
+    implementation: "src/game/devCards.test.ts",
+    evidence: "hides rivals' hands and the draw order, and shows hand counts",
+  },
+  devCardYields: {
+    implementation: "src/game/devCards.test.ts",
+    evidence: "counts settlements and every pop, those on the move included",
+  },
+  devCardRivals: {
+    implementation: "src/game/devCards.test.ts",
+    evidence: "Raiders takes no more than the rival holds",
+  },
+  botPlaysCards: {
+    implementation: "src/sim/devCardPolicy.test.ts",
+    evidence: "buys and plays cards through legal commands",
   },
   lawIncome: {
     implementation: "src/game/assembly/laws.test.ts",
@@ -233,10 +258,8 @@ export const EVENT_EFFECT_PARITY = {
   addPops: event("eventPops"),
 } as const satisfies Record<EventEffect["type"], EffectParityCoverage>;
 
-// The riot table's effects are priced by the forecast's expected riot; the ventures'
-// by their outcomes, each played through the engine.
+// The riot table's effects are priced by the forecast's expected riot.
 const riotValuation = { implementation: "src/sim/policies.ts", evidence: "expectedRiot" };
-const ventureValuation = { implementation: "src/sim/chance.ts", evidence: "ventureOutcomes" };
 const table = (valuation: ParityEvidence, ...fixtures: NonEmptyList<ParityBehaviorFixtureId>) =>
   coverage(
     { implementation: "src/game/tables.ts", evidence: "applyTableEffect" },
@@ -252,8 +275,6 @@ export const TABLE_EFFECT_PARITY = {
   losePops: table(riotValuation, "tableResolution"),
   loseResource: table(riotValuation, "tableResolution", "tableFallbacks"),
   destroyBuilding: table(riotValuation, "tableFallbacks"),
-  gainResource: table(ventureValuation, "tableResolution"),
-  gainPop: table(ventureValuation, "tableResolution", "tableFallbacks"),
 } as const satisfies Record<TableEffect["type"], EffectParityCoverage>;
 
 // `deltaIfEnacted` is the route every Law and Directive is scored through, on a clone
@@ -487,12 +508,26 @@ export const PLAYER_EVENT_CONTENT_IDS = [
   "player-public-calm",
 ] as const;
 
-export const EVENT_TABLE_CONTENT_IDS = [
-  "riot",
-  "merchantConvoy",
-  "grandEmbassy",
-  "colonistsVoyage",
-] as const satisfies readonly EventTableId[];
+export const EVENT_TABLE_CONTENT_IDS = ["riot"] as const satisfies readonly EventTableId[];
+
+export const DEV_CARD_CONTENT_IDS = [
+  "foraging",
+  "woodcutters",
+  "quarry-gang",
+  "bountiful-harvest",
+  "civic-feast",
+  "tunny-run",
+  "timber-raft",
+  "marble-block",
+  "caravan",
+  "settlers",
+  "captives",
+  "master-builder",
+  "festival-day",
+  "raiders",
+  "agitators",
+  "informer",
+] as const satisfies readonly DevCardId[];
 
 export const RIOT_INSURANCE_CONTENT_IDS = [
   "breadDole",
@@ -630,12 +665,30 @@ export const CONTENT_MANIFEST = {
     ids: EVENT_TABLE_CONTENT_IDS,
     engine: { implementation: "src/game/tables.ts", evidence: "rollOnTable" },
     frontend: {
-      implementation: "src/components/board/modals/EventTableModal.tsx",
+      implementation: "src/components/board/modals/EventTableRows.tsx",
       evidence: "presentTableEffect",
     },
     simulation: { implementation: "src/sim/policies.ts", evidence: "onePlyLookahead" },
     telemetry: { implementation: "src/sim/telemetry.ts", evidence: "movesByType" },
     behaviorFixtures: ["tableResolution"],
+  },
+  devCards: {
+    ids: DEV_CARD_CONTENT_IDS,
+    engine: { implementation: "src/game/devCards.ts", evidence: "playDevCard" },
+    frontend: {
+      implementation: "src/components/board/modals/DevCardModal.tsx",
+      evidence: "devCardFace",
+    },
+    simulation: { implementation: "src/sim/policies.ts", evidence: "cardGainValue" },
+    telemetry: { implementation: "src/sim/telemetry.ts", evidence: "devCardsOf" },
+    behaviorFixtures: [
+      "devCardConservation",
+      "devCardTurn",
+      "devCardRedaction",
+      "devCardYields",
+      "devCardRivals",
+      "botPlaysCards",
+    ],
   },
   riotInsurance: {
     ids: RIOT_INSURANCE_CONTENT_IDS,
@@ -707,6 +760,7 @@ export const FEATURE_PARITY = {
   yearCards: CONTENT_MANIFEST.yearCards,
   playerEvents: CONTENT_MANIFEST.playerEvents,
   eventTables: CONTENT_MANIFEST.eventTables,
+  devCards: CONTENT_MANIFEST.devCards,
   workSlots: {
     ids: ["slots", "workingSlaves", "idleSlaves"],
     engine: { implementation: "src/game/settlement.ts", evidence: "settlementWorkingSlaves" },

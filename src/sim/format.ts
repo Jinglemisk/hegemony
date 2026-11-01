@@ -548,6 +548,14 @@ export function renderBatchReport(report: BatchReport, years: number): string {
     lines.push(...renderTrade(report.trade));
   }
 
+  const cards = (stats: BatchReport["devCards"]["total"]) =>
+    `bought ${formatNumber(stats.bought.perGame)}, played ${formatNumber(stats.played.perGame)}, ` +
+    `gold ${formatNumber(stats.goldSpent.perGame)}`;
+  lines.push(`Development cards (per game): ${cards(report.devCards.total)}`);
+  for (const [name, stats] of Object.entries(report.devCards.perPolicy)) {
+    lines.push(`  ${name} (per seat-game): ${cards(stats)}`);
+  }
+
   const { assembly } = report;
   const table = assembly.seats.total;
   lines.push(

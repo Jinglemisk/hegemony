@@ -90,8 +90,8 @@ it("queues Damon's riot result, then the turn notice, before Nikos's event", () 
   // The die lands on the sheet, then the result card says what it cost.
   expect(dialog().querySelector("h2")?.textContent).toBe("Riot");
   act(() => vi.advanceTimersByTime(2000));
-  expect(dialog().querySelector("h2")?.textContent).toBe("Bribe demanded");
-  expect(dialog().textContent).toContain("Lost 3 Gold.");
+  expect(dialog().querySelector("h2")?.textContent).toBe("Granary sacked");
+  expect(dialog().textContent).toContain("Lost 3 Food.");
   expect(dialog().textContent).toContain("Then: Nikos’s turn");
   act(() => button("Endure It").click());
 

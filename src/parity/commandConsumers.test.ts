@@ -41,7 +41,8 @@ describe("behavioral command-consumer parity", () => {
     moves.civicCalm("influence");
     moves.promotePop("tile-a", "freemen");
     moves.demotePop("tile-a", "citizens");
-    moves.fundExpedition("merchantConvoy");
+    moves.buyDevCard();
+    moves.playDevCard({ card: "raiders#1", target: "2", resource: "gold" });
     moves.buyRiotInsurance("concession", { tileId: "tile-a", from: "citizens" });
     moves.resolveRiot();
     moves.assemblyDraw("1", "demosthenes");
@@ -102,8 +103,9 @@ describe("behavioral command-consumer parity", () => {
         command: { type: "demotePop", tileId: "tile-a", from: "citizens" },
         actor: undefined,
       },
+      { command: { type: "buyDevCard" }, actor: undefined },
       {
-        command: { type: "fundExpedition", expeditionId: "merchantConvoy" },
+        command: { type: "playDevCard", card: "raiders#1", target: "2", resource: "gold" },
         actor: undefined,
       },
       {

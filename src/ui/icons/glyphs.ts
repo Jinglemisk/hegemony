@@ -181,7 +181,6 @@ export const GLYPHS = {
   upgrade: [p("M6 20h12M8 20V8m8 12V8M6 8h12M9 8V5h6v3")],
   build: [p("M4 20l6-6m2-2 8-8m-8 8 3 3M12 12 9 9m5 11h6v-6")],
   calm: [p("M5 13c2-2 5-2 7 0s5 2 7 0M8 13V7a4 4 0 0 1 8 0v6")],
-  venture: [p("M3 15c4 3 14 3 18 0M5 15V9l7-4v10m0-6 6 3v3")],
   hourglass: [p("M7 3h10M7 21h10M8.5 3v3.4L12 11l3.5-4.6V3M8.5 21v-3.4L12 13l3.5 4.6V21")],
 
   /* ── Buildings ─────────────────────────────────────────────────────────────
@@ -240,16 +239,6 @@ export const GLYPHS = {
     p(
       "M6 21v-8M6 13 3.5 9M6 13l2.5-4M12 21V11M12 11 9.2 6.6M12 11l2.8-4.4M18 21v-8M18 13l-2.5-4M18 13l2.5-4",
     ),
-  ],
-  convoy: [box(3, 9, 13, 7), p("M16 11h3.5l1.5 3v2H16"), c(7, 19, 1.9), c(18, 19, 1.9)],
-  /* The kerykeion — a herald's staff is what an embassy IS. */
-  embassy: [
-    p("M12 21V7"),
-    c(12, 5, 1.8),
-    p(
-      "M12 8.5c-1.8-1.8-3.8-2-5.2-.6 1.4 1.4 3.4 1.6 5.2.6zm0 0c1.8-1.8 3.8-2 5.2-.6-1.4 1.4-3.4 1.6-5.2.6z",
-    ),
-    p("M9.5 13c2.5 0 2.5 3 5 3M9.5 17c2.5 0 2.5 3 5 3"),
   ],
   /* Pips are drawn as rings, not filled dots: three solid masses would make the
      die the one glyph in the set that reads as a sticker, and at 14px a 1.6r ring

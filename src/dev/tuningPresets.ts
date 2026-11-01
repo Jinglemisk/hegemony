@@ -63,10 +63,8 @@ function isHappiness(resource: Stat) {
 function scaleTable(table: EventTableDefinition): void {
   for (const row of table.rows) {
     for (const effect of row.effects) {
-      if (effect.type === "gainResource" || effect.type === "loseResource") {
+      if (effect.type === "loseResource") {
         effect.amount = scaledMagnitude(effect.amount, isHappiness(effect.resource) ? 2 : 3);
-      } else if (effect.type === "gainPop") {
-        effect.foodFallback = Math.max(1, Math.round(effect.foodFallback / 2));
       }
     }
   }
@@ -81,7 +79,7 @@ function scaleTable(table: EventTableDefinition): void {
 export function createLowNumberContent(base: GameContent): GameContent {
   const content = structuredClone(base);
 
-  // Buildings, player cards, ventures and the year deck stay as authored: v2's roster is already single
+  // Buildings, player cards, development cards and the year deck stay as authored: v2's roster is already single
   // digits, and a year card carries no number to scale.
   // Step 8 Laws, Directives and sitting prices remain as authored.
 

@@ -11,8 +11,10 @@ export function resetTurnFlags(G: HegemonyState) {
     player.grownSettlementsThisTurn = [];
     player.civicCalmUsedThisTurn = false;
     player.ladderUsedThisTurn = false;
-    player.ventureUsedThisTurn = false;
+    player.devCardBoughtThisTurn = false;
+    player.devCardPlayedThisTurn = false;
     player.moveUsedThisTurn = false;
+    player.buildDiscount = {};
     player.calmActive = false;
   }
 }

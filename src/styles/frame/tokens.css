@@ -267,6 +267,8 @@
   --deck-directive-ink: var(--ivory);
   --deck-idea: var(--olive);
   --deck-idea-ink: var(--ivory);
+  --deck-dev: var(--sea-deep);
+  --deck-dev-ink: var(--ivory);
   --leaf: #a8b976;
   --card-ceremony: calc(var(--u) * 80); /* 320 */
   --card-hand: calc(var(--u) * 44); /* 176 */

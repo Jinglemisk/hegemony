@@ -39,8 +39,8 @@ import {
 } from "./civic";
 import type { CivicCalmPayment } from "./civic";
 import { CONCESSION_FROM, buyRiotInsurance, getBuyRiotInsuranceStatus, resolveRiot } from "./riot";
-import { fundExpedition, getFundExpeditionStatus } from "./ventures";
-import { getAuthoredGameContent, getExpeditionTables, getRiotTable } from "./content";
+import { buyDevCard, devCardPlays, getBuyDevCardStatus, playDevCard } from "./devCards";
+import { getAuthoredGameContent, getRiotTable } from "./content";
 import { EMPTY_POPS, GROWABLE_POPS, POP_TYPES, totalPops } from "./core/pops";
 import { formatPopName, formatPops } from "./core/format";
 import { getOwnedSettlement, getTile } from "./core/query";
@@ -101,12 +101,12 @@ import {
 } from "./trade";
 import type {
   BuildingId,
-  EventTableId,
   HegemonyState,
   HungerLeave,
   PlayerId,
   PopType,
   Pops,
+  Resource,
   Resources,
   RiotInsuranceId,
   TradableMaterial,
@@ -171,7 +171,16 @@ export type GameCommand =
   | { type: "civicCalm"; payment: CivicCalmPayment }
   | { type: "promotePop"; tileId: string; from: PopType }
   | { type: "demotePop"; tileId: string; from: PopType }
-  | { type: "fundExpedition"; expeditionId: EventTableId }
+  /** Buy the top development card: a yield lands at once, a held card is kept. */
+  | { type: "buyDevCard" }
+  /** Play a held card by instance id, with the choice it asks for. */
+  | {
+      type: "playDevCard";
+      card: string;
+      resource?: Resource;
+      tileId?: string;
+      target?: PlayerId;
+    }
   | {
       type: "buyRiotInsurance";
       optionId: RiotInsuranceId;
@@ -352,8 +361,10 @@ function applyCommandMutable(G: HegemonyState, playerID: PlayerId, move: GameCom
       return promotePop(G, playerID, move.tileId, move.from);
     case "demotePop":
       return demotePop(G, playerID, move.tileId, move.from);
-    case "fundExpedition":
-      return fundExpedition(G, playerID, move.expeditionId);
+    case "buyDevCard":
+      return buyDevCard(G, playerID);
+    case "playDevCard":
+      return playDevCard(G, playerID, move);
     case "buyRiotInsurance":
       return buyRiotInsurance(G, playerID, move.optionId, move.demoteTarget);
     case "resolveRiot":
@@ -607,8 +618,10 @@ export function describeCommand(
       return `promote a ${formatPopName(move.from, 1)} on ${move.tileId}${formatCost(cost)}`;
     case "demotePop":
       return `demote a ${formatPopName(move.from, 1)} on ${move.tileId}${formatCost(cost)}`;
-    case "fundExpedition":
-      return `fund the ${move.expeditionId}${formatCost(cost)}`;
+    case "buyDevCard":
+      return `buy a development card${formatCost(cost)}`;
+    case "playDevCard":
+      return `play ${move.card}${move.target ? ` on seat ${move.target}` : ""}${move.resource ? ` for ${move.resource}` : ""}${move.tileId ? ` in ${move.tileId}` : ""}`;
     case "buyRiotInsurance":
       return `declare riot insurance: ${move.optionId}${move.demoteTarget ? ` (demoting a ${formatPopName(move.demoteTarget.from, 1)} on ${move.demoteTarget.tileId})` : ""}`;
     case "resolveRiot":
@@ -933,11 +946,9 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
     }
   }
 
-  for (const table of getExpeditionTables(G.definition.content)) {
-    const status = getFundExpeditionStatus(G, playerID, table.id);
-    if (status.can)
-      moves.push({ type: "fundExpedition", expeditionId: table.id, cost: status.cost ?? {} });
-  }
+  const buyStatus = getBuyDevCardStatus(G, playerID);
+  if (buyStatus.can) moves.push({ type: "buyDevCard", cost: buyStatus.cost ?? {} });
+  for (const play of devCardPlays(G, playerID)) moves.push({ type: "playDevCard", ...play });
 
   moves.push(...enumerateIdeaCommands(G, playerID, "buyIdea"));
   moves.push(...enumerateTradeCommands(G, playerID));

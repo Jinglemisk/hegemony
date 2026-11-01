@@ -74,6 +74,10 @@
   --deck: var(--deck-idea);
   --deck-ink: var(--deck-idea-ink);
 }
+.deck-dev {
+  --deck: var(--deck-dev);
+  --deck-ink: var(--deck-dev-ink);
+}
 
 /* ── Turning over ──────────────────────────────────────────────────────────── */
 .gc-flip {
@@ -584,6 +588,30 @@
 }
 .drawnReveal .gc-ceremony {
   --gc-w: min(var(--card-ceremony), 40vh);
+}
+/* The hand: the seat's development cards in a row over the same deck line and tray. */
+.drawnReveal.handReveal {
+  width: min(calc(var(--u) * 190), calc(100vw - var(--s-8))); /* 760 */
+}
+.handReveal .drawn-tray {
+  width: min(100%, calc(var(--u) * 100));
+}
+.hand-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-3);
+}
+.hand-card {
+  padding: 0;
+  border: 0;
+  border-radius: var(--gc-r, var(--s-2));
+  background: none;
+  cursor: pointer;
+}
+.hand-card:focus-visible {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: var(--s-1);
 }
 .drawnReveal .gc-ceremony .gc-face {
   box-shadow:

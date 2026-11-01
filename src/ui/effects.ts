@@ -163,13 +163,6 @@ export function presentTableEffect(effect: TableEffect): EffectPresentation {
       });
     case "destroyBuilding":
       return carve("negative", { magnitude: "−1", subject: "building" });
-    case "gainResource":
-      return carve("positive", {
-        magnitude: `+${formatNumber(effect.amount)}`,
-        subject: RESOURCE_LABELS[effect.resource],
-      });
-    case "gainPop":
-      return carve("positive", { magnitude: "+1", subject: formatPopLabel(effect.pop, 1) });
   }
 }
 

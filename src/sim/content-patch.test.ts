@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   getAuthoredGameContent,
   getBuildings,
-  getExpeditionTables,
+  getDevCards,
   getPlayerEventCards,
   getRiotTable,
   getResolutionCards,
@@ -54,7 +54,7 @@ describe("sim content/tune patching", () => {
     expect(getYearCards(preset)).toBe(preset.yearCards);
     expect(getPlayerEventCards(preset)).toBe(preset.playerEvents);
     expect(getRiotTable(preset)).toBe(preset.riotTable);
-    expect(getExpeditionTables(preset)).toBe(preset.expeditionTables);
+    expect(getDevCards(preset)).toBe(preset.devCards);
     expect(getResolutionCards(preset)).toBe(preset.resolutions);
 
     expect(getBuildings(authored)).toBe(authored.buildings);

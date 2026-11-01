@@ -8,6 +8,7 @@ import { GAME_MODES, deriveRuleset } from "../ruleset";
 import type { GameModeId, RulesetPatch } from "../ruleset";
 import { advanceSetupTurn, beginGameplayTurn } from "../turn";
 import type {
+  DevCardId,
   HegemonyState,
   HexTile,
   PlayerId,
@@ -182,6 +183,20 @@ export class ScenarioBuilder {
     return this;
   }
 
+  /** Rig the development deck: a copy of the named card is the next one bought. */
+  stackDevCard(cardId: DevCardId): this {
+    this.G.devDrawPile.unshift(takeDevCard(this.G.devDrawPile, cardId));
+    return this;
+  }
+
+  /** Put a copy of the named card in a seat's hand, playable this turn (it came in on
+   *  an earlier one). */
+  withDevCard(playerID: PlayerId, cardId: DevCardId): this {
+    const id = takeDevCard(this.G.devDrawPile, cardId);
+    this.G.devHands[playerID].push({ id, turn: this.G.turn - 1 });
+    return this;
+  }
+
   /** Rig the year deck: the named card is the next one revealed. */
   stackYearCard(cardId: string): this {
     moveCardToTop(this.G.yearDrawPile, cardId);
@@ -204,6 +219,13 @@ function moveCardToTop(deck: Array<{ id: string }>, cardId: string): void {
   if (index < 0) throw new Error(`no event card ${cardId}`);
   const [card] = deck.splice(index, 1);
   deck.unshift(card);
+}
+
+/** Take a copy of a development card out of the pile, by card id. */
+function takeDevCard(pile: string[], cardId: DevCardId): string {
+  const index = pile.findIndex((id) => id.startsWith(`${cardId}#`));
+  if (index < 0) throw new Error(`no development card ${cardId} in the pile`);
+  return pile.splice(index, 1)[0];
 }
 
 function assertOk(result: MoveResult, playerID: PlayerId, tileId: string) {
