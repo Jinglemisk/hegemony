@@ -267,7 +267,6 @@ export const IDEA_RASTERS = {
   "good-harvest": "resources/food",
   "public-dole": "unrest/bread-dole",
   "urban-planning": "settlements/city",
-  "capital-works": "settlements/capital",
   "civic-tradition": "resources/influence",
   "frontier-charter": "settlements/colony",
   "new-settlers": "pops/freemen",

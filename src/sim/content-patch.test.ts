@@ -14,6 +14,7 @@ import { BUILDINGS } from "../game/data";
 import { mergeRulesetPatches } from "../game/ruleset";
 import { applyBuildingOverrides, rulesetPatchFromOverrides } from "../dev/tuning";
 import { createLowNumberContent } from "../dev/tuningPresets";
+import type { NationalIdeaId } from "../game/ideaTypes";
 import { restoreContent } from "./restore";
 
 describe("sim content/tune patching", () => {
@@ -72,6 +73,11 @@ describe("sim content/tune patching", () => {
         .effects.find((effect) => effect.type === "slaveUnrestWeight");
     expect(weight(restoreContent(authored, ["manumission"]))).toMatchObject({ amount: 3 });
     expect(weight(authored)).toMatchObject({ amount: 2 });
+    const ideas = restoreContent(authored, ["capital-works"]).nationalIdeas.map(({ id }) => id);
+    expect(ideas).toHaveLength(authored.nationalIdeas.length + 1);
+    expect(ideas.indexOf("capital-works" as NationalIdeaId)).toBe(
+      ideas.indexOf("urban-planning") + 1,
+    );
     expect(restoreContent(authored, [])).toBe(authored);
   });
 });

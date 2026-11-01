@@ -10,6 +10,7 @@ import {
 } from "./ideas";
 import type { NationalIdeaId, IdeaPopChoice } from "./ideaTypes";
 import { owned, scenario, tile } from "./testing/scenario";
+import { PLAYER_IDS } from "./data";
 import { calculateIncome, calculateIncomeBreakdown } from "./economy/income";
 import {
   playerPieces,
@@ -48,7 +49,7 @@ function buy(G: ReturnType<typeof realm>, id: NationalIdeaId, target?: IdeaPopCh
   expect(takeNationalIdea(G, "0", id, target).ok).toBe(true);
 }
 
-describe("twelve National Ideas", () => {
+describe("eleven National Ideas", () => {
   it("Good Harvest adds flat realm food even under Drought, with a named income line", () => {
     const G = realm();
     const before = calculateIncome(G, "0").food;
@@ -80,15 +81,6 @@ describe("twelve National Ideas", () => {
     expect(settlementSlots(tile(G, colony.tileId), colony, G)).toBe(tile(G, colony.tileId).slots);
     city.pops.slaves = 20;
     expect(settlementWorkingSlaves(tile(G, city.tileId), city, G)).toBe(before + 1);
-  });
-  it("Capital Works adds a slot only to the first setup city", () => {
-    const G = realm();
-    buy(G, "capital-works");
-    const s = owned(G, "-2,0", "0");
-    expect(settlementSlots(tile(G, s.tileId), s, G)).toBe(tile(G, s.tileId).slots + 1);
-    const c = owned(G, "0,0", "0");
-    c.kind = "city";
-    expect(settlementSlots(tile(G, c.tileId), c, G)).toBe(tile(G, c.tileId).slots);
   });
   it("Civic Tradition adds flat influence even when citizen influence is zeroed", () => {
     const G = realm();
@@ -264,6 +256,41 @@ describe("Idea ownership and acquisition", () => {
     const odd = { ...G, ruleset: { ...G.ruleset, setup: ["capital", "colony", "colony"] } };
     expect(ideaDraftOrder(odd as typeof G)).toEqual(["3", "2", "1", "0"]);
   });
+  it("drafts from all eleven Ideas, Capital Works gone, and sells the seven left", () => {
+    let G = realm();
+    G.players["0"].nationalIdeas = [];
+    G.phase = "setupIdeas";
+    G.currentPlayer = ideaDraftOrder(G)[0];
+    const offered = (type: "pickIdea" | "buyIdea") => [
+      ...new Set(
+        enumerateLegalCommands(G, G.currentPlayer).flatMap((c) =>
+          c.type === type ? [c.ideaId] : [],
+        ),
+      ),
+    ];
+    expect(offered("pickIdea")).toHaveLength(11);
+    expect(offered("pickIdea")).not.toContain("capital-works");
+    for (const seat of ideaDraftOrder(G)) {
+      const pick = enumerateLegalCommands(G, seat).find((c) => c.type === "pickIdea")!;
+      const result = transition(G.definition, G, seat, pick);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      G = result.state;
+    }
+    expect(G.phase).toBe("gameplay");
+    expect(PLAYER_IDS.map((id) => G.players[id].nationalIdeas.length)).toEqual([1, 1, 1, 1]);
+    // The opener answers the year's first event card, then may buy one of the seven left.
+    const event = enumerateLegalCommands(G, G.currentPlayer).find((c) => c.type === "resolveEvent");
+    if (event) {
+      const resolved = transition(G.definition, G, G.currentPlayer, event);
+      expect(resolved.ok).toBe(true);
+      if (!resolved.ok) return;
+      G = resolved.state;
+    }
+    expect(offered("buyIdea")).toHaveLength(7);
+    const buy = enumerateLegalCommands(G, G.currentPlayer).find((c) => c.type === "buyIdea")!;
+    expect(transition(G.definition, G, G.currentPlayer, buy).ok).toBe(true);
+  });
   it("offers only untaken Ideas for purchase", () => {
     const G = realm();
     G.players["1"].nationalIdeas = [{ id: "good-harvest", acquired: "setup", year: 1 }];
@@ -307,6 +334,6 @@ describe("Idea ownership and acquisition", () => {
     G.players["0"].nationalIdeas = [{ id: "good-harvest", acquired: "setup", year: 1 }];
     expect(calculateIncome(G, "0").food).toBe(3);
     expect(playerNationalIdeas(G, "0")[0].text).toBe(idea.text);
-    expect(NATIONAL_IDEAS).toHaveLength(12);
+    expect(NATIONAL_IDEAS).toHaveLength(11);
   });
 });

@@ -320,9 +320,7 @@ the seat's own gain counts once.
 Mixed tables route every Assembly action to its actual seat, including when a
 sitting spans one opener's player-turn.
 
-Capital Works adds no benefit that Urban Planning lacks when both are available:
-Urban Planning covers the capital and later cities at the same price. Harbour
-Planning credits a saved slot at the ordinary projected material value for an
+Harbour Planning credits a saved slot at the ordinary projected material value for an
 owned unclaimed Port site; if the site has no building slot left, use half a
 luxury's weight for opening that claim instead. Count at most one prospective
 site per distinct claimable good, keeping the most valuable sites. Existing Ports

@@ -133,7 +133,6 @@ with a seed or preset; `?setup=ideas` auto-places and opens the picker for revie
 | Good Harvest     | Your realm gains 2 food at each year's income.                                      |
 | Public Dole      | Your Dole buys 1 food for 2 influence.                                              |
 | Urban Planning   | Each of your cities has one extra work slot.                                        |
-| Capital Works    | Your capital has one extra work slot.                                               |
 | Civic Tradition  | Your realm gains 2 influence at each year's income.                                 |
 | Frontier Charter | You have one extra colony piece.                                                    |
 | New Settlers     | When you take this Idea, add one slave or freeman to an owned settlement with room. |
@@ -143,7 +142,7 @@ with a seed or preset; `?setup=ideas` auto-places and opens the picker for revie
 | Treasury Grant   | When you take this Idea, gain 4 gold.                                               |
 | Assembly Brokers | You may buy a third vote at each Assembly.                                          |
 
-City slots include the capital. Capital Works uses your first setup city. Pop grants
+City slots include the capital. Pop grants
 reserve room for pops already travelling; founding Law grants come before Slave
 Colonies. Grants bypass paid growth. Harbour Planning keeps the Port's price and
 claim, and a Law limiting building counts still counts it. Whole-realm food and

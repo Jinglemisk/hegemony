@@ -20,12 +20,6 @@ export const NATIONAL_IDEAS: NationalIdeaDefinition[] = [
     effects: [{ type: "extraSlots", scope: "city", amount: 1 }],
   },
   {
-    id: "capital-works",
-    name: "Capital Works",
-    text: "Your capital has one extra work slot.",
-    effects: [{ type: "extraSlots", scope: "capital", amount: 1 }],
-  },
-  {
     id: "civic-tradition",
     name: "Civic Tradition",
     text: "Your realm gains 2 influence at each year's income.",
