@@ -1191,11 +1191,62 @@ describe("v2 card scoring", () => {
       })
       .build();
     const commands = enumerateLegalCommands(G, "0");
-    expect(commands).toHaveLength(2);
+    // Two settlements, and the decline.
+    expect(commands).toHaveLength(3);
     for (const policy of [smartPolicy, masterPolicy]) {
       const command = policy.choose(observe(G), commands, createSimRng(1));
       expect(command).toEqual({ type: "resolveEvent", targetTileId: plains.id });
       expect(transition(G.definition, G, "0", command).ok).toBe(true);
+    }
+  });
+
+  it("declines a pop that clearly hurts and takes one that clearly helps", () => {
+    const initial = scenario().build();
+    const plains = initial.board.tiles.find((tile) => tile.terrain === "plains")!;
+    const hill = initial.board.tiles.find((tile) => tile.terrain === "hill")!;
+    // Seat 0 drew the card at this turn's income.
+    const drew = (cardId: string) => (state: HegemonyState) => {
+      state.phase = "gameplay";
+      state.currentPlayer = "0";
+      state.activeYearCard = null;
+      state.players["0"].collectedThisTurn = true;
+      state.pendingPlayerEvent = {
+        card: PLAYER_EVENT_CARDS.find((card) => card.id === cardId)!,
+        playerID: "0",
+      };
+    };
+    const slaves = (level: number | null, stocks: { gold: number; influence: number }) => {
+      const build = scenario()
+        .withSettlement("0", plains.id, "capital", { citizens: 1, freemen: 1, slaves: 1 })
+        .withSettlement("0", hill.id, "colony", { citizens: 0, freemen: 1, slaves: 0 })
+        .withResources("0", { wood: 4, stone: 4, food: 10, ...stocks });
+      if (level !== null) build.withHappiness("0", level);
+      return build.mutate(drew("player-captured-laborers")).build();
+    };
+    const freemen = (food: number, slaves: number) =>
+      scenario()
+        .withSettlement("0", plains.id, "capital", { citizens: 1, freemen: 1, slaves })
+        .withResources("0", { wood: 4, stone: 4, gold: 4, food, influence: 2 })
+        .mutate(drew("player-free-settlers"))
+        .build();
+
+    const riotLine = DEFAULT_RULESET.economy.unrest.riotThreshold;
+    const cases: Array<[string, HegemonyState, boolean]> = [
+      // A second slave takes 1 from the level, onto the riot line, with nothing to buy calm.
+      ["a slave onto the riot line", slaves(riotLine + 1, { gold: 0, influence: 0 }), true],
+      // Food made and eaten even, none stored: another mouth goes hungry each year.
+      ["a freeman it cannot feed", freemen(0, 2), true],
+      ["a slave far from the line", slaves(null, { gold: 4, influence: 2 }), false],
+      ["a freeman it can feed", freemen(20, 3), false],
+    ];
+    for (const [name, G, declines] of cases) {
+      const commands = enumerateLegalCommands(G, "0");
+      expect(commands.at(-1), name).toEqual({ type: "resolveEvent", decline: true });
+      for (const policy of [smartPolicy, masterPolicy]) {
+        const command = policy.choose(observe(G), commands, createSimRng(1));
+        expect(command.type === "resolveEvent" && command.decline === true, name).toBe(declines);
+        expect(transition(G.definition, G, "0", command).ok).toBe(true);
+      }
     }
   });
 });

@@ -11,7 +11,13 @@ import {
   getResolutionCards,
   getYearCards,
 } from "../../../game/content";
-import { getBuilding, getBuildings, getLuxuryGoods, getTerrainDeck } from "../../../game/rules";
+import {
+  getAddPopsEffect,
+  getBuilding,
+  getBuildings,
+  getLuxuryGoods,
+  getTerrainDeck,
+} from "../../../game/rules";
 import { POLITICIANS, isHappinessLaw, isPriceLaw } from "../../../game/assembly";
 import { DEFAULT_RULESET } from "../../../game/ruleset";
 import { VICTORY_CARDS } from "../../../game/victory";
@@ -847,6 +853,17 @@ const years: RuleChapter = {
             act once, on everyone, when they are turned up. The <strong>player deck</strong> (
             {countCopies(getPlayerEventCards(G.definition.content))} cards) deals you a private card
             each income.
+          </Note>
+          <Note>
+            {listed(
+              getPlayerEventCards(G.definition.content)
+                .filter((card) => getAddPopsEffect(card.effects))
+                .map((card) => card.name),
+            )}{" "}
+            {G.ruleset.events.optionalPops
+              ? "offer a pop: take it in a settlement with room, or decline. A declined card goes to the bottom of the player deck and gives nothing, and the table sees which card it was."
+              : "put a pop in a settlement with room."}{" "}
+            With no room anywhere, the card is discarded.
           </Note>
           <DefList>
             {yearCards.map((card) => (

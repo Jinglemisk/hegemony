@@ -57,7 +57,8 @@ discards, results, and public logs. It removes or canonicalizes authority-only i
   name its Law;
 - spectators see no held card or sealed proposal;
 - a pending Player Event is visible only to its decision owner; other views receive a generic
-  workflow/log indication until it resolves.
+  workflow/log indication until it resolves. A declined pop card is named in the Chronicle, so
+  every view knows the player deck's last card; the pile still shows its count only.
 
 A pending hunger choice is public: every view sees which seat must send how many pops away,
 and the chosen pops in the Chronicle once they leave.

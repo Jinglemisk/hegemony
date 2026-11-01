@@ -739,6 +739,14 @@
 .drawn-wait {
   color: var(--ochre);
 }
+/* Decline beside the commit sits on the scrim, so it reads in ivory, not ink. */
+.drawn-tray .ghostVerb {
+  color: var(--ivory-70);
+}
+.drawn-tray .ghostVerb:not(:disabled):hover {
+  color: var(--ivory);
+  background: color-mix(in srgb, var(--ivory) 10%, transparent);
+}
 @keyframes drawnTray {
   from {
     opacity: 0;

@@ -38,7 +38,8 @@ import { createSimRng, deriveBotSeed } from "../sim/rng";
  * each rival holding stone) and `?dev=assembly-trade` (the first sitting's preparation,
  * every seat sealed and none Ready). `?dev=cards`: the seat at the development deck,
  * with gold for a card, a Caravan held from an earlier turn and a Foraging on top of the
- * pile. For the board: `?dev=mid-game` and `?dev=late-game` (the sim's smart bots play
+ * pile. `?dev=fate-pop`: the second seat's Free Settlers, to place or decline. For the
+ * board: `?dev=mid-game` and `?dev=late-game` (the sim's smart bots play
  * every seat to the start of Year 6 or Year 12).
  */
 
@@ -212,6 +213,15 @@ export const DEV_SCENES: Record<string, (G: HegemonyState) => DevScene> = {
       draft.devHands[seat].push({ id: take("caravan"), turn: draft.turn - 1 });
       draft.devDrawPile.unshift(take("foraging"));
     }),
+  }),
+  // The next seat draws Free Settlers at its income: place the freeman, or decline.
+  "fate-pop": (G) => ({
+    G: endCurrentTurn(
+      produce(clearFate(G), (draft) => {
+        const index = draft.playerDrawPile.findIndex((c) => c.id === "player-free-settlers");
+        draft.playerDrawPile.unshift(...draft.playerDrawPile.splice(index, 1));
+      }),
+    ),
   }),
   "mid-game": (G) => ({ G: botsToYear(G, 6) }),
   "late-game": (G) => ({ G: botsToYear(G, 12) }),

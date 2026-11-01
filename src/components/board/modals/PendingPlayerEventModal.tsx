@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  canDeclinePlayerEvent,
   getAddPopsEffect,
   getEventPopTargets,
   getOwnedSettlement,
@@ -92,6 +93,7 @@ export function PendingPlayerEventModal() {
   }
 
   const canConfirm = isActive && (!popEffect || targetTileIds.length > 0);
+  const canDecline = canDeclinePlayerEvent(G, playerID);
   const blow = presentEventEffects(effects);
   // The mood decides the frame AND the verb. A card that hurts you should not ask
   // to be "claimed" — you endure it. One word and one colour, read off the
@@ -106,15 +108,37 @@ export function PendingPlayerEventModal() {
       ? "Place Pop"
       : commitVerb(mood, blow.subject);
 
+  const commit = (
+    <button
+      className="ceremonyCommit verb verb-lg"
+      disabled={!canConfirm}
+      onClick={() => moves.resolvePendingPlayerEvent(popEffect ? targetTileId : undefined)}
+    >
+      {actionLabel}
+    </button>
+  );
+
   return (
-    // Blocking on purpose: a drawn event must be resolved, never dismissed. The card,
-    // the fates' deck line, the settlement slip when it asks for one, then the commit.
+    // Blocking on purpose: a drawn event must be answered, never dismissed. The card,
+    // the fates' deck line, the settlement slip when it asks for one, then the commit,
+    // with Decline beside it for a pop card.
     <DrawnReveal
       caption={
-        !isActive ? (
-          <p className="drawn-wait">
-            <Prose links={false}>Only the active player can resolve this event.</Prose>
-          </p>
+        !isActive || canDecline ? (
+          <>
+            {canDecline ? (
+              <p>
+                <Prose links={false}>
+                  Decline, and the card goes to the bottom of the player deck. You get nothing.
+                </Prose>
+              </p>
+            ) : null}
+            {!isActive ? (
+              <p className="drawn-wait">
+                <Prose links={false}>Only the active player can resolve this event.</Prose>
+              </p>
+            ) : null}
+          </>
         ) : null
       }
       card={
@@ -167,13 +191,21 @@ export function PendingPlayerEventModal() {
         ) : null
       }
     >
-      <button
-        className="ceremonyCommit verb verb-lg"
-        disabled={!canConfirm}
-        onClick={() => moves.resolvePendingPlayerEvent(popEffect ? targetTileId : undefined)}
-      >
-        {actionLabel}
-      </button>
+      {canDecline ? (
+        <span className="hungerActs">
+          <button
+            className="ghostVerb verb"
+            disabled={!isActive}
+            onClick={() => moves.declinePendingPlayerEvent()}
+            type="button"
+          >
+            Decline
+          </button>
+          {commit}
+        </span>
+      ) : (
+        commit
+      )}
     </DrawnReveal>
   );
 }

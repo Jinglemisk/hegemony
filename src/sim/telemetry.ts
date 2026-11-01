@@ -1,4 +1,4 @@
-import { emptyReachCounts, moveReachIds, type ReachReport } from "./reach";
+import { POP_CARD_IDS, emptyReachCounts, moveReachIds, type ReachReport } from "./reach";
 import { NATIONAL_IDEAS, playerNationalIdeas } from "../game/ideas";
 import type { NationalIdeaId, NationalIdeaOwnership } from "../game/ideaTypes";
 import type { OpeningKind } from "./io";
@@ -212,6 +212,9 @@ export type DrawSwingSummary = {
   tokensMoved: number;
   /** Resolved cards that changed nothing: a loss with nothing to take, or no token to clear. */
   unchanged: number;
+  /** Each pop card's pops placed, and the cards declined to the bottom of the deck. A
+   *  declined card is no resolved card above. */
+  eventPops: Record<string, { placed: number; declined: number }>;
 };
 
 /** Where influence goes. `draws` is the Assembly draw, the price of proposing;
@@ -988,6 +991,15 @@ function drawSwingsOf(group: SeatGame[]): DrawSwingSummary {
     tokenCards: tokenCards.length,
     tokensMoved: sum(tokenCards, (row) => Math.abs(row.unrestTokens)),
     unchanged: rows.length - new Set([...resourceCards, ...popCards, ...tokenCards]).size,
+    eventPops: Object.fromEntries(
+      POP_CARD_IDS.map((id) => [
+        id,
+        {
+          placed: sum(group, ({ facts }) => facts.reach[`playerResolve:${id}`] ?? 0),
+          declined: sum(group, ({ facts }) => facts.reach[`playerDecline:${id}`] ?? 0),
+        },
+      ]),
+    ),
   };
 }
 
@@ -1386,7 +1398,7 @@ export class Aggregator {
       this.countTrade(before, G, player, move);
       this.countDeck(before, G, player, move);
     }
-    if (move.type === "resolveEvent" && before?.pendingPlayerEvent) {
+    if (move.type === "resolveEvent" && !move.decline && before?.pendingPlayerEvent) {
       const old = before.players[player];
       const now = G.players[player];
       const resources = resourceChange(before, G, player);

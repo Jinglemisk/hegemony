@@ -68,8 +68,11 @@ export const ENGINE_VERSION = "0.1.0";
  *  carries both switches and the free card's level, and a pending riot carries the pops
  *  still to answer once its die is cast. Command v9 adds the answer, pop or card. Older
  *  saves are rejected, not migrated. */
-export const STATE_SCHEMA_VERSION = 22;
-export const COMMAND_SCHEMA_VERSION = 9;
+/** v23 (agency package, optional event pops): a seat may decline a pop card to the bottom
+ *  of the player deck. The ruleset carries the switch, and command v10 adds the decline
+ *  to resolving an event. Older saves are rejected, not migrated. */
+export const STATE_SCHEMA_VERSION = 23;
+export const COMMAND_SCHEMA_VERSION = 10;
 
 export const SAVE_FORMAT_VERSION = 2;
 export const SCRIPT_FORMAT_VERSION = 2;

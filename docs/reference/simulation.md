@@ -94,7 +94,7 @@ npm run sim -- move pops <src> <dst> <popSpec>    # popSpec: citizens=1,slaves=2
 npm run sim -- move dole                          # 3 influence for 1 food
 npm run sim -- move place-capital <tile> <popSpec>
 npm run sim -- move place-colony <tile> <popSpec>
-npm run sim -- move resolve [targetTile]
+npm run sim -- move resolve [targetTile]          # decline a pop card with move index (see legal)
 npm run sim -- move buy-card                      # 2 gold for a development card; play one with move index
 npm run sim -- move riot-pop <pop|card>           # a rolled riot's pop: lose it, or a random held card
 npm run sim -- move index <N>
@@ -468,7 +468,9 @@ spending from the stock change.
 - `drawSwingSummary` (cut) — `draws` and those `discarded` for no room;
   `resourceCards` with the percentiles of their `collectedRatio`; `popCards` and
   `popsMoved`; `tokenCards` and `tokensMoved`; and `unchanged` (a loss with nothing to
-  take, or no token to clear). Pop and token cards are counted in their own units
+  take, or no token to clear). Pop and token cards are counted in their own units.
+  `eventPops` gives each pop card's pops placed and cards declined, read off the reach
+  counts `playerResolve:` and `playerDecline:`. A declined card is no draw swing
 - `devCards` (cut) — development cards bought and played, the gold paid for them, and
   each card drawn and each held card played, a game for the table and a seat-game for a
   seat or a personality, read off the reach counts. Happiness and the hand:
@@ -528,6 +530,11 @@ time, for the comparisons that measure each: `devCards.freeCard` (a free card at
 standing level of `devCards.freeCardLevel`, 3, or higher) and `devCards.riotCard` (a
 held card in place of a riot's pop). Both are on by default and no screen offers them;
 `{"devCards":{"freeCard":false}}` under `--ruleset-patch` turns the free card off.
+
+**Event switch.** `events.optionalPops`, on by default, lets a seat decline Free Settlers
+or Captured Laborers to the bottom of the player deck. `{"events":{"optionalPops":false}}`
+under `--ruleset-patch` makes the pop forced again, as before the agency package. No
+screen offers it.
 
 **Content switches.** The agency package's Law and Idea changes are content, which
 `--ruleset-patch` and `--tune-patch` do not reach, so `--restore` turns them off:
