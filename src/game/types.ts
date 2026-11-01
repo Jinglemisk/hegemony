@@ -171,9 +171,9 @@ export type DevCardEffect =
   | { type: "gain"; resources: Resource[]; amount: number; per?: "settlement" | "pop" }
   /** A pop in one of the seat's settlements with room. */
   | { type: "addPop"; pop: GrowablePop }
-  /** The seat's next building or colony upgrade this turn costs `amount` less wood or
-   *  stone. */
-  | { type: "buildDiscount"; amount: number }
+  /** The seat's next building or colony upgrade this turn costs `amount` less of one of
+   *  `resources`, chosen when the card is played. */
+  | { type: "buildDiscount"; resources: Resource[]; amount: number }
   | { type: "unrestTokens"; change: "placeOne" | "clearOne" }
   /** Up to `amount` of one of `resources` the rival holds. */
   | { type: "raid"; resources: Resource[]; amount: number }
@@ -390,8 +390,9 @@ export interface PlayerState {
   devCardPlayedThisTurn: boolean;
   moveUsedThisTurn: boolean;
   /** What Master builder takes off the seat's next building or colony upgrade this
-   *  turn; 0 when no discount stands. Reset with the turn flags. */
-  buildDiscount: number;
+   *  turn, in the resource picked when it was played; empty when no discount stands.
+   *  Reset with the turn flags. */
+  buildDiscount: Partial<Resources>;
   /** Calm bought this year. It expires when the year turns and is never banked. */
   calmActive: boolean;
   /** Turns of income Stratokles's General Strike has taken away. Decremented at the

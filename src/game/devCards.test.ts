@@ -9,7 +9,7 @@ import {
   getPlayDevCardStatus,
   playDevCard,
 } from "./devCards";
-import { getBuildBuildingStatus } from "./status";
+import { getBuildBuildingStatus, getUpgradeColonyToCityStatus } from "./status";
 import { collectInvariantViolations } from "./invariants";
 import { enumerateLegalCommands, transition } from "./legalMoves";
 import type { GameCommand } from "./legalMoves";
@@ -243,15 +243,36 @@ describe("the development deck", () => {
     G = act(G, { type: "playDevCard", card: handOf(G, "0", "agitators").id, target: "3" });
     expect(G.players["3"].unrestTokens).toBe(1);
 
-    // Master Builder: the next building costs 2 less wood or stone, then it is spent.
+    // Master Builder: the next building costs 2 less of the kind picked, then it is spent.
     G = nextTurn(G);
     G.players["0"].resources.stone = 3;
+    const builder = handOf(G, "0", "master-builder").id;
+    expect(devCardPlays(G, "0").map((play) => play.resource)).toEqual(["wood", "stone"]);
+    expect(getPlayDevCardStatus(G, "0", { card: builder }).reasons).toContain(
+      "Pick what it takes off.",
+    );
     const forum = () => getBuildBuildingStatus(G, "0", "-2,0", "forum").cost;
     expect(forum()).toEqual({ stone: 3 });
-    G = act(G, { type: "playDevCard", card: handOf(G, "0", "master-builder").id });
+    G = act(G, { type: "playDevCard", card: builder, resource: "stone" });
     expect(forum()).toEqual({ stone: 1 });
     G = act(G, { type: "buildBuilding", tileId: "-2,0", buildingId: "forum" });
     expect(G.players["0"].resources.stone).toBe(2);
-    expect(G.players["0"].buildDiscount).toBe(0);
+    expect(G.players["0"].buildDiscount).toEqual({});
+  });
+
+  it("takes Master Builder's 2 off the kind picked, never more than the build costs in it", () => {
+    const G = table().withDevCard("0", "master-builder").build();
+    const builder = handOf(G, "0", "master-builder").id;
+    const played = (resource: "wood" | "stone") =>
+      act(nextTurn(G), { type: "playDevCard", card: builder, resource });
+
+    const wood = played("wood");
+    expect(getUpgradeColonyToCityStatus(wood, "0", "-2,0").cost).toEqual({ wood: 1, stone: 3 });
+    // The Forum costs no wood, so a wood discount takes nothing off it.
+    expect(getBuildBuildingStatus(wood, "0", "-2,0", "forum").cost).toEqual({ stone: 3 });
+
+    const stone = played("stone");
+    expect(getUpgradeColonyToCityStatus(stone, "0", "-2,0").cost).toEqual({ wood: 3, stone: 1 });
+    expect(stone.log.at(-1)?.message).toMatch(/costs 2 less stone\.$/);
   });
 });

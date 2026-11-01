@@ -153,7 +153,7 @@ your realm, those on the move included (owner, 2026-10-29).
 | Caravan           | Held  | 4     | +1 wood, stone or food for each of your settlements, one kind, your choice when played | new: a choice that counts settlements |
 | Settlers          | Held  | 3     | A freeman in one of your settlements with room (the Colonists' Voyage)                 | `addPops`                             |
 | Captives          | Held  | 1     | A slave in one of your settlements with room                                           | `addPops`                             |
-| Master builder    | Held  | 1     | Your next building or colony upgrade this turn costs 2 less wood or stone              | new: a discount on the next build     |
+| Master builder    | Held  | 1     | Your next building or colony upgrade this turn costs 2 less wood or stone, your choice | new: a discount on the next build     |
 | Festival day      | Held  | 3     | Clear one of your Unrest tokens                                                        | `unrestTokens` clearOne               |
 | Raiders           | Rival | 4     | Take up to 3 of one resource a rival of your choice holds: wood, stone, food or gold   | new: a transfer between seats         |
 | Agitators         | Rival | 2     | A rival of your choice places an Unrest token                                          | `unrestTokens` placeOne, retargeted   |

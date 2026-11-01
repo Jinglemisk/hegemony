@@ -375,8 +375,9 @@ cards it could be. Every seat's score counts its hand this way.
   toward included.
 - **Playing:** first in its turn, a seat plays the card that pays most now: its own
   cards on its own score, which counts the card it gives up, and rival cards by the
-  Assembly's competitive delta, so they find the leader. Master Builder is played when
-  the turn's best line with its discount beats the best line without it.
+  Assembly's competitive delta, so they find the leader. Master Builder is played on
+  wood or stone, whichever gives the turn's best line, when that line beats the best
+  line without it.
 
 ## Limits and validation
 
