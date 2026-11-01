@@ -19,6 +19,18 @@ const MANUMISSION_THREE_TIMES: ResolutionCard = {
   ],
 };
 
+const FORUM_RITES: ResolutionCard = {
+  kind: "law",
+  politician: "perdiccas",
+  id: "forum-rites",
+  name: "Forum Rites",
+  text: "Citizens produce 2 influence everywhere, but freemen produce nothing in colonies.",
+  effects: [
+    { type: "popIncome", pop: "citizens", resource: "influence", amount: 2 },
+    { type: "popIncome", pop: "freemen", resource: "gold", amount: 0, scope: "colony" },
+  ],
+};
+
 const CAPITAL_WORKS: NationalIdeaDefinition = {
   // An id the game no longer has.
   id: "capital-works" as NationalIdeaId,
@@ -46,6 +58,8 @@ export const RESTORES: Record<string, (content: GameContent) => GameContent> = {
       nationalIdeas: [...ideas.slice(0, at), CAPITAL_WORKS, ...ideas.slice(at)],
     };
   },
+  /** Forum Rites stands in Rural Messengers' place: every citizen makes 2 influence. */
+  "forum-rites": (content) => replaceResolution(content, "rural-messengers", FORUM_RITES),
 };
 
 export function restoreContent(content: GameContent, ids: readonly string[]): GameContent {

@@ -563,7 +563,7 @@ export const LAW_CONTENT_IDS = [
   "festival-calendar",
   "public-works",
   "guild-charter",
-  "forum-rites",
+  "rural-messengers",
   "civic-pride",
   "master-builders",
   "homestead-act",
