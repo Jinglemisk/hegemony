@@ -230,53 +230,66 @@ describe("shared personality search", () => {
     30000,
   );
 
-  it.each([...names, "master"] as const)(
-    "%s grows a freeman past its food line only when its gold feeds him to the last year",
-    (name) => {
-      // Three freemen and one plains slave: two food short every year, bought from the
-      // bank with the freemen's gold. A fourth freeman makes it three short: 6 gold of
-      // food against 4 of income, so 2 gold a year out of the stock.
-      const choice = (
-        year: number,
-        gold: number,
-        pops = { citizens: 0, freemen: 3, slaves: 1 },
-      ) => {
-        const G = scenario({ patch: BEFORE_TRADE })
-          .withSettlement("0", "-2,1", "city", pops)
-          .withResources("0", { food: 3, wood: 0, stone: 0, gold, influence: 0 })
-          .build();
-        G.phase = "gameplay";
-        G.year = year;
-        G.players["0"].collectedThisTurn = true;
-        G.activeYearCard = null;
-        return choose(
-          name,
-          G,
-          (m) => m.type === "endTurn" || (m.type === "growPop" && m.pop === "freemen"),
-        );
-      };
-      const grows = { type: "growPop", pop: "freemen" };
+  /** Grow a freeman in the plains city, or end the turn. Three freemen and three plains
+   *  slaves: the land feeds the realm exactly. A fourth freeman is one food short a
+   *  year, 3 influence by the Dole, and no citizen makes influence, so the stock pays
+   *  3 influence for each income left. */
+  function freemanChoice(
+    name: PersonalityId | "master",
+    year: number,
+    influence: number,
+    pops = { citizens: 0, freemen: 3, slaves: 3 },
+  ) {
+    const G = scenario()
+      .withSettlement("0", "-2,1", "city", pops)
+      .withResources("0", { food: 3, wood: 0, stone: 0, gold: 0, influence })
+      .build();
+    G.phase = "gameplay";
+    G.year = year;
+    G.players["0"].collectedThisTurn = true;
+    G.activeYearCard = null;
+    // The seat has made its offer and its ladder move this turn, so the choice is the
+    // freeman or the end of the turn.
+    G.offersMade["0"] = 1;
+    G.players["0"].ladderUsedThisTurn = true;
+    return choose(
+      name,
+      G,
+      (m) => m.type === "endTurn" || (m.type === "growPop" && m.pop === "freemen"),
+    );
+  }
+  const growsFreeman = { type: "growPop", pop: "freemen" };
 
-      // Year 2 leaves twelve incomes: 24 gold feeds him to year 14, and 32 is in hand.
-      // (The slaver weighs a freeman least and wants the widest margin.)
-      expect(choice(2, 32)).toMatchObject(grows);
-      // 14 gold lasts seven years. Six of them are the forecast, which grew him and
-      // then lost him: the food is now followed to the game's last year.
-      expect(choice(2, 14)).toEqual({ type: "endTurn" });
-      // From year 9 the same 14 gold lasts to the end.
-      expect(choice(9, 14)).toMatchObject(grows);
-      // Inside the forecast as before: 6 gold runs out in the fourth year.
-      expect(choice(5, 6)).toEqual({ type: "endTurn" });
-      // A seat whose land feeds it needs no gold: three plains slaves feed the third
-      // freeman, in year 2 as in any other.
-      expect(choice(2, 0, { citizens: 0, freemen: 2, slaves: 3 })).toMatchObject(grows);
-      // A realm that buys its food keeps a year's purchases in hand against a lean
-      // year. In year 12 two incomes are left: 4 gold feeds the fourth freeman to the
-      // end, and buys two of the three food a year he would leave the realm short.
-      expect(choice(12, 4)).toEqual({ type: "endTurn" });
-      expect(choice(12, 20)).toMatchObject(grows);
+  it.each([...names, "master"] as const)(
+    "%s grows a freeman its land feeds, and none its Dole stock cannot feed to the last year",
+    (name) => {
+      // Three plains slaves feed the third freeman: no stock needed.
+      expect(freemanChoice(name, 2, 0, { citizens: 0, freemen: 2, slaves: 3 })).toMatchObject(
+        growsFreeman,
+      );
+      // Year 2 leaves twelve incomes, 36 influence of Dole. 18 runs out after six.
+      expect(freemanChoice(name, 2, 18)).toEqual({ type: "endTurn" });
     },
+    30000,
   );
+
+  it("the trader grows a freeman past its food line only when its influence feeds him to the last year", () => {
+    // A freeman fed by the Dole costs 3 influence a year and makes 1 gold. Fed to the
+    // end from year 2, the six years the forecast scores put him at −19 for the slaver,
+    // −31 for the civic and −13 for the master, whatever the stock. Only the trader,
+    // which weights a freeman at 4, pays for him (+22), so it is the build where
+    // following his food to the game's last year can be seen.
+    // Year 2 leaves twelve incomes: 12 × 3 = 36 influence feeds him to year 14.
+    expect(freemanChoice("trader", 2, 36)).toMatchObject(growsFreeman);
+    // 18 feeds him the six years the forecast sees, and he starves in the seventh,
+    // missing six of his twelve incomes: half a pop lost at 60 is 30, more than the 22
+    // he is worth. A forecast that stopped at six years grew him.
+    expect(freemanChoice("trader", 2, 18)).toEqual({ type: "endTurn" });
+    // From year 9 five incomes are left: 5 × 3 = 15 feeds him to the end.
+    expect(freemanChoice("trader", 9, 15)).toMatchObject(growsFreeman);
+    // 12 runs out in the fifth year, inside the forecast.
+    expect(freemanChoice("trader", 9, 12)).toEqual({ type: "endTurn" });
+  }, 30000);
 
   it("sequences selling wood into a Port for the trader", () => {
     // Four slaves hold the level at −2, so the Port's +2 is worth its price.
