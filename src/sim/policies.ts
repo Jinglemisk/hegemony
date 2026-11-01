@@ -1799,14 +1799,16 @@ function proposalDelta(
 /**
  * A Law blocked now is kept if it is still blocked at its turn, and its seat may propose
  * it at the next sitting with no draw. So it is worth what it would do enacted then, on a
- * copy of the board in that year; nothing when it cannot stand then either, when no
- * sitting is left, or without kept Laws, where it cannot be sealed at all.
+ * copy of the board in that year, if the block lifts by then: the Law it would replace,
+ * the cap's oldest or the price Law, is past its tenure. It is worth 0 when the block still
+ * stands then, and nothing when no sitting is left or without kept Laws, where it cannot
+ * be sealed at all.
  */
 function keptLawDelta(G: HegemonyState, card: ResolutionCard, me: PlayerId, score: Scorer) {
   const year = nextAssemblyYear(G);
   if (!G.ruleset.assembly.keptLaws || year === null) return -Infinity;
   const later = { ...G, year };
-  if (lawProposalReason(later, card)) return -Infinity;
+  if (lawProposalReason(later, card)) return 0;
   const item: BallotItem = { kind: "enact", card, proposer: me };
   return deltaIfEnacted(later, scoreEveryone(later, score), item, me, score);
 }

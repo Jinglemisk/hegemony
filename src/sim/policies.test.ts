@@ -961,32 +961,48 @@ describe("political policy", () => {
     expect(choose("freemen")).toBe("assemblyDiscardHeld");
   });
 
-  it("seals a blocked Law it can keep for the next sitting, and only with kept Laws", () => {
-    // The prize makes Sacred Fields worth passing; a protected price Law blocks it now,
-    // and that Law's tenure ends before the next sitting.
-    const choose = (keptLaws: boolean) => {
-      const G = scenario({
-        seed: 13,
-        patch: { assembly: { keptLaws, prizes: { demosthenes: { food: 40 } } } },
-      })
-        .opening()
-        .build();
-      playUntilAssembly(G);
-      const me = G.currentPlayer;
-      G.politicianDecks.demosthenes = G.politicianDecks.demosthenes.filter(
-        (id) => id !== "tenant-rights" && id !== "sacred-fields",
-      );
-      G.activeLaws = [
-        { cardId: "tenant-rights", author: "1", enactedYear: G.year - 2, order: G.lawOrder++ },
-      ];
-      G.assembly!.held[me] = {
-        card: RESOLUTION_CARDS.find((card) => card.id === "sacred-fields")!,
-      };
-      return politicalPolicy.choose(observe(G, me), enumerateLegalCommands(G, me), createSimRng(1))
-        .type;
+  /** What the seat does with a drawn Sacred Fields, which the prize makes worth passing,
+   *  while Tenant Rights, a price Law enacted `enactedAgo` years ago, blocks it in its
+   *  tenure. */
+  const chooseBlocked = (keptLaws: boolean, enactedAgo: number) => {
+    const G = scenario({
+      seed: 13,
+      patch: { assembly: { keptLaws, prizes: { demosthenes: { food: 40 } } } },
+    })
+      .opening()
+      .build();
+    playUntilAssembly(G);
+    const me = G.currentPlayer;
+    G.politicianDecks.demosthenes = G.politicianDecks.demosthenes.filter(
+      (id) => id !== "tenant-rights" && id !== "sacred-fields",
+    );
+    G.activeLaws = [
+      {
+        cardId: "tenant-rights",
+        author: "1",
+        enactedYear: G.year - enactedAgo,
+        order: G.lawOrder++,
+      },
+    ];
+    G.assembly!.held[me] = {
+      card: RESOLUTION_CARDS.find((card) => card.id === "sacred-fields")!,
     };
-    expect(choose(true)).toBe("assemblyPropose");
-    expect(choose(false)).toBe("assemblyDiscardHeld");
+    return politicalPolicy.choose(observe(G, me), enumerateLegalCommands(G, me), createSimRng(1))
+      .type;
+  };
+
+  it("seals a blocked Law it can keep for the next sitting, and only with kept Laws", () => {
+    // Tenant Rights's tenure ends before the next sitting.
+    expect(chooseBlocked(true, 2)).toBe("assemblyPropose");
+    expect(chooseBlocked(false, 2)).toBe("assemblyDiscardHeld");
+  });
+
+  it("values a blocked Law at nothing when the block still stands at the next sitting", () => {
+    // Enacted two years ago, Tenant Rights can be replaced at the next sitting, so the
+    // kept Sacred Fields is worth its enactment then. Enacted this year, it is still in its
+    // tenure then, so the Law is worth nothing and the seat lets it go.
+    expect(chooseBlocked(true, 2)).toBe("assemblyPropose");
+    expect(chooseBlocked(true, 0)).toBe("assemblyDiscardHeld");
   });
 
   it("values a kept Law against a fresh draw", () => {
