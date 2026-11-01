@@ -14,7 +14,7 @@ export function resetTurnFlags(G: HegemonyState) {
     player.devCardBoughtThisTurn = false;
     player.devCardPlayedThisTurn = false;
     player.moveUsedThisTurn = false;
-    player.buildDiscount = 0;
+    player.buildDiscount = {};
     player.calmActive = false;
   }
 }

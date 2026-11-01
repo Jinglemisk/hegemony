@@ -371,7 +371,7 @@ and goes to the discards, face up, and the table is told what it did.
 - **Settlers** (3) and **Captives** (1) — a freeman, or a slave, in one of your
   settlements with room.
 - **Master Builder** (1) — your next building or colony upgrade this turn costs 2 less
-  wood or stone, wood first.
+  wood or stone: one kind, chosen when you play it.
 - **Festival Day** (3) — clear one of your Unrest tokens.
 
 **Rival cards** (8) are held cards you play on a rival you pick. They cannot take what
