@@ -257,11 +257,13 @@ export const DEV_SCENES: Record<string, (G: HegemonyState) => DevScene> = {
  *  more). */
 function storedLateGame(G: HegemonyState): HegemonyState | null {
   const stored = JSON.parse(lateGameJson) as { stateSchemaVersion: number; state: HegemonyState };
+  // JSON loses the shared definition reference the engine checks on every move, so the
+  // board takes this game's definition back (the same rules, by the id check).
   if (
     stored.stateSchemaVersion === STATE_SCHEMA_VERSION &&
     stored.state.definitionId === G.definitionId
   )
-    return stored.state;
+    return { ...stored.state, definition: G.definition, ruleset: G.ruleset };
   console.warn("?dev=late-game: the stored board is stale; run `npm run dev:late-game`");
   return null;
 }
