@@ -1729,8 +1729,14 @@ export class Aggregator {
       drawSwings,
       drawSwingSummary: by(drawSwingsOf),
       classes: by(classesOf),
+      // The authored Ideas, then any other a seat held: Capital Works under `--restore`.
       nationalIdeas: Object.fromEntries(
-        NATIONAL_IDEAS.map((idea) => [idea.id, by(ideaHolders(idea.id))]),
+        [
+          ...new Set([
+            ...NATIONAL_IDEAS.map((idea) => idea.id),
+            ...seatGames.flatMap(({ facts }) => facts.nationalIdeas.map((owned) => owned.id)),
+          ]),
+        ].map((id) => [id, by(ideaHolders(id))]),
       ) as BatchReport["nationalIdeas"],
       perYear: yearRows(snapshots, seatGames),
       hunger: by(hungerOf),

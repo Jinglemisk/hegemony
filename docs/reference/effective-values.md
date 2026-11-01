@@ -116,7 +116,7 @@ preset leaves these resolutions, participation prices and prizes as authored.
 
 ## National Ideas
 
-The match pins the twelve Idea definitions. Per-seat public ownership adds typed
+The match pins the eleven Idea definitions. Per-seat public ownership adds typed
 sources to `getStandingEffectSources`, alongside table-wide Laws. Slot usage counts
 occupied slots: Harbour Planning Ports occupy zero while remaining real buildings
 for Law building-count limits. Piece supply, Dole prices, yearly realm income and

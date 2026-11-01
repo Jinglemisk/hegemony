@@ -5,7 +5,6 @@ export type NationalIdeaId =
   | "good-harvest"
   | "public-dole"
   | "urban-planning"
-  | "capital-works"
   | "civic-tradition"
   | "frontier-charter"
   | "new-settlers"

@@ -34,7 +34,7 @@ The full-game browser test waits.
 calls on 2026-10-27; the [frontend presentation reference](reference/frontend-presentation.md#map-presentation)
 holds them.
 
-**Locked sequence:** V1 includes luxury goods, full Catan-style player trade, all twelve
+**Locked sequence:** V1 includes luxury goods, full Catan-style player trade, all eleven
 National Ideas, and the intended typed Resolution/Idea effects. The v1 mechanics freeze
 precedes full multiplayer. The mechanics are frozen (owner, 2026-10-27) but for the
 [agency package](plans/agency-package.md). What remains is balance: the deck, events and year cards.
@@ -52,7 +52,7 @@ precedes full multiplayer. The mechanics are frozen (owner, 2026-10-27) but for 
 | [Board modes](plans/board-modes.md)                 | post-v2  | `proposed` | Engine and sim (#145); Q81 answered: hop 3, seven goods, the oracle on an island  |
 | [Game settings](plans/game-settings.md)             | post-v2  | `proposed` | Length and base income built in the engine; the setup screen is parked            |
 | [National Ideas](plans/national-ideas.md)           | v2       | `active`   | Step 9 shipped (#88); twelve v2 rules, open setup draft (#95), influence purchase |
-| [Agency package](plans/agency-package.md)           | post-v2  | `active`   | Manumission built; the other narrow changes next                                  |
+| [Agency package](plans/agency-package.md)           | post-v2  | `active`   | Manumission and Capital Works built; the other narrow changes next                |
 | [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked`  | Final typed Resolution/Idea effects and evidence before multiplayer               |
 
 Every file in `docs/plans/` must appear in this table. Start a substantial feature

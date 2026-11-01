@@ -39,18 +39,17 @@ Each row is the full player-facing sentence, also stored in the match content.
 | 1   | Good Harvest     | Your realm gains 2 food at each year's income.                                      |
 | 2   | Public Dole      | Your Dole buys 1 food for 2 influence.                                              |
 | 3   | Urban Planning   | Each of your cities has one extra work slot.                                        |
-| 4   | Capital Works    | Your capital has one extra work slot.                                               |
-| 5   | Civic Tradition  | Your realm gains 2 influence at each year's income.                                 |
-| 6   | Frontier Charter | You have one extra colony piece.                                                    |
-| 7   | New Settlers     | When you take this Idea, add one slave or freeman to an owned settlement with room. |
-| 8   | City Pioneers    | Upgrading a colony adds one freeman to that city if it has room.                    |
-| 9   | Slave Colonies   | When you found a colony, add one slave there, as room allows.                       |
-| 10  | Harbour Planning | Your Ports take no work slot.                                                       |
-| 11  | Treasury Grant   | When you take this Idea, gain 4 gold.                                               |
-| 12  | Assembly Brokers | You may buy a third vote at each Assembly.                                          |
+| 4   | Civic Tradition  | Your realm gains 2 influence at each year's income.                                 |
+| 5   | Frontier Charter | You have one extra colony piece.                                                    |
+| 6   | New Settlers     | When you take this Idea, add one slave or freeman to an owned settlement with room. |
+| 7   | City Pioneers    | Upgrading a colony adds one freeman to that city if it has room.                    |
+| 8   | Slave Colonies   | When you found a colony, add one slave there, as room allows.                       |
+| 9   | Harbour Planning | Your Ports take no work slot.                                                       |
+| 10  | Treasury Grant   | When you take this Idea, gain 4 gold.                                               |
+| 11  | Assembly Brokers | You may buy a third vote at each Assembly.                                          |
 
-Capital Works leaves the roster under the [agency package](agency-package.md) (owner,
-2026-10-31; not built yet), so eleven remain. Urban Planning is unchanged.
+Capital Works left the roster under the [agency package](agency-package.md) (owner,
+2026-10-31; built 2026-11-01), so eleven remain. Urban Planning is unchanged.
 
 ## Defaults and interactions
 
@@ -59,8 +58,7 @@ The full Step 9 default block lives in the [migration plan](../archive/plans/v2-
 - Good Harvest and Civic Tradition are flat realm income; year cards zeroing class
   columns do not take them. General Strike suppresses them with the rest of income.
 - Public Dole states a whole price, with the existing food amount and unlimited uses.
-- City slots include the capital; Capital Works uses the first setup city, and modes
-  with no setup city have no capital. Slot additions stack with Laws; neither changes
+- City slots include the capital. Slot additions stack with Laws; neither changes
   population capacity. Harbour Planning makes a Port occupy zero slots, while Laws'
   building-count limits still count it and its price and claim stay unchanged.
 - New Settlers never grants a citizen. Both acquisition grants apply on the purchase
@@ -129,7 +127,7 @@ Works also offers less scope than Urban Planning at the same price. These are
 the shared scorer's current preferences; the rerun should record their spread
 without requiring every Idea to be used or changing the rules to force it.
 
-Telemetry zero-fills all twelve Ideas with setup picks, purchases, holder counts, wins and
+Telemetry zero-fills every Idea with setup picks, purchases, holder counts, wins and
 holder win rates. Counts include capped games; win rates use finished seat-games only.
 A consumed acquisition grant still belongs to its holder and counts in this denominator.
 Step 18's state schema 12 and command schema 6 reject earlier saves and scripts.

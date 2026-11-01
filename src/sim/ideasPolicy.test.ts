@@ -4,7 +4,10 @@ import { enumerateLegalCommands } from "../game/legalMoves";
 import { projectForPlayer } from "../game/projection";
 import { yearDeckSize } from "../game/year";
 import type { NationalIdeaId } from "../game/ideaTypes";
+import { createGameDefinition } from "../game/definition";
+import type { HegemonyState } from "../game/types";
 import { chooseIdea, evaluatePlacement, masterPolicy, PERSONALITY_WEIGHTS } from "./policies";
+import { restoreContent } from "./restore";
 import { createSimRng } from "./rng";
 import { Aggregator } from "./telemetry";
 
@@ -196,23 +199,8 @@ describe("scores setup Ideas and in-play purchases", () => {
       { id: "treasury-grant", acquired: "purchase", year: 1 },
     ];
     G.players["1"].nationalIdeas = [{ id: "good-harvest", acquired: "setup", year: 1 }];
-    const agg = new Aggregator();
-    agg.beginGame(0, 1, G);
-    agg.endGame(G);
-    const report = agg.buildReport({
-      games: 1,
-      turns: 56,
-      policy: "master",
-      mode: "standard",
-      boardLayout: "scenario",
-      opening: "policy",
-      baseSeed: 1,
-      botSeedRule: "test",
-      rulesetPatch: null,
-      definition: G.definition.identity,
-      generatedAt: "test",
-    });
-    expect(Object.keys(report.nationalIdeas)).toHaveLength(12);
+    const report = reportOf(G);
+    expect(Object.keys(report.nationalIdeas)).toHaveLength(11);
     const goodHarvest = { setupPicks: 2, purchases: 0, holders: 2, wins: 1, winRate: 0.5 };
     expect(report.nationalIdeas["good-harvest"].total).toEqual(goodHarvest);
     expect(report.nationalIdeas["good-harvest"].perPolicy).toEqual({ master: goodHarvest });
@@ -227,6 +215,45 @@ describe("scores setup Ideas and in-play purchases", () => {
       wins: 1,
       winRate: 1,
     });
-    expect(report.nationalIdeas["capital-works"].total.winRate).toBe(0);
+    expect(report.nationalIdeas["urban-planning"].total.winRate).toBe(0);
+  });
+  it("adds a row for Capital Works when `--restore` put it back and a seat held it", () => {
+    const G = board(30, 1, 0);
+    G.definition = createGameDefinition({
+      ruleset: G.ruleset,
+      content: restoreContent(G.definition.content, ["capital-works"]),
+    });
+    G.definitionId = G.definition.identity.id;
+    G.phase = "gameOver";
+    G.gameOverReason = "deckExhausted";
+    G.winner = "0";
+    G.players["0"].nationalIdeas = [
+      { id: "capital-works" as NationalIdeaId, acquired: "setup", year: 1 },
+    ];
+    const report = reportOf(G);
+    expect(Object.keys(report.nationalIdeas)).toHaveLength(12);
+    expect(report.nationalIdeas["capital-works" as NationalIdeaId].total).toMatchObject({
+      setupPicks: 1,
+      wins: 1,
+    });
   });
 });
+
+function reportOf(G: HegemonyState) {
+  const agg = new Aggregator();
+  agg.beginGame(0, 1, G);
+  agg.endGame(G);
+  return agg.buildReport({
+    games: 1,
+    turns: 56,
+    policy: "master",
+    mode: "standard",
+    boardLayout: "scenario",
+    opening: "policy",
+    baseSeed: 1,
+    botSeedRule: "test",
+    rulesetPatch: null,
+    definition: G.definition.identity,
+    generatedAt: "test",
+  });
+}

@@ -174,7 +174,7 @@ export const PARITY_BEHAVIOR_FIXTURES = {
     implementation: "src/sim/policies.test.ts",
     evidence: "plays complete games across seeds without deadlocking through the agora",
   },
-  ideaRules: { implementation: "src/game/ideas.test.ts", evidence: "twelve National Ideas" },
+  ideaRules: { implementation: "src/game/ideas.test.ts", evidence: "eleven National Ideas" },
   ideaPolicy: {
     implementation: "src/sim/ideasPolicy.test.ts",
     evidence: "scores setup Ideas and in-play purchases",
@@ -606,7 +606,6 @@ export const NATIONAL_IDEA_CONTENT_IDS = [
   "good-harvest",
   "public-dole",
   "urban-planning",
-  "capital-works",
   "civic-tradition",
   "frontier-charter",
   "new-settlers",

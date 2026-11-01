@@ -236,8 +236,8 @@ Compare `currencyVerbs.civicCalm` (calm bought), `riots.perGame` and
 `riots.revoltsPerGame` with the earlier batch; look for legal calm purchases when
 a +2 lift avoids a visible riot or revolt. Since Step 19 a riot is charged what
 the riot table takes, so expect less calm and more riots than in the batches
-before it: a riot that calm would only move a year is faced. Capital Works is
-weakly dominated by Urban Planning; other unused Ideas need context, not quotas.
+before it: a riot that calm would only move a year is faced. Unused Ideas need
+context, not quotas.
 The balance check owns the 20–45% win-rate decision and any balance changes.
 
 Time the forty-game rotation before starting the balance check's larger conditions. The
@@ -339,7 +339,9 @@ same on all four rows) and `activeLuxuries`.
   definition ID changes with the content.
 - `--restore id,id` — plays the content an [agency package](../plans/agency-package.md)
   change replaced, for the comparisons that turn each change off one at a time.
-  `manumission` counts each slave three times for unrest again. `meta.restored` records
+  `manumission` counts each slave three times for unrest again; `capital-works` puts
+  Capital Works back among the Ideas, and the report gives it a row once a seat holds
+  it. `meta.restored` records
   the list, and the definition ID changes with the content. No screen offers it, and
   each id goes once its comparison is read.
 - `--jobs N` — plays the games on N worker processes and still writes one report and
@@ -528,7 +530,7 @@ held card in place of a riot's pop). Both are on by default and no screen offers
 
 **Content switches.** The agency package's Law and Idea changes are content, which
 `--ruleset-patch` and `--tune-patch` do not reach, so `--restore` turns them off:
-`--restore manumission` plays Manumission at three times.
+`--restore manumission,capital-works` plays Manumission at three times and twelve Ideas.
 
 Identical inputs produce byte-identical reports (minus `meta.generatedAt`), and
 the same CSV, whatever `--jobs` is. Compare two patches by running two batches with
