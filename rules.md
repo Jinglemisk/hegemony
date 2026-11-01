@@ -11,8 +11,8 @@ out-produce your rivals.
 
 ## The board
 
-The island is a grid of 37 hex tiles. A tile prints two things: its terrain and a
-number of **slots**. The land makes nothing by itself. A slave working the tile makes
+The board holds 37 hex tiles: by default islands with sea between them, or one landmass
+(see [The map](#the-map)). A tile prints two things: its terrain and a number of **slots**. The land makes nothing by itself. A slave working the tile makes
 1 of the terrain's resource:
 
 - **Forest** → Wood
