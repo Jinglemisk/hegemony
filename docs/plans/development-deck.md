@@ -314,6 +314,9 @@ deck against Ventures, then the free card on and off, read against the [rotated 
    Ventures waits for the end (owner).
 2. **Happiness and the hand.** The free card at +3, a riot taking a card in place of a pop,
    and the bots' value of both, with a dated report on slaves and happiness by personality.
+   **Built 2026-11-01** (branch `feat/dev-deck-happiness`), with a ruleset switch for each
+   rule (`devCards.freeCard`, `devCards.riotCard`) for the comparisons; the report waits for
+   the owner's go.
 3. **Card trading.** Closed cards in the trade composer, the giver's pick, not playable the turn
    received; bots trade cards. Needs player trade's first PR.
 4. **Close-out.** The rules guide, the Codex and the owner's hotseat playtest.

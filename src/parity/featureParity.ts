@@ -65,6 +65,18 @@ export const PARITY_BEHAVIOR_FIXTURES = {
     implementation: "src/sim/devCardPolicy.test.ts",
     evidence: "buys and plays cards through legal commands",
   },
+  devCardFreeCard: {
+    implementation: "src/game/devCards.test.ts",
+    evidence: "draws one at the end of the turn at +3 or higher, and none at +2",
+  },
+  devCardRiot: {
+    implementation: "src/game/riot.test.ts",
+    evidence: "asks for each pop the row takes: lose it, or a held card drawn at random",
+  },
+  botHappinessCards: {
+    implementation: "src/sim/devCardPolicy.test.ts",
+    evidence: "weighs the hand's average card against the pop at its own weights",
+  },
   lawIncome: {
     implementation: "src/game/assembly/laws.test.ts",
     evidence: "Civic Pride pays one flat happiness line",
@@ -688,6 +700,9 @@ export const CONTENT_MANIFEST = {
       "devCardYields",
       "devCardRivals",
       "botPlaysCards",
+      "devCardFreeCard",
+      "devCardRiot",
+      "botHappinessCards",
     ],
   },
   riotInsurance: {

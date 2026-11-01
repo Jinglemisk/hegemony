@@ -3,11 +3,14 @@ import {
   CONCESSION_FROM,
   getBuyRiotInsuranceStatus,
   getDemotePopStatus,
+  getResolveRiotPopStatus,
   insuranceRollBonus,
+  riotPopNext,
   riotRollReach,
 } from "../../../game/rules";
 import { getRiotTable } from "../../../game/content";
 import type {
+  HegemonyState,
   LogEntry,
   LogMoment,
   PlayerId,
@@ -16,6 +19,7 @@ import type {
   TableInsuranceOption,
 } from "../../../game/types";
 import { presentTableEffect } from "../../../ui/effects";
+import { formatPopLabel } from "../../../ui/formatters";
 import { sign } from "../../../ui/frameFormat";
 import { RESOURCE_RASTERS } from "../../../ui/iconRegistry";
 import { AnnotatedText, Prose } from "../../AnnotatedText";
@@ -57,10 +61,12 @@ function blowIconOf(effect: TableEffect | undefined): string {
 /**
  * The riot, at a committed turn end. The sheet sets insurance against the table: each
  * declared insurance strikes the rows it puts out of reach. The roll lands on the
- * same table, then the result card says what it all cost. Blocking: it mounts while
- * `G.pendingRiot` stands, so the handoff waits for the roll, and the result stays
- * until the seat endures it although the turn has already passed (the parent holds
- * it open via `onRolled` / `onDismissResult`).
+ * same table. A seat holding development cards then answers each pop the row takes:
+ * lose it, or give up a held card drawn at random. Then the result card says what it
+ * all cost. Blocking: it mounts while `G.pendingRiot` stands, so the handoff waits for
+ * the roll and the answers, and the result stays until the seat endures it although
+ * the turn has already passed (the parent holds it open via `onRolled` /
+ * `onDismissResult`).
  */
 export function RiotModal({
   onRolled,
@@ -75,19 +81,26 @@ export function RiotModal({
   const [seat] = useState<PlayerId>(
     () => pending?.playerID ?? latestRiot(G.log)?.about ?? currentPlayerId,
   );
-  const [stage, setStage] = useState<"sheet" | "roll" | "result">(pending ? "sheet" : "result");
+  const [stage, setStage] = useState<"sheet" | "roll" | "pay" | "result">(
+    pending ? (pending.losses ? "pay" : "sheet") : "result",
+  );
   const entry = pending ? null : latestRiot(G.log, seat);
+  // The die as it landed: the riot's line once it closed, the record while its pops wait.
+  const paying = Boolean(pending?.losses);
+  const rolled = entry ? entry.moment : paying ? G.lastTableRoll : null;
+  const landed = Boolean(rolled);
 
   useEffect(() => {
-    if (stage !== "roll" || !entry) return;
-    const timer = window.setTimeout(() => setStage("result"), ROLL_BEAT_MS);
+    if (stage !== "roll" || !landed) return;
+    const timer = window.setTimeout(() => setStage(paying ? "pay" : "result"), ROLL_BEAT_MS);
     return () => window.clearTimeout(timer);
-  }, [stage, entry]);
+  }, [stage, landed, paying]);
 
   const riotTable = getRiotTable(G.definition.content);
   const name = G.players[seat].name;
 
-  if (stage === "result" && entry) {
+  // The last answer closes the riot: its result follows the answers.
+  if ((stage === "result" || stage === "pay") && entry) {
     const moment = entry.moment;
     const row = riotTable.rows.find((candidate) => candidate.roll === moment.modified);
     const first = row?.effects[0];
@@ -137,6 +150,7 @@ export function RiotModal({
         kicker="Riot"
         lines={[
           ...leaveLines(G, seat, moment.left),
+          ...cardLines(G, moment.cards),
           ...insurance,
           tokensLine(moment.tokensCleared, moment.level),
         ]}
@@ -146,23 +160,25 @@ export function RiotModal({
     );
   }
 
-  const modifier = entry
-    ? entry.moment.modifier
+  const modifier = rolled
+    ? rolled.modifier
     : insuranceRollBonus(pending?.boughtInsurance ?? [], G.definition.content);
   const reach = riotRollReach(G, modifier);
+  const die = riotTable.die ?? 6;
   const canAct = viewerCanAct && seat === currentPlayerId && Boolean(pending);
-  const rolledRecord = entry
+  const rolledRecord = rolled
     ? {
         tableId: "riot" as const,
         playerID: seat,
-        roll: entry.moment.roll,
-        modified: entry.moment.modified,
+        roll: rolled.roll,
+        modified: rolled.modified,
         modifier,
-        rowLabel: entry.moment.rowLabel,
-        outcomes: entry.moment.outcomes,
-        year: entry.year,
+        rowLabel: rolled.rowLabel,
+        outcomes: rolled.outcomes,
+        year: entry?.year ?? G.year,
       }
     : null;
+  const next = paying ? riotPopNext(G, seat) : null;
 
   return (
     <ModalShell
@@ -179,25 +195,29 @@ export function RiotModal({
             Riot
           </h2>
           <p className="fateVoice body-em">
-            The agora fills with angry voices. Declare your concessions before the die decides.
+            {paying
+              ? "The die has spoken. The mob will take a pop, or a card in its place."
+              : "The agora fills with angry voices. Declare your concessions before the die decides."}
           </p>
         </div>
       </header>
 
       <div className="sheetBody">
-        {stage === "roll" && entry ? (
+        {stage === "roll" && rolled ? (
           <div className="riotRoll">
-            <LacquerDie value={entry.moment.roll} />
+            <LacquerDie value={rolled.roll} />
             <span className="riotSum display num">
-              {entry.moment.roll}
+              {rolled.roll}
               {modifier ? (
                 <>
                   {" "}
-                  <span className="riotSumMute">+ {modifier} =</span> {entry.moment.modified}
+                  <span className="riotSumMute">+ {modifier} =</span> {rolled.modified}
                 </>
               ) : null}
             </span>
           </div>
+        ) : paying ? (
+          <RiotPops seat={seat} />
         ) : pending ? (
           <Insurance seat={seat} canAct={canAct} />
         ) : null}
@@ -212,8 +232,8 @@ export function RiotModal({
           />
           <p className="caption sheetNote">
             {modifier
-              ? `You roll a d6 ${sign(modifier)}: the worst you can roll is a ${reach.lowest}.`
-              : "You roll a d6. Each insurance puts the lowest row out of reach."}
+              ? `You roll a d${die} ${sign(modifier)}: the worst you can roll is a ${reach.lowest}.`
+              : `You roll a d${die}. Each insurance puts the lowest row out of reach.`}
           </p>
         </section>
       </div>
@@ -222,7 +242,33 @@ export function RiotModal({
         <span className="caption">
           <Prose links={false}>Losses take slaves first.</Prose>
         </span>
-        {pending ? (
+        {paying && stage === "pay" ? (
+          <span className="hungerActs">
+            <button
+              className="ghostVerb verb"
+              disabled={!canAct || !getResolveRiotPopStatus(G, seat, "pop").can}
+              onClick={() => {
+                onRolled();
+                moves.resolveRiotPop("pop");
+              }}
+              type="button"
+            >
+              Lose the {next ? formatPopLabel(next.pop, 1) : "pop"}
+            </button>
+            <button
+              className="ceremonyCommit verb verb-lg"
+              disabled={!canAct || !getResolveRiotPopStatus(G, seat, "card").can}
+              onClick={() => {
+                onRolled();
+                moves.resolveRiotPop("card");
+              }}
+              type="button"
+            >
+              <Ico path="events/convoy" size="ui" />
+              Give Up a Card
+            </button>
+          </span>
+        ) : pending && !paying ? (
           <button
             className="ceremonyCommit verb verb-lg"
             disabled={!canAct}
@@ -242,7 +288,63 @@ export function RiotModal({
   );
 }
 
-/** The insurance column: three declarations, +1 each, paid now. */
+/**
+ * The rolled riot's pops, one at a time: what the next one is, and the hand that may
+ * stand in for it. The hand shows only its count, so nobody sees which card would go.
+ */
+function RiotPops({ seat }: { seat: PlayerId }) {
+  const { G } = useGameUi();
+  const losses = G.pendingRiot!.losses!;
+  const next = riotPopNext(G, seat);
+  const held = G.devHands[seat].length;
+  const owed = losses.owed;
+  return (
+    <section className="sheetCol">
+      <h3 className="sheetSec label">Pops or cards</h3>
+      <p className="body">
+        <Prose links={false}>
+          {`${owed === 1 ? "One pop" : `${owed} pops`} to answer. For each, lose it or give up a held card drawn at random.`}
+        </Prose>
+      </p>
+      <ul className="insRows">
+        {next ? (
+          <li className="insRow">
+            <Ico path={`pops/${next.pop}`} size="tile" />
+            <span className="insWords">
+              <b className="title">Next to go</b>
+              <span className="caption">
+                A {formatPopLabel(next.pop, 1)} from {placeName(G, seat, next.tileId)}
+              </span>
+            </span>
+          </li>
+        ) : null}
+        <li className="insRow">
+          <Ico path="events/convoy" size="tile" />
+          <span className="insWords">
+            <b className="title">Held cards</b>
+            <span className="caption">
+              {held} in hand{losses.cards.length ? `, ${losses.cards.length} given up` : ""}
+            </span>
+          </span>
+        </li>
+      </ul>
+      <p className="caption sheetNote">
+        The card is drawn after you choose. It is discarded, not played.
+      </p>
+    </section>
+  );
+}
+
+/** "Caravan went in place of a pop." — one line per card a riot took. */
+function cardLines(G: HegemonyState, cards: readonly string[]): LossLine[] {
+  return cards.map((cardId, index) => ({
+    key: `card-${index}`,
+    icon: "events/convoy",
+    text: `${G.definition.content.devCards.find((card) => card.id === cardId)?.name ?? "A card"} went in place of a pop.`,
+  }));
+}
+
+/** The insurance column: each declaration once, paid now, for its bonus to the roll. */
 function Insurance({ seat, canAct }: { seat: PlayerId; canAct: boolean }) {
   const { G, moves } = useGameUi();
   const pending = G.pendingRiot!;
@@ -257,6 +359,9 @@ function Insurance({ seat, canAct }: { seat: PlayerId; canAct: boolean }) {
   );
   const [target, setTarget] = useState(0);
   const tileId = targets[Math.min(target, targets.length - 1)];
+  // The bonus is data: one number when every option adds the same.
+  const bonuses = new Set((riotTable.insurance ?? []).map((option) => option.modifier));
+  const uniform = bonuses.size === 1 ? [...bonuses][0] : null;
 
   return (
     <section className="sheetCol">
@@ -311,9 +416,13 @@ function Insurance({ seat, canAct }: { seat: PlayerId; canAct: boolean }) {
                   <AnnotatedText
                     className="caption"
                     links={false}
-                    text={`${amount ?? 0} ${resource ?? ""}`}
+                    text={`${amount ?? 0} ${resource ?? ""} · ${sign(option.modifier)}`}
                   />
                 )}
+                {/* Why it cannot be declared; the concession says so above. */}
+                {!bought && !status.can && (usable || !option.demotesPop) ? (
+                  <span className="caption">{status.reasons[0]}</span>
+                ) : null}
               </span>
               <button
                 aria-label={`Declare ${option.label.toLowerCase()}`}
@@ -333,7 +442,10 @@ function Insurance({ seat, canAct }: { seat: PlayerId; canAct: boolean }) {
           );
         })}
       </ul>
-      <p className="caption sheetNote">Each one declared adds +1 to the roll, paid now.</p>
+      <p className="caption sheetNote">
+        Each one declared adds {uniform !== null ? `${sign(uniform)}` : "its bonus"} to the roll,
+        paid now.
+      </p>
       <p className="caption sheetNote insCleared">
         <Ico path="unrest/unrest" size="ui" />
         Your {pending.tokensCleared} Unrest{" "}

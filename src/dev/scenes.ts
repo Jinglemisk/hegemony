@@ -28,7 +28,8 @@ import { createSimRng, deriveBotSeed } from "../sim/rng";
  * rival bought). Part B's: `?dev=year` (Year II's card, Plague, before the Assembly),
  * `?dev=year-back` (its back, held), `?dev=year-term` (Year III's card, Drought),
  * `?dev=riot-confirm` and `?dev=revolt-confirm` (End turn's confirm at each line),
- * `?dev=riot` (the riot sheet), `?dev=riot-result`, `?dev=revolt` (the revolt card),
+ * `?dev=riot` (the riot sheet), `?dev=riot-result`, `?dev=riot-cards` (a riot rolled on
+ * two pops, the seat holding two development cards), `?dev=revolt` (the revolt card),
  * `?dev=rival-unrest` (a rival's riot and another's revolt, toasted), `?dev=threat` (a rival
  * holding three titles, with the title toasts), `?dev=race` and `?dev=age-end` (the two
  * tablets), `?dev=turn-notice` (the turn notice), `?dev=alarms` (a rival one title short,
@@ -114,6 +115,25 @@ export const DEV_SCENES: Record<string, (G: HegemonyState) => DevScene> = {
       G: apply(rioting, { type: "resolveRiot" }),
       shell: { riotResult: true, viewer: seat },
     };
+  },
+  "riot-cards": (G) => {
+    const seat = G.currentPlayer;
+    const held = produce(clearFate(G), (draft) => {
+      for (const cardId of ["caravan", "settlers"]) {
+        const index = draft.devDrawPile.findIndex((id) => id.startsWith(`${cardId}#`));
+        draft.devHands[seat].push({ id: draft.devDrawPile.splice(index, 1)[0], turn: 0 });
+      }
+    });
+    const rioting = produce(
+      apply(atLevel(held, G.ruleset.economy.unrest.riotThreshold), END_TURN),
+      (draft) => {
+        // The die lands on 2, Revolt spreads: two pops.
+        let state = 1;
+        while (1 + Math.floor(mulberry32(state).value * 6) !== 2) state += 1;
+        draft.rng = state;
+      },
+    );
+    return { G: apply(rioting, { type: "resolveRiot" }), shell: { viewer: seat } };
   },
   revolt: (G) => {
     const start = atLevel(clearFate(G), G.ruleset.economy.unrest.revoltThreshold);

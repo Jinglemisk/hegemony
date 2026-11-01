@@ -269,6 +269,24 @@ export interface PendingRiot {
   tokensCleared: number;
   /** Where the concession demoted its citizen, once declared. */
   concessionTileId: string | null;
+  /** Set once the die is cast and the row takes pops the seat may pay for in held cards:
+   *  the riot waits while the seat answers them, one pop at a time. */
+  losses: RiotLosses | null;
+}
+
+/** How a seat answers one pop a riot would take: lose it, or discard a held card drawn
+ *  at random. */
+export type RiotPay = "pop" | "card";
+
+/** A riot's pops after its roll, while the seat answers them. */
+export interface RiotLosses {
+  /** Pops still to answer. */
+  owed: number;
+  /** The pops taken so far, and the held cards discarded in place of the others. */
+  left: PopLeave[];
+  cards: DevCardId[];
+  /** The roll's Chronicle line, which takes the riot's moment once every pop is answered. */
+  line: number;
 }
 
 /** The last table roll, kept on state so the UI can show the outcome after the move
@@ -479,6 +497,8 @@ export type LogMoment =
       rowLabel: string;
       outcomes: string[];
       left: PopLeave[];
+      /** Held cards discarded in place of pops, by card. */
+      cards: DevCardId[];
       insurance: RiotInsuranceId[];
       concessionTileId: string | null;
       tokensCleared: number;
@@ -491,6 +511,9 @@ export type LogMoment =
   /** A development card the table sees resolve: a yield on its draw, or a held card
    *  played. `outcome` says what it did. A held card drawn is no moment: it is secret. */
   | { kind: "devCard"; cardId: DevCardId; played: boolean; target?: PlayerId; outcome: string }
+  /** The free card at the end of a seat's turn, at a standing level of `level`. A yield
+   *  names itself and what it gave; a held card stays secret. */
+  | { kind: "freeCard"; level: number; card?: DevCardId; outcome?: string }
   /** The year's card, turned: it tags the Chronicle line and raises no toast. */
   | { kind: "yearCard"; cardId: string };
 

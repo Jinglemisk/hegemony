@@ -64,8 +64,12 @@ export const ENGINE_VERSION = "0.1.0";
  *  price for the venture stake, and the content the cards for the expedition tables.
  *  Command v8 drops the venture and adds buying and playing a card. The same seed deals
  *  the deck after every older shuffle, but older saves are rejected, not migrated. */
-export const STATE_SCHEMA_VERSION = 21;
-export const COMMAND_SCHEMA_VERSION = 8;
+/** v22 (development deck, slice 2): the free card at +3 and a riot's card. The ruleset
+ *  carries both switches and the free card's level, and a pending riot carries the pops
+ *  still to answer once its die is cast. Command v9 adds the answer, pop or card. Older
+ *  saves are rejected, not migrated. */
+export const STATE_SCHEMA_VERSION = 22;
+export const COMMAND_SCHEMA_VERSION = 9;
 
 export const SAVE_FORMAT_VERSION = 2;
 export const SCRIPT_FORMAT_VERSION = 2;

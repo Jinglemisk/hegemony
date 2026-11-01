@@ -224,7 +224,7 @@ It expires at the year boundary and never counts for Beloved. Bots weigh calm,
 Temples and ladder changes against the visible turn-end risk.
 
 A riot is charged what the riot table is expected to take, read from the engine's
-table: every face at equal odds. The pops are charged at the weight of the class
+table through its own row lookup: every face at equal odds. The pops are charged at the weight of the class
 the table takes next (slaves first), a burned building at what the seat would pay
 to raise it again, and the food and gold at what the realm could hand over. With
 no building to burn or under 3 gold the table takes a pop more often, and the
@@ -250,7 +250,12 @@ none pays, the concession included. The forecast charges the pending riot at the
 insurance bought so far, so an option is worth the loss it saves at the seat's
 weights, less its price. The rule used to buy the bread dole and patronage
 whenever it could pay and never the concession. No bot concedes its last citizen.
-Resolving the riot passes the committed turn.
+Once the die is cast, a bot holding development cards answers each pop the row takes:
+it gives up a card when the average card in its hand, as the hand counts it, is worth
+less than the pop at its weight for that class. The card goes at random, so the bot
+never weighs the card that would go. The last answer passes the committed turn. The
+forecast still charges a riot's pops at the pop's weight: it does not yet price a card
+standing in.
 
 ## Hunger
 
@@ -377,6 +382,11 @@ cards it could be. Every seat's score counts its hand this way.
   cards on its own score, which counts the card it gives up, and rival cards by the
   Assembly's competitive delta, so they find the leader. Master Builder is played when
   the turn's best line with its discount beats the best line without it.
+- **The free card:** the forecast reads the engine's free-card rule at each turn end it
+  checks, this turn's included, and the score adds an unseen card's worth for each one
+  drawn. So a level of +3 or higher is worth a card a turn, and a seat weighs a slave
+  against it.
+- **A riot's card:** see the riot table, above.
 
 ## Limits and validation
 

@@ -195,6 +195,10 @@ export const COMMAND_PARITY = {
     frontend: interactive("src/components/board/modals/RiotModal.tsx"),
     simulation: simulated("master-rule", "resolveRiotByRule roll"),
   },
+  resolveRiotPop: {
+    frontend: interactive("src/components/board/modals/RiotModal.tsx"),
+    simulation: simulated("master-rule", "resolveRiotByRule → riotPopByRule"),
+  },
   assemblyDraw: {
     frontend: interactive("src/components/board/assembly/AssemblySitting.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),

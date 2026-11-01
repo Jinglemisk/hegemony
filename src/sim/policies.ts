@@ -7,8 +7,8 @@ import { playerPieces } from "../game/settlement";
 import { YEAR_TERM_COLUMNS, calculateIncome, unfedAtTurnEnd } from "../game/economy/income";
 import { applyHunger, hungerForEval, hungerMouths } from "../game/hunger";
 import { happinessLevel, slaveUnhappiness, standingHappiness } from "../game/happiness";
-import { TABLE_LOSS_ORDER, removePops } from "../game/tables";
-import { insuranceRollBonus } from "../game/riot";
+import { TABLE_LOSS_ORDER, landedRow, removePops } from "../game/tables";
+import { insuranceRollBonus, riotPopNext } from "../game/riot";
 import { getAdjustedActionCost } from "../game/economy/cost";
 import { getActiveEffects } from "../game/activeEffects";
 import { applyIncome } from "../game/core/resources";
@@ -22,7 +22,7 @@ import {
   getResolutionCards,
   getRiotTable,
 } from "../game/content";
-import { devCardGain, devCardOf } from "../game/devCards";
+import { devCardGain, devCardOf, freeCardDue } from "../game/devCards";
 import { totalPops } from "../game/core/pops";
 import { getOwnedSettlement, getTile, popsInTransit, realmPops } from "../game/core/query";
 import { placeCapital, placeCity, placeColony, resolveArrivingPops } from "../game/actions";
@@ -190,19 +190,24 @@ export const randomPolicy: Policy = {
 const RIOT_MOVE_TYPES: ReadonlySet<GameCommand["type"]> = new Set([
   "resolveRiot",
   "buyRiotInsurance",
+  "resolveRiotPop",
 ]);
 
 /**
  * A riot on the table: buy the insurance that leaves the seat best off, the concession
  * included, and roll when none pays. The forecast charges the pending riot what its
  * table is expected to take at the insurance bought so far, so an option is worth what
- * it saves at the seat's weights, less its price.
+ * it saves at the seat's weights, less its price. Once rolled, each pop is answered by
+ * {@link riotPopByRule}.
  */
 function resolveRiotByRule(
   G: HegemonyState,
   moves: GameCommand[],
   score: Scorer,
+  weights = DEFAULT_WEIGHTS,
 ): GameCommand | null {
+  const answer = riotPopByRule(G, moves, weights);
+  if (answer) return answer;
   const riot = moves.find((move) => move.type === "resolveRiot");
   if (!riot) return null;
   const playerID = G.currentPlayer;
@@ -220,6 +225,28 @@ function resolveRiotByRule(
     }
   }
   return best;
+}
+
+/**
+ * A rolled riot's pop: give a held card in its place when the average card in the hand
+ * is worth less than the pop (docs/plans/development-deck.md, Bots). A card counts as
+ * the hand counts it, a year's wait off; the pop at the seat's weight for its class. The
+ * card goes at random, so the bot weighs the average and never the card that would go.
+ */
+function riotPopByRule(
+  G: HegemonyState,
+  moves: GameCommand[],
+  weights: ScoreWeights,
+): GameCommand | null {
+  const answers = moves.filter((move) => move.type === "resolveRiotPop");
+  const pop = answers.find((move) => move.pay === "pop");
+  const card = answers.find((move) => move.pay === "card");
+  if (!pop || !card) return pop ?? card ?? null;
+  const me = G.currentPlayer;
+  const next = riotPopNext(G, me);
+  const held = G.devHands[me].length;
+  if (!next || held === 0) return pop;
+  return handValue(G, me, weights) / held < popValue(weights, next.pop) ? card : pop;
 }
 
 /**
@@ -326,10 +353,11 @@ function onePlyLookahead(
   G: HegemonyState,
   moves: GameCommand[],
   score: (g: HegemonyState, p: PlayerId) => number,
+  weights = DEFAULT_WEIGHTS,
 ): GameCommand {
   const playerID = G.currentPlayer;
 
-  const byRule = resolveRiotByRule(G, moves, score);
+  const byRule = resolveRiotByRule(G, moves, score, weights);
   if (byRule) {
     return byRule;
   }
@@ -440,6 +468,8 @@ export type PolicyProjection = {
    *  counted by the share of its remaining incomes that the pop misses. */
   starvedAfterHorizon: number;
   unrest: PolicyUnrestExposure;
+  /** The free cards the seat draws at the turn ends the forecast checks. */
+  freeCards: number;
 };
 
 /** The smart score counts each point of its heuristic this many times. */
@@ -586,10 +616,15 @@ export function projectPolicyHorizon(
     riotPopsOwed -= leaving;
     return leaving > 0 && removePops(projectedState, playerID, leaving).total > 0;
   };
+  // The free card is read at the same turn end, through the engine's own rule. Calm only
+  // adds to the level, so a level under the line skips the read.
+  let freeCards = 0;
+  const freeLine = G.ruleset.devCards.freeCardLevel;
   // A collected income does not end the current year: calm and Blockade still
   // count at this turn's check, even when no future incomes remain.
   const checkTurnEnd = (outcome: UnrestOutcome, currentTurn = false) => {
     unrest.minimumHappiness = Math.min(unrest.minimumHappiness, outcome.level);
+    if (outcome.level >= freeLine && freeCardDue(projectedState, playerID)) freeCards += 1;
     const risk = evaluatePolicyUnrestRisk(projectedState, outcome);
 
     if (risk.tier === "revolt") {
@@ -660,9 +695,11 @@ export function projectPolicyHorizon(
     settleHunger(false);
     if (G.phase === "gameplay" && G.currentPlayer === playerID && !G.assembly) {
       // A riot already on the table is this turn's check, at the insurance bought so far.
-      if (G.pendingRiot)
-        faceRiot(insuranceRollBonus(G.pendingRiot.boughtInsurance, G.definition.content));
-      else checkTurnEnd(unrestOutcome(projectedState, playerID), true);
+      // Once its die is cast the pops it takes are the seat's answers, not a forecast.
+      if (G.pendingRiot) {
+        if (!G.pendingRiot.losses)
+          faceRiot(insuranceRollBonus(G.pendingRiot.boughtInsurance, G.definition.content));
+      } else checkTurnEnd(unrestOutcome(projectedState, playerID), true);
     }
     expireYear();
   }
@@ -756,6 +793,7 @@ export function projectPolicyHorizon(
     expectedStarvationPopLoss,
     starvedAfterHorizon,
     unrest,
+    freeCards,
   };
 }
 
@@ -826,8 +864,7 @@ function expectedRiot(
   let cost = 0;
 
   for (let roll = 1; roll <= die; roll += 1) {
-    const modified = Math.min(die, Math.max(1, roll + modifier));
-    const row = table.rows.find((candidate) => candidate.roll === modified) ?? table.rows.at(-1)!;
+    const { row } = landedRow(table, roll, modifier);
     for (const effect of row.effects) {
       if (effect.type === "losePops") pops += effect.count / die;
       if (effect.type === "destroyBuilding") {
@@ -1161,6 +1198,7 @@ function evaluateSmart(
       leanYearValue(G, playerID, projection.income, weights) +
       opportunity +
       hand +
+      freeCardsValue(G, playerID, projection.freeCards, weights) +
       savingValue(G, playerID, wants, projected) -
       projection.unrest.riskPenalty
     );
@@ -1330,11 +1368,12 @@ function beamPlan(
   G: HegemonyState,
   moves: GameCommand[],
   score: (g: HegemonyState, p: PlayerId) => number,
+  weights = DEFAULT_WEIGHTS,
 ): GameCommand {
   const playerID = G.currentPlayer;
 
   // A forced riot keeps the shared insurance handler.
-  const byRule = resolveRiotByRule(G, moves, score);
+  const byRule = resolveRiotByRule(G, moves, score, weights);
   if (byRule) {
     return byRule;
   }
@@ -1344,7 +1383,7 @@ function beamPlan(
   // A forced position (a pending event: no endTurn) is a single required choice — fall back
   // to one-ply rather than beam-plan past a resolution whose effects may be stochastic.
   if (!endTurn) {
-    return onePlyLookahead(G, moves, score);
+    return onePlyLookahead(G, moves, score, weights);
   }
 
   const rootMoves = searchable(G, moves);
@@ -2281,7 +2320,7 @@ function planTurn(G: HegemonyState, moves: GameCommand[], weights: ScoreWeights)
   const free = moves.some((move) => move.type === "endTurn");
   const wants = free ? purchaseWants(G, me, plain, weights) : NO_WANTS;
   const score = wants.length === 0 ? plain : scoreFor(wants);
-  if (!free) return beamPlan(G, moves, score);
+  if (!free) return beamPlan(G, moves, score, weights);
 
   const answered =
     takeCounter(G, moves, me, (state) => score(state, me)) ?? withdrawAnswered(G, moves, me);
@@ -2367,6 +2406,17 @@ function handValue(G: HegemonyState, playerID: PlayerId, weights: ScoreWeights):
     return sum + unseen;
   }, 0);
   return held * share;
+}
+
+/** The free cards the forecast sees drawn, each at an unseen card's worth: what a level
+ *  of +3 or higher pays, so the seat weighs a slave against the card. */
+function freeCardsValue(
+  G: HegemonyState,
+  playerID: PlayerId,
+  cards: number,
+  weights: ScoreWeights,
+): number {
+  return cards > 0 ? cards * unseenCardValue(G, playerID, weights) : 0;
 }
 
 /** What an unseen card off the deck is worth to the seat: a yield at what it gives now,

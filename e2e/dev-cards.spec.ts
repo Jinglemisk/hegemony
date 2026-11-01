@@ -39,3 +39,23 @@ test("buys a development card, then plays one from the hand", async ({ page }) =
   await expect(played).toBeHidden();
   await expect(page.getByRole("button", { name: /acting, your seat/ })).toBeVisible();
 });
+
+test("a riot takes a held card in place of a pop, the seat's choice", async ({ page }) => {
+  // The riot rolled on Revolt spreads, two pops, and the seat holds two cards.
+  await visit(page, "/?dev=riot-cards&seed=42");
+  const riot = page.getByRole("dialog", { name: "Riot", exact: true });
+  await expect(riot).toContainText(/2 pops to answer/i);
+  await expect(riot).toContainText("2 in hand");
+
+  // Only the count shows: the card is drawn after the choice.
+  await riot.getByRole("button", { name: "Give Up a Card" }).click();
+  await expect(riot).toContainText(/One pop to answer/i);
+  await expect(riot).toContainText("1 in hand, 1 given up");
+
+  await riot.getByRole("button", { name: /^Lose the slave/ }).click();
+  const result = page.getByRole("dialog", { name: "Revolt spreads", exact: true });
+  await expect(result).toContainText("went in place of a pop.");
+  await expect(result).toContainText(/A slave left/);
+  await result.getByRole("button", { name: "Endure It", exact: true }).click();
+  await expect(result).toBeHidden();
+});

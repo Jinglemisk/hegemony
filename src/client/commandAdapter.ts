@@ -10,6 +10,7 @@ import type {
   PopType,
   Pops,
   RiotInsuranceId,
+  RiotPay,
   TradeAnswer,
   TradePlaces,
   TradeTerms,
@@ -41,6 +42,7 @@ export type GameMoves = {
     demoteTarget?: { tileId: string; from: PopType },
   ) => void;
   resolveRiot: () => void;
+  resolveRiotPop: (pay: RiotPay) => void;
   assemblyDraw: (playerID: PlayerId, politician: PoliticianId) => void;
   assemblyDiscardHeld: (playerID: PlayerId) => void;
   assemblyPropose: (playerID: PlayerId, target?: PlayerId) => void;
@@ -106,6 +108,7 @@ export function createCommandMoves(dispatch: DispatchGameCommand): GameMoves {
     buyRiotInsurance: (optionId, demoteTarget) =>
       dispatch({ type: "buyRiotInsurance", optionId, ...(demoteTarget ? { demoteTarget } : {}) }),
     resolveRiot: () => dispatch({ type: "resolveRiot" }),
+    resolveRiotPop: (pay) => dispatch({ type: "resolveRiotPop", pay }),
     assemblyDraw: (playerID, politician) =>
       dispatch({ type: "assemblyDraw", politician }, playerID),
     assemblyDiscardHeld: (playerID) => dispatch({ type: "assemblyDiscardHeld" }, playerID),

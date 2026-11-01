@@ -7,6 +7,7 @@ import { TEST_OPENING_SETUP } from "../game/config";
 import { createModeDefinition } from "../game/definition";
 import { PLAYER_IDS } from "../game/data";
 import { transition, type GameCommand } from "../game/legalMoves";
+import { mulberry32 } from "../game/core/rng";
 import { resolveRiot } from "../game/riot";
 import { beginTurnFor, endTurn } from "../game/turn";
 import { yearDeckSize } from "../game/year";
@@ -652,6 +653,50 @@ describe("the Step 11 report fields", () => {
     expect(report.riots.perPolicy.slaver.byYear).toEqual([
       { year: 1, riots: 0, playerTurns: 1, revolts: 0 },
     ]);
+  });
+
+  it("counts free cards, turns at their level and a riot's cards, per personality", () => {
+    const content = drive(
+      scenario()
+        .opening()
+        .mutate((G) => {
+          G.pendingPlayerEvent = null;
+          for (const tileId of G.players["0"].settlements) owned(G, tileId, "0").pops.slaves = 0;
+          owned(G, "-2,0", "0").buildings = ["temple", "temple", "temple"];
+        })
+        .build(),
+    );
+    content.take("0", { type: "endTurn" });
+    expect(content.report().devCards.perPolicy.civic).toMatchObject({
+      drawnFree: { count: 1 },
+      turnsAtFreeLevel: { count: 1 },
+      lostToRiots: { count: 0 },
+    });
+
+    const rioting = drive(
+      scenario()
+        .opening()
+        .withHappiness("0", -3)
+        .withDevCard("0", "caravan")
+        .mutate((G) => {
+          G.pendingPlayerEvent = null;
+        })
+        .build(),
+    );
+    rioting.take("0", { type: "endTurn" });
+    // Rig the die onto Revolt spreads, two pops: the card keeps the first, a slave.
+    rioting.G = structuredClone(rioting.G);
+    for (let state = 1; ; state += 1) {
+      if (1 + Math.floor(mulberry32(state).value * 6) !== 2) continue;
+      rioting.G.rng = state;
+      break;
+    }
+    rioting.take("0", { type: "resolveRiot" });
+    rioting.take("0", { type: "resolveRiotPop", pay: "card" });
+    const cards = rioting.report().devCards.perPolicy.civic;
+    expect(cards.lostToRiots.count).toBe(1);
+    expect(cards.popsSaved.slaves.count).toBe(1);
+    expect(cards.turnsAtFreeLevel.count).toBe(0);
   });
 
   it("counts hunger turns per personality, and the class that left", () => {

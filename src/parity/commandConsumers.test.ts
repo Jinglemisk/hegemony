@@ -45,6 +45,7 @@ describe("behavioral command-consumer parity", () => {
     moves.playDevCard({ card: "raiders#1", target: "2", resource: "gold" });
     moves.buyRiotInsurance("concession", { tileId: "tile-a", from: "citizens" });
     moves.resolveRiot();
+    moves.resolveRiotPop("card");
     moves.assemblyDraw("1", "demosthenes");
     moves.assemblyDiscardHeld("1");
     moves.assemblyPropose("1", "2");
@@ -117,6 +118,7 @@ describe("behavioral command-consumer parity", () => {
         actor: undefined,
       },
       { command: { type: "resolveRiot" }, actor: undefined },
+      { command: { type: "resolveRiotPop", pay: "card" }, actor: undefined },
       { command: { type: "assemblyDraw", politician: "demosthenes" }, actor: "1" },
       { command: { type: "assemblyDiscardHeld" }, actor: "1" },
       {

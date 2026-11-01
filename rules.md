@@ -272,7 +272,8 @@ before income. On your turn:
    turn to buy food instead. **Happiness:** **−3 or below starts a riot**, **−6 or
    below a revolt**. Calm bought this turn counts. At either line, holding End turn
    opens a confirm first: it offers calm, with its price, when calm would change what
-   happens, and the plain choice to face it.
+   happens, and the plain choice to face it. At **+3 or higher**, calm left out, you draw
+   a free development card instead (see Development cards).
 
 A **year** is one turn for every seat. After all four have played, the next year
 begins and its card is revealed: the card turns over mid-screen, with the year deck's
@@ -382,9 +383,25 @@ the rival does not have.
 - **Informer** (2) — the rival discards a held card, drawn at random. It needs a rival
   who holds one.
 
+**The free card.** At the end of your own turn, at the riot check, a happiness level of
+**+3 or higher** draws one card free. Calm bought this year does not count, the level is
+read after hunger, and there is no food condition. A yield lands at once; a held card
+goes to your hand and you can play it from your next turn. If the pile and the discards
+are both empty, nothing is drawn. The other seats see a note under the compass.
+
+**A riot's card.** When a riot's roll takes pops and you hold development cards, you
+answer each pop in turn: **lose the pop**, or **discard a held card drawn at random**.
+You choose before the card is drawn, so you never see which card would go. It counts as
+a discard, not as your card for the turn. Buildings and stocks still go as the row says,
+and a revolt still costs half your slaves: no card stops that. Your slaves stay, so a
+level the slaves hold down riots again next turn: cards buy time, they do not fix the
+level.
+
 Bots buy a card when the average card is worth more to them than its 2 gold and the
 purchases they save toward, play a card when it pays now, and aim rival cards at the
-leader, as they vote in the Assembly.
+leader, as they vote in the Assembly. They count a free card a turn as part of what +3
+is worth, and in a riot they give up a card when the average card in their hand is worth
+less to them than the pop.
 
 ## Buildings
 
@@ -481,7 +498,8 @@ riot sheet strikes the rows each declaration puts out of reach; after the roll a
 lists what the riot cost, and the other seats see it as a note under the compass.
 
 Pops lost to a riot are **slaves first**, then freemen, then citizens, each from the
-settlement holding the most of them.
+settlement holding the most of them. If you hold development cards, you may give up a
+held card, drawn at random, in place of each pop (see Development cards).
 
 **At −6 or lower it is a revolt instead.** Nothing is rolled: **half your slaves
 leave**, rounded down, and your Unrest tokens clear. With no slaves it costs only the

@@ -122,6 +122,7 @@ describe("turn-end unrest", () => {
       boughtInsurance: [],
       tokensCleared: 3,
       concessionTileId: null,
+      losses: null,
     });
     expect(playerPopTotal(G, "0")).toBe(before);
     expect(G.players["0"].unrestTokens).toBe(0);

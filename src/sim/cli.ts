@@ -544,6 +544,12 @@ function cmdMove(positionals: string[], file: string) {
         );
       case "resolve-riot":
         return findLegal(save.state, (move) => move.type === "resolveRiot", "resolve riot");
+      case "riot-pop":
+        return findLegal(
+          save.state,
+          (move) => move.type === "resolveRiotPop" && move.pay === args[0],
+          `riot-pop ${args[0] ?? "<pop|card>"}`,
+        );
       case "index": {
         const commands = enumerateLegalCommands(save.state, save.state.currentPlayer);
         const index = requireInt(args[0], "move index");
@@ -1000,7 +1006,7 @@ Save file defaults to ${DEFAULT_SAVE_PATH}.
              pops <srcTile> <dstTile> <popSpec>     popSpec: citizens=1,slaves=2 (or c=1,s=2)
              promote <tile> <pop> | demote <tile> <pop>
              bank-sell <material> | bank-buy <material>
-             calm | dole | buy-card | insure [optionId] | resolve-riot
+             calm | dole | buy-card | insure [optionId] | resolve-riot | riot-pop <pop|card>
              place-capital <tile> <popSpec>
              place-colony <tile> <popSpec>
              resolve [targetTile]
