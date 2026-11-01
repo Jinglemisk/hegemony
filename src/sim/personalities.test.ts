@@ -8,7 +8,6 @@ import { projectForPlayer } from "../game/projection";
 import { BEFORE_TRADE, owned, scenario } from "../game/testing/scenario";
 import type { HegemonyState, Pops } from "../game/types";
 import { yearDeckSize } from "../game/year";
-import { ventureOutcomes } from "./chance";
 import { POLICIES, type PersonalityId } from "./policies";
 import { createSimRng } from "./rng";
 import { playTurn, runGame } from "./runner";
@@ -178,12 +177,11 @@ describe("shared personality search", () => {
         gold: 4,
         influence: 0,
       });
-      // All 4 gold goes to food: one from the bank, and a Colonists' Voyage, whose 2
-      // gold bring 1.5 food on average against the bank's one.
+      // All 4 gold goes to food from the bank.
       const last = playOwnTurn(name, doomed);
       expect(last.moves).toEqual([
         { type: "bankBuy", material: "food" },
-        { type: "fundExpedition", expeditionId: "colonistsVoyage" },
+        { type: "bankBuy", material: "food" },
       ]);
       expect(last.G.players["0"].resources.gold).toBe(0);
 
@@ -259,8 +257,9 @@ describe("shared personality search", () => {
       };
       const grows = { type: "growPop", pop: "freemen" };
 
-      // Year 2 leaves twelve incomes: 24 gold feeds him to year 14, and 28 is in hand.
-      expect(choice(2, 28)).toMatchObject(grows);
+      // Year 2 leaves twelve incomes: 24 gold feeds him to year 14, and 32 is in hand.
+      // (The slaver weighs a freeman least and wants the widest margin.)
+      expect(choice(2, 32)).toMatchObject(grows);
       // 14 gold lasts seven years. Six of them are the forecast, which grew him and
       // then lost him: the food is now followed to the game's last year.
       expect(choice(2, 14)).toEqual({ type: "endTurn" });
@@ -317,48 +316,14 @@ describe("shared personality search", () => {
     ).toMatchObject({ type: "buildBuilding", buildingId: "forum" });
   });
 
-  it("scores a venture to reach Treasurer but refuses its negative gold expectation away from the title", () => {
-    const G = realm({ citizens: 0, freemen: 0, slaves: 0 });
-    G.year = 14;
-    G.players["0"].resources.gold = G.ruleset.victory.minimums.gold - 1;
-    const keep = (m: GameCommand) =>
-      m.type === "endTurn" || (m.type === "fundExpedition" && m.expeditionId === "merchantConvoy");
-    expect(choose("trader", G, keep)).toEqual({
-      type: "fundExpedition",
-      expeditionId: "merchantConvoy",
-    });
-    const poor = structuredClone(G);
-    poor.players["0"].resources.gold = 10;
-    expect(choose("trader", poor, keep)).toEqual({ type: "endTurn" });
-  });
-
-  it("exhausts public venture outcomes, including every uniform Voyage destination, without mutation", () => {
-    const G = realm({ citizens: 0, freemen: 0, slaves: 0 });
-    const other = G.board.tiles.find((tile) => tile.id !== "-2,0" && tile.resource)!;
-    const second = structuredClone(owned(G, "-2,0", "0"));
-    second.id = `settlement-${G.nextEntityId++}`;
-    second.tileId = other.id;
-    other.settlements.push(second);
-    G.players["0"].settlements.push(other.id);
-    const before = JSON.stringify(G);
-    const command = { type: "fundExpedition", expeditionId: "colonistsVoyage" } as const;
-    const outcomes = ventureOutcomes(G, "0", command);
-    expect(outcomes).toHaveLength(7);
-    expect(outcomes.reduce((sum, o) => sum + o.probability, 0)).toBeCloseTo(1);
-    const jackpots = outcomes.filter((o) => o.state.lastTableRoll?.roll === 6);
-    expect(jackpots.map((o) => o.probability)).toEqual([1 / 12, 1 / 12]);
-    expect(jackpots.map((o) => owned(o.state, "-2,0", "0").pops.freemen).sort()).toEqual([0, 1]);
-    for (const o of outcomes) expect(o.state.rng).toBe(G.rng);
-    expect(JSON.stringify(G)).toBe(before);
-  });
-
   it.each(names)("%s makes the same legal choice when hidden rolls and decks differ", (name) => {
     const G = realm();
     const altered = structuredClone(G);
     altered.rng ^= 0xfffffff;
     altered.yearDrawPile.reverse();
     altered.playerDrawPile.reverse();
-    const keep = (m: GameCommand) => m.type === "endTurn" || m.type === "fundExpedition";
+    altered.devDrawPile.reverse();
+    const keep = (m: GameCommand) => m.type === "endTurn" || m.type === "buyDevCard";
     const move = choose(name, G, keep);
     expect(choose(name, altered, keep)).toEqual(move);
     expect(enumerateLegalCommands(G, "0")).toContainEqual(move);

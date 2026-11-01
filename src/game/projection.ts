@@ -90,6 +90,17 @@ function redactState(state: HegemonyState, viewer: PlayerId | null): ProjectedGa
     );
     draft.playerDrawPile = hiddenEventDeck(draft.playerDrawPile);
     draft.playerDiscardPile = canonicalEventDeck(draft.playerDiscardPile);
+    // The development deck: the order stays hidden and the discards are public. Each
+    // seat sees its own hand; a rival's hand shows how many cards it holds, never which.
+    draft.devDrawPile = draft.devDrawPile.map(() => HIDDEN_DEV_CARD);
+    draft.devDiscardPile.sort();
+    for (const playerID of PLAYER_IDS) {
+      if (playerID === viewer) continue;
+      draft.devHands[playerID] = draft.devHands[playerID].map((held) => ({
+        ...held,
+        id: HIDDEN_DEV_CARD,
+      }));
+    }
 
     for (const politician of Object.keys(draft.politicianDecks) as Array<
       keyof typeof draft.politicianDecks
@@ -128,6 +139,9 @@ function redactState(state: HegemonyState, viewer: PlayerId | null): ProjectedGa
     }
   }) as ProjectedGameState;
 }
+
+/** Stands in for every development card the viewer may not see. */
+const HIDDEN_DEV_CARD = "__hidden_dev__";
 
 /** Stands in for every undrawn year card. Its effect is a placeholder the type needs;
  *  nothing reads a hidden card's effect. */

@@ -1,5 +1,3 @@
-import { getFundExpeditionStatus } from "../../../game/ventures";
-import { getExpeditionTables } from "../../../game/content";
 import type { Phase } from "../../../client/controller";
 import { getCivicCalmStatus } from "../../../game/civic";
 import { getBuildings } from "../../../game/content";
@@ -41,7 +39,6 @@ export type VerbContext = {
    */
   armedVerb: VerbId | null;
   calmUsed: boolean;
-  ventureUsed: boolean;
 };
 
 export type VerbHandlers = {
@@ -51,10 +48,9 @@ export type VerbHandlers = {
   onUpgradeCityRequest: () => void;
   onBuildRequest: () => void;
   onCalmRequest: () => void;
-  onVentureRequest: () => void;
 };
 
-export type VerbId = "grow" | "move" | "found" | "upgrade" | "build" | "calm" | "venture";
+export type VerbId = "grow" | "move" | "found" | "upgrade" | "build" | "calm";
 
 /**
  * Which verb a given map mode belongs to. The board arms modes; the dock shows
@@ -83,7 +79,7 @@ export function armedVerbOf(mode: MapSelectionMode | undefined): VerbId | null {
  * FLOOR — `2–6 food`, `from 6 stone` — never the word "varies". A price you have
  * to hover to learn is a price you cannot plan around.
  *
- * A clause is a lead word (`free`, `from`, `stake`) and/or an amount; a `span` is
+ * A clause is a lead word (`free`, `from`) and/or an amount; a `span` is
  * the min–max of one resource. Two clauses read as alternatives, which is what
  * Calm's influence-or-gold is.
  */
@@ -213,26 +209,6 @@ export const VERBS: VerbSpec[] = [
     hint: "Buy calm this year: influence or gold, once per turn.",
     blockedHint: "One civic-calm action per turn — already used.",
     select: (handlers) => handlers.onCalmRequest(),
-  },
-  {
-    id: "venture",
-    label: "Venture",
-    // Every expedition posts the same stake, so it is quotable before you pick
-    // one — `ruleset.ventureCost` is the field `getFundExpeditionStatus` reads.
-    cost: ({ G, playerID }) => [
-      {
-        lead: "stake",
-        amounts: getFundExpeditionStatus(
-          G,
-          playerID,
-          getExpeditionTables(G.definition.content)[0].id,
-        ).cost,
-      },
-    ],
-    available: ({ ventureUsed }) => !ventureUsed,
-    hint: "Fund an expedition: post the stake, roll the table.",
-    blockedHint: "One venture per turn — the ships are already out.",
-    select: (handlers) => handlers.onVentureRequest(),
   },
 ];
 

@@ -156,6 +156,20 @@ function presentMoment(
         ),
       };
     }
+    case "devCard": {
+      const card = G.definition.content.devCards.find((entry) => entry.id === moment.cardId);
+      const on = moment.target ? ` on ${G.players[moment.target].name}` : "";
+      return {
+        kicker: `${name} ${moment.played ? "played" : "drew"} a card`,
+        icon: "events/convoy",
+        body: (
+          <>
+            <b>{card?.name ?? moment.cardId}</b>
+            {on}: {moment.outcome}.
+          </>
+        ),
+      };
+    }
     case "yearCard":
       return null;
   }

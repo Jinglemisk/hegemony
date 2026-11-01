@@ -5,7 +5,7 @@ import { createModeDefinition } from "../game/definition";
 import { DEFAULT_RULESET } from "../game/ruleset";
 import { POLITICIANS, RESOLUTION_CARDS } from "../game/assembly/deck";
 import { getAuthoredGameContent, getBuildings, getTerrainDeck } from "../game/content";
-import { PLAYER_EVENT_CARDS, YEAR_CARDS, EXPEDITION_TABLES, RIOT_TABLE } from "../game/data";
+import { DEV_CARDS, PLAYER_EVENT_CARDS, YEAR_CARDS, RIOT_TABLE } from "../game/data";
 import { settlementNetYield } from "../game/economy/income";
 import { settlementBuildingHappiness } from "../game/happiness";
 import { materialTile, owned, scenario } from "../game/testing/scenario";
@@ -24,6 +24,7 @@ import {
   BUILDING_CONTENT_IDS,
   BUILDING_EFFECT_PARITY,
   CONTENT_MANIFEST,
+  DEV_CARD_CONTENT_IDS,
   NATIONAL_IDEA_CONTENT_IDS,
   DIRECTIVE_CONTENT_IDS,
   DIRECTIVE_EFFECT_PARITY,
@@ -134,7 +135,7 @@ describe("feature and content parity manifests", () => {
   });
 
   it("matches every shipped content id and effect to the manifests", () => {
-    const tables = [RIOT_TABLE, ...EXPEDITION_TABLES];
+    const tables = [RIOT_TABLE];
     expect(sorted(AUTHORED_CONTENT.nationalIdeas.map((idea) => idea.id))).toEqual(
       sorted(NATIONAL_IDEA_CONTENT_IDS),
     );
@@ -150,6 +151,7 @@ describe("feature and content parity manifests", () => {
       sorted(PLAYER_EVENT_CONTENT_IDS),
     );
     expect(sorted(tables.map((table) => table.id))).toEqual(sorted(EVENT_TABLE_CONTENT_IDS));
+    expect(sorted(DEV_CARDS.map((card) => card.id))).toEqual(sorted(DEV_CARD_CONTENT_IDS));
     expect(sorted(RIOT_TABLE.insurance?.map((option) => option.id) ?? [])).toEqual(
       sorted(RIOT_INSURANCE_CONTENT_IDS),
     );
@@ -203,10 +205,8 @@ describe("feature and content parity manifests", () => {
     for (const effect of eventEffects) expectPresentation(presentEventEffect(effect));
     for (const card of YEAR_CARDS) expectPresentation(presentYearCard(card));
 
-    for (const table of [RIOT_TABLE, ...EXPEDITION_TABLES]) {
-      for (const effect of table.rows.flatMap((row) => row.effects)) {
-        expectPresentation(presentTableEffect(effect));
-      }
+    for (const effect of RIOT_TABLE.rows.flatMap((row) => row.effects)) {
+      expectPresentation(presentTableEffect(effect));
     }
 
     for (const card of RESOLUTION_CARDS) {

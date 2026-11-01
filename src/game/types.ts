@@ -140,6 +140,65 @@ export interface YearCard {
   effect: YearCardEffect;
 }
 
+// ── The development deck (docs/plans/development-deck.md) ────────────────────────────
+
+export type DevCardId =
+  | "foraging"
+  | "woodcutters"
+  | "quarry-gang"
+  | "bountiful-harvest"
+  | "civic-feast"
+  | "tunny-run"
+  | "timber-raft"
+  | "marble-block"
+  | "caravan"
+  | "settlers"
+  | "captives"
+  | "master-builder"
+  | "festival-day"
+  | "raiders"
+  | "agitators"
+  | "informer";
+
+/** A yield resolves on the draw. A held card goes to the hand, and a rival card is a
+ *  held card played on a rival its holder picks. */
+export type DevCardKind = "yield" | "held" | "rival";
+
+/** What a development card does, to its holder or, on a rival card, to the rival. */
+export type DevCardEffect =
+  /** `amount` of a resource, once or for each of the seat's settlements or pops. More
+   *  than one resource is a choice, made when the card is played. */
+  | { type: "gain"; resources: Resource[]; amount: number; per?: "settlement" | "pop" }
+  /** A pop in one of the seat's settlements with room. */
+  | { type: "addPop"; pop: GrowablePop }
+  /** The seat's next building or colony upgrade this turn costs `amount` less wood or
+   *  stone. */
+  | { type: "buildDiscount"; amount: number }
+  | { type: "unrestTokens"; change: "placeOne" | "clearOne" }
+  /** Up to `amount` of one of `resources` the rival holds. */
+  | { type: "raid"; resources: Resource[]; amount: number }
+  /** The rival discards a held card drawn at random. */
+  | { type: "discardHeld" };
+
+export interface DevCard {
+  id: DevCardId;
+  name: string;
+  count: number;
+  kind: DevCardKind;
+  /** The rule sentence: what the card does. */
+  text: string;
+  /** Presentation only, as on an {@link EventCard}. */
+  flavor?: string;
+  effect: DevCardEffect;
+}
+
+/** A card in a seat's hand: its instance id (`caravan#2`) and the turn it came into the
+ *  hand. A card is never played on the turn it was drawn or received. */
+export interface HeldDevCard {
+  id: string;
+  turn: number;
+}
+
 export interface PendingHunger {
   playerID: PlayerId;
   unfed: number;
@@ -158,20 +217,17 @@ export interface TileResource {
 
 // ── Event tables (roadmap-appendix D9/D10 · docs/archive/plans/event-tables.md) ─────────────
 //
-// Dice-and-table as one reusable, data-driven component: a table is content data,
-// `rollOnTable` (game/tables.ts) is the only engine seam, and every instance — riot,
-// the expeditions — shares the same UI modal.
+// Dice-and-table as one reusable, data-driven component: a table is content data and
+// `rollOnTable` (game/tables.ts) is the only engine seam. The riot is the one table.
 
-export type EventTableId = "riot" | "merchantConvoy" | "grandEmbassy" | "colonistsVoyage";
+export type EventTableId = "riot";
 
 /** The closed effect vocabulary a table row may apply. Each effect with an impossible
- *  happy path carries its explicit fallback (no building → pops, no room → food). */
+ *  happy path carries its explicit fallback (no building → pops). */
 export type TableEffect =
   | { type: "losePops"; count: number }
   | { type: "loseResource"; resource: Resource; amount: number; popLossIfShort?: number }
   | { type: "destroyBuilding"; popLossFallback: number }
-  | { type: "gainResource"; resource: Resource; amount: number }
-  | { type: "gainPop"; pop: PopType; foodFallback: number }
   | { type: "none" };
 
 export interface EventTableRow {
@@ -326,12 +382,16 @@ export interface PlayerState {
   /** Running total of pops gained inorganically from event cards (the `addPops`
    *  effect) — the ledger's "Gained" stat, paired with deaths. */
   popsGainedFromEvents: number;
-  /** Once-per-turn throttles: one civic-calm action, one ladder move, one venture,
-   *  one paid pop move. Reset with the turn flags. */
+  /** Once-per-turn throttles: one civic-calm action, one ladder move, one development
+   *  card bought and one played, one paid pop move. Reset with the turn flags. */
   civicCalmUsedThisTurn: boolean;
   ladderUsedThisTurn: boolean;
-  ventureUsedThisTurn: boolean;
+  devCardBoughtThisTurn: boolean;
+  devCardPlayedThisTurn: boolean;
   moveUsedThisTurn: boolean;
+  /** What Master builder takes off the seat's next building or colony upgrade this
+   *  turn; 0 when no discount stands. Reset with the turn flags. */
+  buildDiscount: number;
   /** Calm bought this year. It expires when the year turns and is never banked. */
   calmActive: boolean;
   /** Turns of income Stratokles's General Strike has taken away. Decremented at the
@@ -428,6 +488,9 @@ export type LogMoment =
   | { kind: "revolt"; slaves: number; left: PopLeave[]; tokensCleared: number; level: number }
   /** A settled trade, its terms read from the offering seat. */
   | { kind: "trade"; from: PlayerId; partner: PlayerId; terms: TradeTerms }
+  /** A development card the table sees resolve: a yield on its draw, or a held card
+   *  played. `outcome` says what it did. A held card drawn is no moment: it is secret. */
+  | { kind: "devCard"; cardId: DevCardId; played: boolean; target?: PlayerId; outcome: string }
   /** The year's card, turned: it tags the Chronicle line and raises no toast. */
   | { kind: "yearCard"; cardId: string };
 
@@ -497,6 +560,11 @@ export interface HegemonyState {
   yearDiscardPile: YearCard[];
   playerDrawPile: EventDeck;
   playerDiscardPile: EventDeck;
+  /** The development deck by card instance id: the draw pile in its hidden order, the
+   *  discards, and each seat's hand. Together they always hold the whole deck. */
+  devDrawPile: string[];
+  devDiscardPile: string[];
+  devHands: Record<PlayerId, HeldDevCard[]>;
   /** This year's card, retained for the final tally. Null before gameplay starts. */
   activeYearCard: YearCard | null;
   lastPlayerEvent: EventCard | null;

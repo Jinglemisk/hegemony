@@ -159,11 +159,11 @@ function costSections(G: HegemonyState, playerID: PlayerId) {
           base: [{ influence: R.dole.influenceCost }],
         }),
         line({
-          id: "venture",
-          icon: "events/venture",
-          name: "Fund an expedition",
-          note: "Roll on an expedition table. Once a turn.",
-          live: [R.ventureCost],
+          id: "dev-card",
+          icon: "events/convoy",
+          name: "Buy a card",
+          note: "Draw a development card. Once a turn.",
+          live: [R.devCards.cost],
         }),
         line({
           id: "idea",

@@ -1,12 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  BUILDINGS,
-  EXPEDITION_TABLES,
-  PLAYER_EVENT_CARDS,
-  RIOT_TABLE,
-  YEAR_CARDS,
-} from "../game/data";
+import { BUILDINGS, PLAYER_EVENT_CARDS, RIOT_TABLE, YEAR_CARDS } from "../game/data";
 import { getCivicCalmStatus } from "../game/civic";
 import { GROWABLE_POPS } from "../game/core/pops";
 import { getGrowPopCost } from "../game/economy/cost";
@@ -14,7 +8,6 @@ import { calculateIncome, calculateIncomeBreakdown } from "../game/economy/incom
 import { revealYearCard } from "../game/year";
 import { owned, scenario } from "../game/testing/scenario";
 import type { BuildingDefinition, HegemonyState, Resources } from "../game/types";
-import { getFundExpeditionStatus } from "../game/ventures";
 import { presentEventEffects, presentTableEffect, presentYearCard } from "../ui/effects";
 import { getAuthoredGameContent } from "../game/content";
 import { createGameDefinition } from "../game/definition";
@@ -106,7 +99,7 @@ describe("frontend-to-frontend parity", () => {
   });
 
   it("presents every table effect through the same text-and-tone contract", () => {
-    const tables = [RIOT_TABLE, ...EXPEDITION_TABLES];
+    const tables = [RIOT_TABLE];
 
     for (const table of tables) {
       for (const row of table.rows) {
@@ -167,7 +160,6 @@ function commandContext(G: HegemonyState): VerbContext {
     canBuild: true,
     armedVerb: null,
     calmUsed: false,
-    ventureUsed: false,
   };
 }
 
@@ -224,7 +216,7 @@ describe("effective content and cost parity", () => {
       { amounts: getUpgradeColonyToCityStatus(G, "0", "").cost },
     ]);
 
-    // The four verbs that used to print "varies" / "options" / "stakes". A dock
+    // The verbs that used to print "varies" / "options". A dock
     // price has to be a figure the press would really charge, so each is checked
     // against the engine query that charges it rather than against a literal.
     const growFood = GROWABLE_POPS.map((pop) => getGrowPopCost(G, "0", pop).food ?? 0);
@@ -246,12 +238,6 @@ describe("effective content and cost parity", () => {
     expect(priceOf("calm")).toEqual([
       { amounts: getCivicCalmStatus(G, "0", "influence").cost },
       { amounts: getCivicCalmStatus(G, "0", "gold").cost },
-    ]);
-    expect(priceOf("venture")).toEqual([
-      {
-        lead: "stake",
-        amounts: getFundExpeditionStatus(G, "0", EXPEDITION_TABLES[0].id).cost,
-      },
     ]);
   });
 

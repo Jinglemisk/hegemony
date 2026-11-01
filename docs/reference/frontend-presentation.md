@@ -78,7 +78,7 @@ Three rules, each owned by one shared part so a new surface gets it by using the
 - **Every sentence a player reads takes its terms' icons.** `AnnotatedText` (a string)
   and `Prose` (JSX) put each game term's icon before its word: resources, classes,
   buildings, settlements, terrain, luxuries and each good, unrest, titles and each
-  title, Ideas and each Idea, trade, ventures, the Assembly's nouns. The term list is
+  title, Ideas and each Idea, trade, development cards, the Assembly's nouns. The term list is
   built from the icon registry and the content package, so new content gets its icon
   without touching a sentence. Tooltip paragraphs (`TipBody`), ledger labels, warnings,
   blocked reasons, toasts and card text all pass through it; an effect renders through

@@ -9,6 +9,7 @@ import type { GameContent } from "../game/content";
 import type { NationalIdeaDefinition } from "../game/ideaTypes";
 import type { Ruleset } from "../game/ruleset";
 import type {
+  DevCard,
   EventCard,
   EventEffect,
   HegemonyState,
@@ -42,7 +43,7 @@ import { RESOURCE_ORDER } from "./resourceVisuals";
  * How many cards are left is never on the face: it is the deck line's, under the card.
  */
 
-export type CardDeck = "year" | "fate" | "law" | "directive" | "idea";
+export type CardDeck = "year" | "fate" | "law" | "directive" | "idea" | "dev";
 export type CardSize = "ceremony" | "hand" | "mini";
 
 /** A corner: its bronze icon (or a short text where the vocabulary has none), and its
@@ -85,6 +86,7 @@ const KIND = {
   law: { icon: "assembly/law", label: "Kind: Law" },
   directive: { icon: "assembly/directive", label: "Kind: Directive" },
   idea: { icon: "assembly/national-idea", label: "Kind: National Idea" },
+  dev: { icon: "events/convoy", label: "Kind: Development card" },
 } as const satisfies Record<Exclude<CardDeck, "year">, CardMark>;
 
 const RIVAL = "chrome/dossier";
@@ -99,6 +101,7 @@ const REACH = {
 const TIMING = {
   now: { icon: "unrest/alarm", label: "Timing: At once" },
   sitting: { icon: "assembly/vote", label: "Timing: At the sitting, by vote" },
+  played: { icon: "assembly/propose", label: "Timing: When you play it" },
 } as const satisfies Record<string, CardMark>;
 
 const DURATION = {
@@ -486,6 +489,78 @@ export function ideaCardFace(
   };
 }
 
+/** One of `resources`, an icon each, joined by "/". */
+function oneOf(resources: readonly Stat[]): EqToken[] {
+  return resources.flatMap((resource, index) => [
+    ...(index ? [or] : []),
+    ic(RESOURCE_RASTERS[resource]),
+  ]);
+}
+
+function devRow(card: DevCard): EqRow {
+  const { effect } = card;
+  switch (effect.type) {
+    case "gain":
+      return {
+        tone: "gain",
+        tokens: [
+          signed(effect.amount),
+          ...oneOf(effect.resources),
+          ...(effect.per ? [cond(effect.per === "pop" ? "each pop" : "each settlement")] : []),
+        ],
+      };
+    case "addPop":
+      return {
+        tone: "gain",
+        tokens: [n("+1"), ic(POP_RASTERS[effect.pop]), to, ic("pops/capacity")],
+      };
+    case "buildDiscount":
+      return {
+        tone: "gain",
+        tokens: [
+          ic(ACTION_ICONS.buildBuilding),
+          or,
+          ic(ACTION_ICONS.upgradeColonyToCity),
+          signed(-effect.amount),
+          ...oneOf(["wood", "stone"]),
+        ],
+      };
+    case "unrestTokens":
+      return {
+        tone: "gain",
+        tokens: [...unrestTokens(effect.change), ...(card.kind === "rival" ? [to, ic(RIVAL)] : [])],
+      };
+    case "raid":
+      return {
+        tone: "gain",
+        tokens: [n(`≤${effect.amount}`), ...oneOf(effect.resources), cond("from a rival")],
+      };
+    case "discardHeld":
+      return {
+        tone: "gain",
+        tokens: [n("−1"), ic(KIND.dev.icon), to, ic(RIVAL), cond("at random")],
+      };
+  }
+}
+
+/** A development card: a yield lands at once; a held card waits in the hand. */
+export function devCardFace(card: DevCard): CardFace {
+  const row = devRow(card);
+  return {
+    deck: "dev",
+    name: card.name,
+    band: "Development",
+    kind: KIND.dev,
+    reach: card.kind === "rival" ? REACH.rival : REACH.you,
+    timing: card.kind === "yield" ? TIMING.now : TIMING.played,
+    duration: DURATION.once,
+    art: { icon: subject([row]) },
+    voice: card.flavor,
+    equation: { rows: [row], but: [] },
+    sentence: card.text,
+  };
+}
+
 // ── The deck line ───────────────────────────────────────────────────────────
 
 /** What the table may know of a deck, said under its drawn card. */
@@ -508,9 +583,23 @@ export type DeckLine = {
  */
 export function deckLine(
   G: HegemonyState,
-  deck: { kind: "year" } | { kind: "fate" } | { kind: "politician"; politician: PoliticianId },
+  deck:
+    | { kind: "year" }
+    | { kind: "fate" }
+    | { kind: "dev" }
+    | { kind: "politician"; politician: PoliticianId },
 ): DeckLine {
   const content = G.definition.content;
+  // The development deck's held cards stay in hands unseen, so the table knows only
+  // how many are left in the pile.
+  if (deck.kind === "dev") {
+    return {
+      name: "Development deck",
+      left: G.devDrawPile.length,
+      total: content.devCards.reduce((sum, card) => sum + card.count, 0),
+      kinds: [],
+    };
+  }
   if (deck.kind === "politician") {
     const { politician } = deck;
     const total = content.resolutions.filter((card) => card.politician === politician).length;

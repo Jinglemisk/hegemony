@@ -35,8 +35,10 @@ import { createSimRng, deriveBotSeed } from "../sim/rng";
  * and the seat with gold and stone for a Port), `?dev=assembly-ballot`, `-vote` and
  * `-rises` (the fourth sitting's ballot), `?dev=trade` (the seat holding wood to offer,
  * each rival holding stone) and `?dev=assembly-trade` (the first sitting's preparation,
- * every seat sealed and none Ready). For the board: `?dev=mid-game` and `?dev=late-game`
- * (the sim's smart bots play every seat to the start of Year 6 or Year 12).
+ * every seat sealed and none Ready). `?dev=cards`: the seat at the development deck,
+ * with gold for a card, a Caravan held from an earlier turn and a Foraging on top of the
+ * pile. For the board: `?dev=mid-game` and `?dev=late-game` (the sim's smart bots play
+ * every seat to the start of Year 6 or Year 12).
  */
 
 /** What a scene asks of the board's first render, beside its state. */
@@ -176,6 +178,19 @@ export const DEV_SCENES: Record<string, (G: HegemonyState) => DevScene> = {
         const mine = seat === draft.currentPlayer;
         Object.assign(draft.players[seat].resources, { wood: mine ? 8 : 0, stone: mine ? 0 : 4 });
       }
+    }),
+  }),
+  cards: (G) => ({
+    G: produce(clearFate(G), (draft) => {
+      const seat = draft.currentPlayer;
+      const take = (cardId: string) =>
+        draft.devDrawPile.splice(
+          draft.devDrawPile.findIndex((id) => id.startsWith(`${cardId}#`)),
+          1,
+        )[0];
+      draft.players[seat].resources.gold = Math.max(draft.players[seat].resources.gold, 6);
+      draft.devHands[seat].push({ id: take("caravan"), turn: draft.turn - 1 });
+      draft.devDrawPile.unshift(take("foraging"));
     }),
   }),
   "mid-game": (G) => ({ G: botsToYear(G, 6) }),

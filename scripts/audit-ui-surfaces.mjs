@@ -213,26 +213,16 @@ export const SURFACES = [
     },
   },
   {
-    name: "venture-pick",
+    name: "card-drawn",
     go: async (p) => {
-      await pressVerb(p, "Civic", ["Venture"]);
-    },
-  },
-  {
-    name: "venture-rolled",
-    go: async (p) => {
-      const roll = p.getByRole("dialog").getByRole("button", { name: /fund/i }).first();
-      if (await roll.count()) {
-        await roll.click().catch(() => {});
-        await p.waitForTimeout(1000);
-      }
+      await pressVerb(p, "Civic", ["Buy a card"]);
+      await p.waitForTimeout(1000);
     },
     after: async (p) => {
-      // The venture's commit verb is the outcome now ("Take the Gold"), not a
-      // generic Continue — the dismissal has to follow the copy.
+      // A yield's commit names what it gave ("Take the Food"); a held card is kept.
       const done = p
         .getByRole("dialog")
-        .getByRole("button", { name: /continue|close|take the/i })
+        .getByRole("button", { name: /keep it|take the/i })
         .first();
       if (await done.count()) await done.click().catch(() => {});
       await p.waitForTimeout(400);

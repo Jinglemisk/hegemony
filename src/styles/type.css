@@ -158,10 +158,10 @@
    ceremony's carved figure. At most one per page —
    a second would mean neither is the answer.
 
-   34px is the fate card's own spec (c-event.html). The venture's payoff is drawn
-   at 38 and the Assembly's tally at 56, but those are scene numerals inside a
-   scene that owns its whole viewport, not page numerals; giving each its own
-   role would make the size table longer than the thing it disciplines. */
+   34px is the fate card's own spec (c-event.html). The Assembly's tally is drawn
+   at 56, but that is a scene numeral inside a scene that owns its whole viewport,
+   not a page numeral; giving it its own role would make the size table longer
+   than the thing it disciplines. */
 .stat-lg.stat-hero {
   font-size: 2.125rem;
 }

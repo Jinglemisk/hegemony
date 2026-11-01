@@ -160,3 +160,11 @@ export function firstAvailablePop(pops?: Pops): PopType {
 
   return POP_TYPES.find((candidate) => pops[candidate] > 0) ?? "citizens";
 }
+
+/** Where a seat stood before it bought or played a development card: its hand and the
+ *  log's length, so the deck's dialog can find what the command did. */
+export type DeckMark = { hand: string[]; log: number };
+
+export function deckMark(G: HegemonyState, playerID: PlayerId): DeckMark {
+  return { hand: G.devHands[playerID].map((held) => held.id), log: G.log.length };
+}

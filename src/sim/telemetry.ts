@@ -13,7 +13,7 @@ import type { ActiveEffectKind } from "../game/activeEffects";
 import { TRADABLE_MATERIALS } from "../game/bank";
 import type { GameCommand } from "../game/legalMoves";
 import type { DefinitionIdentity } from "../game/definition";
-import { PLAYER_IDS } from "../game/data";
+import { DEV_CARDS, PLAYER_IDS } from "../game/data";
 import { getAddPopsEffect } from "../game/events";
 import { activeClaims, ownedClaims } from "../game/luxury";
 import { playerStandings } from "../game/score";
@@ -42,6 +42,7 @@ import type { UnrestTier } from "../game/unrest";
 import type {
   BoardLayout,
   BuildingId,
+  DevCardId,
   GameOverReason,
   HegemonyState,
   LogEntry,
@@ -300,6 +301,8 @@ export type SeatCounts = {
   influenceSpent: Record<InfluenceSink, number>;
   /** Gold paid for votes, read off the stock the same way. */
   voteGold: number;
+  /** Gold paid for development cards, read off the stock the same way. */
+  devCardGold: number;
   /** Food bought while the stock was below zero, and at zero or above. */
   foodBought: { coveringShortfall: FoodBought; buyingAhead: FoodBought };
   /** Times it took Voice. */
@@ -363,6 +366,7 @@ function emptySeatCounts(): Record<PlayerId, SeatCounts> {
       number
     >,
     voteGold: 0,
+    devCardGold: 0,
     foodBought: { coveringShortfall: emptyFoodBought(), buyingAhead: emptyFoodBought() },
     voiceClaims: 0,
     repealsPassed: 0,
@@ -733,6 +737,16 @@ export type TradeFigures = {
   >;
 };
 
+/** The development deck: cards bought and the gold paid, and each card drawn and played. */
+export type DevCardFigures = {
+  bought: Count;
+  goldSpent: Count;
+  played: Count;
+  drawn: Record<DevCardId, Count>;
+  /** Only the held cards: a yield resolves on its draw. */
+  playedByCard: Partial<Record<DevCardId, Count>>;
+};
+
 export type BatchReport = {
   meta: {
     games: number;
@@ -786,6 +800,7 @@ export type BatchReport = {
   beloved: Cut<BelovedLuxury>;
   influenceSpent: Cut<Record<InfluenceSink, Count>>;
   trade: Cut<TradeFigures>;
+  devCards: Cut<DevCardFigures>;
   /** Universal action telemetry. Every GameCommand type is present, including zeroes,
    *  so newly added or unexercised actions cannot disappear from a report. */
   movesByType: Record<GameCommandType, Count>;
@@ -872,7 +887,8 @@ const CURRENCY_VERBS = [
   "civicCalm",
   "promotePop",
   "demotePop",
-  "fundExpedition",
+  "buyDevCard",
+  "playDevCard",
   "buyRiotInsurance",
   "resolveRiot",
 ] as const;
@@ -1121,6 +1137,25 @@ function assemblyOf(group: SeatGame[], games: number): AssemblySeat {
     repealsPassed: count(({ facts }) => facts.repealsPassed),
     repealsFailed: count(({ facts }) => facts.repealsFailed),
     directivesAimedAt: count(({ facts }) => facts.directivesAimedAt),
+  };
+}
+
+function devCardsOf(group: SeatGame[], games: number): DevCardFigures {
+  const count = counter(group, games);
+  const reached = (id: string) => count(({ facts }) => facts.reach[id] ?? 0);
+  return {
+    bought: reached("command:buyDevCard"),
+    goldSpent: count(({ facts }) => facts.devCardGold),
+    played: reached("command:playDevCard"),
+    drawn: Object.fromEntries(
+      DEV_CARDS.map((card) => [card.id, reached(`devDraw:${card.id}`)]),
+    ) as Record<DevCardId, Count>,
+    playedByCard: Object.fromEntries(
+      DEV_CARDS.filter((card) => card.kind !== "yield").map((card) => [
+        card.id,
+        reached(`devPlay:${card.id}`),
+      ]),
+    ),
   };
 }
 
@@ -1393,6 +1428,7 @@ export class Aggregator {
     const sink = influenceSink(move);
     if (sink) seat.influenceSpent[sink] += Math.max(0, -change.influence);
     if (move.type === "assemblyBribe") seat.voteGold += Math.max(0, -change.gold);
+    if (move.type === "buyDevCard") seat.devCardGold += Math.max(0, -change.gold);
 
     if (move.type === "dole" || (move.type === "bankBuy" && move.material === "food")) {
       // Below zero the seat is covering a shortfall; at zero or above it buys ahead.
@@ -1665,6 +1701,7 @@ export class Aggregator {
       beloved: by(belovedOf),
       influenceSpent,
       trade: by(tradeOf),
+      devCards: by(devCardsOf),
       movesByType: commands(GAME_COMMAND_TYPES) as BatchReport["movesByType"],
       activeEffects: activeEffectsOf(snapshots),
       buildings: Object.fromEntries(

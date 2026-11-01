@@ -1,5 +1,6 @@
 import type {
   BuildingDefinition,
+  DevCard,
   EventCard,
   YearCard,
   EventTableDefinition,
@@ -124,103 +125,6 @@ export const RIOT_TABLE: EventTableDefinition = {
     { id: "patronage", label: "Patronage", cost: { influence: 3 }, modifier: 1 },
   ],
 };
-
-/** One d6 roll per venture. The Voyage adds a freeman only on a 6. */
-export const EXPEDITION_TABLES: EventTableDefinition[] = [
-  {
-    id: "merchantConvoy",
-    name: "Merchant Convoy",
-    flavor: "Amphorae for the Tyrrhenian markets — if the sea allows.",
-    rows: [
-      { roll: 1, label: "Lost at sea", effects: [{ type: "none" }] },
-      { roll: 2, label: "Pirates take the cargo", effects: [{ type: "none" }] },
-      {
-        roll: 3,
-        label: "Modest profits",
-        effects: [{ type: "gainResource", resource: "gold", amount: 2 }],
-      },
-      {
-        roll: 4,
-        label: "Modest profits",
-        effects: [{ type: "gainResource", resource: "gold", amount: 2 }],
-      },
-      {
-        roll: 5,
-        label: "Modest profits",
-        effects: [{ type: "gainResource", resource: "gold", amount: 2 }],
-      },
-      {
-        roll: 6,
-        label: "Rich cargo returns",
-        effects: [{ type: "gainResource", resource: "gold", amount: 4 }],
-      },
-    ],
-  },
-  {
-    id: "grandEmbassy",
-    name: "Grand Embassy",
-    flavor: "Envoys and gifts to a distant court.",
-    rows: [
-      { roll: 1, label: "Rebuffed at court", effects: [{ type: "none" }] },
-      { roll: 2, label: "Rebuffed at court", effects: [{ type: "none" }] },
-      {
-        roll: 3,
-        label: "A polite hearing",
-        effects: [{ type: "gainResource", resource: "influence", amount: 1 }],
-      },
-      {
-        roll: 4,
-        label: "A polite hearing",
-        effects: [{ type: "gainResource", resource: "influence", amount: 1 }],
-      },
-      {
-        roll: 5,
-        label: "An alliance of guest-friendship",
-        effects: [{ type: "gainResource", resource: "influence", amount: 2 }],
-      },
-      {
-        roll: 6,
-        label: "An alliance of guest-friendship",
-        effects: [{ type: "gainResource", resource: "influence", amount: 2 }],
-      },
-    ],
-  },
-  {
-    id: "colonistsVoyage",
-    name: "Colonists' Voyage",
-    flavor: "Families and seed-grain aboard — seeking a kinder shore.",
-    rows: [
-      { roll: 1, label: "Storms scatter the ships", effects: [{ type: "none" }] },
-      { roll: 2, label: "Storms scatter the ships", effects: [{ type: "none" }] },
-      {
-        roll: 3,
-        label: "Provisions salvaged",
-        effects: [{ type: "gainResource", resource: "food", amount: 2 }],
-      },
-      {
-        roll: 4,
-        label: "Provisions salvaged",
-        effects: [{ type: "gainResource", resource: "food", amount: 2 }],
-      },
-      {
-        roll: 5,
-        label: "A bountiful landfall",
-        effects: [{ type: "gainResource", resource: "food", amount: 3 }],
-      },
-      {
-        roll: 6,
-        label: "Settlers arrive",
-        effects: [
-          { type: "gainPop", pop: "freemen", foodFallback: 2 },
-          { type: "gainResource", resource: "food", amount: 2 },
-        ],
-      },
-    ],
-  },
-];
-
-/** One 2-gold stake funds any expedition. */
-export const VENTURE_COST: Partial<Resources> = { gold: 2 };
 
 // One of each per settlement. Marketplace, Estate and Forum raise their class column
 // from 1 to 2; Temple and Granary state one flat fact; the Port's fact is its claim on
@@ -511,5 +415,161 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     text: "Clear one Unrest token.",
     flavor: "The quarrel is settled over wine, and the street goes quiet.",
     effects: [{ type: "unrestTokens", change: "clearOne" }],
+  },
+];
+
+// ── The development deck (docs/plans/development-deck.md) ───────────────────────────
+//
+// Forty cards, signed off by the owner on 2026-10-31: twenty yields that land on the
+// draw, twelve held cards a seat plays on itself, and eight it plays on a rival. A yield
+// counts the realm or gives 5; no card gives +1 of a resource.
+
+/** One card costs this; a seat buys one a turn. */
+export const DEV_CARD_COST: Partial<Resources> = { gold: 2 };
+
+export const DEV_CARDS: DevCard[] = [
+  {
+    id: "foraging",
+    name: "Foraging",
+    count: 5,
+    kind: "yield",
+    text: "Gain 1 food for each of your settlements.",
+    flavor: "Every hamlet sends its children out to the hedgerows.",
+    effect: { type: "gain", resources: ["food"], amount: 1, per: "settlement" },
+  },
+  {
+    id: "woodcutters",
+    name: "Woodcutters",
+    count: 5,
+    kind: "yield",
+    text: "Gain 1 wood for each of your settlements.",
+    flavor: "Axes ring in every village wood.",
+    effect: { type: "gain", resources: ["wood"], amount: 1, per: "settlement" },
+  },
+  {
+    id: "quarry-gang",
+    name: "Quarry Gang",
+    count: 5,
+    kind: "yield",
+    text: "Gain 1 stone for each of your settlements.",
+    flavor: "A gang with wedges and rope works each hillside.",
+    effect: { type: "gain", resources: ["stone"], amount: 1, per: "settlement" },
+  },
+  {
+    id: "bountiful-harvest",
+    name: "Bountiful Harvest",
+    count: 1,
+    kind: "yield",
+    text: "Gain 1 food for each pop in your realm.",
+    flavor: "Every hand in the realm brings in a sheaf.",
+    effect: { type: "gain", resources: ["food"], amount: 1, per: "pop" },
+  },
+  {
+    id: "civic-feast",
+    name: "Civic Feast",
+    count: 1,
+    kind: "yield",
+    text: "Gain 1 influence for each pop in your realm.",
+    flavor: "An ox roasts in the agora, and every guest remembers the host.",
+    effect: { type: "gain", resources: ["influence"], amount: 1, per: "pop" },
+  },
+  {
+    id: "tunny-run",
+    name: "Tunny Run",
+    count: 1,
+    kind: "yield",
+    text: "Gain 5 food.",
+    flavor: "The tunny shoals come close inshore, and the nets come up full.",
+    effect: { type: "gain", resources: ["food"], amount: 5 },
+  },
+  {
+    id: "timber-raft",
+    name: "Timber Raft",
+    count: 1,
+    kind: "yield",
+    text: "Gain 5 wood.",
+    flavor: "Logs lashed together ride the river down on the flood.",
+    effect: { type: "gain", resources: ["wood"], amount: 5 },
+  },
+  {
+    id: "marble-block",
+    name: "Marble Block",
+    count: 1,
+    kind: "yield",
+    text: "Gain 5 stone.",
+    flavor: "A flawless block from the new face of the quarry.",
+    effect: { type: "gain", resources: ["stone"], amount: 5 },
+  },
+  {
+    id: "caravan",
+    name: "Caravan",
+    count: 4,
+    kind: "held",
+    text: "Gain 1 wood, stone or food for each of your settlements: one kind, chosen when you play it.",
+    flavor: "Mules loaded at every gate, bound wherever you send them.",
+    effect: { type: "gain", resources: ["wood", "stone", "food"], amount: 1, per: "settlement" },
+  },
+  {
+    id: "settlers",
+    name: "Settlers",
+    count: 3,
+    kind: "held",
+    text: "Gain a freeman in one of your settlements with room.",
+    flavor: "Families and seed-grain, seeking a kinder shore.",
+    effect: { type: "addPop", pop: "freemen" },
+  },
+  {
+    id: "captives",
+    name: "Captives",
+    count: 1,
+    kind: "held",
+    text: "Gain a slave in one of your settlements with room.",
+    flavor: "Prisoners from a border raid, roped at the neck.",
+    effect: { type: "addPop", pop: "slaves" },
+  },
+  {
+    id: "master-builder",
+    name: "Master Builder",
+    count: 1,
+    kind: "held",
+    text: "Your next building or colony upgrade this turn costs 2 less wood or stone.",
+    flavor: "He knows where every block will sit before the first is cut.",
+    effect: { type: "buildDiscount", amount: 2 },
+  },
+  {
+    id: "festival-day",
+    name: "Festival Day",
+    count: 3,
+    kind: "held",
+    text: "Clear one of your Unrest tokens.",
+    flavor: "Garlands, wine, and a day off work.",
+    effect: { type: "unrestTokens", change: "clearOne" },
+  },
+  {
+    id: "raiders",
+    name: "Raiders",
+    count: 4,
+    kind: "rival",
+    text: "Take up to 3 wood, stone, food or gold from a rival you pick: one kind, and no more than they hold.",
+    flavor: "They come at night and are gone before the alarm.",
+    effect: { type: "raid", resources: ["wood", "stone", "food", "gold"], amount: 3 },
+  },
+  {
+    id: "agitators",
+    name: "Agitators",
+    count: 2,
+    kind: "rival",
+    text: "A rival you pick places an Unrest token.",
+    flavor: "Paid voices in a rival's market.",
+    effect: { type: "unrestTokens", change: "placeOne" },
+  },
+  {
+    id: "informer",
+    name: "Informer",
+    count: 2,
+    kind: "rival",
+    text: "A rival you pick discards a held card, drawn at random.",
+    flavor: "A servant who listens at doors, and sells what he hears.",
+    effect: { type: "discardHeld" },
   },
 ];

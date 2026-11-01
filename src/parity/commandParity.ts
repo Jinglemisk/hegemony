@@ -173,12 +173,19 @@ export const COMMAND_PARITY = {
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
-  fundExpedition: {
+  buyDevCard: {
     frontend: interactive(
-      "src/components/frame/VerbDiscs.tsx",
-      "src/components/board/modals/VentureModal.tsx",
+      "src/components/frame/discs.ts",
+      "src/components/board/modals/DevCardModal.tsx",
     ),
-    simulation: simulated("master-search", "beamPlan → searchOutcomes → ventureOutcomes"),
+    simulation: simulated("master-rule", "planTurn → buyCard"),
+  },
+  playDevCard: {
+    frontend: interactive(
+      "src/components/frame/discs.ts",
+      "src/components/board/modals/DevCardModal.tsx",
+    ),
+    simulation: simulated("master-rule", "planTurn → playCard and playBuilder"),
   },
   buyRiotInsurance: {
     frontend: interactive("src/components/board/modals/RiotModal.tsx"),

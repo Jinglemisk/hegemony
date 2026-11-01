@@ -59,8 +59,13 @@ export const ENGINE_VERSION = "0.1.0";
 /** v20 (board modes, Q81): Silphium makes seven luxury goods, and an Archipelago board
  *  deals the oracle onto an island. The same seed lays a different board and seats the
  *  goods elsewhere, so older saves are rejected. Commands are unchanged. */
-export const STATE_SCHEMA_VERSION = 20;
-export const COMMAND_SCHEMA_VERSION = 7;
+/** v21 (development deck, slice 1): the deck replaces Ventures. The state carries the
+ *  deck's pile, discards and hands and the once-a-turn card flags, the ruleset the card's
+ *  price for the venture stake, and the content the cards for the expedition tables.
+ *  Command v8 drops the venture and adds buying and playing a card. The same seed deals
+ *  the deck after every older shuffle, but older saves are rejected, not migrated. */
+export const STATE_SCHEMA_VERSION = 21;
+export const COMMAND_SCHEMA_VERSION = 8;
 
 export const SAVE_FORMAT_VERSION = 2;
 export const SCRIPT_FORMAT_VERSION = 2;

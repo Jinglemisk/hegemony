@@ -80,7 +80,6 @@ export const VERB_GLYPHS = {
   upgrade: "upgrade",
   build: "build",
   calm: "calm",
-  venture: "venture",
 } as const satisfies Record<VerbId, GlyphId>;
 
 /** Six buildings, six drawings: no two share a picture. */
@@ -102,9 +101,6 @@ export const POLITICIAN_GLYPHS = {
 
 export const EVENT_TABLE_GLYPHS = {
   riot: "riot",
-  merchantConvoy: "convoy",
-  grandEmbassy: "embassy",
-  colonistsVoyage: "venture",
 } as const satisfies Record<EventTableId, GlyphId>;
 
 /* ── The effect grammar ─────────────────────────────────────────────────────
@@ -124,8 +120,6 @@ export const TABLE_EFFECT_GLYPHS = {
   losePops: "popLoss",
   loseResource: "loss",
   destroyBuilding: "ruin",
-  gainResource: "gain",
-  gainPop: "popGain",
 } as const satisfies Record<TableEffect["type"], GlyphId>;
 
 export const LAW_EFFECT_GLYPHS = {
@@ -213,36 +207,6 @@ export const EFFECT_REGISTRY_FAMILIES = [
   "buildingEffect",
   "activeEffectMechanic",
 ] as const satisfies readonly (keyof typeof ICON_REGISTRY_FAMILIES)[];
-
-/* ── Lookup ────────────────────────────────────────────────────────────────── */
-
-/** An effect plus which vocabulary it came from — the two facts needed to pick a
- *  glyph. Callers pass the effect they already hold rather than a glyph name, so
- *  assignment stays in this file and the unions are narrowed in exactly one place. */
-export type EffectIconTarget =
-  | { family: "event"; effect: EventEffect }
-  | { family: "table"; effect: TableEffect }
-  | { family: "law"; effect: LawEffect }
-  | { family: "directive"; effect: DirectiveEffect }
-  | { family: "building"; effect: BuildingEffect }
-  | { family: "activeMechanic"; effect: ActiveEffectMechanic };
-
-export function effectGlyph(target: EffectIconTarget): GlyphId {
-  switch (target.family) {
-    case "event":
-      return EVENT_EFFECT_GLYPHS[target.effect.type];
-    case "table":
-      return TABLE_EFFECT_GLYPHS[target.effect.type];
-    case "law":
-      return LAW_EFFECT_GLYPHS[target.effect.type];
-    case "directive":
-      return DIRECTIVE_EFFECT_GLYPHS[target.effect.type];
-    case "building":
-      return BUILDING_EFFECT_GLYPHS[target.effect.type];
-    case "activeMechanic":
-      return ACTIVE_EFFECT_MECHANIC_GLYPHS[target.effect.type];
-  }
-}
 
 /* ── The frame's rasters ─────────────────────────────────────────────────────
    The v2 frame names its icons by `family/name` raster path (`rasterIcon`, the

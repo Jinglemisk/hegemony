@@ -67,6 +67,22 @@
     inset 0 0 0 var(--rule-2) var(--ivory),
     0 0 0 var(--rule-2) var(--ring);
 }
+/* The development cards a seat holds: a count on the disc's shoulder. */
+.rival-cards {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  min-width: var(--badge);
+  height: var(--badge);
+  padding: 0 var(--rule-2);
+  border-radius: var(--r-round);
+  color: var(--ink);
+  background: var(--ivory);
+  box-shadow: 0 0 0 var(--rule) color-mix(in srgb, var(--ink) 40%, transparent);
+  letter-spacing: 0;
+}
 
 .dock {
   flex: none;

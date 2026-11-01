@@ -109,9 +109,6 @@ const GLYPH_PLACEHOLDERS: Partial<Record<GlyphId, string | undefined>> = {
   stratokles: placeholder("assembly/politician"),
 
   die: placeholder("events/die"),
-  venture: placeholder("events/venture"),
-  convoy: placeholder("events/convoy"),
-  embassy: placeholder("events/embassy"),
 
   laurel: placeholder("victory/laurel"),
   chronicle: placeholder("chrome/chronicle"),

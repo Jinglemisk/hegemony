@@ -245,6 +245,8 @@ export function upgradeColonyToCity(
   }
 
   payCost(G.players[playerID].resources, status.cost ?? G.ruleset.actionCosts.upgradeColonyToCity);
+  // An upgrade spends Master builder's discount, as a building does.
+  G.players[playerID].buildDiscount = 0;
   const displacedPlayers = tile.settlements
     .filter((candidate) => candidate.owner !== playerID && candidate.kind === "colony")
     .map((candidate) => candidate.owner);
@@ -373,6 +375,7 @@ export function buildBuilding(
   }
 
   payCost(G.players[playerID].resources, status.cost ?? building.cost);
+  G.players[playerID].buildDiscount = 0;
   settlement.buildings.push(building.id);
 
   if (claim) {

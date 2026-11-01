@@ -3,6 +3,7 @@ import { getPlayerEventCards, getResolutionCards, getYearCards } from "./content
 import type { BallotItem, PoliticianId } from "./assembly/types";
 import type { HegemonyState, PlayerId, Pops, Settlement } from "./types";
 import { playerPieces } from "./settlement";
+import { devDeckInstances } from "./devCards";
 import { COMMAND_SCHEMA_VERSION, STATE_SCHEMA_VERSION } from "./version";
 
 export interface InvariantViolation {
@@ -264,6 +265,7 @@ export function collectInvariantViolations(
     }
   }
 
+  validateDevCards(G, add, options.strictCardConservation === true);
   if (options.strictCardConservation) {
     validateEventCards(G, "year", getYearCards(G.definition.content), add);
     validateEventCards(G, "player", getPlayerEventCards(G.definition.content), add);
@@ -333,6 +335,32 @@ function validateEventCards(
   }
   for (const cardId of actual.keys()) {
     if (!expected.has(cardId)) add("cards.unknown", `${deck}Cards.${cardId}`, "unknown card id");
+  }
+}
+
+/**
+ * The development deck is conserved: its pile, discards and hands hold every card. The
+ * count holds on any state, a projection's hidden cards included; strict accounting
+ * also proves each card instance is in exactly one place.
+ */
+function validateDevCards(
+  G: HegemonyState,
+  add: (code: string, path: string, message: string) => void,
+  strict: boolean,
+) {
+  const deck = devDeckInstances(G.definition.content);
+  const held = PLAYER_IDS.flatMap((playerID) =>
+    (G.devHands[playerID] ?? []).map((card) => card.id),
+  );
+  const live = [...G.devDrawPile, ...G.devDiscardPile, ...held];
+  if (live.length !== deck.length) {
+    add(
+      "cards.devCount",
+      "devHands",
+      `expected ${deck.length} development cards, found ${live.length}`,
+    );
+  } else if (strict && !sameMultiset(live, deck)) {
+    add("cards.devConservation", "devHands", "every development card must be in exactly one place");
   }
 }
 

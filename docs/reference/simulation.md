@@ -95,7 +95,7 @@ npm run sim -- move dole                          # 3 influence for 1 food
 npm run sim -- move place-capital <tile> <popSpec>
 npm run sim -- move place-colony <tile> <popSpec>
 npm run sim -- move resolve [targetTile]
-npm run sim -- move venture <expeditionId>        # merchantConvoy|grandEmbassy|colonistsVoyage
+npm run sim -- move buy-card                      # 2 gold for a development card; play one with move index
 npm run sim -- move index <N>
 npm run sim -- end-turn
 ```
@@ -137,8 +137,8 @@ Works from any phase — bots will finish a manual setup too. Policies:
   within-turn sequences one-ply misses (build-then-promote chains). It does
   not search through `endTurn`, so the six-turn income projection is state evaluation,
   not income-to-future-action planning.
-  Evaluates ventures as chance leaves using every public
-  outcome, independently of the live die/deck stream. A riot on the table has one
+  Development cards are played by rule, outside the search (see
+  docs/reference/ai.md). A riot on the table has one
   shared handler: it buys the insurance that saves more than it costs and then
   rolls. Record→replay remains deterministic. A `smart`-vs-`beam` A/B
   isolates search depth from evaluation. See docs/reference/ai.md and docs/reports/simulation/ for the head-to-head.
@@ -228,8 +228,7 @@ In `results.perPolicy`, compare wins, all six final titles and final-card distri
 Check whether slaves/Estates, citizens/Forums/Laws and freemen/Marketplaces/Ports
 appear in their builds (the trader raised 12 Marketplaces in the 40 games of Step 17's
 batch), that trades and Doles fund useful actions, and that hunger falls
-when a seat can pay for food. Venture counts need not be even: bots now choose
-expected value, rather than cycling tables. Under the owner ruling of 2026-10-03,
+when a seat can pay for food. Under the owner ruling of 2026-10-03,
 calm covers the buyer's current turn-end check and still cannot take Beloved.
 Compare `currencyVerbs.civicCalm` (calm bought), `riots.perGame` and
 `riots.revoltsPerGame` with the earlier batch; look for legal calm purchases when
@@ -242,7 +241,7 @@ The balance check owns the 20–45% win-rate decision and any balance changes.
 Time the forty-game rotation before starting the balance check's larger conditions. The
 runtime target is under twenty minutes on one core; `--jobs 4` plays the same forty
 games on four worker processes and writes the same report. The performance follow-up
-keeps width 3, depth 4 and all public venture outcomes; cached queries and scores
+keeps width 3 and depth 4; cached queries and scores
 must preserve choices, full-game finishes and the absence of action caps.
 
 The 2026-10-03 performance follow-up ran those forty rotations serially through
@@ -440,7 +439,8 @@ spending from the stock change.
   acquisitions but never holder wins. A personality drafts the same Idea most games, so
   read `perPolicy` beside the pooled rate
 - `reach` (cut) — zero-filled use counts for every command, building, player card, year
-  card, venture, Law and Directive (proposed and passed), Idea (setup and bought), calm
+  card, development card (`devDraw:` drawn, `devPlay:` played), Law and Directive
+  (proposed and passed), Idea (setup and bought), calm
   payment, bank trade per material, ladder rung, growth, bought vote, riot insurance and
   politician draw, with per-seat-game rates. A hunger pick adds one count per pop sent
   away, by class. The summary prints every item under 0.2 a game as "Low reach". A zero
@@ -459,7 +459,10 @@ spending from the stock change.
   `resourceCards` with the percentiles of their `collectedRatio`; `popCards` and
   `popsMoved`; `tokenCards` and `tokensMoved`; and `unchanged` (a loss with nothing to
   take, or no token to clear). Pop and token cards are counted in their own units
-- `buildings`, `upgrades`, `currencyVerbs` (bank, Dole, calm, ladder, venture, riot)
+- `devCards` (cut) — development cards bought and played, the gold paid for them, and
+  each card drawn and each held card played, a game for the table and a seat-game for a
+  seat or a personality, read off the reach counts
+- `buildings`, `upgrades`, `currencyVerbs` (bank, Dole, calm, ladder, cards, riot)
   and `events` (draws by the twelve player-card kinds and eight year-card kinds) are
   read off the reach counts
 - `luxuries` — goods claimed and active a game, their mean standing happiness per seat,

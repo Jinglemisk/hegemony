@@ -1,10 +1,10 @@
 import {
   ACTION_COSTS,
+  DEV_CARD_COST,
   GROW_POP_COSTS,
   PLAYER_IDS,
   SETTLEMENT_RULES,
   STARTING_RESOURCES,
-  VENTURE_COST,
 } from "./data";
 import { PLACEMENT_POP_COUNTS } from "./core/pops";
 import type { PoliticianId } from "./assembly/types";
@@ -66,6 +66,12 @@ export interface IdeaRules {
   influenceCost: number;
   /** Ideas a seat may buy after its setup pick. */
   purchases: number;
+}
+
+/** The development deck's price (docs/plans/development-deck.md). The cards themselves
+ *  are content. */
+export interface DevCardRules {
+  cost: Partial<Resources>;
 }
 
 /** Player trade (docs/plans/player-trade.md). Off, no seat offers and the Assembly's
@@ -224,8 +230,7 @@ export interface Ruleset {
   civicCalm: CivicCalmRules;
   ladder: LadderRules;
   ideas: IdeaRules;
-  /** One stake posts any expedition. */
-  ventureCost: Partial<Resources>;
+  devCards: DevCardRules;
   /** The Assembly & Politicians layer (Phase 3-B). */
   assembly: AssemblyRules;
   trade: TradeRules;
@@ -310,7 +315,7 @@ export const DEFAULT_RULESET: Ruleset = {
     demoteCosts: { citizens: { influence: 1 }, freemen: { influence: 1 } },
   },
   ideas: { influenceCost: 6, purchases: 1 },
-  ventureCost: VENTURE_COST,
+  devCards: { cost: DEV_CARD_COST },
   assembly: {
     // Every other year from Year 2: up to seven sittings in a fourteen-year game.
     firstYear: 2,

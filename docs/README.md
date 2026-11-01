@@ -5,7 +5,7 @@ tree. The roadmap establishes sequence and exit gates; plans define unshipped
 work; references describe the game that exists; reports preserve dated evidence;
 and the archive is historical context, never current authority.
 
-Last updated: 2026-10-31.
+Last updated: 2026-11-01.
 
 ## Now
 
@@ -48,7 +48,7 @@ precedes full multiplayer. The mechanics are frozen (owner, 2026-10-27) but for 
 | [UI — what is left](plans/ui-remaining.md)          | —        | `active`   | The one UI ledger; the KYKLOS triage ledgers are archived                         |
 | [Code health](plans/code-health.md)                 | post-v2  | `active`   | Five cleanup PRs before trade; all merged, trade next                             |
 | [Player trade](plans/player-trade.md)               | post-v2  | `active`   | PRs #131 and #132 merged; the owner plays trade next; holds the balance check     |
-| [Development deck](plans/development-deck.md)       | post-v2  | `proposed` | Replaces Ventures; the owner signed off the card list on 2026-10-31               |
+| [Development deck](plans/development-deck.md)       | post-v2  | `active`   | Slice 1 built: the deck replaces Ventures; slice 2 (free card, riots) next        |
 | [Board modes](plans/board-modes.md)                 | post-v2  | `proposed` | Engine and sim (#145); Q81 answered: hop 3, seven goods, the oracle on an island  |
 | [Game settings](plans/game-settings.md)             | post-v2  | `proposed` | Length and base income built in the engine; the setup screen is parked            |
 | [National Ideas](plans/national-ideas.md)           | v2       | `active`   | Step 9 shipped (#88); twelve v2 rules, open setup draft (#95), influence purchase |

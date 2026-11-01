@@ -72,29 +72,23 @@ The slaver values slaves, Estates' real production, yielding slots and expansion
 The civic values citizens, Forums' influence, Temples and standing Laws toward
 Voice. The trader values freemen, Marketplaces' gold, Ports and luxuries. Buildings
 have no personality bonus: their changes to income, slots and happiness carry
-the value. Each build trades with the other seats by rule (see Trade) and chooses
-ventures in search.
+the value. Each build trades with the other seats and plays development cards by rule
+(see Trade and Development cards).
 
 ## Search and forecasts
 
-All optional economic actions enter search, including the Dole, calm, Ideas and
-ventures, and unit bank buys and sells where a ruleset keeps the bank. Trade does not:
-an offer is composed and its answers are other seats', so it is played by rule. A seat has one move a turn, so the engine
+All optional economic actions enter search, including the Dole, calm and Ideas, and
+unit bank buys and sells where a ruleset keeps the bank. Trade does not: an offer is
+composed and its answers are other seats', so it is played by rule. Development cards
+do not either: a draw is unseen, so they are played by rule too. A seat has one move a turn, so the engine
 offers a few bundles for each pair of settlements: one pop of a class, all of a
 class, everyone, and as many slaves as the target has slots open. The last is the
 one that puts two of four idle slaves to work. A riot on the table has its own
 handler, below; search never evaluates the live riot roll.
 
-Ventures are chance leaves at every search depth. Score every public die face,
-and every uniform settlement destination for the Voyage jackpot, with its actual
-probability. Synthetic RNG seeds reproduce those outcomes through canonical
-transitions independently of the game's RNG. Compare the expected score with the
-other branches; after execution, observe the real roll and replan. This supports
-venture sequences without expanding subsequent turns or a chance tree.
-A negative mean gold payout can still be useful near a title threshold. Equal
-positions at the same depth are expanded once. Scores are shared across depths
-and venture outcomes within one decision, keyed by the economic fields that can
-change during that search. Logs and the last roll display do not distinguish
+No searched action reads the game's RNG. Equal positions at the same depth are
+expanded once. Scores are shared across depths within one decision, keyed by the
+economic fields that can change during that search. Logs and the last roll display do not distinguish
 positions. When the only optional first move already improves the score, return
 it immediately: deeper search cannot change that first move. A costly first move
 still gets the full search to find a later payoff. Width, depth, odds and tie order
@@ -366,6 +360,24 @@ before the turn goes on, a bot before any person, and an answer does not count t
 the turn's 30 actions. The browser plays the bot seats the same way and stops where a
 person must act: their turn, an offer naming them, or the sitting's recap.
 
+## Development cards
+
+Cards are played by rule, outside the search ([deck plan](../plans/development-deck.md),
+Bots). A card in the hand is worth what playing it gives at the seat's weights: a
+yield or a Caravan its stock, Settlers or Captives a pop, Master Builder the 2 it saves,
+Festival Day a point of the level, Raiders the 3 it takes, Agitators and an Informer
+nothing. A held card waits a turn at least, so the hand counts each card a year of the
+forecast less. An unseen card, in the deck or a rival's hand, is the average of the
+cards it could be. Every seat's score counts its hand this way.
+
+- **Buying:** once the turn's search would end the turn, a seat buys when the deck's
+  average beats what its 2 gold is worth on its own score, the purchase it saves
+  toward included.
+- **Playing:** first in its turn, a seat plays the card that pays most now: its own
+  cards on its own score, which counts the card it gives up, and rival cards by the
+  Assembly's competitive delta, so they find the leader. Master Builder is played when
+  the turn's best line with its discount beats the best line without it.
+
 ## Limits and validation
 
 Search cannot plan a sequence across turns, model general rival replies, or plan
@@ -375,11 +387,11 @@ not found a forest colony in order to cut wood later. Bots model no rival when t
 price a deal, and bargain no further than one counter. The forecast buys food and calm and loses pops to riots, and
 nothing else: it does not grow slaves or raise a building in a later year. The
 risk of standing near the riot line and future Idea opportunities are heuristics.
-Venture expectation is exact for the shipped public tables; it does not implement
-the outcome-driven AI program. Focused tests cover build preferences, food rescue,
+Card values are the deck plan's material values at the seat's weights, not a forecast
+of when a card is best played; they do not implement the outcome-driven AI program. Focused tests cover build preferences, food rescue,
 bank-to-Port sequences in the economy before trade, wood for food between two bots, a
-refused deal worth less than none, a refused deal that hands Treasurer, venture odds
-and title decisions, Idea picks/purchases, private-information invariance, seat
+refused deal worth less than none, a refused deal that hands Treasurer, cards bought,
+played and aimed at the leader, title decisions, Idea picks/purchases, private-information invariance, seat
 routing and telemetry denominators.
 
 Use the rotated [simulation commands](simulation.md) for full-game evidence.

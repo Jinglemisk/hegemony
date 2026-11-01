@@ -1,7 +1,7 @@
 ---
-status: proposed
+status: active
 phase: "post-v2"
-updated: 2026-10-31
+updated: 2026-11-01
 ---
 
 # Development deck
@@ -310,7 +310,8 @@ deck against Ventures, then the free card on and off, read against the [rotated 
    yields on the draw, hold, play one a turn, never on the turn drawn; the rival cards; public
    hand counts and hidden hands in the projections; Chronicle and Codex; bots buy, play and aim.
    Checked by engine tests (conservation, the not-this-turn rule, redaction), a browser test, and
-   a batch against Ventures.
+   a batch against Ventures. **Built 2026-11-01** (branch `feat/dev-deck`); the batch against
+   Ventures waits for the end (owner).
 2. **Happiness and the hand.** The free card at +3, a riot taking a card in place of a pop,
    and the bots' value of both, with a dated report on slaves and happiness by personality.
 3. **Card trading.** Closed cards in the trade composer, the giver's pick, not playable the turn
@@ -338,6 +339,7 @@ row it lands on, reads the insurance modifier and the die from data, and shows i
 
 ## Retirement
 
-When slice 4 merges: replace the Ventures section of `rules.md` with a Development cards section;
-update the Codex, [AI](../reference/ai.md) and [simulation](../reference/simulation.md)
-references; move this plan to `docs/archive/plans/` with its PRs and reports.
+Slice 1 replaced the Ventures section of `rules.md` with a Development cards section and
+updated the Codex, [AI](../reference/ai.md) and [simulation](../reference/simulation.md)
+references, since Ventures are gone. When slice 4 merges: bring them up to date and move this
+plan to `docs/archive/plans/` with its PRs and reports.
