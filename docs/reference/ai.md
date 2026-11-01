@@ -328,6 +328,13 @@ the seat's own gain counts once.
 Mixed tables route every Assembly action to its actual seat, including when a
 sitting spans one opener's player-turn.
 
+A Law blocked now is worth what it would do enacted at the next sitting, on a copy of
+the board in that year: a seat seals it, to be kept, when that beats discarding it, and
+a deck's blocked cards count at that worth. A kept Law costs no draw. The seat proposes
+it when it is worth more than the speech it could pay for instead, or than nothing;
+otherwise it draws, repeals or passes and the card goes to the discards. Kept Laws are
+out of every deck's pool.
+
 Harbour Planning credits a saved slot at the ordinary projected material value for an
 owned unclaimed Port site; if the site has no building slot left, use half a
 luxury's weight for opening that claim instead. Count at most one prospective

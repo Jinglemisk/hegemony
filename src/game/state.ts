@@ -153,6 +153,7 @@ export function createInitialStateFromDefinition(
     lawOrder: 0,
     assemblyPassedByPlayer: { "0": 0, "1": 0, "2": 0, "3": 0 },
     pendingIsonomiaTarget: null,
+    keptLaws: { "0": null, "1": null, "2": null, "3": null },
     assembliesHeld: 0,
   };
 }

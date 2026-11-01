@@ -11,6 +11,7 @@ import { unrestStatus } from "../game/unrest";
 import type { HegemonyState, PlayerId, Resources } from "../game/types";
 import { presentActiveEffects } from "../ui/effects";
 import type {
+  AssemblySeat,
   BatchReport,
   BelovedLuxury,
   FoodPurchases,
@@ -598,6 +599,13 @@ export function renderBatchReport(report: BatchReport, years: number): string {
   lines.push(
     `Repeals: ${table.repealsProposed.count} filed · ${table.repealsPassed.count} passed · ${table.repealsFailed.count} failed`,
   );
+  const kept = (seat: AssemblySeat) =>
+    `draws blocked when drawn ${formatNumber(seat.blockedDraws.perGame)} · ` +
+    `kept ${formatNumber(seat.lawsKept.perGame)} · passed later ${formatNumber(seat.keptLawsPassed.perGame)} · ` +
+    `influence on draws that went nowhere ${formatNumber(seat.lostDrawInfluence.perGame)}`;
+  lines.push(`Kept Laws (per game): ${kept(table)}`);
+  for (const [name, seat] of Object.entries(assembly.seats.perPolicy))
+    lines.push(`  ${name} (per seat-game): ${kept(seat)}`);
 
   const assemblyVerbs = Object.entries(assembly.verbs)
     .filter(([, value]) => value.count > 0)

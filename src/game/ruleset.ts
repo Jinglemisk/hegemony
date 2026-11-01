@@ -219,6 +219,11 @@ export interface AssemblyRules {
   briberyCap: number;
   /** Whether a tied vote carries. The design's default is that ties fail. */
   tiesPass: boolean;
+  /** Repeals are voted first, and a Law still blocked at its turn is kept by its seat for
+   *  the next sitting (docs/plans/agency-package.md). Off, the ballot runs in seat order
+   *  and a blocked Law cannot be proposed. On in the game; a batch turns it off to
+   *  measure it, and no screen offers the switch. */
+  keptLaws: boolean;
 }
 
 export interface Ruleset {
@@ -350,6 +355,7 @@ export const DEFAULT_RULESET: Ruleset = {
     briberyCost: 2,
     briberyCap: 2,
     tiesPass: false,
+    keptLaws: true,
   },
   trade: { enabled: true },
   setup: ["capital", "colony"],

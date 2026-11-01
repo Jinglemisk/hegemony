@@ -380,6 +380,7 @@ function validateResolutionCards(
     G.politicianDiscards[politician].forEach(countId);
   }
   G.activeLaws.forEach((law) => countId(law.cardId));
+  Object.values(G.keptLaws).forEach((cardId) => cardId && countId(cardId));
 
   const session = G.assembly;
   if (session?.phase === "proposal") {

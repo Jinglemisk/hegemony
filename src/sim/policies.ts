@@ -42,6 +42,7 @@ import {
   baseVoteWeight,
   currentVoteWeight,
   enactForEval,
+  keptLaw,
   lawProposalReason,
   nextAssemblyYear,
   nextDrawCost,
@@ -1781,6 +1782,35 @@ function deltaIfEnacted(
   return competitiveDelta(before, clone, me, score);
 }
 
+/** What sealing an item is worth: what it does if it carries, or, for a Law blocked now,
+ *  what keeping it is worth. */
+function proposalDelta(
+  G: HegemonyState,
+  before: Scores,
+  item: BallotItem,
+  me: PlayerId,
+  score: Scorer,
+): number {
+  return item.kind === "enact" && lawProposalReason(G, item.card)
+    ? keptLawDelta(G, item.card, me, score)
+    : deltaIfEnacted(G, before, item, me, score);
+}
+
+/**
+ * A Law blocked now is kept if it is still blocked at its turn, and its seat may propose
+ * it at the next sitting with no draw. So it is worth what it would do enacted then, on a
+ * copy of the board in that year; nothing when it cannot stand then either, when no
+ * sitting is left, or without kept Laws, where it cannot be sealed at all.
+ */
+function keptLawDelta(G: HegemonyState, card: ResolutionCard, me: PlayerId, score: Scorer) {
+  const year = nextAssemblyYear(G);
+  if (!G.ruleset.assembly.keptLaws || year === null) return -Infinity;
+  const later = { ...G, year };
+  if (lawProposalReason(later, card)) return -Infinity;
+  const item: BallotItem = { kind: "enact", card, proposer: me };
+  return deltaIfEnacted(later, scoreEveryone(later, score), item, me, score);
+}
+
 // Assembly heuristic tunables — sim-tuned to the smart-score scale, where a single
 // income Law shifts a beneficiary's score by ~tens (10 × the projected income delta / 8).
 // Buy votes only when they can change the outcome; reserve repeals for harmful Laws.
@@ -1801,7 +1831,7 @@ function bestProposalDelta(
   me: PlayerId,
   score: Scorer,
 ): number {
-  if (lawProposalReason(G, card)) return -Infinity;
+  if (lawProposalReason(G, card)) return keptLawDelta(G, card, me, score);
   const items: BallotItem[] = [];
 
   if (card.kind === "directive") {
@@ -1863,6 +1893,8 @@ function observablePoliticianPool(
   }
   const held = session?.held[me];
   if (held) knownOutsideDeck.add(held.card.id);
+  // Kept Laws were read out on a ballot.
+  for (const cardId of Object.values(G.keptLaws)) if (cardId) knownOutsideDeck.add(cardId);
   const setAside = session?.setAside[me];
   if (setAside) knownOutsideDeck.add(setAside);
   const proposal = session?.proposals[me];
@@ -1912,9 +1944,31 @@ function resolveAssemblyByHeuristic(
     return chooseProposeOrDiscard(G, held.card, moves, me, score);
   }
   return (
+    proposeKept(G, session, moves, me, score) ??
     speechOffer(G, session, me, score, weights) ??
     chooseDrawRepealOrPass(G, session, moves, me, score)
   );
+}
+
+/** A kept Law costs no draw. The seat proposes it when it is worth more than the speech it
+ *  could pay for instead, or than nothing; otherwise it draws, repeals or passes, and the
+ *  card goes to the discards. */
+function proposeKept(
+  G: HegemonyState,
+  session: AssemblySession,
+  moves: GameCommand[],
+  me: PlayerId,
+  score: Scorer,
+): GameCommand | null {
+  const card = keptLaw(G, me);
+  const propose = moves.find((move) => move.type === "assemblyPropose");
+  if (!card || !propose) return null;
+  const item: BallotItem = { kind: "enact", card, proposer: me };
+  const value = proposalDelta(G, scoreEveryone(G, score), item, me, score);
+  if (!(value > 0)) return null;
+  const speech = wantedSpeech(G, session, moves, me, score);
+  const paid = speech && G.players[me].resources.influence >= speech.cost;
+  return paid && speech.value > value ? null : propose;
 }
 
 function chooseVote(
@@ -2133,7 +2187,7 @@ function chooseProposeOrDiscard(
       proposer: me,
       target: move.target,
     };
-    const delta = deltaIfEnacted(G, before, item, me, score);
+    const delta = proposalDelta(G, before, item, me, score);
     if (delta > bestDelta) {
       bestDelta = delta;
       best = move;

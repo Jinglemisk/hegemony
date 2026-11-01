@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { PLAYER_IDS } from "../../game/data";
-import { currentVoteWeight } from "../../game/assembly";
+import { currentVoteWeight, keptLaw } from "../../game/assembly";
 import { happinessLevel } from "../../game/happiness";
 import { playerNationalIdeas } from "../../game/ideas";
 import { victoryMetricValue, voiceHolder } from "../../game/victory";
@@ -68,6 +68,7 @@ function Rival({
   const glaze = PLAYER_GLAZES[id];
   const census = publicCensus(G, id);
   const cards = G.devHands[id].length;
+  const kept = keptLaw(G, id);
 
   return (
     <Tooltip
@@ -112,6 +113,11 @@ function Rival({
               <strong>{idea.name}</strong> · {idea.text}
             </TipBody>
           ))}
+          {kept ? (
+            <TipBody>
+              Kept Law: <strong>{kept.name}</strong>, to propose at the next sitting
+            </TipBody>
+          ) : null}
         </Tip>
       }
       preferredPlacement="above"

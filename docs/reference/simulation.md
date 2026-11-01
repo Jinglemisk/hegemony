@@ -486,7 +486,10 @@ spending from the stock change.
 - `assembly` — `seats` (cut): Laws proposed, authored passes split into Laws and
   Directives, authored Laws standing at the end, votes bought and their gold, Voice
   claims and table-turns held, repeals filed, passed and failed, and passed Directives
-  aimed at the seat. Beside it: sittings `held`, `prizesGranted`, `voiceTransfers`,
+  aimed at the seat, and kept Laws: `blockedDraws` (draws blocked when drawn), `lawsKept`,
+  `keptLawsPassed` (kept Laws that passed when proposed again) and `lostDrawInfluence`
+  (influence paid for draws whose card reached no vote: set aside, or kept and then let go
+  or held at the end). Beside it: sittings `held`, `prizesGranted`, `voiceTransfers`,
   `voiceHoldersAtEnd`, `voiceHolderWins`, the authored-pass lead margin and leader
   share, `lawsRemoved` (passed less still standing), the influence spent on votes,
   draws and repeals, and a per-verb breakdown. CSV snapshots include standing
@@ -535,6 +538,11 @@ held card in place of a riot's pop). Both are on by default and no screen offers
 or Captured Laborers to the bottom of the player deck. `{"events":{"optionalPops":false}}`
 under `--ruleset-patch` makes the pop forced again, as before the agency package. No
 screen offers it.
+
+**Assembly switch.** `assembly.keptLaws`, on by default, votes the repeals first and lets
+a seat seal a blocked Law, which it keeps if the Law is still blocked at its turn.
+`{"assembly":{"keptLaws":false}}` under `--ruleset-patch` restores seat order and today's
+blocked Laws, as before the agency package. No screen offers it.
 
 **Content switches.** The agency package's Law and Idea changes are content, which
 `--ruleset-patch` and `--tune-patch` do not reach, so `--restore` turns them off:

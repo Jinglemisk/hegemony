@@ -1069,6 +1069,7 @@ const assembly: RuleChapter = {
     "bribe",
     "bribery",
     "repeal",
+    "kept",
     "patron",
     "patronage",
     "agora",
@@ -1132,6 +1133,14 @@ const assembly: RuleChapter = {
               the Directive and its target are revealed before voting. One proposal per player per
               Assembly.
             </DefRow>
+            {rules.keptLaws ? (
+              <DefRow term="Kept Law">
+                A Law that would replace a protected Law is blocked, but you may still seal it. It
+                is checked again at its turn on the ballot: if it is still blocked, it is not voted
+                and you keep it. Everyone sees it. At the next sitting propose it with no draw, or
+                draw a new card; drawing, a repeal or a pass sends it to the discards.
+              </DefRow>
+            ) : null}
             <DefRow term="Repeal">
               For <strong>{rules.repealCost}</strong> influence, move to strike a standing Law whose
               protection has ended, instead. It is voted like any other resolution — undoing a law
@@ -1143,9 +1152,10 @@ const assembly: RuleChapter = {
 
         <Entry id={anchor("assembly", "vote")} title="Voting">
           <Note>
-            The ballot is voted one resolution at a time, in turn order, <strong>openly</strong> —
-            every vote is visible as it lands, so the last seat to speak on a close vote is a
-            kingmaker.
+            The ballot is voted one resolution at a time,{" "}
+            {rules.keptLaws ? "repeals first, then the rest in turn order" : "in turn order"},{" "}
+            <strong>openly</strong> — every vote is visible as it lands, so the last seat to speak
+            on a close vote is a kingmaker.
           </Note>
           <DefList>
             <DefRow term="Your votes">

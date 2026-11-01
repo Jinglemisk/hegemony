@@ -277,7 +277,29 @@ export function assemblyDraw(
     `${getPlayerName(G, playerID)} paid ${cost} influence to sound out ${politicianName(politician)}.`,
     playerID,
   );
+  // After the draw, so the kept card cannot be shuffled back into it.
+  dropKeptLaw(G, playerID);
   return MOVE_OK;
+}
+
+/** The Law a seat kept from an earlier sitting, which it may propose with no draw. */
+export function keptLaw(G: HegemonyState, playerID: PlayerId): ResolutionCard | null {
+  const cardId = G.keptLaws[playerID];
+  return cardId ? getResolutionCard(G.definition.content, cardId) : null;
+}
+
+/** A seat that draws, repeals or passes instead of proposing its kept Law lets it go:
+ *  the card goes to its politician's discards, in the open, as it was read out. */
+function dropKeptLaw(G: HegemonyState, playerID: PlayerId) {
+  const card = keptLaw(G, playerID);
+  if (!card) return;
+  G.keptLaws[playerID] = null;
+  discardCard(G, card);
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} lets the kept ${card.name} go to the discards.`,
+    playerID,
+  );
 }
 
 /** Discard the draw. Its price is sunk; there is no second draw. */
@@ -328,6 +350,8 @@ export function lawReplacementIds(G: HegemonyState, card: ResolutionCard): strin
   }
   return [...new Set(ids)];
 }
+/** Why a Law cannot take effect now: it already stands, or it is blocked, as it would
+ *  replace a Law still in its minimum tenure. */
 export function lawProposalReason(G: HegemonyState, card: ResolutionCard): string | null {
   if (card.kind !== "law") return null;
   if (activeLawIds(G).includes(card.id)) return "That Law already stands.";
@@ -335,8 +359,9 @@ export function lawProposalReason(G: HegemonyState, card: ResolutionCard): strin
     return "A Law this would replace is still in its minimum tenure.";
   return null;
 }
-/** Why the seat cannot seal its held card: a Law that cannot stand, or a Directive
- * not aimed at one rival. */
+/** Why the seat cannot seal its card: a Directive not aimed at one rival, or a Law that
+ *  cannot stand. With kept Laws a blocked Law may still be sealed: it is checked again at
+ *  its turn on the ballot. */
 export function proposalReason(
   G: HegemonyState,
   playerID: PlayerId,
@@ -345,6 +370,8 @@ export function proposalReason(
 ): string | null {
   if (card.kind === "directive" && (!target || target === playerID || !PLAYER_IDS.includes(target)))
     return "Choose one rival for this Directive.";
+  if (G.ruleset.assembly.keptLaws && card.kind === "law" && !activeLawIds(G).includes(card.id))
+    return null;
   return lawProposalReason(G, card);
 }
 
@@ -354,12 +381,13 @@ export function assemblyPropose(
   target?: PlayerId,
 ): MoveResult {
   const session = G.assembly;
+  // The drawn card, or else the kept one, which costs no draw.
+  const held = session?.held[playerID]?.card ?? null;
+  const card = held ?? keptLaw(G, playerID);
 
-  if (!canAct(G, playerID) || !session!.held[playerID]) {
+  if (!canAct(G, playerID) || !card) {
     return invalid();
   }
-
-  const card = session!.held[playerID]!.card;
 
   const reason = proposalReason(G, playerID, card, target);
   if (reason) return invalid(reason);
@@ -370,10 +398,13 @@ export function assemblyPropose(
     proposer: playerID,
     target: card.kind === "directive" ? target : undefined,
   };
-  session!.held[playerID] = null;
+  if (held) session!.held[playerID] = null;
+  else G.keptLaws[playerID] = null;
   addLog(
     G,
-    `${getPlayerName(G, playerID)} seals a resolution to lay before the Assembly.`,
+    held
+      ? `${getPlayerName(G, playerID)} seals a resolution to lay before the Assembly.`
+      : `${getPlayerName(G, playerID)} seals the kept ${card.name} for the ballot.`,
     playerID,
   );
   finalizeProposal(G, playerID);
@@ -415,6 +446,7 @@ export function assemblyProposeRepeal(
 
   G.players[playerID].resources.influence -= cost;
   setAsideHeld(G, playerID);
+  dropKeptLaw(G, playerID);
 
   // The Law it names stays sealed until the ballot is read; the price is public.
   session!.proposals[playerID] = { kind: "repeal", cardId, proposer: playerID };
@@ -437,6 +469,7 @@ export function assemblyPass(G: HegemonyState, playerID: PlayerId): MoveResult {
   }
 
   setAsideHeld(G, playerID);
+  dropKeptLaw(G, playerID);
   session!.proposals[playerID] = null;
   addLog(G, `${getPlayerName(G, playerID)} holds their peace.`, playerID);
   finalizeProposal(G, playerID);
@@ -501,8 +534,8 @@ export function assemblyReady(G: HegemonyState, playerID: PlayerId): MoveResult 
 /**
  * Assemble the ballot and open the vote. The proposals were secret and arrived in
  * whatever real-time order the seats acted; the ballot orders them deterministically —
- * each seat's proposal in turn order — so the vote sequence
- * never depends on who happened to click first.
+ * the repeals first, then the Laws and Directives, each in turn order — so the vote
+ * sequence never depends on who happened to click first.
  */
 function beginVoting(G: HegemonyState) {
   const session = G.assembly!;
@@ -514,11 +547,12 @@ function beginVoting(G: HegemonyState) {
     session.setAside[seat] = null;
   }
 
-  session.ballot = [
-    ...session.voteOrder
+  session.ballot = ballotOrder(
+    G,
+    session.voteOrder
       .map((seat) => session.proposals[seat])
       .filter((item): item is BallotItem => item !== null),
-  ];
+  );
 
   if (session.ballot.length === 0) {
     // Nothing was laid before the house — the agora rises without a vote.
@@ -530,13 +564,61 @@ function beginVoting(G: HegemonyState) {
 
   session.phase = "voting";
   session.ballotIndex = 0;
-  session.votes = [];
-  session.voteIndex = 0;
   addLog(
     G,
-    `The Assembly turns to the ballot — ${session.ballot.length} resolution${session.ballot.length === 1 ? "" : "s"}, voted in turn.`,
+    `The Assembly turns to the ballot — ${session.ballot.length} resolution${session.ballot.length === 1 ? "" : "s"}, voted ${G.ruleset.assembly.keptLaws ? "repeals first, then in turn" : "in turn"}.`,
   );
+  openBallotItem(G);
   syncAssemblyActor(G);
+}
+
+/** The order the ballot is voted in, from proposals in turn order: with kept Laws the
+ *  repeals come first, so a Law is checked after the room they free. */
+function ballotOrder(G: HegemonyState, items: BallotItem[]): BallotItem[] {
+  if (!G.ruleset.assembly.keptLaws) return items;
+  return [
+    ...items.filter((item) => item.kind === "repeal"),
+    ...items.filter((item) => item.kind !== "repeal"),
+  ];
+}
+
+/**
+ * Open the item at the ballot's index for the vote. With kept Laws a Law is checked again
+ * at its turn: one still blocked is not voted, and its seat keeps the card for the next
+ * sitting. When no item is left, the house rises.
+ */
+function openBallotItem(G: HegemonyState) {
+  const session = G.assembly!;
+  session.votes = [];
+  session.voteIndex = 0;
+
+  for (; session.ballotIndex < session.ballot.length; session.ballotIndex += 1) {
+    const item = session.ballot[session.ballotIndex];
+    const reason =
+      G.ruleset.assembly.keptLaws && item.kind === "enact" ? lawProposalReason(G, item.card) : null;
+    if (!reason || item.kind !== "enact") return;
+    keepLaw(G, item, reason);
+  }
+
+  session.phase = "closing";
+  // The sitting's recap is one Chronicle entry, to be read again later.
+  const verdicts = session.results.map(
+    (done) =>
+      `${ballotItemName(G, done.item)} ${
+        done.outcome === "kept"
+          ? "kept"
+          : `${done.outcome === "carried" ? "carried" : "fell"} ${done.yea}–${done.nay}`
+      }`,
+  );
+  addLog(G, `The Assembly rises: ${verdicts.join("; ")}.`);
+}
+
+/** A Law still blocked at its turn goes back to its seat, which may propose it next time. */
+function keepLaw(G: HegemonyState, item: Extract<BallotItem, { kind: "enact" }>, reason: string) {
+  G.keptLaws[item.proposer] = item.card.id;
+  const summary = `${item.card.name} is not voted. ${reason} ${getPlayerName(G, item.proposer)} keeps it for the next sitting.`;
+  addLog(G, summary, item.proposer);
+  G.assembly!.results.push({ item, outcome: "kept", yea: 0, nay: 0, votes: [], summary });
 }
 
 /** What a seat's base vote is made of: the seat, its citizens, and the votes a standing
@@ -735,19 +817,7 @@ function resolveBallotItem(G: HegemonyState) {
   addLog(G, result.summary);
   session.results.push(result);
   session.ballotIndex += 1;
-  session.votes = [];
-  session.voteIndex = 0;
-
-  if (session.ballotIndex >= session.ballot.length) {
-    session.phase = "closing";
-    // The sitting's recap is one Chronicle entry, to be read again later.
-    const verdicts = session.results.map(
-      (done) =>
-        `${ballotItemName(G, done.item)} ${done.outcome === "carried" ? "carried" : "fell"} ${done.yea}–${done.nay}`,
-    );
-    addLog(G, `The Assembly rises: ${verdicts.join("; ")}.`);
-  }
-
+  openBallotItem(G);
   syncAssemblyActor(G);
 }
 

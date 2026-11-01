@@ -71,7 +71,11 @@ export const ENGINE_VERSION = "0.1.0";
 /** v23 (agency package, optional event pops): a seat may decline a pop card to the bottom
  *  of the player deck. The ruleset carries the switch, and command v10 adds the decline
  *  to resolving an event. Older saves are rejected, not migrated. */
-export const STATE_SCHEMA_VERSION = 23;
+/** v24 (agency package, kept Laws): repeals are voted first, and a Law still blocked at
+ *  its turn is kept by its seat. The state carries each seat's kept Law and the ruleset
+ *  the switch. Proposing takes the same command, now for a blocked or a kept Law too, so
+ *  commands are unchanged. Older saves are rejected, not migrated. */
+export const STATE_SCHEMA_VERSION = 24;
 export const COMMAND_SCHEMA_VERSION = 10;
 
 export const SAVE_FORMAT_VERSION = 2;

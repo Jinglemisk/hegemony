@@ -585,12 +585,13 @@ politician and propose it, or pay **3 influence** to propose an eligible repeal.
 You may discard the draw and pass; there is no second draw. Only player proposals
 reach the ballot, so a sitting has zero to four items.
 
-Reveal the proposals and vote on each in turn order. Each seat casts **one vote
+Reveal the proposals. The repeals are voted first, then the Laws and Directives, each in
+turn order. Each seat casts **one vote
 plus one per citizen**, citizens on the move included. During your vote you may buy
 at most **two votes per sitting**, for **2 gold or 2 influence each**, in any mix.
 They count on every remaining ballot. A simple majority passes; a tie fails.
 
-A drawn card, kept or discarded, and a sealed repeal stay with their seat until the
+A drawn card, sealed or discarded, and a sealed repeal stay with their seat until the
 ballot is read; everyone sees only who has sealed. On screen the sitting is a sheet
 over the map. Each seat proposes in turn order after its turn notice, the
 ballot is read out, and each vote shows what your votes would make the tally and
@@ -614,9 +615,18 @@ first leave in Year 6. This protects it from repeal, replacement and The Stele I
 Broken. At most **one price Law** stands; a new one replaces the previous price
 Law as well as the oldest if the cap requires it. The price Laws are Sacred Fields,
 Manumission, Tenant Rights, Festival Calendar, Public Works, Colonial Charter and
-Harbour Dues. A protected replacement blocks the proposal, and a Law already standing
-cannot be proposed again. Earlier votes can make a later item ineligible; then it has
-no effect or prize even if it wins a majority.
+Harbour Dues. A Law already standing cannot be proposed again.
+
+**A blocked Law is kept.** A Law is blocked when it would replace a protected Law. You
+may still propose it. It is checked again at its turn on the ballot, after the repeals:
+if a repeal freed the room, it is voted; if it is still blocked, by a protected Law or
+by an earlier item on the same ballot, it is not voted and you keep the card. Everyone
+sees a kept card. At the next sitting you may propose it as your one proposal, with no
+draw, or draw a new card instead. If you draw, repeal or pass, the kept card goes to its
+politician's discards. A repeal strikes only a Law past its tenure, so today a Law blocked
+when drawn is always kept for the next sitting. On screen the kept card shows on your
+seat and in your next sitting, with **Propose it** and **Draw a new card**. A repeal whose
+Law an earlier repeal struck has no effect, even if it wins a majority.
 
 Laws apply to every realm. Cities include capitals. Capacity, slot and piece cuts
 leave existing holdings standing and block further additions. Each passing

@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import { PLAYER_IDS } from "../data";
 import { collectIncome } from "../actions";
 import { closeAssembly } from "../turn";
+import { collectInvariantViolations } from "../invariants";
 import { enumerateLegalCommands } from "../legalMoves";
+import type { AssemblyRules } from "../ruleset";
 import { owned, scenario } from "../testing/scenario";
 import { voiceHolder } from "../victory";
 import type { HegemonyState, PlayerId } from "../types";
@@ -20,8 +22,10 @@ import {
   baseVoteWeight,
   enactForEval,
   lawCanBeRemoved,
+  lawProposalReason,
   openAssembly,
   previewDirective,
+  proposalReason,
   restCanTurn,
   shouldOpenAssembly,
   voteOutlook,
@@ -29,8 +33,8 @@ import {
 } from "./assembly";
 import { projectForPlayer } from "../projection";
 
-function sitting(year = 2, tiesPass = false) {
-  const G = scenario({ patch: { assembly: { tiesPass } } })
+function sitting(year = 2, assembly: Partial<AssemblyRules> = {}) {
+  const G = scenario({ patch: { assembly } })
     .opening()
     .withResources("0", { influence: 30 })
     .build();
@@ -160,7 +164,7 @@ describe("v2 Assembly", () => {
     expect(voiceHolder(G)).toBe("1");
     expect(lawCanBeRemoved(G, "civic-pride")).toBe(false);
   });
-  it("keeps one price Law, rechecks tenure between ballots and never rewards an invalid enactment", () => {
+  it("keeps one price Law, and keeps a Law an earlier item blocked, unvoted and unrewarded", () => {
     const G = sitting(6);
     plant(G, "tenant-rights", "1", 2);
     propose(G, "sacred-fields");
@@ -169,10 +173,13 @@ describe("v2 Assembly", () => {
     pass(G);
     vote(G);
     expect(G.activeLaws.map((l) => l.cardId)).toEqual(["sacred-fields"]);
-    expect(G.assembly!.results.map((r) => r.outcome)).toEqual(["carried", "blocked"]);
+    // Festival Calendar would now replace Sacred Fields, in its tenure: it is not voted.
+    expect(G.assembly!.results.map((r) => r.outcome)).toEqual(["carried", "kept"]);
+    expect(G.assembly!.results[1].votes).toEqual([]);
     expect(G.assemblyPassedByPlayer["0"]).toBe(1);
     expect(G.assemblyPassedByPlayer["1"]).toBe(0);
-    expect(G.politicianDiscards.demosthenes).toContain("festival-calendar");
+    expect(G.keptLaws["1"]).toBe("festival-calendar");
+    expect(G.politicianDiscards.demosthenes).not.toContain("festival-calendar");
   });
   it("charges 3 influence for eligible repeal and lowers standing Voice", () => {
     const G = sitting(6);
@@ -239,7 +246,7 @@ describe("The vote as the seats read it", () => {
     expect(restCanTurn(G, 1, 2, 1)).toBe(false);
   });
   it("carries a tie when the ruleset says ties pass", () => {
-    const G = sitting(2, true);
+    const G = sitting(2, { tiesPass: true });
     expect(wouldPass(G, 3, 3)).toBe(true);
     expect(restCanTurn(G, 2, 1, 1)).toBe(false);
     expect(restCanTurn(G, 1, 2, 1)).toBe(true);
@@ -332,5 +339,173 @@ describe("Directives", () => {
     G.year = 6;
     openAssembly(G, "0");
     expect(baseVoteWeight(G, "1")).toBeGreaterThan(1);
+  });
+});
+
+describe("Repeals first, and a blocked Law is kept", () => {
+  /** A standing Law taken out of its deck, so every card is in one place. */
+  function stand(G: HegemonyState, cardId: string, enactedYear: number, author: PlayerId = "1") {
+    const { politician } = getAuthoredResolutionCard(cardId)!;
+    G.politicianDecks[politician] = G.politicianDecks[politician].filter((id) => id !== cardId);
+    plant(G, cardId, author, enactedYear);
+  }
+  const misplaced = (G: HegemonyState) =>
+    collectInvariantViolations(G, { strictCardConservation: true }).filter((violation) =>
+      violation.code.includes("Resolution"),
+    );
+  const ballot = (G: HegemonyState) =>
+    G.assembly!.ballot.map((item) => `${item.kind} ${item.proposer}`);
+  /** Vote the item under consideration, every seat the same way. */
+  function voteItem(G: HegemonyState, yea: boolean) {
+    const decided = G.assembly!.results.length;
+    while (G.assembly!.phase === "voting" && G.assembly!.results.length === decided)
+      expect(assemblyVote(G, G.currentPlayer, yea).ok).toBe(true);
+  }
+  /** Seat 0 seals Sacred Fields in Year 4, behind a protected price Law, and keeps it; the
+   *  house rises and meets again in Year 6, when that Law's tenure has ended. */
+  function keptSitting() {
+    const G = sitting(4);
+    stand(G, "tenant-rights", 2);
+    propose(G, "sacred-fields");
+    pass(G);
+    expect(G.keptLaws["0"]).toBe("sacred-fields");
+    closeAssembly(G);
+    G.assembly = null;
+    G.year = 6;
+    openAssembly(G, "0");
+    return G;
+  }
+
+  it("votes the repeals first, then the Laws and Directives in seat order", () => {
+    const G = sitting(6);
+    stand(G, "guild-charter", 2);
+    for (const seat of PLAYER_IDS) G.players[seat].resources.influence = 10;
+    propose(G, "frontier-spirit", "0");
+    propose(G, "grain-riot", "1", "2");
+    expect(assemblyProposeRepeal(G, "2", "guild-charter").ok).toBe(true);
+    propose(G, "rural-bloc", "3");
+    pass(G);
+    expect(ballot(G)).toEqual(["repeal 2", "enact 0", "enact 1", "enact 3"]);
+  });
+
+  it("seals a Law blocked when drawn, and keeps it unvoted when it is still blocked", () => {
+    const G = sitting(4);
+    stand(G, "tenant-rights", 2);
+    G.politicianDecks.demosthenes = [
+      "sacred-fields",
+      ...G.politicianDecks.demosthenes.filter((id) => id !== "sacred-fields"),
+    ];
+    expect(assemblyDraw(G, "0", "demosthenes").ok).toBe(true);
+    const card = G.assembly!.held["0"]!.card;
+    expect(lawProposalReason(G, card)).toMatch(/minimum tenure/);
+    expect(proposalReason(G, "0", card)).toBeNull();
+    expect(enumerateLegalCommands(G, "0")).toContainEqual({ type: "assemblyPropose" });
+    expect(assemblyPropose(G, "0").ok).toBe(true);
+    pass(G);
+
+    expect(G.assembly!.phase).toBe("closing");
+    expect(G.assembly!.results).toMatchObject([{ outcome: "kept", yea: 0, nay: 0, votes: [] }]);
+    expect(G.activeLaws.map((law) => law.cardId)).toEqual(["tenant-rights"]);
+    expect(G.keptLaws["0"]).toBe("sacred-fields");
+    expect(G.log.some((entry) => entry.message.includes("keeps it for the next sitting"))).toBe(
+      true,
+    );
+    expect(misplaced(G)).toEqual([]);
+    // It was read out on the ballot, so every seat sees it.
+    expect(projectForPlayer(G.definition, structuredClone(G), "2").state.keptLaws["0"]).toBe(
+      "sacred-fields",
+    );
+  });
+
+  it("votes a Law blocked when drawn once a repeal ahead of it frees the room", () => {
+    // Crafted: under today's tenure no repeal can free a blocked Law's room, as a Law past
+    // its tenure is never younger than a protected one. Here the oldest by order is.
+    const sat = (repealCarries: boolean) => {
+      const G = sitting(6);
+      stand(G, "land-reform", 4);
+      for (const id of ["guild-charter", "rural-messengers", "civic-pride"]) stand(G, id, 0);
+      G.players["1"].resources.influence = 10;
+      propose(G, "frontier-spirit");
+      expect(lawProposalReason(G, getAuthoredResolutionCard("frontier-spirit")!)).not.toBeNull();
+      expect(assemblyProposeRepeal(G, "1", "guild-charter").ok).toBe(true);
+      pass(G);
+      expect(ballot(G)).toEqual(["repeal 1", "enact 0"]);
+      voteItem(G, repealCarries);
+      if (G.assembly!.phase === "voting") voteItem(G, true);
+      expect(misplaced(G)).toEqual([]);
+      return G;
+    };
+
+    const freed = sat(true);
+    expect(freed.assembly!.results.map((r) => r.outcome)).toEqual(["carried", "carried"]);
+    expect(freed.activeLaws.map((law) => law.cardId)).toEqual([
+      "land-reform",
+      "rural-messengers",
+      "civic-pride",
+      "frontier-spirit",
+    ]);
+    expect(freed.keptLaws["0"]).toBeNull();
+
+    const still = sat(false);
+    expect(still.assembly!.results.map((r) => r.outcome)).toEqual(["fell", "kept"]);
+    expect(still.keptLaws["0"]).toBe("frontier-spirit");
+  });
+
+  it("proposes a kept Law at the next sitting for no draw price", () => {
+    const G = keptSitting();
+    const influence = G.players["0"].resources.influence;
+    const commands = enumerateLegalCommands(G, "0");
+    expect(commands).toContainEqual({ type: "assemblyPropose" });
+    expect(commands.some((command) => command.type === "assemblyDraw")).toBe(true);
+    expect(assemblyPropose(G, "0").ok).toBe(true);
+    expect(G.players["0"].resources.influence).toBe(influence);
+    expect(G.keptLaws["0"]).toBeNull();
+    expect(misplaced(G)).toEqual([]);
+    pass(G);
+    vote(G);
+    expect(G.assembly!.results.map((r) => r.outcome)).toEqual(["carried"]);
+    expect(G.activeLaws.map((law) => law.cardId)).toEqual(["sacred-fields"]);
+    expect(misplaced(G)).toEqual([]);
+  });
+
+  it("sends the kept Law to its politician's discards when the seat draws, repeals or passes", () => {
+    const speeches = {
+      draw: (G: HegemonyState) => assemblyDraw(G, "0", "perdiccas"),
+      repeal: (G: HegemonyState) => assemblyProposeRepeal(G, "0", "tenant-rights"),
+      pass: (G: HegemonyState) => assemblyPass(G, "0"),
+    };
+    for (const [speech, speak] of Object.entries(speeches)) {
+      const G = keptSitting();
+      expect(speak(G).ok, speech).toBe(true);
+      expect(G.keptLaws["0"], speech).toBeNull();
+      expect(G.politicianDiscards.demosthenes, speech).toContain("sacred-fields");
+      expect(misplaced(G), speech).toEqual([]);
+    }
+  });
+
+  it("restores seat order and today's blocked Laws with the switch off", () => {
+    const G = sitting(6, { keptLaws: false });
+    stand(G, "tenant-rights", 2);
+    stand(G, "guild-charter", 2);
+    for (const seat of PLAYER_IDS) G.players[seat].resources.influence = 20;
+    propose(G, "sacred-fields");
+    propose(G, "festival-calendar", "1");
+    expect(assemblyProposeRepeal(G, "2", "guild-charter").ok).toBe(true);
+    pass(G);
+    expect(ballot(G)).toEqual(["enact 0", "enact 1", "repeal 2"]);
+    vote(G);
+    expect(G.assembly!.results.map((r) => r.outcome)).toEqual(["carried", "blocked", "carried"]);
+    expect(G.keptLaws["1"]).toBeNull();
+    expect(G.politicianDiscards.demosthenes).toContain("festival-calendar");
+
+    const H = sitting(4, { keptLaws: false });
+    stand(H, "tenant-rights", 2);
+    H.politicianDecks.demosthenes = [
+      "sacred-fields",
+      ...H.politicianDecks.demosthenes.filter((id) => id !== "sacred-fields"),
+    ];
+    expect(assemblyDraw(H, "0", "demosthenes").ok).toBe(true);
+    expect(assemblyPropose(H, "0").ok).toBe(false);
+    expect(enumerateLegalCommands(H, "0").some((m) => m.type === "assemblyPropose")).toBe(false);
   });
 });

@@ -182,6 +182,18 @@ export const PARITY_BEHAVIOR_FIXTURES = {
     implementation: "src/sim/policies.test.ts",
     evidence: "uses the political Assembly strategy and carries the session to completion",
   },
+  assemblyKeptLaws: {
+    implementation: "src/game/assembly/assembly.test.ts",
+    evidence: "seals a Law blocked when drawn, and keeps it unvoted when it is still blocked",
+  },
+  botKeptLaws: {
+    implementation: "src/sim/policies.test.ts",
+    evidence: "values a kept Law against a fresh draw",
+  },
+  keptLawTelemetry: {
+    implementation: "src/sim/telemetry.test.ts",
+    evidence: "counts blocked draws, kept Laws, kept Laws that pass and draws that went nowhere",
+  },
   policyCompleteGame: {
     implementation: "src/sim/policies.test.ts",
     evidence: "plays complete games across seeds without deadlocking through the agora",
@@ -841,5 +853,17 @@ export const FEATURE_PARITY = {
     ids: DIRECTIVE_CONTENT_IDS,
     telemetry: { implementation: "src/sim/telemetry.ts", evidence: "directivesPassed" },
     behaviorFixtures: ["directiveResources", "directiveSuppression", "policyAssembly"],
+  },
+  // Repeals first, and a Law still blocked at its turn is kept (agency package).
+  assemblyKeptLaws: {
+    ids: ["ballotOrder", "keptLaw"],
+    engine: { implementation: "src/game/assembly/assembly.ts", evidence: "keepLaw" },
+    frontend: {
+      implementation: "src/components/board/assembly/AssemblySitting.tsx",
+      evidence: "KeptLaw",
+    },
+    simulation: { implementation: "src/sim/policies.ts", evidence: "proposeKept" },
+    telemetry: { implementation: "src/sim/telemetry.ts", evidence: "keptPassed" },
+    behaviorFixtures: ["assemblyKeptLaws", "botKeptLaws", "keptLawTelemetry"],
   },
 } as const satisfies Record<string, ContentManifestEntry>;

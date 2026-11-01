@@ -10,6 +10,7 @@ import {
   getActiveEffects,
 } from "../game/activeEffects";
 import type { ActiveEffectKind } from "../game/activeEffects";
+import { lawProposalReason, type AssemblyResult } from "../game/assembly";
 import { TRADABLE_MATERIALS } from "../game/bank";
 import type { GameCommand } from "../game/legalMoves";
 import type { DefinitionIdentity } from "../game/definition";
@@ -321,6 +322,10 @@ export type SeatCounts = {
   repealsFailed: number;
   /** Passed Directives aimed at this seat. */
   directivesAimedAt: number;
+  /** Kept Laws: its draws blocked when drawn, its Laws kept at their turn, its kept Laws
+   *  that passed when proposed again, and the influence it paid for draws whose card never
+   *  reached a vote: set aside, or kept and later let go or held at the end. */
+  kept: { blockedDraws: number; kept: number; keptPassed: number; lostDrawInfluence: number };
   trade: TradeCounts;
 };
 
@@ -382,6 +387,7 @@ function emptySeatCounts(): Record<PlayerId, SeatCounts> {
     repealsPassed: 0,
     repealsFailed: 0,
     directivesAimedAt: 0,
+    kept: { blockedDraws: 0, kept: 0, keptPassed: 0, lostDrawInfluence: 0 },
     trade: emptyTradeCounts(),
   });
   return Object.fromEntries(PLAYER_IDS.map((id) => [id, empty()])) as Record<PlayerId, SeatCounts>;
@@ -713,6 +719,11 @@ export type AssemblySeat = {
   repealsFailed: Count;
   /** Passed Directives aimed at it. */
   directivesAimedAt: Count;
+  /** Kept Laws, as in {@link SeatCounts.kept}. */
+  blockedDraws: Count;
+  lawsKept: Count;
+  keptLawsPassed: Count;
+  lostDrawInfluence: Count;
 };
 
 /** Player trade. Offers and the trades they settled belong to the offering seat,
@@ -1165,6 +1176,10 @@ function assemblyOf(group: SeatGame[], games: number): AssemblySeat {
     repealsPassed: count(({ facts }) => facts.repealsPassed),
     repealsFailed: count(({ facts }) => facts.repealsFailed),
     directivesAimedAt: count(({ facts }) => facts.directivesAimedAt),
+    blockedDraws: count(({ facts }) => facts.kept.blockedDraws),
+    lawsKept: count(({ facts }) => facts.kept.kept),
+    keptLawsPassed: count(({ facts }) => facts.kept.keptPassed),
+    lostDrawInfluence: count(({ facts }) => facts.kept.lostDrawInfluence),
   };
 }
 
@@ -1334,7 +1349,12 @@ export class Aggregator {
   /** What the acting seat's stock changed by at this turn's income. */
   private collected: Resources | null = null;
   private lastVoiceHolder: PlayerId | null = null;
-  private lastAssemblyResultKey: string | null = null;
+  /** The sitting whose results are counted, and how many of them. */
+  private countedResults = { sitting: "", count: 0 };
+  /** Draws whose card has reached no vote yet, by card: the seat and what it paid. */
+  private openDraws = new Map<string, { seat: PlayerId; price: number }>();
+  /** Kept Laws proposed again this sitting, not yet voted. */
+  private keptProposals = new Set<string>();
 
   private game = -1;
   private seed = 0;
@@ -1361,7 +1381,9 @@ export class Aggregator {
     this.lastYear = G.year;
     this.gameSeatPolicies = seatPolicies ?? null;
     this.lastVoiceHolder = voiceHolder(G);
-    this.lastAssemblyResultKey = null;
+    this.countedResults = { sitting: "", count: 0 };
+    this.openDraws = new Map();
+    this.keptProposals = new Set();
     this.seats = emptySeatCounts();
     this.gameCounts = emptyGameCounts();
     this.gameYearCards = [];
@@ -1397,6 +1419,7 @@ export class Aggregator {
       this.countRevolts(before, G);
       this.countTrade(before, G, player, move);
       this.countDeck(before, G, player, move);
+      this.countKept(before, G, player, move);
     }
     if (move.type === "resolveEvent" && !move.decline && before?.pendingPlayerEvent) {
       const old = before.players[player];
@@ -1438,7 +1461,9 @@ export class Aggregator {
       this.seats[player].riotYears.push(G.lastTableRoll!.year);
     }
 
-    this.countAssemblyResult(G);
+    this.countAssemblyResults(G);
+    // The sitting has risen: a draw that reached no vote and is not kept went nowhere.
+    if (before?.assembly && !G.assembly) this.closeDraws(G);
 
     const voice = voiceHolder(G);
     if (voice !== this.lastVoiceHolder) {
@@ -1550,20 +1575,57 @@ export class Aggregator {
     price(answering, terms.get, terms.give);
   }
 
-  /** The Assembly's latest result, once: the list stands until the sitting closes. */
-  private countAssemblyResult(G: HegemonyState) {
-    const results = G.assembly?.results;
-    if (!results || results.length === 0) return;
-    const key = `${this.game}:${G.assembliesHeld}:${results.length}`;
-    if (key === this.lastAssemblyResultKey) return;
-    this.lastAssemblyResultKey = key;
+  /** A draw blocked when drawn, a kept Law proposed again, and what a draw paid. */
+  private countKept(before: HegemonyState, G: HegemonyState, player: PlayerId, move: GameCommand) {
+    if (move.type === "assemblyDraw") {
+      const card = G.assembly?.held[player]?.card;
+      if (!card) return;
+      if (lawProposalReason(G, card)) this.seats[player].kept.blockedDraws += 1;
+      const price = Math.max(0, -resourceChange(before, G, player).influence);
+      this.openDraws.set(card.id, { seat: player, price });
+    }
+    const kept = before.keptLaws[player];
+    if (move.type === "assemblyPropose" && kept && !before.assembly?.held[player])
+      this.keptProposals.add(kept);
+  }
 
-    const { item, outcome } = results[results.length - 1];
+  /** At the sitting's end, draws neither voted nor kept went nowhere. */
+  private closeDraws(G: HegemonyState) {
+    const kept = new Set(Object.values(G.keptLaws));
+    for (const [cardId, { seat, price }] of this.openDraws) {
+      if (kept.has(cardId)) continue;
+      this.seats[seat].kept.lostDrawInfluence += price;
+      this.openDraws.delete(cardId);
+    }
+  }
+
+  /** The sitting's results not yet counted, once each: the list stands until the sitting
+   *  closes, and one command can add several, as Laws still blocked are kept unvoted. */
+  private countAssemblyResults(G: HegemonyState) {
+    const results = G.assembly?.results;
+    if (!results) return;
+    const sitting = `${this.game}:${G.assembliesHeld}`;
+    if (sitting !== this.countedResults.sitting) this.countedResults = { sitting, count: 0 };
+    for (const result of results.slice(this.countedResults.count))
+      this.countAssemblyResult(G, result);
+    this.countedResults.count = results.length;
+  }
+
+  private countAssemblyResult(G: HegemonyState, { item, outcome }: AssemblyResult) {
     if (item.kind === "repeal") {
       const seat = this.seats[item.proposer];
       if (outcome === "carried") seat.repealsPassed += 1;
       else seat.repealsFailed += 1;
-    } else if (outcome === "carried") {
+      return;
+    }
+    const proposedAgain = this.keptProposals.delete(item.card.id);
+    if (outcome === "kept") {
+      this.seats[item.proposer].kept.kept += 1;
+      return;
+    }
+    this.openDraws.delete(item.card.id);
+    if (outcome === "carried" && proposedAgain) this.seats[item.proposer].kept.keptPassed += 1;
+    if (outcome === "carried") {
       this.countReach(item.proposer, [`${item.card.kind}:${item.card.id}`]);
       const prize = G.ruleset.assembly.prizes[item.card.politician];
       for (const [resource, amount] of Object.entries(prize) as Array<
@@ -1621,6 +1683,10 @@ export class Aggregator {
           : null;
     const standings = victoryStandings(G);
     this.data.finals.push(snapshotTurn(G, this.game, this.seed));
+    // A draw still open at the end, kept or on a ballot left unfinished, went nowhere.
+    for (const { seat, price } of this.openDraws.values())
+      this.seats[seat].kept.lostDrawInfluence += price;
+    this.openDraws.clear();
 
     const seats = {} as Record<PlayerId, SeatFacts>;
     for (const id of PLAYER_IDS) {

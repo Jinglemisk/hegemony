@@ -848,6 +848,61 @@ describe("the Step 11 report fields", () => {
     expect(report.assembly.seats.perPolicy.slaver.repealsProposed.perGame).toBe(0);
     expect(report.influenceSpent.total.repeals).toEqual({ count: 3, perGame: 3 });
   });
+
+  it("counts blocked draws, kept Laws, kept Laws that pass and draws that went nowhere", () => {
+    const G = scenario()
+      .opening()
+      .withResources("1", { influence: 2 })
+      .withResources("2", { influence: 2 })
+      .build();
+    G.pendingPlayerEvent = null;
+    G.year = 6;
+    // Tenant Rights, in its tenure, blocks the price Law seat 1 draws; seat 0 kept Guild
+    // Charter at the last sitting.
+    G.activeLaws = [{ cardId: "tenant-rights", author: "3", enactedYear: 4, order: G.lawOrder++ }];
+    G.keptLaws["0"] = "guild-charter";
+    const without = (ids: string[], deck: string[]) => deck.filter((id) => !ids.includes(id));
+    G.politicianDecks.perdiccas = without(["guild-charter"], G.politicianDecks.perdiccas);
+    G.politicianDecks.demosthenes = [
+      "sacred-fields",
+      ...without(["sacred-fields", "tenant-rights"], G.politicianDecks.demosthenes),
+    ];
+    openAssembly(G, "0");
+    const game = drive(G);
+    game.take("0", { type: "assemblyPropose" });
+    game.take("1", { type: "assemblyDraw", politician: "demosthenes" });
+    game.take("1", { type: "assemblyPropose" });
+    game.take("2", { type: "assemblyDraw", politician: "perdiccas" });
+    game.take("2", { type: "assemblyDiscardHeld" });
+    game.take("2", { type: "assemblyPass" });
+    game.take("3", { type: "assemblyPass" });
+    for (const id of ["0", "1", "2", "3"] as const) game.take(id, { type: "assemblyReady" });
+    while (game.G.assembly?.phase === "voting")
+      game.take(game.G.assembly.activePlayer, { type: "assemblyVote", yea: true });
+    expect(game.G.assembly!.results.map((result) => result.outcome)).toEqual(["carried", "kept"]);
+    game.take("0", { type: "assemblyClose" });
+    const report = game.report();
+
+    const seats = report.assembly.seats;
+    expect(seats.perSeat["0"]).toMatchObject({
+      keptLawsPassed: { count: 1 },
+      lawsKept: { count: 0 },
+      lostDrawInfluence: { count: 0 },
+    });
+    // Seat 1 still holds its kept Law at the end, so its draw went nowhere too.
+    expect(seats.perSeat["1"]).toMatchObject({
+      blockedDraws: { count: 1 },
+      lawsKept: { count: 1 },
+      lostDrawInfluence: { count: 2 },
+    });
+    expect(seats.perSeat["2"]).toMatchObject({
+      blockedDraws: { count: 0 },
+      lostDrawInfluence: { count: 2 },
+    });
+    expect(seats.perPolicy.civic.keptLawsPassed.count).toBe(1);
+    expect(seats.perPolicy.slaver.lawsKept.count).toBe(1);
+    expect(seats.total.lostDrawInfluence).toEqual({ count: 4, perGame: 4 });
+  });
 });
 
 describe("trade telemetry", () => {
