@@ -1,7 +1,7 @@
 ---
 status: ready
 phase: "post-3.5"
-updated: 2026-08-03
+updated: 2026-11-01
 ---
 
 # Outcome-driven AI plan
@@ -38,6 +38,22 @@ also unblock multiplayer. Luxury goods, v1 trade, National Ideas, and typed Reso
 effect closure then establish the frozen target. Outcome vectors, rollouts, tournaments,
 MCTS, player-facing CPU difficulty, and learned models resume after the v1 mechanics
 freeze unless a narrower feature slice needs them for honest validation.
+
+**Owner direction (2026-11-01):** after the agency package, this plan is reopened as a
+consolidation and overhaul of the whole bot system. Three points to settle then:
+
+- **Parity of estimates.** Every uncertain quantity a bot faces gets an explicit estimate from
+  public information: the year cards still to come, event and development draws, whether a
+  rival accepts a deal, how a sitting will vote. Today some are estimated (the lean-year
+  reserve, the next sitting's repeals) and others are assumed away (later year cards, trade in
+  the forecast). The agency package's ruling 11 adds the first two missing ones.
+- **Consolidation.** One bot with one forecast and one estimate per uncertainty, instead of
+  rules added feature by feature. The owner approved removing the five stepping-stone
+  policies (greedy, smart, beam, political, settler) on 2026-11-01; master and its three
+  personalities remain.
+- **An LLM-driven player.** A language model choosing among the engine's legal moves from a
+  player's view, as an alternative or a complement to search. Open for discussion: cost,
+  speed, determinism and replay, and fairness (it must see only what a player sees).
 
 ## 1. Decision
 

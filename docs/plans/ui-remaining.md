@@ -40,6 +40,7 @@ resource chips, two token tables) are scheduled in the
 | `DUP-1`  | nothing    | Four repeated glossary words, judged and left |
 | `MAP-2`  | a decision | Trade names a held good twice (Q85)           |
 | `MAP-3`  | a fix      | Labels that cover a neighbour's on the map    |
+| `RIOT-1` | later      | Redesign the riot screen in the current UI    |
 
 ### Shipped or closed
 
@@ -441,3 +442,10 @@ Two overlaps on the 3D map, seen 2026-10-28:
   covers part of that tile's badge.
 - Close in, two neighbouring tiles that each hold two settlements have plates wider than
   a hex, and the plates overlap. This was already true before #160.
+
+## RIOT-1 — redesign the riot screen in the current UI · **later**
+
+Owner note, 2026-11-01: not yet. The riot screen predates the current UI. Redesign it so that
+each effect of the rolled row is shown as a card, in the shared card format, with one line per
+loss (pops, burned buildings, resources, cards given up). Today the result shows one headline
+loss and lists the rest in a caption under it.

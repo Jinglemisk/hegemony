@@ -34,7 +34,8 @@ Dropped by the owner (2026-10-31), though the study raised them:
 - The study's refund of an Assembly draw that cannot be proposed. Ruling 6 replaces it.
 - Tiers on moving pops (owner, 2026-10-31): one move already carries any number of pops.
 
-Kept fixed: base income 0, no bank, and the Dole at 3 influence for 1 food. Riot insurance and
+Kept fixed: base income 0, no bank, and the Dole at 3 influence for 1 food. Luxury goods stay at
++2 happiness each and a Port at 4 gold and 2 stone (owner, 2026-10-31). Riot insurance and
 bought votes keep their caps. The development deck's card list lives in [its plan](development-deck.md)
 (PR #163) and is not restated here.
 
@@ -128,6 +129,16 @@ ruled in after the 2026-10-27 freeze ruling ("no new features").
    card list on 2026-10-31. A riot's card stays the player's choice, pop by pop. The free card
    needs standing happiness +3, read after hunger.
 10. **Dropped and fixed:** see Non-goals.
+11. **Bots plan with the remaining year cards and with trade** (owner, 2026-11-01). This changes
+    the bots only, not the rules.
+    - The lean-year reserve reads the share of Drought and Piracy among the year cards still to
+      come, not the whole deck. A full game plays all fourteen, so what is left is public.
+    - The six-year forecast applies each remaining year card's effect, weighted by its chance of
+      being drawn, instead of assuming plain years once the current card expires.
+    - A trade-acceptance estimate: for a deal and a rival, the chance the rival accepts, from
+      public information only (its stock and projected income), judged at master's weights
+      since personalities are hidden. The forecast prices future food at the cheaper of the
+      Dole and the expected trade price, so a bot may grow a pop that trade can feed.
 
 ## Open owner questions
 
@@ -185,7 +196,8 @@ run at the end. Every batch then runs on the owner's go.
    Capital Works, the Assembly order with kept Laws, the Port rule, then the tiers one action per
    slice (the Dole, calm, the ladder, growing).
 3. **The year forecast, with bots that use it.** Today's bot forecast expires the active card and
-   treats later cards as unknown. A forecast the bots ignore tests nothing.
+   treats later cards as unknown. A forecast the bots ignore tests nothing. Ruling 11's bot
+   planning follows in its own PR, since it changes the same forecast.
 4. **The development deck** in its plan's slices: the deck replaces Ventures; the free card and
    the riot's card; card trading; close-out.
 5. **The comparisons.** The full package against a pinned `main` commit from before slice 1, on
