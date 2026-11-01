@@ -5,7 +5,7 @@ before planning, implementing, or declaring work complete. Implementation detail
 belongs in linked plans; unresolved owner decisions belong only in
 [questions.md](questions.md).
 
-Last updated: 2026-10-27.
+Last updated: 2026-11-02.
 
 ## Mandatory three-axis parity contract
 
@@ -142,15 +142,45 @@ merged it into `main` on 2026-10-18 (#121). Its Step 11, the sim gate, is now
 Step 16, the refactor, is the [code-health plan](plans/code-health.md), except the SVG island
 code, which the 3D map has since replaced.
 
-## Current initiative — code health, player trade and the 3D map
+## Current initiative — the agency package and the development deck
 
-[Player trade](plans/player-trade.md) ships to `main` in two PRs; it removes the bank and
-gives every settlement 1 food. The [code-health plan](plans/code-health.md), from the
-[v2 merge audit](reports/audits/2026-10-19-v2-merge-code-health.md), went first: five cleanup
-PRs before trade, kept apart from feature work so each could show the game unchanged. Trade's
-second PR carries its telemetry rewrite and the bot forecast's bank-adjacent code. The [development deck](plans/development-deck.md) follows trade and replaces
-Ventures. The balance check follows trade (owner, 2026-10-25); number tuning follows trade and
-the deck.
+[Player trade](plans/player-trade.md), the [code-health plan](plans/code-health.md) and the
+[luck study](reports/product/2026-10-30-agency-and-luck/README.md) are done. The
+[agency package](plans/agency-package.md) and the [development deck](plans/development-deck.md)
+are being built, with no balance batches until both are in the engine and the bots play them.
+
+**Build order.** No balance or comparison batches until step 9 (owner, 2026-10-26 and
+2026-10-31):
+
+1. The Port rule: a good counts only while its holder has a Port beside it (agency ruling 7).
+2. Per-turn caps on the Dole, calm, the social ladder and growing, three uses a turn, with a
+   uses-left badge on each action (agency ruling 8, owner 2026-11-02).
+3. Shared colonies as a board switch, on for Continental only
+   ([board modes](plans/board-modes.md), owner 2026-11-02).
+4. The year forecast, with bots that use it (agency ruling 1).
+5. Bots plan with the remaining year cards and a trade-acceptance estimate (agency ruling 11).
+6. Card trading (development deck slice 3).
+7. The measurement telemetry still missing (agency slice 1).
+8. The deck's close-out, then the owner's hotseat game.
+9. The comparison batches on the owner's go, against `main` at d6ebecd: the package's
+   comparisons, the mixed table on the Archipelago, length batches.
+10. The combined check.
+11. The bot overhaul: [outcome-driven AI](plans/outcome-driven-ai.md), reopened 2026-11-01.
+12. The [game settings](plans/game-settings.md) setup screen, after card balance (owner,
+    2026-10-29). Recurring deals are dropped (owner, 2026-10-29).
+13. Networked multiplayer (Phase 6 below).
+
+**Small items**, taken when convenient:
+
+- `RIOT-1` and `MAP-3` in the [UI ledger](plans/ui-remaining.md): the riot screen redesign and
+  overlapping map labels.
+- `npm run ui:check` fails on `main`: 83 font shorthands against a limit of 80.
+- After the comparisons, delete the sim's `--restore` switch and the Capital Works slot effect it
+  keeps.
+- The test suite takes about three minutes since the stepping-stone bots went (#178): the
+  Assembly bot test plays two full master games. A built Assembly position would replace them.
+- Stale: `docs/reference/balance.html` (last updated 2026-10-03), and `assets/codex-banana-showcase`,
+  used only by two old showcase pages in `docs/reference`.
 
 The 3D map, in three.js after the [showcase](reference/design/showcases/living-map.html), is
 the only board. On 2026-10-26 the owner ruled out going back to 2D: no 2D board, no flag and

@@ -2,7 +2,7 @@
 title: UI — what is genuinely left
 status: active
 phase: "—"
-updated: 2026-10-27
+updated: 2026-11-02
 ---
 
 # UI — what is genuinely left
@@ -38,7 +38,6 @@ resource chips, two token tables) are scheduled in the
 | -------- | ---------- | --------------------------------------------- |
 | `TYPE-1` | a decision | Two type sizes sit under spec, on purpose     |
 | `DUP-1`  | nothing    | Four repeated glossary words, judged and left |
-| `MAP-2`  | a decision | Trade names a held good twice (Q85)           |
 | `MAP-3`  | a fix      | Labels that cover a neighbour's on the map    |
 | `RIOT-1` | later      | Redesign the riot screen in the current UI    |
 
@@ -53,6 +52,9 @@ resource chips, two token tables) are scheduled in the
   mini size. Deck counts left the card for a deck line on the table under it. Five
   corner marks wear the closest bronze icon until theirs is drawn (`cardFace.ts`); the
   development deck's reveal, hand and seat counts build on the same face in its slice 1.
+
+- **`MAP-2` · Trade keeps the Port chips** (Q85, owner 2026-11-02). Each Port's chip names the
+  good it holds, beside the good's own icon and seat mark on its raft. No change.
 
 - **`MAP-1` · the 3D map's seven calls** (Q83, answered 2026-10-27). The number keys stay
   with the map modes. A pick shows its candidates' names at any zoom, the compass is a
@@ -426,13 +428,6 @@ disambiguates it.
 Numbering them ("Gold, second mention") would make the prose unreadable when read
 linearly, to fix an ambiguity that only exists if you tab the page as a list of
 controls. Judged and left.
-
-## MAP-2 — Trade names a held good twice
-
-Since #160 (2026-10-28) a good's icon stays on its raft in every mode, the holder's seat
-mark under it. Trade still hangs a chip off each Port naming the good it holds, so a held
-good shows twice there, and near Kydonia the Port's chip crowds the good's name. The owner
-decides whether the Port chips go (Q85).
 
 ## MAP-3 — labels that cover a neighbour's
 

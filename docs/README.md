@@ -5,7 +5,7 @@ tree. The roadmap establishes sequence and exit gates; plans define unshipped
 work; references describe the game that exists; reports preserve dated evidence;
 and the archive is historical context, never current authority.
 
-Last updated: 2026-11-01.
+Last updated: 2026-11-02.
 
 ## Now
 
@@ -20,13 +20,9 @@ five, and v2 (#121, its [plan](archive/plans/v2-migration.md) archived) are merg
 within noise; Q84 (2026-10-26) retired the stock ratio for pops and income ratios and left hunger
 to the bots.
 
-**Next:**
-
-1. The [agency package](plans/agency-package.md): its slices and the deck's are built first.
-2. Then the batches, once all of it is in the engine and the bots play it (owner, 2026-10-26 and
-   2026-10-31): the package's comparisons, the mixed table on the Archipelago, length batches.
-3. The [game settings](plans/game-settings.md) setup screen waits until after card balance
-   (owner, 2026-10-29). Recurring deals are dropped (owner, 2026-10-29).
+**Next:** the build order (Port rule, per-turn caps, shared colonies on Continental, the year
+forecast, bot planning, card trading, telemetry, the deck's close-out, then batches on the owner's
+go) and the small cleanup items are in the [roadmap](roadmap.md#current-initiative--the-agency-package-and-the-development-deck).
 
 The full-game browser test waits.
 
