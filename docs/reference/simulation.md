@@ -96,6 +96,7 @@ npm run sim -- move place-capital <tile> <popSpec>
 npm run sim -- move place-colony <tile> <popSpec>
 npm run sim -- move resolve [targetTile]
 npm run sim -- move buy-card                      # 2 gold for a development card; play one with move index
+npm run sim -- move riot-pop <pop|card>           # a rolled riot's pop: lose it, or a random held card
 npm run sim -- move index <N>
 npm run sim -- end-turn
 ```
@@ -140,7 +141,8 @@ Works from any phase — bots will finish a manual setup too. Policies:
   Development cards are played by rule, outside the search (see
   docs/reference/ai.md). A riot on the table has one
   shared handler: it buys the insurance that saves more than it costs and then
-  rolls. Record→replay remains deterministic. A `smart`-vs-`beam` A/B
+  rolls, and answers each pop the roll takes with a card or the pop. Record→replay
+  remains deterministic. A `smart`-vs-`beam` A/B
   isolates search depth from evaluation. See docs/reference/ai.md and docs/reports/simulation/ for the head-to-head.
 - `political` — `smart` economy plus standing-authorship valuation outside the
   Assembly. All non-random policies share its Assembly handler: draw and propose
@@ -461,7 +463,11 @@ spending from the stock change.
   take, or no token to clear). Pop and token cards are counted in their own units
 - `devCards` (cut) — development cards bought and played, the gold paid for them, and
   each card drawn and each held card played, a game for the table and a seat-game for a
-  seat or a personality, read off the reach counts
+  seat or a personality, read off the reach counts. Happiness and the hand:
+  `drawnFree` (free cards drawn), `turnsAtFreeLevel` (the seat's own turns that ended at
+  the free card's level, counted with the rule off too), `lostToRiots` (held cards a riot
+  took in place of a pop) and `popsSaved` (the pop each of those kept, by class). Slaves
+  held are the `classes` cut
 - `buildings`, `upgrades`, `currencyVerbs` (bank, Dole, calm, ladder, cards, riot)
   and `events` (draws by the twelve player-card kinds and eight year-card kinds) are
   read off the reach counts
@@ -508,6 +514,12 @@ each settlement makes on its own, by resource, all 0 by default; `{"economy":{"b
 is trade PR 2's base food). The economy before trade is
 `{"economy":{"bank":{"enabled":true}},"trade":{"enabled":false}}`, passed with
 `--ruleset-patch`.
+
+**Deck switches.** Two ruleset values turn the deck's happiness rules off one at a
+time, for the comparisons that measure each: `devCards.freeCard` (a free card at a
+standing level of `devCards.freeCardLevel`, 3, or higher) and `devCards.riotCard` (a
+held card in place of a riot's pop). Both are on by default and no screen offers them;
+`{"devCards":{"freeCard":false}}` under `--ruleset-patch` turns the free card off.
 
 Identical inputs produce byte-identical reports (minus `meta.generatedAt`), and
 the same CSV, whatever `--jobs` is. Compare two patches by running two batches with

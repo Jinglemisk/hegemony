@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { buyRiotInsurance, resolveRiot, riotRollReach } from "./riot";
+import {
+  buyRiotInsurance,
+  getBuyRiotInsuranceStatus,
+  resolveRiot,
+  resolveRiotPop,
+  riotRollReach,
+} from "./riot";
 import { beginTurnFor, endTurn } from "./turn";
 import { applyUnrestAtTurnEnd } from "./unrest";
 import { yearDeckSize } from "./year";
@@ -10,7 +16,11 @@ import { buildBuilding } from "./actions";
 import { removePops } from "./tables";
 import { owned, scenario } from "./testing/scenario";
 import { TEST_OPENING_SETUP } from "./config";
-import type { HegemonyState } from "./types";
+import { mulberry32 } from "./core/rng";
+import { collectInvariantViolations } from "./invariants";
+import { enumerateLegalCommands } from "./legalMoves";
+import type { RulesetPatch } from "./ruleset";
+import type { DevCardId, HegemonyState } from "./types";
 
 const P0_CAPITAL = TEST_OPENING_SETUP[0].capital.tileId;
 
@@ -260,5 +270,140 @@ describe("the roll", () => {
     };
 
     expect(run()).toEqual(run());
+  });
+});
+
+/** Rig the riot's die: the rng state whose next roll is `face`. */
+function rigRoll(G: HegemonyState, face: number) {
+  for (let state = 1; ; state += 1) {
+    if (1 + Math.floor(mulberry32(state).value * 6) === face) {
+      G.rng = state;
+      return;
+    }
+  }
+}
+
+const devViolations = (G: HegemonyState) =>
+  collectInvariantViolations(G, { strictCardConservation: true }).filter((violation) =>
+    violation.code.startsWith("cards.dev"),
+  );
+
+/** Seat 0 riots holding the named cards, its die set to land on `face`. */
+function riotWithCards(face: number, cards: DevCardId[], patch?: RulesetPatch) {
+  const build = scenario({ patch }).opening();
+  for (const card of cards) build.withDevCard("0", card);
+  const G = build
+    .mutate((draft) => {
+      draft.pendingPlayerEvent = null;
+      draft.players["0"].unrestTokens = tokensForRiot(draft);
+    })
+    .build();
+  expect(endTurn(G).ok).toBe(true);
+  rigRoll(G, face);
+  return G;
+}
+
+describe("a riot's card", () => {
+  it("asks for each pop the row takes: lose it, or a held card drawn at random", () => {
+    // Revolt spreads: two pops.
+    const G = riotWithCards(2, ["caravan", "settlers"]);
+    const pops = totalPopsOf(G, "0");
+    expect(resolveRiot(G, "0").ok).toBe(true);
+    expect(G.pendingRiot?.losses).toMatchObject({ owed: 2, left: [], cards: [] });
+    expect(G.currentPlayer).toBe("0");
+    expect(enumerateLegalCommands(G, "0")).toEqual([
+      { type: "resolveRiotPop", pay: "pop" },
+      { type: "resolveRiotPop", pay: "card" },
+    ]);
+    // The die is cast: no more insurance, no second roll.
+    expect(getBuyRiotInsuranceStatus(G, "0", "breadDole").reasons).toContain("The die is cast.");
+    expect(resolveRiot(G, "0").ok).toBe(false);
+
+    expect(resolveRiotPop(G, "0", "card").ok).toBe(true);
+    expect(G.devHands["0"]).toHaveLength(1);
+    expect(G.pendingRiot?.losses?.owed).toBe(1);
+    expect(totalPopsOf(G, "0")).toBe(pops);
+    expect(devViolations(G)).toEqual([]);
+
+    expect(resolveRiotPop(G, "0", "pop").ok).toBe(true);
+    expect(totalPopsOf(G, "0")).toBe(pops - 1);
+    expect(G.pendingRiot).toBeNull();
+    expect(G.currentPlayer).toBe("1");
+    expect(G.players["0"].popsLostToUnrest).toBe(1);
+    expect(devViolations(G)).toEqual([]);
+
+    const moment = G.log.find((entry) => entry.moment?.kind === "riot")?.moment;
+    expect(moment).toMatchObject({ kind: "riot", left: [{ pop: "slaves" }] });
+    expect(moment?.kind === "riot" && moment.cards).toHaveLength(1);
+    expect(G.lastTableRoll?.outcomes).toEqual([
+      "Lost 1 slave.",
+      "A held card discarded in place of a pop.",
+    ]);
+  });
+
+  it("draws the card through the game's rng, after the choice", () => {
+    const lost = new Set<string>();
+    for (let burn = 0; burn < 12; burn += 1) {
+      const G = riotWithCards(3, ["caravan", "settlers"]);
+      resolveRiot(G, "0");
+      G.rng = (G.rng + burn * 7919) >>> 0;
+      const before = structuredClone(G);
+      resolveRiotPop(G, "0", "card");
+      resolveRiotPop(before, "0", "card");
+      // Same state, same card: the draw is seeded, and nothing named it beforehand.
+      expect(before.devDiscardPile).toEqual(G.devDiscardPile);
+      lost.add(G.devDiscardPile.at(-1)!.split("#")[0]);
+    }
+    expect([...lost].sort()).toEqual(["caravan", "settlers"]);
+  });
+
+  it("still takes the row's buildings and stocks at the roll", () => {
+    // The mob torches the works: a pop and a building.
+    const G = riotWithCards(1, ["caravan"]);
+    owned(G, P0_CAPITAL, "0").buildings = ["temple"];
+    resolveRiot(G, "0");
+    expect(owned(G, P0_CAPITAL, "0").buildings).toEqual([]);
+    expect(G.pendingRiot?.losses?.owed).toBe(1);
+    resolveRiotPop(G, "0", "card");
+    expect(G.pendingRiot).toBeNull();
+    expect(G.lastTableRoll?.outcomes).toEqual([
+      "Temple destroyed.",
+      "A held card discarded in place of a pop.",
+    ]);
+  });
+
+  it("takes the rest of the pops once the hand is empty", () => {
+    const G = riotWithCards(2, ["caravan"]);
+    const pops = totalPopsOf(G, "0");
+    resolveRiot(G, "0");
+    resolveRiotPop(G, "0", "card");
+    expect(G.pendingRiot).toBeNull();
+    expect(totalPopsOf(G, "0")).toBe(pops - 1);
+    expect(G.devHands["0"]).toEqual([]);
+  });
+
+  it.each([
+    ["holds no card", [] as DevCardId[], undefined],
+    ["has the rule switched off", ["caravan"] as DevCardId[], { devCards: { riotCard: false } }],
+  ])("takes the pops at the roll when the seat %s", (_, cards, patch) => {
+    const G = riotWithCards(2, cards, patch);
+    const pops = totalPopsOf(G, "0");
+    expect(resolveRiot(G, "0").ok).toBe(true);
+    expect(G.pendingRiot).toBeNull();
+    expect(G.currentPlayer).toBe("1");
+    expect(totalPopsOf(G, "0")).toBe(pops - 2);
+    expect(G.devHands["0"]).toHaveLength(cards.length);
+  });
+
+  it("leaves a revolt alone: half the slaves go, and no card stands in", () => {
+    const G = scenario().opening().withDevCard("0", "caravan").build();
+    G.pendingPlayerEvent = null;
+    owned(G, P0_CAPITAL, "0").pops = { citizens: 0, freemen: 0, slaves: 8 };
+    owned(G, G.players["0"].settlements[1], "0").pops = { citizens: 0, freemen: 0, slaves: 4 };
+    expect(happinessLevel(G, "0")).toBe(-6);
+    expect(endTurn(G).ok).toBe(true);
+    expect(G.players["0"]).toMatchObject({ revolts: 1, popsLostToUnrest: 6 });
+    expect(G.pendingRiot).toBeNull();
+    expect(G.devHands["0"]).toHaveLength(1);
   });
 });

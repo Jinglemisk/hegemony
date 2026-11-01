@@ -78,6 +78,7 @@ describe("workflow actor eligibility", () => {
       boughtInsurance: [],
       tokensCleared: 0,
       concessionTileId: null,
+      losses: null,
     };
     expect(requiredDecision(G, "2")).toEqual({ source: "riotDecision", actor: "1" });
   });

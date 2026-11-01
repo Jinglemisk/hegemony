@@ -14,6 +14,8 @@ import { TRADABLE_MATERIALS } from "../game/bank";
 import type { GameCommand } from "../game/legalMoves";
 import type { DefinitionIdentity } from "../game/definition";
 import { DEV_CARDS, PLAYER_IDS } from "../game/data";
+import { atFreeCardLevel } from "../game/devCards";
+import { riotPopNext } from "../game/riot";
 import { getAddPopsEffect } from "../game/events";
 import { activeClaims, ownedClaims } from "../game/luxury";
 import { playerStandings } from "../game/score";
@@ -303,6 +305,10 @@ export type SeatCounts = {
   voteGold: number;
   /** Gold paid for development cards, read off the stock the same way. */
   devCardGold: number;
+  /** Happiness and the hand: free cards drawn, its own turns that ended at the free
+   *  card's level (counted with the rule off too), and the held cards a riot took in place
+   *  of a pop, by the class of the pop each kept. */
+  deck: { freeCards: number; turnsAtFreeLevel: number; riotCards: Record<PopType, number> };
   /** Food bought while the stock was below zero, and at zero or above. */
   foodBought: { coveringShortfall: FoodBought; buyingAhead: FoodBought };
   /** Times it took Voice. */
@@ -367,6 +373,7 @@ function emptySeatCounts(): Record<PlayerId, SeatCounts> {
     >,
     voteGold: 0,
     devCardGold: 0,
+    deck: { freeCards: 0, turnsAtFreeLevel: 0, riotCards: { citizens: 0, freemen: 0, slaves: 0 } },
     foodBought: { coveringShortfall: emptyFoodBought(), buyingAhead: emptyFoodBought() },
     voiceClaims: 0,
     repealsPassed: 0,
@@ -737,7 +744,10 @@ export type TradeFigures = {
   >;
 };
 
-/** The development deck: cards bought and the gold paid, and each card drawn and played. */
+/** The development deck: cards bought and the gold paid, and each card drawn and played.
+ *  Happiness and the hand: free cards drawn, turns that ended at the free card's level,
+ *  and held cards a riot took in place of a pop, with the pops they kept by class. Slaves
+ *  held are the `classes` cut. */
 export type DevCardFigures = {
   bought: Count;
   goldSpent: Count;
@@ -745,6 +755,10 @@ export type DevCardFigures = {
   drawn: Record<DevCardId, Count>;
   /** Only the held cards: a yield resolves on its draw. */
   playedByCard: Partial<Record<DevCardId, Count>>;
+  drawnFree: Count;
+  turnsAtFreeLevel: Count;
+  lostToRiots: Count;
+  popsSaved: Record<PopType, Count>;
 };
 
 export type BatchReport = {
@@ -1156,6 +1170,12 @@ function devCardsOf(group: SeatGame[], games: number): DevCardFigures {
         reached(`devPlay:${card.id}`),
       ]),
     ),
+    drawnFree: count(({ facts }) => facts.deck.freeCards),
+    turnsAtFreeLevel: count(({ facts }) => facts.deck.turnsAtFreeLevel),
+    lostToRiots: count(({ facts }) => totalPops(facts.deck.riotCards)),
+    popsSaved: Object.fromEntries(
+      POP_TYPES.map((pop) => [pop, count(({ facts }) => facts.deck.riotCards[pop])]),
+    ) as Record<PopType, Count>,
   };
 }
 
@@ -1362,6 +1382,7 @@ export class Aggregator {
       this.countSpending(before, G, player, move);
       this.countRevolts(before, G);
       this.countTrade(before, G, player, move);
+      this.countDeck(before, G, player, move);
     }
     if (move.type === "resolveEvent" && before?.pendingPlayerEvent) {
       const old = before.players[player];
@@ -1441,6 +1462,21 @@ export class Aggregator {
       bought.food += change.food;
       bought.gold += Math.max(0, -change.gold);
       bought.influence += Math.max(0, -change.influence);
+    }
+  }
+
+  /** The free card's turn end runs inside the command that commits the turn: the level
+   *  is the one before it, which hunger cannot move (it takes no slaves). A free draw is
+   *  its log moment; a riot's card is the answer, keeping the pop the riot took next. */
+  private countDeck(before: HegemonyState, G: HegemonyState, player: PlayerId, move: GameCommand) {
+    const commits = move.type === "resolveHunger" || (move.type === "endTurn" && !G.pendingHunger);
+    if (commits && atFreeCardLevel(before, player)) this.seats[player].deck.turnsAtFreeLevel += 1;
+    if (move.type === "resolveRiotPop" && move.pay === "card") {
+      const kept = riotPopNext(before, player);
+      if (kept) this.seats[player].deck.riotCards[kept.pop] += 1;
+    }
+    for (const { about, moment } of linesWritten(before, G)) {
+      if (moment?.kind === "freeCard" && about) this.seats[about].deck.freeCards += 1;
     }
   }
 

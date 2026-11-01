@@ -13,7 +13,7 @@ import { titleChanges, titleHolders } from "../../game/victory";
 import type { TitleChange, TitleHolders } from "../../game/victory";
 import { describeBundle } from "../../game/trade";
 import { presentUnrestOutcome } from "../../ui/effects";
-import { formatPopLabel, seatName } from "../../ui/formatters";
+import { formatPopLabel, formatSignedNumber, seatName } from "../../ui/formatters";
 import { settlementNameOf } from "../../ui/settlementNames";
 import { titleValue } from "../../ui/frameFormat";
 
@@ -109,6 +109,7 @@ function presentMoment(
     }
     case "riot": {
       const rolled = moment.modifier ? `${moment.roll} + ${moment.modifier}` : String(moment.roll);
+      const cards = moment.cards.length;
       return {
         kicker: `Riot · ${name}`,
         icon: "unrest/riot",
@@ -117,9 +118,16 @@ function presentMoment(
             Rolled {rolled}: <b>{moment.rowLabel}</b>.{" "}
             {moment.left.length ? (
               <>{leaveSentence(G, about, moment.left, true)}.</>
-            ) : (
+            ) : cards ? null : (
               moment.outcomes.join(" ")
             )}
+            {cards ? (
+              <>
+                {" "}
+                {cards === 1 ? "A held card" : `${cards} held cards`} went in place of{" "}
+                {cards === 1 ? "a pop" : "pops"}.
+              </>
+            ) : null}
           </>
         ),
       };
@@ -166,6 +174,27 @@ function presentMoment(
           <>
             <b>{card?.name ?? moment.cardId}</b>
             {on}: {moment.outcome}.
+          </>
+        ),
+      };
+    }
+    case "freeCard": {
+      const card = moment.card
+        ? G.definition.content.devCards.find((entry) => entry.id === moment.card)
+        : undefined;
+      return {
+        kicker: `${name} drew a free card`,
+        icon: "events/convoy",
+        body: (
+          <>
+            Content at {formatSignedNumber(moment.level)}:{" "}
+            {card ? (
+              <>
+                <b>{card.name}</b>, {moment.outcome}.
+              </>
+            ) : (
+              "kept in hand."
+            )}
           </>
         ),
       };

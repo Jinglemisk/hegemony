@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { RIOT_TABLE } from "./data";
 import { rollOnTable } from "./tables";
-import { scenario } from "./testing/scenario";
+import { owned, scenario } from "./testing/scenario";
 import type { EventTableDefinition, HegemonyState, TableEffect } from "./types";
 
 function opening(): HegemonyState {
@@ -55,12 +55,23 @@ describe("the event-table component (docs/archive/plans/event-tables.md)", () =>
     expect(capital.buildings).toHaveLength(0);
 
     const before = capital.pops.citizens + capital.pops.freemen + capital.pops.slaves;
-    // Force the roll onto row 1 (losePops 1 + destroyBuilding fallback 1).
-    const { popsRemoved } = rollOnTable(G, "0", RIOT_TABLE, { modifier: -10 });
+    // Force the roll onto row 1 (losePops 1 + destroyBuilding fallback 1). The roll counts
+    // the pops; the riot takes them, or a held card in place of each.
+    const { pops } = rollOnTable(G, "0", RIOT_TABLE, { modifier: -10 });
 
-    expect(popsRemoved).toBe(2);
+    expect(pops).toBe(2);
     expect(G.players["0"].settlements).toHaveLength(2); // settlements survive
     expect(before).toBeGreaterThan(0);
+  });
+
+  it("counts no more pops than stand in the seat's settlements", () => {
+    const G = opening();
+    for (const tileId of G.players["0"].settlements)
+      owned(G, tileId, "0").pops = { citizens: 0, freemen: 0, slaves: 0 };
+    owned(G, G.players["0"].settlements[0], "0").pops.slaves = 1;
+
+    // Row 1 with no building wants two pops; one stands.
+    expect(rollOnTable(G, "0", RIOT_TABLE, { modifier: -10 }).pops).toBe(1);
   });
 
   it("destroyBuilding burns a real building when one exists", () => {
@@ -87,10 +98,10 @@ describe("the event-table component (docs/archive/plans/event-tables.md)", () =>
       rows: RIOT_TABLE.rows.map((row) => ({ ...row, effects: bribeOnly })),
     };
 
-    const { popsRemoved } = rollOnTable(G, "0", table);
+    const { pops } = rollOnTable(G, "0", table);
 
     expect(G.players["0"].resources.gold).toBe(0);
-    expect(popsRemoved).toBe(1);
+    expect(pops).toBe(1);
   });
 });
 

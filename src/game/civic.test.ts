@@ -131,6 +131,7 @@ describe("the social ladder (D8)", () => {
       boughtInsurance: [],
       tokensCleared: 0,
       concessionTileId: null,
+      losses: null,
     };
 
     // No influence, still legal.

@@ -172,7 +172,7 @@ function commandMatchesWorkflow(
     case "eventDecision":
       return type === "resolveEvent";
     case "riotDecision":
-      return type === "buyRiotInsurance" || type === "resolveRiot";
+      return type === "buyRiotInsurance" || type === "resolveRiot" || type === "resolveRiotPop";
     case "assemblyProposal":
       return ASSEMBLY_PROPOSAL_COMMANDS.has(type);
     case "assemblyVote":
@@ -194,6 +194,7 @@ function commandMatchesWorkflow(
         type !== "resolveHunger" &&
         type !== "buyRiotInsurance" &&
         type !== "resolveRiot" &&
+        type !== "resolveRiotPop" &&
         type !== "pickIdea" &&
         type !== "placeCapital" &&
         type !== "placeCity" &&

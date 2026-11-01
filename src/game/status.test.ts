@@ -315,6 +315,7 @@ describe("a pending riot", () => {
           boughtInsurance: [],
           tokensCleared: 0,
           concessionTileId: null,
+          losses: null,
         };
       })
       .build();

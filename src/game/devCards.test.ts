@@ -10,6 +10,8 @@ import {
   playDevCard,
 } from "./devCards";
 import { getBuildBuildingStatus, getUpgradeColonyToCityStatus } from "./status";
+import { happinessLevel, standingHappiness } from "./happiness";
+import type { RulesetPatch } from "./ruleset";
 import { collectInvariantViolations } from "./invariants";
 import { enumerateLegalCommands, transition } from "./legalMoves";
 import type { GameCommand } from "./legalMoves";
@@ -20,8 +22,8 @@ import type { HegemonyState } from "./types";
 
 /** Seat 0's turn, its event card resolved, with gold to buy. Seat 0 holds a capital and
  *  a colony with six pops between them. */
-function table() {
-  return scenario()
+function table(patch?: RulesetPatch) {
+  return scenario({ patch })
     .opening()
     .withResources("0", { gold: 40, wood: 0, stone: 0, food: 10, influence: 0 })
     .mutate((G) => {
@@ -274,5 +276,97 @@ describe("the development deck", () => {
     const stone = played("stone");
     expect(getUpgradeColonyToCityStatus(stone, "0", "-2,0").cost).toEqual({ wood: 3, stone: 1 });
     expect(stone.log.at(-1)?.message).toMatch(/costs 2 less stone\.$/);
+  });
+});
+
+/** Seat 0 content at `level`, from Temples alone: no slaves, and a Temple for each point
+ *  (more than a capital may raise, which the level does not check). */
+function contentAt(G: HegemonyState, level: number): HegemonyState {
+  for (const tileId of G.players["0"].settlements) owned(G, tileId, "0").pops.slaves = 0;
+  owned(G, "-2,0", "0").buildings = Array.from({ length: level }, () => "temple" as const);
+  expect(standingHappiness(G, "0")).toBe(level);
+  return G;
+}
+
+/** The free card's Chronicle line, if seat 0's turn end wrote one. */
+const freeLine = (G: HegemonyState) =>
+  G.log.find((entry) => entry.about === "0" && entry.moment?.kind === "freeCard");
+
+describe("the free card", () => {
+  it("draws one at the end of the turn at +3 or higher, and none at +2", () => {
+    const below = act(contentAt(table().build(), 2), { type: "endTurn" });
+    expect(freeLine(below)).toBeUndefined();
+
+    const G = contentAt(table().stackDevCard("settlers").build(), 3);
+    const pile = G.devDrawPile.length;
+    const after = act(G, { type: "endTurn" });
+    expect(after.currentPlayer).toBe("1");
+    expect(after.devDrawPile).toHaveLength(pile - 1);
+    expect(freeLine(after)?.moment).toEqual({ kind: "freeCard", level: 3 });
+    expect(freeLine(after)?.message).toBe(
+      "Damon's realm is content at +3: a free development card, kept.",
+    );
+  });
+
+  it("leaves calm out of the level", () => {
+    const G = contentAt(table().build(), 1);
+    G.players["0"].calmActive = true;
+    expect(happinessLevel(G, "0")).toBe(3);
+    expect(freeLine(act(G, { type: "endTurn" }))).toBeUndefined();
+  });
+
+  it("is read after hunger, with no food condition", () => {
+    let G = contentAt(table().build(), 3);
+    G.players["0"].resources.food = -1;
+    G = act(G, { type: "endTurn" });
+    expect(G.pendingHunger?.playerID).toBe("0");
+    expect(freeLine(G)).toBeUndefined();
+
+    const [leave] = enumerateLegalCommands(G, "0");
+    G = act(G, leave);
+    expect(G.players["0"].popsLostToHunger).toBe(1);
+    expect(freeLine(G)).toBeDefined();
+  });
+
+  it("lands a yield at once and keeps a held card for the seat's next turn", () => {
+    const yielding = contentAt(table().stackDevCard("foraging").build(), 3);
+    const food = yielding.players["0"].resources.food;
+    const fed = act(yielding, { type: "endTurn" });
+    expect(fed.players["0"].resources.food).toBe(food + 2);
+    expect(freeLine(fed)?.moment).toEqual({
+      kind: "freeCard",
+      level: 3,
+      card: "foraging",
+      outcome: "+2 food",
+    });
+
+    const G = contentAt(table().stackDevCard("settlers").build(), 3);
+    const after = act(G, { type: "endTurn" });
+    const settlers = handOf(after, "0", "settlers");
+    expect(settlers.turn).toBe(G.turn);
+    // Seat 0's next turn comes on a later turn, when the card plays.
+    const later = structuredClone(after);
+    later.currentPlayer = "0";
+    later.turn += 3;
+    later.pendingPlayerEvent = null;
+    expect(getPlayDevCardStatus(later, "0", { card: settlers.id, tileId: "-2,0" }).can).toBe(true);
+  });
+
+  it("draws nothing when the pile and the discards are empty", () => {
+    const G = contentAt(table().build(), 3);
+    G.devHands["1"].push(...G.devDrawPile.map((id) => ({ id, turn: 0 })));
+    G.devDrawPile = [];
+    const after = act(G, { type: "endTurn" });
+    expect(freeLine(after)).toBeUndefined();
+    expect(
+      collectInvariantViolations(after, { strictCardConservation: true }).filter((violation) =>
+        violation.code.startsWith("cards.dev"),
+      ),
+    ).toEqual([]);
+  });
+
+  it("draws nothing with the rule switched off", () => {
+    const G = contentAt(table({ devCards: { freeCard: false } }).build(), 4);
+    expect(freeLine(act(G, { type: "endTurn" }))).toBeUndefined();
   });
 });

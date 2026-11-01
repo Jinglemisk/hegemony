@@ -145,6 +145,7 @@ describe("action cap", () => {
           boughtInsurance: [],
           tokensCleared: 0,
           concessionTileId: null,
+          losses: null,
         };
       }
       const moves: string[] = [];

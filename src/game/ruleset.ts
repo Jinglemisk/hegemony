@@ -68,10 +68,18 @@ export interface IdeaRules {
   purchases: number;
 }
 
-/** The development deck's price (docs/plans/development-deck.md). The cards themselves
- *  are content. */
+/** The development deck's price and its two happiness rules
+ *  (docs/plans/development-deck.md). The cards themselves are content. Both rules are on
+ *  in the game; a batch turns one off to measure it, and no screen offers the switches. */
 export interface DevCardRules {
   cost: Partial<Resources>;
+  /** A standing level of `freeCardLevel` or higher, calm left out, draws a free card at
+   *  the end of the seat's own turn. */
+  freeCard: boolean;
+  freeCardLevel: number;
+  /** A riot may take a held card, drawn at random, in place of each pop: the seat's
+   *  choice, pop by pop. */
+  riotCard: boolean;
 }
 
 /** Player trade (docs/plans/player-trade.md). Off, no seat offers and the Assembly's
@@ -315,7 +323,7 @@ export const DEFAULT_RULESET: Ruleset = {
     demoteCosts: { citizens: { influence: 1 }, freemen: { influence: 1 } },
   },
   ideas: { influenceCost: 6, purchases: 1 },
-  devCards: { cost: DEV_CARD_COST },
+  devCards: { cost: DEV_CARD_COST, freeCard: true, freeCardLevel: 3, riotCard: true },
   assembly: {
     // Every other year from Year 2: up to seven sittings in a fourteen-year game.
     firstYear: 2,

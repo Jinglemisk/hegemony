@@ -15,6 +15,7 @@ import {
 } from "./rules";
 import type { MoveResult } from "./rules";
 import { unfedAtTurnEnd } from "./economy/income";
+import { drawFreeCard, freeCardDue } from "./devCards";
 import { checkVictoryAtTurnStart } from "./victory";
 import { tickLuxurySuppression } from "./luxury";
 import { closeOffers } from "./trade";
@@ -170,15 +171,19 @@ export function endTurn(G: HegemonyState): MoveResult {
 }
 
 /**
- * Hunger is settled: test unrest before the player, year or Assembly changes.
- * A riot suspends the handoff until its insurance and roll have resolved.
+ * Hunger is settled: test unrest and the free card before the player, year or Assembly
+ * changes. A riot suspends the handoff until its insurance and roll have resolved.
  */
 export function commitTurn(G: HegemonyState): MoveResult {
+  const current = G.currentPlayer;
   // No food debt leaves the turn, also when no free pop was there to pay for it.
-  const resources = G.players[G.currentPlayer].resources;
+  const resources = G.players[current].resources;
   resources.food = Math.max(0, resources.food);
 
-  applyUnrestAtTurnEnd(G, G.currentPlayer);
+  // The free card is read with the riot check, after hunger, on the level without calm.
+  const freeCard = freeCardDue(G, current);
+  applyUnrestAtTurnEnd(G, current);
+  if (freeCard) drawFreeCard(G, current);
   return G.pendingRiot ? { ok: true } : finishTurn(G);
 }
 

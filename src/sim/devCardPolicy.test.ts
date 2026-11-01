@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { enumerateLegalCommands, transition, type GameCommand } from "../game/legalMoves";
 import { projectForPlayer } from "../game/projection";
-import { scenario } from "../game/testing/scenario";
-import type { HegemonyState } from "../game/types";
-import { POLICIES, type PersonalityId } from "./policies";
+import { mulberry32 } from "../game/core/rng";
+import { happinessLevel } from "../game/happiness";
+import type { RulesetPatch } from "../game/ruleset";
+import { owned, scenario } from "../game/testing/scenario";
+import type { DevCardId, HegemonyState } from "../game/types";
+import { POLICIES, projectPolicyHorizon, type PersonalityId } from "./policies";
 import { createSimRng } from "./rng";
 import { runGame } from "./runner";
 
@@ -88,4 +91,65 @@ describe("bots and the development deck", () => {
     expect(bought).toBeGreaterThan(0);
     expect(played).toBeGreaterThan(0);
   }, 120000);
+});
+
+/** Seat 0's riot rolled on "Revolt spreads" (two pops), holding `cards`: the pops wait for
+ *  its answers. */
+function riotPops(cards: DevCardId[]) {
+  const build = midGame();
+  for (const card of cards) build.withDevCard("0", card);
+  const G = build.build();
+  G.players["0"].unrestTokens = happinessLevel(G, "0") - G.ruleset.economy.unrest.riotThreshold;
+  let next = transition(G.definition, G, "0", { type: "endTurn" });
+  if (!next.ok) throw new Error(next.reasons.join("; "));
+  const rioting = structuredClone(next.state);
+  // The rng state whose next d6 is a 2.
+  rioting.rng = Array.from({ length: 64 }, (_, state) => state).find(
+    (state) => 1 + Math.floor(mulberry32(state).value * 6) === 2,
+  )!;
+  next = transition(G.definition, rioting, "0", { type: "resolveRiot" });
+  if (!next.ok) throw new Error(next.reasons.join("; "));
+  expect(next.state.pendingRiot?.losses?.owed).toBe(2);
+  return next.state;
+}
+
+const answer = (name: PersonalityId, G: HegemonyState) =>
+  POLICIES[name].choose(
+    projectForPlayer(G.definition, G, "0"),
+    enumerateLegalCommands(G, "0"),
+    createSimRng(1),
+  );
+
+describe("bots and happiness", () => {
+  it.each(names)("%s gives up a card worth nothing to keep a pop", (name) => {
+    expect(answer(name, riotPops(["agitators"]))).toEqual({ type: "resolveRiotPop", pay: "card" });
+  });
+
+  it("weighs the hand's average card against the pop at its own weights", () => {
+    // Settlers is a freeman: the slaver would sooner lose it than a slave, the civic and
+    // the trader the other way round.
+    const G = riotPops(["settlers"]);
+    expect(answer("slaver", G)).toEqual({ type: "resolveRiotPop", pay: "card" });
+    expect(answer("civic", G)).toEqual({ type: "resolveRiotPop", pay: "pop" });
+    expect(answer("trader", G)).toEqual({ type: "resolveRiotPop", pay: "pop" });
+  });
+
+  it("forecasts a free card at each turn end at +3 or higher", () => {
+    const content = (level: number, patch?: RulesetPatch) => {
+      const G = scenario({ patch })
+        .opening()
+        .mutate((draft) => {
+          draft.pendingPlayerEvent = null;
+          for (const tileId of draft.players["0"].settlements)
+            owned(draft, tileId, "0").pops.slaves = 0;
+          owned(draft, "-2,0", "0").buildings = Array.from({ length: level }, () => "temple");
+        })
+        .build();
+      return projectPolicyHorizon(G, "0").freeCards;
+    };
+    // This turn's end and each of the six the forecast plays.
+    expect(content(3)).toBe(7);
+    expect(content(2)).toBe(0);
+    expect(content(3, { devCards: { freeCard: false } })).toBe(0);
+  });
 });

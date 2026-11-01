@@ -38,7 +38,14 @@ import {
   promotePop,
 } from "./civic";
 import type { CivicCalmPayment } from "./civic";
-import { CONCESSION_FROM, buyRiotInsurance, getBuyRiotInsuranceStatus, resolveRiot } from "./riot";
+import {
+  CONCESSION_FROM,
+  buyRiotInsurance,
+  getBuyRiotInsuranceStatus,
+  getResolveRiotPopStatus,
+  resolveRiot,
+  resolveRiotPop,
+} from "./riot";
 import { buyDevCard, devCardPlays, getBuyDevCardStatus, playDevCard } from "./devCards";
 import { getAuthoredGameContent, getRiotTable } from "./content";
 import { EMPTY_POPS, GROWABLE_POPS, POP_TYPES, totalPops } from "./core/pops";
@@ -109,6 +116,7 @@ import type {
   Resource,
   Resources,
   RiotInsuranceId,
+  RiotPay,
   TradableMaterial,
   TradeAnswer,
   TradeBundle,
@@ -187,6 +195,8 @@ export type GameCommand =
       demoteTarget?: { tileId: string; from: PopType };
     }
   | { type: "resolveRiot" }
+  /** One pop the rolled riot takes: lose it, or discard a held card drawn at random. */
+  | { type: "resolveRiotPop"; pay: RiotPay }
   // ── The Assembly (Phase 3-B). While a session is open these are the ONLY legal
   //    moves: the agora suspends the turn machine, so every gameplay verb is shut
   //    off until the house rises.
@@ -369,6 +379,8 @@ function applyCommandMutable(G: HegemonyState, playerID: PlayerId, move: GameCom
       return buyRiotInsurance(G, playerID, move.optionId, move.demoteTarget);
     case "resolveRiot":
       return resolveRiot(G, playerID);
+    case "resolveRiotPop":
+      return resolveRiotPop(G, playerID, move.pay);
     case "assemblyDraw":
       return assemblyDraw(G, playerID, move.politician);
     case "assemblyDiscardHeld":
@@ -626,6 +638,10 @@ export function describeCommand(
       return `declare riot insurance: ${move.optionId}${move.demoteTarget ? ` (demoting a ${formatPopName(move.demoteTarget.from, 1)} on ${move.demoteTarget.tileId})` : ""}`;
     case "resolveRiot":
       return "face the riot table";
+    case "resolveRiotPop":
+      return move.pay === "card"
+        ? "discard a held card, drawn at random, in place of a pop"
+        : "lose the pop";
     case "assemblyDraw":
       return `sound out ${move.politician}${formatCost(cost)}`;
     case "assemblyDiscardHeld":
@@ -680,8 +696,15 @@ function formatCost(cost: Partial<Resources>): string {
 }
 
 /** The riot's forced menu: each unbought, affordable insurance (the concession once
- *  per settlement with a citizen to demote), and always the roll itself. */
+ *  per settlement with a citizen to demote), and always the roll itself. Once rolled,
+ *  each pop it takes: lose the pop, or a held card in its place. */
 function enumerateRiotMoves(G: HegemonyState, playerID: PlayerId): DerivedCommand[] {
+  if (G.pendingRiot?.losses) {
+    return (["pop", "card"] as const)
+      .filter((pay) => getResolveRiotPopStatus(G, playerID, pay).can)
+      .map((pay) => ({ type: "resolveRiotPop", pay }));
+  }
+
   const moves: DerivedCommand[] = [];
 
   for (const option of getRiotTable(G.definition.content).insurance ?? []) {

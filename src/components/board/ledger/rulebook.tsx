@@ -793,7 +793,11 @@ const unrest: RuleChapter = {
             At a level of {u.riotThreshold} or below when you end your turn, your Unrest tokens
             clear and a riot rolls before the turn passes. Declare insurance first (each once, +1 to
             the roll); the concession demotes a citizen. Pop losses take slaves first, then freemen,
-            then citizens. At {u.revoltThreshold} or below it is a revolt instead:{" "}
+            then citizens
+            {G.ruleset.devCards.riotCard
+              ? ", and for each one you may discard a held development card, drawn at random, instead"
+              : ""}
+            . At {u.revoltThreshold} or below it is a revolt instead:{" "}
             {presentUnrestOutcome(G.ruleset, "revolt").share.toLowerCase()} your slaves leave,
             rounded down, your tokens clear, and nothing is rolled.
           </Note>
@@ -956,14 +960,18 @@ const deck: RuleChapter = {
     "settlers",
     "raiders",
     "informer",
+    "free",
+    "riot",
   ],
   entries: [
     { id: anchor("deck", "buying"), label: "Buying" },
     { id: anchor("deck", "hand"), label: "The hand" },
+    { id: anchor("deck", "happiness"), label: "Happiness and the hand" },
     { id: anchor("deck", "cards"), label: "The cards" },
   ],
   Body: ({ G }) => {
     const cards = getDevCards(G.definition.content);
+    const rules = G.ruleset.devCards;
     return (
       <div className="compendiumStack">
         <Entry id={anchor("deck", "buying")} title="Buying">
@@ -989,6 +997,25 @@ const deck: RuleChapter = {
             that rival does not have: Raiders names a stock the rival holds, and an Informer needs a
             rival who holds a development card.
           </Note>
+        </Entry>
+        <Entry id={anchor("deck", "happiness")} title="Happiness and the hand">
+          {rules.freeCard ? (
+            <Note>
+              At the end of your own turn, at the riot check, a happiness level of{" "}
+              {formatSignedNumber(rules.freeCardLevel)} or higher draws one card free. Calm does not
+              count, the level is read after hunger, and there is no food condition. A yield lands
+              at once; a held card is playable from your next turn. With the pile and the discards
+              empty, nothing is drawn.
+            </Note>
+          ) : null}
+          {rules.riotCard ? (
+            <Note>
+              When a riot takes pops, you answer each one: lose the pop, or discard a held card
+              drawn at random. You choose before the card is drawn. It is a discard, not your card
+              for the turn. Buildings and stocks go as the row says, and a revolt still costs its
+              slaves.
+            </Note>
+          ) : null}
         </Entry>
         <Entry id={anchor("deck", "cards")} title="The cards">
           <DefList>

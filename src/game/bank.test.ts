@@ -121,6 +121,7 @@ describe("bank trades", () => {
       boughtInsurance: [],
       tokensCleared: 0,
       concessionTileId: null,
+      losses: null,
     };
 
     expect(bankSell(G, "0", "wood").ok).toBe(false);

@@ -1,14 +1,14 @@
 import { getDevCards } from "./content";
 import type { GameContent } from "./content";
 import { PLAYER_IDS } from "./data";
-import { formatPopName, formatTileLabel } from "./core/format";
+import { formatPopName, formatRuleNumber, formatTileLabel } from "./core/format";
 import { totalPops } from "./core/pops";
 import { addLog, getOwnedSettlement, getPlayerName, realmPops } from "./core/query";
 import { applyResourceDelta, canAfford, createResourceDelta, payCost } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
 import type { ActionStatus, MoveResult } from "./core/results";
 import { mulberry32, shuffleWithSeed } from "./core/rng";
-import { applyUnrestTokenChange } from "./happiness";
+import { applyUnrestTokenChange, standingHappiness } from "./happiness";
 import { settlementRoom } from "./settlement";
 import { pendingDecisionReasons } from "./status";
 import type { DevCard, DevCardEffect, HegemonyState, PlayerId, Resource } from "./types";
@@ -19,6 +19,10 @@ import type { DevCard, DevCardEffect, HegemonyState, PlayerId, Resource } from "
  * card goes to the hand, face down, and is played one a turn, never on the turn it came
  * in. A rival card is a held card aimed at a rival when it is played. The discards
  * reshuffle when the pile runs out, so pile, discards and hands always hold the deck.
+ *
+ * Happiness pays into the deck: a standing level of +3 or higher draws a free card at the
+ * end of the seat's turn (turn.ts), and a riot may take a held card in place of a pop
+ * (riot.ts).
  */
 
 /** Each card's copies by stable instance id, `caravan#1` to `caravan#4`, in content order. */
@@ -85,18 +89,14 @@ export function buyDevCard(G: HegemonyState, playerID: PlayerId): MoveResult {
   payCost(player.resources, status.cost ?? {});
   player.devCardBoughtThisTurn = true;
 
-  const id = drawDevCard(G);
-  const card = devCardOf(G, id)!;
+  const { card, outcome } = drawFor(G, playerID);
   const name = getPlayerName(G, playerID);
-  if (card.kind !== "yield") {
+  if (outcome === null) {
     // Which card it is stays the seat's own: the line says only that one was kept.
-    G.devHands[playerID].push({ id, turn: G.turn });
     addLog(G, `${name} bought a development card and kept it.`, playerID);
     return MOVE_OK;
   }
 
-  G.devDiscardPile.push(id);
-  const outcome = applyDevEffect(G, playerID, card, { card: id });
   addLog(G, `${name} bought a development card: ${card.name}, ${outcome}.`, playerID, {
     kind: "devCard",
     cardId: card.id,
@@ -104,6 +104,65 @@ export function buyDevCard(G: HegemonyState, playerID: PlayerId): MoveResult {
     outcome,
   });
   return MOVE_OK;
+}
+
+/** Whether the seat's standing level, calm left out, is at the free card's line. */
+export function atFreeCardLevel(G: HegemonyState, playerID: PlayerId): boolean {
+  return standingHappiness(G, playerID) >= G.ruleset.devCards.freeCardLevel;
+}
+
+/** Whether ending the turn now draws the free card: the rule is on, a card is left to
+ *  draw, and the standing level is at its line. Read with the riot check, after hunger;
+ *  there is no food condition. */
+export function freeCardDue(G: HegemonyState, playerID: PlayerId): boolean {
+  return (
+    G.ruleset.devCards.freeCard &&
+    G.devDrawPile.length + G.devDiscardPile.length > 0 &&
+    atFreeCardLevel(G, playerID)
+  );
+}
+
+/** The free card at the end of the seat's own turn, already found due: a yield lands at
+ *  once, a held card goes to the hand and is playable from the seat's next turn. */
+export function drawFreeCard(G: HegemonyState, playerID: PlayerId) {
+  const level = standingHappiness(G, playerID);
+  const { card, outcome } = drawFor(G, playerID);
+  const content = `${getPlayerName(G, playerID)}'s realm is content at ${formatRuleNumber(level, true)}: a free development card`;
+  if (outcome === null) {
+    addLog(G, `${content}, kept.`, playerID, { kind: "freeCard", level });
+    return;
+  }
+  addLog(G, `${content}, ${card.name}, ${outcome}.`, playerID, {
+    kind: "freeCard",
+    level,
+    card: card.id,
+    outcome,
+  });
+}
+
+/** Draw the top card for the seat. A yield resolves at once and goes to the discards,
+ *  with what it did; a held card goes to the hand, playable from the seat's next turn. */
+function drawFor(G: HegemonyState, playerID: PlayerId): { card: DevCard; outcome: string | null } {
+  const id = drawDevCard(G);
+  const card = devCardOf(G, id)!;
+  if (card.kind !== "yield") {
+    G.devHands[playerID].push({ id, turn: G.turn });
+    return { card, outcome: null };
+  }
+  G.devDiscardPile.push(id);
+  return { card, outcome: applyDevEffect(G, playerID, card, { card: id }) };
+}
+
+/** Discard one of the seat's held cards, drawn at random through the game's rng: an
+ *  Informer's, or a riot's in place of a pop. */
+export function discardAtRandom(G: HegemonyState, playerID: PlayerId): DevCard | undefined {
+  const hand = G.devHands[playerID];
+  if (hand.length === 0) return undefined;
+  const step = mulberry32(G.rng);
+  G.rng = step.state;
+  const [lost] = hand.splice(Math.floor(step.value * hand.length), 1);
+  G.devDiscardPile.push(lost.id);
+  return devCardOf(G, lost.id);
 }
 
 function drawDevCard(G: HegemonyState): string {
@@ -260,12 +319,8 @@ function applyDevEffect(
       return `took ${taken} ${play.resource}`;
     }
     case "discardHeld": {
-      const hand = G.devHands[play.target!];
-      const step = mulberry32(G.rng);
-      G.rng = step.state;
-      const [lost] = hand.splice(Math.floor(step.value * hand.length), 1);
-      G.devDiscardPile.push(lost.id);
-      return `${getPlayerName(G, play.target!)} discarded ${devCardOf(G, lost.id)?.name ?? "a card"}`;
+      const lost = discardAtRandom(G, play.target!);
+      return `${getPlayerName(G, play.target!)} discarded ${lost?.name ?? "a card"}`;
     }
   }
 }
