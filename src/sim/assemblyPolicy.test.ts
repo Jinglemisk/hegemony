@@ -5,7 +5,7 @@ import { enumerateLegalCommands, transition, type GameCommand } from "../game/le
 import { projectForPlayer } from "../game/projection";
 import { owned, scenario } from "../game/testing/scenario";
 import { voiceHolder } from "../game/victory";
-import { smartPolicy } from "./policies";
+import { masterPolicy } from "./policies";
 import { createSimRng } from "./rng";
 import { Aggregator, snapshotsToCsv } from "./telemetry";
 
@@ -41,7 +41,7 @@ it("buys an affordable pivotal coalition, authors Voice and reports the seat's A
   take("2", { type: "assemblyVote", yea: false });
   take("3", { type: "assemblyVote", yea: false });
   const choose = () =>
-    smartPolicy.choose(
+    masterPolicy.choose(
       projectForPlayer(G.definition, G, "0"),
       enumerateLegalCommands(G, "0"),
       createSimRng(1),
@@ -60,7 +60,7 @@ it("buys an affordable pivotal coalition, authors Voice and reports the seat's A
   const report = aggregator.buildReport({
     games: 1,
     turns: 56,
-    policy: "smart",
+    policy: "master",
     mode: "standard",
     boardLayout: "scenario",
     baseSeed: 42,

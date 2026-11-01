@@ -349,7 +349,7 @@ describe("Aggregator", () => {
     const aggregator = new Aggregator();
     const seed = 900;
     const played = runGame({ seed, mode: "standard", policy: randomPolicy, turns: 6 });
-    const seatPolicies = { "0": "greedy", "1": "smart", "2": "smart", "3": "smart" } as const;
+    const seatPolicies = { "0": "master", "1": "trader", "2": "trader", "3": "trader" } as const;
     aggregator.beginGame(0, seed, played, { ...seatPolicies });
     const G = structuredClone(played);
 
@@ -373,13 +373,13 @@ describe("Aggregator", () => {
       generatedAt: "test",
     });
 
-    // greedy held one seat and won it; smart held three seats and won none.
-    expect(report.results.perPolicy.greedy).toMatchObject({
+    // master held one seat and won it; trader held three seats and won none.
+    expect(report.results.perPolicy.master).toMatchObject({
       finishedSeatGames: 1,
       wins: 1,
       winRate: 1,
     });
-    expect(report.results.perPolicy.smart).toMatchObject({
+    expect(report.results.perPolicy.trader).toMatchObject({
       finishedSeatGames: 3,
       wins: 0,
       winRate: 0,

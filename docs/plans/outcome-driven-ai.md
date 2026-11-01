@@ -516,14 +516,11 @@ budgets, not semantic feature values.
 Do not use only one continuation policy. The initial rollout league contains:
 
 - frozen `master`;
-- `beam`;
-- `political`;
-- `smart`;
-- `greedy`;
 - noisy Master, which selects among statistically near-equivalent actions;
 - risk-seeking and risk-averse outcome-policy variants once available;
 - previous frozen versions of the outcome-driven policy.
 
+The earlier `beam`, `political`, `smart` and `greedy` bots were removed on 2026-11-01.
 Each rollout samples or assigns a plausible policy per rival seat. Reports record which policies were
 used. This tests whether a candidate works only against one exploitable continuation.
 
@@ -716,7 +713,7 @@ Roadmap scheduling for these internal phases:
 
 **Deliverables**
 
-- Preserve the existing `random`, `greedy`, `smart`, `beam`, `political`, and `master` policies.
+- Preserve the existing `random`, `master`, `slaver`, `civic` and `trader` policies.
 - Record representative baseline tournaments on Continental boards with seat rotation.
 - Add the feature/capability manifest required by the parity audit.
 - Add move counts by type and per-policy behavior attribution.

@@ -14,21 +14,16 @@ import { resolveRiot } from "../game/riot";
 import { unrestOutcome } from "../game/unrest";
 import type { HegemonyState } from "../game/types";
 import {
-  beamPolicy,
   competitiveDelta,
   evaluatePlacement,
   evaluatePolicyUnrestRisk,
   frontierValue,
-  greedyPolicy,
   masterPolicy,
   PERSONALITY_WEIGHTS,
   placementFrontier,
   POLICIES,
   POLICY_UNREST_WEIGHTS,
-  politicalPolicy,
   projectPolicyHorizon,
-  settlerPolicy,
-  smartPolicy,
 } from "./policies";
 import { createSimRng } from "./rng";
 import { playTurn, runGame } from "./runner";
@@ -74,7 +69,7 @@ describe("searched bank chains", () => {
     let forced = 0;
     playTurn(
       G,
-      smartPolicy,
+      masterPolicy,
       createSimRng(1),
       { onForceEndTurn: () => (forced += 1) },
       { maxActions: 30 },
@@ -294,18 +289,15 @@ describe("policy unrest risk", () => {
     });
   });
 
-  it.each([
-    ["smart", smartPolicy],
-    ["beam", beamPolicy],
-  ] as const)(
-    "%s will not grow a freeman it cannot feed but grows the fed equivalent",
-    (_name, policy) => {
-      // Three food buys the freeman and leaves three mouths with an empty granary:
-      // all three leave at the next income. Unspent, it feeds the two for a turn.
-      expect(chooseFreemanGrowth(policy, 3).type).toBe("endTurn");
-      expect(chooseFreemanGrowth(policy, 60)).toMatchObject({ type: "growPop", pop: "freemen" });
-    },
-  );
+  it("master will not grow a freeman it cannot feed but grows the fed equivalent", () => {
+    // Three food buys the freeman and leaves three mouths with an empty granary:
+    // all three leave at the next income. Unspent, it feeds the two for a turn.
+    expect(chooseFreemanGrowth(masterPolicy, 3).type).toBe("endTurn");
+    expect(chooseFreemanGrowth(masterPolicy, 60)).toMatchObject({
+      type: "growPop",
+      pop: "freemen",
+    });
+  });
 });
 
 describe("the forecast buys food", () => {
@@ -601,7 +593,7 @@ function slavesInCapital(G: HegemonyState, slaves?: number): number {
   return settlement.pops.slaves;
 }
 
-function chooseFreemanGrowth(policy: typeof smartPolicy | typeof beamPolicy, food: number) {
+function chooseFreemanGrowth(policy: typeof masterPolicy, food: number) {
   const G = scenario().build();
   const player = G.players["0"];
   const tile = G.board.tiles.find((candidate) => candidate.resource?.type === "wood");
@@ -609,6 +601,8 @@ function chooseFreemanGrowth(policy: typeof smartPolicy | typeof beamPolicy, foo
 
   G.phase = "gameplay";
   G.currentPlayer = "0";
+  // The turn's one offer is made, so master weighs only the growth against the turn's end.
+  G.offersMade["0"] = 1;
   tile.settlements.push({
     id: `settlement-${G.nextEntityId++}`,
     tileId: tile.id,
@@ -686,45 +680,19 @@ describe("policy evaluation is side-effect-free", () => {
     );
   });
 
-  it("greedy and smart choose on a deep-frozen state without throwing (immer-safe)", () => {
+  it("master chooses on a deep-frozen state without throwing (immer-safe)", () => {
     const rng = createSimRng(4);
-    const G = runGame({ seed: 4, mode: "standard", policy: greedyPolicy, turns: 8 });
+    const G = runGame({ seed: 4, mode: "standard", policy: masterPolicy, turns: 8 });
     const moves = enumerateLegalCommands(G, G.currentPlayer);
     expect(moves.length).toBeGreaterThan(0);
 
     deepFreeze(G);
 
     // The old evaluator mutated G.players[x].resources in place then restored it —
-    // which throws on frozen state. The projection now runs on a copy.
-    expect(() => greedyPolicy.choose(observe(G), moves, rng)).not.toThrow();
-    expect(() => smartPolicy.choose(observe(G), moves, rng)).not.toThrow();
-    // The beam searches on clones only, so a frozen committed state is safe too.
-    expect(() => beamPolicy.choose(observe(G), moves, rng)).not.toThrow();
-    // The political bot evaluates on structuredClones too — never mutates the passed G.
-    expect(() => politicalPolicy.choose(observe(G), moves, rng)).not.toThrow();
-    // The settler bot's frontier term only READS the board (canPlaceColonyOnTile) — safe on frozen state.
-    expect(() => settlerPolicy.choose(observe(G), moves, rng)).not.toThrow();
-    // Master composes the beam with the political + frontier score and is equally safe.
+    // which throws on frozen state. The projection now runs on a copy, the beam and the
+    // political score search on clones, and the frontier term only READS the board.
     expect(() => masterPolicy.choose(observe(G), moves, rng)).not.toThrow();
-  });
-});
-
-// The settler bot adds map/expansion foresight — a frontier term over the same smart
-// evaluation — so like the others it must stay deterministic and complete games (its
-// one-ply search still meets the agora, where it passes like smart).
-describe("settler policy", () => {
-  it("is deterministic: same seed twice → byte-identical game", () => {
-    const a = runGame({ seed: 31, mode: "standard", policy: settlerPolicy, turns: 60 });
-    const b = runGame({ seed: 31, mode: "standard", policy: settlerPolicy, turns: 60 });
-    expect(JSON.stringify(a)).toBe(JSON.stringify(b));
-  }, 60000);
-
-  it("plays complete games across seeds without deadlocking", () => {
-    for (const seed of [1, 2, 3]) {
-      const G = runGame({ seed, mode: "standard", policy: settlerPolicy, turns: 80 });
-      expect(["gameplay", "gameOver"]).toContain(G.phase);
-    }
-  }, 90000);
+  }, 30000);
 });
 
 describe("master policy", () => {
@@ -734,13 +702,12 @@ describe("master policy", () => {
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
   }, 60000);
 
-  it("uses the political Assembly strategy and carries the session to completion", () => {
+  it("carries an Assembly session to completion", () => {
     let G = scenario({ seed: 23 }).opening().build();
     playUntilAssembly(G);
     expect(G.assembly).toBeTruthy();
 
     const masterRng = createSimRng(1);
-    const politicalRng = createSimRng(1);
     let steps = 0;
 
     while (G.assembly && steps < 500) {
@@ -749,8 +716,6 @@ describe("master policy", () => {
       expect(moves.length).toBeGreaterThan(0);
 
       const choice = masterPolicy.choose(observe(G), moves, masterRng);
-      // The Assembly half of master is deliberately the proven political heuristic.
-      expect(choice).toEqual(politicalPolicy.choose(observe(G), moves, politicalRng));
       const result = transition(G.definition, G, player, choice);
       expect(result.ok).toBe(true);
       if (!result.ok) break;
@@ -763,12 +728,12 @@ describe("master policy", () => {
   });
 });
 
-// The political bot plays the Assembly (Phase 3-C). Its heuristics score hypothetical
-// enactments on clones, so — like the beam — they must be deterministic, RNG-free, and
-// side-effect-free even mid-agora. And a fully-engaged assembly must never deadlock the
-// runner (it once did: an engaged agora blew past the single-turn action cap and the
-// force-end tried an endTurn that is illegal while the agora stands).
-describe("political policy", () => {
+// Every search bot plays the Assembly by the political heuristic (Phase 3-C). It scores
+// hypothetical enactments on clones, so — like the beam — it must be deterministic,
+// RNG-free, and side-effect-free even mid-agora. And a fully-engaged assembly must never
+// deadlock the runner (it once did: an engaged agora blew past the single-turn action
+// cap and the force-end tried an endTurn that is illegal while the agora stands).
+describe("Assembly heuristic", () => {
   it("values a ballot item once: own gain, less the best rival gain, plus the leader's loss", () => {
     const G = scenario().build();
     const before = { "0": 50, "1": 80, "2": 60, "3": 40 };
@@ -783,16 +748,18 @@ describe("political policy", () => {
     expect(value({ "0": 5, "3": 12 })).toBe(-7);
   });
 
-  it("smart bots author passing Laws, hold Voice and finish without action caps", () => {
+  it("master bots author passing Laws, hold Voice and finish without action caps", () => {
     const passedSeats = new Set<string>();
     const voices = new Set<string>();
     let capped = 0;
     const years = yearDeckSize(scenario().build());
-    for (const seed of [2, 3, 5]) {
+    // Two whole master games, the slowest test here: between them every seat authors a
+    // Law that passes.
+    for (const seed of [2, 3]) {
       const G = runGame({
         seed,
         mode: "standard",
-        policy: smartPolicy,
+        policy: masterPolicy,
         turns: years * PLAYER_IDS.length,
         hooks: {
           onMove: (state) => {
@@ -823,20 +790,13 @@ describe("political policy", () => {
     expect(capped).toBe(0);
     expect([...passedSeats].sort()).toEqual([...PLAYER_IDS]);
     expect(voices.size).toBeGreaterThan(0);
-  }, 90000);
+  }, 600000);
 
   it("is deterministic across assemblies: same seed twice → byte-identical game", () => {
-    const a = runGame({ seed: 21, mode: "standard", policy: politicalPolicy, turns: 12 });
-    const b = runGame({ seed: 21, mode: "standard", policy: politicalPolicy, turns: 12 });
+    const a = runGame({ seed: 21, mode: "standard", policy: masterPolicy, turns: 12 });
+    const b = runGame({ seed: 21, mode: "standard", policy: masterPolicy, turns: 12 });
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
   }, 60000);
-
-  it("plays complete games across seeds without deadlocking through the agora", () => {
-    for (const seed of [1, 2, 3]) {
-      const G = runGame({ seed, mode: "standard", policy: politicalPolicy, turns: 80 });
-      expect(["gameplay", "gameOver"]).toContain(G.phase);
-    }
-  }, 90000);
 
   it("chooses at an OPEN assembly without advancing game RNG or mutating (anti-peek)", () => {
     const G = scenario({ seed: 7 }).opening().build();
@@ -848,7 +808,7 @@ describe("political policy", () => {
 
     const rngBefore = G.rng;
     const snapshot = JSON.stringify(G);
-    politicalPolicy.choose(observe(G), moves, createSimRng(1));
+    masterPolicy.choose(observe(G), moves, createSimRng(1));
 
     // The seeded stream never advanced, and the evaluation ran only on clones.
     expect(G.rng).toBe(rngBefore);
@@ -864,7 +824,7 @@ describe("political policy", () => {
     const me = G.currentPlayer;
     G.players[me].resources.influence = 0; // nothing to spend
 
-    const choice = politicalPolicy.choose(
+    const choice = masterPolicy.choose(
       observe(G, me),
       enumerateLegalCommands(G, me),
       createSimRng(1),
@@ -887,7 +847,7 @@ describe("political policy", () => {
       G.politicianDiscards[politician] = [];
     }
 
-    const choice = politicalPolicy.choose(
+    const choice = masterPolicy.choose(
       observe(G, me),
       enumerateLegalCommands(G, me),
       createSimRng(1),
@@ -903,13 +863,13 @@ describe("political policy", () => {
     const me = G.currentPlayer;
     G.players[me].resources.influence = 100;
     const moves = enumerateLegalCommands(G, me);
-    const before = politicalPolicy.choose(observe(G), moves, createSimRng(1));
+    const before = masterPolicy.choose(observe(G), moves, createSimRng(1));
 
     for (const politician of ["demosthenes", "perdiccas", "kleistophenes", "stratokles"] as const) {
       G.politicianDecks[politician].reverse();
     }
 
-    expect(politicalPolicy.choose(observe(G), moves, createSimRng(1))).toEqual(before);
+    expect(masterPolicy.choose(observe(G), moves, createSimRng(1))).toEqual(before);
   });
 
   it("aims a Directive at the rival it hurts most", () => {
@@ -928,7 +888,7 @@ describe("political policy", () => {
       card: RESOLUTION_CARDS.find((card) => card.id === "grain-riot")!,
     };
 
-    const choice = politicalPolicy.choose(
+    const choice = masterPolicy.choose(
       observe(G, me),
       enumerateLegalCommands(G, me),
       createSimRng(1),
@@ -954,7 +914,7 @@ describe("political policy", () => {
       G.assembly!.held[me] = {
         card: RESOLUTION_CARDS.find((card) => card.id === "rural-messengers")!,
       };
-      return politicalPolicy.choose(observe(G, me), enumerateLegalCommands(G, me), createSimRng(1))
+      return masterPolicy.choose(observe(G, me), enumerateLegalCommands(G, me), createSimRng(1))
         .type;
     };
     expect(choose("citizens")).toBe("assemblyPropose");
@@ -987,8 +947,7 @@ describe("political policy", () => {
     G.assembly!.held[me] = {
       card: RESOLUTION_CARDS.find((card) => card.id === "sacred-fields")!,
     };
-    return politicalPolicy.choose(observe(G, me), enumerateLegalCommands(G, me), createSimRng(1))
-      .type;
+    return masterPolicy.choose(observe(G, me), enumerateLegalCommands(G, me), createSimRng(1)).type;
   };
 
   it("seals a blocked Law it can keep for the next sitting, and only with kept Laws", () => {
@@ -1022,7 +981,7 @@ describe("political policy", () => {
         (id) => id !== "sacred-fields",
       );
       G.keptLaws[me] = "sacred-fields";
-      const choice = politicalPolicy.choose(
+      const choice = masterPolicy.choose(
         observe(G, me),
         enumerateLegalCommands(G, me),
         createSimRng(1),
@@ -1036,21 +995,15 @@ describe("political policy", () => {
 
 // The beam search is compute-heavy, so these run short games and lift vitest's default
 // 5s per-test timeout (they can exceed it on slower CI hardware).
-describe("beam policy", () => {
-  it("is deterministic: same seed twice → byte-identical game", () => {
-    const a = runGame({ seed: 13, mode: "standard", policy: beamPolicy, turns: 8 });
-    const b = runGame({ seed: 13, mode: "standard", policy: beamPolicy, turns: 8 });
-    expect(JSON.stringify(a)).toBe(JSON.stringify(b));
-  }, 30000);
-
+describe("master's beam search", () => {
   it("consumes no game RNG and never mutates the passed state (anti-peek)", () => {
-    const G = runGame({ seed: 8, mode: "standard", policy: beamPolicy, turns: 5 });
+    const G = runGame({ seed: 8, mode: "standard", policy: masterPolicy, turns: 5 });
     const moves = enumerateLegalCommands(G, G.currentPlayer);
     if (moves.length === 0) return; // gameOver — nothing to choose
 
     const rngBefore = G.rng;
     const snapshot = JSON.stringify(G);
-    beamPolicy.choose(observe(G), moves, createSimRng(1));
+    masterPolicy.choose(observe(G), moves, createSimRng(1));
 
     // The seeded stream never advanced, and the search ran only on clones.
     expect(G.rng).toBe(rngBefore);
@@ -1060,7 +1013,7 @@ describe("beam policy", () => {
   it.each([1, 2, 3])(
     "plays seed %i's complete turns without tripping the anti-peek assertion",
     (seed) => {
-      const G = runGame({ seed, mode: "standard", policy: beamPolicy, turns: 4 });
+      const G = runGame({ seed, mode: "standard", policy: masterPolicy, turns: 4 });
       expect(["gameplay", "gameOver"]).toContain(G.phase);
     },
     30000,
@@ -1073,35 +1026,16 @@ describe("opening placement", () => {
     ruleset: deriveRuleset(GAME_MODES.standard.ruleset, BEFORE_TRADE),
     content: getAuthoredGameContent(),
   });
-  const searchPolicies = [
-    greedyPolicy,
-    smartPolicy,
-    beamPolicy,
-    politicalPolicy,
-    settlerPolicy,
-    masterPolicy,
-  ];
-
   it("seats the first metropolis on food land with enough slave work slots", () => {
     const G = createInitialStateFromDefinition(definition, 5, "scenario");
     const commands = enumerateLegalCommands(G, G.currentPlayer);
-    const command = smartPolicy.choose(observe(G), commands, createSimRng(1));
+    const command = masterPolicy.choose(observe(G), commands, createSimRng(1));
 
     expect(command.type).toBe("placeCapital");
     const tile = getTile(G, (command as { tileId: string }).tileId)!;
     expect(tile.resource).toMatchObject({ type: "food" });
     if (command.type !== "placeCapital") throw new Error("expected capital placement");
     expect(tile.slots).toBeGreaterThanOrEqual(command.pops.slaves);
-  });
-
-  it("every search policy places identically — openings are a held constant in A/Bs", () => {
-    const G = createInitialStateFromDefinition(definition, 5, "scenario");
-    const commands = enumerateLegalCommands(G, G.currentPlayer);
-    const choices = searchPolicies.map((policy) =>
-      JSON.stringify(policy.choose(observe(G), commands, createSimRng(1))),
-    );
-
-    expect(new Set(choices).size).toBe(1);
   });
 
   it("policy openings put every capital on yielding land", () => {
@@ -1265,11 +1199,9 @@ describe("v2 card scoring", () => {
     const commands = enumerateLegalCommands(G, "0");
     // Two settlements, and the decline.
     expect(commands).toHaveLength(3);
-    for (const policy of [smartPolicy, masterPolicy]) {
-      const command = policy.choose(observe(G), commands, createSimRng(1));
-      expect(command).toEqual({ type: "resolveEvent", targetTileId: plains.id });
-      expect(transition(G.definition, G, "0", command).ok).toBe(true);
-    }
+    const command = masterPolicy.choose(observe(G), commands, createSimRng(1));
+    expect(command).toEqual({ type: "resolveEvent", targetTileId: plains.id });
+    expect(transition(G.definition, G, "0", command).ok).toBe(true);
   });
 
   it("declines a pop that clearly hurts and takes one that clearly helps", () => {
@@ -1314,11 +1246,9 @@ describe("v2 card scoring", () => {
     for (const [name, G, declines] of cases) {
       const commands = enumerateLegalCommands(G, "0");
       expect(commands.at(-1), name).toEqual({ type: "resolveEvent", decline: true });
-      for (const policy of [smartPolicy, masterPolicy]) {
-        const command = policy.choose(observe(G), commands, createSimRng(1));
-        expect(command.type === "resolveEvent" && command.decline === true, name).toBe(declines);
-        expect(transition(G.definition, G, "0", command).ok).toBe(true);
-      }
+      const command = masterPolicy.choose(observe(G), commands, createSimRng(1));
+      expect(command.type === "resolveEvent" && command.decline === true, name).toBe(declines);
+      expect(transition(G.definition, G, "0", command).ok).toBe(true);
     }
   });
 });
@@ -1341,12 +1271,10 @@ describe("hunger choice", () => {
       "resolveHunger",
       "resolveHunger",
     ]);
-    for (const policy of [smartPolicy, masterPolicy]) {
-      const command = policy.choose(observe(G), commands, createSimRng(1));
-      expect(commands).toContainEqual(command);
-      const result = transition(G.definition, G, "0", command);
-      expect(result.ok).toBe(true);
-      if (result.ok) expect(result.state.pendingHunger).toBeNull();
-    }
+    const command = masterPolicy.choose(observe(G), commands, createSimRng(1));
+    expect(commands).toContainEqual(command);
+    const result = transition(G.definition, G, "0", command);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.state.pendingHunger).toBeNull();
   });
 });

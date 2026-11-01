@@ -212,7 +212,7 @@ function parseBoard(flags: Flags, fallback: BoardLayout = "continental"): BoardL
   return board;
 }
 
-/** `--seats greedy,smart,smart,smart` → a policy per seat, plus the display names. */
+/** `--seats slaver,civic,trader,master` → a policy per seat, plus the display names. */
 function parseSeats(
   flags: Flags,
 ): { policies: Record<PlayerId, Policy>; names: Record<PlayerId, string> } | null {

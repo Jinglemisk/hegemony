@@ -39,7 +39,7 @@ import { createSimRng, deriveBotSeed } from "../sim/rng";
  * every seat sealed and none Ready). `?dev=cards`: the seat at the development deck,
  * with gold for a card, a Caravan held from an earlier turn and a Foraging on top of the
  * pile. `?dev=fate-pop`: the second seat's Free Settlers, to place or decline. For the
- * board: `?dev=mid-game` and `?dev=late-game` (the sim's smart bots play
+ * board: `?dev=mid-game` and `?dev=late-game` (the sim's master bots play
  * every seat to the start of Year 6 or Year 12).
  */
 
@@ -250,15 +250,16 @@ export const DEV_SCENES: Record<string, (G: HegemonyState) => DevScene> = {
   "late-game": (G) => ({ G: botsToYear(G, 12) }),
 };
 
-/** A board as a real game leaves it: the sim's smart bots play every seat until the
- *  year opens (past any sitting), in a few seconds. */
+/** A board as a real game leaves it: the sim's master bots play every seat until the
+ *  year opens (past any sitting). Master searches every turn, so Year 12 takes a
+ *  minute or more. */
 function botsToYear(initial: HegemonyState, year: number): HegemonyState {
   const rng = createSimRng(deriveBotSeed(initial.seed));
-  const smart = resolvePolicy("smart");
+  const master = resolvePolicy("master");
   let G = initial;
   for (let turn = 0; turn < 400; turn++) {
     if (G.phase !== "gameplay" || (G.year >= year && !G.assembly)) break;
-    G = playTurn(G, smart, rng);
+    G = playTurn(G, master, rng);
   }
   return G;
 }

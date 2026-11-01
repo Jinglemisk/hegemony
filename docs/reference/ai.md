@@ -21,13 +21,13 @@ game's card or die stream. `?dev=bots` still uses `master` for every browser sea
 ## Policies
 
 - `random`: choose a move type uniformly, then a command within that type.
-- `greedy`: one-ply search over the simpler population/material score.
-- `smart`: one-ply search with class, material, work-slot and luxury values.
-- `beam`: smart score with width 3, depth 4 search within the current turn.
-- `political`: smart score plus standing authored Laws, using one-ply search.
-- `settler`: smart score plus the one-step expansion frontier, using one-ply search.
-- `master`: political score plus the frontier, using the beam.
+- `master`: the smart score (class, material, work-slot and luxury values) plus
+  standing authored Laws (the political score) and the one-step expansion frontier,
+  searched with a width 3, depth 4 beam within the current turn.
 - `slaver`, `civic`, `trader`: master with the following initial weights.
+
+The stepping-stone bots `greedy`, `smart`, `beam`, `political` and `settler` measured
+those parts one at a time and were removed on 2026-11-01. Older reports still name them.
 
 These are starting preferences. Step 11 measures whether each build can win.
 
@@ -157,7 +157,7 @@ land feeds is charged nothing.
 Influence uses projected income too, so a Forum pays back
 through its actual citizen column; Civic Tradition needs no duplicate future bonus.
 
-Every search bot but greedy also forecasts the next sitting (`lawRisks`). A Law can be
+Every search bot also forecasts the next sitting (`lawRisks`). A Law can be
 repealed at any sitting after the one that follows its own, so a realm a Law feeds has
 to be ready before that sitting. For each standing Law the next sitting may strike, the
 seat asks what the Assembly handler would do: whether any seat, itself included, would

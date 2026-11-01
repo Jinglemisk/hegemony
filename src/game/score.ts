@@ -14,8 +14,7 @@ export interface PlayerStandings {
 /**
  * Roster standings: settlement/pop counts plus victory cards held. The old
  * provisional VP formula is gone — the victory race (game/victory.ts) is the
- * scoring system now; the sim's greedy bot keeps its own positional heuristic
- * in src/sim/policies.ts.
+ * scoring system now.
  */
 export function playerStandings(G: HegemonyState, playerID: PlayerId): PlayerStandings {
   const player = G.players[playerID];

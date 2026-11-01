@@ -32,7 +32,7 @@ npm run sim -- legal                # numbered list of every legal move
 npm run sim -- move index 3         # apply move #3 from that list
 npm run sim -- end-turn
 npm run sim -- auto --turns 24      # let bots play six years
-npm run sim -- batch --games 50 --turns 56 --policy greedy   # balance report
+npm run sim -- batch --games 50 --turns 56 --policy master   # balance report
 ```
 
 ## Commands
@@ -113,7 +113,7 @@ must be resolved (`move resolve`) before anything else.
 ### `auto` — bot play
 
 ```bash
-npm run sim -- auto [--turns 40] [--policy random|greedy|smart|beam|political|settler|master|slaver|civic|trader]
+npm run sim -- auto [--turns 40] [--policy random|master|slaver|civic|trader]
                     [--seats p0,p1,p2,p3] [--bot-seed N] [--record script.json] [--quiet]
 ```
 
@@ -122,46 +122,38 @@ Works from any phase — bots will finish a manual setup too. Policies:
 
 - `random` — uniform by move type, then within type (keeps big move families
   from dominating; turns always self-terminate).
-- `greedy` — one-ply lookahead over a card-anchored positional score with a
-  6-turn income projection. Deterministic. Blind to Phase 2's strategic layer: it
-  values pops tier-blind and materials flat, so it never promotes.
-- `smart` — same one-ply search, but the score weights pops BY TIER (a citizen is
-  worth far more than a slave), materials by role, and each open work slot as the slave
-  who could work it. So it climbs the social ladder, raises the class buildings, and
-  keeps plains slots for the slaves that feed it. Dole moves (and bank moves, where a
-  ruleset keeps the bank) enter search; each food the seat is short of now has a
-  price, so it buys what it lacks and holds none ahead. Its forecast buys the food
-  later years lack by the Dole, so a seat that can pay for imports grows past what
-  its land feeds.
-  Deterministic.
-- `beam` — a within-turn **beam search** over the same `smart` score, so it values the
-  within-turn sequences one-ply misses (build-then-promote chains). It does
-  not search through `endTurn`, so the six-turn income projection is state evaluation,
-  not income-to-future-action planning.
-  Development cards are played by rule, outside the search (see
-  docs/reference/ai.md). A riot on the table has one
-  shared handler: it buys the insurance that saves more than it costs and then
-  rolls, and answers each pop the roll takes with a card or the pop. Record→replay
-  remains deterministic. A `smart`-vs-`beam` A/B
-  isolates search depth from evaluation. See docs/reference/ai.md and docs/reports/simulation/ for the head-to-head.
-- `political` — `smart` economy plus standing-authorship valuation outside the
-  Assembly. All non-random policies share its Assembly handler: draw and propose
-  useful cards, support coalitions, block a winning rival, and buy affordable
-  pivotal votes. It evaluates real engine enactment on clones and reads unordered
-  public card composition. Directives score each legal rival target. Assemblies
-  convene in Years 2, 4, 6, 8, 10, 12 and 14; `--turns 56` lets the year deck finish.
-- `settler` — `smart` plus **map/expansion foresight**: a frontier term (the total yield of
-  the tiles it could legally found a colony on _next_) so the one-ply search prefers
-  placements that OPEN expansion — the second-order move the board-static scorer misses.
-  A `settler`-vs-`smart` A/B isolates map foresight. See docs/reports/simulation/2026-07-21-map-foresight.md.
-- `master` — the cumulative bot: `smart` economics, `beam`'s four-action within-turn
-  planning, `political`'s Assembly strategy and rival-aware resolution scoring, plus the
-  measured one-step expansion-frontier signal from `settler`. This is the strongest single
-  policy for whole-game runs. It combines all EXISTING specialist knowledge; cross-turn
-  saving, general opponent replies and multi-hop route planning remain future work.
+- `master` — the cumulative bot and the strongest single policy for whole-game runs.
+  - **Score.** Pops are weighted BY TIER (a citizen is worth far more than a slave),
+    materials by role, and each open work slot as the slave who could work it. So it
+    climbs the social ladder, raises the class buildings, and keeps plains slots for
+    the slaves that feed it. Dole moves (and bank moves, where a ruleset keeps the
+    bank) enter search; each food the seat is short of now has a price, so it buys what
+    it lacks and holds none ahead. Its forecast buys the food later years lack by the
+    Dole, so a seat that can pay for imports grows past what its land feeds. On top
+    sit its standing authored Laws and a frontier term: the total yield of the tiles
+    it could legally found a colony on _next_, so it prefers placements that OPEN
+    expansion.
+  - **Search.** A within-turn **beam search** (width 3, depth 4), so it values the
+    within-turn sequences one-ply misses (build-then-promote chains). It does not
+    search through `endTurn`, so the six-turn income projection is state evaluation,
+    not income-to-future-action planning. Development cards are played by rule,
+    outside the search (see docs/reference/ai.md). A riot on the table has one shared
+    handler: it buys the insurance that saves more than it costs and then rolls, and
+    answers each pop the roll takes with a card or the pop. Deterministic, so
+    record→replay is too.
+  - **Assembly.** Every search policy shares its Assembly handler: draw and propose
+    useful cards, support coalitions, block a winning rival, and buy affordable
+    pivotal votes. It evaluates real engine enactment on clones and reads unordered
+    public card composition. Directives score each legal rival target. Assemblies
+    convene in Years 2, 4, 6, 8, 10, 12 and 14; `--turns 56` lets the year deck finish.
+  - A plan across turns, general opponent replies and multi-hop route planning remain
+    future work.
 - `slaver`, `civic`, `trader` — the master search and shared political scorer with
   different weights. Those weights apply to placement, Idea picks and purchases,
   economic moves and Assembly choices. See the [weight table](ai.md).
+
+The stepping-stone bots `greedy`, `smart`, `beam`, `political` and `settler` were removed
+on 2026-11-01; master keeps each one's score term or search. Older reports still name them.
 
 Every search policy answers the offers that name its seat, and the master family
 offers on its turn and in a sitting (see [AI](ai.md#trade)). The runner routes by who
@@ -193,7 +185,7 @@ which cards come up.
 ### `batch` — balance simulation
 
 ```bash
-npm run sim -- batch --games 50 [--turns 56] [--policy random|greedy|smart|beam|political|settler|master|slaver|civic|trader]
+npm run sim -- batch --games 50 [--turns 56] [--policy random|master|slaver|civic|trader]
                      [--mode …] [--board continental|archipelago|scenario] [--ruleset-patch p.json]
                      [--tune-preset low-number-core-v1] [--tune-patch p.json]
                      [--seats p0,p1,p2,p3] [--rotate] [--seed 1000] [--jobs N]
@@ -208,7 +200,7 @@ winner). Telemetry includes the opening player-turn and excludes a terminal vict
 check with no income. For a full-game gate:
 
 ```bash
-npm run sim -- batch --games 40 --turns 56 --policy smart --seed 1000
+npm run sim -- batch --games 40 --turns 56 --policy master --seed 1000
 ```
 
 For the Step 10 handoff, run these jobs separately:
