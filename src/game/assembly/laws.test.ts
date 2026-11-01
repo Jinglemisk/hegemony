@@ -68,13 +68,14 @@ describe("standing Laws", () => {
     getStandingEffectSources(G, "0")[0].label = "changed by caller";
     expect(getStandingEffectSources(G, "0")[0].label).toBe("Grain Levy");
     produce(G, (draft) => {
-      draft.activeLaws[0].cardId = "forum-rites";
+      draft.activeLaws[0].cardId = "rural-messengers";
       draft.players["1"].nationalIdeas = [];
       expect(getStandingEffects(draft, "0")).toContainEqual({
         type: "popIncome",
         pop: "citizens",
         resource: "influence",
         amount: 2,
+        scope: "colony",
       });
       expect(getStandingEffects(draft, "1")).toEqual(getStandingEffects(draft, "0"));
     });
@@ -89,7 +90,7 @@ describe("standing Laws", () => {
     );
     expect(getLawEffects(G)).toEqual(getAuthoredResolutionCard("grain-levy")!.effects);
   });
-  it("Forum Rites and Grain Levy change columns before the year card without stacking Forums or Marketplaces", () => {
+  it("Rural Messengers and Grain Levy change columns before the year card without stacking Forums or Marketplaces", () => {
     const G = opening();
     const city = owned(G, cap, "0"),
       farm = owned(G, colony, "0");
@@ -97,10 +98,23 @@ describe("standing Laws", () => {
     city.buildings = ["forum", "marketplace"];
     farm.pops = { citizens: 1, freemen: 2, slaves: 1 };
     farm.buildings = ["marketplace"];
-    law(G, "forum-rites");
+    const before = calculateIncome(G, "0");
+    law(G, "rural-messengers");
+    // Colony citizens make 2 influence and colony freemen no gold, Marketplace or not.
+    expect(settlementNextClassColumn(G, tile(G, colony), farm, "citizens").perPop).toBe(2);
     expect(settlementNextClassColumn(G, tile(G, colony), farm, "freemen").perPop).toBe(0);
-    expect(settlementNextClassColumn(G, tile(G, cap), city, "citizens").perPop).toBe(2);
-    expect(settlementNextClassColumn(G, tile(G, colony), farm, "freemen").perPop).toBe(0);
+    // City citizens are unchanged: the Forum still raises them to 2, and without it they make 1.
+    expect(settlementNextClassColumn(G, tile(G, cap), city, "citizens")).toMatchObject({
+      perPop: 2,
+      raisedBy: "Forum",
+    });
+    expect(calculateIncome(G, "0")).toMatchObject({
+      influence: before.influence + 1,
+      gold: before.gold - 4,
+    });
+    city.buildings = ["marketplace"];
+    expect(settlementNextClassColumn(G, tile(G, cap), city, "citizens").perPop).toBe(1);
+    city.buildings = ["forum", "marketplace"];
     law(G, "grain-levy");
     expect(settlementNextClassColumn(G, tile(G, cap), city, "freemen")).toMatchObject({
       perPop: 1,

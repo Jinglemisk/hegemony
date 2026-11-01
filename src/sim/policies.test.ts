@@ -935,6 +935,31 @@ describe("political policy", () => {
     );
     expect(choice).toMatchObject({ type: "assemblyPropose", target });
   });
+
+  it("proposes Rural Messengers when its colonies hold the citizens, not the freemen", () => {
+    // No prize, so the Law is worth only what it moves in the seats' income.
+    const choose = (myColonies: "citizens" | "freemen") => {
+      const G = scenario({ seed: 13, patch: { assembly: { prizes: { perdiccas: { stone: 0 } } } } })
+        .opening()
+        .build();
+      playUntilAssembly(G);
+      const me = G.currentPlayer;
+      for (const id of PLAYER_IDS)
+        for (const tileId of G.players[id].settlements) {
+          const settlement = owned(G, tileId, id);
+          if (settlement.kind !== "colony") continue;
+          const pop = (id === me) === (myColonies === "citizens") ? "citizens" : "freemen";
+          settlement.pops = { citizens: 0, freemen: 0, slaves: 0, [pop]: 2 };
+        }
+      G.assembly!.held[me] = {
+        card: RESOLUTION_CARDS.find((card) => card.id === "rural-messengers")!,
+      };
+      return politicalPolicy.choose(observe(G, me), enumerateLegalCommands(G, me), createSimRng(1))
+        .type;
+    };
+    expect(choose("citizens")).toBe("assemblyPropose");
+    expect(choose("freemen")).toBe("assemblyDiscardHeld");
+  });
 });
 
 // The beam search is compute-heavy, so these run short games and lift vitest's default

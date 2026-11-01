@@ -101,11 +101,11 @@ export const RESOLUTION_CARDS: ResolutionCard[] = [
   {
     kind: "law",
     politician: "perdiccas",
-    id: "forum-rites",
-    name: "Forum Rites",
-    text: "Citizens produce 2 influence everywhere, but freemen produce nothing in colonies.",
+    id: "rural-messengers",
+    name: "Rural Messengers",
+    text: "Citizens in colonies make 2 influence; freemen in colonies make 0 gold.",
     effects: [
-      { type: "popIncome", pop: "citizens", resource: "influence", amount: 2 },
+      { type: "popIncome", pop: "citizens", resource: "influence", amount: 2, scope: "colony" },
       { type: "popIncome", pop: "freemen", resource: "gold", amount: 0, scope: "colony" },
     ],
   },

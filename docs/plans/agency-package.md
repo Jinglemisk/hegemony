@@ -184,9 +184,9 @@ run at the end. Every batch then runs on the owner's go.
 2. **The narrow changes, one slice each:** optional event pops, Manumission, Rural Messengers,
    Capital Works, the Assembly order with kept Laws, the Port rule, then the tiers one action per
    slice (the Dole, calm, the ladder, growing).
-   **Built 2026-11-01:** Manumission (branch `feat/manumission-weight`) and Capital Works
-   (`feat/drop-capital-works`). Each change's comparison
-   switch is `batch --restore <id>`, which plays the content it replaced.
+   **Built 2026-11-01:** Manumission (branch `feat/manumission-weight`), Capital Works
+   (`feat/drop-capital-works`) and Rural Messengers (`feat/rural-messengers`). Each change's
+   comparison switch is `batch --restore <id>`, which plays the content it replaced.
 3. **The year forecast, with bots that use it.** Today's bot forecast expires the active card and
    treats later cards as unknown. A forecast the bots ignore tests nothing.
 4. **The development deck** in its plan's slices: the deck replaces Ventures; the free card and

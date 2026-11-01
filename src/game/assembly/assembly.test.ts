@@ -145,7 +145,7 @@ describe("v2 Assembly", () => {
   });
   it("replaces the oldest at four and protects tenure through the following sitting", () => {
     const G = sitting(4);
-    for (const id of ["land-reform", "guild-charter", "forum-rites", "frontier-spirit"])
+    for (const id of ["land-reform", "guild-charter", "rural-messengers", "frontier-spirit"])
       plant(G, id, "1", 2);
     expect(lawCanBeRemoved(G, "land-reform")).toBe(false);
     expect(assemblyProposeRepeal(G, "0", "land-reform").ok).toBe(false);
@@ -153,7 +153,7 @@ describe("v2 Assembly", () => {
     carry(G, "civic-pride");
     expect(G.activeLaws.map((l) => l.cardId)).toEqual([
       "guild-charter",
-      "forum-rites",
+      "rural-messengers",
       "frontier-spirit",
       "civic-pride",
     ]);
@@ -177,7 +177,7 @@ describe("v2 Assembly", () => {
   it("charges 3 influence for eligible repeal and lowers standing Voice", () => {
     const G = sitting(6);
     plant(G, "guild-charter");
-    plant(G, "forum-rites");
+    plant(G, "rural-messengers");
     expect(voiceHolder(G)).toBe("0");
     expect(assemblyProposeRepeal(G, "0", "guild-charter").ok).toBe(true);
     expect(G.players["0"].resources.influence).toBe(27);
@@ -305,7 +305,7 @@ describe("Directives", () => {
   it("The Stele Is Broken removes the newest authored Law only after tenure", () => {
     const G = sitting(6);
     plant(G, "guild-charter", "1", 2);
-    plant(G, "forum-rites", "1", 4);
+    plant(G, "rural-messengers", "1", 4);
     enactForEval(G, {
       kind: "enact",
       card: getAuthoredResolutionCard("the-stele-is-broken")!,

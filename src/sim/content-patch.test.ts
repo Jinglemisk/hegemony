@@ -78,6 +78,10 @@ describe("sim content/tune patching", () => {
     expect(ideas.indexOf("capital-works" as NationalIdeaId)).toBe(
       ideas.indexOf("urban-planning") + 1,
     );
+    const laws = (content: typeof authored) => content.resolutions.map(({ id }) => id);
+    const forum = laws(restoreContent(authored, ["forum-rites"]));
+    expect(forum.indexOf("forum-rites")).toBe(laws(authored).indexOf("rural-messengers"));
+    expect(forum).not.toContain("rural-messengers");
     expect(restoreContent(authored, [])).toBe(authored);
   });
 });

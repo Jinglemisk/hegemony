@@ -635,7 +635,7 @@ each politician's Laws and monuments by seat, and Voice.
 | Demosthenes   | Festival Calendar | Calm costs 2 food or 2 influence.                                                                                         |
 | Perdiccas     | Public Works      | Estates and Granaries cost 3 wood; Marketplaces cost 2 wood and 2 gold. Colonies hold 3 pops. Other building prices stay. |
 | Perdiccas     | Guild Charter     | The capital may grow twice per turn; other cities once, colonies never.                                                   |
-| Perdiccas     | Forum Rites       | Citizens make 2 influence everywhere; Forums add nothing further. Colony freemen make no gold, but still eat.             |
+| Perdiccas     | Rural Messengers  | Colony citizens make 2 influence; colony freemen make no gold, but still eat. City citizens and Forums are unchanged.     |
 | Perdiccas     | Civic Pride       | Flat +1 happiness per realm; each city pays 1 gold a year, as far as the realm's gold goes.                               |
 | Perdiccas     | Master Builders   | Cities gain one slot; only three colony pieces may be placed. Existing fourth colonies stay.                              |
 | Kleistophenes | Homestead Act     | Colonies may hold one building, including a Port; cities lose one slot.                                                   |
