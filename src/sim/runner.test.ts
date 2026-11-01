@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Policy, PolicyId } from "./policies";
-import { greedyPolicy, randomPolicy } from "./policies";
+import { masterPolicy, randomPolicy } from "./policies";
 import { createSimRng } from "./rng";
 import { playTurn, runGame } from "./runner";
 import { scenario } from "../game/testing/scenario";
@@ -17,9 +17,9 @@ describe("runGame determinism", () => {
     expect(JSON.stringify(first)).toBe(JSON.stringify(second));
   });
 
-  it("greedy policy: same seed twice → byte-identical state", () => {
-    const first = runGame({ seed: 11, mode: "standard", policy: greedyPolicy, turns: 8 });
-    const second = runGame({ seed: 11, mode: "standard", policy: greedyPolicy, turns: 8 });
+  it("master policy: same seed twice → byte-identical state", () => {
+    const first = runGame({ seed: 11, mode: "standard", policy: masterPolicy, turns: 8 });
+    const second = runGame({ seed: 11, mode: "standard", policy: masterPolicy, turns: 8 });
 
     expect(JSON.stringify(first)).toBe(JSON.stringify(second));
   }, 30_000);
@@ -111,14 +111,14 @@ describe("runGame smoke", () => {
         return moves.find((move) => move.type === "endTurn") ?? moves[0];
       },
     });
-    const greedy = recorder("greedy");
-    const smart = recorder("smart");
+    const master = recorder("master");
+    const trader = recorder("trader");
 
     runGame({
       seed: 3,
       mode: "standard",
-      policy: greedy, // fallback (unused — every seat is named)
-      seatPolicies: { "0": greedy, "1": smart, "2": smart, "3": smart },
+      policy: master, // fallback (unused — every seat is named)
+      seatPolicies: { "0": master, "1": trader, "2": trader, "3": trader },
       // Include setup picks and a multi-seat Assembly.
       turns: 8,
     });
@@ -126,9 +126,9 @@ describe("runGame smoke", () => {
     const seat0 = calls.filter((call) => call.seat === "0");
     const seat1 = calls.filter((call) => call.seat === "1");
     expect(seat0.length).toBeGreaterThan(0);
-    expect(seat0.every((call) => call.policy === "greedy")).toBe(true);
+    expect(seat0.every((call) => call.policy === "master")).toBe(true);
     expect(seat1.length).toBeGreaterThan(0);
-    expect(seat1.every((call) => call.policy === "smart")).toBe(true);
+    expect(seat1.every((call) => call.policy === "trader")).toBe(true);
   });
 });
 

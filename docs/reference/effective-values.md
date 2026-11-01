@@ -98,7 +98,7 @@ part of its validation, while the real-device checklist remains an owner gate in
 `src/parity/withinAxisParity.test.ts` applies a tuned building definition
 and proves that the paired query,
 frontend-facing label, legal move, execution payment, and resulting income agree.
-It also proves that the smart policy reverses a build decision when effective
+It also proves that the master policy reverses a build decision when effective
 building economics reverse. Existing status, legal-move, preview, and parity suites
 cover the remaining action families.
 

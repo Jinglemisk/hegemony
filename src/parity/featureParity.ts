@@ -180,7 +180,7 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   },
   policyAssembly: {
     implementation: "src/sim/policies.test.ts",
-    evidence: "uses the political Assembly strategy and carries the session to completion",
+    evidence: "carries an Assembly session to completion",
   },
   assemblyKeptLaws: {
     implementation: "src/game/assembly/assembly.test.ts",
@@ -196,7 +196,7 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   },
   policyCompleteGame: {
     implementation: "src/sim/policies.test.ts",
-    evidence: "plays complete games across seeds without deadlocking through the agora",
+    evidence: "master bots author passing Laws, hold Voice and finish without action caps",
   },
   ideaRules: { implementation: "src/game/ideas.test.ts", evidence: "eleven National Ideas" },
   ideaPolicy: {

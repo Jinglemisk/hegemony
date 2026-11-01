@@ -12,9 +12,11 @@ import { lastYear } from "../game/year";
 import { getOwnedSettlement, isCapital } from "../game/core/query";
 import { totalPops } from "../game/core/pops";
 import { settlementCapacity } from "../game/settlement";
-import { choosePlacement, resolvePolicy } from "../sim/policies";
-import { playTurn } from "../sim/runner";
+import { STATE_SCHEMA_VERSION } from "../game/version";
+import { choosePlacement } from "../sim/policies";
 import { createSimRng, deriveBotSeed } from "../sim/rng";
+import { botsToYear } from "./botsToYear";
+import lateGameJson from "./late-game.json?raw";
 
 /**
  * The DEV scenes: `?dev=<key>` shortcuts to Step 13's moments and the Assembly for the gate
@@ -39,8 +41,8 @@ import { createSimRng, deriveBotSeed } from "../sim/rng";
  * every seat sealed and none Ready). `?dev=cards`: the seat at the development deck,
  * with gold for a card, a Caravan held from an earlier turn and a Foraging on top of the
  * pile. `?dev=fate-pop`: the second seat's Free Settlers, to place or decline. For the
- * board: `?dev=mid-game` and `?dev=late-game` (the sim's smart bots play
- * every seat to the start of Year 6 or Year 12).
+ * board: `?dev=mid-game` and `?dev=late-game` (the sim's master bots play
+ * every seat to the start of Year 6 or Year 12; Year 12 is a stored board, seed 42).
  */
 
 /** What a scene asks of the board's first render, beside its state. */
@@ -247,20 +249,23 @@ export const DEV_SCENES: Record<string, (G: HegemonyState) => DevScene> = {
     ),
   }),
   "mid-game": (G) => ({ G: botsToYear(G, 6) }),
-  "late-game": (G) => ({ G: botsToYear(G, 12) }),
+  "late-game": (G) => ({ G: storedLateGame(G) ?? botsToYear(G, 12) }),
 };
 
-/** A board as a real game leaves it: the sim's smart bots play every seat until the
- *  year opens (past any sitting), in a few seconds. */
-function botsToYear(initial: HegemonyState, year: number): HegemonyState {
-  const rng = createSimRng(deriveBotSeed(initial.seed));
-  const smart = resolvePolicy("smart");
-  let G = initial;
-  for (let turn = 0; turn < 400; turn++) {
-    if (G.phase !== "gameplay" || (G.year >= year && !G.assembly)) break;
-    G = playTurn(G, smart, rng);
-  }
-  return G;
+/** The Year 12 board stored by `npm run dev:late-game`, when it was played under the same
+ *  rules and state shape as this game; otherwise the scene plays the bots (a minute or
+ *  more). */
+function storedLateGame(G: HegemonyState): HegemonyState | null {
+  const stored = JSON.parse(lateGameJson) as { stateSchemaVersion: number; state: HegemonyState };
+  // JSON loses the shared definition reference the engine checks on every move, so the
+  // board takes this game's definition back (the same rules, by the id check).
+  if (
+    stored.stateSchemaVersion === STATE_SCHEMA_VERSION &&
+    stored.state.definitionId === G.definitionId
+  )
+    return { ...stored.state, definition: G.definition, ruleset: G.ruleset };
+  console.warn("?dev=late-game: the stored board is stale; run `npm run dev:late-game`");
+  return null;
 }
 
 /** Reach the fourth sitting and seal a Directive, a repeal, a Law and a silence, so the

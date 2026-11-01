@@ -23,7 +23,6 @@ import {
   getRiotTable,
 } from "../game/content";
 import { devCardGain, devCardOf, freeCardDue } from "../game/devCards";
-import { totalPops } from "../game/core/pops";
 import { getOwnedSettlement, getTile, popsInTransit, realmPops } from "../game/core/query";
 import { placeCapital, placeCity, placeColony, resolveArrivingPops } from "../game/actions";
 import { lastYear, yearDeckSize } from "../game/year";
@@ -56,7 +55,6 @@ import type { AssemblySession, BallotItem, LawEffect, ResolutionCard } from "../
 import type { GameCommand } from "../game/legalMoves";
 import { enumerateLegalCommands, enumerateLegalOptions, transition } from "../game/legalMoves";
 import { claimableLuxuriesAt, ownedClaims } from "../game/luxury";
-import { playerStandings } from "../game/score";
 import {
   getBuildBuildingStatus,
   getFoundColonyStatus,
@@ -102,8 +100,7 @@ import type { PlayerView } from "../game/projection";
 import type { SimRng } from "./rng";
 
 export type PersonalityId = "slaver" | "civic" | "trader";
-export type PolicyId =
-  "random" | "greedy" | "smart" | "beam" | "political" | "settler" | "master" | PersonalityId;
+export type PolicyId = "random" | "master" | PersonalityId;
 type Scorer = (g: HegemonyState, p: PlayerId) => number;
 
 /** One shared scorer; these are initial build preferences, not balance claims. */
@@ -344,11 +341,10 @@ function expectedScore(outcomes: SearchOutcome[], valueOf: (state: HegemonyState
 }
 
 /**
- * One-ply lookahead shared by the greedy and smart bots: apply each candidate to a
- * clone and keep the best score delta under `score`. Ends the turn when nothing
- * improves the position. Deterministic — ties keep the first (enumeration-ordered)
- * candidate. The two bots differ ONLY in the `score` function, so a greedy-vs-smart
- * comparison isolates the evaluation, not the search.
+ * One-ply lookahead: apply each candidate to a clone and keep the best score delta
+ * under `score`. Ends the turn when nothing improves the position. Deterministic —
+ * ties keep the first (enumeration-ordered) candidate. The beam falls back to it in
+ * a forced position.
  */
 function onePlyLookahead(
   G: HegemonyState,
@@ -428,27 +424,7 @@ function searchPolicy(
   };
 }
 
-export const greedyPolicy = searchPolicy("greedy", (G, moves) =>
-  onePlyLookahead(G, moves, evaluate),
-);
-
-/**
- * The slot- and promotion-aware bot (2026-07-18). Same search as greedy, but its
- * evaluation actually values Phase 2's strategic layer — so sims exercise the
- * mechanics greedy is blind to: it climbs the social ladder, builds the class
- * buildings, and keeps plains slots for the slaves that feed it. See {@link evaluateSmart}.
- */
-export const smartPolicy = searchPolicy("smart", (G, moves) =>
-  onePlyLookahead(
-    G,
-    moves,
-    facingRepeals(G, (state, player, risks) =>
-      evaluateSmart(state, player, DEFAULT_WEIGHTS, NO_WANTS, risks),
-    ),
-  ),
-);
-
-/** How many turns of income the greedy score projects forward. The horizon is
+/** How many turns of income the score projects forward. The horizon is
  *  what lets one-ply search see delayed payoffs: a class building's raise is
  *  invisible at the moment of purchase and only becomes worth its cost when
  *  multiplied out. */
@@ -952,9 +928,6 @@ export function evaluatePolicyUnrestRisk(
   return { tier: proximity > 0 ? "buffer" : "safe", proximity };
 }
 
-/** Score per point of the standing level: one for each year of the horizon the
- *  point holds. */
-const LEVEL_WEIGHT = INCOME_HORIZON;
 /** How far past Beloved's minimum the standing level is still worth something. */
 const LEVEL_CAP_MARGIN = 2;
 
@@ -969,54 +942,15 @@ function levelCap(G: HegemonyState): number {
  * the riot line, and past it more happiness buys nothing. The unrest risk term prices
  * the lines themselves.
  */
-function levelValue(G: HegemonyState, playerID: PlayerId, weight = LEVEL_WEIGHT): number {
+function levelValue(G: HegemonyState, playerID: PlayerId, weight: number): number {
   return weight * Math.min(standingHappiness(G, playerID), levelCap(G));
 }
 
-/**
- * Positional score for the greedy bot, evaluated on resources projected
- * INCOME_HORIZON turns ahead.
- *
- * The old provisional-VP formula lives on here as the bot's private heuristic —
- * a smooth gradient (cities, colonies, pops, banked material) the one-ply search
- * can climb — now topped with a large victory-card term so the bot actually
- * chases the race (game/victory.ts), and the shared ruleset-aware unrest risk
- * term prices the nonlinear riot and revolt thresholds.
- *
- * The projection runs through calculateIncome — the engine's own formula — so
- * the score sees food-shortage pressure, building income and standing Laws
- * without duplicating any of them.
- */
-function evaluate(G: HegemonyState, playerID: PlayerId): number {
-  const projection = projectPolicyHorizon(G, playerID);
-  const projected = projection.resources;
-
-  const standings = playerStandings(G, playerID);
-  const material = projected.wood + projected.stone + projected.gold + projected.food;
-  const materialDivisor = Math.max(1, G.ruleset.victory.minimums.gold / 3);
-  const heuristic =
-    5 * standings.cities +
-    3 * standings.colonies +
-    standings.pops +
-    totalPops(popsInTransit(G, playerID)) +
-    Math.floor(material / materialDivisor) -
-    2 * (projection.expectedStarvationPopLoss + projection.starvedAfterHorizon);
-  return (
-    100 * victoryCardsHeld(G, playerID) +
-    10 * heuristic +
-    levelValue(G, playerID) +
-    projected.influence +
-    ideaOpportunityValue(G, playerID) -
-    projection.unrest.riskPenalty
-  );
-}
-
-// The smart bot values what greedy flattens away. Pops are weighted BY TIER (a
-// citizen is worth far more than a slave — income + the Civic Elite card), so a
-// promotion is score-positive and the one-ply search will climb the ladder. Materials
-// are weighted by role (gold liquid, stone the scarce civic currency, food the
-// consumed one) instead of greedy's flat material/10, so the Estate and the stone
-// civics register. And it prices an open work slot as the slave who could work it,
+// The smart score weights pops BY TIER (a citizen is worth far more than a slave —
+// income + the Civic Elite card), so a promotion is score-positive and the search
+// will climb the ladder. Materials are weighted by role (gold liquid, stone the scarce
+// civic currency, food the consumed one), so the Estate and the stone civics
+// register. And it prices an open work slot as the slave who could work it,
 // so a building on a plains slot costs the food that slave would have grown.
 const SMART_VICTORY_CARD_VALUE = 120;
 /** A pop the horizon sees starve costs more than any personality's pop weight. */
@@ -1455,28 +1389,12 @@ function beamSearch(
   return best;
 }
 
-/**
- * The turn-planning bot: a within-turn beam search over {@link evaluateSmart}, so it values
- * the within-turn sequences one-ply misses (build-then-promote and bank chains).
- * It cannot intentionally save across turns because endTurn is not a search branch.
- * Same scoring as `smart`, deeper search — so a smart-vs-beam A/B isolates search depth.
- */
-export const beamPolicy = searchPolicy("beam", (G, moves) =>
-  beamPlan(
-    G,
-    moves,
-    facingRepeals(G, (state, player, risks) =>
-      evaluateSmart(state, player, DEFAULT_WEIGHTS, NO_WANTS, risks),
-    ),
-  ),
-);
-
 // ── Opening placement — setup is just more policy calls ──────────────────────────────
 //
 // Capitals and founding colonies used to be filled in by a uniform draw over the legal
 // placements (the sim's "random" opening and the browser's dev auto-opening). Every search
 // policy now branches here during the setup phases and scores placements with ONE shared
-// evaluator. Baseline policies share its weights for gameplay A/Bs; personalities
+// evaluator. `master` uses the default weights; personalities
 // apply their own weights during setup too. `random` keeps its uniform pick.
 // See docs/archive/plans/policy-placement.md.
 
@@ -1700,22 +1618,21 @@ export function choosePlacement(
   return best.length === 1 ? best[0] : rng.pick(best);
 }
 
-// ── Phase 3-C: the influence-aware "political" bot ────────────────────────────────────
+// ── Phase 3-C: the influence-aware political score ───────────────────────────────────
 //
 // A Law's payoff sits beyond any affordable search (draw now → propose → rivals vote
 // across the round → reap it over many turns), so every non-random bot plays the agora
 // by the heuristic below rather than blind search. It rests on a DIFFERENTIAL lens (my
 // gain minus the STRONGEST rival's, so "does this hurt me, help me, or help a rival
-// more?"). `political` adds a political-position term to its score outside a sitting.
-// Same `evaluateSmart` spine, so a political-vs-smart A/B isolates that term. See
-// docs/archive/plans/influence-aware-ai.md.
+// more?"). The political score adds a political-position term to `evaluateSmart`
+// outside a sitting. See docs/archive/plans/influence-aware-ai.md.
 
 function playerIds(G: HegemonyState): PlayerId[] {
   return Object.keys(G.players) as PlayerId[];
 }
 
 /**
- * The political bot's positional score: the smart economy plus its agora standing, its
+ * The political positional score: the smart economy plus its agora standing, its
  * standing authored Laws (its progress toward Voice). Progress matters, but it is not
  * itself a victory card. The actual threshold crossing is already worth a full card in
  * `evaluateSmart`; overpricing every preliminary pass made political seats reject
@@ -2080,15 +1997,6 @@ const NO_RISKS: LawRisk[] = [];
 /** The chance of a repeal the bought votes decide. They are bought in the open, in
  *  vote order, so who buys enough cannot be read off the board. */
 const CONTESTED_REPEAL = 0.5;
-type RiskScorer = (state: HegemonyState, player: PlayerId, risks: LawRisk[]) => number;
-
-/** `score` for the acting seat, with the Laws the next sitting may strike. */
-function facingRepeals(G: HegemonyState, score: RiskScorer): Scorer {
-  const me = G.currentPlayer;
-  const risks = lawRisks(G, me);
-  return (state, player) => score(state, player, player === me ? risks : NO_RISKS);
-}
-
 /**
  * The standing Laws the next sitting may strike, each with its chance, as `me` reads
  * them. A seat, `me` included, files the repeal it values most, past
@@ -2272,27 +2180,17 @@ function chooseDrawRepealOrPass(
   return moves.find((move) => move.type === "assemblyPass") ?? moves[0];
 }
 
-export const politicalPolicy = searchPolicy("political", (G, moves) =>
-  onePlyLookahead(
-    G,
-    moves,
-    facingRepeals(G, (state, player, risks) =>
-      scorePolitical(state, player, DEFAULT_WEIGHTS, NO_WANTS, risks),
-    ),
-  ),
-);
-
-// ── Map / expansion foresight — the "settler" bot ─────────────────────────────────────
+// ── Map / expansion foresight — the frontier term ────────────────────────────────────
 //
-// Every other bot is board-STATIC: it values a colony for its own count + tile yield, but
+// The smart score is board-STATIC: it values a colony for its own count + tile yield, but
 // not for the EXPANSION it unlocks ("found HERE and I can chain to that rich cluster two
-// turns on"). Expansion is the heart of the game, so `settler` prices it: a term for the
-// reachable, unclaimed, yielding frontier, so the one-ply search prefers placements that
-// OPEN expansion, not just the fattest single tile. Same smart spine, so a settler-vs-smart
-// A/B isolates map foresight from everything else. See docs/reports/simulation/2026-07-21-map-foresight.md.
+// turns on"). Expansion is the heart of the game, so the frontier term prices it: the
+// reachable, unclaimed, yielding frontier, so the search prefers placements that OPEN
+// expansion, not just the fattest single tile. It was measured on its own as the
+// `settler` bot; see docs/reports/simulation/2026-07-21-map-foresight.md.
 
-/** Total yield on the player's next legally reachable settlement frontier. This is the
- * measured-low-weight signal from `settler`: it nudges WHICH direction to expand without
+/** Total yield on the player's next legally reachable settlement frontier. This is a
+ * measured-low-weight signal: it nudges WHICH direction to expand without
  * overpowering the income model into founding unsustainable extra colonies. */
 export function frontierValue(G: HegemonyState, playerID: PlayerId): number {
   // No colony piece left, no frontier to settle: the engine refuses the founding. An
@@ -2320,32 +2218,12 @@ export function frontierValue(G: HegemonyState, playerID: PlayerId): number {
  *  sized like a good yield tile so it steers direction without minting colonies. */
 const LUXURY_FRONTIER_PULL = 3;
 
-/** The default frontier weight is the measured-neutral setting. Larger values made the
- *  prototype over-expand. */
-function evaluateSettler(G: HegemonyState, playerID: PlayerId, risks = NO_RISKS): number {
-  return (
-    evaluateSmart(G, playerID, DEFAULT_WEIGHTS, NO_WANTS, risks) +
-    DEFAULT_WEIGHTS.frontier * frontierValue(G, playerID)
-  );
-}
-
-/**
- * The expansion-frontier bot: `smart`'s economic / population / building evaluation PLUS a
- * one-step frontier term, over the same one-ply search `smart` uses. It scores the same as
- * `smart` but adds `frontier weight × frontierValue`, so a `smart`-vs-`settler` A/B isolates
- * map foresight from everything else. See docs/reports/simulation/2026-07-21-map-foresight.md.
- */
-export const settlerPolicy = searchPolicy("settler", (G, moves) =>
-  onePlyLookahead(G, moves, facingRepeals(G, evaluateSettler)),
-);
-
 // ── The cumulative policy — every shipped specialist in one bot ──────────────────────
 //
-// The earlier policies are controlled experiments: `beam` isolates search depth,
-// `political` isolates Assembly judgment, and `settler` isolates a one-step map signal.
-// `master` is the play-strength composition rather than another isolated arm: smart
-// economy + political standing + frontier value, searched with the beam during normal
-// play, while the dedicated political heuristic runs the Assembly.
+// `master` is the play-strength composition: smart economy + political standing +
+// frontier value, searched with the beam during normal play, while the dedicated
+// political heuristic runs the Assembly. The earlier bots that measured each part on
+// its own (greedy, smart, beam, political, settler) are retired.
 
 function scoreMaster(
   G: HegemonyState,
@@ -2986,12 +2864,11 @@ function voteOffer(
 /**
  * The strongest cumulative sim policy currently available:
  *
- * - `smart` economic / population / building evaluation;
- * - `beam` within-turn sequencing (W=3, D=4);
- * - `political` Assembly decisions and political standing;
- * - `settler` one-step expansion-frontier signal;
- * - a value on what the seat is saving toward ({@link savingValue}), which no
- *   specialist has.
+ * - the smart economic / population / building evaluation ({@link evaluateSmart});
+ * - beam within-turn sequencing (W=3, D=4);
+ * - the political Assembly decisions and political standing ({@link scorePolitical});
+ * - the one-step expansion frontier ({@link frontierValue});
+ * - a value on what the seat is saving toward ({@link savingValue}).
  *
  * This deliberately does NOT claim capabilities that nobody has built yet: a plan
  * across turns, general opponent replies or multi-hop route search.
@@ -3012,11 +2889,6 @@ function personalityPolicy(name: PersonalityId): Policy {
 
 export const POLICIES: Record<PolicyId, Policy> = {
   random: randomPolicy,
-  greedy: greedyPolicy,
-  smart: smartPolicy,
-  beam: beamPolicy,
-  political: politicalPolicy,
-  settler: settlerPolicy,
   master: masterPolicy,
   slaver: personalityPolicy("slaver"),
   civic: personalityPolicy("civic"),

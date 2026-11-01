@@ -12,13 +12,13 @@ import type { BatchReport } from "./telemetry";
 const CLI = fileURLToPath(new URL("./cli.ts", import.meta.url));
 
 /** Runs the real CLI in a process of its own, as `npm run sim` does. Two seeds through
- *  four seatings on the one-ply policies: eight full games that all finish. */
+ *  four seatings of two-year games: eight full games that all finish. */
 function batch(dir: string, jobs: number) {
   const reportPath = join(dir, `jobs-${jobs}.json`);
   const csvPath = join(dir, `jobs-${jobs}.csv`);
-  const args = `batch --games 2 --seats random,greedy,smart,political --rotate --seed 1000 --jobs ${jobs}`;
+  const args = `batch --games 2 --years 2 --seats random,master,slaver,civic --rotate --seed 1000 --jobs ${jobs}`;
   // The limit is on the process: the test's own timeout cannot stop a call that blocks.
-  // A run takes about 22 seconds on one job and 12 on two; the room is for slow machines.
+  // The two runs take about 42 seconds together; the room is for slow machines.
   const stdout = execFileSync(
     process.execPath,
     ["--import", "tsx", CLI, ...args.split(" "), "--report", reportPath, "--csv", csvPath],

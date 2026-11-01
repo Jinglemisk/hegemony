@@ -22,7 +22,7 @@ import {
 import { VERBS } from "../components/board/command/verbs";
 import type { VerbContext } from "../components/board/command/verbs";
 import { buildingName } from "../ui/formatters";
-import { smartPolicy } from "../sim/policies";
+import { masterPolicy } from "../sim/policies";
 import { createSimRng } from "../sim/rng";
 import { endTurnWarning } from "../ui/frameSelectors";
 
@@ -241,7 +241,7 @@ describe("effective content and cost parity", () => {
     ]);
   });
 
-  it("makes smart policy reverse its build choice when effective economics reverse", () => {
+  it("makes master policy reverse its build choice when effective economics reverse", () => {
     const choose = (cost: number, income: number) => {
       const buildings = tunedBuildings("granary", {
         cost: { wood: cost },
@@ -258,7 +258,7 @@ describe("effective content and cost parity", () => {
         { type: "endTurn" },
       ];
 
-      return smartPolicy.choose(projectForPlayer(G.definition, G, "0"), moves, createSimRng(1))
+      return masterPolicy.choose(projectForPlayer(G.definition, G, "0"), moves, createSimRng(1))
         .type;
     };
 
