@@ -532,9 +532,9 @@ export const DEV_CARDS: DevCard[] = [
     name: "Master Builder",
     count: 1,
     kind: "held",
-    text: "Your next building or colony upgrade this turn costs 2 less wood or stone.",
+    text: "Your next building or colony upgrade this turn costs 2 less wood or stone: one kind, chosen when you play it.",
     flavor: "He knows where every block will sit before the first is cut.",
-    effect: { type: "buildDiscount", amount: 2 },
+    effect: { type: "buildDiscount", resources: ["wood", "stone"], amount: 2 },
   },
   {
     id: "festival-day",

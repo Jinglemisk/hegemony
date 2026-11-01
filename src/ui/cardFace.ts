@@ -522,7 +522,7 @@ function devRow(card: DevCard): EqRow {
           or,
           ic(ACTION_ICONS.upgradeColonyToCity),
           signed(-effect.amount),
-          ...oneOf(["wood", "stone"]),
+          ...oneOf(effect.resources),
         ],
       };
     case "unrestTokens":

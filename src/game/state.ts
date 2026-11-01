@@ -116,7 +116,7 @@ export function createInitialStateFromDefinition(
           devCardBoughtThisTurn: false,
           devCardPlayedThisTurn: false,
           moveUsedThisTurn: false,
-          buildDiscount: 0,
+          buildDiscount: {},
           calmActive: false,
           incomeSuppressedTurns: 0,
         },

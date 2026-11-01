@@ -2421,7 +2421,7 @@ function cardGainValue(
     case "addPop":
       return popValue(weights, effect.pop);
     case "buildDiscount":
-      return effect.amount * best(["wood", "stone"]);
+      return effect.amount * best(effect.resources);
     case "unrestTokens":
       return card.kind === "rival" ? 0 : weights.level;
     case "raid":
@@ -2537,8 +2537,8 @@ function playCard(
   return best?.move ?? null;
 }
 
-/** Play Master builder when the turn's best line with its discount beats the best
- *  line without it (`without`), the card given up counted. */
+/** Play Master builder, on the kind whose turn line is best, when that line beats the
+ *  best line without it (`without`), the card given up counted. */
 function playBuilder(
   G: HegemonyState,
   moves: GameCommand[],
@@ -2546,21 +2546,21 @@ function playBuilder(
   evaluation: SearchEvaluation,
   without: number,
 ): GameCommand | null {
-  const move = moves.find(
-    (candidate) =>
-      candidate.type === "playDevCard" &&
-      devCardOf(G, candidate.card)?.effect.type === "buildDiscount",
-  );
-  if (!move) return null;
-  const result = transition(G.definition, G, me, move);
-  if (!result.ok) return null;
-  const after = result.state;
-  const withCard = beamSearch(
-    after,
-    searchable(after, enumerateLegalCommands(after, me)),
-    evaluation,
-  );
-  return withCard.score > without + 1e-8 ? move : null;
+  let best: { move: GameCommand; score: number } | null = null;
+  for (const move of moves) {
+    if (move.type !== "playDevCard" || devCardOf(G, move.card)?.effect.type !== "buildDiscount")
+      continue;
+    const result = transition(G.definition, G, me, move);
+    if (!result.ok) continue;
+    const after = result.state;
+    const { score } = beamSearch(
+      after,
+      searchable(after, enumerateLegalCommands(after, me)),
+      evaluation,
+    );
+    if (score > (best?.score ?? without) + 1e-8) best = { move, score };
+  }
+  return best?.move ?? null;
 }
 
 // ── Trade ────────────────────────────────────────────────────────────────────────────
