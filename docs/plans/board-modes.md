@@ -1,7 +1,7 @@
 ---
 status: proposed
 phase: "post-v2"
-updated: 2026-10-26
+updated: 2026-11-02
 ---
 
 # Board modes: Continental and Archipelago
@@ -44,6 +44,10 @@ A game is played on one of two boards, chosen before setup:
     blocks a tile (no slots, never settled), so a place at the centre buys no balance. The
     island that holds it keeps at least two settleable tiles. The generator keeps every other
     limit.
+- **Shared colonies** (owner, 2026-11-02). Today two rivals' colonies may share a tile and split
+  its slots. Sharing becomes a ruleset switch, on for Continental only: the Continental board's
+  patch turns it on, the way it sets the sea reach, and on the Archipelago and the authored board
+  a tile holds one settlement. Not built yet.
 - The [2026-10-24 balance batches](../reports/simulation/2026-10-24-balance-lines.md) showed
   that the board alone moves balance a lot. Moving from the authored board to the shuffled
   one:
