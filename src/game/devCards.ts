@@ -179,7 +179,7 @@ function drawDevCard(G: HegemonyState): string {
 /** One play of a held card: the card by instance id, and the choice it asks for. */
 export type DevCardPlay = {
   card: string;
-  /** Caravan's kind, or the resource Raiders takes. */
+  /** Caravan's kind, the kind Master Builder takes off, or the resource Raiders takes. */
   resource?: Resource;
   /** The settlement Settlers or Captives land in. */
   tileId?: string;
@@ -233,7 +233,9 @@ function choiceReasons(
         : ["Needs a settlement of yours with room."];
     }
     case "buildDiscount":
-      return [];
+      return play.resource && effect.resources.includes(play.resource)
+        ? []
+        : ["Pick what it takes off."];
     case "unrestTokens":
       return card.kind !== "rival" && G.players[playerID].unrestTokens === 0
         ? ["You have no Unrest token to clear."]
@@ -298,8 +300,8 @@ function applyDevEffect(
       return `a ${formatPopName(effect.pop, 1)} in ${formatTileLabel(G, play.tileId!)}`;
     }
     case "buildDiscount":
-      player.buildDiscount = effect.amount;
-      return `the next building or colony upgrade this turn costs ${effect.amount} less wood or stone`;
+      player.buildDiscount = { [play.resource!]: effect.amount };
+      return `the next building or colony upgrade this turn costs ${effect.amount} less ${play.resource}`;
     case "unrestTokens": {
       const seat = card.kind === "rival" ? play.target! : playerID;
       applyUnrestTokenChange(G, seat, effect.change);
@@ -333,6 +335,7 @@ function playChoices(G: HegemonyState, playerID: PlayerId, card: DevCard, id: st
     const play = { card: id, ...(target ? { target } : {}) };
     switch (effect.type) {
       case "gain":
+      case "buildDiscount":
       case "raid":
         return effect.resources.map((resource) => ({ ...play, resource }));
       case "addPop":
