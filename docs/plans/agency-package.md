@@ -129,6 +129,11 @@ ruled in after the 2026-10-27 freeze ruling ("no new features").
    card list on 2026-10-31. A riot's card stays the player's choice, pop by pop. The free card
    needs standing happiness +3, read after hunger.
 10. **Dropped and fixed:** see Non-goals.
+11. **The player chooses a riot's pop losses** (owner, 2026-11-01). Today a riot takes slaves
+    first, then freemen, then citizens, each from the settlement holding the most. Instead the
+    rioting player picks which pops go, from which settlements, as hunger already lets them pick
+    which freemen and citizens leave. A held development card can still stand in for a pop. Not
+    built yet; the riot screen's redesign (`RIOT-1` in the UI ledger) is separate.
 
 ## Open owner questions
 
@@ -184,7 +189,7 @@ run at the end. Every batch then runs on the owner's go.
    (Blockade, Drought, Manumission passing); Ports lost, by cause, and goods released.
 2. **The narrow changes, one slice each:** optional event pops, Manumission, Rural Messengers,
    Capital Works, the Assembly order with kept Laws, the Port rule, then the tiers one action per
-   slice (the Dole, calm, the ladder, growing).
+   slice (the Dole, calm, the ladder, growing), and the riot's pop choice (ruling 11).
 3. **The year forecast, with bots that use it.** Today's bot forecast expires the active card and
    treats later cards as unknown. A forecast the bots ignore tests nothing.
 4. **The development deck** in its plan's slices: the deck replaces Ventures; the free card and
