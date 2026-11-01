@@ -18,9 +18,12 @@ test("proposes a Law kept at the last sitting, or opens a new draw", async ({ pa
   await sheet.getByRole("button", { name: "Draw a new card" }).click();
   await expect(draw).toBeVisible();
 
+  // Sealed like any proposal: the Chronicle names the card only when the ballot is read.
   await sheet.getByRole("button", { name: "Propose it" }).click();
   await expect(
-    page.getByRole("button", { name: /^Chronicle: .*seals the kept .* for the ballot\./ }),
+    page.getByRole("button", {
+      name: /^Chronicle: .*seals a resolution to lay before the Assembly\./,
+    }),
   ).toBeVisible();
 });
 

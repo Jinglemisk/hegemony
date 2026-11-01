@@ -468,6 +468,25 @@ describe("Repeals first, and a blocked Law is kept", () => {
     expect(misplaced(G)).toEqual([]);
   });
 
+  it("names a kept Law proposed again only when the ballot is read", () => {
+    const G = keptSitting();
+    const name = G.players["0"].name;
+    const mark = G.log.length;
+    const since = () => G.log.slice(mark).map((entry) => entry.message);
+    expect(assemblyPropose(G, "0").ok).toBe(true);
+    expect(since()).toEqual([`${name} seals a resolution to lay before the Assembly.`]);
+    // A rival sees the seal, as for any proposal, and not the card.
+    const view = projectForPlayer(G.definition, structuredClone(G), "2").state;
+    expect(view.assembly!.proposals["0"]).toBeNull();
+    expect(view.log.slice(mark).some((entry) => entry.message.includes("Sacred Fields"))).toBe(
+      false,
+    );
+
+    pass(G);
+    expect(G.assembly!.phase).toBe("voting");
+    expect(since()).toContain(`${name} proposes the kept Sacred Fields again.`);
+  });
+
   it("sends the kept Law to its politician's discards when the seat draws, repeals or passes", () => {
     const speeches = {
       draw: (G: HegemonyState) => assemblyDraw(G, "0", "perdiccas"),

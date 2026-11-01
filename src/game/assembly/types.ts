@@ -189,6 +189,9 @@ export type BallotItem =
       proposer: PlayerId;
       /** Required for a Directive and always a rival of its proposer. */
       target?: PlayerId;
+      /** The proposer's kept Law, proposed again with no draw. The Chronicle names it only
+       *  when the ballot is read, like every sealed proposal. */
+      kept?: true;
     }
   | { kind: "repeal"; cardId: string; proposer: PlayerId };
 

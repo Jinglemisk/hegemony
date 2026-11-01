@@ -397,14 +397,13 @@ export function assemblyPropose(
     card,
     proposer: playerID,
     target: card.kind === "directive" ? target : undefined,
+    ...(held ? {} : { kept: true as const }),
   };
   if (held) session!.held[playerID] = null;
   else G.keptLaws[playerID] = null;
   addLog(
     G,
-    held
-      ? `${getPlayerName(G, playerID)} seals a resolution to lay before the Assembly.`
-      : `${getPlayerName(G, playerID)} seals the kept ${card.name} for the ballot.`,
+    `${getPlayerName(G, playerID)} seals a resolution to lay before the Assembly.`,
     playerID,
   );
   finalizeProposal(G, playerID);
@@ -568,6 +567,14 @@ function beginVoting(G: HegemonyState) {
     G,
     `The Assembly turns to the ballot — ${session.ballot.length} resolution${session.ballot.length === 1 ? "" : "s"}, voted ${G.ruleset.assembly.keptLaws ? "repeals first, then in turn" : "in turn"}.`,
   );
+  // A kept Law proposed again was sealed like any proposal; it is named as the ballot is read.
+  for (const item of session.ballot)
+    if (item.kind === "enact" && item.kept)
+      addLog(
+        G,
+        `${getPlayerName(G, item.proposer)} proposes the kept ${item.card.name} again.`,
+        item.proposer,
+      );
   openBallotItem(G);
   syncAssemblyActor(G);
 }

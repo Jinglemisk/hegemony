@@ -58,7 +58,8 @@ discards, results, and public logs. It removes or canonicalizes authority-only i
 - spectators see no held card or sealed proposal;
 - a kept Law (`keptLaws`) is public: it was read out on the ballot. When its seat proposes it
   again the card moves into that seat's sealed proposal, hidden like any other until the
-  ballot is read; when the seat draws, repeals or passes, it goes to the discards in the open;
+  ballot is read, when the Chronicle names it; when the seat draws, repeals or passes, it
+  goes to the discards in the open;
 - a pending Player Event is visible only to its decision owner; other views receive a generic
   workflow/log indication until it resolves. A declined pop card is named in the Chronicle, so
   every view knows the player deck's last card; the pile still shows its count only.
