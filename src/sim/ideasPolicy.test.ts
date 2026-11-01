@@ -42,9 +42,9 @@ describe("scores setup Ideas and in-play purchases", () => {
     expect(pick(0, 0)).toEqual(colonyChoices[0]);
     expect(pick(3, 4)).toEqual(colonyChoices[1]);
   });
-  it("triples that cost under Manumission", () => {
-    // Four goods put the level two above the cap, so three future slaves cost nothing
-    // counted and beat Frontier Charter. Tripled, they cost enough to lose.
+  it("doubles that cost under Manumission", () => {
+    // Three goods put the level at the cap, so three future slaves cost one level and
+    // still beat Frontier Charter. Doubled, they cost three levels and lose.
     const build = () => {
       const G = scenario()
         .withSettlement("0", "-2,0", "city", { citizens: 1, slaves: 0, freemen: 0 })
@@ -52,7 +52,7 @@ describe("scores setup Ideas and in-play purchases", () => {
         .withResources("0", { food: 80, influence: 6 })
         .build();
       G.phase = "setupIdeas";
-      for (const good of G.board.luxuries.slice(0, 4)) good.owner = "0";
+      for (const good of G.board.luxuries.slice(0, 3)) good.owner = "0";
       return G;
     };
     expect(chooseIdea(build(), colonyChoices, createSimRng(1))).toEqual(colonyChoices[0]);

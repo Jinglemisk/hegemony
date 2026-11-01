@@ -3138,7 +3138,7 @@ function foundingGrantValue(
   // every opening.
   if (effect.grantPop === "slaves") {
     // The realm's count under the standing Laws: Manumission counts each slave
-    // three times, and a slave on the move counts.
+    // twice, and a slave on the move counts.
     const times = slaveUnrestCount(G, me);
     const slaves = realmPops(G, me).slaves;
     const loss = slaveUnhappiness(G, times * (slaves + pops)) - slaveUnhappiness(G, times * slaves);

@@ -29,10 +29,10 @@ export const RESOLUTION_CARDS: ResolutionCard[] = [
     politician: "demosthenes",
     id: "manumission",
     name: "Manumission",
-    text: "Promoting a slave is free, but slaves count three times for unrest.",
+    text: "Promoting a slave is free, but slaves count twice for unrest.",
     effects: [
       { type: "actionCost", action: "promotePop", pop: "slaves", cost: {} },
-      { type: "slaveUnrestWeight", amount: 3 },
+      { type: "slaveUnrestWeight", amount: 2 },
     ],
   },
   {

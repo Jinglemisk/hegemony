@@ -14,6 +14,7 @@ import { BUILDINGS } from "../game/data";
 import { mergeRulesetPatches } from "../game/ruleset";
 import { applyBuildingOverrides, rulesetPatchFromOverrides } from "../dev/tuning";
 import { createLowNumberContent } from "../dev/tuningPresets";
+import { restoreContent } from "./restore";
 
 describe("sim content/tune patching", () => {
   it("a buildings.* override changes the roster the engine reads, leaving the constant intact", () => {
@@ -61,5 +62,16 @@ describe("sim content/tune patching", () => {
     expect(getPlayerEventCards(authored)).toBe(authored.playerEvents);
     expect(getRiotTable(authored)).toBe(authored.riotTable);
     expect(getResolutionCards(authored)).toBe(authored.resolutions);
+  });
+
+  it("--restore plays the content an agency change replaced, leaving the authored intact", () => {
+    const authored = getAuthoredGameContent();
+    const weight = (content: typeof authored) =>
+      content.resolutions
+        .find((card) => card.id === "manumission")!
+        .effects.find((effect) => effect.type === "slaveUnrestWeight");
+    expect(weight(restoreContent(authored, ["manumission"]))).toMatchObject({ amount: 3 });
+    expect(weight(authored)).toMatchObject({ amount: 2 });
+    expect(restoreContent(authored, [])).toBe(authored);
   });
 });

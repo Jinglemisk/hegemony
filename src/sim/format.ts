@@ -341,6 +341,9 @@ export function renderBatchReport(report: BatchReport, years: number): string {
   if (report.meta.withoutIdeas) {
     lines.push(`Played without these National Ideas: ${report.meta.withoutIdeas.join(", ")}`);
   }
+  if (report.meta.restored) {
+    lines.push(`Played with the old content of: ${report.meta.restored.join(", ")}`);
+  }
 
   if (report.meta.tunePatchHash) {
     lines.push(`Manual tuning patch: ${report.meta.tunePatchHash}`);

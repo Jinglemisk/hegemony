@@ -187,7 +187,7 @@ describe("standing Laws", () => {
     expect(getBuildBuildingStatus(G, "0", colony, "port").cost).toEqual({ stone: 2 });
     expect(getBuildBuildingStatus(G, "0", cap, "marketplace").cost).toEqual({ wood: 3, gold: 4 });
   });
-  it("Civic Pride pays one flat happiness line and city upkeep; Manumission changes counted slaves", () => {
+  it("Civic Pride pays one flat happiness line and city upkeep", () => {
     const G = opening();
     const before = happinessLevel(G, "0");
     law(G, "civic-pride");
@@ -197,12 +197,17 @@ describe("standing Laws", () => {
       resource: "gold",
       amount: -1,
     });
-    G.activeLaws = [];
+  });
+  it("Manumission counts each slave twice for unrest, rounded after counting, and frees promotion", () => {
+    const G = opening();
     owned(G, cap, "0").pops.slaves = 3;
     owned(G, colony, "0").pops.slaves = 0;
+    const before = happinessLevel(G, "0");
     law(G, "manumission");
+    // Three slaves count as six: −3 in all, where they cost −1 before.
+    expect(happinessLevel(G, "0")).toBe(before - 2);
+    expect(getLawHappinessContributions(G, "0")).toEqual([{ label: "Manumission", amount: -2 }]);
     expect(getPromotePopStatus(G, "0", cap, "slaves").cost).toEqual({});
-    expect(getLawHappinessContributions(G, "0")).toEqual([{ label: "Manumission", amount: -3 }]);
   });
   it("city upkeep reaches settlement projections and Grain Levy exempts freemen from hunger", () => {
     const G = opening();
