@@ -73,7 +73,8 @@ export interface LuxuryAsset {
   tileIds: [string, string];
   owner: PlayerId | null;
   /** The settlement whose Port first claimed it. Stays put when trade later moves
-   *  `owner` — a tile id alone cannot name one settlement on a shared tile. */
+   *  `owner` — a tile id alone cannot name one settlement on a shared tile — and clears
+   *  with the owner when the good goes back to the board. */
   claimedAtSettlementId: string | null;
   /** Turns of denial remaining (future Directives mutate this; 0 = untouched). */
   suppressedTurns: number;
@@ -348,8 +349,9 @@ export interface BuildingDefinition {
   effects: BuildingEffect[];
   /** A coastal colony may raise it. Every other building needs a city. */
   colony?: true;
-  /** Its fact is a claim on one adjacent unclaimed luxury, so it needs the coast and a
-   *  free good, and the build names which good it claims. */
+  /** Its fact is the luxury goods beside it: it needs the coast and a good beside it,
+   *  claims one still unclaimed, and the build names which. Its holder's goods count
+   *  only while one stands beside them. */
   claimsLuxury?: true;
   /** Needs a tile whose slaves make something, so it cannot stand on a hill. */
   needsYield?: true;

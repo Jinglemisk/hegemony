@@ -11,7 +11,7 @@ import { mulberry32 } from "../game/core/rng";
 import { resolveRiot } from "../game/riot";
 import { beginTurnFor, endTurn } from "../game/turn";
 import { yearDeckSize } from "../game/year";
-import { BEFORE_TRADE, owned, scenario } from "../game/testing/scenario";
+import { BEFORE_TRADE, owned, portBeside, scenario } from "../game/testing/scenario";
 import type { HegemonyState, PlayerId, TradeBundle } from "../game/types";
 import { renderBatchReport } from "./format";
 import { randomPolicy } from "./policies";
@@ -903,6 +903,54 @@ describe("the Step 11 report fields", () => {
     expect(seats.perPolicy.slaver.lawsKept.count).toBe(1);
     expect(seats.total.lostDrawInfluence).toEqual({ count: 4, perGame: 4 });
   });
+
+  it("counts Ports lost by cause, the goods released and who claims one next", () => {
+    const good = scenario().opening().build().board.luxuries[0];
+    const [here, there] = good.tileIds;
+    const NONE = { citizens: 0, freemen: 0, slaves: 0 };
+    const G = scenario()
+      .opening()
+      .withSettlement("1", there, "colony", NONE)
+      .withResources("1", "wealthy")
+      .mutate((draft) => {
+        draft.pendingPlayerEvent = null;
+        // Seat 0's one building is the Port that holds the good.
+        const port = portBeside(draft, "0", draft.board.luxuries[0]);
+        Object.assign(draft.board.luxuries[0], { owner: "0", claimedAtSettlementId: port.id });
+      })
+      .withHappiness("0", -3)
+      .build();
+    expect(owned(G, here, "0").buildings).toEqual(["port"]);
+    const game = drive(G);
+    game.take("0", { type: "endTurn" });
+    // Rig the die onto the fire.
+    game.G = structuredClone(game.G);
+    for (let state = 1; ; state += 1) {
+      if (1 + Math.floor(mulberry32(state).value * 6) !== 1) continue;
+      game.G.rng = state;
+      break;
+    }
+    game.take("0", { type: "resolveRiot" });
+    expect(game.G.board.luxuries[0].owner).toBeNull();
+    // Seat 1's turn: its new Port claims the released good.
+    game.G = structuredClone(game.G);
+    game.G.pendingPlayerEvent = null;
+    game.take("1", {
+      type: "buildBuilding",
+      tileId: there,
+      buildingId: "port",
+      claimVertexId: good.vertexId,
+    });
+    const ports = game.report().ports;
+
+    expect(ports.perPolicy.civic).toMatchObject({
+      lost: { riot: { count: 1 }, displaced: { count: 0 }, other: { count: 0 } },
+      goodsReleased: { count: 1 },
+      reclaimed: { count: 0 },
+    });
+    expect(ports.perPolicy.slaver).toMatchObject({ rivalsClaimed: { count: 1 } });
+    expect(ports.total.goodsReleased).toEqual({ count: 1, perGame: 1 });
+  });
 });
 
 describe("trade telemetry", () => {
@@ -1010,11 +1058,12 @@ describe("trade telemetry", () => {
         draft.year = 2;
       })
       .build();
-    // Three goods make seat 0 Beloved.
+    // Three goods make seat 0 Beloved. Seat 1 has a Port beside each, to take them.
     const goods = G.board.luxuries.slice(0, 3);
     for (const good of goods) {
       good.owner = "0";
       good.claimedAtSettlementId = owned(G, TEST_OPENING_SETUP[0].capital.tileId, "0").id;
+      portBeside(G, "1", good);
     }
     openAssembly(G, "0");
     const game = drive(G);

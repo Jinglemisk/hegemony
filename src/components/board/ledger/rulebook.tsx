@@ -151,7 +151,7 @@ function popIncomeText(G: HegemonyState, pop: PopType): string {
  *  is its claim, and a building that needs a yield never stands on a hill. */
 function buildingRuleText(building: BuildingDefinition): string {
   if (building.id === "port") {
-    return "Claims one adjacent luxury good; needs the coast";
+    return "Claims one adjacent luxury good, and keeps it; needs the coast";
   }
   const text = presentBuildingEffects(building.effects).text;
   return building.needsYield ? `${text}; not on a hill` : text;
@@ -695,9 +695,12 @@ const luxuries: RuleChapter = {
           <Note>
             Each good sits off the shared vertex of two coastal tiles. A Port
             {port ? <> (base cost {formatResourceCost(port.cost)})</> : null} raised in a settlement
-            on either tile claims it — a colony may raise one too. The first Port wins, and the good
-            stays claimed for the rest of the game, even if the Port burns. A Port needs the coast
-            and an unclaimed good adjacent.
+            on either tile claims it — a colony may raise one too. The first Port wins. A good
+            counts only while its holder has a Port beside it, and a second one is a backup. Lose
+            every such Port, to a riot's fire or a rival's city, and the good goes back to the board
+            unclaimed: the next Port built beside it claims it, yours included, and one already
+            standing does not. A Port needs the coast and a good adjacent, claimed or not; beside a
+            rival's good it lets you take that good in trade.
           </Note>
         </Entry>
         <Entry id={anchor("luxuries", "offset")} title="The standing offset">

@@ -261,7 +261,7 @@ The game's rules for the sea, the map, the bots and the sim flag wait for that a
    - Left for this slice: `rules.md` and the rulebook on islands, once the live game offers
      the board.
    - **Shared colonies, built 2026-11-03** (`feat/shared-colonies`): `placement.maxColoniesPerTile`
-     is 1 by default and the Continental board's patch makes it 2. State schema 26.
+     is 1 by default and the Continental board's patch makes it 2. State schema 28.
 3. **Batches.**
    - Mixed and masters tables, Continental against Archipelago, on the same seeds.
    - Run with base income at 0, as the game now plays.

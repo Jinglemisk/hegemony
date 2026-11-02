@@ -1,5 +1,5 @@
 import { getBuildings, getLuxuryGood } from "./content";
-import { claimableLuxuriesAt, transferLuxury } from "./luxury";
+import { claimableLuxuriesAt, releaseLuxuriesAfterPortLoss, transferLuxury } from "./luxury";
 import type { BuildingId, HegemonyState, HexTile, PlayerId, PopType, Pops } from "./types";
 import { formatPopName, formatPops, formatRuleResourceDelta, formatTileLabel } from "./core/format";
 import {
@@ -247,9 +247,10 @@ export function upgradeColonyToCity(
   payCost(G.players[playerID].resources, status.cost ?? G.ruleset.actionCosts.upgradeColonyToCity);
   // An upgrade spends Master builder's discount, as a building does.
   G.players[playerID].buildDiscount = {};
-  const displacedPlayers = tile.settlements
-    .filter((candidate) => candidate.owner !== playerID && candidate.kind === "colony")
-    .map((candidate) => candidate.owner);
+  const displaced = tile.settlements.filter(
+    (candidate) => candidate.owner !== playerID && candidate.kind === "colony",
+  );
+  const displacedPlayers = displaced.map((candidate) => candidate.owner);
   tile.settlements = tile.settlements.filter((candidate) => candidate.owner === playerID);
   settlement.kind = "city";
   for (const effect of getStandingEffects(G, playerID))
@@ -271,6 +272,8 @@ export function upgradeColonyToCity(
     `${getPlayerName(G, playerID)} upgraded a colony to a city on ${tile.terrain}.${displacementText}`,
     playerID,
   );
+  // A colony driven off takes its buildings with it, a Port among them.
+  for (const colony of displaced) releaseLuxuriesAfterPortLoss(G, colony.owner, tile.id);
   return MOVE_OK;
 }
 
@@ -356,9 +359,11 @@ export function buildBuilding(
     return invalid(...status.reasons);
   }
 
-  // The Port's effect is the claim (luxury-goods.md §3.2). Resolve WHICH good
-  // before paying anything: with two reachable, the choice is the player's — a
-  // typed command field, never a default the engine guesses.
+  // A new Port claims an unclaimed good beside it (luxury-goods.md §3.2). Resolve
+  // WHICH good before paying anything: with two reachable, the choice is the player's —
+  // a typed command field, never a default the engine guesses. With none left to claim,
+  // legality has already allowed it under the Port rule: it stands as a backup, or as a
+  // way to take a good in trade.
   let claim = null;
   if (building.claimsLuxury) {
     const claimable = claimableLuxuriesAt(G, tileId);
@@ -369,7 +374,7 @@ export function buildBuilding(
           : null
         : (claimable.find((asset) => asset.vertexId === claimVertexId) ?? null);
 
-    if (!claim) {
+    if (!claim && claimable.length > 0) {
       return invalid("Choose which luxury good this Port claims.");
     }
   }
