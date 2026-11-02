@@ -211,6 +211,22 @@ export const PARITY_BEHAVIOR_FIXTURES = {
     implementation: "src/game/luxury.test.ts",
     evidence: "counts every good a player holds: there is no cap",
   },
+  portRelease: {
+    implementation: "src/game/luxury.test.ts",
+    evidence: "releases a good when its holder's last Port beside it burns, and a backup keeps it",
+  },
+  portReclaim: {
+    implementation: "src/game/luxury.test.ts",
+    evidence: "lets only a newly built Port claim a released good, the former holder's included",
+  },
+  tradeNeedsPort: {
+    implementation: "src/game/trade.test.ts",
+    evidence: "offers a good only to a seat with a Port beside it",
+  },
+  portTelemetry: {
+    implementation: "src/sim/telemetry.test.ts",
+    evidence: "counts Ports lost by cause, the goods released and who claims one next",
+  },
   tradeSettlement: {
     implementation: "src/game/trade.test.ts",
     evidence: "settles atomically: exactly the named stocks move and every table total holds",
@@ -865,5 +881,21 @@ export const FEATURE_PARITY = {
     simulation: { implementation: "src/sim/policies.ts", evidence: "proposeKept" },
     telemetry: { implementation: "src/sim/telemetry.ts", evidence: "keptPassed" },
     behaviorFixtures: ["assemblyKeptLaws", "botKeptLaws", "keptLawTelemetry"],
+  },
+  // A good counts only while its holder has a Port beside it (agency package). Bots meet
+  // the rule only through the legal moves: a Port beside a claimed good, claiming nothing.
+  portRule: {
+    ids: ["portRelease", "portBackup", "tradeNeedsPort"],
+    engine: { implementation: "src/game/luxury.ts", evidence: "releaseLuxuriesAfterPortLoss" },
+    frontend: {
+      implementation: "src/components/frame/realm/BuildPage.tsx",
+      evidence: "luxuriesBeside",
+    },
+    simulation: {
+      implementation: "src/game/legalMoves.ts",
+      evidence: "the Port rule lets it stand beside a claimed good",
+    },
+    telemetry: { implementation: "src/sim/telemetry.ts", evidence: "countPorts" },
+    behaviorFixtures: ["portRelease", "portReclaim", "tradeNeedsPort", "portTelemetry"],
   },
 } as const satisfies Record<string, ContentManifestEntry>;

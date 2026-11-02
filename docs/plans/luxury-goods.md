@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "4"
-updated: 2026-10-31
+updated: 2026-11-02
 ---
 
 # Luxury Goods — feature plan & open decisions
@@ -28,7 +28,7 @@ updated: 2026-10-31
 > for today's four. **Silphium** is the seventh good. The ruleset's default reads the seat
 > list, so the number is `2 * PLAYER_IDS.length - 1`.
 >
-> **Ruled 2026-10-31, not built:** a good counts only while its holder has a Port beside it (a
+> **Ruled 2026-10-31, built 2026-11-02:** a good counts only while its holder has a Port beside it (a
 > second one is a backup), losing the last such Port sends the good back to the board unclaimed,
 > and a good can be traded only to a seat with a Port beside it; see the
 > [agency package](agency-package.md), ruling 7.

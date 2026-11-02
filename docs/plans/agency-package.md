@@ -201,7 +201,7 @@ run at the end. Every batch then runs on the owner's go.
    **Built 2026-11-03** (`feat/telemetry`): shortages by stock, builds held back by price
    apart from hunger's pops, happiness lines crossed, recovery after the three shocks, and the
    development deck's free and riot cards by card. The earlier slices had added blocked draws
-   and event pops placed and declined.
+   and event pops placed and declined, and the Port rule the Ports lost and goods released.
 2. **The narrow changes, one slice each:** optional event pops, Manumission, Rural Messengers,
    Capital Works, the Assembly order with kept Laws, the Port rule, then the per-turn caps in one
    slice (the Dole, calm, the ladder, growing). A ruleset patch that sets today's limits back is
@@ -212,6 +212,8 @@ run at the end. Every batch then runs on the owner's go.
    Optional event pops (`feat/optional-event-pops`) is a rule, not content: its switch is
    `{"events":{"optionalPops":false}}` under `--ruleset-patch`. The Assembly order with kept
    Laws (`feat/assembly-kept-laws`) is a rule too: `{"assembly":{"keptLaws":false}}`.
+   **Built 2026-11-02:** the Port rule (`feat/port-rule`), switch
+   `{"economy":{"luxury":{"needsPort":false}}}`.
 3. **The year forecast, with bots that use it.** Today's bot forecast expires the active card and
    treats later cards as unknown. A forecast the bots ignore tests nothing. Ruling 11's bot
    planning follows in its own PR, since it changes the same forecast.

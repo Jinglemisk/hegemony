@@ -475,6 +475,9 @@ spending from the stock change.
   read off the reach counts
 - `luxuries` — goods claimed and active a game, their mean standing happiness per seat,
   and the end-of-game gold distribution
+- `ports` (cut) — the Port rule: Ports `lost` by cause (`riot`, `displaced` by a rival's
+  city, `other`), `goodsReleased` back to the board, and who claimed a released good next:
+  its former holder (`reclaimed`) or a rival (`rivalsClaimed`)
 - `assembly` — `seats` (cut): Laws proposed, authored passes split into Laws and
   Directives, authored Laws standing at the end, votes bought and their gold, Voice
   claims and table-turns held, repeals filed, passed and failed, and passed Directives
@@ -535,6 +538,12 @@ screen offers it.
 a seat seal a blocked Law, which it keeps if the Law is still blocked at its turn.
 `{"assembly":{"keptLaws":false}}` under `--ruleset-patch` restores seat order and today's
 blocked Laws, as before the agency package. No screen offers it.
+
+**Port switch.** `economy.luxury.needsPort`, on by default, counts a good only while its
+holder has a Port beside it, releases it when the last one falls, lets a Port stand beside a
+claimed good, and offers a good only to a seat with a Port beside it.
+`{"economy":{"luxury":{"needsPort":false}}}` under `--ruleset-patch` keeps a good its
+holder's for the game, as before the agency package. No screen offers it.
 
 **Content switches.** The agency package's Law and Idea changes are content, which
 `--ruleset-patch` and `--tune-patch` do not reach, so `--restore` turns them off:
