@@ -15,13 +15,20 @@ import { TRADABLE_MATERIALS } from "../game/bank";
 import type { GameCommand } from "../game/legalMoves";
 import type { DefinitionIdentity } from "../game/definition";
 import { DEV_CARDS, PLAYER_IDS } from "../game/data";
-import { atFreeCardLevel } from "../game/devCards";
+import { atFreeCardLevel, devCardOf } from "../game/devCards";
 import { riotPopNext } from "../game/riot";
+import { standingHappiness } from "../game/happiness";
 import { getAddPopsEffect } from "../game/events";
 import { activeClaims, ownedClaims } from "../game/luxury";
 import { playerStandings } from "../game/score";
 import { getOwnedSettlement, getTile } from "../game/core/query";
 import { canPlaceColonyOnTile, settlementIdleSlaves } from "../game/settlement";
+import {
+  getBuildBuildingOptions,
+  getFoundColonyStatus,
+  getUpgradeColonyToCityStatus,
+} from "../game/status";
+import type { ActionStatus } from "../game/core/results";
 import { TRADE_RESOURCES } from "../game/trade";
 import { unrestStatus } from "../game/unrest";
 import {
@@ -293,6 +300,20 @@ export type TradeCounts = {
   prices: Partial<Record<TradableMaterial, Partial<Record<Resource, number[]>>>>;
 };
 
+/** The happiness lines a level can cross: the revolt and riot lines, read with calm as
+ *  the riot check reads them, and the free card's line, read without it. */
+export const HAPPINESS_LINES = ["revolt", "riot", "freeCard"] as const;
+export type HappinessLine = (typeof HAPPINESS_LINES)[number];
+
+/** The named shocks whose recovery is measured: two year cards and a Law passing. */
+export const SHOCKS = ["blockade", "drought", "manumission"] as const;
+export type Shock = (typeof SHOCKS)[number];
+const SHOCK_CARDS: Record<string, Shock> = {
+  "year-blockade": "blockade",
+  "year-drought": "drought",
+  manumission: "manumission",
+};
+
 /** What one seat did in one game, counted once, as it played. */
 export type SeatCounts = {
   /** Its commands, buildings, draws and passed resolutions by reach id, only the ids it
@@ -312,7 +333,20 @@ export type SeatCounts = {
   /** Happiness and the hand: free cards drawn, its own turns that ended at the free
    *  card's level (counted with the rule off too), and the held cards a riot took in place
    *  of a pop, by the class of the pop each kept. */
-  deck: { freeCards: number; turnsAtFreeLevel: number; riotCards: Record<PopType, number> };
+  deck: {
+    freeCards: number;
+    turnsAtFreeLevel: number;
+    riotCards: Record<PopType, number>;
+    /** The free cards and the riot's cards again, by card. */
+    freeByCard: Partial<Record<DevCardId, number>>;
+    riotByCard: Partial<Record<DevCardId, number>>;
+  };
+  /** Its turns that ended with a build it had a place for and could not pay (a building,
+   *  a city upgrade or a colony), and of them the turns whose price lacked each stock. */
+  buildDelayed: { turns: number; by: Record<Resource, number> };
+  /** Each happiness line: the times its level moved onto the line's side (fell to the
+   *  revolt or riot line, rose to the free card's) and off it, between turn snapshots. */
+  lines: Record<HappinessLine, { reached: number; left: number }>;
   /** Food bought while the stock was below zero, and at zero or above. */
   foodBought: { coveringShortfall: FoodBought; buyingAhead: FoodBought };
   /** Times it took Voice. */
@@ -381,7 +415,23 @@ function emptySeatCounts(): Record<PlayerId, SeatCounts> {
     >,
     voteGold: 0,
     devCardGold: 0,
-    deck: { freeCards: 0, turnsAtFreeLevel: 0, riotCards: { citizens: 0, freemen: 0, slaves: 0 } },
+    deck: {
+      freeCards: 0,
+      turnsAtFreeLevel: 0,
+      riotCards: { citizens: 0, freemen: 0, slaves: 0 },
+      freeByCard: {},
+      riotByCard: {},
+    },
+    buildDelayed: {
+      turns: 0,
+      by: Object.fromEntries(TRADE_RESOURCES.map((resource) => [resource, 0])) as Record<
+        Resource,
+        number
+      >,
+    },
+    lines: Object.fromEntries(
+      HAPPINESS_LINES.map((line) => [line, { reached: 0, left: 0 }]),
+    ) as SeatCounts["lines"],
     foodBought: { coveringShortfall: emptyFoodBought(), buyingAhead: emptyFoodBought() },
     voiceClaims: 0,
     repealsPassed: 0,
@@ -442,6 +492,24 @@ function slaveCounts(G: HegemonyState, playerID: PlayerId) {
   }
 
   return { slaves, idleSlaves };
+}
+
+/** The stocks the seat lacks for the builds it has a place for and cannot pay: a
+ *  building, a city upgrade or a new colony whose one reason is the price. */
+function buildShortfalls(G: HegemonyState, player: PlayerId): Set<Resource> {
+  const stock = G.players[player].resources;
+  const short = new Set<Resource>();
+  const read = (status: ActionStatus) => {
+    if (status.reasons.length !== 1 || status.reasons[0] !== "Not enough resources.") return;
+    for (const resource of TRADE_RESOURCES)
+      if ((status.cost?.[resource] ?? 0) > stock[resource]) short.add(resource);
+  };
+  for (const tileId of G.players[player].settlements) {
+    for (const option of getBuildBuildingOptions(G, player, tileId)) read(option.status);
+    read(getUpgradeColonyToCityStatus(G, player, tileId));
+  }
+  for (const tile of G.board.tiles) read(getFoundColonyStatus(G, player, tile.id));
+  return short;
 }
 
 export type Percentiles = {
@@ -630,6 +698,8 @@ export type GameRow = GameCounts & {
   assembliesHeld: number;
   /** The year cards in the order they turned. */
   yearCards: string[];
+  /** Each named shock, at the index of the game's first turn snapshot under it. */
+  shocks: Array<{ shock: Shock; at: number }>;
   seats: Record<PlayerId, SeatFacts>;
 };
 
@@ -758,6 +828,30 @@ export type TradeFigures = {
   >;
 };
 
+/** Shortages, kept apart by what they cost. A build delayed is a turn that ended with a
+ *  building, city upgrade or colony the seat had a place for and could not pay, counted
+ *  once for each stock the price lacked. Food is the one stock whose lack costs pops,
+ *  through hunger at turn end: the `hunger` figures again. */
+export type Shortages = {
+  buildDelayedTurns: Count;
+  buildDelayedBy: Record<Resource, Count>;
+  costingPops: { food: { turns: Count; pops: Count } };
+};
+
+/** One named shock, for each seat each time it came. The measure is what the shock
+ *  strikes: happiness for Blockade and Manumission, the food stock for Drought. A seat is
+ *  struck when the measure, at its lowest in the shock's year, is below its level just
+ *  before the shock; it has recovered when the measure is back at that level. */
+export type ShockRecovery = {
+  seatShocks: number;
+  struck: number;
+  /** How far the measure fell, over the struck seats. */
+  drop: Percentiles;
+  /** Struck seats back by the game's end, and the seat's own turns from the shock. */
+  recovered: number;
+  turnsToRecover: Percentiles;
+};
+
 /** The development deck: cards bought and the gold paid, and each card drawn and played.
  *  Happiness and the hand: free cards drawn, turns that ended at the free card's level,
  *  and held cards a riot took in place of a pop, with the pops they kept by class. Slaves
@@ -766,12 +860,16 @@ export type DevCardFigures = {
   bought: Count;
   goldSpent: Count;
   played: Count;
+  /** Bought, by card. */
   drawn: Record<DevCardId, Count>;
   /** Only the held cards: a yield resolves on its draw. */
   playedByCard: Partial<Record<DevCardId, Count>>;
   drawnFree: Count;
+  drawnFreeByCard: Record<DevCardId, Count>;
   turnsAtFreeLevel: Count;
   lostToRiots: Count;
+  /** Only the held cards: a yield never sits in a hand. */
+  lostToRiotsByCard: Partial<Record<DevCardId, Count>>;
   popsSaved: Record<PopType, Count>;
 };
 
@@ -831,6 +929,10 @@ export type BatchReport = {
   influenceSpent: Cut<Record<InfluenceSink, Count>>;
   trade: Cut<TradeFigures>;
   devCards: Cut<DevCardFigures>;
+  shortages: Cut<Shortages>;
+  /** Moves onto and off each happiness line's side (see {@link SeatCounts.lines}). */
+  happinessLines: Cut<Record<HappinessLine, { reached: Count; left: Count }>>;
+  recovery: Cut<Record<Shock, ShockRecovery>>;
   /** Universal action telemetry. Every GameCommand type is present, including zeroes,
    *  so newly added or unexercised actions cannot disappear from a report. */
   movesByType: Record<GameCommandType, Count>;
@@ -1200,12 +1302,108 @@ function devCardsOf(group: SeatGame[], games: number): DevCardFigures {
       ]),
     ),
     drawnFree: count(({ facts }) => facts.deck.freeCards),
+    drawnFreeByCard: Object.fromEntries(
+      DEV_CARDS.map((card) => [card.id, count(({ facts }) => facts.deck.freeByCard[card.id] ?? 0)]),
+    ) as Record<DevCardId, Count>,
     turnsAtFreeLevel: count(({ facts }) => facts.deck.turnsAtFreeLevel),
     lostToRiots: count(({ facts }) => totalPops(facts.deck.riotCards)),
+    lostToRiotsByCard: Object.fromEntries(
+      DEV_CARDS.filter((card) => card.kind !== "yield").map((card) => [
+        card.id,
+        count(({ facts }) => facts.deck.riotByCard[card.id] ?? 0),
+      ]),
+    ),
     popsSaved: Object.fromEntries(
       POP_TYPES.map((pop) => [pop, count(({ facts }) => facts.deck.riotCards[pop])]),
     ) as Record<PopType, Count>,
   };
+}
+
+function shortagesOf(group: SeatGame[], games: number): Shortages {
+  const count = counter(group, games);
+  return {
+    buildDelayedTurns: count(({ facts }) => facts.buildDelayed.turns),
+    buildDelayedBy: Object.fromEntries(
+      TRADE_RESOURCES.map((resource) => [
+        resource,
+        count(({ facts }) => facts.buildDelayed.by[resource]),
+      ]),
+    ) as Record<Resource, Count>,
+    costingPops: {
+      food: {
+        turns: count(({ facts }) => facts.reach["command:resolveHunger"] ?? 0),
+        pops: count(({ facts }) => facts.popsLostToHunger),
+      },
+    },
+  };
+}
+
+function happinessLinesOf(
+  group: SeatGame[],
+  games: number,
+): BatchReport["happinessLines"]["total"] {
+  const count = counter(group, games);
+  return Object.fromEntries(
+    HAPPINESS_LINES.map((line) => [
+      line,
+      {
+        reached: count(({ facts }) => facts.lines[line].reached),
+        left: count(({ facts }) => facts.lines[line].left),
+      },
+    ]),
+  ) as BatchReport["happinessLines"]["total"];
+}
+
+/** What each shock strikes. */
+const STRUCK: Record<Shock, (player: PlayerSnapshot) => number> = {
+  blockade: (player) => player.happiness,
+  drought: (player) => player.resources.food,
+  manumission: (player) => player.happiness,
+};
+
+function recoveryOf(group: SeatGame[]): Record<Shock, ShockRecovery> {
+  const rows = Object.fromEntries(
+    SHOCKS.map((shock) => [shock, { seatShocks: 0, drops: [] as number[], turns: [] as number[] }]),
+  ) as Record<Shock, { seatShocks: number; drops: number[]; turns: number[] }>;
+  for (const { game, seat, snapshots } of group) {
+    for (const { shock, at } of game.shocks) {
+      // A shock in the game's first snapshot has no level before it to come back to.
+      if (at < 1 || at >= snapshots.length) continue;
+      const row = rows[shock];
+      const measure = (index: number) => STRUCK[shock](snapshots[index].players[seat]);
+      const before = measure(at - 1);
+      row.seatShocks += 1;
+      let low = at;
+      for (let index = at; snapshots[index]?.year === snapshots[at].year; index += 1)
+        if (measure(index) < measure(low)) low = index;
+      if (measure(low) >= before) continue;
+      row.drops.push(before - measure(low));
+      // The seat's own turns from the shock until the measure is back, after its low.
+      let turns = 0;
+      for (let index = at; index < snapshots.length; index += 1) {
+        if (index > low && measure(index) >= before) {
+          row.turns.push(turns);
+          break;
+        }
+        if (snapshots[index].actingSeat === seat) turns += 1;
+      }
+    }
+  }
+  return Object.fromEntries(
+    SHOCKS.map((shock) => {
+      const { seatShocks, drops, turns } = rows[shock];
+      return [
+        shock,
+        {
+          seatShocks,
+          struck: drops.length,
+          drop: percentiles(drops),
+          recovered: turns.length,
+          turnsToRecover: percentiles(turns),
+        },
+      ];
+    }),
+  ) as Record<Shock, ShockRecovery>;
 }
 
 function tradeOf(group: SeatGame[], games: number): TradeFigures {
@@ -1356,6 +1554,12 @@ export class Aggregator {
   /** Kept Laws proposed again this sitting, not yet voted. */
   private keptProposals = new Set<string>();
 
+  /** The game in progress's named shocks, its turn snapshots so far, and each seat's
+   *  happiness at the last of them: with calm, as the riot check reads it, and without. */
+  private gameShocks: GameRow["shocks"] = [];
+  private gameSnapshots = 0;
+  private levels: Partial<Record<PlayerId, { tested: number; standing: number }>> = {};
+
   private game = -1;
   private seed = 0;
   private startTurn = 1;
@@ -1387,6 +1591,9 @@ export class Aggregator {
     this.seats = emptySeatCounts();
     this.gameCounts = emptyGameCounts();
     this.gameYearCards = [];
+    this.gameShocks = [];
+    this.gameSnapshots = 0;
+    this.levels = {};
     // The last setup move opened turn 1 with the opener's income. Its own maker is
     // left out: a setup Idea can pay gold in the same step.
     const [beforeOpening, opening] = this.setupMoves.slice(-2);
@@ -1402,7 +1609,35 @@ export class Aggregator {
     // The opening already revealed year 1's card and player 0's first draw.
     this.countYearCard(G);
     this.countPlayerDraw(G);
-    this.data.snapshots.push(snapshotTurn(G, this.game, this.seed));
+    this.pushSnapshot(G);
+  }
+
+  /** A turn snapshot, and the happiness lines each seat's level crossed since the last. */
+  private pushSnapshot(G: HegemonyState) {
+    const snapshot = snapshotTurn(G, this.game, this.seed);
+    this.data.snapshots.push(snapshot);
+    this.gameSnapshots += 1;
+    const { riotThreshold, revoltThreshold } = G.ruleset.economy.unrest;
+    const freeLevel = G.ruleset.devCards.freeCardLevel;
+    for (const seat of PLAYER_IDS) {
+      const now = {
+        tested: snapshot.players[seat].happiness,
+        standing: standingHappiness(G, seat),
+      };
+      const was = this.levels[seat];
+      this.levels[seat] = now;
+      if (!was) continue;
+      const sides: Record<HappinessLine, [boolean, boolean]> = {
+        revolt: [was.tested <= revoltThreshold, now.tested <= revoltThreshold],
+        riot: [was.tested <= riotThreshold, now.tested <= riotThreshold],
+        freeCard: [was.standing >= freeLevel, now.standing >= freeLevel],
+      };
+      for (const line of HAPPINESS_LINES) {
+        const [before, after] = sides[line];
+        if (!before && after) this.seats[seat].lines[line].reached += 1;
+        if (before && !after) this.seats[seat].lines[line].left += 1;
+      }
+    }
   }
 
   onMove(G: HegemonyState, player: PlayerId, move: GameCommand) {
@@ -1420,6 +1655,7 @@ export class Aggregator {
       this.countTrade(before, G, player, move);
       this.countDeck(before, G, player, move);
       this.countKept(before, G, player, move);
+      if (move.type === "endTurn") this.countBuildDelay(before, player);
     }
     if (move.type === "resolveEvent" && !move.decline && before?.pendingPlayerEvent) {
       const old = before.players[player];
@@ -1504,18 +1740,42 @@ export class Aggregator {
     }
   }
 
+  /** A turn ended with a build held back only by its price, read where the seat chose to
+   *  end it. */
+  private countBuildDelay(before: HegemonyState, player: PlayerId) {
+    const short = buildShortfalls(before, player);
+    if (short.size === 0) return;
+    const delayed = this.seats[player].buildDelayed;
+    delayed.turns += 1;
+    for (const resource of short) delayed.by[resource] += 1;
+  }
+
   /** The free card's turn end runs inside the command that commits the turn: the level
    *  is the one before it, which hunger cannot move (it takes no slaves). A free draw is
    *  its log moment; a riot's card is the answer, keeping the pop the riot took next. */
   private countDeck(before: HegemonyState, G: HegemonyState, player: PlayerId, move: GameCommand) {
     const commits = move.type === "resolveHunger" || (move.type === "endTurn" && !G.pendingHunger);
     if (commits && atFreeCardLevel(before, player)) this.seats[player].deck.turnsAtFreeLevel += 1;
+    const deck = this.seats[player].deck;
     if (move.type === "resolveRiotPop" && move.pay === "card") {
       const kept = riotPopNext(before, player);
-      if (kept) this.seats[player].deck.riotCards[kept.pop] += 1;
+      if (kept) deck.riotCards[kept.pop] += 1;
+      const lost = before.devHands[player].find(
+        (held) => !G.devHands[player].some((now) => now.id === held.id),
+      );
+      const card = lost && devCardOf(before, lost.id);
+      if (card) deck.riotByCard[card.id] = (deck.riotByCard[card.id] ?? 0) + 1;
     }
     for (const { about, moment } of linesWritten(before, G)) {
-      if (moment?.kind === "freeCard" && about) this.seats[about].deck.freeCards += 1;
+      if (moment?.kind !== "freeCard" || !about) continue;
+      const seat = this.seats[about].deck;
+      seat.freeCards += 1;
+      // A yield names itself; a held card is the one new in the hand.
+      const added = G.devHands[about].find(
+        (held) => !before.devHands[about].some((old) => old.id === held.id),
+      );
+      const card = moment.card ?? (added && devCardOf(G, added.id)?.id);
+      if (card) seat.freeByCard[card] = (seat.freeByCard[card] ?? 0) + 1;
     }
   }
 
@@ -1625,6 +1885,8 @@ export class Aggregator {
     }
     this.openDraws.delete(item.card.id);
     if (outcome === "carried" && proposedAgain) this.seats[item.proposer].kept.keptPassed += 1;
+    if (outcome === "carried" && SHOCK_CARDS[item.card.id])
+      this.gameShocks.push({ shock: SHOCK_CARDS[item.card.id], at: this.gameSnapshots });
     if (outcome === "carried") {
       this.countReach(item.proposer, [`${item.card.kind}:${item.card.id}`]);
       const prize = G.ruleset.assembly.prizes[item.card.politician];
@@ -1660,8 +1922,7 @@ export class Aggregator {
     }
 
     this.countPlayerDraw(G);
-
-    this.data.snapshots.push(snapshotTurn(G, this.game, this.seed));
+    this.pushSnapshot(G);
   }
 
   endGame(G: HegemonyState) {
@@ -1734,6 +1995,7 @@ export class Aggregator {
       assembliesHeld: G.assembliesHeld,
       ...this.gameCounts,
       yearCards: this.gameYearCards,
+      shocks: this.gameShocks,
       seats,
     });
   }
@@ -1824,6 +2086,9 @@ export class Aggregator {
       influenceSpent,
       trade: by(tradeOf),
       devCards: by(devCardsOf),
+      shortages: by(shortagesOf),
+      happinessLines: by(happinessLinesOf),
+      recovery: by(recoveryOf),
       movesByType: commands(GAME_COMMAND_TYPES) as BatchReport["movesByType"],
       activeEffects: activeEffectsOf(snapshots),
       buildings: Object.fromEntries(
@@ -1896,7 +2161,10 @@ export class Aggregator {
 
   private countYearCard(G: HegemonyState) {
     const card = G.activeYearCard;
-    if (card) this.gameYearCards.push(card.id);
+    if (!card) return;
+    this.gameYearCards.push(card.id);
+    if (SHOCK_CARDS[card.id])
+      this.gameShocks.push({ shock: SHOCK_CARDS[card.id], at: this.gameSnapshots });
   }
 
   private countPlayerDraw(G: HegemonyState) {

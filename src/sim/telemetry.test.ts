@@ -1,4 +1,5 @@
 import { defaultHungerLeave, resolveHunger } from "../game/hunger";
+import { produce } from "immer";
 import { describe, expect, it } from "vitest";
 
 import { ACTIVE_EFFECT_KINDS } from "../game/activeEffects";
@@ -659,6 +660,8 @@ describe("the Step 11 report fields", () => {
     const content = drive(
       scenario()
         .opening()
+        // A held card, which the log does not name: the hand shows which it was.
+        .stackDevCard("caravan")
         .mutate((G) => {
           G.pendingPlayerEvent = null;
           for (const tileId of G.players["0"].settlements) owned(G, tileId, "0").pops.slaves = 0;
@@ -669,6 +672,7 @@ describe("the Step 11 report fields", () => {
     content.take("0", { type: "endTurn" });
     expect(content.report().devCards.perPolicy.civic).toMatchObject({
       drawnFree: { count: 1 },
+      drawnFreeByCard: { caravan: { count: 1 }, foraging: { count: 0 } },
       turnsAtFreeLevel: { count: 1 },
       lostToRiots: { count: 0 },
     });
@@ -695,8 +699,88 @@ describe("the Step 11 report fields", () => {
     rioting.take("0", { type: "resolveRiotPop", pay: "card" });
     const cards = rioting.report().devCards.perPolicy.civic;
     expect(cards.lostToRiots.count).toBe(1);
+    expect(cards.lostToRiotsByCard.caravan?.count).toBe(1);
     expect(cards.popsSaved.slaves.count).toBe(1);
     expect(cards.turnsAtFreeLevel.count).toBe(0);
+  });
+
+  it("counts builds held back by price, happiness lines crossed and recovery from a Blockade", () => {
+    // Every fate drawn on the way gains a stock other than stone and moves no happiness.
+    const harmless = ["player-good-stores", "player-timber", "player-profit", "player-patronage"];
+    const game = drive(
+      scenario({ patch: { assembly: { firstYear: 0 } } })
+        .opening()
+        // Year 2 is a Blockade, Year 3 a Piracy, which moves no happiness.
+        .stackYearCard("year-piracy")
+        .stackYearCard("year-blockade")
+        .mutate((G) => {
+          G.pendingPlayerEvent = null;
+          G.playerDrawPile.sort(
+            (a, b) => Number(harmless.includes(b.id)) - Number(harmless.includes(a.id)),
+          );
+          for (const seat of PLAYER_IDS)
+            Object.assign(G.players[seat].resources, {
+              wood: 50,
+              stone: 0,
+              gold: 50,
+              food: 50,
+              influence: 50,
+            });
+          // Seat 0 holds a good, which the Blockade takes out of its level.
+          Object.assign(G.board.luxuries[0], {
+            owner: "0",
+            claimedAtSettlementId: owned(G, G.players["0"].settlements[0], "0").id,
+          });
+        })
+        .build(),
+    );
+    const tokens = (seat: PlayerId, change: number) => {
+      game.G = produce(game.G, (G) => {
+        G.players[seat].unrestTokens += change;
+      });
+    };
+    // Seat 2 sinks past the riot and revolt lines and is back before its own turn.
+    tokens("2", 20);
+    game.take("0", { type: "endTurn" });
+    tokens("2", -20);
+    while (game.G.year < 3) {
+      const seat = game.G.currentPlayer;
+      if (game.G.pendingPlayerEvent) game.take(seat, { type: "resolveEvent" });
+      game.take(seat, { type: "endTurn" });
+    }
+    const report = game.report();
+
+    // Seat 0 ended both its turns with a city slot and no stone for a Temple: its
+    // mountain makes one a turn, and a Temple costs three.
+    const civic = report.shortages.perPolicy.civic;
+    expect(civic.buildDelayedTurns.count).toBe(2);
+    expect(civic.buildDelayedBy.stone.count).toBe(2);
+    for (const stock of ["wood", "food", "gold", "influence"] as const)
+      expect(civic.buildDelayedBy[stock].count).toBe(0);
+    expect(civic.costingPops.food.turns.count).toBe(0);
+
+    const line = { reached: { count: 1, perGame: 1 }, left: { count: 1, perGame: 1 } };
+    const none = { reached: { count: 0, perGame: 0 }, left: { count: 0, perGame: 0 } };
+    expect(report.happinessLines.perPolicy.trader).toEqual({
+      revolt: line,
+      riot: line,
+      freeCard: none,
+    });
+    expect(report.happinessLines.perPolicy.civic.riot).toEqual(none);
+
+    // The Blockade turned with Year 2 and took seat 0's good out of its level; it was
+    // back when Year 3 began, one turn of its own later. The other seats hold no good.
+    expect(report.perGame[0].shocks).toEqual([{ shock: "blockade", at: 4 }]);
+    expect(report.recovery.total.blockade).toMatchObject({
+      seatShocks: 4,
+      struck: 1,
+      recovered: 1,
+    });
+    expect(report.recovery.perPolicy.civic.blockade).toMatchObject({
+      struck: 1,
+      drop: { median: game.G.ruleset.economy.luxury.happinessPerGood },
+      turnsToRecover: { median: 1 },
+    });
   });
 
   it("counts hunger turns per personality, and the class that left", () => {
