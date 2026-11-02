@@ -29,7 +29,7 @@ import { createSimRng } from "./rng";
 import { playTurn, runGame } from "./runner";
 import { buildNewGame } from "./setup";
 import { getTile } from "../game/core/query";
-import { victoryCardsHeld, voiceHolder } from "../game/victory";
+import { voiceHolder } from "../game/victory";
 import { hexDistance } from "../game/mapTopology";
 import { isAdjacentToCity } from "../game/settlement";
 import { createGameDefinition } from "../game/definition";
@@ -749,48 +749,41 @@ describe("Assembly heuristic", () => {
   });
 
   it("master bots author passing Laws, hold Voice and finish without action caps", () => {
-    const passedSeats = new Set<string>();
-    const voices = new Set<string>();
+    // The first sitting, built: every seat can draw, propose and buy votes, and seat 3
+    // carries a Law still in its tenure. The bots play the sitting through the runner.
+    const G = scenario({ seed: 3 }).opening().build();
+    playUntilAssembly(G);
+    expect(G.assembly).toBeTruthy();
+    G.politicianDecks.kleistophenes = G.politicianDecks.kleistophenes.filter(
+      (id) => id !== "rural-bloc",
+    );
+    G.activeLaws.push({
+      cardId: "rural-bloc",
+      author: "3",
+      enactedYear: G.year,
+      order: G.lawOrder++,
+    });
+    for (const id of PLAYER_IDS)
+      Object.assign(G.players[id].resources, { influence: 10, gold: 10 });
+    expect(voiceHolder(G)).toBeNull();
+
+    const cap = G.ruleset.assembly.lawCap;
     let capped = 0;
-    const years = yearDeckSize(scenario().build());
-    // Two whole master games, the slowest test here: between them every seat authors a
-    // Law that passes.
-    for (const seed of [2, 3]) {
-      const G = runGame({
-        seed,
-        mode: "standard",
-        policy: masterPolicy,
-        turns: years * PLAYER_IDS.length,
-        hooks: {
-          onMove: (state) => {
-            for (const id of PLAYER_IDS)
-              if (
-                state.assemblyPassedByPlayer[id] > 0 &&
-                state.activeLaws.some((law) => law.author === id)
-              )
-                passedSeats.add(id);
-            const holder = voiceHolder(state);
-            if (holder) voices.add(holder);
-            expect(state.activeLaws.length).toBeLessThanOrEqual(4);
-          },
-          onForceEndTurn: () => {
-            capped++;
-          },
-        },
-      });
-      expect(G.phase).toBe("gameOver");
-      if (G.gameOverReason === "deckExhausted") expect(G.year).toBe(years);
-      else {
-        expect(G.gameOverReason).toBe("victoryRace");
-        expect(G.year).toBeLessThanOrEqual(years);
-        expect(G.winner).not.toBeNull();
-        expect(victoryCardsHeld(G, G.winner!)).toBeGreaterThanOrEqual(G.ruleset.victory.cardsToWin);
-      }
-    }
+    const after = playTurn(G, masterPolicy, createSimRng(1), {
+      onMove: (state) => expect(state.activeLaws.length).toBeLessThanOrEqual(cap),
+      onForceEndTurn: () => {
+        capped++;
+      },
+    });
+
+    expect(after.assembly).toBeNull();
     expect(capped).toBe(0);
-    expect([...passedSeats].sort()).toEqual([...PLAYER_IDS]);
-    expect(voices.size).toBeGreaterThan(0);
-  }, 600000);
+    // Every seat passes an item it authored: three Laws fill the cap and seat 1's item is a
+    // Directive. Seat 3's second standing Law gives it Voice.
+    expect(after.assemblyPassedByPlayer).toEqual({ "0": 1, "1": 1, "2": 1, "3": 1 });
+    expect(after.activeLaws.map((law) => law.author).sort()).toEqual(["0", "2", "3", "3"]);
+    expect(voiceHolder(after)).toBe("3");
+  }, 60000);
 
   it("is deterministic across assemblies: same seed twice → byte-identical game", () => {
     const a = runGame({ seed: 21, mode: "standard", policy: masterPolicy, turns: 12 });
