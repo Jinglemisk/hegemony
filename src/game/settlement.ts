@@ -214,8 +214,13 @@ export function canPlaceColonyOnTile(
     status.reasons.push("You already have a settlement here.");
   }
 
-  if (tile.settlements.length >= G.ruleset.placement.maxColoniesPerTile) {
-    status.reasons.push("A tile can hold at most two colonies.");
+  const most = G.ruleset.placement.maxColoniesPerTile;
+  if (tile.settlements.length >= most) {
+    status.reasons.push(
+      most === 1
+        ? "A tile holds one settlement on this board."
+        : `A tile can hold at most ${most} colonies.`,
+    );
   }
 
   if (G.ruleset.placement.colonyContiguity && G.players[playerID].settlements.length > 0) {

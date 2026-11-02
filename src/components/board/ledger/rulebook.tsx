@@ -272,8 +272,10 @@ const board: RuleChapter = {
           The island is a field of hexes ringed by sea. A land tile prints its terrain and a number
           of <em>slots</em>, nothing else. The slots are one pool: each building takes one, and each
           open slot holds one working slave, who makes {G.ruleset.popIncome.slaves.primaryResource}{" "}
-          of the terrain's resource. Slaves beyond the open slots sit idle. Two colonies on one tile
-          split its slots, and the colony founded first takes the odd one.
+          of the terrain's resource. Slaves beyond the open slots sit idle.{" "}
+          {G.ruleset.placement.maxColoniesPerTile > 1
+            ? "Two rivals' colonies may share a tile and split its slots; the colony founded first takes the odd one."
+            : "A tile holds one settlement."}
         </Note>
         {/* The terrain leads with its own icon; the resource's rides in the yield
             beside it, so neither word wears the other's picture. */}

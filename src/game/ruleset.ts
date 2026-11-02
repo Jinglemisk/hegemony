@@ -202,8 +202,9 @@ export interface PlacementRules {
    *  and on the founding voyage, where the capital is the only one. Null is any shore to
    *  any shore. Founding beside an own settlement is never limited. */
   seaReach: number | null;
-  /** A tile holds at most this many colonies (and no city may share). Two colonies may
-   *  work one chora; the third is refused (post-sprint-debt §2.6 — was inline `>= 2`). */
+  /** A tile holds at most this many colonies (and no city may share). One by default: a
+   *  tile holds one settlement. The Continental board's patch makes it two, so two rivals'
+   *  colonies may share a tile and split its slots (board-modes plan, shared colonies). */
   maxColoniesPerTile: number;
   /** Cities repel other cities within this hex distance — 1 means no two cities may sit
    *  adjacent. Both the upgrade and the founding-voyage paths read it (was inline `> 1`). */
@@ -291,7 +292,7 @@ export const DEFAULT_RULESET: Ruleset = {
     colonyContiguity: true,
     coastalLeapfrog: true,
     seaReach: null,
-    maxColoniesPerTile: 2,
+    maxColoniesPerTile: 1,
     cityExclusionRadius: 1,
   },
   victory: {
@@ -428,17 +429,19 @@ export function mergeRulesetPatches(
 /**
  * What a board brings to the rules, as a ruleset patch: a game's settings resolve to a
  * ruleset patch and a board (docs/plans/game-settings.md). Archipelago hops 3 hexes across
- * water (owner, Q81); Continental and Scenario keep any shore. No rule reads the board's
- * name, so this patch is the one way a board changes a rule.
+ * water (owner, Q81); Continental and Scenario keep any shore. Only Continental lets two
+ * rivals' colonies share a tile (owner, 2026-11-02). No rule reads the board's name, so
+ * this patch is the one way a board changes a rule.
  */
 const BOARD_RULESET_PATCHES: Record<BoardLayout, RulesetPatch | null> = {
-  continental: null,
+  continental: { placement: { maxColoniesPerTile: 2 } },
   archipelago: { placement: { seaReach: 3 } },
   scenario: null,
 };
 
 /** The board's patch with `patch` over it: a value the given patch sets, such as
- *  `placement.seaReach`, wins over the board's. Null when neither has anything. */
+ *  `placement.seaReach` or `placement.maxColoniesPerTile`, wins over the board's. Null
+ *  when neither has anything. */
 export function boardRulesetPatch(
   board: BoardLayout,
   patch: RulesetPatch | null = null,

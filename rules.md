@@ -175,9 +175,9 @@ You hold three kinds of settlement:
   slots.
 - **Colony** — a small outpost. It holds up to 4 pops and raises no buildings, so
   every slot on its tile is a work slot. The one exception is a **Port** on the coast,
-  which takes one of those slots. Two colonies belonging to different players may
-  share a single tile; they **split its slots**, and the colony founded first takes
-  the odd one.
+  which takes one of those slots. A tile holds one settlement, except on the
+  **Continental** board: there two colonies belonging to different players may share a
+  single tile; they **split its slots**, and the colony founded first takes the odd one.
 
 Every way to add a pop needs room, and there is no penalty for standing over the cap.
 Laws can change capacity, slots and building permission. A cut blocks new additions;
