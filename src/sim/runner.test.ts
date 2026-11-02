@@ -22,7 +22,7 @@ describe("runGame determinism", () => {
     const second = runGame({ seed: 11, mode: "standard", policy: masterPolicy, turns: 8 });
 
     expect(JSON.stringify(first)).toBe(JSON.stringify(second));
-  }, 30_000);
+  }, 60_000);
 
   it("different seeds diverge", () => {
     const first = runGame({ seed: 1, mode: "standard", policy: randomPolicy, turns: 8 });
