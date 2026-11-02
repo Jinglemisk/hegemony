@@ -184,8 +184,6 @@ export function getLawIncomeContributions(
 }
 /** How many times a slave counts for unrest where no standing effect weighs it. */
 export const SLAVE_UNREST_WEIGHT = 1;
-/** How many times one settlement may grow per turn where no standing effect sets it. */
-export const GROWS_PER_TURN = 1;
 
 /** How many times this seat's slaves count for unrest under its standing effects. */
 export function slaveUnrestCount(G: HegemonyState, playerID: PlayerId): number {
@@ -243,12 +241,14 @@ export function settlementVoteDelta(
   );
 }
 /** How many times this settlement may grow per turn, and the source that set it (null at
- *  the base). A later source overrides an earlier one. */
+ *  the base): the ruleset's cap, scaled by a standing `growLimit` factor. A later source
+ *  overrides an earlier one. Null is no cap, which only a factor of 0 closes. */
 export function growLimit(
   G: HegemonyState,
   settlement: Settlement,
-): { amount: number; label: string | null } {
-  let limit: { amount: number; label: string | null } = { amount: GROWS_PER_TURN, label: null };
+): { amount: number | null; label: string | null } {
+  const cap = G.ruleset.turnCaps.grow;
+  let limit: { amount: number | null; label: string | null } = { amount: cap, label: null };
   for (const source of getStandingEffectSources(G, settlement.owner))
     for (const effect of source.effects)
       if (
@@ -257,7 +257,10 @@ export function growLimit(
           ? settlement.kind === "colony"
           : isCapital(G, settlement.owner, settlement.tileId))
       )
-        limit = { amount: effect.amount, label: source.label };
+        limit = {
+          amount: cap === null && effect.factor !== 0 ? null : (cap ?? 0) * effect.factor,
+          label: source.label,
+        };
   return limit;
 }
 /** Whether a standing effect leaves this owner's building idle: it stands and does nothing. */

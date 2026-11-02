@@ -218,10 +218,10 @@ describe("policy unrest risk", () => {
     slavesInCapital(G, 6);
     G.year = yearDeckSize(G);
     expect(projectPolicyHorizon(G, "0").unrest.riotEvents).toBe(1);
-    G.players["0"].calmActive = true;
+    G.players["0"].calmUsesThisTurn = 1;
     expect(projectPolicyHorizon(G, "0").unrest.riotEvents).toBe(0);
     expect(projectPolicyHorizon(G, "0", 1).unrest.riotEvents).toBe(1);
-    expect(G.players["0"].calmActive).toBe(true);
+    expect(G.players["0"].calmUsesThisTurn).toBe(1);
   });
 
   it("keeps Blockade through the collected turn's check, then expires it", () => {
@@ -255,7 +255,7 @@ describe("policy unrest risk", () => {
       unrest: { riotEvents: 2 },
       resources: { gold: 1, influence: 0 },
     });
-    expect(G.players["0"].calmActive).toBe(false);
+    expect(G.players["0"].calmUsesThisTurn).toBe(0);
   });
 
   it("buys calm only where it changes what happens, and not during setup", () => {
@@ -271,7 +271,7 @@ describe("policy unrest risk", () => {
     // Twelve stand at −6, calmed to −4 this year. Next year calm turns the revolt
     // into a riot, so it is bought.
     slavesInCapital(deep, 12);
-    deep.players["0"].calmActive = true;
+    deep.players["0"].calmUsesThisTurn = 1;
     expect(projectPolicyHorizon(deep, "0", 1)).toMatchObject({
       unrest: { revoltEvents: 0, riotEvents: 2 },
       resources: { gold: 9, influence: 20 },

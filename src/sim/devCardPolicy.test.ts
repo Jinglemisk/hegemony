@@ -13,8 +13,8 @@ import { runGame } from "./runner";
 const names: PersonalityId[] = ["slaver", "civic", "trader"];
 
 /** A mid-game turn for seat 0, its event card resolved: a capital and a colony. */
-function midGame() {
-  return scenario()
+function midGame(patch?: RulesetPatch) {
+  return scenario({ patch })
     .opening()
     .mutate((G) => {
       G.pendingPlayerEvent = null;
@@ -46,7 +46,9 @@ describe("bots and the development deck", () => {
   it.each(names)(
     "%s buys and plays cards through legal commands",
     (name) => {
-      const G = midGame()
+      // Calm, the ladder and growing once a turn, as before the per-turn caps: with three
+      // of each, the slaver and the civic spend the gold on calm and promotions first.
+      const G = midGame({ turnCaps: { calm: 1, ladder: 1, grow: 1 } })
         .withResources("0", { gold: 6, wood: 0, stone: 0, food: 10, influence: 0 })
         .withDevCard("0", "caravan")
         .build();

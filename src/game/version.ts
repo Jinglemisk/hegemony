@@ -75,7 +75,12 @@ export const ENGINE_VERSION = "0.1.0";
  *  its turn is kept by its seat. The state carries each seat's kept Law and the ruleset
  *  the switch. Proposing takes the same command, now for a blocked or a kept Law too, so
  *  commands are unchanged. Older saves are rejected, not migrated. */
-export const STATE_SCHEMA_VERSION = 24;
+/** v25 (agency package, per-turn caps): the Dole, calm, the ladder and growing are capped
+ *  per turn by the ruleset, so a seat counts its uses of each instead of holding the
+ *  once-a-turn calm and ladder flags, and Guild Charter scales the growth cap. Each use
+ *  is the same one-unit command, so commands are unchanged. Older saves are rejected, not
+ *  migrated. */
+export const STATE_SCHEMA_VERSION = 25;
 export const COMMAND_SCHEMA_VERSION = 10;
 
 export const SAVE_FORMAT_VERSION = 2;

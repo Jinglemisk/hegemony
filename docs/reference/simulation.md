@@ -536,6 +536,14 @@ a seat seal a blocked Law, which it keeps if the Law is still blocked at its tur
 `{"assembly":{"keptLaws":false}}` under `--ruleset-patch` restores seat order and today's
 blocked Laws, as before the agency package. No screen offers it.
 
+**Turn caps.** `turnCaps` holds how many times a seat may use the Dole, calm, the ladder
+and growing in its turn: 3 each by default, growing per settlement, and Guild Charter
+doubles the capital's and closes the colonies'. Null is no cap.
+`{"turnCaps":{"dole":null,"calm":1,"ladder":1,"grow":1}}` under `--ruleset-patch` restores
+the limits from before the agency package: the Dole unlimited, one calm, one ladder move
+and one growth a settlement, and Guild Charter's capital twice. The TUNE panel edits the
+caps as numbers.
+
 **Content switches.** The agency package's Law and Idea changes are content, which
 `--ruleset-patch` and `--tune-patch` do not reach, so `--restore` turns them off:
 `--restore manumission,capital-works,forum-rites` plays all three as they were before the

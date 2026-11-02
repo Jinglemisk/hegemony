@@ -115,7 +115,7 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   },
   lawGrowth: {
     implementation: "src/game/assembly/laws.test.ts",
-    evidence: "Guild Charter grants a second capital growth and forbids colony growth",
+    evidence: "Guild Charter doubles the capital's growth cap and forbids colony growth",
   },
   lawVotes: {
     implementation: "src/game/assembly/laws.test.ts",

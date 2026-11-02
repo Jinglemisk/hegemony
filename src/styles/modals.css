@@ -415,6 +415,17 @@
   grid-row: 1 / 3;
 }
 
+/* The growths left here this turn: the verb disc's count badge, on the icon's corner. */
+.growPopChoiceGrid .uses-host {
+  position: relative;
+  display: grid;
+  overflow: visible;
+}
+
+.growPopChoiceGrid .uses-host .verb-count {
+  transform: translate(30%, -40%);
+}
+
 .growPopChoiceGrid strong {
   color: var(--muted);
   font-family: var(--f-body);

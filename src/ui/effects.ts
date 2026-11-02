@@ -1,5 +1,5 @@
 import type { ActiveEffectDescriptor, ActiveEffectMechanic } from "../game/activeEffects";
-import { GROWS_PER_TURN, SLAVE_UNREST_WEIGHT } from "../game/assembly/laws";
+import { SLAVE_UNREST_WEIGHT } from "../game/assembly/laws";
 import type { DirectiveEffect, LawEffect } from "../game/assembly/types";
 import { getAuthoredGameContent } from "../game/content";
 import type { GameContent } from "../game/content";
@@ -341,10 +341,10 @@ export function presentLawEffect(
       const who = effect.scope === "capital" ? "Your capital" : "Colonies";
       return {
         text:
-          effect.amount === 0
+          effect.factor === 0
             ? `${who} may not grow`
-            : `${who} may grow ${effect.amount} times per turn`,
-        tone: signedTone(effect.amount - GROWS_PER_TURN),
+            : `${who} may grow ${effect.factor === 2 ? "twice" : `${effect.factor} times`} as often each turn`,
+        tone: signedTone(effect.factor - 1),
       };
     }
     case "settlementVotes":
