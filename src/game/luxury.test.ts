@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildBuilding } from "./actions";
+import { buildBuilding, upgradeColonyToCity } from "./actions";
 import { PLAYER_IDS } from "./data";
 import { createModeDefinition } from "./definition";
 import { collectInvariantViolations } from "./invariants";
@@ -14,11 +14,14 @@ import {
 } from "./luxury";
 import { isCoastalTile } from "./mapTopology";
 import { createInitialStateFromDefinition } from "./state";
-import { getBuildBuildingStatus } from "./status";
+import { getBuildBuildingStatus, getUpgradeColonyToCityStatus } from "./status";
+import { rollOnTable } from "./tables";
+import { colonyOn, scenario } from "./testing/scenario";
+import type { RulesetPatch } from "./ruleset";
 import { beginTurnFor, createGame } from "./turn";
 import { applyUnrestAtTurnEnd, unrestStatus } from "./unrest";
 import { victoryMetricValue } from "./victory";
-import type { HegemonyState, LuxuryAsset, PlayerId } from "./types";
+import type { EventTableDefinition, HegemonyState, LuxuryAsset, PlayerId } from "./types";
 
 // The scripted two-city opening: every player starts gameplay with a capital and a
 // second city already placed, which is what a Port needs (a non-colony settlement).
@@ -140,7 +143,7 @@ describe("the Port and the claim", () => {
     expect(status.reasons.join(" ")).toMatch(/inland/);
   });
 
-  it("is unbuildable on a coast with no unclaimed good adjacent, with a reason", () => {
+  it("is unbuildable on a coast with no good adjacent, with a reason", () => {
     const G = preloadedGame(SEED);
     const luxuryTiles = new Set(G.board.luxuries.flatMap((asset) => asset.tileIds));
     const bareCoast = G.board.tiles.find(
@@ -155,7 +158,7 @@ describe("the Port and the claim", () => {
 
     const status = getBuildBuildingStatus(G, "0", bareCoast.id, "port");
     expect(status.can).toBe(false);
-    expect(status.reasons.join(" ")).toMatch(/No unclaimed luxury/);
+    expect(status.reasons.join(" ")).toMatch(/No luxury good adjoins/);
   });
 
   it("claims the adjacent good through the ownership seam — first Port wins", () => {
@@ -290,5 +293,118 @@ describe("luxuries in the level", () => {
     expect(status.happiness).toBe(-2);
     // Without the good the level would sit below the riot line.
     expect(status.tier).toBe("discontent");
+  });
+});
+
+describe("the Port rule", () => {
+  /** A table whose every row burns a building, so a riot's fire is certain. */
+  const FIRE: EventTableDefinition = {
+    id: "riot",
+    name: "Riot",
+    flavor: "",
+    rows: [1, 2, 3, 4, 5, 6].map((roll) => ({
+      roll,
+      label: "Fire",
+      effects: [{ type: "destroyBuilding", popLossFallback: 0 }],
+    })),
+  };
+
+  /** Seat 0's turn, nothing pending, every seat able to pay for a Port, and Tyrian Dye,
+   *  whose two tiles stand empty on this board. */
+  function portGame(patch?: RulesetPatch) {
+    const G = scenario({ patch })
+      .opening()
+      .mutate((draft) => {
+        draft.pendingPlayerEvent = null;
+        for (const seat of PLAYER_IDS) fund(draft, seat);
+      })
+      .build();
+    const good = G.board.luxuries[0];
+    const [here, there] = good.tileIds;
+    return { G, good, here, there };
+  }
+
+  it("releases a good when its holder's last Port beside it burns, and a backup keeps it", () => {
+    const { G, good, here, there } = portGame();
+    colonyOn(G, "0", here);
+    colonyOn(G, "0", there);
+    expect(buildBuilding(G, "0", here, "port").ok).toBe(true);
+    expect(good.owner).toBe("0");
+
+    // A second Port beside a good its builder holds claims nothing: it is the backup.
+    expect(buildBuilding(G, "0", there, "port").ok).toBe(true);
+    expect(good.owner).toBe("0");
+
+    // Seat 0's only buildings are the two Ports. One burns: the backup holds the good.
+    rollOnTable(G, "0", FIRE);
+    expect(good.owner).toBe("0");
+    expect(luxuryHappinessBonus(G, "0")).toBe(2);
+
+    // The other burns: the good goes back to the board, its claim origin with it.
+    const { record } = rollOnTable(G, "0", FIRE);
+    expect(good).toMatchObject({ owner: null, claimedAtSettlementId: null });
+    expect(luxuryHappinessBonus(G, "0")).toBe(0);
+    expect(record.outcomes).toEqual(["Port destroyed.", "Tyrian Dye goes back to the board."]);
+    expect(G.log.at(-1)).toMatchObject({
+      about: "0",
+      message: "Tyrian Dye goes back to the board unclaimed: Damon has no Port beside it.",
+    });
+    expect(collectInvariantViolations(G)).toEqual([]);
+  });
+
+  it("lets only a newly built Port claim a released good, the former holder's included", () => {
+    const { G, good, here, there } = portGame();
+    colonyOn(G, "0", here);
+    colonyOn(G, "1", there);
+    expect(buildBuilding(G, "0", here, "port").ok).toBe(true);
+    // A rival's Port beside a claimed good stands, claiming nothing.
+    expect(buildBuilding(G, "1", there, "port").ok).toBe(true);
+    expect(good.owner).toBe("0");
+
+    rollOnTable(G, "0", FIRE);
+    // Seat 1's Port was standing beside it already: it does not take it.
+    expect(good.owner).toBeNull();
+    expect(claimableLuxuriesAt(G, here).map((asset) => asset.id)).toEqual([good.id]);
+
+    // Seat 0 rebuilds first and claims it again.
+    expect(buildBuilding(G, "0", here, "port").ok).toBe(true);
+    expect(good.owner).toBe("0");
+  });
+
+  it("releases a good when a rival's city drives off the colony that held its Port", () => {
+    const { G, good, here } = portGame();
+    colonyOn(G, "1", here);
+    expect(buildBuilding(G, "1", here, "port").ok).toBe(true);
+    expect(good.owner).toBe("1");
+    colonyOn(G, "0", here);
+
+    const upgrade = getUpgradeColonyToCityStatus(G, "0", here);
+    expect(upgrade.reasons).toEqual([]);
+    expect(upgradeColonyToCity(G, "0", here).ok).toBe(true);
+
+    expect(good).toMatchObject({ owner: null, claimedAtSettlementId: null });
+    expect(G.log.at(-1)?.message).toMatch(/Tyrian Dye goes back to the board unclaimed/);
+  });
+
+  it("builds a Port beside a claimed good only under the rule", () => {
+    for (const needsPort of [true, false]) {
+      const { G, here, there } = portGame({ economy: { luxury: { needsPort } } });
+      colonyOn(G, "0", here);
+      colonyOn(G, "1", there);
+      expect(buildBuilding(G, "0", here, "port").ok).toBe(true);
+      expect(getBuildBuildingStatus(G, "1", there, "port").reasons).toEqual(
+        needsPort ? [] : ["No unclaimed luxury good adjoins this tile."],
+      );
+    }
+  });
+
+  it("keeps a good its holder's for the game with the switch off, Port or none", () => {
+    const { G, good, here } = portGame({ economy: { luxury: { needsPort: false } } });
+    colonyOn(G, "0", here);
+    expect(buildBuilding(G, "0", here, "port").ok).toBe(true);
+
+    rollOnTable(G, "0", FIRE);
+    expect(good.owner).toBe("0");
+    expect(luxuryHappinessBonus(G, "0")).toBe(2);
   });
 });

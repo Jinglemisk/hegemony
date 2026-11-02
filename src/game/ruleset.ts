@@ -167,6 +167,13 @@ export interface LuxuryRules {
   randomPlacement: boolean;
   /** What each active good adds to the level. */
   happinessPerGood: number;
+  /** A good counts only while its holder has a Port beside it: losing the last such Port
+   *  sends it back to the board, a Port may stand beside a claimed good, and a good goes in
+   *  trade only to a seat with a Port beside it (docs/plans/agency-package.md). Off, a good
+   *  stays its holder's for the game with no Port, a Port needs an unclaimed good, and goods
+   *  trade freely. On in the game; a batch turns it off to measure it, and no screen offers
+   *  the switch. */
+  needsPort: boolean;
 }
 
 /** The level's two lines. At or below the first a riot rolls on the riot table
@@ -343,6 +350,7 @@ export const DEFAULT_RULESET: Ruleset = {
       coastalGoods: 2 * PLAYER_IDS.length - 1,
       randomPlacement: false,
       happinessPerGood: 2,
+      needsPort: true,
     },
   },
   civicCalm: { happiness: 2, influenceCost: 2, goldCost: 2 },

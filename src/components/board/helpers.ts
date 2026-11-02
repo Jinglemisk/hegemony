@@ -4,7 +4,8 @@ import type { ActionStatus } from "../../game/rules";
 import {
   POP_TYPES,
   claimableLuxuriesAt,
-  getLuxuryGood,
+  luxuriesBeside,
+  luxuryName,
   settlementNextClassColumn,
   previewBuildBuilding,
   previewBuildingIncomeDelta,
@@ -87,13 +88,20 @@ export function getBuildingBenefitText(
   // what the standing offset is worth, from the same selectors the engine reads.
   if (building.id === "port") {
     const goods = claimableLuxuriesAt(G, tile.id)
-      .map((asset) => getLuxuryGood(G.definition.content, asset.goodId)?.name ?? asset.goodId)
+      .map((asset) => luxuryName(G, asset))
       .join(" or ");
     const perGood = G.ruleset.economy.luxury.happinessPerGood;
+    const [held] = luxuriesBeside(G, tile.id);
 
-    return goods
-      ? `Claims ${goods}: +${perGood} effective happiness while active. Never banked; counts toward Beloved of the People.`
-      : "Claims an adjacent unclaimed coastal luxury good — none adjoins this tile.";
+    if (goods) {
+      return `Claims ${goods}: +${perGood} effective happiness while active. Never banked; counts toward Beloved of the People.`;
+    }
+    if (!held || !G.ruleset.economy.luxury.needsPort) {
+      return "Claims an adjacent unclaimed coastal luxury good — none adjoins this tile.";
+    }
+    return held.owner === playerID
+      ? `A second Port beside ${luxuryName(G, held)}: you keep it while either stands.`
+      : `Stands beside ${luxuryName(G, held)}: a good goes in trade only to a seat with a Port beside it.`;
   }
 
   const preview = previewBuildBuilding(G, playerID, tile.id, building.id);

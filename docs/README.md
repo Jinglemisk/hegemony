@@ -37,19 +37,19 @@ precedes full multiplayer. The mechanics are frozen (owner, 2026-10-27) but for 
 
 ## Active plans
 
-| Plan                                                | Phase    | Status     | Position                                                                          |
-| --------------------------------------------------- | -------- | ---------- | --------------------------------------------------------------------------------- |
-| [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`    | Reopened after the agency package as a bot overhaul (owner, 2026-11-01)           |
-| [Luxury goods](plans/luxury-goods.md)               | 4        | `active`   | Slices 1–2 shipped on `main`; the v2 migration carries them unchanged             |
-| [UI — what is left](plans/ui-remaining.md)          | —        | `active`   | The one UI ledger; the KYKLOS triage ledgers are archived                         |
-| [Code health](plans/code-health.md)                 | post-v2  | `active`   | Five cleanup PRs before trade; all merged, trade next                             |
-| [Player trade](plans/player-trade.md)               | post-v2  | `active`   | PRs #131 and #132 merged; the owner plays trade next; holds the balance check     |
-| [Development deck](plans/development-deck.md)       | post-v2  | `active`   | Slices 1-2 built: the deck, the free card, a riot's card; card trading next       |
-| [Board modes](plans/board-modes.md)                 | post-v2  | `proposed` | Engine and sim (#145); Q81 answered: hop 3, seven goods, the oracle on an island  |
-| [Game settings](plans/game-settings.md)             | post-v2  | `proposed` | Length and base income built in the engine; the setup screen is parked            |
-| [National Ideas](plans/national-ideas.md)           | v2       | `active`   | Step 9 shipped (#88); twelve v2 rules, open setup draft (#95), influence purchase |
-| [Agency package](plans/agency-package.md)           | post-v2  | `active`   | Manumission, Capital Works, Messengers, optional pops, kept Laws, caps built      |
-| [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked`  | Final typed Resolution/Idea effects and evidence before multiplayer               |
+| Plan                                                | Phase    | Status     | Position                                                                                |
+| --------------------------------------------------- | -------- | ---------- | --------------------------------------------------------------------------------------- |
+| [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`    | Reopened after the agency package as a bot overhaul (owner, 2026-11-01)                 |
+| [Luxury goods](plans/luxury-goods.md)               | 4        | `active`   | Slices 1–2 shipped on `main`; the v2 migration carries them unchanged                   |
+| [UI — what is left](plans/ui-remaining.md)          | —        | `active`   | The one UI ledger; the KYKLOS triage ledgers are archived                               |
+| [Code health](plans/code-health.md)                 | post-v2  | `active`   | Five cleanup PRs before trade; all merged, trade next                                   |
+| [Player trade](plans/player-trade.md)               | post-v2  | `active`   | PRs #131 and #132 merged; the owner plays trade next; holds the balance check           |
+| [Development deck](plans/development-deck.md)       | post-v2  | `active`   | Slices 1-2 built: the deck, the free card, a riot's card; card trading next             |
+| [Board modes](plans/board-modes.md)                 | post-v2  | `proposed` | Engine and sim (#145); Q81 answered: hop 3, seven goods, the oracle on an island        |
+| [Game settings](plans/game-settings.md)             | post-v2  | `proposed` | Length and base income built in the engine; the setup screen is parked                  |
+| [National Ideas](plans/national-ideas.md)           | v2       | `active`   | Step 9 shipped (#88); twelve v2 rules, open setup draft (#95), influence purchase       |
+| [Agency package](plans/agency-package.md)           | post-v2  | `active`   | Manumission, Capital Works, Messengers, optional pops, kept Laws, Port rule, caps built |
+| [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked`  | Final typed Resolution/Idea effects and evidence before multiplayer                     |
 
 Every file in `docs/plans/` must appear in this table. Start a substantial feature
 from [the plan template](plans/_template.md).

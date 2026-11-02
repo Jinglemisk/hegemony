@@ -13,7 +13,7 @@ import { buildingGround } from "../../game/status";
 import type { HegemonyState, HexTile, PopType, Resource, Settlement } from "../../game/types";
 import { sign } from "../../ui/frameFormat";
 import { BUILDING_RASTERS, POP_RASTERS, RESOURCE_RASTERS } from "../../ui/iconRegistry";
-import { getLuxuryGood } from "../../game/content";
+import { luxuriesBeside, luxuryName } from "../../game/luxury";
 import { presentBuildingEffects } from "../../ui/effects";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { Prose } from "../AnnotatedText";
@@ -138,10 +138,11 @@ export function SettlementPage({
       <ul className="ground" data-c="settle-lines">
         {settlement.buildings.map((id, index) => {
           const building = getBuilding(G.definition.content, id);
-          // A standing building states its one fact; the Port's is the good it claimed.
-          const claimed = G.board.luxuries
-            .filter((asset) => asset.claimedAtSettlementId === settlement.id)
-            .map((asset) => getLuxuryGood(G.definition.content, asset.goodId)?.name ?? asset.goodId)
+          // A standing building states its one fact; the Port's is the goods beside it
+          // its holder keeps.
+          const held = luxuriesBeside(G, tile.id)
+            .filter((asset) => asset.owner === settlement.owner)
+            .map((asset) => luxuryName(G, asset))
             .join(", ");
           return (
             <li className="g-line" data-c="settle-line" key={`${id}-${index}`}>
@@ -149,7 +150,7 @@ export function SettlementPage({
               {building?.name ?? id}
               {!building ? null : building.claimsLuxury ? (
                 <span>
-                  <Prose>{claimed ? `Claims ${claimed}` : "Its claim is gone"}</Prose>
+                  <Prose>{held ? `Holds ${held}` : "Holds no good"}</Prose>
                 </span>
               ) : (
                 <EffectLine effect={presentBuildingEffects(building.effects)} />

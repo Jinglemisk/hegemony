@@ -869,19 +869,19 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
       }
 
       // A Port is enumerated once per claimable good, claim explicit, so a bot's
-      // choice between two reachable luxuries is a command, not a coin flip.
-      if (building.claimsLuxury) {
-        for (const asset of claimableLuxuriesAt(G, tileId)) {
-          moves.push({
-            type: "buildBuilding",
-            tileId,
-            buildingId: building.id,
-            claimVertexId: asset.vertexId,
-            cost: status.cost ?? {},
-          });
-        }
-        continue;
+      // choice between two reachable luxuries is a command, not a coin flip. With none
+      // to claim, the Port rule lets it stand beside a claimed good, claiming nothing.
+      const claimable = building.claimsLuxury ? claimableLuxuriesAt(G, tileId) : [];
+      for (const asset of claimable) {
+        moves.push({
+          type: "buildBuilding",
+          tileId,
+          buildingId: building.id,
+          claimVertexId: asset.vertexId,
+          cost: status.cost ?? {},
+        });
       }
+      if (claimable.length > 0) continue;
 
       moves.push({
         type: "buildBuilding",
