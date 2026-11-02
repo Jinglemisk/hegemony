@@ -325,7 +325,9 @@ the table. Every seat sees every offer.
 - You may have several offers open and offer again after a refusal. Your open offers
   close when your turn ends.
 - **Luxury goods** carry their +2 happiness to whoever holds them; the Port that claimed
-  one stays where it stands.
+  one stays where it stands. A good goes only to a seat with a Port beside it, so you may
+  offer it only to such seats (the table counts every rival), and ask for one only with a
+  Port of your own beside it.
 - **Pops** leave at once and travel like a move. Each side picks its own settlements on
   the map, as it offers, accepts or counters: the one the pops it gives leave from, and
   the one that takes in the pops it gets, which needs room, counting pops already on
@@ -418,17 +420,31 @@ instead of 1. The other three state one fact.
 - **Forum** (3 stone) — citizens here make 2 influence.
 - **Temple** (3 stone) — +1 happiness while it stands.
 - **Granary** (4 wood) — +2 food each turn.
-- **Port** (4 gold, 2 stone) — claims one adjacent **luxury good** (below). It needs
-  the coast and an unclaimed good adjoining the tile. A colony may raise one; it is
-  the only building a colony can hold.
+- **Port** (4 gold, 2 stone) — claims one adjacent **luxury good** (below), and your
+  goods count only while you have a Port beside them. It needs the coast and a good
+  adjoining the tile, claimed or not. A colony may raise one; it is the only building a
+  colony can hold.
 
 ## Luxury goods
 
 Seven named goods — Tyrian Dye, Pearls, Coral, Glassware, Incense, Fine Linen,
 Silphium — sit moored off the coast, each at a point shared by **two** coastal
 tiles. A **Port** raised in a settlement on either tile claims the good; **the first
-Port wins**, and the good stays claimed for the rest of the game. Each good is
-unique: one copy, one owner.
+Port wins**. Each good is unique: one copy, one owner.
+
+**A good needs a Port.** It counts only while you have a Port beside it, in one of your
+settlements on either of its two tiles. A second Port beside the same good is a backup:
+the good stays yours while either stands. A Port elsewhere on the map does not help.
+
+- **Losing the last Port.** When every Port you have beside a good is destroyed, by a
+  riot's fire, by a rival's city driving off the colony that held it, or anything else,
+  the good goes back to the board unclaimed, and the Chronicle says so.
+- **Claiming it again.** The next Port **built** beside a released good claims it, and
+  that may be yours, rebuilt. A Port already standing beside it does not take it.
+- **Beside a claimed good.** You may build a Port beside a good someone holds. It claims
+  nothing: it is your backup if the good is yours, or your way to take it in trade if it
+  is a rival's.
+- A settlement still holds one Port.
 
 Every good you hold adds **+2 to your happiness** for as long as you hold it, and
 there is no limit on how many count. The riot and revolt lines and the **Beloved of
@@ -653,7 +669,7 @@ each politician's Laws and monuments by seat, and Voice.
 | Kleistophenes | Homestead Act     | Colonies may hold one building, including a Port; cities lose one slot.                                                   |
 | Kleistophenes | Colonial Charter  | Found for 1 food and a pop; upgrade for 6 stone. Pieces and placement rules still apply.                                  |
 | Kleistophenes | Frontier Spirit   | Founding adds a free slave to the new colony, with no Unrest token; colonies hold 3 pops.                                 |
-| Kleistophenes | Harbour Dues      | Ports cost 2 stone; Marketplaces cost 3 wood and 4 gold. A Port still needs a coast and an unclaimed good.                |
+| Kleistophenes | Harbour Dues      | Ports cost 2 stone; Marketplaces cost 3 wood and 4 gold. A Port still needs a coast and a good beside it.                 |
 | Kleistophenes | Rural Bloc        | +1 vote per colony, −1 per city; at least one base vote.                                                                  |
 
 Stratokles offers six one-time **Directives**. Choose one rival before sealing the

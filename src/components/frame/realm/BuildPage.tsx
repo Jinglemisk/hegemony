@@ -4,7 +4,8 @@ import {
   getAdjustedActionCost,
   getBuildBuildingStatus,
   getBuildings,
-  getLuxuryGood,
+  luxuriesBeside,
+  luxuryName,
 } from "../../../game/rules";
 import type {
   BuildingDefinition,
@@ -34,10 +35,15 @@ function cellLine(
   building: BuildingDefinition,
 ) {
   if (building.claimsLuxury) {
-    const goods = claimableLuxuriesAt(G, tile.id).map(
-      (asset) => getLuxuryGood(G.definition.content, asset.goodId)?.name ?? asset.goodId,
-    );
-    return goods.length > 0 ? `claims ${goods.join(" or ")}` : "no good adjoins";
+    const goods = claimableLuxuriesAt(G, tile.id).map((asset) => luxuryName(G, asset));
+    if (goods.length > 0) return `claims ${goods.join(" or ")}`;
+    // Under the Port rule it may stand beside a claimed good: a backup for its holder, or
+    // a rival's way to take it in trade.
+    const [held] = luxuriesBeside(G, tile.id);
+    if (!held) return "no good adjoins";
+    return held.owner === playerID
+      ? `a second Port for ${luxuryName(G, held)}`
+      : `takes ${luxuryName(G, held)} in trade`;
   }
   return getBuildingBenefitText(G, playerID, tile, building);
 }

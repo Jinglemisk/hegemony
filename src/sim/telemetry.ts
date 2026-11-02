@@ -19,6 +19,7 @@ import { atFreeCardLevel } from "../game/devCards";
 import { riotPopNext } from "../game/riot";
 import { getAddPopsEffect } from "../game/events";
 import { activeClaims, ownedClaims } from "../game/luxury";
+import { getBuilding } from "../game/content";
 import { playerStandings } from "../game/score";
 import { getOwnedSettlement, getTile } from "../game/core/query";
 import { canPlaceColonyOnTile, settlementIdleSlaves } from "../game/settlement";
@@ -293,6 +294,11 @@ export type TradeCounts = {
   prices: Partial<Record<TradableMaterial, Partial<Record<Resource, number[]>>>>;
 };
 
+/** Why a Port fell: a riot's fire, a rival's city driving off its colony, or anything
+ *  else. */
+export type PortLoss = "riot" | "displaced" | "other";
+const PORT_LOSSES: PortLoss[] = ["riot", "displaced", "other"];
+
 /** What one seat did in one game, counted once, as it played. */
 export type SeatCounts = {
   /** Its commands, buildings, draws and passed resolutions by reach id, only the ids it
@@ -326,6 +332,14 @@ export type SeatCounts = {
    *  that passed when proposed again, and the influence it paid for draws whose card never
    *  reached a vote: set aside, or kept and later let go or held at the end. */
   kept: { blockedDraws: number; kept: number; keptPassed: number; lostDrawInfluence: number };
+  /** The Port rule: its Ports lost, by cause; its goods that went back to the board; and
+   *  the released goods it claimed next, its own former goods or a rival's. */
+  ports: {
+    lost: Record<PortLoss, number>;
+    goodsReleased: number;
+    reclaimed: number;
+    rivalsClaimed: number;
+  };
   trade: TradeCounts;
 };
 
@@ -388,6 +402,12 @@ function emptySeatCounts(): Record<PlayerId, SeatCounts> {
     repealsFailed: 0,
     directivesAimedAt: 0,
     kept: { blockedDraws: 0, kept: 0, keptPassed: 0, lostDrawInfluence: 0 },
+    ports: {
+      lost: { riot: 0, displaced: 0, other: 0 },
+      goodsReleased: 0,
+      reclaimed: 0,
+      rivalsClaimed: 0,
+    },
     trade: emptyTradeCounts(),
   });
   return Object.fromEntries(PLAYER_IDS.map((id) => [id, empty()])) as Record<PlayerId, SeatCounts>;
@@ -425,6 +445,17 @@ function addUnits(units: Record<TradeUnit, number>, bundle: TradeBundle) {
   for (const resource of TRADE_RESOURCES) units[resource] += bundle.resources[resource] ?? 0;
   units.goods += bundle.goods.length;
   for (const pop of POP_TYPES) units[pop] += bundle.pops[pop];
+}
+
+/** The Ports standing in a seat's settlements. */
+function portCount(G: HegemonyState, playerID: PlayerId): number {
+  let ports = 0;
+  for (const tileId of G.players[playerID].settlements) {
+    const settlement = getOwnedSettlement(G, tileId, playerID);
+    for (const id of settlement?.buildings ?? [])
+      if (getBuilding(G.definition.content, id)?.claimsLuxury) ports += 1;
+  }
+  return ports;
 }
 
 function slaveCounts(G: HegemonyState, playerID: PlayerId) {
@@ -775,6 +806,16 @@ export type DevCardFigures = {
   popsSaved: Record<PopType, Count>;
 };
 
+/** The Port rule: Ports lost, by cause, the goods released with them, and who claimed a
+ *  released good next, its former holder or a rival. A good still unclaimed at the end
+ *  is released less those two. */
+export type PortFigures = {
+  lost: Record<PortLoss, Count>;
+  goodsReleased: Count;
+  reclaimed: Count;
+  rivalsClaimed: Count;
+};
+
 export type BatchReport = {
   meta: {
     games: number;
@@ -831,6 +872,7 @@ export type BatchReport = {
   influenceSpent: Cut<Record<InfluenceSink, Count>>;
   trade: Cut<TradeFigures>;
   devCards: Cut<DevCardFigures>;
+  ports: Cut<PortFigures>;
   /** Universal action telemetry. Every GameCommand type is present, including zeroes,
    *  so newly added or unexercised actions cannot disappear from a report. */
   movesByType: Record<GameCommandType, Count>;
@@ -1208,6 +1250,18 @@ function devCardsOf(group: SeatGame[], games: number): DevCardFigures {
   };
 }
 
+function portsOf(group: SeatGame[], games: number): PortFigures {
+  const count = counter(group, games);
+  return {
+    lost: Object.fromEntries(
+      PORT_LOSSES.map((cause) => [cause, count(({ facts }) => facts.ports.lost[cause])]),
+    ) as Record<PortLoss, Count>,
+    goodsReleased: count(({ facts }) => facts.ports.goodsReleased),
+    reclaimed: count(({ facts }) => facts.ports.reclaimed),
+    rivalsClaimed: count(({ facts }) => facts.ports.rivalsClaimed),
+  };
+}
+
 function tradeOf(group: SeatGame[], games: number): TradeFigures {
   const count = counter(group, games);
   const units = (side: "given" | "received") =>
@@ -1355,6 +1409,8 @@ export class Aggregator {
   private openDraws = new Map<string, { seat: PlayerId; price: number }>();
   /** Kept Laws proposed again this sitting, not yet voted. */
   private keptProposals = new Set<string>();
+  /** Goods back on the board and unclaimed since, by asset: the seat that last held each. */
+  private released = new Map<string, PlayerId>();
 
   private game = -1;
   private seed = 0;
@@ -1384,6 +1440,7 @@ export class Aggregator {
     this.countedResults = { sitting: "", count: 0 };
     this.openDraws = new Map();
     this.keptProposals = new Set();
+    this.released = new Map();
     this.seats = emptySeatCounts();
     this.gameCounts = emptyGameCounts();
     this.gameYearCards = [];
@@ -1420,6 +1477,7 @@ export class Aggregator {
       this.countTrade(before, G, player, move);
       this.countDeck(before, G, player, move);
       this.countKept(before, G, player, move);
+      this.countPorts(before, G, move);
     }
     if (move.type === "resolveEvent" && !move.decline && before?.pendingPlayerEvent) {
       const old = before.players[player];
@@ -1573,6 +1631,35 @@ export class Aggregator {
     };
     price(offering, terms.give, terms.get);
     price(answering, terms.get, terms.give);
+  }
+
+  /** Ports a command took, by the command that took them; goods it sent back to the board;
+   *  and who claimed a released good next. */
+  private countPorts(before: HegemonyState, G: HegemonyState, move: GameCommand) {
+    const cause: PortLoss =
+      move.type === "resolveRiot"
+        ? "riot"
+        : move.type === "upgradeColonyToCity"
+          ? "displaced"
+          : "other";
+    for (const seat of PLAYER_IDS) {
+      const lost = portCount(before, seat) - portCount(G, seat);
+      if (lost > 0) this.seats[seat].ports.lost[cause] += lost;
+    }
+    for (const asset of G.board.luxuries) {
+      const was = before.board.luxuries.find((old) => old.id === asset.id)?.owner ?? null;
+      if (was !== null && asset.owner === null) {
+        this.seats[was].ports.goodsReleased += 1;
+        this.released.set(asset.id, was);
+      }
+      const former = this.released.get(asset.id);
+      if (was === null && asset.owner !== null && former) {
+        const claims = this.seats[asset.owner].ports;
+        if (former === asset.owner) claims.reclaimed += 1;
+        else claims.rivalsClaimed += 1;
+        this.released.delete(asset.id);
+      }
+    }
   }
 
   /** A draw blocked when drawn, a kept Law proposed again, and what a draw paid. */
@@ -1824,6 +1911,7 @@ export class Aggregator {
       influenceSpent,
       trade: by(tradeOf),
       devCards: by(devCardsOf),
+      ports: by(portsOf),
       movesByType: commands(GAME_COMMAND_TYPES) as BatchReport["movesByType"],
       activeEffects: activeEffectsOf(snapshots),
       buildings: Object.fromEntries(

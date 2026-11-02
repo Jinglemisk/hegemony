@@ -1,10 +1,10 @@
-import { getLuxuryGood, getLuxuryGoods } from "./content";
+import { getBuilding, getLuxuryGood, getLuxuryGoods } from "./content";
 import type { GameContent } from "./content";
 import { allocateEntityId } from "./entity";
 import { selectLuxuryVertices } from "./mapTopology";
 import type { HegemonyState, HexTile, LuxuryAsset, PlayerId } from "./types";
 import type { Ruleset } from "./ruleset";
-import { addLog, getPlayerName, zeroedYearTerm } from "./core/query";
+import { addLog, getOwnedSettlement, getPlayerName, zeroedYearTerm } from "./core/query";
 import type { MoveResult } from "./core/results";
 import { MOVE_OK, invalid } from "./core/results";
 
@@ -16,6 +16,11 @@ import { MOVE_OK, invalid } from "./core/results";
  * The load-bearing rule: an asset stores ownership and suppression, NEVER whether
  * it is active. {@link activeClaims} derives activity in one stable ordering from
  * ownership and suppression, so no state can contradict it.
+ *
+ * The Port rule (docs/plans/agency-package.md, ruling 7): a good counts only while its
+ * holder has a Port beside it. Ownership carries that: a good is claimed by a new Port,
+ * goes in trade only to a seat with a Port beside it, and goes back to the board when its
+ * holder's last Port beside it falls, so a held good always has one.
  */
 
 /** Seat the authored goods on the board's selected moorings at match creation.
@@ -69,17 +74,39 @@ export function luxuryHappinessBonus(G: HegemonyState, playerID: PlayerId): numb
   return activeClaims(G, playerID).length * G.ruleset.economy.luxury.happinessPerGood;
 }
 
+/** Every good beside `tileId`, claimed or not: those a Port there stands beside. */
+export function luxuriesBeside(G: HegemonyState, tileId: string): LuxuryAsset[] {
+  return G.board.luxuries.filter((asset) => asset.tileIds.includes(tileId));
+}
+
 /** The unclaimed goods a Port in a settlement on `tileId` could seize. */
 export function claimableLuxuriesAt(G: HegemonyState, tileId: string): LuxuryAsset[] {
-  return G.board.luxuries.filter((asset) => asset.owner === null && asset.tileIds.includes(tileId));
+  return luxuriesBeside(G, tileId).filter((asset) => asset.owner === null);
+}
+
+/** Whether `seat` has a Port in a settlement on one of the good's two tiles. */
+export function hasPortBeside(G: HegemonyState, seat: PlayerId, asset: LuxuryAsset): boolean {
+  return asset.tileIds.some((tileId) =>
+    getOwnedSettlement(G, tileId, seat)?.buildings.some(
+      (id) => getBuilding(G.definition.content, id)?.claimsLuxury,
+    ),
+  );
+}
+
+export function luxuryName(G: HegemonyState, asset: LuxuryAsset): string {
+  return getLuxuryGood(G.definition.content, asset.goodId)?.name ?? asset.goodId;
 }
 
 /**
- * The one ownership-transfer seam. The Port's claim uses it today; player trade
- * and denial effects use the same door later, so "one good, one owner" is checked
- * in exactly one place.
+ * The one ownership-transfer seam. The Port's claim, player trade and the Port rule's
+ * release all go through it, so "one good, one owner" is checked in exactly one place.
+ * A release (`null`) clears the claim origin with the owner.
  */
-export function transferLuxury(G: HegemonyState, assetId: string, newOwner: PlayerId): MoveResult {
+export function transferLuxury(
+  G: HegemonyState,
+  assetId: string,
+  newOwner: PlayerId | null,
+): MoveResult {
   const asset = G.board.luxuries.find((candidate) => candidate.id === assetId);
 
   if (!asset) {
@@ -90,7 +117,36 @@ export function transferLuxury(G: HegemonyState, assetId: string, newOwner: Play
   }
 
   asset.owner = newOwner;
+  if (newOwner === null) asset.claimedAtSettlementId = null;
   return MOVE_OK;
+}
+
+/**
+ * The Port rule's release, run wherever a Port of `seat` on `tileId` falls: each good
+ * beside that tile the seat holds with no other Port of its own beside it goes back to
+ * the board unclaimed. A Port already standing beside a released good does not take it;
+ * only a newly built one claims. Off under the comparison switch. Returns the goods
+ * released, by name.
+ */
+export function releaseLuxuriesAfterPortLoss(
+  G: HegemonyState,
+  seat: PlayerId,
+  tileId: string,
+): string[] {
+  if (!G.ruleset.economy.luxury.needsPort) return [];
+  const released: string[] = [];
+  for (const asset of luxuriesBeside(G, tileId)) {
+    if (asset.owner !== seat || hasPortBeside(G, seat, asset)) continue;
+    transferLuxury(G, asset.id, null);
+    const name = luxuryName(G, asset);
+    addLog(
+      G,
+      `${name} goes back to the board unclaimed: ${getPlayerName(G, seat)} has no Port beside it.`,
+      seat,
+    );
+    released.push(name);
+  }
+  return released;
 }
 
 /** Tick down denial on the player's goods at their upkeep. Nothing suppresses yet
