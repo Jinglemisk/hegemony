@@ -572,9 +572,13 @@ button.link {
   color: var(--ink);
   font-weight: 700;
 }
-.cost-sub {
+/* The section's note and the "or" between two prices: an aside in the body face. */
+.cost-sub,
+.cost-or {
   font: italic 500 var(--t-cap) / var(--l-cap) var(--f-body);
   color: var(--ink-66);
+}
+.cost-sub {
   text-transform: none;
 }
 .cost-line {
@@ -606,10 +610,6 @@ button.link {
 }
 .cost-res {
   gap: var(--rule);
-}
-.cost-or {
-  font: italic 500 var(--t-cap) / var(--l-cap) var(--f-body);
-  color: var(--ink-66);
 }
 .cost-free {
   color: var(--olive);
