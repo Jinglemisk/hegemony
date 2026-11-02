@@ -3,6 +3,7 @@ import { POP_TYPES, fullest, totalPops } from "./core/pops";
 import { formatPopName } from "./core/format";
 import { addLog, getOwnedSettlement, getPlayerName } from "./core/query";
 import { applyResourceDeltaWithFloors, createResourceDelta } from "./core/resources";
+import { releaseLuxuriesAfterPortLoss } from "./luxury";
 import { mulberry32 } from "./core/rng";
 import type {
   EventTableDefinition,
@@ -156,8 +157,16 @@ function applyTableEffect(
       const destroyed = destroyRandomBuilding(G, playerID);
 
       if (destroyed) {
-        addLog(G, `${name} — ${destroyed} burns to the ground.`);
-        return { outcomes: [`${destroyed} destroyed.`], pops: 0 };
+        addLog(G, `${name} — ${destroyed.name} burns to the ground.`);
+        // A burned Port may have been the last beside a good: the good goes back.
+        const released = releaseLuxuriesAfterPortLoss(G, playerID, destroyed.tileId);
+        return {
+          outcomes: [
+            `${destroyed.name} destroyed.`,
+            ...released.map((good) => `${good} goes back to the board.`),
+          ],
+          pops: 0,
+        };
       }
 
       // Nothing to burn: the fallback pops are lost instead, so a buildingless
@@ -245,9 +254,12 @@ export function describeRemoval(summary: Pick<RemovalSummary, "byType">): string
   return parts.join(", ");
 }
 
-/** Burn one random owned building (seeded). Returns its display name, or null if the
- *  player owns none. A settlement holds one of each building, so the one burned is gone. */
-function destroyRandomBuilding(G: HegemonyState, playerID: PlayerId): string | null {
+/** Burn one random owned building (seeded). Returns its display name and tile, or null if
+ *  the player owns none. A settlement holds one of each building, so the one burned is gone. */
+function destroyRandomBuilding(
+  G: HegemonyState,
+  playerID: PlayerId,
+): { name: string; tileId: string } | null {
   const owned: Array<{ settlement: Settlement; index: number }> = [];
 
   for (const tileId of G.players[playerID].settlements) {
@@ -266,7 +278,7 @@ function destroyRandomBuilding(G: HegemonyState, playerID: PlayerId): string | n
   G.rng = step.state;
   const target = owned[Math.floor(step.value * owned.length)];
   const [removed] = target.settlement.buildings.splice(target.index, 1);
-  return (
-    getBuildings(G.definition.content).find((building) => building.id === removed)?.name ?? removed
-  );
+  const name =
+    getBuildings(G.definition.content).find((building) => building.id === removed)?.name ?? removed;
+  return { name, tileId: target.settlement.tileId };
 }
