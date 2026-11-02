@@ -75,11 +75,16 @@ export const ENGINE_VERSION = "0.1.0";
  *  its turn is kept by its seat. The state carries each seat's kept Law and the ruleset
  *  the switch. Proposing takes the same command, now for a blocked or a kept Law too, so
  *  commands are unchanged. Older saves are rejected, not migrated. */
-/** v25 (agency package, year forecast): next year's card is public, and a game longer
+/** v25 (agency package, the Port rule): a good counts only while its holder has a Port
+ *  beside it, and goes back to the board when the last one falls. The ruleset carries the
+ *  switch, so older pinned rulesets cannot answer it. Building a Port takes the same
+ *  command, now beside a claimed good too, so commands are unchanged. Older saves are
+ *  rejected, not migrated. */
+/** v26 (agency package, year forecast): next year's card is public, and a game longer
  *  than the deck shuffles the spent years back in a year earlier, so the next card can
- *  show. Such a v24 recording replays differently, so older saves are rejected. Commands
+ *  show. Such a v25 recording replays differently, so older saves are rejected. Commands
  *  are unchanged. */
-export const STATE_SCHEMA_VERSION = 25;
+export const STATE_SCHEMA_VERSION = 26;
 export const COMMAND_SCHEMA_VERSION = 10;
 
 export const SAVE_FORMAT_VERSION = 2;
