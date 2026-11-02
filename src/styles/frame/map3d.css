@@ -213,11 +213,21 @@
   line-height: 1;
   letter-spacing: var(--track-name);
 }
-/* Two settlements on a tile: a rule between them. */
-.lm-plate > u {
-  align-self: stretch;
-  width: 1px;
-  background: var(--ink-45);
+.lm-plate .pl-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+}
+/* Two settlements on a tile: a row each, a rule between them. Side by side the plate
+   was wider than a hex and covered the next tile's. */
+.lm-plate.is-shared {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+}
+.lm-plate.is-shared .pl-row + .pl-row {
+  padding-top: 2px;
+  border-top: 1px solid var(--ink-45);
 }
 .lm-plate .pips,
 .lm-plate .pl-pops {
@@ -281,8 +291,8 @@
   display: flex;
   align-items: center;
   gap: 0.6em;
-  margin-top: 3px;
-  padding: 3px 8px;
+  margin-top: 2px;
+  padding: 2px 6px;
   font-family: var(--f-sans);
   font-weight: 700;
   line-height: 1;
@@ -313,8 +323,8 @@
   color: var(--pos);
 }
 .lm-hint img {
-  width: 2em;
-  height: 2em;
+  width: 1.5em;
+  height: 1.5em;
 }
 
 /* A selected tile's buildings: each a bronze icon on a stem over its building. */

@@ -214,12 +214,13 @@
 .lm-tokens {
   font-size: max(var(--t-12), calc(var(--lab) * 0.92));
 }
-/* Trade's hint, larger than the plate it hangs from, its arrows larger still. */
+/* Trade's hint, the plate's size, its arrows a little larger: any taller and it
+   reached the next row's badges. */
 .lm-hint {
-  font-size: calc(var(--lab) * 1.15);
+  font-size: var(--lab);
 }
 .lm-hint b {
-  font-size: 1.5em;
+  font-size: 1.2em;
 }
 /* The corner dock: a mode's name at the floor, the Chronicle's deeds at reading size. */
 .dock-mode {

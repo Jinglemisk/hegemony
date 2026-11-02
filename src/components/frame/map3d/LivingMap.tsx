@@ -137,13 +137,16 @@ function ResBadge({ tile, look }: { tile: MapTile; look: Plates["look"] }) {
  *  candidate's at any zoom (`asked`). Trade's hint hangs under a capital's. */
 function Plate({ tile, asked, hint }: { tile: MapTile; asked: boolean; hint?: ReactNode }) {
   const [lead] = tile.settlements;
+  const shared = tile.settlements.length > 1;
   return (
-    <div className={`lm-plate${lead.capital ? " capital" : ""}${asked ? " is-asked" : ""}`}>
+    <div
+      className={`lm-plate${lead.capital ? " capital" : ""}${asked ? " is-asked" : ""}${shared ? " is-shared" : ""}`}
+    >
       {hint}
-      {/* Each settlement's own: two on a tile may have two owners. */}
-      {tile.settlements.map((s, i) => (
-        <Fragment key={s.id}>
-          {i ? <u /> : null}
+      {/* Each settlement's own row: two on a tile may have two owners, and stacked their
+          plate is no wider than one, so it stays inside its hex (MAP-3). */}
+      {tile.settlements.map((s) => (
+        <span className="pl-row" key={s.id}>
           <span className="pl-name">{s.name}</span>
           <span className="pips">
             <Pips built={s.built} slots={s.slots} worked={s.worked} />
@@ -152,7 +155,7 @@ function Plate({ tile, asked, hint }: { tile: MapTile; asked: boolean; hint?: Re
             {icon("pops/crowd")}
             {s.pops}
           </span>
-        </Fragment>
+        </span>
       ))}
     </div>
   );
