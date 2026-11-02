@@ -270,8 +270,9 @@ function After({ G, seat, sides }: { G: HegemonyState; seat: PlayerId; sides: Si
 }
 
 /** The settlements a seat would name for its traded pops: the first that serves each
- *  end, or the ones already named while they still serve. The buttons ask the engine
- *  with these; the map pick names the real ones as the command goes. */
+ *  end, or the ones already named while they still serve, and the first cards in its
+ *  hand. The buttons ask the engine with these; the map pick and the card pick name the
+ *  real ones as the command goes. */
 function firstPlaces(
   G: HegemonyState,
   seat: PlayerId,
@@ -282,7 +283,12 @@ function firstPlaces(
   const tos = totalPops(sides.gets.pops) > 0 ? tradePopTargets(G, seat, sides.gets.pops) : [];
   const from = named.from && froms.includes(named.from) ? named.from : froms[0];
   const to = named.to && tos.includes(named.to) ? named.to : tos[0];
-  return { ...(from ? { from } : {}), ...(to ? { to } : {}) };
+  const cards = G.devHands[seat].slice(0, sides.gives.cards).map((held) => held.id);
+  return {
+    ...(from ? { from } : {}),
+    ...(to ? { to } : {}),
+    ...(sides.gives.cards > 0 ? { cards } : {}),
+  };
 }
 
 function CardHead({
@@ -392,6 +398,7 @@ export function ComposeCard({ seat, onClose }: { seat: PlayerId; onClose: () => 
                 partner: to.length === 1 ? to[0] : null,
                 gives: sides.gives.pops,
                 gets: sides.gets.pops,
+                cards: sides.gives.cards,
               },
               (places) => moves.tradeOffer(seat, to, terms, places),
             );
@@ -460,7 +467,13 @@ function Counter({
           heading="Send counter"
           onClick={() => {
             pick(
-              { seat, partner: offer.from, gives: draft.gives.pops, gets: draft.gets.pops },
+              {
+                seat,
+                partner: offer.from,
+                gives: draft.gives.pops,
+                gets: draft.gets.pops,
+                cards: draft.gives.cards,
+              },
               (places) =>
                 moves.tradeAnswer(seat, offer.id, { kind: "counter", terms: counterTerms, places }),
             );
@@ -576,6 +589,7 @@ function Answers({
                         partner: owner,
                         gives: theirs.gives.pops,
                         gets: theirs.gets.pops,
+                        cards: theirs.gives.cards,
                       },
                       (places) => moves.tradeAnswer(seat, offer.id, { kind: "accept", places }),
                     );
@@ -599,6 +613,7 @@ function Answers({
                       partner: seat,
                       gives: ownSides.gives.pops,
                       gets: ownSides.gets.pops,
+                      cards: ownSides.gives.cards,
                       places: offer.places,
                     },
                     (places) => moves.tradeSettle(owner, offer.id, seat, places),

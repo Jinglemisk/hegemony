@@ -32,12 +32,13 @@ state reaches a consumer. AI policies receive the same fair player observation v
 Post-transition invariants cover settlement indexes, population and transfers, card zones,
 Assembly state, Idea ownership, stable definition identity, and compatibility versions. Saves and scripts
 distinguish unsupported historical versions from deterministic replay divergence. Supported
-recipes replay byte-for-byte. State schema 25 and command schema 10 are current. Older saves and scripts are
+recipes replay byte-for-byte. State schema 26 and command schema 11 are current. Older saves and scripts are
 rejected. Assembly proposals name no replacement; a vote purchase names gold or
 influence. Idea commands name the Idea and New Settlers' optional pop/settlement choice. A hunger
 choice names one settlement and class per pop that leaves. House items and vetoes are gone. Event resolution takes only an optional
 settlement target, or a decline for a pop card; buying a development card takes nothing, its cost read from the
-ruleset, and playing one names the card and only the choice it asks for.
+ruleset, and playing one names the card and only the choice it asks for. A trade names a number of
+cards on each side, and the giving seat's places name the cards it picks.
 
 ## Mechanical gates
 

@@ -15,7 +15,7 @@ import { TRADABLE_MATERIALS } from "../game/bank";
 import type { GameCommand } from "../game/legalMoves";
 import type { DefinitionIdentity } from "../game/definition";
 import { DEV_CARDS, PLAYER_IDS } from "../game/data";
-import { atFreeCardLevel } from "../game/devCards";
+import { atFreeCardLevel, devCardOf } from "../game/devCards";
 import { riotPopNext } from "../game/riot";
 import { getAddPopsEffect } from "../game/events";
 import { activeClaims, ownedClaims } from "../game/luxury";
@@ -270,9 +270,10 @@ export type FoodBought = {
   influence: number;
 };
 
-/** What a trade can move, unit by unit: stocks, luxury goods, and pops by class. */
-export type TradeUnit = Resource | "goods" | PopType;
-const TRADE_UNITS: TradeUnit[] = [...TRADE_RESOURCES, "goods", ...POP_TYPES];
+/** What a trade can move, unit by unit: stocks, luxury goods, pops by class, and held
+ *  cards. */
+export type TradeUnit = Resource | "goods" | PopType | "cards";
+const TRADE_UNITS: TradeUnit[] = [...TRADE_RESOURCES, "goods", ...POP_TYPES, "cards"];
 
 /** One seat's trade in one game. A settled trade belongs to the seat whose offer it
  *  was; the units it moved belong to both sides. */
@@ -317,8 +318,14 @@ export type SeatCounts = {
   devCardGold: number;
   /** Happiness and the hand: free cards drawn, its own turns that ended at the free
    *  card's level (counted with the rule off too), and the held cards a riot took in place
-   *  of a pop, by the class of the pop each kept. */
-  deck: { freeCards: number; turnsAtFreeLevel: number; riotCards: Record<PopType, number> };
+   *  of a pop, by the class of the pop each kept. Beside them, the held cards it gave in
+   *  trade, by card. */
+  deck: {
+    freeCards: number;
+    turnsAtFreeLevel: number;
+    riotCards: Record<PopType, number>;
+    traded: Partial<Record<DevCardId, number>>;
+  };
   /** Food bought while the stock was below zero, and at zero or above. */
   foodBought: { coveringShortfall: FoodBought; buyingAhead: FoodBought };
   /** Times it took Voice. */
@@ -395,7 +402,12 @@ function emptySeatCounts(): Record<PlayerId, SeatCounts> {
     >,
     voteGold: 0,
     devCardGold: 0,
-    deck: { freeCards: 0, turnsAtFreeLevel: 0, riotCards: { citizens: 0, freemen: 0, slaves: 0 } },
+    deck: {
+      freeCards: 0,
+      turnsAtFreeLevel: 0,
+      riotCards: { citizens: 0, freemen: 0, slaves: 0 },
+      traded: {},
+    },
     foodBought: { coveringShortfall: emptyFoodBought(), buyingAhead: emptyFoodBought() },
     voiceClaims: 0,
     repealsPassed: 0,
@@ -436,7 +448,7 @@ function linesWritten(before: HegemonyState, G: HegemonyState): LogEntry[] {
 
 /** The single stock a trade's side holds, with nothing else beside it, or null. */
 function soleStock(bundle: TradeBundle): [Resource, number] | null {
-  if (bundle.goods.length > 0 || totalPops(bundle.pops) > 0) return null;
+  if (bundle.goods.length > 0 || totalPops(bundle.pops) > 0 || bundle.cards > 0) return null;
   const stocks = TRADE_RESOURCES.filter((resource) => (bundle.resources[resource] ?? 0) > 0);
   return stocks.length === 1 ? [stocks[0], bundle.resources[stocks[0]]!] : null;
 }
@@ -445,6 +457,7 @@ function addUnits(units: Record<TradeUnit, number>, bundle: TradeBundle) {
   for (const resource of TRADE_RESOURCES) units[resource] += bundle.resources[resource] ?? 0;
   units.goods += bundle.goods.length;
   for (const pop of POP_TYPES) units[pop] += bundle.pops[pop];
+  units.cards += bundle.cards;
 }
 
 /** The Ports standing in a seat's settlements. */
@@ -804,6 +817,8 @@ export type DevCardFigures = {
   turnsAtFreeLevel: Count;
   lostToRiots: Count;
   popsSaved: Record<PopType, Count>;
+  /** Held cards given in trade, by card, counted to the seat that gave them. */
+  traded: Partial<Record<DevCardId, Count>>;
 };
 
 /** The Port rule: Ports lost, by cause, the goods released with them, and who claimed a
@@ -1247,6 +1262,12 @@ function devCardsOf(group: SeatGame[], games: number): DevCardFigures {
     popsSaved: Object.fromEntries(
       POP_TYPES.map((pop) => [pop, count(({ facts }) => facts.deck.riotCards[pop])]),
     ) as Record<PopType, Count>,
+    traded: Object.fromEntries(
+      DEV_CARDS.filter((card) => card.kind !== "yield").map((card) => [
+        card.id,
+        count(({ facts }) => facts.deck.traded[card.id] ?? 0),
+      ]),
+    ),
   };
 }
 
@@ -1619,6 +1640,18 @@ export class Aggregator {
     addUnits(offering.received, terms.get);
     addUnits(answering.given, terms.get);
     addUnits(answering.received, terms.give);
+    // Which cards moved is the givers' secret, but not the batch's: read off the hands.
+    for (const [giver, receiver] of [
+      [from, partner],
+      [partner, from],
+    ] as const) {
+      for (const { id } of before.devHands[giver]) {
+        const card = G.devHands[receiver].some((held) => held.id === id) && devCardOf(G, id);
+        if (!card) continue;
+        const traded = this.seats[giver].deck.traded;
+        traded[card.id] = (traded[card.id] ?? 0) + 1;
+      }
+    }
 
     // Priced only where one side is a material alone and the other one stock alone.
     const price = (seller: TradeCounts, sold: TradeBundle, paid: TradeBundle) => {

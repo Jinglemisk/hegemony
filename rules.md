@@ -309,8 +309,9 @@ left, what you give on the right, each with − and + to set the number. Pick
 seats at the top of the card to offer only to them; pick none and the offer goes to
 the table. Every seat sees every offer.
 
-- **What trades:** wood, stone, food, gold, influence, claimed luxury goods and pops of
-  every class. Votes, Ideas, Laws, settlements, buildings and Unrest tokens never trade.
+- **What trades:** wood, stone, food, gold, influence, claimed luxury goods, pops of
+  every class and held development cards, by count (see Development cards). Votes, Ideas,
+  Laws, settlements, buildings and Unrest tokens never trade.
 - **No gifts:** each side gives at least one thing, at any ratio. You give only what you
   hold, so a seat short of food gives no food, though it may take food.
 - **Answers:** the offer waits as a disc on the alarms row, in your glaze. It shakes once
@@ -383,6 +384,14 @@ the rival does not have.
 - **Agitators** (2) — the rival places an Unrest token.
 - **Informer** (2) — the rival discards a held card, drawn at random. It needs a rival
   who holds one.
+
+**Trading cards.** Held cards trade like anything else (see Trade): **Cards** on the
+offer card, with − and +. An offer names how many cards, never which. The seat that
+gives cards picks which, and may hand over other cards than the ones it talked about:
+you pick yours as you send an offer or a counter, as you accept, or as you take a
+counter. In hotseat the screen passes to the seat that picks, and comes back after.
+Only the two seats see which cards moved; the table sees the count. A card you receive
+goes to your hand and is never played on the turn you received it.
 
 **The free card.** At the end of your own turn, at the riot check, a happiness level of
 **+3 or higher** draws one card free. Calm bought this year does not count, the level is
@@ -725,5 +734,6 @@ shows the year and cards remaining.
 can play against bots; the screen stays on the people, and bot seats get no turn
 notice. Headless sims can seat `slaver`, `civic` and `trader` by name: they favour
 slaves and Estates, citizens and the Assembly, or freemen and coastal trade. They use
-the same legal commands, search Idea purchases, and trade and play cards as above. See
+the same legal commands, search Idea purchases, and trade and play cards as above. A
+bot never puts a card in a trade and declines an offer that asks it for one. See
 the [simulation reference](docs/reference/simulation.md) for mixed and rotated batches.
