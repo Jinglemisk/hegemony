@@ -174,11 +174,8 @@ are being built, with no balance batches until both are in the engine and the bo
 
 - `RIOT-1` and `MAP-3` in the [UI ledger](plans/ui-remaining.md): the riot screen redesign and
   overlapping map labels.
-- `npm run ui:check` fails on `main`: 83 font shorthands against a limit of 80.
 - After the comparisons, delete the sim's `--restore` switch and the Capital Works slot effect it
   keeps.
-- The test suite takes about three minutes since the stepping-stone bots went (#178): the
-  Assembly bot test plays two full master games. A built Assembly position would replace them.
 - Stale: `docs/reference/balance.html` (last updated 2026-10-03), and `assets/codex-banana-showcase`,
   used only by two old showcase pages in `docs/reference`.
 
