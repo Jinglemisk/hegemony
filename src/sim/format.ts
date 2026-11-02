@@ -569,6 +569,12 @@ export function renderBatchReport(report: BatchReport, years: number): string {
     lines.push(`  ${name} (per seat-game): ${cards(stats)}`);
   }
 
+  const ports = (stats: BatchReport["ports"]["total"]) =>
+    `lost to riots ${formatNumber(stats.lost.riot.perGame)}, driven off ${formatNumber(stats.lost.displaced.perGame)}, ` +
+    `other ${formatNumber(stats.lost.other.perGame)} · goods released ${formatNumber(stats.goodsReleased.perGame)}, ` +
+    `then claimed by their holder ${formatNumber(stats.reclaimed.perGame)}, by a rival ${formatNumber(stats.rivalsClaimed.perGame)}`;
+  lines.push(`Ports (per game): ${ports(report.ports.total)}`);
+
   const { assembly } = report;
   const table = assembly.seats.total;
   lines.push(

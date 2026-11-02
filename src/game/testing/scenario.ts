@@ -11,6 +11,7 @@ import type {
   DevCardId,
   HegemonyState,
   HexTile,
+  LuxuryAsset,
   PlayerId,
   Pops,
   Resources,
@@ -43,6 +44,34 @@ export function tile(G: HegemonyState, id: string): HexTile {
 export function owned(G: HegemonyState, tileId: string, owner: PlayerId): Settlement {
   const settlement = tile(G, tileId).settlements.find((candidate) => candidate.owner === owner);
   if (!settlement) throw new Error(`no ${owner} settlement on ${tileId}`);
+  return settlement;
+}
+
+/** A Port of `playerID` beside `good`: in its settlement on one of the good's tiles, or in
+ *  a new colony dropped on a free one. No legality, no cost, no claim. */
+export function portBeside(G: HegemonyState, playerID: PlayerId, good: LuxuryAsset): Settlement {
+  const own = good.tileIds
+    .map((id) => tile(G, id).settlements.find((candidate) => candidate.owner === playerID))
+    .find((candidate) => candidate !== undefined);
+  const free = good.tileIds.find((id) => tile(G, id).settlements.length === 0);
+  if (!own && !free) throw new Error(`no free tile beside ${good.id}`);
+  const settlement = own ?? colonyOn(G, playerID, free!);
+  if (!settlement.buildings.includes("port")) settlement.buildings.push("port");
+  return settlement;
+}
+
+/** Drop an empty colony of `playerID` on a tile — no placement legality, no cost. */
+export function colonyOn(G: HegemonyState, playerID: PlayerId, tileId: string): Settlement {
+  const settlement: Settlement = {
+    id: allocateEntityId(G, "settlement"),
+    tileId,
+    owner: playerID,
+    kind: "colony",
+    buildings: [],
+    pops: clonePops({ citizens: 0, freemen: 0, slaves: 0 }),
+  };
+  tile(G, tileId).settlements.push(settlement);
+  G.players[playerID].settlements.push(tileId);
   return settlement;
 }
 
@@ -160,15 +189,9 @@ export class ScenarioBuilder {
 
   /** Drop a settlement straight onto the board — no placement legality, no cost. */
   withSettlement(playerID: PlayerId, tileId: string, kind: SettlementKind, pops: Pops): this {
-    tile(this.G, tileId).settlements.push({
-      id: allocateEntityId(this.G, "settlement"),
-      tileId,
-      owner: playerID,
-      kind,
-      buildings: [],
-      pops: clonePops(pops),
-    });
-    this.G.players[playerID].settlements.push(tileId);
+    const settlement = colonyOn(this.G, playerID, tileId);
+    settlement.kind = kind;
+    settlement.pops = clonePops(pops);
     return this;
   }
 

@@ -6,7 +6,7 @@ import { standingHappiness } from "./happiness";
 import { getLuxuryGood } from "./content";
 import { PLAYER_IDS } from "./data";
 import { allocateEntityId } from "./entity";
-import { transferLuxury } from "./luxury";
+import { hasPortBeside, luxuryName, transferLuxury } from "./luxury";
 import { settlementRoom } from "./settlement";
 import { formatPops } from "./core/format";
 import { EMPTY_POPS, POP_TYPES, clonePops, hasPops, subtractPops, totalPops } from "./core/pops";
@@ -146,8 +146,20 @@ export function tradeShortfalls(
   return reasons;
 }
 
+/** Under the Port rule a good goes only to a seat with a Port beside it, so it is never
+ *  handed over to be released at once: the goods of `goods` the seat could not take, by
+ *  name. */
+function goodsWithoutPort(G: HegemonyState, seat: PlayerId, goods: readonly string[]): string[] {
+  if (!G.ruleset.economy.luxury.needsPort) return [];
+  return goods.flatMap((id) => {
+    const asset = G.board.luxuries.find((candidate) => candidate.id === id);
+    return asset && !hasPortBeside(G, seat, asset) ? [luxuryName(G, asset)] : [];
+  });
+}
+
 /** Why a seat's side cannot be committed: what it lacks to give, an unnamed source for
- *  the pops it gives, and no named settlement with room for the pops it gets. */
+ *  the pops it gives, no named settlement with room for the pops it gets, and no Port
+ *  beside a good it gets. */
 function sideReasons(
   G: HegemonyState,
   seat: PlayerId,
@@ -165,7 +177,17 @@ function sideReasons(
       reasons.push("No room there for the pops.");
     }
   }
+  for (const good of goodsWithoutPort(G, seat, gets.goods)) {
+    reasons.push(`No Port beside ${good} to take it.`);
+  }
   return reasons;
+}
+
+/** Why `seat` may not be offered `goods`: it has no Port beside one of them. */
+function noPortReasons(G: HegemonyState, seat: PlayerId, goods: readonly string[]): string[] {
+  return goodsWithoutPort(G, seat, goods).map(
+    (good) => `${getPlayerName(G, seat)} has no Port beside ${good}.`,
+  );
 }
 
 /** Trade happens on a turn, with nothing pending, and in the Assembly's preparation. */
@@ -217,6 +239,7 @@ export function getTradeOfferStatus(
     if (terms.get.goods.some((id) => G.board.luxuries.find((a) => a.id === id)?.owner === seat)) {
       reasons.push("You already hold that good.");
     }
+    for (const id of recipients(seat, to)) reasons.push(...noPortReasons(G, id, terms.give.goods));
   }
   return { can: reasons.length === 0, reasons };
 }
@@ -268,7 +291,10 @@ export function getTradeAnswerStatus(
     const shape = termsReason(G, answer.terms);
     const reasons = shape
       ? [shape]
-      : sideReasons(G, seat, answer.terms.get, answer.terms.give, answer.places);
+      : [
+          ...sideReasons(G, seat, answer.terms.get, answer.terms.give, answer.places),
+          ...noPortReasons(G, offer.from, answer.terms.get.goods),
+        ];
     return { can: reasons.length === 0, reasons };
   }
   // An accept settles at once: both sides are checked now.

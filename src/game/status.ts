@@ -31,7 +31,7 @@ import {
   settlementRoom,
   settlementSlots,
 } from "./settlement";
-import { claimableLuxuriesAt } from "./luxury";
+import { claimableLuxuriesAt, luxuriesBeside } from "./luxury";
 import { isCoastalTile } from "./mapTopology";
 import { getAdjustedActionCost, getGrowPopCost } from "./economy/cost";
 
@@ -236,13 +236,18 @@ function buildSiteReasons(
     reasons.push(`${building.name} cannot stand on ${tile.terrain}: it yields nothing.`);
   }
 
-  // The Port is the coastal-gated exception (Q47): its effect is the claim, so it
-  // is refused — with the authoritative why-not the UI renders — wherever there is
-  // no sea or nothing left to claim.
+  // The Port is the coastal-gated exception (Q47): it is refused — with the
+  // authoritative why-not the UI renders — wherever there is no sea or no good beside
+  // it. Under the Port rule it may stand beside a claimed good, as its holder's backup
+  // or a receiver's way to take it in trade; without the rule its effect is the claim,
+  // so it needs a good still unclaimed.
   if (building.claimsLuxury) {
+    const needsPort = G.ruleset.economy.luxury.needsPort;
     if (!isCoastalTile(tile, G.board.tiles)) {
       reasons.push(`A ${building.name} needs the coast — this settlement is inland.`);
-    } else if (claimableLuxuriesAt(G, tile.id).length === 0) {
+    } else if (needsPort && luxuriesBeside(G, tile.id).length === 0) {
+      reasons.push("No luxury good adjoins this tile.");
+    } else if (!needsPort && claimableLuxuriesAt(G, tile.id).length === 0) {
       reasons.push("No unclaimed luxury good adjoins this tile.");
     }
 
@@ -267,13 +272,15 @@ export function portClaimSites(G: HegemonyState, playerID: PlayerId) {
   const cost = getAdjustedActionCost(G, playerID, "buildBuilding", port.cost, port.id);
   return G.players[playerID].settlements.flatMap((tileId) => {
     const tile = getTile(G, tileId);
-    if (!tile || buildSiteReasons(G, playerID, tile, port).length > 0) return [];
+    const luxuries = claimableLuxuriesAt(G, tileId);
+    if (!tile || luxuries.length === 0 || buildSiteReasons(G, playerID, tile, port).length > 0)
+      return [];
     const settlement = tile.settlements.find((candidate) => candidate.owner === playerID)!;
     return [
       {
         tileId,
         settlementId: settlement.id,
-        luxuries: claimableLuxuriesAt(G, tileId),
+        luxuries,
         cost,
         affordable: canAfford(G.players[playerID].resources, cost),
       },

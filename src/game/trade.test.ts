@@ -11,7 +11,7 @@ import type { GameCommand } from "./legalMoves";
 import { luxuryHappinessBonus } from "./luxury";
 import { projectForPlayer } from "./projection";
 import { settlementCapacity } from "./settlement";
-import { owned, scenario } from "./testing/scenario";
+import { owned, portBeside, scenario } from "./testing/scenario";
 import { TRADE_RESOURCES, tradeLean } from "./trade";
 import { titleHolders } from "./victory";
 import { calculateIncome } from "./economy/income";
@@ -164,6 +164,8 @@ describe("player trade", () => {
     const per = G.ruleset.economy.luxury.happinessPerGood;
     const levels = { "0": standingHappiness(G, "0"), "1": standingHappiness(G, "1") };
 
+    // A good goes only to a seat with a Port beside it.
+    for (const good of goods) portBeside(G, "1", good);
     const ids = goods.map((good) => good.id);
     const made = offer(G, "0", terms(side({}, { goods: ids }), side({ gold: 5 })), ["1"]);
     G = act(made.G, "1", accept(made.id));
@@ -174,6 +176,39 @@ describe("player trade", () => {
     expect(standingHappiness(G, "0")).toBe(levels["0"] - 3 * per);
     expect(standingHappiness(G, "1")).toBe(levels["1"] + 3 * per);
     expect(titleHolders(G).beloved).toBe("1");
+  });
+
+  it("offers a good only to a seat with a Port beside it", () => {
+    const G = turn();
+    const good = G.board.luxuries[0];
+    portBeside(G, "0", good);
+    good.owner = "0";
+    good.claimedAtSettlementId = owned(G, good.tileIds[0], "0").id;
+    const sale = terms(side({}, { goods: [good.id] }), side({ gold: 2 }));
+    const toNikos: GameCommand = { type: "tradeOffer", to: ["1"], terms: sale, places: {} };
+
+    expect(refused(G, "0", toNikos)).toEqual(["Nikos has no Port beside Tyrian Dye."]);
+    // The table takes in every rival, each of which needs one.
+    portBeside(G, "1", good);
+    expect(refused(G, "0", { ...toNikos, to: [] })).toEqual([
+      "Theron has no Port beside Tyrian Dye.",
+      "Kyros has no Port beside Tyrian Dye.",
+    ]);
+
+    const made = offer(G, "0", sale, ["1"]);
+    const settled = act(made.G, "1", accept(made.id));
+    expect(settled.board.luxuries[0].owner).toBe("1");
+    expect(luxuryHappinessBonus(settled, "1")).toBe(G.ruleset.economy.luxury.happinessPerGood);
+
+    // Asking for a good needs a Port beside it too.
+    expect(
+      refused(settled, "0", {
+        type: "tradeOffer",
+        to: ["2"],
+        terms: terms(side({ wood: 1 }), side({}, { goods: [G.board.luxuries[1].id] })),
+        places: {},
+      }),
+    ).toContain("No Port beside Pearls to take it.");
   });
 
   it("rechecks at settlement when two open offers spend the same goods", () => {
