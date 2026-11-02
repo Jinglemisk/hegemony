@@ -323,8 +323,8 @@
   color: var(--pos);
 }
 .lm-hint img {
-  width: 1.5em;
-  height: 1.5em;
+  width: 1.25em;
+  height: 1.25em;
 }
 
 /* A selected tile's buildings: each a bronze icon on a stem over its building. */

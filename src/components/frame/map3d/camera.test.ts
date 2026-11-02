@@ -84,6 +84,10 @@ describe("the living map's camera", () => {
     expect([html("political").realm, html("political").capital]).toEqual([1, 0]);
     expect([html("economy").ecoC, html("economy").ecoF, html("economy").plates]).toEqual([1, 0, 0]);
     expect([html("trade").hint, html("terrain").hint]).toEqual([1, 0]);
+    // Trade's hint, a row under its capital's plate, waits for hexes wide enough that it
+    // stays clear of the next row's badges.
+    expect(bandAlphas(T_FIT, 90, "trade").html.hint).toBe(0);
+    expect(bandAlphas(T_FIT, 100, "trade").html.hint).toBe(1);
   });
 
   it("opens with every tile on screen and clear of the chrome", () => {

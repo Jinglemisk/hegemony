@@ -220,7 +220,7 @@
   font-size: var(--lab);
 }
 .lm-hint b {
-  font-size: 1.2em;
+  font-size: 1.1em;
 }
 /* The corner dock: a mode's name at the floor, the Chronicle's deeds at reading size. */
 .dock-mode {
