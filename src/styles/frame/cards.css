@@ -593,8 +593,26 @@
 .drawnReveal.handReveal {
   width: min(calc(var(--u) * 190), calc(100vw - var(--s-8))); /* 760 */
 }
-.handReveal .drawn-tray {
+.handReveal .drawn-tray,
+.yearReveal .drawn-tray {
   width: min(100%, calc(var(--u) * 100));
+}
+/* The year: this year's card, and beside it next year's at hand size, turning with it. */
+.drawnReveal.yearReveal {
+  width: min(calc(var(--u) * 140), calc(100vw - var(--s-8))); /* 560 */
+}
+.year-pair {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: var(--s-6);
+}
+.year-next {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-2);
+  color: var(--ivory-70);
 }
 .hand-row {
   display: flex;

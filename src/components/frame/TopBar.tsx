@@ -40,7 +40,7 @@ function Clock({ G }: { G: HegemonyState }) {
         content={
           <Tip title={`Year ${toRoman(year)}`}>
             <TipBody>
-              {`A year is one turn for every seat, and each turns a card from the year deck; the next card is hidden. ${left} ${left === 1 ? "year follows" : "years follow"} this one, then the game ends.`}
+              {`A year is one turn for every seat, and each turns a card from the year deck${left > 0 ? "; next year's card already shows" : ""}. ${left} ${left === 1 ? "year follows" : "years follow"} this one, then the game ends.`}
             </TipBody>
           </Tip>
         }

@@ -833,12 +833,14 @@ const years: RuleChapter = {
         <Entry id={anchor("years", "clock")} title="The clock">
           <Note>
             A year is one turn for every seat. As each year opens, the top card of the year deck is
-            turned up and stands for that year; the next card stays hidden. The seat that plays
-            first moves on one place each year.
+            turned up and stands for that year. The card under it shows as next year&rsquo;s and
+            acts only when its year opens; the rest stay hidden, and nothing shows past the last
+            year. The seat that plays first moves on one place each year.
           </Note>
           <Note>
             The game runs {lastYear(G)} years and the deck holds {countCopies(yearCards)} cards; a
-            longer game shuffles the spent cards back in. After the last year the age ends.
+            longer game shuffles the spent cards back in a year early, so next year&rsquo;s card can
+            show. After the last year the age ends.
           </Note>
         </Entry>
         <Entry id={anchor("years", "decks")} title="The decks">

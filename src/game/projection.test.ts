@@ -94,9 +94,11 @@ describe("player and spectator projections", () => {
     expect(view.state.seed).toBe(0);
     expect(view.state.rng).toBe(0);
     expect(view.state.yearDrawPile).toHaveLength(G.yearDrawPile.length);
-    // The next year card stays hidden from every viewer.
-    expect(view.state.yearDrawPile.every((card) => card.id === "__hidden_year__")).toBe(true);
-    expect(JSON.stringify(view.state.yearDrawPile)).not.toContain(G.yearDrawPile[0].name);
+    // Next year's card is public; the rest of the year pile stays hidden from every viewer.
+    expect(view.state.yearDrawPile[0]).toEqual(G.yearDrawPile[0]);
+    expect(view.state.yearDrawPile.slice(1).every((card) => card.id === "__hidden_year__")).toBe(
+      true,
+    );
     expect(view.state.playerDrawPile.every((card) => card.id === "__hidden_event__")).toBe(true);
     for (const deck of Object.values(view.state.politicianDecks)) {
       expect(deck.every((cardId) => cardId === "__hidden_resolution__")).toBe(true);

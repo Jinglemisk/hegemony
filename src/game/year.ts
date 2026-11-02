@@ -1,4 +1,4 @@
-import type { HegemonyState } from "./types";
+import type { HegemonyState, YearCard } from "./types";
 import { PLAYER_IDS } from "./data";
 import { addLog, getPlayerName } from "./core/query";
 import { applyUnrestTokenChange } from "./happiness";
@@ -22,7 +22,7 @@ export function resetTurnFlags(G: HegemonyState) {
 /**
  * Turn the top card of the year deck face up. A card that zeroes a term stands until
  * the year turns and is read by the income and happiness selectors; Plague and
- * Festival act once, here, on every realm.
+ * Festival act once, here, on every realm. The card under it is next year's forecast.
  */
 export function revealYearCard(G: HegemonyState) {
   const card = G.yearDrawPile.shift();
@@ -43,6 +43,28 @@ export function revealYearCard(G: HegemonyState) {
     kind: "yearCard",
     cardId: card.id,
   });
+
+  // A game longer than the deck shuffles the spent years back in as the pile runs
+  // out, a year before it needs a card, so next year's card can show. This year's
+  // card is still in play, so it waits for the next shuffle.
+  if (G.yearDrawPile.length === 0 && G.year < lastYear(G)) {
+    const reshuffled = shuffleWithSeed(G.yearDiscardPile, G.rng);
+    G.yearDrawPile = reshuffled.cards;
+    G.rng = reshuffled.state;
+    G.yearDiscardPile = [];
+    addLog(G, "The year deck is spent and shuffled back in.");
+  }
+}
+
+/**
+ * Next year's card, public from the moment year 1's card is turned: the top of the
+ * year pile. It acts only when its year opens. Nothing is forecast past the final year.
+ */
+export function forecastYearCard(
+  G: Pick<HegemonyState, "activeYearCard" | "year" | "yearDrawPile" | "ruleset">,
+): YearCard | null {
+  if (!G.activeYearCard || G.year >= lastYear(G)) return null;
+  return G.yearDrawPile[0] ?? null;
 }
 
 export function startNewYear(G: HegemonyState) {
@@ -57,15 +79,6 @@ export function startNewYear(G: HegemonyState) {
   if (G.activeYearCard) {
     G.yearDiscardPile.push(G.activeYearCard);
     G.activeYearCard = null;
-  }
-
-  // A game longer than the deck shuffles the spent years back in.
-  if (G.yearDrawPile.length === 0) {
-    const reshuffled = shuffleWithSeed(G.yearDiscardPile, G.rng);
-    G.yearDrawPile = reshuffled.cards;
-    G.rng = reshuffled.state;
-    G.yearDiscardPile = [];
-    addLog(G, "The year deck is spent and shuffled back in.");
   }
 
   G.year += 1;

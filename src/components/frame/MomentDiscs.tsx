@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import { seatsBefore } from "../../game/turn";
 import type { VictoryThreat } from "../../game/victory";
 import type { HegemonyState, PlayerId, VictoryMetric } from "../../game/types";
+import { forecastYearCard } from "../../game/year";
 import { capitalize } from "../../game/core/format";
 import { listed, numberWord, seatName } from "../../ui/formatters";
 import { titleValue } from "../../ui/frameFormat";
@@ -16,7 +17,8 @@ import { Ico, Tip, TipBody } from "./parts";
 
 /**
  * The year card, closed: the first disc of the alarms row until the year turns. The
- * year icon carries the card's subject as a badge; a click reopens the face.
+ * year icon carries the card's subject as a badge; a click reopens the face, with next
+ * year's card beside it. The tooltip names next year's card too.
  */
 export function YearDisc({
   G,
@@ -29,18 +31,20 @@ export function YearDisc({
 }) {
   const card = G.activeYearCard;
   if (!card) return null;
+  const next = forecastYearCard(G);
   return (
     <li>
       <Tooltip
         content={
           <Tip title={card.name} turns={turnsLeftInYear(G, viewerId)}>
             <TipBody>{card.text}</TipBody>
+            {next ? <TipBody>{`Next year: ${next.name}.`}</TipBody> : null}
             <p className="tip-act">Click to read the card</p>
           </Tip>
         }
       >
         <button
-          aria-label={`This year’s card: ${card.name}. ${card.text}`}
+          aria-label={`This year’s card: ${card.name}. ${card.text}${next ? ` Next year: ${next.name}.` : ""}`}
           className="alarm-disc is-year"
           data-gate-hover="year-disc"
           onClick={onOpen}

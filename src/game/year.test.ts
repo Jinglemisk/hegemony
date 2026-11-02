@@ -8,7 +8,7 @@ import { endTurn } from "./turn";
 import type { HegemonyState, YearCard } from "./types";
 import { unrestStatus } from "./unrest";
 import { victoryMetricValue, victoryStandings } from "./victory";
-import { revealYearCard, startNewYear, yearDeckSize } from "./year";
+import { forecastYearCard, lastYear, revealYearCard, startNewYear, yearDeckSize } from "./year";
 
 /** A game mid-year with no Assembly, nothing pending and no card in play. */
 function game(): HegemonyState {
@@ -88,7 +88,7 @@ describe("year cards that zero a term", () => {
     standCard(G, "year-piracy");
     expect(calculateIncome(G, "0").gold).toBe(0);
 
-    // Their next income falls under next year's card, which nobody has seen.
+    // Their next income falls under next year's card, which the forecast does not read.
     G.players["0"].collectedThisTurn = true;
     expect(calculateIncome(G, "0").gold).toBe(2);
   });
@@ -117,6 +117,59 @@ describe("Plague and Festival", () => {
     G.yearDrawPile.unshift(yearCard(G, "year-festival"));
     revealYearCard(G);
     expect(Object.values(G.players).map((player) => player.unrestTokens)).toEqual([0, 0, 0, 0]);
+  });
+});
+
+describe("the year forecast", () => {
+  it("shows year 2's card once year 1's is turned, and turns it when Year 2 opens", () => {
+    expect(forecastYearCard(scenario().build())).toBeNull();
+
+    const G = scenario().opening().build();
+    const forecast = forecastYearCard(G);
+    expect(G.year).toBe(1);
+    expect(forecast).toBe(G.yearDrawPile[0]);
+
+    startNewYear(G);
+    expect(G.activeYearCard).toBe(forecast);
+    expect(forecastYearCard(G)).toBe(G.yearDrawPile[0]);
+  });
+
+  it("lets a forecast Plague act only when its year opens", () => {
+    const G = scenario().opening().stackYearCard("year-plague").build();
+    const tokens = () => Object.values(G.players).map((player) => player.unrestTokens);
+    const before = tokens();
+    expect(forecastYearCard(G)?.id).toBe("year-plague");
+
+    startNewYear(G);
+    expect(G.activeYearCard?.id).toBe("year-plague");
+    expect(tokens()).toEqual(before.map((count) => count + 1));
+  });
+
+  it("forecasts nothing past the final year", () => {
+    const G = scenario().opening().build();
+    G.year = lastYear(G) - 1;
+    expect(forecastYearCard(G)).not.toBeNull();
+
+    startNewYear(G);
+    expect(G.year).toBe(lastYear(G));
+    expect(forecastYearCard(G)).toBeNull();
+  });
+
+  it("shuffles the spent years back in a year early when the game outlasts the deck", () => {
+    const G = scenario({ patch: { victory: { years: 16 } } })
+      .opening()
+      .build();
+    // Year 13 of 16 with one card left: year 14's.
+    G.year = 13;
+    G.yearDiscardPile.push(...G.yearDrawPile.splice(1));
+    const yearFourteen = G.yearDrawPile[0];
+
+    startNewYear(G);
+    expect(G.activeYearCard).toBe(yearFourteen);
+    // Every other card is back in the pile, and year 15's card shows.
+    expect(G.yearDrawPile).toHaveLength(yearDeckSize(G) - 1);
+    expect(G.yearDiscardPile).toEqual([]);
+    expect(forecastYearCard(G)).toBe(G.yearDrawPile[0]);
   });
 });
 
