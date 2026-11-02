@@ -351,10 +351,9 @@ walks every family: 12 assertions became 21.
 
 ### What was deliberately left
 
-- **`light-icon-atlas.png`**, the painted original, stays under `assets/`. Only the
-  alpha-keyed derivative was deleted. `docs/reference/codex-banana-showcase.html`
-  displays the original as part of the design record — the same reason the sea
-  plate stayed on disk when the sea became CSS.
+- **`light-icon-atlas.png`**, the painted original, stayed under `assets/` for the
+  Codex Banana showcase page. Only the alpha-keyed derivative was deleted then; the
+  page and its folder went in the stale-doc cleanup of 2026-11-03.
 - **The terrain sheet.** `TerrainSprite` is a different token and a different
   component, and it turned up a defect of its own — see `TERR-1`.
 

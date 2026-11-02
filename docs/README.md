@@ -78,7 +78,7 @@ Idea → owner question → accepted plan → implementation PRs → validation 
 - [Roadmap](roadmap.md) — mandatory parity contract, phase order, and exit gates.
 - [Questions](questions.md) — unresolved owner decisions only.
 - [`plans/`](plans/) — proposed, ready, active, or blocked work only.
-- [`reference/`](reference/) — living rules, effective-value and parity-manifest contracts, AI, simulation, balance, and design descriptions.
+- [`reference/`](reference/) — living rules, effective-value and parity-manifest contracts, AI, simulation, and design descriptions.
 - [Frontend presentation contract](reference/frontend-presentation.md) — authoritative UI explanation,
   accessibility, overlay, and integration rules.
 - [Actors and views](reference/actors-and-views.md) — workflow eligibility, redaction,
