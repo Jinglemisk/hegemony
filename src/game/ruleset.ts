@@ -39,8 +39,8 @@ export interface BankRules {
   scarce: BankRatePair;
 }
 
-/** Civic calm: one action per turn, two payments, the same rise in the level. The bonus
- *  lasts until the year turns and is never banked. */
+/** Civic calm: two payments, the same rise in the level for each use. The bonus lasts
+ *  until the year turns and is never banked. */
 export interface CivicCalmRules {
   happiness: number;
   influenceCost: number;
@@ -99,6 +99,17 @@ export interface TradeRules {
 export interface DoleRules {
   influenceCost: number;
   food: number;
+}
+
+/** Per-turn caps on the utility actions (docs/plans/agency-package.md, ruling 8): how many
+ *  times a seat may use each in its own turn, one unit a use at the usual price. Promotions
+ *  and demotions share the ladder's cap. Growing counts per settlement, and a standing
+ *  `growLimit` Law scales it. Null is no cap, as the Dole had none before the package. */
+export interface TurnCapRules {
+  dole: number | null;
+  calm: number | null;
+  ladder: number | null;
+  grow: number | null;
 }
 
 /**
@@ -252,6 +263,7 @@ export interface Ruleset {
   movePopCost: Partial<Resources>;
   pieces: PieceRules;
   dole: DoleRules;
+  turnCaps: TurnCapRules;
   popIncome: Record<PopType, PopIncomeRule>;
   economy: EconomyRules;
   civicCalm: CivicCalmRules;
@@ -305,6 +317,8 @@ export const DEFAULT_RULESET: Ruleset = {
   movePopCost: { food: 1 },
   pieces: { colonies: 4, cities: 3 },
   dole: { influenceCost: 3, food: 1 },
+  // Before the agency package: the Dole had no cap, calm and the ladder 1, growing 1.
+  turnCaps: { dole: 3, calm: 3, ladder: 3, grow: 3 },
   // One pop, one output. A slave makes 1 of its tile's resource when it holds an open
   // slot and eats nothing; a freeman makes 1 gold and a citizen 1 influence, and each
   // eats 1 food. Slaves cost happiness by the realm's count, not per pop: see

@@ -135,10 +135,11 @@ export function unrestStatus(G: HegemonyState, playerID: PlayerId): UnrestStatus
 /** What ending the turn now sets off, and what calm bought first would change. */
 export interface TurnEndUnrest extends UnrestOutcome {
   tier: "riot" | "revolt";
-  /** The first calm the seat can buy that changes the outcome, with the level it
-   *  reaches and what ending then sets off; null when no calm helps. */
+  /** The fewest calm uses the seat can buy within the turn's cap that change the outcome,
+   *  one payment a use, with their total cost, the level they reach and what ending then
+   *  sets off; null when no calm helps. */
   calm: {
-    payment: CivicCalmPayment;
+    payments: CivicCalmPayment[];
     cost: Partial<Resources>;
     level: number;
     tier: "riot" | "none";
@@ -146,26 +147,36 @@ export interface TurnEndUnrest extends UnrestOutcome {
 }
 
 /** The end-turn confirm's facts: null when ending now starts neither a riot nor a
- *  revolt. Calm is tried through the real action on a draft, gold before influence. */
+ *  revolt. Calm is bought through the real action on a draft, one use at a time and gold
+ *  before influence, until the outcome changes or no use is left. */
 export function turnEndUnrest(G: HegemonyState, playerID: PlayerId): TurnEndUnrest | null {
   const outcome = unrestOutcome(G, playerID);
   const { tier } = outcome;
   if (tier === "none") return null;
 
-  let calm: TurnEndUnrest["calm"] = null;
-  for (const payment of ["gold", "influence"] as const) {
-    const status = getCivicCalmStatus(G, playerID, payment);
-    if (!status.can) continue;
-    const after = happinessLevel(
-      produce(G, (draft) => void civicCalm(draft, playerID, payment)),
-      playerID,
-    );
+  const payments: CivicCalmPayment[] = [];
+  const cost: Partial<Resources> = {};
+  let draft = G;
+  let level = outcome.level;
+  for (;;) {
+    const use = (["gold", "influence"] as const)
+      .map((payment) => ({ payment, status: getCivicCalmStatus(draft, playerID, payment) }))
+      .find(({ status }) => status.can);
+    if (!use) break;
+    draft = produce(draft, (next) => void civicCalm(next, playerID, use.payment));
+    const after = happinessLevel(draft, playerID);
+    // A calm worth nothing (a tuned ruleset) would never change the outcome.
+    if (after <= level) break;
+    level = after;
+    payments.push(use.payment);
+    for (const [resource, amount] of Object.entries(use.status.cost ?? {}) as Array<
+      [keyof Resources, number]
+    >)
+      cost[resource] = (cost[resource] ?? 0) + amount;
     const then = unrestOutcome(G, playerID, after).tier;
-    if (then !== tier && then !== "revolt") {
-      calm = { payment, cost: status.cost ?? {}, level: after, tier: then };
-      break;
-    }
+    if (then !== tier && then !== "revolt")
+      return { ...outcome, tier, calm: { payments, cost, level: after, tier: then } };
   }
 
-  return { ...outcome, tier, calm };
+  return { ...outcome, tier, calm: null };
 }

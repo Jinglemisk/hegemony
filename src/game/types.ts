@@ -402,10 +402,15 @@ export interface PlayerState {
   /** Running total of pops gained inorganically from event cards (the `addPops`
    *  effect) — the ledger's "Gained" stat, paired with deaths. */
   popsGainedFromEvents: number;
-  /** Once-per-turn throttles: one civic-calm action, one ladder move, one development
-   *  card bought and one played, one paid pop move. Reset with the turn flags. */
-  civicCalmUsedThisTurn: boolean;
-  ladderUsedThisTurn: boolean;
+  /** Uses this turn of the actions under a per-turn cap (`ruleset.turnCaps`): the Dole,
+   *  calm and the ladder. Growing counts per settlement, in `grownSettlementsThisTurn`.
+   *  The calm count is also the calm bought this year: each use adds to the level until
+   *  the year turns, and it is never banked. Reset with the turn flags. */
+  doleUsesThisTurn: number;
+  calmUsesThisTurn: number;
+  ladderUsesThisTurn: number;
+  /** Once-per-turn throttles: one development card bought and one played, one paid pop
+   *  move. Reset with the turn flags. */
   devCardBoughtThisTurn: boolean;
   devCardPlayedThisTurn: boolean;
   moveUsedThisTurn: boolean;
@@ -413,8 +418,6 @@ export interface PlayerState {
    *  turn, in the resource picked when it was played; empty when no discount stands.
    *  Reset with the turn flags. */
   buildDiscount: Partial<Resources>;
-  /** Calm bought this year. It expires when the year turns and is never banked. */
-  calmActive: boolean;
   /** Turns of income Stratokles's General Strike has taken away. Decremented at the
    *  moment income would have been collected, so the strike costs exactly one turn. */
   incomeSuppressedTurns: number;

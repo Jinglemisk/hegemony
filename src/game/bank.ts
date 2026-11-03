@@ -1,5 +1,5 @@
 import { playerDole } from "./ideaRules";
-import { addLog, getPlayerName } from "./core/query";
+import { addLog, getPlayerName, usesLeft } from "./core/query";
 import { MOVE_OK, invalid } from "./core/results";
 import type { ActionStatus, MoveResult } from "./core/results";
 import type { BankRules } from "./ruleset";
@@ -159,7 +159,7 @@ export function bankBuy(
   return MOVE_OK;
 }
 
-/** The Dole: influence buys food. */
+/** The Dole: influence buys food, up to the ruleset's uses a turn. */
 export function getDoleStatus(G: HegemonyState, playerID: PlayerId): ActionStatus {
   const reasons: string[] = [];
   const { influenceCost, food } = playerDole(G, playerID);
@@ -167,6 +167,8 @@ export function getDoleStatus(G: HegemonyState, playerID: PlayerId): ActionStatu
   if (G.phase !== "gameplay") reasons.push("The Dole opens with gameplay.");
   if (G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger)
     reasons.push("Resolve the pending event first.");
+  if (usesLeft(G, playerID, "dole") === 0)
+    reasons.push(`The Dole is used up this turn: ${G.ruleset.turnCaps.dole} a turn.`);
   if (G.players[playerID].resources.influence < influenceCost) {
     reasons.push(`The Dole takes ${influenceCost} influence for ${food} food.`);
   }
@@ -182,9 +184,10 @@ export function dole(G: HegemonyState, playerID: PlayerId): MoveResult {
   }
 
   const { influenceCost, food } = playerDole(G, playerID);
-  const resources = G.players[playerID].resources;
-  resources.influence -= influenceCost;
-  resources.food += food;
+  const player = G.players[playerID];
+  player.resources.influence -= influenceCost;
+  player.resources.food += food;
+  player.doleUsesThisTurn += 1;
   addLog(
     G,
     `${getPlayerName(G, playerID)} bought ${food} food with ${influenceCost} influence: the Dole.`,

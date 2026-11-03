@@ -137,11 +137,11 @@ describe("getGrowPopStatus", () => {
     expect(status.reasons).toContain("Requires your settlement on this tile.");
   });
 
-  it("blocks a second grow on the same settlement in one turn", () => {
+  it("blocks growth past the settlement's cap for the turn", () => {
     const { G, id } = cityWith(pops(1, 0, 0));
-    G.players["0"].grownSettlementsThisTurn = [id];
+    G.players["0"].grownSettlementsThisTurn = [id, id, id];
     const status = getGrowPopStatus(G, "0", id, "freemen");
-    expect(status.reasons).toContain("Already grew a pop here this turn.");
+    expect(status.reasons).toContain("No growth left here this turn: 3 a turn.");
   });
 
   it("blocks growth past the settlement's capacity", () => {

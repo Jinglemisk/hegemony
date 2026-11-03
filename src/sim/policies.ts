@@ -662,8 +662,7 @@ export function projectPolicyHorizon(
 
   const expireYear = () => {
     projectedState.activeYearCard = null;
-    player.calmActive = false;
-    player.civicCalmUsedThisTurn = false;
+    player.calmUsesThisTurn = 0;
     player.collectedThisTurn = false;
   };
 
@@ -807,6 +806,9 @@ function createPolicyProjectionState(G: HegemonyState, playerID: PlayerId): Hege
         resources: { ...originalPlayer.resources },
       },
     },
+    // The forecast buys food as if the Dole had no per-turn cap: planning within it is
+    // left for the bot work (docs/plans/agency-package.md, ruling 8).
+    ruleset: { ...G.ruleset, turnCaps: { ...G.ruleset.turnCaps, dole: null } },
     // Arrivals and the engine's purchases write log lines; keep them off the real log.
     log: [],
     // Later turns have nothing pending, so the engine's purchases are open in them.

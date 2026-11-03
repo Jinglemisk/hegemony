@@ -3,7 +3,7 @@ import { BUILDINGS } from "../data";
 import { DEFAULT_RULESET } from "../ruleset";
 import type { Resource, Resources } from "../types";
 import { RESOLUTION_CARDS } from "./deck";
-import { GROWS_PER_TURN, SLAVE_UNREST_WEIGHT } from "./laws";
+import { SLAVE_UNREST_WEIGHT } from "./laws";
 import type { LawCard, LawEffect } from "./types";
 
 /**
@@ -49,7 +49,7 @@ function directionsOf(effect: LawEffect): number[] {
     case "popIncome":
       return [Math.sign(effect.amount - (rules.popIncome[effect.pop].flat[effect.resource] ?? 0))];
     case "growLimit":
-      return [Math.sign(effect.amount - GROWS_PER_TURN)];
+      return [Math.sign(effect.factor - 1)];
     case "slaveUnrestWeight":
       return [Math.sign(SLAVE_UNREST_WEIGHT - effect.amount)];
     case "dolePrice":

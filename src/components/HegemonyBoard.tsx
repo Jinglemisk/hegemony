@@ -580,7 +580,6 @@ export function HegemonyBoard({
     canUpgradeCity,
     canBuild,
     armedVerb: armedVerbOf(mapSelection.selection?.mode),
-    calmUsed: viewer.civicCalmUsedThisTurn,
   };
   // Found, from a tile's page: arm the mode and open its popover on that tile.
   const foundHere = (tileId: string) => {

@@ -92,10 +92,10 @@ export const RESOLUTION_CARDS: ResolutionCard[] = [
     politician: "perdiccas",
     id: "guild-charter",
     name: "Guild Charter",
-    text: "Your capital may grow twice per turn, but colonies may not grow.",
+    text: "Your capital may grow twice as often each turn, but colonies may not grow.",
     effects: [
-      { type: "growLimit", scope: "capital", amount: 2 },
-      { type: "growLimit", scope: "colony", amount: 0 },
+      { type: "growLimit", scope: "capital", factor: 2 },
+      { type: "growLimit", scope: "colony", factor: 0 },
     ],
   },
   {
