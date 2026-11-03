@@ -311,8 +311,12 @@ same on all four rows) and `activeLuxuries`.
   must border it). `null`, the ruleset's default, is any shore to any shore. No rule reads
   the board's name; instead the board brings its own patch. `--board archipelago` applies
   `{"placement":{"seaReach":3}}` (Q81) under `--ruleset-patch`, so a patch that sets
-  `seaReach` keeps its own: `4` for hop 4, `null` for any shore. Continental and scenario
-  bring none. The report's `meta.rulesetPatch` and the save record the applied patch.
+  `seaReach` keeps its own: `4` for hop 4, `null` for any shore. Scenario brings no patch.
+  The report's `meta.rulesetPatch` and the save record the applied patch.
+- Shared tiles are the ruleset value `placement.maxColoniesPerTile`: 1 by default, a tile
+  holds one settlement. `--board continental` applies `{"placement":{"maxColoniesPerTile":2}}`,
+  so two rivals' colonies may share a tile and split its slots, as every board allowed
+  before 2026-11-03. A patch that sets the value keeps its own.
 - `--years N|open` — the game's length (`victory.years`, 14 by default), folded into the
   ruleset patch. A game longer than the 14-card year deck reshuffles it; `open` plays until
   the race is won, with a safety stop at year 40. `batch`'s default `--turns` follows it.
@@ -468,7 +472,8 @@ spending from the stock change.
   seat or a personality, read off the reach counts. Happiness and the hand:
   `drawnFree` (free cards drawn), `turnsAtFreeLevel` (the seat's own turns that ended at
   the free card's level, counted with the rule off too), `lostToRiots` (held cards a riot
-  took in place of a pop) and `popsSaved` (the pop each of those kept, by class). Slaves
+  took in place of a pop) and `popsSaved` (the pop each of those kept, by class), and
+  `traded` (held cards given in trade, by card, to the seat that gave them). Slaves
   held are the `classes` cut
 - `buildings`, `upgrades`, `currencyVerbs` (bank, Dole, calm, ladder, cards, riot)
   and `events` (draws by the twelve player-card kinds and eight year-card kinds) are
@@ -544,6 +549,14 @@ holder has a Port beside it, releases it when the last one falls, lets a Port st
 claimed good, and offers a good only to a seat with a Port beside it.
 `{"economy":{"luxury":{"needsPort":false}}}` under `--ruleset-patch` keeps a good its
 holder's for the game, as before the agency package. No screen offers it.
+
+**Turn caps.** `turnCaps` holds how many times a seat may use the Dole, calm, the ladder
+and growing in its turn: 3 each by default, growing per settlement, and Guild Charter
+doubles the capital's and closes the colonies'. Null is no cap.
+`{"turnCaps":{"dole":null,"calm":1,"ladder":1,"grow":1}}` under `--ruleset-patch` restores
+the limits from before the agency package: the Dole unlimited, one calm, one ladder move
+and one growth a settlement, and Guild Charter's capital twice. The TUNE panel edits the
+caps as numbers.
 
 **Content switches.** The agency package's Law and Idea changes are content, which
 `--ruleset-patch` and `--tune-patch` do not reach, so `--restore` turns them off:

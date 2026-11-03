@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getTile } from "../game/core/query";
+import { getTile, usesLeft } from "../game/core/query";
 import { PLAYER_IDS } from "../game/data";
 import { happinessLevel } from "../game/happiness";
 import { playerDole } from "../game/ideaRules";
@@ -131,8 +131,11 @@ describe("shared personality search", () => {
           [payment]: 100,
         });
         const turn = playOwnTurn(name, G);
-        expect(turn.foodBought).toBe(8);
-        expect(turn.G.players["0"].resources.food).toBeGreaterThanOrEqual(0);
+        // The bank sells all eight; the Dole stops at its three a turn, and the rest
+        // goes hungry.
+        const bought = payment === "gold" ? 8 : (G.ruleset.turnCaps.dole ?? 8);
+        expect(turn.foodBought).toBe(bought);
+        expect(turn.G.players["0"].resources.food).toBe(bought - 8);
       }
     },
     30000,
@@ -248,10 +251,12 @@ describe("shared personality search", () => {
     G.year = year;
     G.players["0"].collectedThisTurn = true;
     G.activeYearCard = null;
-    // The seat has made its offer and its ladder move this turn, so the choice is the
-    // freeman or the end of the turn.
+    // The seat has made its offer, used up its ladder moves and grown here all but once
+    // this turn, so the choice is the freeman or the end of the turn. With growths to
+    // spare it would also grow a plains slave, paid by the Dole's food, to feed him.
     G.offersMade["0"] = 1;
-    G.players["0"].ladderUsedThisTurn = true;
+    G.players["0"].ladderUsesThisTurn = G.ruleset.turnCaps.ladder ?? 0;
+    G.players["0"].grownSettlementsThisTurn = ["-2,1", "-2,1"];
     return choose(
       name,
       G,
@@ -590,8 +595,11 @@ describe("shared personality search", () => {
         onForceEndTurn: () => caps++,
         onMove: (state, player, command) => {
           if (command.type !== "endTurn" || state.pendingHunger?.playerID !== player) return;
-          // With no bank, the Dole is the food a seat can buy.
-          if (state.players[player].resources.influence >= playerDole(state, player).influenceCost)
+          // With no bank, the Dole is the food a seat can buy, while it has uses left.
+          if (
+            usesLeft(state, player, "dole") !== 0 &&
+            state.players[player].resources.influence >= playerDole(state, player).influenceCost
+          )
             shortWithMeans++;
         },
       },

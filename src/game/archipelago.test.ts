@@ -165,13 +165,16 @@ describe("the Archipelago board's settings", () => {
     expect(ARCHIPELAGO_RULES.ruleset.placement.seaReach).toBe(3);
   });
 
-  it("leaves Continental and Scenario with any shore", () => {
-    for (const board of ["continental", "scenario"] as const) {
-      expect(boardRulesetPatch(board)).toBeNull();
-      expect(boardRulesetPatch(board, { victory: { years: 6 } })).toEqual({
-        victory: { years: 6 },
-      });
-    }
+  it("leaves Continental and Scenario with any shore, and lets Continental share tiles", () => {
+    expect(boardRulesetPatch("scenario")).toBeNull();
+    expect(boardRulesetPatch("scenario", { victory: { years: 6 } })).toEqual({
+      victory: { years: 6 },
+    });
+    expect(boardRulesetPatch("continental", { victory: { years: 6 } })).toEqual({
+      placement: { maxColoniesPerTile: 2 },
+      victory: { years: 6 },
+    });
     expect(DEFINITION.ruleset.placement.seaReach).toBeNull();
+    expect(DEFINITION.ruleset.placement.maxColoniesPerTile).toBe(1);
   });
 });

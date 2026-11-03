@@ -1,5 +1,5 @@
 import { formatPopName } from "./core/format";
-import { addLog, getOwnedSettlement, getPlayerName, getTile } from "./core/query";
+import { addLog, getOwnedSettlement, getPlayerName, getTile, usesLeft } from "./core/query";
 import { canAfford, payCost } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
 import type { ActionStatus, MoveResult } from "./core/results";
@@ -9,8 +9,8 @@ import { pendingDecisionReasons } from "./status";
 
 /**
  * The civic verbs (roadmap-appendix D7/D8): calm the province, or move a pop up and
- * down the social ladder. Both are once-per-turn throttles — calm must not stack,
- * and the ladder is deliberately slower than growing pops.
+ * down the social ladder. Each use is one unit at the usual price, up to the ruleset's
+ * cap a turn (agency package, ruling 8); promotions and demotions share the ladder's.
  */
 
 export type CivicCalmPayment = "influence" | "gold";
@@ -75,8 +75,8 @@ export function getCivicCalmStatus(
 
   if (G.phase !== "gameplay") reasons.push("Calm is a gameplay action.");
   reasons.push(...pendingDecisionReasons(G));
-  if (G.players[playerID].civicCalmUsedThisTurn)
-    reasons.push("One civic-calm action per turn — calm must not stack.");
+  if (usesLeft(G, playerID, "calm") === 0)
+    reasons.push(`Calm is used up this turn: ${G.ruleset.turnCaps.calm} a turn.`);
   if (!canAfford(G.players[playerID].resources, cost)) {
     reasons.push("Not enough resources for calm.");
   }
@@ -85,8 +85,8 @@ export function getCivicCalmStatus(
 }
 
 /** One `civicCalm` seam, two payments: Stabilize Province (influence) or Bread &
- *  Circuses (gold). Both add `happiness` until the year turns and burn
- *  the same shared throttle. */
+ *  Circuses (gold). Each use adds `happiness` until the year turns and counts against
+ *  the same cap. */
 export function civicCalm(
   G: HegemonyState,
   playerID: PlayerId,
@@ -100,9 +100,8 @@ export function civicCalm(
 
   const player = G.players[playerID];
   payCost(player.resources, status.cost ?? {});
-  // Calm is a level bonus for this year; the year boundary clears it.
-  player.calmActive = true;
-  player.civicCalmUsedThisTurn = true;
+  // Calm is a level bonus for this year; the year boundary clears the count.
+  player.calmUsesThisTurn += 1;
   addLog(
     G,
     `${getPlayerName(G, playerID)} ${payment === "influence" ? "stabilized the province" : "staged bread & circuses"} (+${G.ruleset.civicCalm.happiness} happiness this year).`,
@@ -110,6 +109,9 @@ export function civicCalm(
   );
   return MOVE_OK;
 }
+
+const ladderUsedUp = (G: HegemonyState) =>
+  `The ladder is used up this turn: ${G.ruleset.turnCaps.ladder} moves a turn.`;
 
 export function getPromotePopStatus(
   G: HegemonyState,
@@ -125,7 +127,7 @@ export function getPromotePopStatus(
   reasons.push(...pendingDecisionReasons(G));
   if (!PROMOTE_FROM.includes(from as "slaves" | "freemen"))
     reasons.push("Only slaves and freemen can rise.");
-  if (G.players[playerID].ladderUsedThisTurn) reasons.push("One ladder move per turn.");
+  if (usesLeft(G, playerID, "ladder") === 0) reasons.push(ladderUsedUp(G));
   if (!settlement || settlement.pops[from] < 1)
     reasons.push(`No ${formatPopName(from, 1)} there to promote.`);
   if (!canAfford(G.players[playerID].resources, cost)) reasons.push("Can't afford the promotion.");
@@ -140,7 +142,7 @@ export function getDemotePopStatus(
   from: PopType,
 ): ActionStatus {
   // Demotion is FREE during your own riot (D8 — the mob forces it), and doesn't
-  // burn the ladder throttle: the concession insurance rides on this rule.
+  // count against the ladder's cap: the concession insurance rides on this rule.
   const duringOwnRiot = G.pendingRiot?.playerID === playerID;
   const cost = duringOwnRiot ? {} : getDemoteCost(G, playerID, from);
   const reasons: string[] = [];
@@ -150,8 +152,7 @@ export function getDemotePopStatus(
   if (!duringOwnRiot) reasons.push(...pendingDecisionReasons(G));
   if (!DEMOTE_FROM.includes(from as "citizens" | "freemen"))
     reasons.push("Only citizens and freemen can fall.");
-  if (!duringOwnRiot && G.players[playerID].ladderUsedThisTurn)
-    reasons.push("One ladder move per turn.");
+  if (!duringOwnRiot && usesLeft(G, playerID, "ladder") === 0) reasons.push(ladderUsedUp(G));
   if (!settlement || settlement.pops[from] < 1)
     reasons.push(`No ${formatPopName(from, 1)} there to demote.`);
   if (!canAfford(G.players[playerID].resources, cost)) reasons.push("Can't afford the demotion.");
@@ -178,7 +179,7 @@ export function promotePop(
   payCost(G.players[playerID].resources, status.cost ?? {});
   settlement.pops[from] -= 1;
   settlement.pops[to] += 1;
-  G.players[playerID].ladderUsedThisTurn = true;
+  G.players[playerID].ladderUsesThisTurn += 1;
   addLog(
     G,
     `${getPlayerName(G, playerID)} promoted a ${formatPopName(from, 1)} to ${formatPopName(to, 1)} on ${tile.terrain}.`,
@@ -187,8 +188,8 @@ export function promotePop(
   return MOVE_OK;
 }
 
-/** Fall one rung: citizen→freeman or freeman→slave, for influence. Free and
- *  throttle-exempt during your own riot. */
+/** Fall one rung: citizen→freeman or freeman→slave, for influence. Free and outside
+ *  the ladder's cap during your own riot. */
 export function demotePop(
   G: HegemonyState,
   playerID: PlayerId,
@@ -208,7 +209,7 @@ export function demotePop(
   payCost(G.players[playerID].resources, status.cost ?? {});
 
   if (!duringOwnRiot) {
-    G.players[playerID].ladderUsedThisTurn = true;
+    G.players[playerID].ladderUsesThisTurn += 1;
   }
 
   settlement.pops[from] -= 1;

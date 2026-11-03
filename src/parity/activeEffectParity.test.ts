@@ -228,7 +228,7 @@ describe("frontend active-effect parity", () => {
     const guild = presentations.find((effect) => effect.source === "Guild Charter")!;
     const builders = presentations.find((effect) => effect.source === "Master Builders")!;
 
-    expect(guild.text).toContain("Your capital may grow 2 times per turn");
+    expect(guild.text).toContain("Your capital may grow twice as often each turn");
     expect(guild.text).toContain("Colonies may not grow");
     expect(builders.text).toContain("Cities gain 1 work slot");
     expect(builders.text).toContain("1 fewer colony piece");

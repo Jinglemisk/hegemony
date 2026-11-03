@@ -318,12 +318,12 @@ function lawTokens(effect: LawEffect, ruleset: Ruleset): EqToken[] {
     case "colonyLimit":
       return [signed(effect.amount), ic("settlements/colony"), cond("piece")];
     case "growLimit":
-      return effect.amount === 0
+      return effect.factor === 0
         ? [ic(SCOPE_ICONS[effect.scope][0]), struck("pops/pop-gain")]
         : [
             ic(SCOPE_ICONS[effect.scope][0]),
             ic("pops/pop-gain"),
-            n(`×${effect.amount}`),
+            n(`×${effect.factor}`),
             cond("a turn"),
           ];
     case "settlementVotes":

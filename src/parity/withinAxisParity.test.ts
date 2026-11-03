@@ -75,9 +75,9 @@ describe("frontend-to-frontend parity", () => {
       label: "Starts riot",
       message: "Ending now starts a riot at −2.",
     });
-    G.players["0"].calmActive = true;
+    G.players["0"].calmUsesThisTurn = 1;
     expect(endTurnWarning(G, "0")).toBeNull();
-    G.players["0"].calmActive = false;
+    G.players["0"].calmUsesThisTurn = 0;
     G.players["0"].unrestTokens += 3;
     expect(endTurnWarning(G, "0")).toEqual({
       label: "Starts revolt",
@@ -159,7 +159,6 @@ function commandContext(G: HegemonyState): VerbContext {
     canUpgradeCity: true,
     canBuild: true,
     armedVerb: null,
-    calmUsed: false,
   };
 }
 

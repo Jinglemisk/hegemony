@@ -92,7 +92,7 @@ export function happinessContributions(
     },
     {
       id: "calm",
-      amount: player.calmActive ? G.ruleset.civicCalm.happiness : 0,
+      amount: player.calmUsesThisTurn * G.ruleset.civicCalm.happiness,
       detail: "Calm bought this year",
     },
     ...getLawHappinessContributions(G, playerID).map((law): HappinessContribution => ({

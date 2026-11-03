@@ -402,10 +402,15 @@ export interface PlayerState {
   /** Running total of pops gained inorganically from event cards (the `addPops`
    *  effect) — the ledger's "Gained" stat, paired with deaths. */
   popsGainedFromEvents: number;
-  /** Once-per-turn throttles: one civic-calm action, one ladder move, one development
-   *  card bought and one played, one paid pop move. Reset with the turn flags. */
-  civicCalmUsedThisTurn: boolean;
-  ladderUsedThisTurn: boolean;
+  /** Uses this turn of the actions under a per-turn cap (`ruleset.turnCaps`): the Dole,
+   *  calm and the ladder. Growing counts per settlement, in `grownSettlementsThisTurn`.
+   *  The calm count is also the calm bought this year: each use adds to the level until
+   *  the year turns, and it is never banked. Reset with the turn flags. */
+  doleUsesThisTurn: number;
+  calmUsesThisTurn: number;
+  ladderUsesThisTurn: number;
+  /** Once-per-turn throttles: one development card bought and one played, one paid pop
+   *  move. Reset with the turn flags. */
   devCardBoughtThisTurn: boolean;
   devCardPlayedThisTurn: boolean;
   moveUsedThisTurn: boolean;
@@ -413,8 +418,6 @@ export interface PlayerState {
    *  turn, in the resource picked when it was played; empty when no discount stands.
    *  Reset with the turn flags. */
   buildDiscount: Partial<Resources>;
-  /** Calm bought this year. It expires when the year turns and is never banked. */
-  calmActive: boolean;
   /** Turns of income Stratokles's General Strike has taken away. Decremented at the
    *  moment income would have been collected, so the strike costs exactly one turn. */
   incomeSuppressedTurns: number;
@@ -433,11 +436,14 @@ export interface PopulationTransfer {
   pops: Pops;
 }
 
-/** What one side of a trade hands over: stocks, luxury goods by asset id, and pops. */
+/** What one side of a trade hands over: stocks, luxury goods by asset id, pops, and a
+ *  number of held development cards. */
 export interface TradeBundle {
   resources: Partial<Resources>;
   goods: string[];
   pops: Pops;
+  /** Held development cards, by count only: the giver picks which (TradePlaces.cards). */
+  cards: number;
 }
 
 /** An offer's terms, read from the offering seat: what it gives and what it gets. */
@@ -446,11 +452,16 @@ export interface TradeTerms {
   get: TradeBundle;
 }
 
-/** The settlements a seat names for its own traded pops: where the pops it gives
- *  leave, and where the pops it gets arrive. Each is needed only when such pops trade. */
+/** What a seat names for its own side of a trade: where the pops it gives leave, where
+ *  the pops it gets arrive, and which held cards it gives. Each is needed only when such
+ *  pops or cards trade. */
 export interface TradePlaces {
   from?: string;
   to?: string;
+  /** The held cards it hands over, by instance id: its own pick, made as it offers,
+   *  counters, accepts or takes a counter. Projections hide it from every other seat, so
+   *  a seat may promise one card and hand over another. */
+  cards?: string[];
 }
 
 /** An answer that stays on the offer: an accept settles at once, so it never does. */
