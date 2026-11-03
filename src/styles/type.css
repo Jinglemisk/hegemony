@@ -175,15 +175,19 @@
 /* The living map's labels take one size, --lab, which the camera sets as
    the map comes closer, and keep the frame's 12px floor. A tile's resource badge is
    sized to its hex by the camera; its parts scale with it. */
-.lm-plate,
-.lm-plate .pl-name,
-.lm-plate .pips i,
 .lm-oracle,
 .lm-realm {
   font-size: var(--lab);
 }
+/* A name plate a tenth under it, so close in two plates side by side, each led by its
+   seat disc, stay inside their hexes. */
+.lm-plate,
+.lm-plate .pl-name,
+.lm-plate .pips i {
+  font-size: max(var(--t-12), calc(var(--lab) * 0.9));
+}
 .lm-plate.capital .pl-name {
-  font-size: calc(var(--lab) * 1.1);
+  font-size: max(var(--t-12), calc(var(--lab) * 0.99));
 }
 .lm-plate .pl-pops {
   font-size: max(var(--t-12), calc(var(--lab) * 0.9));
@@ -191,7 +195,8 @@
 .lm-ship {
   font-size: max(var(--t-12), calc(var(--lab) * 0.95));
 }
-.lm-moor {
+.lm-moor,
+.lm-tokens {
   font-size: max(var(--t-12), calc(var(--lab) * 0.92));
 }
 .lm-res b,
@@ -210,9 +215,6 @@
 .lm-chip,
 .lm-eco {
   font-size: max(var(--t-12), calc(var(--lab) * 0.98));
-}
-.lm-tokens {
-  font-size: max(var(--t-12), calc(var(--lab) * 0.92));
 }
 /* Trade's hint, the plate's size, its arrows a little larger: any taller and it
    reached the next row's badges. */
