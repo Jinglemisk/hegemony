@@ -958,6 +958,7 @@ describe("trade telemetry", () => {
     resources,
     goods,
     pops: { citizens: 0, freemen: 0, slaves: 0 },
+    cards: 0,
   });
   function offer(
     game: ReturnType<typeof drive>,
@@ -1047,6 +1048,33 @@ describe("trade telemetry", () => {
     });
     expect(trade.perPolicy.trader.exports.wood.most).toEqual({ games: 1, netSent: 2 });
     expect(trade.perPolicy.civic.exports.wood.most.games).toBe(0);
+  });
+
+  it("counts the held cards traded, by card, to the seat that gave them", () => {
+    const game = drive(
+      scenario()
+        .opening()
+        .withDevCard("0", "caravan")
+        .withResources("1", { stone: 2 })
+        .mutate((G) => {
+          G.pendingPlayerEvent = null;
+        })
+        .build(),
+    );
+    const [caravan] = game.G.devHands["0"];
+    game.take("0", {
+      type: "tradeOffer",
+      to: ["1"],
+      terms: { give: { ...side({}), cards: 1 }, get: side({ stone: 1 }) },
+      places: { cards: [caravan.id] },
+    });
+    game.take("1", accept(game.G.offers[0].id));
+    const report = game.report();
+
+    expect(report.devCards.perSeat["0"].traded.caravan).toEqual({ count: 1, perGame: 1 });
+    expect(report.devCards.perSeat["1"].traded.caravan).toEqual({ count: 0, perGame: 0 });
+    expect(report.trade.perSeat["0"].given.cards.count).toBe(1);
+    expect(report.trade.perSeat["1"].received.cards.count).toBe(1);
   });
 
   it("counts a trade in the Assembly's sitting that moves a title, and offers closed with it", () => {

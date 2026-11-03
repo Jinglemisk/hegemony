@@ -73,6 +73,7 @@ import { RealmPanel, type RealmSubject, type RealmTab } from "./frame/RealmPanel
 import { Alarms } from "./frame/Alarms";
 import { EndTurn } from "./frame/EndTurn";
 import { discGroups } from "./frame/discs";
+import { CardPick } from "./frame/trade/CardPick";
 import { ComposeCard } from "./frame/trade/OfferCard";
 import { TradePickContext, nextTradePick, usedPlaces } from "./frame/trade/tradePick";
 import type { PickTradePlaces, TradePickRequest } from "./frame/trade/tradePick";
@@ -392,17 +393,37 @@ export function HegemonyBoard({
     send: (places: TradePlaces) => void;
     folded: boolean;
   } | null>(null);
+  // Then the held cards it gives, picked in private: in hotseat the screen passes to the
+  // giving seat for the pick and comes back to the seat that was looking.
+  const [cardPick, setCardPick] = useState<{
+    request: TradePickRequest;
+    places: TradePlaces;
+    send: (places: TradePlaces) => void;
+    viewer: PlayerId;
+  } | null>(null);
+  const finishTradePick = useCallback(
+    (request: TradePickRequest, places: TradePlaces, send: (places: TradePlaces) => void) => {
+      const used = usedPlaces(request, places);
+      if (request.cards > 0) setCardPick({ request, places: used, send, viewer: viewerId });
+      else send(used);
+    },
+    [viewerId],
+  );
+  const endCardPick = () => {
+    if (cardPick && cardPick.viewer !== viewerId) onPlayerIDChange(cardPick.viewer);
+    setCardPick(null);
+  };
   const pickTradePlaces = useCallback<PickTradePlaces>(
     (request, send) => {
       const places = request.places ?? {};
       const mode = nextTradePick(G, request, places);
-      if (!mode) return send(usedPlaces(request, places));
+      if (!mode) return finishTradePick(request, places, send);
       const folded = Boolean(sitting && !sitting.minimised);
       if (folded) sitting?.setMinimised(true);
       setTradePick({ request, places, send, folded });
       armSelection(mode);
     },
-    [G, sitting, armSelection],
+    [G, sitting, armSelection, finishTradePick],
   );
   const endTradePick = () => {
     if (tradePick?.folded) sitting?.setMinimised(false);
@@ -419,7 +440,7 @@ export function HegemonyBoard({
       return;
     }
     clearMapSelection();
-    tradePick.send(usedPlaces(tradePick.request, places));
+    finishTradePick(tradePick.request, places, tradePick.send);
     endTradePick();
   };
   // Escape, or any other mode taking the map, cancels the pick.
@@ -751,6 +772,19 @@ export function HegemonyBoard({
               >
                 <ComposeCard onClose={() => setComposing(null)} seat={composing.seat} />
               </Popover>
+            ) : null}
+            {cardPick ? (
+              <CardPick
+                count={cardPick.request.cards}
+                onCancel={endCardPick}
+                onPick={(cards) => {
+                  cardPick.send({ ...cardPick.places, cards });
+                  endCardPick();
+                }}
+                onReveal={() => onPlayerIDChange(cardPick.request.seat)}
+                partner={cardPick.request.partner}
+                seat={cardPick.request.seat}
+              />
             ) : null}
             {activeModal?.kind === "ideas" && !drafting ? (
               <IdeasModal onClose={closeModal} />

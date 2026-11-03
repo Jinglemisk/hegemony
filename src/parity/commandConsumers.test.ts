@@ -21,8 +21,8 @@ describe("behavioral command-consumer parity", () => {
     const events = createCommandEvents(dispatch);
     const pops = { citizens: 1, freemen: 2, slaves: 3 };
     const terms = {
-      give: { resources: { wood: 2 }, goods: [], pops },
-      get: { resources: { food: 1 }, goods: ["luxury-1"], pops: { ...pops, slaves: 0 } },
+      give: { resources: { wood: 2 }, goods: [], pops, cards: 1 },
+      get: { resources: { food: 1 }, goods: ["luxury-1"], pops: { ...pops, slaves: 0 }, cards: 0 },
     };
 
     moves.placeCapital("tile-a", pops);
@@ -55,7 +55,7 @@ describe("behavioral command-consumer parity", () => {
     moves.assemblyVote("1", true);
     moves.assemblyClose();
     moves.assemblyReady("2");
-    moves.tradeOffer("0", ["1", "3"], terms, { from: "tile-a" });
+    moves.tradeOffer("0", ["1", "3"], terms, { from: "tile-a", cards: ["caravan#1"] });
     moves.tradeAnswer("1", "offer-9", { kind: "counter", terms, places: { from: "tile-b" } });
     moves.tradeSettle("0", "offer-9", "1", { to: "tile-a" });
     moves.tradeWithdraw("0", "offer-9");
@@ -132,7 +132,12 @@ describe("behavioral command-consumer parity", () => {
       { command: { type: "assemblyClose" }, actor: undefined },
       { command: { type: "assemblyReady" }, actor: "2" },
       {
-        command: { type: "tradeOffer", to: ["1", "3"], terms, places: { from: "tile-a" } },
+        command: {
+          type: "tradeOffer",
+          to: ["1", "3"],
+          terms,
+          places: { from: "tile-a", cards: ["caravan#1"] },
+        },
         actor: "0",
       },
       {

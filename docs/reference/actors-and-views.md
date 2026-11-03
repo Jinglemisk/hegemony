@@ -68,7 +68,9 @@ A pending hunger choice is public: every view sees which seat must send how many
 and the chosen pops in the Chronicle once they leave.
 
 Trade offers are public (D5 of the trade plan): every view sees every open offer, its terms and
-each answer, so nothing on `offers` is redacted.
+each answer. The one exception is the held cards a giver picked (`places.cards` on an offer or a
+counter): every other seat sees how many, never which. Once a trade settles, the cards are in the
+receiver's hand, which only it sees.
 
 Discard identities remain public and are sorted canonically. Once Assembly proposals enter the
 ballot, they are public and the voting view exposes them normally.
@@ -89,7 +91,9 @@ turn order (`assembly.activePlayer`), and the sitting has no seat switcher, so n
 reads another's drawn card. Once every seat has sealed, the preparation is public: the
 sheet is shared, offers are made and answered on it, and each seat presses Ready there. The
 game's end stays with whoever was looking. Trade answers have no notice either: the offer card
-lists every seat the offer names at once, and the first to accept trades.
+lists every seat the offer names at once, and the first to accept trades. A seat that gives
+held cards picks them behind a short handover ("Nikos chooses a card"): the viewer passes to it
+for the pick and back to the seat that was looking.
 
 `src/sim/runner.ts` likewise projects before every policy decision. Search can transition the
 sanitized state for deterministic, RNG-free branches, but cannot observe real entropy or deck

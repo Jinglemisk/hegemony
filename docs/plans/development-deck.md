@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "post-v2"
-updated: 2026-11-01
+updated: 2026-11-02
 ---
 
 # Development deck
@@ -318,7 +318,9 @@ deck against Ventures, then the free card on and off, read against the [rotated 
    rule (`devCards.freeCard`, `devCards.riotCard`) for the comparisons; the report waits for
    the owner's go.
 3. **Card trading.** Closed cards in the trade composer, the giver's pick, not playable the turn
-   received; bots trade cards. Needs player trade's first PR.
+   received; bots trade cards. Needs player trade's first PR. **Built 2026-11-02** (branch
+   `feat/card-trading`) but for the bots: they never put a card in a trade and decline an
+   offer that asks them for one.
 4. **Close-out.** The rules guide, the Codex and the owner's hotseat playtest.
 
 Both player trade PRs are merged, and the
