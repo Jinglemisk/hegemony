@@ -5,7 +5,7 @@ tree. The roadmap establishes sequence and exit gates; plans define unshipped
 work; references describe the game that exists; reports preserve dated evidence;
 and the archive is historical context, never current authority.
 
-Last updated: 2026-11-02.
+Last updated: 2026-11-03.
 
 ## Now
 
@@ -50,6 +50,7 @@ precedes full multiplayer. The mechanics are frozen (owner, 2026-10-27) but for 
 | [National Ideas](plans/national-ideas.md)           | v2       | `active`   | Step 9 shipped (#88); twelve v2 rules, open setup draft (#95), influence purchase       |
 | [Agency package](plans/agency-package.md)           | post-v2  | `active`   | Manumission, Capital Works, Messengers, optional pops, kept Laws, Port rule, caps built |
 | [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked`  | Final typed Resolution/Idea effects and evidence before multiplayer                     |
+| [Trade deals](plans/trade-deals.md)                 | post-v2  | `proposed` | Leases and yearly deals: open questions for a study before any build                    |
 
 Every file in `docs/plans/` must appear in this table. Start a substantial feature
 from [the plan template](plans/_template.md).
