@@ -7,7 +7,7 @@ import { assertStateDefinition } from "./definition";
 import { PLAYER_IDS } from "./data";
 import { enumerateLegalOptions } from "./legalMoves";
 import type { LegalOption } from "./legalMoves";
-import type { EventCard, HegemonyState, PlayerId, YearCard } from "./types";
+import type { EventCard, HegemonyState, PlayerId, TradePlaces, YearCard } from "./types";
 import { forecastYearCard } from "./year";
 
 /**
@@ -105,6 +105,13 @@ function redactState(state: HegemonyState, viewer: PlayerId | null): ProjectedGa
         id: HIDDEN_DEV_CARD,
       }));
     }
+    // The cards a seat picked to give in trade are its own: an open offer or counter
+    // shows every other seat how many, never which.
+    for (const offer of draft.offers) {
+      if (offer.from !== viewer) hidePick(offer.places);
+      for (const [seat, reply] of Object.entries(offer.answers))
+        if (reply?.kind === "counter" && seat !== viewer) hidePick(reply.places);
+    }
 
     for (const politician of Object.keys(draft.politicianDecks) as Array<
       keyof typeof draft.politicianDecks
@@ -146,6 +153,10 @@ function redactState(state: HegemonyState, viewer: PlayerId | null): ProjectedGa
 
 /** Stands in for every development card the viewer may not see. */
 const HIDDEN_DEV_CARD = "__hidden_dev__";
+
+function hidePick(places: TradePlaces) {
+  if (places.cards) places.cards = places.cards.map(() => HIDDEN_DEV_CARD);
+}
 
 /** Stands in for every undrawn year card. Its effect is a placeholder the type needs;
  *  nothing reads a hidden card's effect. */

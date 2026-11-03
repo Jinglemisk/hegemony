@@ -82,6 +82,10 @@ export type RuleChapter = {
 
 const anchor = (chapter: string, sub: string) => `codex-${chapter}-${sub}`;
 
+/** A per-turn cap as the Codex says it; null is no cap. */
+const times = (cap: number | null) =>
+  cap === null ? "as often as you can pay" : `up to ${cap} ${cap === 1 ? "time" : "times"}`;
+
 // ── shared render helpers ────────────────────────────────────────────────────
 //
 // Every sentence in the rulebook is annotated HERE, at these three seams, not line
@@ -268,8 +272,10 @@ const board: RuleChapter = {
           The island is a field of hexes ringed by sea. A land tile prints its terrain and a number
           of <em>slots</em>, nothing else. The slots are one pool: each building takes one, and each
           open slot holds one working slave, who makes {G.ruleset.popIncome.slaves.primaryResource}{" "}
-          of the terrain's resource. Slaves beyond the open slots sit idle. Two colonies on one tile
-          split its slots, and the colony founded first takes the odd one.
+          of the terrain's resource. Slaves beyond the open slots sit idle.{" "}
+          {G.ruleset.placement.maxColoniesPerTile > 1
+            ? "Two rivals' colonies may share a tile and split its slots; the colony founded first takes the odd one."
+            : "A tile holds one settlement."}
         </Note>
         {/* The terrain leads with its own icon; the resource's rides in the yield
             beside it, so neither word wears the other's picture. */}
@@ -485,7 +491,7 @@ const turn: RuleChapter = {
   id: "turn",
   title: "The Turn",
   icon: "market/income",
-  blurb: "Income, then your actions, then end — and the once-per-turn limits.",
+  blurb: "Income, then your actions, then end — and the per-turn limits.",
   keywords: [
     "turn",
     "income",
@@ -523,9 +529,11 @@ const turn: RuleChapter = {
       </Entry>
       <Entry id={anchor("turn", "throttles")} title="Per-turn limits">
         <Note>
-          Some actions are throttled so a turn can't do everything at once: one grow per settlement,
-          one ladder move, one pop move, one civic calm, and one development card bought and one
-          played per turn.{" "}
+          Some actions are limited so a turn can&rsquo;t do everything at once, one unit a use: the
+          Dole {times(G.ruleset.turnCaps.dole)}, civic calm {times(G.ruleset.turnCaps.calm)}, the
+          ladder {times(G.ruleset.turnCaps.ladder)} (promotions and demotions together) and growing{" "}
+          {times(G.ruleset.turnCaps.grow)} in each settlement. A turn also has one pop move, and one
+          development card bought and one played.{" "}
           {G.ruleset.ideas.purchases === 1
             ? "An Idea can be bought once per game."
             : `${G.ruleset.ideas.purchases} Ideas can be bought per game.`}{" "}
@@ -558,8 +566,10 @@ const ladder: RuleChapter = {
       <div className="compendiumStack">
         <Entry id={anchor("ladder", "grow")} title="Growing">
           <Note>
-            Grow adds one new pop to a settlement with room — once per settlement per turn. These
-            are base costs; the action picker shows the effective cost under standing Laws.
+            Grow adds one new pop to a settlement with room, {times(G.ruleset.turnCaps.grow)} per
+            settlement a turn. Guild Charter doubles the capital&rsquo;s and stops the
+            colonies&rsquo;. These are base costs; the action picker shows the effective cost under
+            standing Laws.
           </Note>
           <DefList>
             {(
@@ -575,9 +585,10 @@ const ladder: RuleChapter = {
         </Entry>
         <Entry id={anchor("ladder", "ladder")} title="The ladder">
           <Note>
-            One ladder move per turn: promote a pop up a class, or demote it down. Promotion buys
-            civic standing; demotion frees labour. The list below shows base costs; the picker shows
-            each effective cost.
+            Promote a pop up a class, or demote it down, {times(G.ruleset.turnCaps.ladder)} a turn
+            in all: promotions and demotions share the limit, and a free promotion still counts.
+            Promotion buys civic standing; demotion frees labour. The list below shows base costs;
+            the picker shows each effective cost.
           </Note>
           <DefList>
             {promotes.map(([pop, cost]) => (
@@ -786,9 +797,10 @@ const unrest: RuleChapter = {
         </Entry>
         <Entry id={anchor("unrest", "calm")} title="Buying calm">
           <Note>
-            One civic calm per turn, both worth +{calm.happiness} happiness this year. It expires
-            when the year turns and does not count toward Beloved of the People. These are base
-            costs; the payment picker shows effective costs:
+            Civic calm can be bought {times(G.ruleset.turnCaps.calm)} a turn, either payment, each
+            worth +{calm.happiness} happiness this year. It expires when the year turns and does not
+            count toward Beloved of the People. These are base costs; the payment picker shows
+            effective costs:
           </Note>
           <DefList>
             <DefRow term="Stabilize Province">
@@ -943,8 +955,9 @@ const trade: RuleChapter = {
       <Entry id={anchor("trade", "prices")} title="No bank">
         <Note>
           There is no bank. Trade is the only way to turn one stock into another, apart from the
-          Dole, where {G.ruleset.dole.influenceCost} influence buys {G.ruleset.dole.food} food.
-          Nothing anchors a price: a deal is whatever two seats agree.
+          Dole, where {G.ruleset.dole.influenceCost} influence buys {G.ruleset.dole.food} food,{" "}
+          {times(G.ruleset.turnCaps.dole)} a turn. Nothing anchors a price: a deal is whatever two
+          seats agree.
         </Note>
       </Entry>
       <Entry id={anchor("trade", "assembly")} title="In the Assembly">
@@ -1018,6 +1031,11 @@ const deck: RuleChapter = {
             Raiders, Agitators and an Informer name a rival when you play them, and cannot take what
             that rival does not have: Raiders names a stock the rival holds, and an Informer needs a
             rival who holds a development card.
+          </Note>
+          <Note>
+            Held cards trade. An offer names how many, never which: the seat that gives them picks,
+            as it sends, accepts or takes a counter, and only the two seats see which moved. A card
+            you receive is never played on the turn you received it.
           </Note>
         </Entry>
         <Entry id={anchor("deck", "happiness")} title="Happiness and the hand">

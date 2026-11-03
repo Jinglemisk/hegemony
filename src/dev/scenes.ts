@@ -37,7 +37,8 @@ import lateGameJson from "./late-game.json?raw";
  * tablets), `?dev=turn-notice` (the turn notice), `?dev=alarms` (a rival one title short,
  * and the seat with gold and stone for a Port), `?dev=assembly-ballot`, `-vote` and
  * `-rises` (the fourth sitting's ballot), `?dev=trade` (the seat holding wood to offer,
- * each rival holding stone) and `?dev=assembly-trade` (the first sitting's preparation,
+ * each rival holding stone), `?dev=trade-cards` (every seat holding a Caravan and a
+ * Raiders to trade) and `?dev=assembly-trade` (the first sitting's preparation,
  * every seat sealed and none Ready). `?dev=cards`: the seat at the development deck,
  * with gold for a card, a Caravan held from an earlier turn and a Foraging on top of the
  * pile. `?dev=fate-pop`: the second seat's Free Settlers, to place or decline. For the
@@ -223,6 +224,21 @@ export const DEV_SCENES: Record<string, (G: HegemonyState) => DevScene> = {
       for (const seat of PLAYER_IDS) {
         const mine = seat === draft.currentPlayer;
         Object.assign(draft.players[seat].resources, { wood: mine ? 8 : 0, stone: mine ? 0 : 4 });
+      }
+    }),
+  }),
+  // `?dev=trade` with a Caravan and a Raiders in every hand, from an earlier turn.
+  "trade-cards": (G) => ({
+    G: produce(clearFate(G), (draft) => {
+      for (const seat of PLAYER_IDS) {
+        for (const cardId of ["caravan", "raiders"]) {
+          const index = draft.devDrawPile.findIndex((id) => id.startsWith(`${cardId}#`));
+          if (index >= 0)
+            draft.devHands[seat].push({
+              id: draft.devDrawPile.splice(index, 1)[0],
+              turn: draft.turn - 1,
+            });
+        }
       }
     }),
   }),

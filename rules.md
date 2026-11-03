@@ -175,9 +175,9 @@ You hold three kinds of settlement:
   slots.
 - **Colony** — a small outpost. It holds up to 4 pops and raises no buildings, so
   every slot on its tile is a work slot. The one exception is a **Port** on the coast,
-  which takes one of those slots. Two colonies belonging to different players may
-  share a single tile; they **split its slots**, and the colony founded first takes
-  the odd one.
+  which takes one of those slots. A tile holds one settlement, except on the
+  **Continental** board: there two colonies belonging to different players may share a
+  single tile; they **split its slots**, and the colony founded first takes the odd one.
 
 Every way to add a pop needs room, and there is no penalty for standing over the cap.
 Laws can change capacity, slots and building permission. A cut blocks new additions;
@@ -243,7 +243,7 @@ before income. On your turn:
      that tile, and hands the colony piece back.
    - **Grow a pop** — add one pop to a settlement that still has room: a slave
      costs 2 food and a freeman 3 food. Citizens cannot be grown. Each settlement
-     can grow once per turn.
+     can grow **up to three times a turn**, one pop each time.
    - **Move pops** (one move per turn) — shift pops between your own settlements
      for **1 food a pop**. The target must have room, and they arrive at the start
      of your next turn. **Pops on the move are still in your realm**: their slaves
@@ -253,14 +253,16 @@ before income. On your turn:
      Port in a coastal colony.
    - **Trade with the other seats** — offer goods on the Trade disc, to the table or
      to the seats you pick, as often as you like (see Trade).
-   - **The Dole** — **3 influence buys 1 food**, as often as you can pay.
-   - **Civic calm** (once per turn) — **Stabilize Province** for 2 influence, or
-     stage **Bread & Circuses** for 2 gold. Either way: **+2 happiness this year**, expiring when the year turns. One calm action per
-     turn is the limit.
-   - **The social ladder** (one move per turn) — promote a slave to freeman for
+   - **The Dole** (up to three a turn) — **3 influence buys 1 food** each time. A seat
+     short of more food than that must trade for it or go hungry.
+   - **Civic calm** (up to three a turn) — **Stabilize Province** for 2 influence, or
+     stage **Bread & Circuses** for 2 gold. Each one: **+2 happiness this year**, so up
+     to +6, expiring when the year turns. Mix the payments as you like.
+   - **The social ladder** (up to three moves a turn) — promote a slave to freeman for
      **2 food**, or a freeman to citizen for **2 gold**. Demote one step for
-     **1 influence**. (A riot's concession demotes a citizen for free; see Happiness
-     and food.)
+     **1 influence**. Promotions and demotions share the three moves, and a free
+     promotion still uses one. (A riot's concession demotes a citizen for free and
+     uses none; see Happiness and food.)
    - **Buy a development card** (once per turn) — **2 gold** draws the top card, and
      you may **play one held card** a turn (see Development cards).
    - **Buy an Idea** (once per game) — your second National Idea for **6 influence**,
@@ -270,8 +272,8 @@ before income. On your turn:
    choose which; holding End turn opens that card, and Go back returns you to your
    turn to buy food instead. **Happiness:** **−3 or below starts a riot**, **−6 or
    below a revolt**. Calm bought this turn counts. At either line, holding End turn
-   opens a confirm first: it offers calm, with its price, when calm would change what
-   happens, and the plain choice to face it. At **+3 or higher**, calm left out, you draw
+   opens a confirm first: it offers the fewest calm buys that would change what
+   happens, with their price, and the plain choice to face it. At **+3 or higher**, calm left out, you draw
    a free development card instead (see Development cards).
 
 A **year** is one turn for every seat. After all four have played, the next year
@@ -298,7 +300,7 @@ riots, the end of the game) have no notice, and a game of bots never shows it.
 
 There is no bank. No seat sells a material for gold or buys one with gold: trade with
 the other seats (see Trade) is the only way to turn one stock into another, apart from
-**the Dole**, where **3 influence buys 1 food**. Nothing anchors a price: a deal is
+**the Dole**, where **3 influence buys 1 food**, three times a turn. Nothing anchors a price: a deal is
 whatever two seats agree. A realm that grows more food than it eats sells it for the
 wood it lacks.
 
@@ -310,8 +312,9 @@ left, what you give on the right, each with − and + to set the number. Pick
 seats at the top of the card to offer only to them; pick none and the offer goes to
 the table. Every seat sees every offer.
 
-- **What trades:** wood, stone, food, gold, influence, claimed luxury goods and pops of
-  every class. Votes, Ideas, Laws, settlements, buildings and Unrest tokens never trade.
+- **What trades:** wood, stone, food, gold, influence, claimed luxury goods, pops of
+  every class and held development cards, by count (see Development cards). Votes, Ideas,
+  Laws, settlements, buildings and Unrest tokens never trade.
 - **No gifts:** each side gives at least one thing, at any ratio. You give only what you
   hold, so a seat short of food gives no food, though it may take food.
 - **Answers:** the offer waits as a disc on the alarms row, in your glaze. It shakes once
@@ -384,6 +387,14 @@ the rival does not have.
 - **Agitators** (2) — the rival places an Unrest token.
 - **Informer** (2) — the rival discards a held card, drawn at random. It needs a rival
   who holds one.
+
+**Trading cards.** Held cards trade like anything else (see Trade): **Cards** on the
+offer card, with − and +. An offer names how many cards, never which. The seat that
+gives cards picks which, and may hand over other cards than the ones it talked about:
+you pick yours as you send an offer or a counter, as you accept, or as you take a
+counter. In hotseat the screen passes to the seat that picks, and comes back after.
+Only the two seats see which cards moved; the table sees the count. A card you receive
+goes to your hand and is never played on the turn you received it.
 
 **The free card.** At the end of your own turn, at the riot check, a happiness level of
 **+3 or higher** draws one card free. Calm bought this year does not count, the level is
@@ -465,7 +476,7 @@ and if the board does not change, neither does the level. A level of −3 this t
 - **−1** for every **two slaves** in your realm, those on the move included; an odd
   slave costs nothing.
 - **−1** for every **Unrest token** on your realm.
-- **+2** if you bought **civic calm** this year.
+- **+2** for each **civic calm** you bought this year.
 
 **Unrest tokens** are the one part that stays from turn to turn. Cards and
 Directives place them: any happiness loss a card names places one token, whatever
@@ -668,7 +679,7 @@ each politician's Laws and monuments by seat, and Voice.
 | Demosthenes   | Grain Levy        | Freemen eat no food; Marketplaces do nothing.                                                                             |
 | Demosthenes   | Festival Calendar | Calm costs 2 food or 2 influence.                                                                                         |
 | Perdiccas     | Public Works      | Estates and Granaries cost 3 wood; Marketplaces cost 2 wood and 2 gold. Colonies hold 3 pops. Other building prices stay. |
-| Perdiccas     | Guild Charter     | The capital may grow twice per turn; other cities once, colonies never.                                                   |
+| Perdiccas     | Guild Charter     | The capital may grow twice as often (six a turn); other cities keep three, colonies never grow.                           |
 | Perdiccas     | Rural Messengers  | Colony citizens make 2 influence; colony freemen make no gold, but still eat. City citizens and Forums are unchanged.     |
 | Perdiccas     | Civic Pride       | Flat +1 happiness per realm; each city pays 1 gold a year, as far as the realm's gold goes.                               |
 | Perdiccas     | Master Builders   | Cities gain one slot; only three colony pieces may be placed. Existing fourth colonies stay.                              |
@@ -731,5 +742,6 @@ shows the year and cards remaining.
 can play against bots; the screen stays on the people, and bot seats get no turn
 notice. Headless sims can seat `slaver`, `civic` and `trader` by name: they favour
 slaves and Estates, citizens and the Assembly, or freemen and coastal trade. They use
-the same legal commands, search Idea purchases, and trade and play cards as above. See
+the same legal commands, search Idea purchases, and trade and play cards as above. A
+bot never puts a card in a trade and declines an offer that asks it for one. See
 the [simulation reference](docs/reference/simulation.md) for mixed and rotated batches.

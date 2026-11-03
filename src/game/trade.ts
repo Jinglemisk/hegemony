@@ -32,21 +32,23 @@ import type {
  * seats. The first named seat to accept trades: settlement rechecks both sides and
  * moves everything at once, and the offer closes. A counter waits for the offering
  * seat to take it, and dies with the offer if another seat accepts first. Offers are
- * public, so nothing here is redacted.
+ * public but for the held cards a giver picks, which projections hide: an offer names how
+ * many cards, never which.
  */
 
 /** Every stock trades. */
 export const TRADE_RESOURCES: readonly Resource[] = ["wood", "stone", "food", "gold", "influence"];
 
 export function emptyBundle(): TradeBundle {
-  return { resources: {}, goods: [], pops: clonePops(EMPTY_POPS) };
+  return { resources: {}, goods: [], pops: clonePops(EMPTY_POPS), cards: 0 };
 }
 
 export function isEmptyBundle(bundle: TradeBundle): boolean {
   return (
     TRADE_RESOURCES.every((resource) => (bundle.resources[resource] ?? 0) === 0) &&
     bundle.goods.length === 0 &&
-    totalPops(bundle.pops) === 0
+    totalPops(bundle.pops) === 0 &&
+    bundle.cards === 0
   );
 }
 
@@ -56,6 +58,7 @@ function bundleShapeReason(bundle: TradeBundle): string | null {
   const counts = [
     ...keys.map((key) => bundle.resources[key] ?? 0),
     ...POP_TYPES.map((pop) => bundle.pops[pop]),
+    bundle.cards,
   ];
   if (counts.some((count) => !Number.isInteger(count) || count < 0)) {
     return "Counts are whole numbers.";
@@ -110,17 +113,30 @@ export function tradePlaceChoices(
   );
 }
 
+/** Whether every card picked is in the hand, each once, and the pick is `count` long.
+ *  Counted as a multiset, so a projection's hidden hand and hidden pick still match. */
+function heldPick(hand: readonly string[], picked: readonly string[], count: number): boolean {
+  if (picked.length !== count) return false;
+  const left = [...hand];
+  return picked.every((id) => {
+    const at = left.indexOf(id);
+    if (at >= 0) left.splice(at, 1);
+    return at >= 0;
+  });
+}
+
 /**
  * What a seat lacks to hand over `bundle`, one line each. Its pops must stand together
- * in `from`, or in any one settlement while it is unnamed. The composer's preview, the
- * answers and settlement all read this one check. A seat short of food holds none to
- * give, though it may take food.
+ * in `from`, or in any one settlement while it is unnamed, and the cards it picked must
+ * be in its hand. The composer's preview, the answers and settlement all read this one
+ * check. A seat short of food holds none to give, though it may take food.
  */
 export function tradeShortfalls(
   G: HegemonyState,
   seat: PlayerId,
   bundle: TradeBundle,
   from?: string,
+  cards?: readonly string[],
 ): string[] {
   const reasons: string[] = [];
   const held = G.players[seat].resources;
@@ -141,6 +157,16 @@ export function tradeShortfalls(
     const sources = tradePopSources(G, seat, bundle.pops);
     if (from ? !sources.includes(from) : sources.length === 0) {
       reasons.push(`No settlement there holds ${formatPops(bundle.pops)}.`);
+    }
+  }
+  if (bundle.cards > 0) {
+    const hand = G.devHands[seat].map((held) => held.id);
+    if (hand.length < bundle.cards) {
+      reasons.push(
+        `Holds ${hand.length} card${hand.length === 1 ? "" : "s"}, not ${bundle.cards}.`,
+      );
+    } else if (cards?.length && !heldPick(hand, cards, bundle.cards)) {
+      reasons.push("No longer holds the cards it picked.");
     }
   }
   return reasons;
@@ -167,10 +193,11 @@ function sideReasons(
   gets: TradeBundle,
   places: TradePlaces,
 ): string[] {
-  const reasons = tradeShortfalls(G, seat, gives, places.from);
+  const reasons = tradeShortfalls(G, seat, gives, places.from, places.cards);
   if (totalPops(gives.pops) > 0 && !places.from) {
     reasons.push("Name the settlement the pops leave.");
   }
+  if (gives.cards > 0 && !places.cards?.length) reasons.push("Pick the cards to give.");
   if (totalPops(gets.pops) > 0) {
     if (!places.to) reasons.push("Name the settlement that receives the pops.");
     else if (!tradePopTargets(G, seat, gets.pops).includes(places.to)) {
@@ -347,7 +374,9 @@ export function counterOf(
 export function partnerCanPay(G: HegemonyState, offer: TradeOffer, partner: PlayerId): boolean {
   const counter = counterOf(offer, partner);
   const terms = counter?.terms ?? offer.terms;
-  return tradeShortfalls(G, partner, terms.get, counter?.places.from).length === 0;
+  return (
+    tradeShortfalls(G, partner, terms.get, counter?.places.from, counter?.places.cards).length === 0
+  );
 }
 
 /** Taking a counter: the offering seat names its pop settlements for the counter's
@@ -376,15 +405,17 @@ export function getTradeSettleStatus(
   return { can: reasons.length === 0, reasons };
 }
 
-/** One seat hands its side to the other. Pops leave at once and travel to the
- *  receiver, who owns them from now and takes them in at the start of its next turn. */
+/** One seat hands its side to the other, from the places each named. Pops leave at once
+ *  and travel to the receiver, who owns them from now and takes them in at the start of
+ *  its next turn. Cards go from hand to hand, the giver's pick, and come in on this turn,
+ *  so the receiver never plays one before its next. */
 function handOver(
   G: HegemonyState,
   giver: PlayerId,
   receiver: PlayerId,
   bundle: TradeBundle,
-  from: string | undefined,
-  to: string | undefined,
+  giverPlaces: TradePlaces,
+  receiverPlaces: TradePlaces,
 ) {
   for (const resource of TRADE_RESOURCES) {
     const amount = bundle.resources[resource] ?? 0;
@@ -392,10 +423,20 @@ function handOver(
     G.players[receiver].resources[resource] += amount;
   }
   for (const id of bundle.goods) transferLuxury(G, id, receiver);
+  for (const id of bundle.cards > 0 ? (giverPlaces.cards ?? []) : []) {
+    const hand = G.devHands[giver];
+    hand.splice(
+      hand.findIndex((held) => held.id === id),
+      1,
+    );
+    G.devHands[receiver].push({ id, turn: G.turn });
+  }
   if (totalPops(bundle.pops) === 0) return;
 
-  const source = getOwnedSettlement(G, from!, giver)!;
-  const target = getOwnedSettlement(G, to!, receiver)!;
+  const from = giverPlaces.from!;
+  const to = receiverPlaces.to!;
+  const source = getOwnedSettlement(G, from, giver)!;
+  const target = getOwnedSettlement(G, to, receiver)!;
   subtractPops(source.pops, bundle.pops);
   G.transfers.push({
     id: allocateEntityId(G, "transfer"),
@@ -403,8 +444,8 @@ function handOver(
     giver,
     fromSettlementId: source.id,
     toSettlementId: target.id,
-    fromTileId: from!,
-    toTileId: to!,
+    fromTileId: from,
+    toTileId: to,
     pops: clonePops(bundle.pops),
   });
 }
@@ -420,8 +461,8 @@ function settle(
   theirPlaces: TradePlaces,
 ) {
   const seat = offer.from;
-  handOver(G, seat, partner, terms.give, ownPlaces.from, theirPlaces.to);
-  handOver(G, partner, seat, terms.get, theirPlaces.from, ownPlaces.to);
+  handOver(G, seat, partner, terms.give, ownPlaces, theirPlaces);
+  handOver(G, partner, seat, terms.get, theirPlaces, ownPlaces);
   G.offers = G.offers.filter((open) => open.id !== offer.id);
   addLog(
     G,
@@ -434,7 +475,9 @@ function settle(
 /**
  * The match as it would stand had `from` traded `terms` with `partner`, for a bot
  * weighing a deal it has not made: both sides hand over as at settlement, with no
- * offer closed and no line written. Holdings and room are the caller's to check.
+ * offer closed and no line written. Holdings and room are the caller's to check. Cards
+ * stay where they are: which ones move is the giver's pick, so a deal's cards weigh
+ * nothing here.
  */
 export function tradeForEval(
   G: HegemonyState,
@@ -444,9 +487,11 @@ export function tradeForEval(
   fromPlaces: TradePlaces = {},
   partnerPlaces: TradePlaces = {},
 ): HegemonyState {
+  const own = { ...fromPlaces, cards: [] };
+  const theirs = { ...partnerPlaces, cards: [] };
   return produce(G, (draft) => {
-    handOver(draft, from, partner, terms.give, fromPlaces.from, partnerPlaces.to);
-    handOver(draft, partner, from, terms.get, partnerPlaces.from, fromPlaces.to);
+    handOver(draft, from, partner, terms.give, own, theirs);
+    handOver(draft, partner, from, terms.get, theirs, own);
   });
 }
 
@@ -532,7 +577,7 @@ export function closeOffers(G: HegemonyState) {
   G.offersMade = {};
 }
 
-/** "2 wood, 1 gold, Pearls and 1 slave", or "nothing". */
+/** "2 wood, 1 gold, Pearls, 1 slave and 2 cards", or "nothing". */
 export function describeBundle(G: HegemonyState, bundle: TradeBundle): string {
   const parts = [
     ...TRADE_RESOURCES.filter((resource) => (bundle.resources[resource] ?? 0) > 0).map(
@@ -543,6 +588,7 @@ export function describeBundle(G: HegemonyState, bundle: TradeBundle): string {
       return (asset && getLuxuryGood(G.definition.content, asset.goodId)?.name) ?? id;
     }),
     ...(totalPops(bundle.pops) > 0 ? [formatPops(bundle.pops)] : []),
+    ...(bundle.cards > 0 ? [`${bundle.cards} card${bundle.cards === 1 ? "" : "s"}`] : []),
   ];
   return parts.length === 0 ? "nothing" : parts.join(", ");
 }

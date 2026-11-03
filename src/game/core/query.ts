@@ -5,6 +5,7 @@ import type {
   HexTile,
   LogMoment,
   PlayerId,
+  PlayerState,
   Pops,
   Settlement,
   YearTerm,
@@ -103,6 +104,22 @@ export function markSettlementGrown(G: HegemonyState, playerID: PlayerId, tileId
   const player = G.players[playerID];
 
   player.grownSettlementsThisTurn = [...(player.grownSettlementsThisTurn ?? []), tileId];
+}
+
+/** The actions a seat's own count holds to a per-turn cap. Growing is capped per
+ *  settlement instead (`growUsesLeft`). */
+export type CappedAction = "dole" | "calm" | "ladder";
+
+const USE_COUNTS = {
+  dole: "doleUsesThisTurn",
+  calm: "calmUsesThisTurn",
+  ladder: "ladderUsesThisTurn",
+} as const satisfies Record<CappedAction, keyof PlayerState>;
+
+/** Uses of a capped action the seat has left this turn; null when the ruleset sets no cap. */
+export function usesLeft(G: HegemonyState, playerID: PlayerId, action: CappedAction) {
+  const cap = G.ruleset.turnCaps[action];
+  return cap === null ? null : Math.max(0, cap - G.players[playerID][USE_COUNTS[action]]);
 }
 
 /** The term this year's card zeroes for the whole table, or null. */

@@ -9,13 +9,13 @@ export function resetTurnFlags(G: HegemonyState) {
   for (const player of Object.values(G.players)) {
     player.collectedThisTurn = false;
     player.grownSettlementsThisTurn = [];
-    player.civicCalmUsedThisTurn = false;
-    player.ladderUsedThisTurn = false;
+    player.doleUsesThisTurn = 0;
+    player.calmUsesThisTurn = 0;
+    player.ladderUsesThisTurn = 0;
     player.devCardBoughtThisTurn = false;
     player.devCardPlayedThisTurn = false;
     player.moveUsedThisTurn = false;
     player.buildDiscount = {};
-    player.calmActive = false;
   }
 }
 

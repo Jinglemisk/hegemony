@@ -85,8 +85,9 @@ export type LawEffect =
   | { type: "colonyBuildings"; amount: number }
   /** Moves how many colony pieces may stand; the supply itself is unchanged. */
   | { type: "colonyLimit"; amount: number }
-  /** How many times one settlement may grow per turn, where it is otherwise once. */
-  | { type: "growLimit"; scope: "capital" | "colony"; amount: number }
+  /** Scales the ruleset's per-turn growth cap for each settlement of the scope: 2 doubles
+   *  it, 0 forbids growth. */
+  | { type: "growLimit"; scope: "capital" | "colony"; factor: number }
   /** Votes added to (or taken from) the base for each settlement of the scope. */
   | { type: "settlementVotes"; scope: "city" | "colony"; amount: number };
 

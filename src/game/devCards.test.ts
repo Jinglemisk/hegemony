@@ -310,7 +310,7 @@ describe("the free card", () => {
 
   it("leaves calm out of the level", () => {
     const G = contentAt(table().build(), 1);
-    G.players["0"].calmActive = true;
+    G.players["0"].calmUsesThisTurn = 1;
     expect(happinessLevel(G, "0")).toBe(3);
     expect(freeLine(act(G, { type: "endTurn" }))).toBeUndefined();
   });

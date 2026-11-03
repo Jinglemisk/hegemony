@@ -374,7 +374,7 @@ describe("the Forum", () => {
 });
 
 describe("grow pop", () => {
-  it("grows a slave for food and only once per settlement per turn", () => {
+  it("grows a slave for food, up to the cap per settlement per turn", () => {
     const state = fresh();
     placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
     state.phase = "gameplay";
@@ -385,7 +385,9 @@ describe("grow pop", () => {
     expect(owned(state, "0,0", "0").pops.slaves).toBe(2);
     expect(state.players["0"].resources.food).toBe(beforeFood - 2);
 
-    // Second grow on the same settlement this turn is rejected.
+    // Two more grow on the same settlement this turn; a fourth is rejected.
+    expect(growPop(state, "0", "0,0", "slaves").ok).toBe(true);
+    expect(growPop(state, "0", "0,0", "slaves").ok).toBe(true);
     expect(growPop(state, "0", "0,0", "slaves").ok).toBe(false);
   });
 

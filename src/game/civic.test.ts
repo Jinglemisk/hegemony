@@ -46,20 +46,8 @@ describe("civic calm", () => {
 
     // -4 + 2 stands above the -3 line; turn end does not expire the bonus.
     expect(G.pendingRiot).toBeNull();
-    expect(G.players["0"].calmActive).toBe(true);
+    expect(G.players["0"].calmUsesThisTurn).toBe(1);
     expect(happinessLevel(G, "0")).toBe(-2);
-  });
-
-  it("shares one throttle across both payments — calm must not stack", () => {
-    const G = scenario()
-      .opening()
-      .mutate(clearPending)
-      .withResources("0", { influence: 8, gold: 12 })
-      .build();
-
-    expect(civicCalm(G, "0", "influence").ok).toBe(true);
-    expect(civicCalm(G, "0", "gold").ok).toBe(false);
-    expect(civicCalm(G, "0", "influence").ok).toBe(false);
   });
 });
 
@@ -106,20 +94,7 @@ describe("the social ladder (D8)", () => {
     expect(G.players["0"].unrestTokens).toBe(0);
   });
 
-  it("one ladder move per turn, shared between promote and demote", () => {
-    const G = scenario()
-      .opening()
-      .mutate(clearPending)
-      .setPops("0", P0_CAPITAL, { citizens: 1, freemen: 1, slaves: 2 })
-      .withResources("0", { food: 20, gold: 20, influence: 20 })
-      .build();
-
-    expect(promotePop(G, "0", P0_CAPITAL, "slaves").ok).toBe(true);
-    expect(promotePop(G, "0", P0_CAPITAL, "slaves").ok).toBe(false);
-    expect(demotePop(G, "0", P0_CAPITAL, "citizens").ok).toBe(false);
-  });
-
-  it("demotion is free — and throttle-exempt — during your own riot (the mob forces it)", () => {
+  it("demotion is free — and outside the ladder's cap — during your own riot (the mob forces it)", () => {
     const G = scenario()
       .opening()
       .mutate(clearPending)
@@ -136,7 +111,7 @@ describe("the social ladder (D8)", () => {
 
     // No influence, still legal.
     expect(demotePop(G, "0", P0_CAPITAL, "freemen").ok).toBe(true);
-    expect(G.players["0"].ladderUsedThisTurn).toBe(false);
+    expect(G.players["0"].ladderUsesThisTurn).toBe(0);
 
     // But only for the rioting player — everyone else waits out the blockade.
     expect(demotePop(G, "1", TEST_OPENING_SETUP[1].capital.tileId, "citizens").ok).toBe(false);

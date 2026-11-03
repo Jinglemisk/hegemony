@@ -39,8 +39,8 @@ export interface BankRules {
   scarce: BankRatePair;
 }
 
-/** Civic calm: one action per turn, two payments, the same rise in the level. The bonus
- *  lasts until the year turns and is never banked. */
+/** Civic calm: two payments, the same rise in the level for each use. The bonus lasts
+ *  until the year turns and is never banked. */
 export interface CivicCalmRules {
   happiness: number;
   influenceCost: number;
@@ -99,6 +99,17 @@ export interface TradeRules {
 export interface DoleRules {
   influenceCost: number;
   food: number;
+}
+
+/** Per-turn caps on the utility actions (docs/plans/agency-package.md, ruling 8): how many
+ *  times a seat may use each in its own turn, one unit a use at the usual price. Promotions
+ *  and demotions share the ladder's cap. Growing counts per settlement, and a standing
+ *  `growLimit` Law scales it. Null is no cap, as the Dole had none before the package. */
+export interface TurnCapRules {
+  dole: number | null;
+  calm: number | null;
+  ladder: number | null;
+  grow: number | null;
 }
 
 /**
@@ -198,8 +209,9 @@ export interface PlacementRules {
    *  and on the founding voyage, where the capital is the only one. Null is any shore to
    *  any shore. Founding beside an own settlement is never limited. */
   seaReach: number | null;
-  /** A tile holds at most this many colonies (and no city may share). Two colonies may
-   *  work one chora; the third is refused (post-sprint-debt §2.6 — was inline `>= 2`). */
+  /** A tile holds at most this many colonies (and no city may share). One by default: a
+   *  tile holds one settlement. The Continental board's patch makes it two, so two rivals'
+   *  colonies may share a tile and split its slots (board-modes plan, shared colonies). */
   maxColoniesPerTile: number;
   /** Cities repel other cities within this hex distance — 1 means no two cities may sit
    *  adjacent. Both the upgrade and the founding-voyage paths read it (was inline `> 1`). */
@@ -252,6 +264,7 @@ export interface Ruleset {
   movePopCost: Partial<Resources>;
   pieces: PieceRules;
   dole: DoleRules;
+  turnCaps: TurnCapRules;
   popIncome: Record<PopType, PopIncomeRule>;
   economy: EconomyRules;
   civicCalm: CivicCalmRules;
@@ -286,7 +299,7 @@ export const DEFAULT_RULESET: Ruleset = {
     colonyContiguity: true,
     coastalLeapfrog: true,
     seaReach: null,
-    maxColoniesPerTile: 2,
+    maxColoniesPerTile: 1,
     cityExclusionRadius: 1,
   },
   victory: {
@@ -305,6 +318,8 @@ export const DEFAULT_RULESET: Ruleset = {
   movePopCost: { food: 1 },
   pieces: { colonies: 4, cities: 3 },
   dole: { influenceCost: 3, food: 1 },
+  // Before the agency package: the Dole had no cap, calm and the ladder 1, growing 1.
+  turnCaps: { dole: 3, calm: 3, ladder: 3, grow: 3 },
   // One pop, one output. A slave makes 1 of its tile's resource when it holds an open
   // slot and eats nothing; a freeman makes 1 gold and a citizen 1 influence, and each
   // eats 1 food. Slaves cost happiness by the realm's count, not per pop: see
@@ -422,17 +437,19 @@ export function mergeRulesetPatches(
 /**
  * What a board brings to the rules, as a ruleset patch: a game's settings resolve to a
  * ruleset patch and a board (docs/plans/game-settings.md). Archipelago hops 3 hexes across
- * water (owner, Q81); Continental and Scenario keep any shore. No rule reads the board's
- * name, so this patch is the one way a board changes a rule.
+ * water (owner, Q81); Continental and Scenario keep any shore. Only Continental lets two
+ * rivals' colonies share a tile (owner, 2026-11-02). No rule reads the board's name, so
+ * this patch is the one way a board changes a rule.
  */
 const BOARD_RULESET_PATCHES: Record<BoardLayout, RulesetPatch | null> = {
-  continental: null,
+  continental: { placement: { maxColoniesPerTile: 2 } },
   archipelago: { placement: { seaReach: 3 } },
   scenario: null,
 };
 
 /** The board's patch with `patch` over it: a value the given patch sets, such as
- *  `placement.seaReach`, wins over the board's. Null when neither has anything. */
+ *  `placement.seaReach` or `placement.maxColoniesPerTile`, wins over the board's. Null
+ *  when neither has anything. */
 export function boardRulesetPatch(
   board: BoardLayout,
   patch: RulesetPatch | null = null,

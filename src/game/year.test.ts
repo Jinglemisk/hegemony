@@ -194,8 +194,8 @@ describe("calm lasts a year", () => {
       G.yearDrawPile = G.yearDrawPile.map(() => yearCard(G, "year-piracy"));
       expect(endTurn(G).ok).toBe(true);
       turns += 1;
-      if (turns < 4) expect(player.calmActive).toBe(true);
-      else expect(player.calmActive).toBe(false);
+      if (turns < 4) expect(player.calmUsesThisTurn).toBe(1);
+      else expect(player.calmUsesThisTurn).toBe(0);
     } while ((G.currentPlayer as string) !== "0");
 
     expect(turns).toBe(7);
@@ -203,7 +203,7 @@ describe("calm lasts a year", () => {
     // The next turn starts without a riot; the buyer still has time to repair it.
     expect(G.pendingRiot).toBeNull();
     expect(unrestStatus(G, "0").tier).toBe("unrest");
-    expect(player.calmActive).toBe(false);
+    expect(player.calmUsesThisTurn).toBe(0);
     G.pendingPlayerEvent = null;
     expect(endTurn(G).ok).toBe(true);
     expect(G.pendingRiot).toMatchObject({ playerID: "0" });
@@ -219,15 +219,15 @@ describe("calm lasts a year", () => {
     expect(endTurn(G).ok).toBe(true);
     expect(G.year).toBe(2);
     expect(G.pendingRiot).toBeNull();
-    expect(player.calmActive).toBe(false);
+    expect(player.calmUsesThisTurn).toBe(0);
   });
 
   it("expires for the last seat as well, and preserves the last card for the final tally", () => {
     const G = game();
-    for (const player of Object.values(G.players)) player.calmActive = true;
+    for (const player of Object.values(G.players)) player.calmUsesThisTurn = 1;
     standCard(G, "year-piracy");
     startNewYear(G);
-    expect(Object.values(G.players).every((player) => !player.calmActive)).toBe(true);
+    expect(Object.values(G.players).every((player) => player.calmUsesThisTurn === 0)).toBe(true);
 
     standCard(G, "year-blockade");
     G.year = 14;

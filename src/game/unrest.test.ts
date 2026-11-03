@@ -82,7 +82,7 @@ describe("the happiness level", () => {
   it("counts calm for the year it was bought and leaves it out of Beloved", () => {
     const G = preloadedGame(SEED);
     setPops(G, "0", { citizens: 1, freemen: 0, slaves: 6 }, NONE);
-    G.players["0"].calmActive = true;
+    G.players["0"].calmUsesThisTurn = 1;
 
     expect(happinessLevel(G, "0")).toBe(-1);
     expect(standingHappiness(G, "0")).toBe(-3);
@@ -251,7 +251,7 @@ describe("the end-turn confirm", () => {
     expect(turnEndUnrest(G, "0")).toMatchObject({
       tier: "riot",
       level: -3,
-      calm: { payment: "gold", cost: { gold: 2 }, level: -1, tier: "none" },
+      calm: { payments: ["gold"], cost: { gold: 2 }, level: -1, tier: "none" },
     });
 
     // At −6 it lifts to −4: a riot instead of a revolt.
@@ -261,9 +261,17 @@ describe("the end-turn confirm", () => {
       calm: { level: -4, tier: "riot" },
     });
 
-    // At −8 calm changes nothing, so it is not offered.
+    // At −8 the one calm the seat can pay for changes nothing, so it is not offered.
     G.players["0"].unrestTokens = 8;
     expect(turnEndUnrest(G, "0")?.calm).toBeNull();
+
+    // With more to pay, the fewest uses that change it: two at −5, gold and then influence.
+    G.players["0"].resources.influence = 6;
+    G.players["0"].unrestTokens = 5;
+    expect(turnEndUnrest(G, "0")).toMatchObject({
+      tier: "riot",
+      calm: { payments: ["gold", "influence"], cost: { gold: 2, influence: 2 }, level: -1 },
+    });
   });
 });
 

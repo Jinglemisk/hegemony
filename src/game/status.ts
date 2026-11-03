@@ -346,6 +346,16 @@ export function getBuildBuildingOptions(
   }));
 }
 
+/** Growths this seat's settlement on the tile has left this turn, under the ruleset's cap
+ *  and any Law that scales it; null when nothing caps it. */
+export function growUsesLeft(G: HegemonyState, playerID: PlayerId, tileId: string) {
+  const settlement = getOwnedSettlement(G, tileId, playerID);
+  if (!settlement) return 0;
+  const { amount } = growLimit(G, settlement);
+  const grown = getGrownSettlementsThisTurn(G, playerID).filter((id) => id === tileId).length;
+  return amount === null ? null : Math.max(0, amount - grown);
+}
+
 export function getGrowPopStatus(
   G: HegemonyState,
   playerID: PlayerId,
@@ -380,15 +390,12 @@ export function getGrowPopStatus(
 
   status.cost = getGrowPopCost(G, playerID, pop);
 
-  const grown = getGrownSettlementsThisTurn(G, playerID).filter((id) => id === tileId).length;
   const limit = growLimit(G, settlement);
-  if (grown >= limit.amount)
+  if (growUsesLeft(G, playerID, tileId) === 0)
     status.reasons.push(
-      limit.amount === 0
+      limit.amount === 0 && limit.label
         ? `${limit.label} forbids growth ${settlement.kind === "colony" ? "in colonies" : "in your capital"}.`
-        : limit.amount === 1
-          ? "Already grew a pop here this turn."
-          : `At most ${limit.amount} growths here per turn.`,
+        : `No growth left here this turn: ${limit.amount} a turn.`,
     );
 
   if (settlementRoom(G, settlement) < 1) {

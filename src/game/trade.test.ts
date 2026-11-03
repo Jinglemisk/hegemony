@@ -8,6 +8,7 @@ import { standingHappiness } from "./happiness";
 import { collectInvariantViolations } from "./invariants";
 import { enumerateLegalCommands, transition } from "./legalMoves";
 import type { GameCommand } from "./legalMoves";
+import { getPlayDevCardStatus } from "./devCards";
 import { luxuryHappinessBonus } from "./luxury";
 import { projectForPlayer } from "./projection";
 import { settlementCapacity } from "./settlement";
@@ -27,7 +28,7 @@ const capital = (seat: PlayerId) => TEST_OPENING_SETUP[Number(seat)].capital.til
 const colony = (seat: PlayerId) => TEST_OPENING_SETUP[Number(seat)].colony.tileId;
 
 function side(resources: TradeBundle["resources"] = {}, more: Partial<TradeBundle> = {}) {
-  return { resources, goods: [], pops: { ...NONE }, ...more };
+  return { resources, goods: [], pops: { ...NONE }, cards: 0, ...more };
 }
 function terms(give: TradeBundle, get: TradeBundle): TradeTerms {
   return { give, get };
@@ -401,6 +402,103 @@ describe("player trade", () => {
         places: {},
       }),
     ).toContain("Trade is off in this game.");
+  });
+});
+
+describe("trading held cards", () => {
+  /** Seat 0's turn, seat 0 holding a Caravan and a Raiders and seat 1 a Settlers, all
+   *  from an earlier turn. */
+  function hands() {
+    const G = scenario()
+      .opening()
+      .withResources("0", { wood: 6, stone: 2 })
+      .withResources("1", { wood: 0, stone: 4 })
+      .withDevCard("0", "caravan")
+      .withDevCard("0", "raiders")
+      .withDevCard("1", "settlers")
+      .mutate((draft) => {
+        draft.pendingPlayerEvent = null;
+        draft.pendingRiot = null;
+      })
+      .build();
+    const [caravan, raiders] = G.devHands["0"].map((held) => held.id);
+    const [settlers] = G.devHands["1"].map((held) => held.id);
+    return { G, caravan, raiders, settlers };
+  }
+  const hand = (G: HegemonyState, seat: PlayerId) => G.devHands[seat].map((held) => held.id);
+  const seen = (G: HegemonyState, viewer: PlayerId) =>
+    projectForPlayer(G.definition, G, viewer).state;
+
+  it("names a number of cards, and the giver's pick moves unseen by the other seats", () => {
+    const { G, caravan, raiders } = hands();
+    const sale = terms(side({}, { cards: 1 }), side({ stone: 1 }));
+    expect(refused(G, "0", { type: "tradeOffer", to: ["1"], terms: sale, places: {} })).toEqual([
+      "Pick the cards to give.",
+    ]);
+    const made = offer(G, "0", sale, ["1"], { cards: [raiders] });
+
+    // The offer says one card; only the giver sees which, the partner included.
+    expect(seen(made.G, "0").offers[0].places.cards).toEqual([raiders]);
+    for (const seat of ["1", "2"] as const)
+      expect(seen(made.G, seat).offers[0].places.cards).toEqual(["__hidden_dev__"]);
+
+    const settled = act(made.G, "1", accept(made.id));
+    expect(hand(settled, "0")).toEqual([caravan]);
+    expect(hand(settled, "1")).toContain(raiders);
+    expect(settled.log.at(-1)?.message).toBe("Damon trades 1 card to Nikos for 1 stone.");
+    // The receiver sees the card it took; a third seat sees how many it holds.
+    expect(hand(seen(settled, "1"), "1")).toContain(raiders);
+    expect(hand(seen(settled, "2"), "1")).toEqual(["__hidden_dev__", "__hidden_dev__"]);
+    expect(collectInvariantViolations(settled)).toEqual([]);
+  });
+
+  it("has the answering seat pick as it accepts, and the offering seat as it takes a counter", () => {
+    const { G, caravan, raiders, settlers } = hands();
+    // Seat 0 asks for a card: seat 1 picks one of its own as it accepts.
+    const ask = offer(G, "0", terms(side({ wood: 2 }), side({}, { cards: 1 })), ["1"]);
+    expect(refused(ask.G, "1", accept(ask.id))).toContain("Pick the cards to give.");
+    expect(refused(ask.G, "1", accept(ask.id, { cards: [caravan] }))).toContain(
+      "No longer holds the cards it picked.",
+    );
+    // A pick is never listed: a bot cannot accept it.
+    expect(
+      enumerateLegalCommands(ask.G, "1").filter((command) => command.type === "tradeAnswer"),
+    ).toEqual([{ type: "tradeAnswer", offerId: ask.id, answer: { kind: "decline" } }]);
+    const bought = act(ask.G, "1", accept(ask.id, { cards: [settlers] }));
+    expect(hand(bought, "0")).toEqual([caravan, raiders, settlers]);
+
+    // Seat 0 offers a card, picking its Caravan; seat 1 counters, and seat 0 takes the
+    // counter handing over its Raiders instead.
+    const sale = offer(G, "0", terms(side({}, { cards: 1 }), side({ stone: 2 })), ["1"], {
+      cards: [caravan],
+    });
+    const countered = act(sale.G, "1", {
+      type: "tradeAnswer",
+      offerId: sale.id,
+      answer: {
+        kind: "counter",
+        terms: terms(side({}, { cards: 1 }), side({ stone: 1 })),
+        places: {},
+      },
+    });
+    const taken = act(countered, "0", {
+      type: "tradeSettle",
+      offerId: sale.id,
+      partner: "1",
+      places: { cards: [raiders] },
+    });
+    expect(hand(taken, "0")).toEqual([caravan]);
+    expect(hand(taken, "1")).toEqual([settlers, raiders]);
+  });
+
+  it("never lets a card be played on the turn it was received", () => {
+    const { G, settlers } = hands();
+    const ask = offer(G, "0", terms(side({ wood: 2 }), side({}, { cards: 1 })), ["1"]);
+    const bought = act(ask.G, "1", accept(ask.id, { cards: [settlers] }));
+    const tileId = bought.players["0"].settlements[0];
+    expect(getPlayDevCardStatus(bought, "0", { card: settlers, tileId }).reasons).toContain(
+      "A card is never played on the turn it came in.",
+    );
   });
 });
 

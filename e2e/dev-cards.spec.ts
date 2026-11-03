@@ -59,3 +59,37 @@ test("a riot takes a held card in place of a pop, the seat's choice", async ({ p
   await result.getByRole("button", { name: "Endure It", exact: true }).click();
   await expect(result).toBeHidden();
 });
+
+test("a seat gives a held card in trade, picked in private behind a handover", async ({ page }) => {
+  // Every seat holds a Caravan and a Raiders from an earlier turn.
+  await visit(page, "/?dev=trade-cards&seed=42");
+  const seat = page.getByRole("button", { name: /, your seat$/ });
+  const person = (await seat.getAttribute("aria-label"))!.split(",")[0];
+
+  // 2 wood for a card, to the table: the offer names a card, never which.
+  await page.getByRole("button", { name: /^Trade: Offer/ }).click();
+  const compose = page.getByRole("region", { name: "Offer a trade" });
+  await compose.getByRole("button", { name: "Add to I give" }).click();
+  await compose.getByRole("button", { name: "wood, you hold 8" }).click();
+  await compose.getByRole("button", { name: "One more wood" }).click();
+  await compose.getByRole("button", { name: "Add to I want" }).click();
+  await compose.getByRole("button", { name: "card", exact: true }).click();
+  await compose.getByRole("button", { name: "Offer to the table" }).click();
+
+  // A seat accepts: the screen passes to it for its pick, then comes back.
+  await page.getByRole("button", { name: /offers the table, 0 of 3 answered/ }).click();
+  const card = page.getByRole("region", { name: /offers the table$/ });
+  await card
+    .getByRole("button", { name: / accepts$/ })
+    .first()
+    .click();
+  const handover = page.getByRole("dialog", { name: /chooses a card$/ });
+  await handover.getByRole("button", { name: "Show the hand" }).click();
+  const pick = page.getByRole("dialog", { name: "Choose a card to give" });
+  await expect(pick.getByRole("button", { name: "Give 0 of 1" })).toBeDisabled();
+  await pick.locator(".hand-card").last().click();
+  await pick.getByRole("button", { name: "Give a card" }).click();
+
+  await expect(page.getByText(/gave 2 wood; .* gave 1 card\./i)).toBeVisible();
+  await expect(seat).toHaveAccessibleName(`${person}, acting, 3 cards, your seat`);
+});
