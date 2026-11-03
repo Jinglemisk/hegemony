@@ -472,7 +472,8 @@ spending from the stock change.
   seat or a personality, read off the reach counts. Happiness and the hand:
   `drawnFree` (free cards drawn), `turnsAtFreeLevel` (the seat's own turns that ended at
   the free card's level, counted with the rule off too), `lostToRiots` (held cards a riot
-  took in place of a pop) and `popsSaved` (the pop each of those kept, by class). Slaves
+  took in place of a pop) and `popsSaved` (the pop each of those kept, by class), and
+  `traded` (held cards given in trade, by card, to the seat that gave them). Slaves
   held are the `classes` cut
 - `buildings`, `upgrades`, `currencyVerbs` (bank, Dole, calm, ladder, cards, riot)
   and `events` (draws by the twelve player-card kinds and eight year-card kinds) are

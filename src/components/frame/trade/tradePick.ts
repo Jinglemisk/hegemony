@@ -7,8 +7,9 @@ import type { MapSelectionMode } from "../../board/map/mapSelection";
 /**
  * Traded pops are placed on the map, as a move's are. A trade that hands over pops
  * asks its seat, before the command goes, for the settlement they leave; one that brings
- * pops asks where they go. Each pick is a map mode; the shell runs them in turn and
- * sends the command with the places named.
+ * pops asks where they go. Each pick is a map mode; the shell runs them in turn. A trade
+ * that hands over held cards then asks its seat which, in private, and the shell sends
+ * the command with the places and the cards named.
  */
 export type TradePickRequest = {
   seat: PlayerId;
@@ -16,6 +17,8 @@ export type TradePickRequest = {
   partner: PlayerId | null;
   gives: Pops;
   gets: Pops;
+  /** The held cards the seat gives: it picks which last, in private. */
+  cards: number;
   /** Places already named, kept when they still serve: an offer's, for its counter. */
   places?: TradePlaces;
 };
