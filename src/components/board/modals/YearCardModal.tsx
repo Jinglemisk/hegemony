@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
-import { forecastYearCard } from "../../../game/year";
 import { deckLine, yearCardFace } from "../../../ui/cardFace";
 import { presentYearCard } from "../../../ui/effects";
 import { toRoman } from "../../../ui/formatters";
 import { DeckLine } from "../../cards/DeckLine";
 import { GameCard } from "../../cards/GameCard";
-import { Ico, Tip, TipBody } from "../../frame/parts";
-import { Tooltip } from "../../overlays/Tooltip";
+import { Ico } from "../../frame/parts";
 import { yearCardArtUrl } from "../events";
 import { useGameUi } from "../GameUiContext";
 import { ceremonyMood } from "./ceremonyMood";
@@ -20,8 +18,6 @@ const FLIP_MS = 1000;
  * kind) and its commit. The commit is laid out from the first frame and shows once the
  * card is face up, so nothing moves. Odd years begin play; in a sitting year the commit
  * convenes the Assembly. Reopened from its alarm disc it shows the face and only closes.
- * Beside it, smaller, lies next year's card, public until it takes effect; it turns
- * with this year's. The final year has none.
  */
 export function YearCardModal({
   reveal,
@@ -52,52 +48,21 @@ export function YearCardModal({
   const card = G.activeYearCard;
   if (!card) return null;
 
-  const next = forecastYearCard(G);
   const sits = G.assembly && G.assembly.year === G.year;
   const convene = reveal && sits;
-  const thisYear = (
-    <GameCard
-      arrive="deal"
-      back={reveal ? <span className="display">{toRoman(G.year)}</span> : undefined}
-      face={yearCardFace(card, G.year, yearCardArtUrl(card))}
-      faceUp={face}
-      onTurn={() => setFace(true)}
-      titleId="year-title"
-    />
-  );
 
   return (
     <DrawnReveal
       card={
-        next ? (
-          <div className="year-pair">
-            {thisYear}
-            <div className="year-next">
-              <span className="label">Next year</span>
-              <Tooltip
-                ariaLabel={`Next year’s card: ${next.name}. ${next.text}`}
-                content={
-                  <Tip title={next.name}>
-                    <TipBody>{next.text}</TipBody>
-                  </Tip>
-                }
-                focusable
-              >
-                <GameCard
-                  arrive="deal"
-                  back={reveal ? <span className="display">{toRoman(G.year + 1)}</span> : undefined}
-                  face={yearCardFace(next, G.year + 1, yearCardArtUrl(next))}
-                  faceUp={face}
-                  size="hand"
-                />
-              </Tooltip>
-            </div>
-          </div>
-        ) : (
-          thisYear
-        )
+        <GameCard
+          arrive="deal"
+          back={reveal ? <span className="display">{toRoman(G.year)}</span> : undefined}
+          face={yearCardFace(card, G.year, yearCardArtUrl(card))}
+          faceUp={face}
+          onTurn={() => setFace(true)}
+          titleId="year-title"
+        />
       }
-      className={next ? "yearReveal" : undefined}
       deck={<DeckLine kinds="line" line={deckLine(G, { kind: "year" })} />}
       label={face ? undefined : "The year turns"}
       labelledBy={face ? "year-title" : undefined}

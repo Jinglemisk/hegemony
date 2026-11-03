@@ -10,7 +10,6 @@ import { ModalShell } from "./ModalShell";
  * Blocking unless `onDismiss` is given, as every ModalShell.
  */
 export function DrawnReveal({
-  className,
   mood,
   label,
   labelledBy,
@@ -22,8 +21,6 @@ export function DrawnReveal({
   waiting = false,
   children,
 }: {
-  /** A variant of the table, beside `drawnReveal`. */
-  className?: string;
   mood: CeremonyMood;
   label?: string;
   labelledBy?: string;
@@ -43,7 +40,7 @@ export function DrawnReveal({
     <ModalShell
       backdropClassName="eventModalBackdrop drawnScrim"
       ceremony={mood}
-      className={className ? `drawnReveal ${className}` : "drawnReveal"}
+      className="drawnReveal"
       label={label}
       labelledBy={labelledBy}
       onDismiss={onDismiss}
