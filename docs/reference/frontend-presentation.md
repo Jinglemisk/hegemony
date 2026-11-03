@@ -225,7 +225,8 @@ anchored entities.
   terrain and the owner rings, or Political's 50% tint). It replaced round owner discs
   behind the badges (owner, 2026-10-28: the tile's own shape, not a circle).
 - **The overview names only the capitals.** Every other settlement is its owner's paint;
-  close in, every settlement's plate, one line with its pips and pops. Two settlements
+  close in, every settlement's plate, one line with its owner's seat disc first, then its
+  name, pips and pops (owner, 2026-11-03). Two settlements
   sharing a tile (Continental only) stack a line each, so the plate is no wider than one.
   The realm's name in Political, with its Unrest tokens, hangs under its capital in place of
   the capital's plate; the tokens moved there from the seals.

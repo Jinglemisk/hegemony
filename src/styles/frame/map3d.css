@@ -229,6 +229,14 @@
   padding-top: 2px;
   border-top: 1px solid var(--ink-45);
 }
+/* The owner's seat disc, sized to the plate's type as the camera scales it, and close
+   to the name so the plate grows as little as it can. */
+.lm-plate .idea-seat {
+  width: 1.5em;
+  height: 1.5em;
+  margin-right: -0.2em;
+  font-size: 0.7em;
+}
 .lm-plate .pips,
 .lm-plate .pl-pops {
   display: flex;
