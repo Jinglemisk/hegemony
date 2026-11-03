@@ -280,8 +280,9 @@ A **year** is one turn for every seat. After all four have played, the next year
 begins and its card is revealed: the card turns over mid-screen, with the year deck's
 line under it. In an Assembly year its button convenes the Assembly. Closed, the
 card waits as a disc in the alarms row, after any title alarms, until the year turns;
-click it to read it again. The **first player moves on one seat** each year. The game
-lasts at most **fourteen years**; the next year card stays hidden.
+click it to read it again. **Next year's card** shows when you hover the year in the top
+bar. The **first player moves on one seat** each year. The game lasts at
+most **fourteen years**.
 
 **The alarms row.** A row of discs hanging from the top bar lists what bears on your realm
 now: a seat holding three titles, a rival one title short, each open trade offer, the year's card, your
@@ -540,8 +541,13 @@ check, then expires when the year turns, including for the last seat.
 ## Years and events
 
 The **year deck** is fourteen cards, shuffled once from the game seed. Reveal one
-as each year opens; the next stays hidden from every player and bot. A card that
-zeroes a term lasts for that year. Plague and Festival act once when revealed.
+as each year opens. **Next year's card is public:** once placement and the Idea draft
+finish, Year 1's card is revealed and Year 2's shows; at each later year the shown card
+takes effect and the next one shows. Nothing is shown past the final year, and the rest of
+the pile stays hidden. A card that zeroes a term lasts for that year. Plague and Festival
+act once, when their year opens, not when they show. A game longer than the deck shuffles
+the spent cards back in as the pile runs out, a year early, so the next card can show; the
+card in play joins the following shuffle. The bots do not plan for the shown card yet.
 
 | Card         | Copies | Effect                                                       |
 | ------------ | -----: | ------------------------------------------------------------ |
@@ -559,7 +565,7 @@ Laws change the columns before the year card. Drought still stops plains food un
 Land Reform; Wildfire and Silent Mines stop only wood and stone, so food made on
 forests or mountains survives. Granary and Sacred Fields food, and Civic Pride
 upkeep, are separate terms. Income forecasts use this year's card while your income is
-still owed; after collection they show printed income for the unknown next year.
+still owed; after collection they show printed income, without next year's card.
 
 **Player events** are drawn at each income and resolved before normal actions.
 The deck has twelve kinds and forty copies; it reshuffles its discards when empty.

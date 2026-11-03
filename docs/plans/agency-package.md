@@ -216,6 +216,8 @@ run at the end. Every batch then runs on the owner's go.
 3. **The year forecast, with bots that use it.** Today's bot forecast expires the active card and
    treats later cards as unknown. A forecast the bots ignore tests nothing. Ruling 11's bot
    planning follows in its own PR, since it changes the same forecast.
+   **Built 2026-11-03:** the forecast itself, without the bots (`feat/year-forecast`): the
+   card shows beside this year's, and the bots' use of it waits for the bot work.
 4. **The development deck** in its plan's slices: the deck replaces Ventures; the free card and
    the riot's card; card trading; close-out.
 5. **The comparisons.** The full package against a pinned `main` commit from before slice 1, on

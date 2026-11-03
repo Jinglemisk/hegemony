@@ -109,7 +109,8 @@ face from the engine's typed card, so the face cannot disagree with the rules:
   selector for what a deck makes public: the year deck's cards left and what is left of
   each kind, the fates' count with the kinds on hover, an Assembly draw's politician
   deck. It reads only the projected state, so it never shows an order or a next card.
-  The year card has no slip: card, deck line, commit.
+  The year card has no slip: card, deck line, commit. Next year's card shows on the
+  clock's hover in the top bar (owner, 2026-11-03); the final year has none.
 - **Nothing moves** (owner, 2026-10-28). A card lands at its final place: it turns over
   or fades in where it lies, never sliding or scaling. The stack under it is laid out at
   its final size from the first frame, and what shows later only fades in place (the

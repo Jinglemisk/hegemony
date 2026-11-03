@@ -8,6 +8,7 @@ import { PLAYER_IDS } from "./data";
 import { enumerateLegalOptions } from "./legalMoves";
 import type { LegalOption } from "./legalMoves";
 import type { EventCard, HegemonyState, PlayerId, TradePlaces, YearCard } from "./types";
+import { forecastYearCard } from "./year";
 
 /**
  * A presentation-compatible state whose secret-bearing collections have been
@@ -82,9 +83,12 @@ function redactState(state: HegemonyState, viewer: PlayerId | null): ProjectedGa
     // so both stay authority-only. Draw piles expose counts, never identities or order.
     draft.seed = 0;
     draft.rng = 0;
-    // The next year card stays hidden: the pile shows how many years are left and
-    // nothing else. The discards are every card already revealed, so they are public.
-    draft.yearDrawPile = draft.yearDrawPile.map(() => HIDDEN_YEAR_CARD);
+    // Next year's card is public; the rest of the pile shows how many years are left
+    // and nothing else. The discards are every card already revealed, so they are public.
+    const forecast = forecastYearCard(draft);
+    draft.yearDrawPile = draft.yearDrawPile.map((card, index) =>
+      index === 0 && forecast ? card : HIDDEN_YEAR_CARD,
+    );
     draft.yearDiscardPile = [...draft.yearDiscardPile].sort((left, right) =>
       left.id.localeCompare(right.id),
     );

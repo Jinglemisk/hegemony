@@ -1,11 +1,12 @@
 import type { CSSProperties, ReactNode } from "react";
 import { unrestOutcome } from "../../game/unrest";
 import type { UnrestOutcome } from "../../game/unrest";
-import { lastYear } from "../../game/year";
+import { forecastYearCard, lastYear } from "../../game/year";
 import type { IncomeContribution } from "../../game/economy/income";
 import type { Ruleset } from "../../game/ruleset";
 import { getOwnedSettlement, popsInTransit } from "../../game/rules";
 import type { HegemonyState, PlayerId, PopType, Resource, Resources } from "../../game/types";
+import { yearCardFace } from "../../ui/cardFace";
 import { presentUnrestOutcome } from "../../ui/effects";
 import { RESOURCE_LABELS, toRoman } from "../../ui/formatters";
 import { gaugeStops } from "../../ui/frameSelectors";
@@ -13,6 +14,8 @@ import type { HappinessDisplay } from "../../ui/frameSelectors";
 import { sign, tone } from "../../ui/frameFormat";
 import { POP_RASTERS, RESOURCE_RASTERS } from "../../ui/iconRegistry";
 import { settlementNames } from "../../ui/settlementNames";
+import { yearCardArtUrl } from "../board/events";
+import { GameCard } from "../cards/GameCard";
 import { Tooltip } from "../overlays/Tooltip";
 import { Ico, Tip, TipBody, TipLedger, TipWarn, Turns } from "./parts";
 
@@ -27,22 +30,25 @@ const PEOPLE: Array<{ pop: PopType; label: string }> = [
 const MAX_TOKEN_PIPS = 6;
 
 /** The year and the years left: the clock at the bar's left end. The year's card
- *  itself leads the alarms row. */
+ *  itself leads the alarms row; next year's card shows on the clock's hover, and the
+ *  final year has none. */
 function Clock({ G }: { G: HegemonyState }) {
   const year = G.year;
   const totalYears = lastYear(G);
   const left = totalYears - year;
+  const next = forecastYearCard(G);
 
   return (
     <div className="clock" data-c="clock">
       <Tooltip
-        ariaLabel={`Year ${year} of ${totalYears}, ${left} ${left === 1 ? "year" : "years"} left`}
+        ariaLabel={`Year ${year} of ${totalYears}, ${left} ${left === 1 ? "year" : "years"} left${next ? `. Next year’s card: ${next.name}. ${next.text}` : ""}`}
         content={
-          <Tip title={`Year ${toRoman(year)}`}>
-            <TipBody>
-              {`A year is one turn for every seat, and each turns a card from the year deck; the next card is hidden. ${left} ${left === 1 ? "year follows" : "years follow"} this one, then the game ends.`}
-            </TipBody>
-          </Tip>
+          next ? (
+            <Tip title="Next year">
+              <GameCard face={yearCardFace(next, year + 1, yearCardArtUrl(next))} size="hand" />
+              <TipBody>{next.text}</TipBody>
+            </Tip>
+          ) : null
         }
         focusable
         triggerClassName="year"

@@ -11,7 +11,7 @@
    holds at its 0.82 floor and the panels float over the (never-reflowed) sea. */
 
 /* Below about 1180px the purse (goods, then people) reaches the clock: the year's
-   total leaves the bar for the clock's tooltip, which already says it. */
+   total leaves the bar; the years left stay. */
 @media (max-width: 1179px) {
   .year .caps {
     display: none;

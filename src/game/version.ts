@@ -92,7 +92,11 @@ export const ENGINE_VERSION = "0.1.0";
  *  patch lets two rivals' colonies share it, which only Continental's does. The same
  *  recipe on another board plays differently, so older saves are rejected, not migrated.
  *  Commands are unchanged. */
-export const STATE_SCHEMA_VERSION = 28;
+/** v29 (agency package, year forecast): next year's card is public, and a game longer
+ *  than the deck shuffles the spent years back in a year earlier, so the next card can
+ *  show. Such a v28 recording replays differently, so older saves are rejected. Commands
+ *  are unchanged. */
+export const STATE_SCHEMA_VERSION = 29;
 export const COMMAND_SCHEMA_VERSION = 11;
 
 export const SAVE_FORMAT_VERSION = 2;

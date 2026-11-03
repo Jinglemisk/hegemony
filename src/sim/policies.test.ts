@@ -666,7 +666,9 @@ describe("policy evaluation is side-effect-free", () => {
     const hiddenVariant = structuredClone(G);
     hiddenVariant.seed += 999;
     hiddenVariant.rng ^= 0x7fffffff;
-    hiddenVariant.yearDrawPile.reverse();
+    // Next year's card is public, so only the year cards under it change order.
+    const [forecast, ...hiddenYears] = hiddenVariant.yearDrawPile;
+    hiddenVariant.yearDrawPile = [forecast, ...hiddenYears.reverse()];
     hiddenVariant.playerDrawPile.reverse();
     for (const deck of Object.values(hiddenVariant.politicianDecks)) deck.reverse();
 
