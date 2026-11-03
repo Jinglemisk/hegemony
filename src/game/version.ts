@@ -80,13 +80,16 @@ export const ENGINE_VERSION = "0.1.0";
  *  switch, so older pinned rulesets cannot answer it. Building a Port takes the same
  *  command, now beside a claimed good too, so commands are unchanged. Older saves are
  *  rejected, not migrated. */
-/** v27 (agency package, per-turn caps; v26 is card trading's): the Dole, calm, the ladder
- *  and growing are capped per turn by the ruleset, so a seat counts its uses of each
- *  instead of holding the once-a-turn calm and ladder flags, and Guild Charter scales the
- *  growth cap. Each use is the same one-unit command, so commands are unchanged. Older
- *  saves are rejected, not migrated. */
+/** v26 (development deck, slice 3): held cards trade. A trade bundle carries a number of
+ *  cards and a seat's places the cards it picked, so open offers carry both. Command v11
+ *  carries them in the trade commands. Older saves are rejected, not migrated. */
+/** v27 (agency package, per-turn caps): the Dole, calm, the ladder and growing are capped
+ *  per turn by the ruleset, so a seat counts its uses of each instead of holding the
+ *  once-a-turn calm and ladder flags, and Guild Charter scales the growth cap. Each use is
+ *  the same one-unit command, so commands are unchanged. Older saves are rejected, not
+ *  migrated. */
 export const STATE_SCHEMA_VERSION = 27;
-export const COMMAND_SCHEMA_VERSION = 10;
+export const COMMAND_SCHEMA_VERSION = 11;
 
 export const SAVE_FORMAT_VERSION = 2;
 export const SCRIPT_FORMAT_VERSION = 2;

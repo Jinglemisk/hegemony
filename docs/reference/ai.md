@@ -376,6 +376,9 @@ it pays.
   it in the preparation, then presses Ready.
 - **Pacing.** One offer a turn and one a sitting, read off the engine's count
   (`offersMade`), so a bot never repeats a declined offer in the same window.
+- **Cards.** A bot puts no held card in a trade: it declines an offer that asks it for
+  one and takes no counter that does. A card it would receive counts for nothing in the
+  deal's worth, since `tradeForEval` leaves cards where they are.
 
 The runner routes by who may act, as a server will: a seat an open offer names answers
 before the turn goes on, a bot before any person, and an answer does not count toward

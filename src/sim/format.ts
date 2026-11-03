@@ -563,7 +563,8 @@ export function renderBatchReport(report: BatchReport, years: number): string {
     `bought ${formatNumber(stats.bought.perGame)}, played ${formatNumber(stats.played.perGame)}, ` +
     `gold ${formatNumber(stats.goldSpent.perGame)}, free ${formatNumber(stats.drawnFree.perGame)}, ` +
     `turns at the free card's level ${formatNumber(stats.turnsAtFreeLevel.perGame)}, ` +
-    `lost to riots ${formatNumber(stats.lostToRiots.perGame)}`;
+    `lost to riots ${formatNumber(stats.lostToRiots.perGame)}, ` +
+    `traded ${formatNumber(Object.values(stats.traded).reduce((sum, card) => sum + (card?.perGame ?? 0), 0))}`;
   lines.push(`Development cards (per game): ${cards(report.devCards.total)}`);
   for (const [name, stats] of Object.entries(report.devCards.perPolicy)) {
     lines.push(`  ${name} (per seat-game): ${cards(stats)}`);

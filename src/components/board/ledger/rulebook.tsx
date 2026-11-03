@@ -1028,6 +1028,11 @@ const deck: RuleChapter = {
             that rival does not have: Raiders names a stock the rival holds, and an Informer needs a
             rival who holds a development card.
           </Note>
+          <Note>
+            Held cards trade. An offer names how many, never which: the seat that gives them picks,
+            as it sends, accepts or takes a counter, and only the two seats see which moved. A card
+            you receive is never played on the turn you received it.
+          </Note>
         </Entry>
         <Entry id={anchor("deck", "happiness")} title="Happiness and the hand">
           {rules.freeCard ? (

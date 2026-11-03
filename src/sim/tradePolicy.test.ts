@@ -101,6 +101,29 @@ describe("bots trade", () => {
     expect(answer(G, terms({ stone: 2 }, { food: 1 }), "civic")).toBe("accept");
   });
 
+  it("declines an offer that asks it for a held card, whatever else it pays", () => {
+    const G = table("1", {
+      "0": {
+        tile: PLAINS,
+        pops: { citizens: 2, freemen: 1, slaves: 4 },
+        resources: { food: 10, stone: 1 },
+      },
+      "1": {
+        tile: FOREST,
+        pops: { citizens: 0, freemen: 1, slaves: 3 },
+        resources: { food: 10, stone: 6 },
+      },
+    });
+    const card = G.devDrawPile.find((id) => id.startsWith("caravan#"))!;
+    G.devDrawPile = G.devDrawPile.filter((id) => id !== card);
+    G.devHands["0"].push({ id: card, turn: G.turn - 1 });
+
+    // The deal it takes above, with a card asked on top.
+    const ask = terms({ stone: 2 }, { food: 1 });
+    expect(answer(G, ask, "civic")).toBe("accept");
+    expect(answer(G, { ...ask, get: { ...ask.get, cards: 1 } }, "civic")).toBe("decline");
+  });
+
   it("the trader buys food with gold before a sitting that would repeal the Law feeding its freemen", () => {
     // Grain Levy feeds seat 0's three freemen: its city grows two food more than it
     // eats, and one less without the Law. Seat 1 holds the influence to move the repeal
