@@ -2,7 +2,9 @@ import { produce } from "immer";
 import { mulberry32 } from "../game/core/rng";
 import { enumerateLegalCommands, transition } from "../game/legalMoves";
 import type { GameCommand } from "../game/legalMoves";
-import type { HegemonyState, PlayerId } from "../game/types";
+import type { HegemonyState, HexTile, PlayerId } from "../game/types";
+import { allocateEntityId } from "../game/entity";
+import { areNeighbours, hexDistance } from "../game/mapTopology";
 import { PLAYER_IDS } from "../game/data";
 import { nextPlayer } from "../game/turn";
 import { happinessLevel } from "../game/happiness";
@@ -43,7 +45,9 @@ import lateGameJson from "./late-game.json?raw";
  * with gold for a card, a Caravan held from an earlier turn and a Foraging on top of the
  * pile. `?dev=fate-pop`: the second seat's Free Settlers, to place or decline. For the
  * board: `?dev=mid-game` and `?dev=late-game` (the sim's master bots play
- * every seat to the start of Year 6 or Year 12; Year 12 is a stored board, seed 42).
+ * every seat to the start of Year 6 or Year 12; Year 12 is a stored board, seed 42), and
+ * `?dev=shared-tiles` (two neighbouring tiles near the centre, each shared by two rivals'
+ * colonies, as Continental allows: their plates stand side by side close in).
  */
 
 /** What a scene asks of the board's first render, beside its state. */
@@ -265,8 +269,37 @@ export const DEV_SCENES: Record<string, (G: HegemonyState) => DevScene> = {
     ),
   }),
   "mid-game": (G) => ({ G: botsToYear(G, 6) }),
+  "shared-tiles": (G) => ({ G: shareTwoTiles(clearFate(G)) }),
   "late-game": (G) => ({ G: storedLateGame(G) ?? botsToYear(G, 12) }),
 };
+
+/** Two rivals' colonies on each of two neighbouring open tiles, the pair nearest the
+ *  centre. Placed directly, so the scene holds on any board. */
+function shareTwoTiles(G: HegemonyState): HegemonyState {
+  return produce(G, (draft) => {
+    const open = draft.board.tiles
+      .filter((tile) => tile.settlements.length === 0 && tile.terrain !== "oracle" && tile.slots)
+      .sort((a, b) => hexDistance(a, { q: 0, r: 0 }) - hexDistance(b, { q: 0, r: 0 }));
+    const first = open.find((tile) => open.some((other) => areNeighbours(tile, other)));
+    const second = first && open.find((other) => areNeighbours(first, other));
+    if (!first || !second) return;
+    const share = (tile: HexTile, seats: PlayerId[]) => {
+      for (const owner of seats) {
+        tile.settlements.push({
+          id: allocateEntityId(draft, "settlement"),
+          tileId: tile.id,
+          owner,
+          kind: "colony",
+          buildings: [],
+          pops: { citizens: 0, freemen: 1, slaves: 1 },
+        });
+        draft.players[owner].settlements.push(tile.id);
+      }
+    };
+    share(first, ["0", "1"]);
+    share(second, ["2", "3"]);
+  });
+}
 
 /** The Year 12 board stored by `npm run dev:late-game`, when it was played under the same
  *  rules and state shape as this game; otherwise the scene plays the bots (a minute or

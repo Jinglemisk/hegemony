@@ -158,6 +158,9 @@ export function stepCamera(cam: Cam, goal: Goal, frame: Frame, reach: number, ra
 const LABEL_ROOM = [44, 50] as const;
 const ROOM = [56, 64] as const;
 const CARD_ROOM = [110, 120] as const;
+/** Trade's hint hangs under a capital's plate, a row below the name: narrower than this,
+ *  it reaches the next row's badges (MAP-3), so it waits for the room. */
+const HINT_ROOM = [94, 98] as const;
 
 /**
  * The zoom bands: one function of the camera and the mode that every layer's fade
@@ -251,8 +254,8 @@ export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain
       building: near,
     },
     // Each Port's chip names the good it holds; each realm's trade hint hangs under its
-    // capital.
-    trade: { ...labels, ship: 1, port: 1, hint: 1 },
+    // capital, where the hexes have room for it.
+    trade: { ...labels, ship: 1, port: 1, hint: smooth(...HINT_ROOM, hexPx) },
   };
   return { close, layers: layers[mode], html: html[mode] };
 }

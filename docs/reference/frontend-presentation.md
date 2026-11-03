@@ -225,21 +225,24 @@ anchored entities.
   terrain and the owner rings, or Political's 50% tint). It replaced round owner discs
   behind the badges (owner, 2026-10-28: the tile's own shape, not a circle).
 - **The overview names only the capitals.** Every other settlement is its owner's paint;
-  close in, every settlement's plate, one line with its pips and pops.
+  close in, every settlement's plate, one line with its owner's seat disc first, then its
+  name, pips and pops (owner, 2026-11-03). Two settlements
+  sharing a tile (Continental only) stack a line each, so the plate is no wider than one.
   The realm's name in Political, with its Unrest tokens, hangs under its capital in place of
   the capital's plate; the tokens moved there from the seals.
 - **Sizes.** The badge's numeral is 0.3 of the hex's drawn width, up to 24px (Large: 0.55,
   up to 32px), and never wider than 0.92 of the hex; the board's label size (`--lab`) is about 13% larger
   at every zoom. Each label waits until the hexes are drawn wide enough to hold it under its
-  badge: a short label 44–50px, every plate 56–64px, Economy's three-row card and a realm's
-  glaze and counts 110–120px. A
+  badge: a short label 44–50px, every plate 56–64px, Trade's hint 94–98px, Economy's
+  three-row card and a realm's glaze and counts 110–120px. A
   phone's opening view shows the badges alone.
 - **Trade's hint** (`tradeLean`, in the engine) hangs under each capital's plate in Trade, a
-  box larger than the plate's text: a red ↑ and the realm's export, the wood, stone or food
+  box the plate's size: a red ↑ and the realm's export, the wood, stone or food
   it makes most of beyond its needs a turn; a green ↓ and its import, of those it makes
   nothing of beyond its needs, the one it will hold least of once the turn's income lands.
-  Both read only public income and stocks. In the overview the box reaches the next row, so
-  in Trade a capital's tag stands over the tags below it. Hovering the hint shows the
+  Both read only public income and stocks. It waits for hexes wide enough that it stays
+  clear of the next row's badges; a capital's tag still stands over the tags below it in
+  Trade. Hovering the hint shows the
   numbers; clicking it picks the capital. The capital's accessible name in Trade says the
   same.
 - **No seat shares a hue with the board.** Nikos's seat was Melichron (honey), which read as

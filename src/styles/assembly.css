@@ -44,14 +44,17 @@
   background: rgb(255 248 231 / 70%);
 }
 
+.ruleCardList li strong,
+.ruleCardList li span {
+  font-size: 10.5px;
+}
+
 .ruleCardList li strong {
   color: var(--ink);
   font-family: var(--f-name);
-  font-size: 10.5px;
 }
 
 .ruleCardList li span {
   color: var(--ink-66);
-  font-size: 10.5px;
   line-height: 1.45;
 }

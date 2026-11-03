@@ -10,7 +10,7 @@ import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
 import { settlementNames } from "../../../ui/settlementNames";
 import { Tooltip } from "../../overlays/Tooltip";
-import { Tip, TipBody, TipLedger } from "../parts";
+import { SeatMark, Tip, TipBody, TipLedger } from "../parts";
 import { BoardTip } from "./BoardTip";
 import { H_TILE } from "./camera";
 import { MAIN_Z, layoutMap } from "./layout";
@@ -132,18 +132,23 @@ function ResBadge({ tile, look }: { tile: MapTile; look: Plates["look"] }) {
   );
 }
 
-/** A tile's name plate, one line: the settlements on it and, close in, each one's slots
- *  as pips and its pops. A capital's shows at both bands, the rest close in; a pick's
- *  candidate's at any zoom (`asked`). Trade's hint hangs under a capital's. */
+/** A tile's name plate, one line: the settlements on it, each led by its owner's seat
+ *  disc, and, close in, each one's slots as pips and its pops. A capital's shows at both
+ *  bands, the rest close in; a pick's candidate's at any zoom (`asked`). Trade's hint
+ *  hangs under a capital's. */
 function Plate({ tile, asked, hint }: { tile: MapTile; asked: boolean; hint?: ReactNode }) {
   const [lead] = tile.settlements;
+  const shared = tile.settlements.length > 1;
   return (
-    <div className={`lm-plate${lead.capital ? " capital" : ""}${asked ? " is-asked" : ""}`}>
+    <div
+      className={`lm-plate${lead.capital ? " capital" : ""}${asked ? " is-asked" : ""}${shared ? " is-shared" : ""}`}
+    >
       {hint}
-      {/* Each settlement's own: two on a tile may have two owners. */}
-      {tile.settlements.map((s, i) => (
-        <Fragment key={s.id}>
-          {i ? <u /> : null}
+      {/* Each settlement's own row: two on a tile may have two owners, and stacked their
+          plate is no wider than one, so it stays inside its hex (MAP-3). */}
+      {tile.settlements.map((s) => (
+        <span className="pl-row" key={s.id}>
+          <SeatMark playerID={s.owner} />
           <span className="pl-name">{s.name}</span>
           <span className="pips">
             <Pips built={s.built} slots={s.slots} worked={s.worked} />
@@ -152,7 +157,7 @@ function Plate({ tile, asked, hint }: { tile: MapTile; asked: boolean; hint?: Re
             {icon("pops/crowd")}
             {s.pops}
           </span>
-        </Fragment>
+        </span>
       ))}
     </div>
   );

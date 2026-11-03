@@ -2,7 +2,7 @@
 title: UI — what is genuinely left
 status: active
 phase: "—"
-updated: 2026-11-02
+updated: 2026-11-03
 ---
 
 # UI — what is genuinely left
@@ -38,10 +38,16 @@ resource chips, two token tables) are scheduled in the
 | -------- | ---------- | --------------------------------------------- |
 | `TYPE-1` | a decision | Two type sizes sit under spec, on purpose     |
 | `DUP-1`  | nothing    | Four repeated glossary words, judged and left |
-| `MAP-3`  | a fix      | Labels that cover a neighbour's on the map    |
 | `RIOT-1` | later      | Redesign the riot screen in the current UI    |
 
 ### Shipped or closed
+
+- **`MAP-3` · labels that cover a neighbour's** (fixed 2026-11-03, `fix/map-label-overlaps`).
+  Trade's hint is the plate's size and waits for hexes of 94–98px, so in the overview it
+  stays clear of the next row's badges (1920 and 1440; at 1280 it waits for the zoom). A
+  tile shared by two settlements stacks its plate a line each, so close in it is no wider
+  than one settlement's. `?dev=shared-tiles&board=continental` shows two such tiles side by
+  side.
 
 - **`CARD-1` · one card face for every deck** (card-face study, owner 2026-10-27). Year
   cards, fates, Laws, Directives and National Ideas print one way (`GameCard`): the
@@ -429,7 +435,7 @@ Numbering them ("Gold, second mention") would make the prose unreadable when rea
 linearly, to fix an ambiguity that only exists if you tab the page as a list of
 controls. Judged and left.
 
-## MAP-3 — labels that cover a neighbour's
+## MAP-3 — labels that cover a neighbour's · **shipped**
 
 Two overlaps on the 3D map, seen 2026-10-28:
 
