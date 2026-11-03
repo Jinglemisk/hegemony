@@ -171,9 +171,9 @@ export function EndTurn({
       {confirming && unrest ? (
         <EndTurnConfirm
           anchor={button}
-          onCalmThenEnd={(payment) => {
+          onCalmThenEnd={(payments) => {
             setConfirming(false);
-            onCalm(payment);
+            for (const payment of payments) onCalm(payment);
             onEndTurn();
           }}
           onClose={() => setConfirming(false)}
@@ -201,12 +201,14 @@ function EndTurnConfirm({
   anchor: RefObject<HTMLButtonElement | null>;
   unrest: TurnEndUnrest;
   ruleset: Ruleset;
-  onCalmThenEnd: (payment: CivicCalmPayment) => void;
+  onCalmThenEnd: (payments: CivicCalmPayment[]) => void;
   onEnd: () => void;
   onClose: () => void;
 }) {
   const revolt = unrest.tier === "revolt";
   const { calm } = unrest;
+  // Calm bought more than once says how many times.
+  const times = calm && calm.payments.length > 1 ? ` ×${calm.payments.length}` : "";
   const { share } = presentUnrestOutcome(ruleset, unrest.tier);
   const title = revolt ? "Ending your turn now means revolt" : "Ending your turn starts a riot";
 
@@ -244,8 +246,8 @@ function EndTurnConfirm({
           <Ico path="unrest/calm" size="ui" />
           <span>
             {calm.tier === "none"
-              ? `Calm gives ${sign(calm.level - unrest.level)} and holds the line.`
-              : `Calm (${sign(calm.level - unrest.level)}) lifts you to ${sign(calm.level)}: a riot instead.`}
+              ? `Calm${times} gives ${sign(calm.level - unrest.level)} and holds the line.`
+              : `Calm${times} (${sign(calm.level - unrest.level)}) lifts you to ${sign(calm.level)}: a riot instead.`}
           </span>
         </p>
       ) : null}
@@ -253,10 +255,10 @@ function EndTurnConfirm({
         {calm ? (
           <button
             className="btn kicker confirm-btn is-primary"
-            onClick={() => onCalmThenEnd(calm.payment)}
+            onClick={() => onCalmThenEnd(calm.payments)}
             type="button"
           >
-            Calm, then end <Chips amounts={calm.cost} />
+            Calm{times}, then end <Chips amounts={calm.cost} />
           </button>
         ) : null}
         <button autoFocus className="btn kicker confirm-btn" onClick={onEnd} type="button">

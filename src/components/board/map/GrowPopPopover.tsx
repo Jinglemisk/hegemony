@@ -1,5 +1,10 @@
 import { useMemo, useState } from "react";
-import { GROWABLE_POPS, getGrowPopStatus, previewGrowPopIncomeDelta } from "../../../game/rules";
+import {
+  GROWABLE_POPS,
+  getGrowPopStatus,
+  growUsesLeft,
+  previewGrowPopIncomeDelta,
+} from "../../../game/rules";
 import type { PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
 import { Prose } from "../../AnnotatedText";
@@ -40,6 +45,8 @@ export function GrowPopPopover({
 
   const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
   const status = getGrowPopStatus(G, playerID, tileId, pop);
+  // Growths this settlement has left this turn: a count on each pop's icon.
+  const left = growUsesLeft(G, playerID, tileId);
   // From the engine (R7), and memoized because the preview clones state.
   const benefit = useMemo(
     () => previewGrowPopIncomeDelta(G, playerID, tileId, pop),
@@ -87,6 +94,9 @@ export function GrowPopPopover({
                       <Prose links={false}>{reason}</Prose>
                     </p>
                   ) : null}
+                  {left === null ? null : (
+                    <p className="mechanicsExplanation">{`${left} ${left === 1 ? "growth" : "growths"} left here this turn.`}</p>
+                  )}
                 </MechanicsDetails>
               }
               key={candidate}
@@ -97,7 +107,14 @@ export function GrowPopPopover({
                 onClick={() => setPop(candidate)}
                 type="button"
               >
-                <Icon glyph={POP_GLYPHS[candidate]} size="rail" className="miniIcon" />
+                <span className="uses-host">
+                  <Icon glyph={POP_GLYPHS[candidate]} size="rail" className="miniIcon" />
+                  {left === null ? null : (
+                    <span aria-hidden="true" className="verb-count">
+                      {left}
+                    </span>
+                  )}
+                </span>
                 <span>{formatPopLabel(candidate, 1)}</span>
                 <strong>
                   <Chips amounts={candidateStatus.cost ?? {}} empty="Free" />

@@ -21,9 +21,14 @@ import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
  * and what it gets.
  */
 
-/** One line on a side: a stock, a class of pops, or one luxury good. */
+/** One line on a side: a stock, a class of pops, one luxury good, or held cards. */
 export type TradeItem =
-  { kind: "resource"; id: Resource } | { kind: "pop"; id: PopType } | { kind: "good"; id: string };
+  | { kind: "resource"; id: Resource }
+  | { kind: "pop"; id: PopType }
+  | { kind: "good"; id: string }
+  | { kind: "cards"; id: "cards" };
+
+const CARDS: TradeItem = { kind: "cards", id: "cards" };
 
 /** A side as the acting seat sees it. */
 export type Sides = { gives: TradeBundle; gets: TradeBundle };
@@ -33,6 +38,7 @@ export const itemKey = (item: TradeItem) => `${item.kind}:${item.id}`;
 export function itemCount(bundle: TradeBundle, item: TradeItem): number {
   if (item.kind === "resource") return bundle.resources[item.id] ?? 0;
   if (item.kind === "pop") return bundle.pops[item.id];
+  if (item.kind === "cards") return bundle.cards;
   return bundle.goods.includes(item.id) ? 1 : 0;
 }
 
@@ -45,11 +51,12 @@ export function withCount(bundle: TradeBundle, item: TradeItem, n: number): Trad
   }
   if (item.kind === "pop")
     return { ...bundle, pops: { ...bundle.pops, [item.id]: Math.max(0, n) } };
+  if (item.kind === "cards") return { ...bundle, cards: Math.max(0, n) };
   const goods = bundle.goods.filter((id) => id !== item.id);
   return { ...bundle, goods: n > 0 ? [...goods, item.id] : goods };
 }
 
-/** The bundle's lines in the card's order: stocks, pops, goods. */
+/** The bundle's lines in the card's order: stocks, pops, goods, cards. */
 export function itemsOf(bundle: TradeBundle): TradeItem[] {
   return [
     ...RESOURCE_ORDER.filter((id) => (bundle.resources[id] ?? 0) > 0).map((id): TradeItem => ({
@@ -58,24 +65,27 @@ export function itemsOf(bundle: TradeBundle): TradeItem[] {
     })),
     ...POP_TYPES.filter((id) => bundle.pops[id] > 0).map((id): TradeItem => ({ kind: "pop", id })),
     ...bundle.goods.map((id): TradeItem => ({ kind: "good", id })),
+    ...(bundle.cards > 0 ? [CARDS] : []),
   ];
 }
 
 export function itemIcon(item: TradeItem): string {
   if (item.kind === "resource") return RESOURCE_RASTERS[item.id];
   if (item.kind === "pop") return POP_RASTERS[item.id];
+  if (item.kind === "cards") return "events/convoy";
   return LUXURY_RASTER;
 }
 
 export function itemName(G: HegemonyState, item: TradeItem, n = 1): string {
   if (item.kind === "resource") return RESOURCE_LABELS[item.id].toLowerCase();
   if (item.kind === "pop") return formatPopLabel(item.id, n);
+  if (item.kind === "cards") return n === 1 ? "card" : "cards";
   const asset = G.board.luxuries.find((candidate) => candidate.id === item.id);
   return (asset && getLuxuryGood(G.definition.content, asset.goodId)?.name) ?? "a luxury good";
 }
 
 /** How many of a line the seat could hand over: a stock it holds, the most of a class
- *  standing in one settlement, a good it holds. */
+ *  standing in one settlement, a good it holds, the cards in its hand. */
 export function heldOf(G: HegemonyState, seat: PlayerId, item: TradeItem): number {
   if (item.kind === "resource") return Math.max(0, G.players[seat].resources[item.id]);
   if (item.kind === "pop") {
@@ -86,11 +96,13 @@ export function heldOf(G: HegemonyState, seat: PlayerId, item: TradeItem): numbe
       ),
     );
   }
+  if (item.kind === "cards") return G.devHands[seat].length;
   return G.board.luxuries.some((asset) => asset.id === item.id && asset.owner === seat) ? 1 : 0;
 }
 
 /** What the picker offers for one side: every line not on the card yet. A seat gives
- *  its own goods and asks for goods the seats across the table hold. */
+ *  its own goods and asks for goods the seats across the table hold. Cards go by count,
+ *  either way. */
 export function pickable(
   G: HegemonyState,
   seat: PlayerId,
@@ -107,6 +119,7 @@ export function pickable(
     ...RESOURCE_ORDER.map((id): TradeItem => ({ kind: "resource", id })),
     ...POP_TYPES.map((id): TradeItem => ({ kind: "pop", id })),
     ...goods,
+    CARDS,
   ].filter((item) => !onCard.has(itemKey(item)));
 }
 

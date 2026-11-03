@@ -222,7 +222,7 @@ describe("happiness as named terms", () => {
         owned(draft, FOREST, "0").buildings.push("temple");
         draft.board.luxuries[0].owner = "0";
         draft.board.luxuries[0].claimedAtSettlementId = owned(draft, FOREST, "0").id;
-        draft.players["0"].calmActive = true;
+        draft.players["0"].calmUsesThisTurn = 1;
         draft.players["0"].unrestTokens = 1;
       })
       .build();

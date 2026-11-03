@@ -30,6 +30,9 @@ type CostLine = {
 const units = (price: Price) => RESOURCE_ORDER.reduce((sum, r) => sum + (price[r] ?? 0), 0);
 const lowest = (prices: Price[]) => Math.min(...prices.map(units));
 const words = (prices: Price[]) => prices.map(formatResourceCost).join(" or ");
+/** A per-turn cap as the note says it; null is no cap. */
+const perTurn = (cap: number | null, what: string) =>
+  cap === null ? `No limit on ${what}.` : `Up to ${cap} ${what} a turn.`;
 
 /** Cheaper helps, dearer hurts; the same weight in another good is only a change. */
 function delta({ live, base }: CostLine): "better" | "worse" | "shift" | undefined {
@@ -78,7 +81,7 @@ function costSections(G: HegemonyState, playerID: PlayerId) {
           id: "grow-slaves",
           icon: POP_RASTERS.slaves,
           name: "Grow a slave",
-          note: "In a settlement with room. One growth per settlement a turn.",
+          note: `In a settlement with room. ${perTurn(R.turnCaps.grow, "growths in each settlement")}`,
           live: [getGrowPopCost(G, playerID, "slaves")],
           base: [R.growPopCosts.slaves],
         }),
@@ -122,7 +125,7 @@ function costSections(G: HegemonyState, playerID: PlayerId) {
           id: "promote-slaves",
           icon: "pops/promote",
           name: "Slave to freeman",
-          note: "One ladder step a turn.",
+          note: `${perTurn(R.turnCaps.ladder, "ladder steps")} Demotions share them.`,
           live: [getPromoteCost(G, playerID, "slaves")],
           base: [R.ladder.promoteCosts.slaves],
         }),
@@ -130,7 +133,7 @@ function costSections(G: HegemonyState, playerID: PlayerId) {
           id: "promote-freemen",
           icon: "pops/promote",
           name: "Freeman to citizen",
-          note: "One ladder step a turn.",
+          note: `${perTurn(R.turnCaps.ladder, "ladder steps")} Demotions share them.`,
           live: [getPromoteCost(G, playerID, "freemen")],
           base: [R.ladder.promoteCosts.freemen],
         }),
@@ -138,7 +141,7 @@ function costSections(G: HegemonyState, playerID: PlayerId) {
           id: "demote",
           icon: "pops/demote",
           name: "Demote one step",
-          note: "Uses the turn's ladder step. Free in your own riot.",
+          note: "Uses a ladder step. Free in your own riot, and uses none.",
           live: [getDemoteCost(G, playerID, "citizens")],
           base: [R.ladder.demoteCosts.citizens],
         }),
@@ -146,7 +149,7 @@ function costSections(G: HegemonyState, playerID: PlayerId) {
           id: "calm",
           icon: "unrest/calm-verb",
           name: "Civic calm",
-          note: `+${R.civicCalm.happiness} happiness until the year turns. Once a turn.`,
+          note: `+${R.civicCalm.happiness} happiness each until the year turns. ${perTurn(R.turnCaps.calm, "calms")}`,
           live: [getCalmCost(G, playerID, "influence"), getCalmCost(G, playerID, "gold")],
           base: [{ influence: R.civicCalm.influenceCost }, { gold: R.civicCalm.goldCost }],
         }),
@@ -154,7 +157,7 @@ function costSections(G: HegemonyState, playerID: PlayerId) {
           id: "dole",
           icon: "unrest/bread-dole",
           name: "The Dole",
-          note: `Buys ${dole.food} food, as often as you can pay.`,
+          note: `Buys ${dole.food} food. ${perTurn(R.turnCaps.dole, "Doles")}`,
           live: [{ influence: dole.influenceCost }],
           base: [{ influence: R.dole.influenceCost }],
         }),

@@ -117,10 +117,12 @@ line. Two turns are left out. The current turn is not bought for: that food the
 seat has to buy itself, now, by the Dole or a trade. And setup buys no food: it picks
 land for fourteen years and the forecast sees six, so a starting store and six years
 of income would make any site look fed. The forecast does not trade: what a deal is
-worth is weighed before it is offered (see Trade).
+worth is weighed before it is offered (see Trade). It buys as if the Dole had no
+per-turn cap: planning within the cap of three is left for the bot work of the agency
+package. In play a bot never takes a fourth Dole, since it picks from the legal moves.
 
 On a later forecast turn the seat also buys calm when its level stands at the riot
-or the revolt line and calm moves it off: once a year, through the engine's calm on
+or the revolt line and one calm moves it off: once a year, through the engine's calm on
 the forecast's copy, the cheaper payment first by its own weights, from the forecast
 stocks and after the food. Before this a slave past the standing level read as a
 riot in every year of the forecast whatever the seat held, so no realm kept more
@@ -374,6 +376,9 @@ it pays.
   it in the preparation, then presses Ready.
 - **Pacing.** One offer a turn and one a sitting, read off the engine's count
   (`offersMade`), so a bot never repeats a declined offer in the same window.
+- **Cards.** A bot puts no held card in a trade: it declines an offer that asks it for
+  one and takes no counter that does. A card it would receive counts for nothing in the
+  deal's worth, since `tradeForEval` leaves cards where they are.
 
 The runner routes by who may act, as a server will: a seat an open offer names answers
 before the turn goes on, a bot before any person, and an answer does not count toward

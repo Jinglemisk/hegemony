@@ -47,7 +47,7 @@ A game is played on one of two boards, chosen before setup:
 - **Shared colonies** (owner, 2026-11-02). Today two rivals' colonies may share a tile and split
   its slots. Sharing becomes a ruleset switch, on for Continental only: the Continental board's
   patch turns it on, the way it sets the sea reach, and on the Archipelago and the authored board
-  a tile holds one settlement. Not built yet.
+  a tile holds one settlement.
 - The [2026-10-24 balance batches](../reports/simulation/2026-10-24-balance-lines.md) showed
   that the board alone moves balance a lot. Moving from the authored board to the shuffled
   one:
@@ -260,6 +260,8 @@ The game's rules for the sea, the map, the bots and the sim flag wait for that a
      [defaults addendum](../reports/simulation/2026-10-25-archipelago-defaults.md).
    - Left for this slice: `rules.md` and the rulebook on islands, once the live game offers
      the board.
+   - **Shared colonies, built 2026-11-03** (`feat/shared-colonies`): `placement.maxColoniesPerTile`
+     is 1 by default and the Continental board's patch makes it 2. State schema 28.
 3. **Batches.**
    - Mixed and masters tables, Continental against Archipelago, on the same seeds.
    - Run with base income at 0, as the game now plays.

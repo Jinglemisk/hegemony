@@ -80,12 +80,24 @@ export const ENGINE_VERSION = "0.1.0";
  *  switch, so older pinned rulesets cannot answer it. Building a Port takes the same
  *  command, now beside a claimed good too, so commands are unchanged. Older saves are
  *  rejected, not migrated. */
-/** v26 (agency package, year forecast): next year's card is public, and a game longer
+/** v26 (development deck, slice 3): held cards trade. A trade bundle carries a number of
+ *  cards and a seat's places the cards it picked, so open offers carry both. Command v11
+ *  carries them in the trade commands. Older saves are rejected, not migrated. */
+/** v27 (agency package, per-turn caps): the Dole, calm, the ladder and growing are capped
+ *  per turn by the ruleset, so a seat counts its uses of each instead of holding the
+ *  once-a-turn calm and ladder flags, and Guild Charter scales the growth cap. Each use is
+ *  the same one-unit command, so commands are unchanged. Older saves are rejected, not
+ *  migrated. */
+/** v28 (board modes, shared colonies): a tile holds one settlement unless the board's
+ *  patch lets two rivals' colonies share it, which only Continental's does. The same
+ *  recipe on another board plays differently, so older saves are rejected, not migrated.
+ *  Commands are unchanged. */
+/** v29 (agency package, year forecast): next year's card is public, and a game longer
  *  than the deck shuffles the spent years back in a year earlier, so the next card can
- *  show. Such a v25 recording replays differently, so older saves are rejected. Commands
+ *  show. Such a v28 recording replays differently, so older saves are rejected. Commands
  *  are unchanged. */
-export const STATE_SCHEMA_VERSION = 26;
-export const COMMAND_SCHEMA_VERSION = 10;
+export const STATE_SCHEMA_VERSION = 29;
+export const COMMAND_SCHEMA_VERSION = 11;
 
 export const SAVE_FORMAT_VERSION = 2;
 export const SCRIPT_FORMAT_VERSION = 2;

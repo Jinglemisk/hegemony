@@ -115,7 +115,7 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   },
   lawGrowth: {
     implementation: "src/game/assembly/laws.test.ts",
-    evidence: "Guild Charter grants a second capital growth and forbids colony growth",
+    evidence: "Guild Charter doubles the capital's growth cap and forbids colony growth",
   },
   lawVotes: {
     implementation: "src/game/assembly/laws.test.ts",
@@ -226,6 +226,27 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   portTelemetry: {
     implementation: "src/sim/telemetry.test.ts",
     evidence: "counts Ports lost by cause, the goods released and who claims one next",
+  },
+  cardTradeRedaction: {
+    implementation: "src/game/trade.test.ts",
+    evidence: "names a number of cards, and the giver's pick moves unseen by the other seats",
+  },
+  cardTradePick: {
+    implementation: "src/game/trade.test.ts",
+    evidence:
+      "has the answering seat pick as it accepts, and the offering seat as it takes a counter",
+  },
+  cardTradeTurn: {
+    implementation: "src/game/trade.test.ts",
+    evidence: "never lets a card be played on the turn it was received",
+  },
+  botDeclinesCardAsk: {
+    implementation: "src/sim/tradePolicy.test.ts",
+    evidence: "declines an offer that asks it for a held card, whatever else it pays",
+  },
+  cardTradeTelemetry: {
+    implementation: "src/sim/telemetry.test.ts",
+    evidence: "counts the held cards traded, by card, to the seat that gave them",
   },
   tradeSettlement: {
     implementation: "src/game/trade.test.ts",
@@ -897,5 +918,20 @@ export const FEATURE_PARITY = {
     },
     telemetry: { implementation: "src/sim/telemetry.ts", evidence: "countPorts" },
     behaviorFixtures: ["portRelease", "portReclaim", "tradeNeedsPort", "portTelemetry"],
+  },
+  // Held development cards trade by count, the giver's pick (development deck, slice 3).
+  cardTrading: {
+    ids: ["cardCount", "giverPick", "pickRedaction"],
+    engine: { implementation: "src/game/trade.ts", evidence: "heldPick" },
+    frontend: { implementation: "src/components/frame/trade/CardPick.tsx", evidence: "CardPick" },
+    simulation: { implementation: "src/sim/policies.ts", evidence: "A bot gives no held card" },
+    telemetry: { implementation: "src/sim/telemetry.ts", evidence: "deck.traded" },
+    behaviorFixtures: [
+      "cardTradeRedaction",
+      "cardTradePick",
+      "cardTradeTurn",
+      "botDeclinesCardAsk",
+      "cardTradeTelemetry",
+    ],
   },
 } as const satisfies Record<string, ContentManifestEntry>;

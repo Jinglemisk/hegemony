@@ -6,6 +6,7 @@ import {
   getFoundColonyStatus,
   getUpgradeColonyToCityStatus,
   pendingDecisionReasons,
+  usesLeft,
 } from "../../../game/rules";
 import type { HegemonyState, PlayerId, Resource, Resources } from "../../../game/types";
 import type { MapSelectionMode } from "../map/mapSelection";
@@ -38,7 +39,6 @@ export type VerbContext = {
    * and every verb that can hold it reads the same field.
    */
   armedVerb: VerbId | null;
-  calmUsed: boolean;
 };
 
 export type VerbHandlers = {
@@ -205,9 +205,9 @@ export const VERBS: VerbSpec[] = [
       { amounts: getCivicCalmStatus(G, playerID, "influence").cost ?? {} },
       { amounts: getCivicCalmStatus(G, playerID, "gold").cost ?? {} },
     ],
-    available: ({ calmUsed }) => !calmUsed,
-    hint: "Buy calm this year: influence or gold, once per turn.",
-    blockedHint: "One civic-calm action per turn — already used.",
+    available: ({ G, playerID }) => usesLeft(G, playerID, "calm") !== 0,
+    hint: "Buy calm this year: influence or gold, up to the turn's cap.",
+    blockedHint: "Calm is used up this turn.",
     select: (handlers) => handlers.onCalmRequest(),
   },
 ];

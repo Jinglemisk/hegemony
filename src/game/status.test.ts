@@ -11,6 +11,8 @@ import { getTakeIdeaStatus } from "./ideas";
 import { materialTile, owned, scenario, tile } from "./testing/scenario";
 import { TEST_OPENING_SETUP } from "./config";
 import { PLAYER_EVENT_CARDS } from "./data";
+import { boardRulesetPatch } from "./ruleset";
+import type { RulesetPatch } from "./ruleset";
 import type { HegemonyState, Pops } from "./types";
 
 /**
@@ -137,11 +139,11 @@ describe("getGrowPopStatus", () => {
     expect(status.reasons).toContain("Requires your settlement on this tile.");
   });
 
-  it("blocks a second grow on the same settlement in one turn", () => {
+  it("blocks growth past the settlement's cap for the turn", () => {
     const { G, id } = cityWith(pops(1, 0, 0));
-    G.players["0"].grownSettlementsThisTurn = [id];
+    G.players["0"].grownSettlementsThisTurn = [id, id, id];
     const status = getGrowPopStatus(G, "0", id, "freemen");
-    expect(status.reasons).toContain("Already grew a pop here this turn.");
+    expect(status.reasons).toContain("No growth left here this turn: 3 a turn.");
   });
 
   it("blocks growth past the settlement's capacity", () => {
@@ -299,6 +301,29 @@ describe("getFoundColonyStatus", () => {
     );
     const status = getFoundColonyStatus(G, "0", tile(G, "0,0").id);
     expect(status.reasons).toContain(PENDING_REASON);
+  });
+});
+
+describe("shared colonies", () => {
+  it("let a rival's colony share a tile only under the Continental board's patch", () => {
+    // Seat 1's colony stands beside seat 0's city, on a tile seat 0 may found on.
+    const foundBeside = (patch: RulesetPatch | null) =>
+      getFoundColonyStatus(
+        scenario({ patch: patch ?? undefined })
+          .withResources("0", "wealthy")
+          .withSettlement("0", "-2,0", "city", pops(1, 2, 2))
+          .withSettlement("1", "-1,0", "colony", pops(0, 1, 1))
+          .mutate(inGameplay)
+          .build(),
+        "0",
+        "-1,0",
+      );
+
+    expect(foundBeside(boardRulesetPatch("continental")).can).toBe(true);
+    for (const board of ["archipelago", "scenario"] as const)
+      expect(foundBeside(boardRulesetPatch(board)).reasons).toEqual([
+        "A tile holds one settlement on this board.",
+      ]);
   });
 });
 

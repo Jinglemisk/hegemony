@@ -261,13 +261,16 @@ describe("standing Laws", () => {
     expect(playerPieces(G, "0")).toMatchObject({ colonySupply: 4, colonyLimit: 3 });
     expect(settlementSlots(tile(G, cap), city, G)).toBe(tile(G, cap).slots + 1);
   });
-  it("Guild Charter grants a second capital growth and forbids colony growth", () => {
+  it("Guild Charter doubles the capital's growth cap and forbids colony growth", () => {
     const G = opening();
     law(G, "guild-charter");
-    expect(growPop(G, "0", cap, "slaves").ok).toBe(true);
-    expect(growPop(G, "0", cap, "slaves").ok).toBe(true);
-    expect(growPop(G, "0", cap, "slaves").ok).toBe(false);
-    expect(getGrowPopStatus(G, "0", colony, "slaves").can).toBe(false);
+    // Room for seven, so the cap stops the seventh and not the capacity.
+    owned(G, cap, "0").pops = { citizens: 1, freemen: 0, slaves: 0 };
+    const grown = Array.from({ length: 7 }, () => growPop(G, "0", cap, "slaves").ok);
+    expect(grown).toEqual([true, true, true, true, true, true, false]);
+    expect(getGrowPopStatus(G, "0", colony, "slaves").reasons).toContain(
+      "Guild Charter forbids growth in colonies.",
+    );
   });
   it("Frontier Spirit grants a slave on the real founding path without a token", () => {
     const G = opening();

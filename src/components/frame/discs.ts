@@ -17,8 +17,9 @@ import {
   promotionTarget,
   devCardPlays,
   getBuyDevCardStatus,
+  usesLeft,
 } from "../../game/rules";
-import type { CivicCalmPayment } from "../../game/rules";
+import type { CappedAction, CivicCalmPayment } from "../../game/rules";
 import { offerWindowReason } from "../../game/trade";
 import type { BuildingDefinition, BuildingId, PopType, Resources } from "../../game/types";
 import { cheapestCost } from "../../ui/frameFormat";
@@ -54,7 +55,8 @@ export type DiscOption = {
   text?: string;
   enabled: boolean;
   hint: string;
-  /** Pieces left in the supply this option draws on: a count on its disc. */
+  /** Pieces left in the supply this option draws on, or uses left this turn of a capped
+   *  action: a count on its disc. */
   left?: number;
   /** This option holds the map right now. */
   armed?: boolean;
@@ -71,7 +73,7 @@ export type DiscGroup = {
   hint: string;
   /** The option a click on the disc runs; without one, a click opens the fan. */
   primary?: string;
-  /** Pieces left for the disc's own option: a count on the disc. */
+  /** Pieces or uses left for the disc's own option: a count on the disc. */
   left?: number;
   options: DiscOption[];
 };
@@ -183,6 +185,15 @@ export function discGroups(
     };
   };
 
+  // Each capped action's uses left this turn are a count on its disc, and said in its
+  // hint. An action the ruleset leaves uncapped has no count.
+  const capped = (option: DiscOption, action: CappedAction): DiscOption => {
+    const left = usesLeft(G, playerID, action);
+    if (left === null) return option;
+    const limit = G.ruleset.turnCaps[action];
+    return { ...option, left, hint: `${option.hint} ${left} of ${limit} left this turn.` };
+  };
+
   // Up the ladder, so the click's own option (a slave) comes first. Citizens are
   // never grown: they come by promotion, under People.
   const grow = [...GROWABLE_POPS].reverse().map((pop) =>
@@ -203,16 +214,19 @@ export function discGroups(
     const status = kind === "promote" ? getPromotePopStatus : getDemotePopStatus;
     const to = kind === "promote" ? promotionTarget(from) : demotionTarget(from);
     const statuses = holdings.map(({ tile }) => status(G, playerID, tile.id, from));
-    return arming(
-      {
-        id: `${kind}-${from}`,
-        label: `${cap(formatPopLabel(from, 1))} to ${formatPopLabel(to, 1)}`,
-        icon: POP_RASTERS[from],
-        ...quote(statuses.map((s) => s.cost ?? {})),
-        hint: `Choose a settlement to ${kind} a ${formatPopLabel(from, 1)}.`,
-      },
-      { kind: "ladder", request: { kind, from } },
-      statuses.some((s) => s.can),
+    return capped(
+      arming(
+        {
+          id: `${kind}-${from}`,
+          label: `${cap(formatPopLabel(from, 1))} to ${formatPopLabel(to, 1)}`,
+          icon: POP_RASTERS[from],
+          ...quote(statuses.map((s) => s.cost ?? {})),
+          hint: `Choose a settlement to ${kind} a ${formatPopLabel(from, 1)}.`,
+        },
+        { kind: "ladder", request: { kind, from } },
+        statuses.some((s) => s.can),
+      ),
+      "ladder",
     );
   };
 
@@ -261,15 +275,18 @@ export function discGroups(
 
   const calm = (payment: CivicCalmPayment): DiscOption => {
     const status = getCivicCalmStatus(G, playerID, payment);
-    return {
-      id: `calm-${payment}`,
-      label: "Calm",
-      icon: payment === "gold" ? "unrest/calm-verb" : "unrest/patronage",
-      prices: [status.cost ?? {}],
-      enabled: open && status.can,
-      hint: `+${G.ruleset.civicCalm.happiness} happiness this year, once a turn.`,
-      run: () => handlers.onCalm(payment),
-    };
+    return capped(
+      {
+        id: `calm-${payment}`,
+        label: "Calm",
+        icon: payment === "gold" ? "unrest/calm-verb" : "unrest/patronage",
+        prices: [status.cost ?? {}],
+        enabled: open && status.can,
+        hint: `+${G.ruleset.civicCalm.happiness} happiness this year.`,
+        run: () => handlers.onCalm(payment),
+      },
+      "calm",
+    );
   };
 
   // Each piece supply is a count on its option's disc, and said in its hint.
@@ -293,16 +310,20 @@ export function discGroups(
   );
 
   const doleStatus = getDoleStatus(G, playerID);
-  const dole: DiscOption = {
-    id: "dole",
-    label: "The Dole",
-    icon: "unrest/bread-dole",
-    prices: [doleStatus.cost ?? {}],
-    gets: { food: G.ruleset.dole.food },
-    enabled: open && doleStatus.can,
-    hint: "Influence buys food.",
-    run: handlers.onDole,
-  };
+  const dole = capped(
+    {
+      id: "dole",
+      label: "The Dole",
+      icon: "unrest/bread-dole",
+      prices: [doleStatus.cost ?? {}],
+      gets: { food: G.ruleset.dole.food },
+      enabled: open && doleStatus.can,
+      hint: "Influence buys food.",
+      run: handlers.onDole,
+    },
+    "dole",
+  );
+  const calmGold = calm("gold");
 
   // The deck: buy one card a turn; the hand opens while the seat holds any, and plays
   // a card the engine allows.
@@ -359,20 +380,26 @@ export function discGroups(
       icon: "pops/crowd",
       hint: "Pick one",
       options: [
-        holder({
-          id: "promote",
-          label: "Promote",
-          icon: "pops/promote",
-          hint: "Raise a pop one rung.",
-          options: PROMOTE_FROM.map((from) => rung("promote", from)),
-        }),
-        holder({
-          id: "demote",
-          label: "Demote",
-          icon: "pops/demote",
-          hint: "Lower a pop one rung.",
-          options: DEMOTE_FROM.map((from) => rung("demote", from)),
-        }),
+        capped(
+          holder({
+            id: "promote",
+            label: "Promote",
+            icon: "pops/promote",
+            hint: "Raise a pop one rung.",
+            options: PROMOTE_FROM.map((from) => rung("promote", from)),
+          }),
+          "ladder",
+        ),
+        capped(
+          holder({
+            id: "demote",
+            label: "Demote",
+            icon: "pops/demote",
+            hint: "Lower a pop one rung.",
+            options: DEMOTE_FROM.map((from) => rung("demote", from)),
+          }),
+          "ladder",
+        ),
         verbOption("move", context, handlers),
       ],
     },
@@ -392,7 +419,8 @@ export function discGroups(
       icon: "unrest/calm-verb",
       hint: "Pick one",
       primary: "calm-gold",
-      options: [calm("gold"), calm("influence"), dole, ideas, buyCard, hand],
+      left: calmGold.left,
+      options: [calmGold, calm("influence"), dole, ideas, buyCard, hand],
     },
     {
       id: "trade",
