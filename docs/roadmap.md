@@ -176,8 +176,6 @@ are being built, with no balance batches until both are in the engine and the bo
   overlapping map labels.
 - After the comparisons, delete the sim's `--restore` switch and the Capital Works slot effect it
   keeps.
-- Stale: `docs/reference/balance.html` (last updated 2026-10-03), and `assets/codex-banana-showcase`,
-  used only by two old showcase pages in `docs/reference`.
 
 The 3D map, in three.js after the [showcase](reference/design/showcases/living-map.html), is
 the only board. On 2026-10-26 the owner ruled out going back to 2D: no 2D board, no flag and
