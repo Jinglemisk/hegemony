@@ -88,7 +88,11 @@ export const ENGINE_VERSION = "0.1.0";
  *  once-a-turn calm and ladder flags, and Guild Charter scales the growth cap. Each use is
  *  the same one-unit command, so commands are unchanged. Older saves are rejected, not
  *  migrated. */
-export const STATE_SCHEMA_VERSION = 27;
+/** v28 (board modes, shared colonies): a tile holds one settlement unless the board's
+ *  patch lets two rivals' colonies share it, which only Continental's does. The same
+ *  recipe on another board plays differently, so older saves are rejected, not migrated.
+ *  Commands are unchanged. */
+export const STATE_SCHEMA_VERSION = 28;
 export const COMMAND_SCHEMA_VERSION = 11;
 
 export const SAVE_FORMAT_VERSION = 2;
