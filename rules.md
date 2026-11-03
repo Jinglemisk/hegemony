@@ -278,8 +278,8 @@ A **year** is one turn for every seat. After all four have played, the next year
 begins and its card is revealed: the card turns over mid-screen, with the year deck's
 line under it. In an Assembly year its button convenes the Assembly. Closed, the
 card waits as a disc in the alarms row, after any title alarms, until the year turns;
-click it to read it again. **Next year's card** lies face up beside it, smaller, and the
-disc's tooltip names it. The **first player moves on one seat** each year. The game lasts at
+click it to read it again. **Next year's card** shows when you hover the year in the top
+bar. The **first player moves on one seat** each year. The game lasts at
 most **fourteen years**.
 
 **The alarms row.** A row of discs hanging from the top bar lists what bears on your realm

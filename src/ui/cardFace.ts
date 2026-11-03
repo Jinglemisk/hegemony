@@ -578,7 +578,7 @@ export type DeckLine = {
  * fates' make-up is public and every card turns face up, so what is left of each kind
  * is the authored count less the cards turned (the discards, the year's card, a fate
  * still in hand). The order stays hidden, as the projection keeps it; next year's card
- * shows beside this year's, not on the line. An Assembly draw's deck is its politician's; its make-up is public, its draw
+ * shows on the clock's hover, not on the line. An Assembly draw's deck is its politician's; its make-up is public, its draw
  * private until the ballot, so the line says only how many are left.
  */
 export function deckLine(
