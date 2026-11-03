@@ -198,6 +198,10 @@ run at the end. Every batch then runs on the owner's go.
    shortages that delay a build kept apart from those that cost pops; Assembly draws blocked when
    drawn; event pops placed and declined; happiness lines crossed; recovery after named shocks
    (Blockade, Drought, Manumission passing); Ports lost, by cause, and goods released.
+   **Built 2026-11-03** (`feat/telemetry`): shortages by stock, builds held back by price
+   apart from hunger's pops, happiness lines crossed, recovery after the three shocks, and the
+   development deck's free and riot cards by card. The earlier slices had added blocked draws
+   and event pops placed and declined, and the Port rule the Ports lost and goods released.
 2. **The narrow changes, one slice each:** optional event pops, Manumission, Rural Messengers,
    Capital Works, the Assembly order with kept Laws, the Port rule, then the per-turn caps in one
    slice (the Dole, calm, the ladder, growing). A ruleset patch that sets today's limits back is
