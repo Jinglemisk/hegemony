@@ -565,9 +565,15 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
  */
 function enumerateTradeCommands(G: HegemonyState, playerID: PlayerId): DerivedCommand[] {
   const moves: DerivedCommand[] = [];
+  // A pick of held cards is composed, never listed, like an offer: an accept or a taken
+  // counter that hands over cards is not enumerated.
   for (const offer of G.offers) {
     if (offer.to.includes(playerID) && !offer.answers[playerID]) {
-      for (const places of tradePlaceChoices(G, playerID, offer.terms.get, offer.terms.give)) {
+      const choices =
+        offer.terms.get.cards > 0
+          ? []
+          : tradePlaceChoices(G, playerID, offer.terms.get, offer.terms.give);
+      for (const places of choices) {
         const answer: TradeAnswer = { kind: "accept", places };
         if (getTradeAnswerStatus(G, playerID, offer.id, answer).can) {
           moves.push({ type: "tradeAnswer", offerId: offer.id, answer });
@@ -578,7 +584,7 @@ function enumerateTradeCommands(G: HegemonyState, playerID: PlayerId): DerivedCo
     if (offer.from !== playerID) continue;
     for (const partner of offer.to) {
       const counter = counterOf(offer, partner);
-      if (!counter) continue;
+      if (!counter || counter.terms.give.cards > 0) continue;
       for (const places of tradePlaceChoices(G, playerID, counter.terms.give, counter.terms.get)) {
         if (getTradeSettleStatus(G, playerID, offer.id, partner, places).can) {
           moves.push({ type: "tradeSettle", offerId: offer.id, partner, places });

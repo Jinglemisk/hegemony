@@ -2554,7 +2554,7 @@ function counterTerms(G: HegemonyState, offer: TradeOffer): TradeTerms[] {
  * A bot's answer to an offer naming it: accept when the trade is worth the margin to it
  * and hands the offering seat no title; else counter once, with the one-unit change
  * that would make it so; else decline. The first accept trades, so a bot answers at
- * once.
+ * once. A bot gives no held card: it declines an offer that asks it for one.
  */
 function answerOffer(
   G: HegemonyState,
@@ -2563,6 +2563,8 @@ function answerOffer(
   me: PlayerId,
   weights: ScoreWeights,
 ): GameCommand {
+  if (offer.terms.get.cards > 0)
+    return { type: "tradeAnswer", offerId: offer.id, answer: { kind: "decline" } };
   const { score } = tradeScorer(G, me, weights);
   const floor = score(G) + TRADE_MARGIN;
   const holders = titleHolders(G);

@@ -433,11 +433,14 @@ export interface PopulationTransfer {
   pops: Pops;
 }
 
-/** What one side of a trade hands over: stocks, luxury goods by asset id, and pops. */
+/** What one side of a trade hands over: stocks, luxury goods by asset id, pops, and a
+ *  number of held development cards. */
 export interface TradeBundle {
   resources: Partial<Resources>;
   goods: string[];
   pops: Pops;
+  /** Held development cards, by count only: the giver picks which (TradePlaces.cards). */
+  cards: number;
 }
 
 /** An offer's terms, read from the offering seat: what it gives and what it gets. */
@@ -446,11 +449,16 @@ export interface TradeTerms {
   get: TradeBundle;
 }
 
-/** The settlements a seat names for its own traded pops: where the pops it gives
- *  leave, and where the pops it gets arrive. Each is needed only when such pops trade. */
+/** What a seat names for its own side of a trade: where the pops it gives leave, where
+ *  the pops it gets arrive, and which held cards it gives. Each is needed only when such
+ *  pops or cards trade. */
 export interface TradePlaces {
   from?: string;
   to?: string;
+  /** The held cards it hands over, by instance id: its own pick, made as it offers,
+   *  counters, accepts or takes a counter. Projections hide it from every other seat, so
+   *  a seat may promise one card and hand over another. */
+  cards?: string[];
 }
 
 /** An answer that stays on the offer: an accept settles at once, so it never does. */
