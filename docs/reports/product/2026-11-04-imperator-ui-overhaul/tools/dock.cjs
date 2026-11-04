@@ -1,0 +1,51 @@
+// The dock and the pruned verbs: chronicle growth and the outliner making room, the confirms, Trade, Calm, the seal, Esc order.
+const { chromium } = require('playwright');
+const OUT = process.argv[2] || 'chk12'; require('fs').mkdirSync(OUT, { recursive: true });
+(async () => {
+  const b = await chromium.launch({ headless: true });
+  const page = await b.newPage({ viewport: { width: 1500, height: 1000 } });
+  const errs = []; page.on('pageerror', e => errs.push(e.message));
+  await page.goto('http://127.0.0.1:8765/index.html', { waitUntil: 'networkidle' });
+  await page.evaluate(() => document.querySelectorAll('details.alljumps').forEach(d => d.open = true));
+  await page.addStyleTag({ content: '.wrap{max-width:1480px!important;padding:0!important}' });
+  const stage = page.locator('#stage-wrap');
+  const S = () => page.evaluate(() => {
+    const k = document.querySelector('#stage').getBoundingClientRect().width / 1440, top = e => e ? Math.round((e.getBoundingClientRect().top - document.querySelector('#stage').getBoundingClientRect().top) / k) : null;
+    const o = document.querySelector('#outl .outl'), d = document.querySelector('#dock');
+    return { outlBottom: o ? Math.round(top(o) + o.getBoundingClientRect().height / k) : null, dockTop: top(d), fan: document.querySelector('#fan .fan')?.dataset.for || null, drop: !!document.querySelector('#drop > *'), moment: document.querySelector('#moment > *') ? (document.querySelector('#moment [aria-label]')?.getAttribute('aria-label')) : null, to: document.querySelector('.composer .to [aria-pressed="true"]')?.textContent || null, win: document.querySelector('#win .win')?.getAttribute('aria-label') || null, seal: document.querySelector('#seal').getAttribute('aria-pressed'), tag: document.querySelector('#stage-tag').textContent, rail: document.querySelector('#rail').children.length, seats: !!document.querySelector('.seats') };
+  });
+  const log = [];
+  const wait = () => page.waitForTimeout(420);
+  const cfm = () => page.evaluate(() => document.querySelector('#cfm .cfm b')?.textContent || null);
+  await page.click('[data-jump="outl:default"]'); await page.click('[data-jump="pick:none"]'); await wait(); log.push(['closed', await S()]); await stage.screenshot({ path: `${OUT}/none.png` });
+  await page.click('#chron'); await wait(); log.push(['log open', await S()]); await stage.screenshot({ path: `${OUT}/log-open.png` });
+  await page.keyboard.press('Escape'); await wait(); log.push(['esc closes log', await S()]);
+  await page.click('[data-dact="dole"]'); await wait(); log.push(['dole asks', await cfm()]); await stage.screenshot({ path: `${OUT}/confirm-dole.png` });
+  await page.keyboard.press('Escape'); await wait(); log.push(['esc cancels', await cfm()]);
+  await page.click('[data-dact="buy"]'); await wait(); await page.keyboard.press('Enter'); await wait(); log.push(['buy, Enter → drawn', await S()]);
+  await page.keyboard.press('Escape'); await wait();
+  await page.click('[data-jump="pick:-4,-1"]'); await wait(); await page.click('#insp [data-act="rung"][data-k="freemen"][data-dir="up"]'); await wait(); log.push(['promote in Samos asks', await cfm()]); await stage.screenshot({ path: `${OUT}/confirm-promote.png` });
+  await page.click('#cfm [data-cfm="yes"]'); await wait(); log.push(['promote yes', await cfm()]);
+  await page.click('[data-jump="pick:-5,0"]'); await wait(); await page.click('#insp [data-act="rung"][data-k="slaves"][data-dir="up"]'); await wait(); log.push(['promote a slave, short: no confirm', await cfm(), await page.textContent('#toast')]);
+  await page.click('[data-jump="pick:-5,6"]'); await wait(); await page.click('#insp button.who'); await wait(); log.push(['Nikos card', await S()]); await stage.screenshot({ path: `${OUT}/seat-nikos.png` });
+  await page.click('#drop [data-act="offer"]'); await wait(); log.push(['card → trade', await S()]);
+  await page.keyboard.press('Escape'); await wait();
+  await page.click('#mood'); await wait(); await page.click('#drop [data-act="calm"] >> nth=1'); await wait(); log.push(['calm in influence asks', await cfm()]);
+  await page.keyboard.press('Enter'); await wait(); log.push(['calm yes closes the card', await S()]);
+  await page.click('[data-jump="winpick:cities"]'); await wait(); log.push(['drawer + inspector widths', await page.evaluate(() => [document.querySelector('#insp').style.width, document.querySelector('#win .win').offsetWidth])]); await stage.screenshot({ path: `${OUT}/joined.png` });
+  await page.click('[data-jump="win:ideas"]'); await page.click('#win [data-buy] >> nth=0'); await wait(); log.push(['idea asks', await cfm()]);
+  await page.keyboard.press('Escape');
+  await page.click('[data-jump="asm:open"]'); await wait(); await page.click('#moment [data-act="asm-draw"] >> nth=0'); await wait(); log.push(['assembly draw asks', await cfm()]); await stage.screenshot({ path: `${OUT}/confirm-asm.png` });
+  await page.keyboard.press('Escape'); await wait(); log.push(['esc: confirm first, sheet stays', await S()]);
+  await page.click('[data-jump="float:victory"]'); await wait();
+  const fw = page.locator('#float .fw .ih'); const bb = await fw.boundingBox();
+  await page.mouse.move(bb.x + 100, bb.y + 10); await page.mouse.down(); await page.mouse.move(bb.x - 300, bb.y + 200, { steps: 5 }); await page.mouse.up();
+  await page.click('[data-jump="pick:none"]'); await page.click('[data-jump="float:victory"]'); await wait(); log.push(['victory remembered', await page.evaluate(() => document.querySelector('#float .fw').style.left + ',' + document.querySelector('#float .fw').style.top)]);
+  await page.reload({ waitUntil: 'networkidle' }); await page.evaluate(() => document.querySelectorAll('details.alljumps').forEach(d => d.open = true)); await page.addStyleTag({ content: '.wrap{max-width:1480px!important;padding:0!important}' }); await page.click('[data-jump="float:victory"]'); await wait(); log.push(['after reload', await page.evaluate(() => document.querySelector('#float .fw').style.left + ',' + document.querySelector('#float .fw').style.top)]);
+  await page.evaluate(() => localStorage.clear());
+  await page.click('[data-jump="mode:political"]'); await page.click('#chron'); await wait(); log.push(['political + log', await S()]); await stage.screenshot({ path: `${OUT}/political-log.png` });
+  await page.click('[data-shell="today"]'); for (const j of ['seat:Nikos', 'confirm:promote', 'drop:mood']) { await page.click(`[data-jump="${j}"]`); await wait(); log.push(['today ' + j, (await S()).tag + ' · ' + await page.evaluate(() => document.querySelector('#today-img').getAttribute('src'))]); }
+  for (const [k, v] of log) console.log(k, JSON.stringify(v));
+  console.log('errors', JSON.stringify(errs));
+  await b.close();
+})();

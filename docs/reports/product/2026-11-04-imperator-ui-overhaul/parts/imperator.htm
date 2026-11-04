@@ -1,0 +1,82 @@
+<section class="block" id="imperator">
+  <div class="wrap">
+    <h2>What Imperator: Rome does</h2>
+    <p class="prose">The figure is my schematic of Imperator 2.0's screen, drawn from the screenshots under Sources: placement and proportion, not its art.</p>
+
+    <div class="qa">
+      <div>
+        <div class="q">Where does everything go?</div>
+        <p>Imperator 2.0 keeps the centre of the screen for the map. Every edge and corner has one job.</p>
+        <ul class="rules">
+          <li><b>Top bar:</b> the realm's numbers, left to right, with the date, game speed and menu at its right end.</li>
+          <li><b>Top-left:</b> the realm's emblem. A vertical strip of icon buttons runs down the left edge, one per realm window (economy, military, characters, technology, religion and so on). Alerts hang from the bar beside the emblem as pennants, in two colours, and a click acts on them.</li>
+          <li><b>Realm windows</b> (Technology, Military, a character, Diplomacy, Nation Overview) all open at the same place, top-left beside the strip, one at a time.</li>
+          <li><b>Bottom-left:</b> the selected province, only while something is selected. Its size follows the pick: a two-part panel for your own province, a narrow card for anyone else's.</li>
+          <li><b>Top-right:</b> the Outliner, a dark list of what needs you (armies, navies, battles, sieges, disloyal characters and provinces, wars, great wonders). A section appears only when it has entries. "Queued Events" sits under it.</li>
+          <li><b>Bottom-right:</b> map modes and a minimap.</li>
+          <li><b>Bottom-centre:</b> transient results, such as a battle report.</li>
+          <li><b>At the cursor:</b> the map's tooltip, e.g. "City of Lavinium in Latium… Terrain: Farmland".</li>
+        </ul>
+      </div>
+      <figure>
+        <svg viewBox="0 0 800 450" role="img" aria-label="Schematic of Imperator: Rome's screen zones">
+          <defs><pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="10" stroke="#2e3d3a" stroke-width="4"/></pattern></defs>
+          <rect x="0" y="0" width="800" height="450" fill="url(#hatch)"/>
+          <text x="400" y="235" fill="#7d9a92" font-family="Alegreya Sans" font-size="15" text-anchor="middle">map</text>
+          <rect x="0" y="0" width="800" height="18" fill="#efe3c8"/>
+          <g fill="#7a6a52"><rect x="62" y="5" width="56" height="8" rx="2"/><rect x="128" y="5" width="56" height="8" rx="2"/><rect x="200" y="5" width="56" height="8" rx="2"/><rect x="266" y="5" width="56" height="8" rx="2"/><rect x="336" y="5" width="56" height="8" rx="2"/><rect x="402" y="5" width="56" height="8" rx="2"/></g>
+          <rect x="620" y="4" width="120" height="10" rx="2" fill="#2c6f7a"/>
+          <text x="680" y="12.5" fill="#efe3c8" font-family="Alegreya Sans" font-size="8" text-anchor="middle">date · speed</text>
+          <rect x="0" y="0" width="52" height="52" fill="#b33a2a"/>
+          <text x="26" y="31" fill="#fff" font-family="Alegreya Sans" font-size="9" text-anchor="middle">emblem</text>
+          <g fill="#d8822e"><path d="M60 18h14v26l-7-5-7 5z"/><path d="M78 18h14v26l-7-5-7 5z"/><path d="M96 18h14v26l-7-5-7 5z"/></g>
+          <g fill="#6f8f3a"><path d="M114 18h14v26l-7-5-7 5z"/><path d="M132 18h14v26l-7-5-7 5z"/></g>
+          <text x="150" y="40" fill="#efe3c8" font-family="Alegreya Sans" font-size="10">alert pennants</text>
+          <rect x="0" y="72" width="22" height="300" fill="#8f2a20"/>
+          <text x="11" y="225" fill="#fff" font-family="Alegreya Sans" font-size="9" text-anchor="middle" transform="rotate(-90 11 225)">window strip</text>
+          <rect x="26" y="56" width="300" height="300" fill="none" stroke="#efe3c8" stroke-dasharray="6 5" stroke-width="1.5"/>
+          <text x="40" y="80" fill="#efe3c8" font-family="Alegreya Sans" font-size="12">realm windows open here, one at a time</text>
+          <rect x="26" y="218" width="302" height="230" fill="#efe3c8"/>
+          <rect x="26" y="218" width="302" height="16" fill="#b33a2a"/>
+          <text x="177" y="230" fill="#fff" font-family="Alegreya Sans" font-size="10" text-anchor="middle">PROVINCE OF …</text>
+          <text x="177" y="330" fill="#3a2c20" font-family="Alegreya Sans" font-size="13" text-anchor="middle">selected province</text>
+          <text x="177" y="348" fill="#3a2c20" font-family="Alegreya Sans" font-size="11" text-anchor="middle">only while something is selected</text>
+          <rect x="690" y="22" width="108" height="228" fill="#1b1612"/>
+          <rect x="690" y="22" width="108" height="14" fill="#b33a2a"/>
+          <text x="744" y="32.5" fill="#fff" font-family="Alegreya Sans" font-size="9" text-anchor="middle">OUTLINER</text>
+          <text x="744" y="130" fill="#d8ccb0" font-family="Alegreya Sans" font-size="10" text-anchor="middle">what needs you</text>
+          <rect x="690" y="256" width="108" height="60" fill="#1b1612"/>
+          <text x="744" y="290" fill="#d8ccb0" font-family="Alegreya Sans" font-size="9" text-anchor="middle">queued events</text>
+          <rect x="652" y="338" width="146" height="110" fill="#efe3c8"/>
+          <rect x="652" y="338" width="146" height="12" fill="#b33a2a"/>
+          <g fill="#2c6f7a"><rect x="656" y="354" width="12" height="12"/><rect x="670" y="354" width="12" height="12"/><rect x="684" y="354" width="12" height="12" fill="#e2b04a"/><rect x="698" y="354" width="12" height="12"/><rect x="712" y="354" width="12" height="12"/><rect x="726" y="354" width="12" height="12"/><rect x="740" y="354" width="12" height="12"/><rect x="754" y="354" width="12" height="12"/><rect x="768" y="354" width="12" height="12"/><rect x="782" y="354" width="12" height="12"/><rect x="656" y="368" width="12" height="12"/><rect x="670" y="368" width="12" height="12"/><rect x="684" y="368" width="12" height="12"/><rect x="698" y="368" width="12" height="12"/></g>
+          <rect x="656" y="384" width="138" height="60" fill="#c9dcd6"/>
+          <text x="725" y="418" fill="#2c4c50" font-family="Alegreya Sans" font-size="10" text-anchor="middle">map modes + minimap</text>
+          <rect x="340" y="330" width="200" height="118" fill="none" stroke="#efe3c8" stroke-dasharray="6 5" stroke-width="1.5"/>
+          <text x="440" y="392" fill="#efe3c8" font-family="Alegreya Sans" font-size="11" text-anchor="middle">battle results (transient)</text>
+        </svg>
+        <figcaption>Imperator 2.0 at 16:9. The dashed areas are filled only by transient things.</figcaption>
+      </figure>
+    </div>
+
+    <div class="qa">
+      <div>
+        <div class="q">What is the philosophy?</div>
+        <p>Paradox rebuilt the interface for the free 2.0 "Marius" update (February 2021). Game director Peter Nicholson described the new look as bolder and cleaner: fewer decorative corners and borders taking up screen space, decoration kept for drawing attention, signalling importance or adding immersion, and airier windows with room for art. The update also brought Crusader Kings III's nested tooltips.</p>
+        <p>The screenshots add four habits:</p>
+        <ul class="rules">
+          <li>The map owns the centre.</li>
+          <li>Each corner has one job.</li>
+          <li>A panel appears for a reason and leaves when the reason is gone.</li>
+          <li>Every window shares one frame: a coloured title bar with a Greek key band, a close button, section headers in the same band, and flat content on parchment.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="q">What we take, and what we leave</div>
+        <p><b>Take:</b> the corner jobs, a selection panel that appears and resizes with the pick, realm windows opened from a left rail, the bar's stock-over-change cells, map modes that change the picture, nested tooltips, and one frame for every panel.</p>
+        <p><b>Take, short:</b> the Outliner. Ours lists a dozen places, the open offers and the Assembly, not hundreds of armies, and you choose what it shows. <b>Leave:</b> the minimap, since one island fits the opening view and the compass already brings it back. Leave the red-and-white Roman colouring and the portraits too: our frame stays ink, bone and ivory, with the bronze icons.</p>
+      </div>
+    </div>
+  </div>
+</section>
+

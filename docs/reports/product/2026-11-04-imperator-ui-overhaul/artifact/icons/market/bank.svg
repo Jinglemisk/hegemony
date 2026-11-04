@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Bank — equal-arm bronze balance scales</title>
+<defs>
+<linearGradient id="a-bank-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+</defs>
+<path d="M27 12Q24 7 32 6Q40 7 37 12V48L48 51V58H16V51L27 48Z" fill="url(#a-bank-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M33 15H36V49L47 52V57H35Z" fill="#795025"/>
+<path d="M6 14Q19 17 27 14L32 12L37 14Q45 17 58 14V23Q45 26 36 22H28Q18 26 6 23Z" fill="url(#a-bank-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M7 21Q19 23 28 19H36Q46 23 57 21V23Q45 25 36 22H28Q17 26 7 23Z" fill="#795025"/>
+<path d="M16 24L7 36M16 24L26 36M48 24L38 36M48 24L58 36" fill="none" stroke="#181210" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M16 25L9 36M48 25L40 36" fill="none" stroke="#f2d28a" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M6 35H27C27 45 23 50 17 50C10 50 6 45 6 35Z" fill="url(#a-bank-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M37 35H58C58 45 54 50 48 50C41 50 37 45 37 35Z" fill="url(#a-bank-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M23 37H26Q26 49 17 49L13 47Q23 47 23 37ZM54 37H57Q57 49 48 49L44 47Q54 47 54 37Z" fill="#795025"/>
+<path d="M23 44L25 42Q23 49 17 49L14 48ZM54 44L56 42Q54 49 48 49L45 48ZM17 55H47V57H17Z" fill="#624123"/>
+<path d="M8 17Q18 20 25 17M29 26V46M8 37H22M39 37H53M19 52H30" fill="none" stroke="#f2d28a" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M10 41L13 43M41 42L44 43M23 54H27" fill="none" stroke="#997035" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M28 8L31 7L33 9L29 10Z" fill="#fff8e9"/>
+</svg>

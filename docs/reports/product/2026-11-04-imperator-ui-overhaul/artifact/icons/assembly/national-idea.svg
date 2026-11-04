@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>National idea — lit bronze oil lamp</title>
+<defs>
+<linearGradient id="a-national-idea-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+<linearGradient id="a-national-idea-fire" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0b0"/><stop offset="0.48" stop-color="#e8ad50"/><stop offset="1" stop-color="#b56026"/></linearGradient>
+</defs>
+<path d="M43 29Q45 18 53 21Q61 24 57 36Q54 43 46 43L44 36Q51 37 51 30Q51 27 49 29L48 34Z" fill="url(#a-national-idea-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M54 24Q60 31 54 38L49 40L47 37Q55 34 54 24Z" fill="#624123"/>
+<path d="M13 33Q21 27 37 29L48 33Q56 39 53 49Q50 58 32 58Q16 58 11 50L6 46V35Z" fill="url(#a-national-idea-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M46 33Q56 41 51 51Q46 57 31 57L19 54Q47 55 46 33Z" fill="#795025"/>
+<path d="M50 42Q55 52 39 56L30 57L24 55Q45 54 50 42Z" fill="#624123"/>
+<ellipse cx="31" cy="37" rx="12" ry="4" fill="#795025" stroke="#181210" stroke-width="1.75"/>
+<ellipse cx="31" cy="36" rx="7" ry="2" fill="#3a2a1e"/>
+<path d="M8 34Q4 24 12 17L16 6Q27 15 25 24Q25 30 20 35Z" fill="url(#a-national-idea-fire)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M15 31Q9 25 16 20L18 15Q24 25 19 31Z" fill="#fff0b0"/>
+<path d="M6 34L20 34L22 41L7 43Z" fill="url(#a-national-idea-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M8 39H20L20 41L8 42Z" fill="#624123"/>
+<path d="M8 36H18M18 45Q21 51 29 51M47 25Q51 21 54 26" fill="none" stroke="#ffe6a0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M10 25Q10 21 13 19" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M22 47L25 48M31 50H36" fill="none" stroke="#b78d44" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M18 43L22 44L22 47L19 46Z" fill="#fff8e9"/>
+</svg>

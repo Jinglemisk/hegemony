@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Granary — round beehive store</title>
+<defs>
+<linearGradient id="a-granary-clay" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e5a268"/><stop offset="0.48" stop-color="#c08243"/><stop offset="1" stop-color="#8b4d28"/></linearGradient>
+<linearGradient id="a-granary-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+<linearGradient id="a-granary-wheat" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3dda0"/><stop offset="0.48" stop-color="#d8be73"/><stop offset="1" stop-color="#a07b38"/></linearGradient>
+</defs>
+<path d="M6 58V37C6 20 15 9 27 7H37C49 9 58 20 58 37V58Z" fill="url(#a-granary-clay)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M37 8C49 11 57 23 57 38V57H44V35C44 23 41 14 37 8Z" fill="#8b4d28"/>
+<path d="M17 17Q32 20 47 17M10 27Q32 32 54 27M7 38Q32 44 57 38M7 49H21M44 49H57" fill="none" stroke="#986238" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M21 58V45Q21 34 32 34Q43 34 43 45V58Z" fill="url(#a-granary-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M26 58V46Q26 40 32 40Q38 40 38 46V58Z" fill="#3a2a1e"/>
+<path d="M32 13C22 20 24 28 32 31C40 28 42 20 32 13Z" fill="url(#a-granary-wheat)" stroke="#8b4d28" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M32 19V30M27 21L32 25L37 21" fill="none" stroke="#997035" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 28Q14 22 18 18" fill="none" stroke="#f3dda0" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M50 22Q57 29 57 41V57H47V53H52V37Z" fill="#68371f"/>
+<path d="M38 42Q42 44 42 49V57H39V45ZM33 28L36 25L35 29L32 30Z" fill="#79502e"/>
+<path d="M11 32Q11 23 18 16M21 12L27 10M23 48V44Q23 39 27 38M28 20L30 17" fill="none" stroke="#f5d49b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M11 43H16M19 24L22 25M46 34L49 33" fill="none" stroke="#af703f" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M27 52L28 47M35 46V53" fill="none" stroke="#60452c" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Influence — ribboned phalera</title>
+<defs>
+<linearGradient id="a-influence-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+<linearGradient id="a-influence-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+<linearGradient id="a-influence-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0b0"/><stop offset="0.48" stop-color="#d8b45e"/><stop offset="1" stop-color="#997035"/></linearGradient>
+</defs>
+<path d="M15 28L32 34L24 58L15 51L6 55Z" fill="url(#a-influence-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M32 34L49 28L58 55L49 51L40 58Z" fill="url(#a-influence-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M20 36L25 38L20 51L15 48ZM40 37L45 35L51 49L46 47Z" fill="url(#a-influence-bronze)"/>
+<ellipse cx="32" cy="26.5" rx="21" ry="21" fill="url(#a-influence-bronze)" stroke="#181210" stroke-width="2.5"/>
+<ellipse cx="32" cy="26" rx="16" ry="16" fill="url(#a-influence-gold)" stroke="#795025" stroke-width="1.75"/>
+<path d="M32 15L36 21L43 21L39 27L41 34L34 32L28 37L26 30L20 26L27 23Z" fill="#a47a36"/>
+<ellipse cx="32" cy="26" rx="6" ry="6" fill="url(#a-influence-bronze)" stroke="#795025" stroke-width="1.5"/>
+<path d="M18 20C20 14 25 10 31 10" fill="none" stroke="#fff0b0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M48 19Q56 38 37 46L34 44Q49 39 48 19Z" fill="#6b491f"/>
+<path d="M42 30Q40 39 31 40L29 38Q38 36 42 30Z" fill="#b18a40"/>
+<path d="M23 48L20 53L24 57L28 46ZM46 47L50 49L56 53L53 44Z" fill="#8c7757"/>
+<path d="M11 48L16 38M41 49L44 53M16 19Q18 12 25 10" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M14 44L16 41M45 44L47 46" fill="none" stroke="#c1ad84" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M22 14L25 12L27 13L23 16Z" fill="#fff8e9"/>
+</svg>

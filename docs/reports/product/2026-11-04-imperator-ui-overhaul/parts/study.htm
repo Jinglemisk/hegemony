@@ -1,0 +1,29 @@
+<section class="block" id="verb-steps">
+  <div class="wrap">
+    <h2>Verb steps</h2>
+    <p class="prose">Clicks from the landing screen for each verb option: in the live build (main c0739d0), counted by every route, and in the Proposal, which has no verbs. "+hover" is a hover the option can't be reached without. In the Proposal, every action that spends ends on its confirm, counted here.</p>
+    <div class="scroll">
+      <table class="spec steps">
+        <thead><tr><th>Verb</th><th>Option</th><th>Today, by the verb</th><th>Today, best other route</th><th>Only a verb?</th><th>Proposal, no verbs</th></tr></thead>
+        <tbody>
+          <tr><td rowspan="2">Grow</td><td>A slave</td><td>3 · disc, tile, confirm</td><td>none</td><td><b>yes</b></td><td>4 · pick, Grow here, A slave, confirm</td></tr>
+          <tr><td class="o">A freeman</td><td>3 + hover, or 4</td><td>none</td><td><b>yes</b></td><td>4 · the same, A freeman</td></tr>
+          <tr><td rowspan="2">People</td><td>Promote or demote</td><td>5 · disc, Promote, rung, tile, confirm</td><td>4 · Ladder page</td><td>no</td><td>3 · pick, ▲ or ▼, confirm</td></tr>
+          <tr><td class="o">Move a pop</td><td>7</td><td>none</td><td><b>yes</b></td><td>4 · pick, Move a pop out, where to, confirm</td></tr>
+          <tr><td rowspan="2">Expand</td><td>Found a colony</td><td>3</td><td>3 · empty tile, Found, confirm</td><td>no</td><td>3 · pick, Found here, confirm</td></tr>
+          <tr><td class="o">Colony to city</td><td>2 + hover</td><td>none</td><td><b>yes</b></td><td>3 · pick, Make it a city, confirm</td></tr>
+          <tr><td rowspan="2">Build</td><td>Estate, Marketplace, Forum</td><td>4 · disc, class, tile, confirm</td><td>2 · Build page</td><td>no</td><td>4 · pick, Raise, the building, confirm</td></tr>
+          <tr><td class="o">Temple, Granary, Port</td><td>5</td><td>2 · Build page</td><td>no</td><td>4 · pick, Raise, the building, confirm</td></tr>
+          <tr><td rowspan="6">Civic</td><td>Calm for gold</td><td>1, with no confirm</td><td>only End turn's riot warning</td><td><b>in practice</b></td><td>3 · the happiness readout, Calm, confirm; or from the discontent alarm</td></tr>
+          <tr><td class="o">Calm for influence</td><td>1 + hover</td><td>the same</td><td><b>in practice</b></td><td>3 · the same</td></tr>
+          <tr><td class="o">The Dole</td><td>1 + hover</td><td>none</td><td><b>yes</b></td><td>2 · the Dole in the dock, confirm</td></tr>
+          <tr><td class="o">Ideas</td><td>3 + hover</td><td>none</td><td><b>yes</b></td><td>3 · rail, the Idea, confirm</td></tr>
+          <tr><td class="o">Buy a card</td><td>1 + hover</td><td>none</td><td><b>yes</b></td><td>2 · Buy a card in the dock, confirm</td></tr>
+          <tr><td class="o">Your hand</td><td>2 + hover</td><td>none</td><td><b>yes</b></td><td>1 · the cards on the bottom edge, or H</td></tr>
+          <tr><td>Trade</td><td>Offer a trade</td><td>6</td><td>none in a turn</td><td><b>yes</b></td><td>6 · Trade in the dock, the outliner, or a rival's inspector, then the composer</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint" style="margin-top:8px">Today, a click on the Civic disc buys Calm at once, and a click on Grow, Expand or Trade runs its first option; their fans open only on a 500 ms hover or by keyboard.</p>
+  </div>
+</section>

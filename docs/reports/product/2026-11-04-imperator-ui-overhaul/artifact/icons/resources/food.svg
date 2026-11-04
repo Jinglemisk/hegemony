@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Food — bound wheat sheaf</title>
+<defs>
+<linearGradient id="a-food-wheat" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3dda0"/><stop offset="0.48" stop-color="#d8be73"/><stop offset="1" stop-color="#a07b38"/></linearGradient>
+<linearGradient id="a-food-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+</defs>
+<path d="M18 31L44 30L41 41L51 58H13L23 41Z" fill="url(#a-food-wheat)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M35 35L41 40L49 57H38Z" fill="#a07b38"/>
+<path d="M26 38C13 34 5 24 6 12C18 14 29 25 30 37Z" fill="url(#a-food-wheat)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M29 37C18 29 14 16 19 6C30 11 36 24 34 37Z" fill="url(#a-food-wheat)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M31 37C26 24 27 13 33 6C42 13 42 27 37 38Z" fill="url(#a-food-wheat)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M36 37C34 25 40 13 48 9C54 20 48 32 40 40Z" fill="url(#a-food-wheat)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M40 39C43 26 50 21 58 20C58 31 52 39 43 42Z" fill="url(#a-food-wheat)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M12 20L24 33M22 15L30 32M34 14V32M46 18L40 33M52 27L46 36" fill="none" stroke="#a07b38" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M27 45L22 55M32 45V56M37 45L43 55" fill="none" stroke="#f3dda0" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M21 37Q32 40 43 37L42 45Q32 48 22 45Z" fill="url(#a-food-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M16 22Q22 26 26 35L23 33ZM23 18Q29 25 31 36L28 32ZM36 18Q40 28 36 37L33 36ZM48 17Q49 28 40 37L39 34ZM54 27Q54 35 45 39L44 37Z" fill="#89662e"/>
+<path d="M8 16Q10 24 17 29M19 10Q17 19 23 27M32 10Q29 20 31 28M46 13Q41 19 40 26M54 23L49 28" fill="none" stroke="#fff0c0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M24 22L27 21M33 24L36 22M44 26L47 27" fill="none" stroke="#b18d49" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M34 48L39 47L47 57H43ZM15 56H37V58H14Z" fill="#89662e"/>
+<path d="M37 40L42 39L41 44L35 45Z" fill="#8c7757"/>
+<path d="M23 39Q28 41 34 41M19 54L23 47" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M26 43L32 44" fill="none" stroke="#c1ad84" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

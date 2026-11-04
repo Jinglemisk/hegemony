@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Riot — raised fist gripping a torch</title>
+<defs>
+<linearGradient id="a-riot-fire" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0b0"/><stop offset="0.48" stop-color="#e8ad50"/><stop offset="1" stop-color="#b56026"/></linearGradient>
+<linearGradient id="a-riot-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+<linearGradient id="a-riot-skin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#edc393"/><stop offset="0.48" stop-color="#c38d5e"/><stop offset="1" stop-color="#895438"/></linearGradient>
+<linearGradient id="a-riot-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+</defs>
+<path d="M35 24C27 22 25 16 31 8L35 14L43 6L46 15L54 10C60 20 55 28 46 28Z" fill="url(#a-riot-fire)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M49 18L54 13Q59 22 49 26L44 26Z" fill="#a95420"/>
+<path d="M35 21L37 15L41 20L45 12L47 22L50 20Q49 27 41 25Z" fill="#fff0b0"/>
+<path d="M30 16L31 13M39 13L42 9" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M41 23L49 25L47 58H40Z" fill="url(#a-riot-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M46 26H48L46 57H43Z" fill="#624123"/>
+<path d="M42 27L41 54" fill="none" stroke="#ecd3a0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M43 49L44 55" fill="none" stroke="#986238" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M14 36V33Q13 29 18 29Q22 28 23 32Q23 27 28 28Q32 28 32 32Q32 28 37 29Q41 29 41 33Q42 30 46 32Q49 33 49 38L47 43L38 47L33 58H14L19 44L15 41Z" fill="url(#a-riot-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M43 35L48 36L46 42L37 46L32 57H25L30 43L39 40Z" fill="#895438"/>
+<path d="M43 41L46 40L44 43L35 47L31 57H28L32 46Z" fill="#68432d"/>
+<path d="M17 33Q18 31 20 33M26 31H29M35 32H38" fill="none" stroke="#f4d2aa" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M23 33V37M32 33V37M41 34V37" fill="none" stroke="#895438" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M15 36Q18 34 22 37L28 40L39 36Q44 35 45 39Q45 42 40 43L28 47L20 43L15 40Z" fill="url(#a-riot-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M19 40L28 44L40 40L44 39Q44 42 39 43L28 46L21 43Z" fill="#895438"/>
+<path d="M18 37L27 42L38 38" fill="none" stroke="#f4d2aa" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M22 49L19 54M29 49L27 52" fill="none" stroke="#b17a50" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M16 53L24 55L34 51L32 58H14Z" fill="url(#a-riot-linen)"/>
+<path d="M24 56L33 53L31 57H23Z" fill="#aa9572"/>
+<path d="M17 54L23 56" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

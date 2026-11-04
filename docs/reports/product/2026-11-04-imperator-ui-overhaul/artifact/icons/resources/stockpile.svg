@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Stockpile — closed wooden chest bound with bronze bands</title>
+<defs>
+<linearGradient id="a-stockpile-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+<linearGradient id="a-stockpile-bark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bd8c55"/><stop offset="0.48" stop-color="#8f5e35"/><stop offset="1" stop-color="#51351f"/></linearGradient>
+<linearGradient id="a-stockpile-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+</defs>
+<path d="M6 25L17 14H49L58 24V54L47 58H6Z" fill="url(#a-stockpile-bark)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M7 27H46V57H7Z" fill="url(#a-stockpile-wood)"/>
+<path d="M47 27L57 24V53L47 57Z" fill="#51351f"/>
+<path d="M6 25L16 13H49L58 24L47 31H6Z" fill="url(#a-stockpile-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M39 14H49L56 24L47 29H38Z" fill="#8b633b"/>
+<path d="M8 34H44M8 45H44M48 36L55 33M48 47L55 44" fill="none" stroke="#8b633b" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M14 25L23 14H30L22 26V57H14Z" fill="url(#a-stockpile-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M36 26L40 14H47L44 27V57H36Z" fill="url(#a-stockpile-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M19 29H21V56H18ZM41 29H43V56H40Z" fill="#795025"/>
+<path d="M16 27V51M38 28V51M17 24L24 16M39 24L42 17" fill="none" stroke="#ffe6a0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M25 29H32V41H25Z" fill="url(#a-stockpile-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M28 34H30V38H28Z" fill="#51351f"/>
+<path d="M7 54H13V57H7ZM23 54H35V57H23ZM45 51L56 47V53L46 56Z" fill="#35251a"/>
+<path d="M8 27H12M9 17L16 16M25 27H34M8 38V42" fill="none" stroke="#f6dfb0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M9 41H12M26 49H32M28 21L32 21" fill="none" stroke="#a67b48" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M16 28H18V31H16ZM38 28H40V31H38Z" fill="#fff8e9"/>
+</svg>

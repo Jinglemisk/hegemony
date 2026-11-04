@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Chronicle — scrolls in a cylindrical capsa</title>
+<defs>
+<linearGradient id="a-chronicle-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+<linearGradient id="a-chronicle-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+<linearGradient id="a-chronicle-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+</defs>
+<path d="M9 30H55V47Q55 58 32 58Q9 58 9 47Z" fill="url(#a-chronicle-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<ellipse cx="32" cy="30" rx="23" ry="8" fill="url(#a-chronicle-wood)" stroke="#181210" stroke-width="2.5"/>
+<ellipse cx="32" cy="30" rx="17" ry="4" fill="#51351f"/>
+<path d="M9 18H23V35Q16 39 9 35Z" fill="url(#a-chronicle-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M19 20H22V35L18 37Z" fill="#aa9572"/>
+<ellipse cx="16" cy="18" rx="7" ry="4" fill="url(#a-chronicle-linen)" stroke="#181210" stroke-width="2.5"/>
+<ellipse cx="16" cy="18" rx="2.5" ry="1.5" fill="#806c50"/>
+<path d="M11 24V32" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M25 11H39V37Q32 41 25 37Z" fill="url(#a-chronicle-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M35 13H38V37L34 39Z" fill="#aa9572"/>
+<ellipse cx="32" cy="11" rx="7" ry="4" fill="url(#a-chronicle-linen)" stroke="#181210" stroke-width="2.5"/>
+<ellipse cx="32" cy="11" rx="2.5" ry="1.5" fill="#806c50"/>
+<path d="M27 17V34" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M41 20H55V35Q48 39 41 35Z" fill="url(#a-chronicle-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M51 22H54V35L50 37Z" fill="#aa9572"/>
+<ellipse cx="48" cy="20" rx="7" ry="4" fill="url(#a-chronicle-linen)" stroke="#181210" stroke-width="2.5"/>
+<ellipse cx="48" cy="20" rx="2.5" ry="1.5" fill="#806c50"/>
+<path d="M43 26V32" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M9 31Q32 43 55 31V48Q55 58 32 58Q9 58 9 48Z" fill="url(#a-chronicle-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M46 36L54 33V48Q53 57 32 57L26 55Q45 54 46 45Z" fill="#8b633b"/>
+<path d="M9 38Q32 49 55 38V44Q32 55 9 44Z" fill="url(#a-chronicle-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M47 43L54 41V43L46 47L37 49L37 46Z" fill="#624123"/>
+<path d="M18 34L17 38M26 38V41M19 49V53M30 51V55" fill="none" stroke="#a67b48" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M12 34L19 37M12 40Q24 46 36 45M12 47V49" fill="none" stroke="#f6dfb0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M14 41L18 42V44L14 43Z" fill="#fff8e9"/>
+</svg>

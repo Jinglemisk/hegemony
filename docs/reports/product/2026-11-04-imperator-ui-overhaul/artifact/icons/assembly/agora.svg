@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Agora — marble bema with bronze lectern</title>
+<defs>
+<linearGradient id="a-agora-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+<linearGradient id="a-agora-marble" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#f7ecd2"/><stop offset="1" stop-color="#c9b48c"/></linearGradient>
+</defs>
+<path d="M27 20H38V34H43V39H22V34H27Z" fill="url(#a-agora-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M34 22H37V34H41V37H31V34H34Z" fill="#795025"/>
+<path d="M19 9L43 13L45 24L18 21Z" fill="url(#a-agora-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M19 18L43 21L44 23L19 20Z" fill="#624123"/>
+<path d="M22 12L40 15" fill="none" stroke="#fff0b0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M22 13L26 13L27 15L22 15Z" fill="#fff8e9"/>
+<path d="M14 33H50V41H55V49H58V58H6V49H9V41H14Z" fill="url(#a-agora-marble)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M44 34H49V42H54V50H57V57H48V49H44Z" fill="#c9b48c"/>
+<path d="M15 41H49M10 49H54" fill="none" stroke="#b49c76" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M7 55H57V57H7ZM45 39H49V41H15V39ZM50 47H54V49H10V47Z" fill="#a48e69"/>
+<path d="M17 35H40M12 43H44M8 51H47" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M20 37L25 37M30 45L35 44M16 54H21" fill="none" stroke="#c4ad84" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

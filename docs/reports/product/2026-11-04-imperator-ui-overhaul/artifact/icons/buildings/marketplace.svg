@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Marketplace — striped awning above an amphora and basket</title>
+<defs>
+<linearGradient id="a-marketplace-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+<linearGradient id="a-marketplace-clay" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e5a268"/><stop offset="0.48" stop-color="#c08243"/><stop offset="1" stop-color="#8b4d28"/></linearGradient>
+<linearGradient id="a-marketplace-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+</defs>
+<path d="M9 19H16V52H9ZM48 19H55V52H48Z" fill="url(#a-marketplace-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 23H15V51H13ZM52 23H54V51H52Z" fill="#624123"/>
+<path d="M12 8H52L58 23V29Q53 33 48 29Q43 33 38 29Q32 33 26 29Q21 33 16 29Q11 33 6 29V23Z" fill="url(#a-marketplace-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M20 9H28L26 29Q21 32 16 29V24ZM36 9H44L48 24V29Q43 32 38 29Z" fill="url(#a-marketplace-clay)"/>
+<path d="M7 25Q12 28 16 26Q21 29 26 26Q32 29 38 26Q44 29 48 26Q53 29 57 26V28Q53 32 48 28Q43 32 38 28Q32 32 26 28Q21 32 16 28Q11 32 7 28Z" fill="#aa9572"/>
+<path d="M8 23H55M13 11H32" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M18 11L14 21M46 12L50 21" fill="none" stroke="#b49c76" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M20 30H29V35Q36 36 33 44L29 49H19L15 44Q13 36 20 35Z" fill="url(#a-marketplace-clay)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M19 37Q15 33 14 38L16 42M30 37Q34 33 35 38L33 42" fill="none" stroke="#795025" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M27 36Q34 39 29 47H25Q30 41 27 36Z" fill="#68371f"/>
+<path d="M21 32H26M19 39V42" fill="none" stroke="#f9d69b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M19 38L21 37V40L19 41Z" fill="#fff8e9"/>
+<path d="M37 38Q44 34 52 38L50 48H39Z" fill="url(#a-marketplace-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M39 40H50M40 44H49M42 39L43 47M47 39V47" fill="none" stroke="#8b633b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M6 47H58V58H6Z" fill="url(#a-marketplace-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M47 49H57V57H47ZM7 55H47V57H7Z" fill="#624123"/>
+<path d="M8 49H41" fill="none" stroke="#f6dfb0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M18 50V56M33 50V56M10 53H14M38 53H42" fill="none" stroke="#a67b48" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

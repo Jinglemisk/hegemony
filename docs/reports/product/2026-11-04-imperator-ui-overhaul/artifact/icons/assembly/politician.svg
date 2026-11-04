@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Politician — bearded marble herm</title>
+<defs>
+<linearGradient id="a-politician-marble" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#f7ecd2"/><stop offset="1" stop-color="#c9b48c"/></linearGradient>
+</defs>
+<path d="M19 28H45V51H49V58H15V51H19Z" fill="url(#a-politician-marble)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M39 30H44V52H48V57H39Z" fill="#c9b48c"/>
+<path d="M20 50H43M17 54H46" fill="none" stroke="#b49c76" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M18 18Q17 6 31 6Q46 6 46 19L44 29L38 36H26L20 29Z" fill="url(#a-politician-marble)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M38 12Q45 13 44 23L41 30L36 34H32L36 26Z" fill="#c9b48c"/>
+<path d="M19 19Q16 8 28 6Q40 4 45 13L44 19L39 14L34 15L28 12L23 15L23 20Z" fill="#b49c76"/>
+<path d="M21 25L27 24L32 28L37 24L43 25L41 33L33 39L24 34Z" fill="url(#a-politician-marble)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M38 27L42 26L40 33L33 37L29 35L35 32Z" fill="#a48e69"/>
+<path d="M25 21H28M36 21H39M32 20L30 25H33M27 28L29 32M34 29L33 34" fill="none" stroke="#8e7958" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M41 39H44V52H47V56H41ZM16 56H47V57H16Z" fill="#a48e69"/>
+<path d="M22 12Q24 8 30 8M23 16L27 15M21 39V47M18 53H35" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M24 43L27 42M29 48H32" fill="none" stroke="#c4ad84" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

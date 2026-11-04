@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Population loss — plain bust with minus badge</title>
+<defs>
+<linearGradient id="a-pop-loss-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+<linearGradient id="a-pop-loss-skin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#edc393"/><stop offset="0.48" stop-color="#c38d5e"/><stop offset="1" stop-color="#895438"/></linearGradient>
+
+<linearGradient id="a-pop-loss-negative" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a83a1c"/><stop offset="0.48" stop-color="#8f2e13"/><stop offset="1" stop-color="#6e2410"/></linearGradient>
+</defs>
+<g>
+<path d="M19 31H36L39 39Q49 42 52 58H6Q7 43 18 39Z" fill="url(#a-pop-loss-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M19 31H36V40L28 46L19 40Z" fill="url(#a-pop-loss-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 19Q12 6 27 6Q43 6 42 19L41 29Q36 38 27 39Q18 37 14 29Z" fill="url(#a-pop-loss-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M31 14Q41 15 40 24L39 29L30 36L33 26Z" fill="#895438"/>
+<path d="M14 20V16Q15 7 27 7Q41 7 41 18L32 15L23 16L19 21Z" fill="#51351f"/>
+<path d="M21 24H24M32 24H35M28 25L26 30M24 33H30" fill="none" stroke="#714c34" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M17 44L27 49L36 43M15 49L12 55" fill="none" stroke="#aa9572" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M36 27L40 25L38 29L32 34L31 32ZM32 49L38 44L39 51L33 57H28Z" fill="#806c50"/>
+<path d="M17 21L20 18M18 12Q22 8 28 9" fill="none" stroke="#ba8a58" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M18 24L20 29M10 49Q12 44 17 43M18 46L26 51" fill="none" stroke="#f4d2aa" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M21 51L19 56M25 54L25 57" fill="none" stroke="#c1ad84" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</g>
+<circle cx="50" cy="50" r="12" fill="url(#a-pop-loss-negative)" stroke="#181210" stroke-width="3"/><path d="M43 47.5H57V52.5H43Z" fill="#fff8e9"/>
+<path d="M41 44Q44 39 49 39" fill="none" stroke="#e8846b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M56 58L59 54" fill="none" stroke="#4a160a" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

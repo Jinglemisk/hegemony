@@ -1,0 +1,224 @@
+YEAR XI
+
+Θ
+Year 11 begins. Theron plays first.
+
+The year's card is Festival: Everyone clears their Unrest Tokens.
+
+Θ
+Theron automatically collected income (+3 Wood, +9 Gold, +10 Influence).
+
+Θ
+Theron received Player Event card Free Settlers. Gain a Freeman in a settlement with room. You may decline it: it goes to the bottom of the deck.
+
+Θ
+Theron added 1 Freeman to Mountain 2,4 from Free Settlers.
+
+Θ
+Theron played Caravan: +5 Food.
+
+Θ
+Theron promoted a Slave to Freeman on Mountain.
+
+Θ
+Theron built Estate.
+
+Θ
+Theron moved 1 Slave from Plains 2,1 to Forest 1,1.
+
+Θ
+Theron bought a Development Card and kept it.
+
+Κ
+Kyros automatically collected income (+1 Wood, +1 Gold, +6 Influence).
+
+Κ
+Kyros received Player Event card Captured Laborers. Gain a Slave in a settlement with room. You may decline it: it goes to the bottom of the deck.
+
+Κ
+Kyros added 1 Slave to Forest -2,-1 from Captured Laborers.
+
+Κ
+Kyros bought 1 Food with 3 Influence: the Dole.
+
+Κ
+Kyros founded a Colony on Mountain with no Pops.
+
+Κ
+Kyros sent 1 Freeman to seed the new Colony on Mountain.
+
+Κ
+Kyros bought 1 Food with 3 Influence: the Dole.
+
+Κ
+Kyros moved 1 Slave from Forest -2,-1 to Mountain -5,5.
+
+Δ
+Damon's 1 Citizen arrived at Plains 4,-3.
+
+Δ
+Damon automatically collected income (+1 Wood, +1 Gold, +1 Food, +8 Influence).
+
+Δ
+Damon received Player Event card Captured Laborers. Gain a Slave in a settlement with room. You may decline it: it goes to the bottom of the deck.
+
+Δ
+Damon added 1 Slave to Mountain 4,-5 from Captured Laborers.
+
+Δ
+Damon moved 1 Slave from Plains 4,-3 to Plains 2,0.
+
+Δ
+Damon bought 1 Food with 2 Influence: the Dole.
+
+Δ
+Damon promoted a Slave to Freeman on Mountain.
+
+Ν
+Nikos's 1 Slave arrived at Mountain 4,2.
+
+Ν
+Nikos's 1 Slave arrived at Mountain -2,4.
+
+Ν
+Nikos automatically collected income (+3 Wood, +2 Stone, +14 Influence).
+
+Player Event discard reshuffled into the draw pile.
+
+Ν
+Nikos received Player Event card Shipment. Gain 2 Stone.
+
+Ν
+Nikos resolved Shipment: +2 Stone.
+
+Ν
+Nikos built Port and claimed Pearls.
+
+Ν
+Nikos's realm is content at +4: a free Development Card, Quarry Gang, +6 Stone.
+
+YEAR XII
+
+Κ
+Year 12 begins. Kyros plays first.
+
+The year's card is Festival: Everyone clears their Unrest Tokens.
+
+The Assembly convenes for Year 12.
+
+Κ
+Kyros offers 1 Gold for 1 Influence to the table.
+
+Δ
+Damon declines Kyros's offer.
+
+Ν
+Nikos declines Kyros's offer.
+
+Θ
+Theron declines Kyros's offer.
+
+Κ
+Kyros withdraws an offer.
+
+Κ
+Kyros holds their peace.
+
+Δ
+Damon paid 2 Influence to sound out Kleistophenes.
+
+Δ
+Damon seals a resolution to lay before the Assembly.
+
+Ν
+Nikos paid 2 Influence to sound out Stratokles.
+
+Ν
+Nikos seals a resolution to lay before the Assembly.
+
+Θ
+Theron paid 2 Influence to sound out Stratokles.
+
+Θ
+Theron seals a resolution to lay before the Assembly.
+
+Κ
+Kyros is ready for the ballots.
+
+Δ
+Damon is ready for the ballots.
+
+Ν
+Nikos is ready for the ballots.
+
+Θ
+Theron is ready for the ballots.
+
+The Assembly turns to the ballot — 3 resolutions, voted repeals first, then in turn.
+
+Κ
+Kyros Votes yea with 4 Votes.
+
+Δ
+Damon Votes yea with 5 Votes.
+
+Ν
+Nikos Votes yea with 7 Votes.
+
+Θ
+Theron Votes yea with 6 Votes.
+
+Frontier Spirit is enacted — a new Stele stands in the Agora. Damon receives +2 Wood.
+
+Κ
+Kyros Votes yea with 4 Votes.
+
+Δ
+Damon Votes yea with 5 Votes.
+
+Ν
+Nikos Votes yea with 7 Votes.
+
+Θ
+Theron Votes nay with 6 Votes.
+
+Θ
+The Mob Rises: Theron loses a Slave to the mob.
+
+The Mob Rises carries against Theron. Nikos receives +2 Gold.
+
+Κ
+Kyros Votes yea with 4 Votes.
+
+Δ
+Damon Votes yea with 5 Votes.
+
+Ν
+Nikos Votes yea with 7 Votes.
+
+Θ
+Theron Votes yea with 6 Votes.
+
+Δ
+The Stele Is Broken: Damon had no authored Stele whose tenure had ended.
+
+The Stele Is Broken carries against Damon. Theron receives +2 Gold.
+
+The Assembly rises: Frontier Spirit carried 22–0; The Mob Rises carried 16–6; The Stele Is Broken carried 22–0.
+
+Κ
+Kyros's 1 Freeman arrived at Mountain -4,-1.
+
+Κ
+Kyros's 1 Slave arrived at Mountain -5,5.
+
+Κ
+Kyros automatically collected income (+1 Wood, +1 Stone, +1 Gold, +6 Influence).
+
+Κ
+Kyros received Player Event card Patronage. Gain 2 Influence.
+
+Κ
+Kyros resolved Patronage: +2 Influence.
+
+Κ

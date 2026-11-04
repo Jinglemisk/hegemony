@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Workshop — smith’s hammer resting on an anvil</title>
+<defs>
+<linearGradient id="a-workshop-iron" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c0b9a4"/><stop offset="0.48" stop-color="#8e8a7a"/><stop offset="1" stop-color="#514e45"/></linearGradient>
+<linearGradient id="a-workshop-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+</defs>
+<path d="M6 27H22V23H58V38H47Q42 39 42 46L51 51V58H14V51L23 46V39Q12 38 6 27Z" fill="url(#a-workshop-iron)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M48 25H57V37H46Q41 39 41 46L49 52V57H35V50L33 45L37 34Z" fill="#514e45"/>
+<path d="M16 54H49V57H16ZM47 37H56V34H41L35 42L36 47L41 49L41 46Q40 40 47 37Z" fill="#36372f"/>
+<path d="M9 28L23 32H43M25 25H54M17 52H30" fill="none" stroke="#e1d9c5" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M27 36H31M22 55H27M49 30H53" fill="none" stroke="#747364" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M17 10L22 6L49 27L44 32Z" fill="url(#a-workshop-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M22 10L48 27L44 30L20 12Z" fill="#8b633b"/>
+<path d="M23 11L37 22" fill="none" stroke="#f6dfb0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M8 15L21 6L32 19L18 28Z" fill="url(#a-workshop-iron)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M24 12L31 19L18 27L15 23Z" fill="#514e45"/>
+<path d="M11 16L20 9M10 19L13 22" fill="none" stroke="#e1d9c5" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 15L17 12L19 14L15 17Z" fill="#fff8e9"/>
+<path d="M35 23L40 26M18 18L20 20" fill="none" stroke="#8e8a7a" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

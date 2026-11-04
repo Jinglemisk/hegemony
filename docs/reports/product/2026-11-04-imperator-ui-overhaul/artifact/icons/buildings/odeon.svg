@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Odeon — three semicircular seating terraces behind a rectangular stage building</title>
+<defs>
+<linearGradient id="a-odeon-stone" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e1d9c5"/><stop offset="0.48" stop-color="#b9b09a"/><stop offset="1" stop-color="#817a68"/></linearGradient>
+<linearGradient id="a-odeon-marble" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#f7ecd2"/><stop offset="1" stop-color="#c9b48c"/></linearGradient>
+</defs>
+<path d="M5.5 41C5.5 30.13 17.4 21.32 32 21.32C46.6 21.32 58.5 30.13 58.5 41V46.74H5.5V41Z" fill="url(#a-odeon-stone)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M7 41C7 30.34 18 22.14 32 22.14C46 22.14 57 30.34 57 41V44.28H7V41Z" fill="#514638"/>
+<path d="M5.5 41C5.5 30.13 17.4 21.32 32 21.32C46.6 21.32 58.5 30.13 58.5 41H51.5C51.5 32.8 43 26.24 32 26.24C21 26.24 12.5 32.8 12.5 41H5.5Z" fill="url(#a-odeon-marble)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M15 41C15 34.19 22.6 28.7 32 28.7C41.4 28.7 49 34.19 49 41H43C43 36.9 38 33.62 32 33.62C26 33.62 21 36.9 21 41H15Z" fill="url(#a-odeon-marble)"/>
+<path d="M23.5 41C23.5 38.29 27.3 36.08 32 36.08C36.7 36.08 40.5 38.29 40.5 41H35C35 40.18 33.7 39.36 32 39.36C30.3 39.36 29 40.18 29 41H23.5Z" fill="url(#a-odeon-marble)"/>
+<path d="M44 25.42C52 29.52 56 34.44 56 40.18H53C53 32.8 49 28.7 44 25.42ZM42 32.8Q48 36.08 48 41H45Q45 36.08 42 32.8ZM36 37.72Q39 38.54 39 41H37L36 37.72Z" fill="#a48e69"/>
+<path d="M8 36.9C10 28.7 20 22.96 32 22.96M17 37.72C20 32.8 25 30.34 32 30.34M26 39.36Q28 37.72 32 37.72" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 41C13 33.62 21 27.06 32 27.06M22 41C22 36.9 27 34.44 32 34.44" fill="none" stroke="#a48e69" stroke-width="1.75" stroke-linecap="round"/>
+<path d="M7 42H57V47H7Z" fill="url(#a-odeon-stone)"/>
+<path d="M44 43H57V47H36Z" fill="#665f50"/>
+<path d="M14 44H41" fill="none" stroke="#e1d9c5" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M9 46H55V58H9Z" fill="url(#a-odeon-marble)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M48 48H54V57H48ZM10 56H54V57H10Z" fill="#a48e69"/>
+<path d="M27 48H37V58H27Z" fill="#3a2a1e"/>
+<path d="M35 49H37V57H35Z" fill="#181210"/>
+<path d="M7 45L10 43H54L57 45V47H7Z" fill="url(#a-odeon-marble)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M10 45H45M11 50V55M25 49V56" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M14 53H20M42 54H46M24 24.6H27" fill="none" stroke="#b49c76" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

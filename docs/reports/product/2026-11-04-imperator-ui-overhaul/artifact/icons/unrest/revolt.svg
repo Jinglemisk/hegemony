@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Revolt — crossed spears over a burning flame</title>
+<defs>
+<linearGradient id="a-revolt-fire" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0b0"/><stop offset="0.48" stop-color="#e8ad50"/><stop offset="1" stop-color="#b56026"/></linearGradient>
+<linearGradient id="a-revolt-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+<linearGradient id="a-revolt-iron" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c0b9a4"/><stop offset="0.48" stop-color="#8e8a7a"/><stop offset="1" stop-color="#514e45"/></linearGradient>
+</defs>
+<path d="M16 58C5 48 7 35 17 21L23 31C28 20 25 12 34 6C46 17 43 26 40 32L49 20C61 35 58 49 48 58Z" fill="url(#a-revolt-fire)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M49 25Q61 44 47 57H35L41 50Q51 42 45 34Z" fill="#b56026"/>
+<path d="M23 54Q15 44 25 35L29 42Q36 33 34 24C45 35 38 41 43 46L46 41Q49 53 36 57H27Z" fill="#fff0b0"/>
+<path d="M14 38L17 30M29 20L32 13" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M17 18L23 17L58 54L54 58Z" fill="url(#a-revolt-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M22 21L57 54L54 57L51 53Z" fill="#624123"/>
+<path d="M6 6L19 10L26 23L19 26L10 18Z" fill="url(#a-revolt-iron)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M7 7L24 23L20 25L11 17Z" fill="#514e45"/>
+<path d="M9 8L19 13L23 20M25 24L47 47" fill="none" stroke="#e1d9c5" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M41 17L47 18L10 58L6 54Z" fill="url(#a-revolt-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M43 23L46 21L11 57L8 55Z" fill="#624123"/>
+<path d="M58 6L54 18L45 26L38 23L45 10Z" fill="url(#a-revolt-iron)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M57 7L53 17L45 24L41 23Z" fill="#514e45"/>
+<path d="M54 9L47 12L41 21M39 25L15 50" fill="none" stroke="#e1d9c5" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M17 17L21 21M44 19L48 15" fill="none" stroke="#8e8a7a" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M46 12L49 11L48 14L45 16Z" fill="#fff8e9"/>
+</svg>

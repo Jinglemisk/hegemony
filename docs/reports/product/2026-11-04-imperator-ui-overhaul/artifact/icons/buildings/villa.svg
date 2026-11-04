@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Villa — tiled country house behind a courtyard and cypress</title>
+<defs>
+<linearGradient id="a-villa-marble" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#f7ecd2"/><stop offset="1" stop-color="#c9b48c"/></linearGradient>
+<linearGradient id="a-villa-clay" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e5a268"/><stop offset="0.48" stop-color="#c08243"/><stop offset="1" stop-color="#8b4d28"/></linearGradient>
+<linearGradient id="a-villa-leaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a8b976"/><stop offset="0.48" stop-color="#7d8f51"/><stop offset="1" stop-color="#48542c"/></linearGradient>
+<linearGradient id="a-villa-stone" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e1d9c5"/><stop offset="0.48" stop-color="#b9b09a"/><stop offset="1" stop-color="#817a68"/></linearGradient>
+</defs>
+<path d="M46 42Q39 37 42 26Q43 15 49 6Q56 17 57 29Q60 40 53 44V51H47Z" fill="url(#a-villa-leaf)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M50 12Q57 27 56 35Q55 41 51 42V49H48V39Q54 31 50 12Z" fill="#48542c"/>
+<path d="M48 15Q44 26 45 34" fill="none" stroke="#d3dba5" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M47 25L49 28M51 32L49 35" fill="none" stroke="#66783e" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M9 24H42V45H9Z" fill="url(#a-villa-marble)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M35 26H41V44H35Z" fill="#c9b48c"/>
+<path d="M6 25L15 14H34L45 25L41 29H10Z" fill="url(#a-villa-clay)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M33 15L44 25L40 28H31L26 15Z" fill="#8b4d28"/>
+<path d="M10 24L16 17H30" fill="none" stroke="#f9d69b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M19 17L15 25M25 17L23 25M31 19L32 24" fill="none" stroke="#a76535" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M16 33H23V43H16ZM29 32H35V38H29Z" fill="#3a2a1e"/>
+<path d="M6 39L17 34V45H46V34L58 40V58H6Z" fill="url(#a-villa-marble)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M17 37H45V45H17Z" fill="url(#a-villa-stone)"/>
+<path d="M7 43L17 38V46H46L57 42V57H7Z" fill="#c9b48c"/>
+<path d="M6 45H58V58H6Z" fill="url(#a-villa-marble)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M27 58V50H38V58Z" fill="#3a2a1e"/>
+<path d="M50 46H57V57H40V54H50Z" fill="#a48e69"/>
+<path d="M8 47H23M40 47H49M8 41L14 38" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M10 52H20M43 52H47M13 53V57M46 55H50" fill="none" stroke="#b49c76" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Unrest — round terracotta token stamped with a flame</title>
+<defs>
+<linearGradient id="a-unrest-clay" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e5a268"/><stop offset="0.48" stop-color="#c08243"/><stop offset="1" stop-color="#8b4d28"/></linearGradient>
+</defs>
+<ellipse cx="32" cy="32" rx="26" ry="26" fill="url(#a-unrest-clay)" stroke="#181210" stroke-width="2.5"/>
+<path d="M49 14C65 29 57 55 35 57L25 56C48 55 59 32 49 14Z" fill="#8b4d28"/>
+<path d="M52 35Q53 52 35 56L27 55Q46 52 52 35Z" fill="#68371f"/>
+<ellipse cx="32" cy="31" rx="21" ry="21" fill="url(#a-unrest-clay)" stroke="#8b4d28" stroke-width="1.75"/>
+<path d="M32 48C20 48 15 39 21 30L25 24L28 32C33 27 30 21 35 15C44 23 42 30 39 34L44 29C52 39 44 49 32 48Z" fill="#68371f"/>
+<path d="M29 44Q23 40 28 34L31 38L35 29Q41 37 37 40L40 38Q42 45 34 46Z" fill="#c08243"/>
+<path d="M22 32L24 28M34 22L35 19M24 44Q28 48 34 48" fill="none" stroke="#f3c081" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M10 27Q12 13 27 10M16 45Q18 49 22 51" fill="none" stroke="#f3c081" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M14 34L15 37M38 12L41 13M43 46L46 43" fill="none" stroke="#a26335" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M14 19L17 16L19 17L16 21Z" fill="#fff0b0"/>
+</svg>

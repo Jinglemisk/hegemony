@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Bribe — closed hand dropping two coins</title>
+<defs>
+<linearGradient id="a-bribe-skin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#edc393"/><stop offset="0.48" stop-color="#c38d5e"/><stop offset="1" stop-color="#895438"/></linearGradient>
+<linearGradient id="a-bribe-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+<linearGradient id="a-bribe-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0b0"/><stop offset="0.48" stop-color="#d8b45e"/><stop offset="1" stop-color="#997035"/></linearGradient>
+</defs>
+<path d="M6 8L19 7L25 13L38 11Q43 11 47 15L54 24Q58 29 54 32Q51 34 47 30L44 27Q49 32 45 35Q42 37 38 33Q39 38 34 39L20 35L14 29H6Z" fill="url(#a-bribe-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M40 15L46 17L53 25Q56 29 53 30L47 25L44 27L47 31Q47 34 44 34L37 28L40 34Q40 37 35 37L24 32L18 27L18 23L29 27L35 25Z" fill="#895438"/>
+<path d="M7 7H17L19 30L7 32Z" fill="url(#a-bribe-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M23 16L33 17L39 24M29 20L33 28M25 25L28 31" fill="none" stroke="#895438" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M41 30L45 33L43 34L38 31L37 36L34 37L30 35L34 33L33 29Z" fill="#68432d"/>
+<path d="M21 15L27 14M34 14L39 14L43 18" fill="none" stroke="#f4d2aa" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M9 10L14 10M10 14V25" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M12 26L16 25" fill="none" stroke="#aa9572" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<ellipse cx="21" cy="45" rx="9" ry="9" fill="url(#a-bribe-gold)" stroke="#181210" stroke-width="2.5"/>
+<ellipse cx="46" cy="48" rx="10" ry="10" fill="url(#a-bribe-gold)" stroke="#181210" stroke-width="2.5"/>
+<path d="M26 39Q34 48 23 53L19 53Q29 49 26 39ZM52 42Q59 53 47 57L43 56Q53 52 52 42Z" fill="#997035"/>
+<ellipse cx="21" cy="45" rx="4.5" ry="4.5" fill="none" stroke="#b08a44" stroke-width="1.75"/>
+<ellipse cx="46" cy="48" rx="5" ry="5" fill="none" stroke="#b08a44" stroke-width="1.75"/>
+<path d="M15 43Q16 39 20 39M39 46Q40 41 45 41" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M17 39L20 38L21 40L18 41ZM41 41L44 40L45 42L42 43Z" fill="#fff8e9"/>
+</svg>

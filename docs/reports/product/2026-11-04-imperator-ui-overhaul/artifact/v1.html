@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hegemony UI Overhaul</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700&family=Alegreya:ital,wght@0,400;0,500;0,700;1,400&family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Layout: a dark kiln page for reading; the prototype is the game's own lit table, full width. */
+  --kiln: #15100d;
+  --kiln-2: #1e1713;
+  --kiln-3: #2a211b;
+  --rule: #3b2f26;
+  --bone: #f1e3c4;
+  --bone-2: #c8b894;
+  --ochre: #e3a24f;
+  --clay: #d65f33;
+  --pos: #a6bb67;
+  --neg: #ec8a70;
+  --f-name: "Cinzel", Copperplate, Georgia, serif;
+  --f-body: "Alegreya", "Iowan Old Style", Palatino, Georgia, serif;
+  --f-sans: "Alegreya Sans", "Gill Sans", Helvetica, Arial, sans-serif;
+
+  /* the game's palette, used only inside the prototype stage */
+  --g-bone: #f4e6c8;
+  --g-ivory: #fff8e7;
+  --g-ink: #241910;
+  --g-ink-66: rgb(36 25 16 / 66%);
+  --g-ink-12: rgb(36 25 16 / 12%);
+  --g-clay: #c0461c;
+  --g-ochre: #d98a35;
+  --g-pos: #4f6a24;
+  --g-neg: #a3351a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--kiln); color: var(--bone); }
+body { font: 17px/1.55 var(--f-body); -webkit-font-smoothing: antialiased; }
+a { color: var(--ochre); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--ochre); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--f-name); font-weight: 700; letter-spacing: .04em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(30px, 4vw, 46px); line-height: 1.1; }
+h2 { font-size: 24px; margin-bottom: 14px; }
+h3 { font-size: 17px; margin-bottom: 8px; color: var(--ochre); }
+p { margin: 0 0 12px; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
+.prose { max-width: 70ch; }
+.eyebrow { font: 600 12px/1 var(--f-sans); letter-spacing: .18em; text-transform: uppercase; color: var(--bone-2); }
+.num { font-variant-numeric: tabular-nums; }
+header.top { padding: 44px 0 18px; border-bottom: 1px solid var(--rule); }
+header.top .meta { margin-top: 10px; color: var(--bone-2); font-size: 15px; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 16px; font: 500 14px var(--f-sans); }
+nav.toc a { color: var(--bone-2); text-decoration: none; }
+nav.toc a:hover { color: var(--ochre); }
+section.block { padding: 36px 0; border-bottom: 1px solid var(--rule); }
+.verdict { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 18px; margin-top: 8px; }
+.verdict > div { border-left: 3px solid var(--clay); padding: 2px 0 2px 14px; }
+.verdict b { display: block; font-family: var(--f-sans); letter-spacing: .06em; text-transform: uppercase; font-size: 13px; color: var(--ochre); margin-bottom: 4px; }
+
+/* ── prototype chrome around the stage ── */
+.proto-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin: 14px 0 12px; font: 500 14px var(--f-sans); }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 999px; overflow: hidden; }
+.seg button { background: transparent; color: var(--bone-2); border: 0; padding: 7px 14px; font: inherit; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--bone); color: var(--kiln); }
+.jumps { display: flex; flex-wrap: wrap; gap: 6px; }
+.jumps button { background: var(--kiln-3); color: var(--bone); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 10px; font: inherit; cursor: pointer; }
+.jumps button:hover { border-color: var(--ochre); }
+.hint { color: var(--bone-2); font-size: 14px; }
+.stage-wrap { position: relative; width: 100%; aspect-ratio: 1440 / 900; overflow: hidden; border-radius: 10px; background: #17505c; box-shadow: 0 20px 60px rgb(0 0 0 / 50%); }
+.stage-tag { position: absolute; bottom: 10px; right: 50%; transform: translateX(50%); z-index: 50; font: 700 11px/1 var(--f-sans); letter-spacing: .2em; padding: 6px 10px; border-radius: 4px; background: rgb(21 16 13 / 80%); color: var(--bone); pointer-events: none; }
+
+/* ── the stage: 1440×900 game screen, scaled ── */
+.stage { position: absolute; left: 0; top: 0; width: 1440px; height: 900px; transform-origin: 0 0; font: 15px/1.35 var(--f-sans); color: var(--g-ink); overflow: hidden; background: #17505c; user-select: none; }
+.world { position: absolute; inset: 0; transition: transform 380ms cubic-bezier(.2,.7,.2,1); }
+.world img.map { position: absolute; inset: 0; width: 1440px; height: 900px; display: block; }
+.hot { position: absolute; border: 0; padding: 0; background: transparent; cursor: pointer; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.hot:hover { background: rgb(255 248 231 / 16%); }
+.hot:focus-visible { outline: none; background: rgb(217 138 53 / 35%); }
+.ring { position: absolute; pointer-events: none; overflow: visible; }
+.ring polygon { fill: rgb(255 248 231 / 14%); stroke: #ffd48a; stroke-width: 3.5; filter: drop-shadow(0 0 6px rgb(255 200 110 / 90%)); animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { stroke-width: 5; } }
+.paint { position: absolute; pointer-events: none; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.realm-name { position: absolute; pointer-events: none; font: 700 28px/1 var(--f-name); letter-spacing: .32em; padding: 6px 6px 6px calc(6px + .32em); border-radius: 6px; background: rgb(36 25 16 / 45%); color: var(--g-ivory); text-shadow: 0 2px 0 rgb(0 0 0 / 55%), 0 0 12px rgb(0 0 0 / 55%); transform: translate(-50%, -50%); white-space: nowrap; }
+
+/* top bar */
+.bar { position: absolute; left: 0; right: 0; top: 0; height: 50px; display: flex; align-items: center; gap: 0; padding-left: 96px; background: rgb(244 230 200 / 94%); box-shadow: 0 1px 0 var(--g-ink-12), 0 6px 18px rgb(10 34 41 / 25%); z-index: 20; }
+.yr { display: flex; align-items: baseline; gap: 6px; padding-right: 18px; }
+.yr b { font: 700 21px/1 var(--f-name); letter-spacing: .04em; }
+.yr span { font-size: 13px; color: var(--g-ink-66); }
+.grp { display: flex; align-items: center; gap: 4px; padding: 0 14px; border-left: 1px solid var(--g-ink-12); height: 34px; }
+.cell { display: flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 6px; cursor: default; position: relative; }
+.cell:hover { background: var(--g-ink-12); }
+.cell img { width: 28px; height: 28px; }
+.cell .v { display: flex; flex-direction: column; line-height: 1; }
+.cell .v b { font: 700 18px/1 var(--f-sans); font-variant-numeric: tabular-nums; }
+.cell .v i { font: 700 12px/1.1 var(--f-sans); font-style: normal; font-variant-numeric: tabular-nums; margin-top: 2px; color: var(--g-ink-66); }
+.up { color: var(--g-pos) !important; }
+.dn { color: var(--g-neg) !important; }
+.mood-meter { width: 46px; height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--g-neg) 0 50%, var(--g-pos) 50% 100%); position: relative; margin-left: 4px; }
+.mood-meter::after { content: ""; position: absolute; top: -4px; left: 34%; width: 3px; height: 14px; background: var(--g-ink); border-radius: 1px; }
+
+/* seal, alarms, rail */
+.seal { position: absolute; left: 12px; top: 6px; width: 72px; height: 72px; border-radius: 50%; border: 3px solid var(--g-ivory); background: #a83226; color: var(--g-ivory); font: 700 36px/1 var(--f-name); display: grid; place-items: center; z-index: 25; cursor: pointer; box-shadow: 0 4px 14px rgb(0 0 0 / 35%), inset 0 0 0 2px rgb(0 0 0 / 20%); }
+.seal:hover { transform: scale(1.04); }
+.alarms { position: absolute; left: 100px; top: 56px; display: flex; gap: 8px; z-index: 18; }
+.alarm { width: 44px; height: 44px; border-radius: 50%; background: var(--g-ivory); display: grid; place-items: center; border: 3px solid var(--g-ink-66); box-shadow: 0 3px 10px rgb(0 0 0 / 30%); cursor: pointer; position: relative; }
+.alarm img { width: 28px; height: 28px; }
+.alarm.hurt { border-color: var(--g-neg); }
+.alarm.help { border-color: var(--g-pos); }
+.rail { position: absolute; left: 18px; top: 96px; display: flex; flex-direction: column; gap: 4px; z-index: 18; }
+.rail button { width: 60px; height: 50px; border: 0; border-radius: 8px; background: rgb(244 230 200 / 92%); display: grid; place-items: center; cursor: pointer; box-shadow: 0 2px 8px rgb(10 34 41 / 30%); position: relative; }
+.rail button img { width: 32px; height: 32px; }
+.rail button:hover, .rail button[aria-pressed="true"] { background: var(--g-ivory); box-shadow: inset 3px 0 0 var(--g-clay), 0 2px 8px rgb(10 34 41 / 30%); }
+.rail .gap { height: 10px; }
+
+/* seats, top right */
+.seats { position: absolute; right: 16px; top: 62px; display: flex; gap: 8px; z-index: 18; align-items: center; }
+.seat { width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--g-ivory); color: var(--g-ivory); font: 700 20px/1 var(--f-name); display: grid; place-items: center; box-shadow: 0 3px 10px rgb(0 0 0 / 30%); cursor: default; position: relative; }
+.seat.now { outline: 3px solid var(--g-ochre); outline-offset: 2px; }
+.seats .lbl { font: 700 11px/1 var(--f-sans); letter-spacing: .14em; text-transform: uppercase; color: var(--g-ivory); text-shadow: 0 1px 2px rgb(0 0 0 / 60%); margin-right: 4px; }
+
+/* dock, bottom right */
+.dock { position: absolute; right: 12px; bottom: 12px; width: 470px; height: 112px; display: grid; grid-template-columns: 1fr 104px; grid-template-rows: 38px 1fr; background: rgb(244 230 200 / 95%); border-radius: 12px; box-shadow: 0 8px 24px rgb(10 34 41 / 35%); z-index: 20; overflow: hidden; }
+.chron { grid-column: 1; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-size: 14px; border-bottom: 1px solid var(--g-ink-12); white-space: nowrap; overflow: hidden; }
+.chron .dot { width: 18px; height: 18px; border-radius: 50%; background: #a83226; color: var(--g-ivory); font: 700 10px/18px var(--f-name); text-align: center; flex: none; }
+.modes { grid-column: 1; display: flex; align-items: stretch; padding: 4px 6px; gap: 2px; }
+.mode { flex: 1; border: 0; background: transparent; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: 600 12px/1 var(--f-sans); color: var(--g-ink-66); cursor: pointer; position: relative; }
+.mode img { width: 30px; height: 30px; }
+.mode kbd { position: absolute; top: 4px; right: 8px; font: 700 10px/1 var(--f-sans); color: var(--g-ink-66); }
+.mode:hover { background: var(--g-ink-12); }
+.mode[aria-pressed="true"] { background: var(--g-ink); color: var(--g-bone); }
+.mode[aria-pressed="true"] kbd { color: var(--g-bone); }
+.mode.plates { flex: .8; border-left: 1px solid var(--g-ink-12); border-radius: 0; }
+.endturn { grid-column: 2; grid-row: 1 / 3; border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; cursor: pointer; border-left: 1px solid var(--g-ink-12); }
+.endturn span.disc { width: 64px; height: 64px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #d9552a, #a3351a); display: grid; place-items: center; box-shadow: 0 3px 0 #7d2811; }
+.endturn span.disc img { width: 38px; height: 38px; filter: brightness(1.6) saturate(.4); }
+.endturn b { font: 700 12px/1 var(--f-sans); letter-spacing: .14em; }
+.legend { position: absolute; right: 12px; bottom: 132px; width: 470px; padding: 10px 14px; background: rgb(36 25 16 / 90%); color: var(--g-bone); border-radius: 10px; font-size: 14px; z-index: 19; display: flex; gap: 10px; align-items: baseline; }
+.legend[hidden] { display: none; }
+.legend b { font: 700 12px/1 var(--f-sans); letter-spacing: .16em; text-transform: uppercase; color: #f3c27d; flex: none; }
+
+/* verb bar, bottom left */
+.verbs { position: absolute; left: 92px; bottom: 12px; height: 84px; display: flex; gap: 2px; padding: 6px 10px; background: rgb(244 230 200 / 95%); border-radius: 14px; box-shadow: 0 8px 24px rgb(10 34 41 / 35%); z-index: 20; }
+.verb { width: 74px; border: 0; background: transparent; border-radius: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; padding-top: 4px; cursor: pointer; font: 700 12px/1 var(--f-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--g-ink); position: relative; }
+.verb .d { width: 50px; height: 50px; border-radius: 50%; background: var(--g-ivory); display: grid; place-items: center; box-shadow: inset 0 0 0 2px #b58a4f, 0 2px 4px rgb(0 0 0 / 20%); }
+.verb .d img { width: 34px; height: 34px; }
+.verb:hover .d, .verb[aria-expanded="true"] .d { box-shadow: inset 0 0 0 3px var(--g-clay), 0 2px 6px rgb(0 0 0 / 25%); }
+.verb .badge { position: absolute; top: 0; right: 10px; min-width: 18px; height: 18px; border-radius: 9px; background: var(--g-ink); color: var(--g-ivory); font: 700 11px/18px var(--f-sans); text-align: center; }
+.verb.target .d { box-shadow: inset 0 0 0 3px var(--g-ochre), 0 2px 6px rgb(0 0 0 / 25%); }
+
+/* fan (verb options) */
+.fan { position: absolute; bottom: 106px; width: 340px; background: var(--g-ivory); border-radius: 12px; box-shadow: 0 14px 34px rgb(10 34 41 / 45%); z-index: 30; overflow: hidden; }
+.fan header { background: var(--g-ink); color: var(--g-bone); padding: 10px 14px; display: flex; justify-content: space-between; align-items: baseline; }
+.fan header b { font: 700 16px/1 var(--f-name); letter-spacing: .06em; }
+.fan header span { font-size: 12px; opacity: .8; }
+.opt { display: grid; grid-template-columns: 32px 1fr auto; gap: 2px 10px; align-items: center; padding: 9px 14px; border-top: 1px solid var(--g-ink-12); cursor: pointer; }
+.opt:first-of-type { border-top: 0; }
+.opt:hover { background: rgb(217 138 53 / 12%); }
+.opt img.i { width: 30px; height: 30px; grid-row: 1 / 3; }
+.opt .n { font-weight: 700; font-size: 15px; }
+.opt .why { grid-column: 2 / 4; font-size: 12.5px; color: var(--g-neg); }
+.opt .why.ok { color: var(--g-pos); }
+.opt.off .n, .opt.off img.i { opacity: .55; }
+.cost { display: inline-flex; gap: 6px; font: 700 13px/1 var(--f-sans); font-variant-numeric: tabular-nums; }
+.cost span { display: inline-flex; align-items: center; gap: 2px; }
+.cost img { width: 18px; height: 18px; }
+.cost .short { color: var(--g-neg); }
+.fan footer { padding: 8px 14px; font-size: 12.5px; color: var(--g-ink-66); background: var(--g-bone); }
+
+/* inspector, bottom left */
+.insp { position: absolute; left: 92px; bottom: 108px; background: var(--g-ivory); border-radius: 12px; box-shadow: 0 14px 34px rgb(10 34 41 / 45%); z-index: 21; overflow: hidden; animation: rise 180ms ease-out; }
+@keyframes rise { from { transform: translateY(12px); opacity: 0; } }
+.insp.l { width: 460px; }
+.insp.m { width: 420px; }
+.insp.s { width: 330px; }
+.ih { display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 14px; background: var(--g-ink); color: var(--g-bone); position: relative; }
+.ih::after { content: ""; position: absolute; left: 0; right: 0; bottom: -5px; height: 5px; background: repeating-linear-gradient(90deg, var(--g-ochre) 0 10px, transparent 10px 12px); opacity: .55; }
+.ih img.k { width: 36px; height: 36px; background: var(--g-bone); border-radius: 8px; padding: 3px; }
+.ih .who { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--g-ivory); display: grid; place-items: center; font: 700 17px/1 var(--f-name); color: var(--g-ivory); flex: none; }
+.ih h3 { font: 700 22px/1 var(--f-name); color: var(--g-ivory); letter-spacing: .06em; margin: 0; }
+.ih p { margin: 4px 0 0; font-size: 13px; color: #d9c9a6; }
+.ih .x { margin-left: auto; width: 34px; height: 34px; border-radius: 8px; border: 0; background: rgb(255 248 231 / 10%); color: var(--g-bone); font: 400 22px/1 var(--f-sans); cursor: pointer; }
+.ih .x:hover { background: rgb(255 248 231 / 22%); }
+.ib { padding: 14px 16px 6px; display: flex; flex-direction: column; gap: 14px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.stat .k, .isec h4 { font: 700 11px/1 var(--f-sans); letter-spacing: .16em; text-transform: uppercase; color: var(--g-ink-66); margin: 0 0 6px; }
+.stat .v { font: 700 20px/1 var(--f-sans); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.stat .v small { font-size: 14px; color: var(--g-ink-66); font-weight: 500; }
+.stat .v img { width: 20px; height: 20px; }
+.bar2 { height: 5px; border-radius: 3px; background: var(--g-ink-12); margin-top: 7px; overflow: hidden; display: flex; }
+.bar2 i { display: block; height: 100%; background: var(--g-ink); }
+.bar2 i.w { background: var(--g-ochre); }
+.slots { display: flex; gap: 8px; flex-wrap: wrap; }
+.slot { width: 74px; height: 70px; border-radius: 8px; background: var(--g-bone); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font: 600 11.5px/1.1 var(--f-sans); text-align: center; position: relative; }
+.slot img { width: 30px; height: 30px; }
+.slot.open { background: transparent; border: 2px dashed rgb(36 25 16 / 35%); color: var(--g-ink-66); cursor: pointer; }
+.slot.open:hover { border-color: var(--g-clay); color: var(--g-clay); }
+.slot.open b { font-size: 22px; line-height: 1; }
+.slot.worked { background: #efe1c2; }
+.pops { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.pop { display: grid; grid-template-columns: 34px 1fr; gap: 0 8px; align-items: center; }
+.pop img { width: 34px; height: 34px; grid-row: 1 / 3; }
+.pop b { font: 700 20px/1 var(--f-sans); font-variant-numeric: tabular-nums; }
+.pop b small { font: 600 12px var(--f-sans); color: var(--g-ink-66); margin-left: 4px; letter-spacing: .04em; }
+.pop span { font-size: 12.5px; color: var(--g-ink-66); }
+.pop .ladder { grid-column: 1 / 3; display: flex; gap: 4px; margin-top: 6px; }
+.pop .ladder button { flex: 1; height: 26px; border-radius: 6px; border: 1px solid var(--g-ink-12); background: var(--g-bone); font: 700 12px/1 var(--f-sans); color: var(--g-ink); cursor: pointer; }
+.pop .ladder button:hover { border-color: var(--g-clay); }
+.blds { font-size: 13.5px; display: flex; flex-direction: column; gap: 4px; }
+.blds div { display: flex; gap: 8px; align-items: center; }
+.blds img { width: 22px; height: 22px; }
+.note { font-size: 13px; color: var(--g-ink-66); }
+.facts { display: flex; flex-direction: column; gap: 8px; font-size: 14.5px; }
+.facts div { display: flex; gap: 8px; align-items: center; }
+.facts img { width: 24px; height: 24px; }
+.ia { display: flex; gap: 8px; padding: 12px 16px 14px; border-top: 1px solid var(--g-ink-12); background: var(--g-bone); flex-wrap: wrap; }
+.act { flex: 1 1 0; min-width: 120px; border: 0; border-radius: 8px; padding: 9px 10px; background: var(--g-ink); color: var(--g-ivory); font: 700 14px/1.1 var(--f-sans); cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; gap: 5px; text-align: left; }
+.act .cost img { width: 16px; height: 16px; }
+.act .cost { color: var(--g-bone); }
+.act.off { background: rgb(36 25 16 / 14%); color: var(--g-ink); cursor: not-allowed; }
+.act.off .cost { color: var(--g-ink); }
+.act .why { font: 600 12px/1.2 var(--f-sans); color: var(--g-neg); }
+.act.go { background: var(--g-clay); }
+
+/* realm window, top left */
+.win { position: absolute; left: 92px; top: 112px; width: 640px; max-height: 560px; background: var(--g-ivory); border-radius: 12px; box-shadow: 0 18px 44px rgb(10 34 41 / 50%); z-index: 24; overflow: hidden; display: flex; flex-direction: column; animation: rise 180ms ease-out; }
+.win .tabs { display: flex; gap: 2px; padding: 8px 12px 0; background: var(--g-bone); border-bottom: 1px solid var(--g-ink-12); }
+.win .tabs button { border: 0; background: transparent; padding: 9px 14px; font: 700 13px/1 var(--f-sans); letter-spacing: .12em; text-transform: uppercase; color: var(--g-ink-66); cursor: pointer; border-radius: 8px 8px 0 0; }
+.win .tabs button[aria-selected="true"] { background: var(--g-ivory); color: var(--g-ink); box-shadow: inset 0 3px 0 var(--g-clay); }
+.wb { padding: 16px 18px 18px; overflow: auto; }
+table.places { width: 100%; border-collapse: collapse; font-size: 14.5px; font-variant-numeric: tabular-nums; }
+table.places th { text-align: left; font: 700 11px/1 var(--f-sans); letter-spacing: .14em; text-transform: uppercase; color: var(--g-ink-66); padding: 0 8px 8px; }
+table.places td { padding: 9px 8px; border-top: 1px solid var(--g-ink-12); }
+table.places tr.row { cursor: pointer; }
+table.places tr.row:hover td { background: rgb(217 138 53 / 12%); }
+table.places td.nm { font: 700 15px/1 var(--f-name); letter-spacing: .04em; display: flex; align-items: center; gap: 8px; }
+table.places td.nm img { width: 22px; height: 22px; }
+.ledger { display: grid; grid-template-columns: 150px 1fr; gap: 10px 14px; font-size: 15px; align-items: center; }
+.ledger dt { font: 700 11px/1 var(--f-sans); letter-spacing: .16em; text-transform: uppercase; color: var(--g-ink-66); }
+.ledger dd { margin: 0; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.ledger dd img { width: 22px; height: 22px; }
+
+/* tooltips */
+.tip { position: absolute; z-index: 60; max-width: 300px; padding: 9px 12px; background: rgb(28 20 14 / 96%); color: var(--g-bone); border-radius: 8px; font: 14px/1.4 var(--f-sans); pointer-events: none; box-shadow: 0 8px 20px rgb(0 0 0 / 40%); }
+.tip b { font-family: var(--f-name); letter-spacing: .05em; color: #f6d9a4; }
+.tip .r { display: flex; justify-content: space-between; gap: 18px; font-variant-numeric: tabular-nums; }
+.toast { position: absolute; left: 50%; top: 70px; transform: translateX(-50%); background: rgb(28 20 14 / 94%); color: var(--g-bone); padding: 9px 16px; border-radius: 8px; font-size: 14px; z-index: 70; pointer-events: none; }
+.today { position: absolute; inset: 0; z-index: 80; display: none; }
+.today img { width: 1440px; height: 900px; display: block; }
+.stage.is-today .today { display: block; }
+
+/* ── document parts ── */
+.qa { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px 36px; align-items: start; }
+.qa + .qa { margin-top: 30px; padding-top: 30px; border-top: 1px dashed var(--rule); }
+.qa .q { font: 700 13px/1.3 var(--f-sans); letter-spacing: .12em; text-transform: uppercase; color: var(--ochre); margin-bottom: 8px; }
+figure { margin: 0; }
+figure svg { width: 100%; height: auto; display: block; background: var(--kiln-2); border-radius: 8px; }
+figcaption { font-size: 14px; color: var(--bone-2); margin-top: 8px; }
+.src { font: 500 13px var(--f-sans); color: var(--bone-2); }
+.shots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.shot { position: relative; border-radius: 8px; overflow: hidden; background: var(--kiln-2); }
+.shot img { width: 100%; display: block; }
+.shot .pin { position: absolute; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; background: var(--clay); color: #fff; font: 700 14px/26px var(--f-sans); text-align: center; box-shadow: 0 0 0 3px rgb(255 255 255 / 85%), 0 3px 8px rgb(0 0 0 / 50%); }
+.shot .cap { position: absolute; left: 8px; bottom: 8px; background: rgb(21 16 13 / 85%); padding: 4px 8px; border-radius: 4px; font: 600 12px var(--f-sans); letter-spacing: .08em; }
+.crops { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.crops div { position: relative; aspect-ratio: 4 / 3; border-radius: 6px; overflow: hidden; }
+.crops img { width: 100%; height: 100%; object-fit: cover; object-position: 28% 38%; transform: scale(1.6); transform-origin: 30% 42%; }
+.crops span { position: absolute; left: 6px; top: 6px; background: rgb(21 16 13 / 85%); padding: 3px 7px; border-radius: 4px; font: 600 12px var(--f-sans); }
+ol.find { padding-left: 0; list-style: none; counter-reset: f; margin: 18px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px 30px; }
+ol.find li { counter-increment: f; position: relative; padding-left: 40px; }
+ol.find li::before { content: counter(f); position: absolute; left: 0; top: 2px; width: 26px; height: 26px; border-radius: 50%; background: var(--clay); color: #fff; font: 700 14px/26px var(--f-sans); text-align: center; }
+ol.find b { color: var(--bone); }
+table.spec { width: 100%; border-collapse: collapse; font-size: 15.5px; }
+table.spec th, table.spec td { text-align: left; vertical-align: top; padding: 10px 12px; border-top: 1px solid var(--rule); }
+table.spec th { font: 700 12px/1.2 var(--f-sans); letter-spacing: .12em; text-transform: uppercase; color: var(--bone-2); border-top: 0; }
+table.spec td:first-child { font-family: var(--f-name); font-weight: 700; color: var(--ochre); white-space: nowrap; }
+.scroll { overflow-x: auto; }
+ul.rules { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.decisions { display: grid; gap: 14px; }
+.dec { display: grid; grid-template-columns: 54px 1fr; gap: 4px 16px; padding: 14px 16px; background: var(--kiln-2); border-radius: 8px; border-left: 3px solid var(--ochre); }
+.dec .id { font: 700 20px/1 var(--f-name); color: var(--ochre); grid-row: 1 / 4; }
+.dec .ask { font-weight: 700; }
+.dec .rec { font-size: 15px; }
+.dec .rec b { color: var(--pos); font-family: var(--f-sans); letter-spacing: .06em; text-transform: uppercase; font-size: 12.5px; }
+.dec .alt { font-size: 15px; color: var(--bone-2); }
+ol.slices { margin: 0; padding-left: 22px; display: grid; gap: 10px; }
+ol.slices b { color: var(--ochre); }
+.keep { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.keep span { border: 1px solid var(--rule); border-radius: 999px; padding: 5px 12px; font: 500 14px var(--f-sans); }
+footer.end { padding: 30px 0 60px; color: var(--bone-2); font-size: 14px; }
+@media (max-width: 860px) {
+  .qa, .shots { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .world, .insp, .win { transition: none; animation: none; }
+  .ring polygon { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="eyebrow">Hegemony · shell research · 3 November 2026</div>
+    <h1>Hegemony UI Overhaul</h1>
+    <p class="meta">A read of Imperator: Rome's screen from about 215 screenshots (15 official, 20 from four DLC store pages, 180 from players), set against our late-game board at 1440×900, with a working prototype of the proposal.</p>
+    <nav class="toc" aria-label="Sections">
+      <a href="#prototype">Prototype</a>
+      <a href="#imperator">What Imperator does</a>
+      <a href="#today">What ours does</a>
+      <a href="#spec">The overhaul</a>
+      <a href="#decisions">Your decisions</a>
+      <a href="#build">Build order</a>
+      <a href="#sources">Sources</a>
+    </nav>
+  </div>
+</header>
+
+<section class="block" id="verdict">
+  <div class="wrap">
+    <h2>Short version</h2>
+    <div class="verdict">
+      <div><b>Imperator's bottom-left</b>The settlement panel appears only while a province is selected and sizes itself to it: a large two-part panel for your own province, a small card for anyone else's. With nothing selected the corner is empty map.</div>
+      <div><b>Ours</b>Our bottom-left panel never leaves and holds five jobs at once: the verbs, the realm header, three realm ledgers, an overview that repeats the top bar, and the selection. Each one gets too little room.</div>
+      <div><b>The proposal</b>Split those jobs up the way Imperator does. Verbs go in a permanent bar along the bottom. The selection gets an inspector that comes and goes. The realm ledgers become a window opened from the seal and a left rail.</div>
+      <div><b>What it costs</b>The shell's layout and the panel components change. The engine, the map and the alarms stay as they are. Six slices, each shippable alone.</div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="prototype">
+  <div class="wrap">
+    <h2>Prototype</h2>
+    <p class="prose">This is our real board (the late-game dev scene, Kyros to play), with the proposed shell over it. Click tiles, the sea, the seal, the left rail, the verbs and the map modes. Esc closes the top-most thing. Switch to <b>Today</b> to see the same state in the current build.</p>
+    <div class="proto-bar">
+      <div class="seg" role="group" aria-label="Which shell">
+        <button type="button" id="btn-prop" aria-pressed="true">Proposal</button>
+        <button type="button" id="btn-today" aria-pressed="false">Today</button>
+      </div>
+      <div class="jumps" role="group" aria-label="Jump to a state">
+        <button type="button" data-jump="none">Nothing selected</button>
+        <button type="button" data-jump="-5,0">Rhodos (yours)</button>
+        <button type="button" data-jump="-5,6">Korone (Nikos)</button>
+        <button type="button" data-jump="-6,6">Open forest</button>
+        <button type="button" data-jump="win">Realm window</button>
+      </div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="stage-wrap" id="stage-wrap">
+      <div class="stage-tag" id="stage-tag">PROPOSAL</div>
+      <div class="stage" id="stage">
+        <div class="world" id="world">
+          <img class="map" id="map" src="img/map-terrain.jpg" alt="The late-game island seen from the opening view">
+          <div id="paint"></div>
+          <div id="hots"></div>
+          <svg class="ring" id="ring" width="0" height="0" aria-hidden="true"><polygon points=""/></svg>
+        </div>
+
+        <div class="bar" id="bar">
+          <div class="yr"><b>Year XII</b><span>of XIV · 2 left</span></div>
+          <div class="grp">
+            <div class="cell" data-tip="wood"><img src="icons/resources/wood.svg" alt=""><div class="v"><b>1</b><i class="up">+1</i></div></div>
+            <div class="cell" data-tip="stone"><img src="icons/resources/stone.svg" alt=""><div class="v"><b>1</b><i class="up">+1</i></div></div>
+            <div class="cell" data-tip="food"><img src="icons/resources/food.svg" alt=""><div class="v"><b>0</b><i>±0</i></div></div>
+            <div class="cell" data-tip="gold"><img src="icons/resources/gold.svg" alt=""><div class="v"><b>2</b><i class="up">+1</i></div></div>
+          </div>
+          <div class="grp">
+            <div class="cell" data-tip="influence"><img src="icons/resources/influence.svg" alt=""><div class="v"><b>9</b><i class="up">+6</i></div></div>
+          </div>
+          <div class="grp">
+            <div class="cell" data-tip="citizens"><img src="icons/pops/citizens.svg" alt=""><div class="v"><b>3</b><i>citizens</i></div></div>
+            <div class="cell" data-tip="freemen"><img src="icons/pops/freemen.svg" alt=""><div class="v"><b>1</b><i>freemen</i></div></div>
+            <div class="cell" data-tip="slaves"><img src="icons/pops/slaves.svg" alt=""><div class="v"><b>6</b><i>slaves</i></div></div>
+            <div class="cell" data-tip="room"><img src="icons/pops/capacity.svg" alt=""><div class="v"><b>10<small style="font-size:13px;color:var(--g-ink-66)">/28</small></b><i>room</i></div></div>
+          </div>
+          <div class="grp">
+            <div class="cell" data-tip="mood"><img src="icons/resources/unhappiness.svg" alt=""><div class="v"><b class="dn">−2</b><i>discontent</i></div><span class="mood-meter" aria-hidden="true"></span></div>
+          </div>
+        </div>
+
+        <button class="seal" id="seal" type="button" aria-label="Realm of Kyros: open the realm window" data-tip="seal">Κ</button>
+        <div class="alarms" aria-label="Alarms">
+          <div class="alarm hurt" data-tip="a-unrest"><img src="icons/unrest/discontent.svg" alt="Discontent"></div>
+          <div class="alarm" data-tip="a-year"><img src="icons/events/year.svg" alt="Year card"></div>
+          <div class="alarm help" data-tip="a-port"><img src="icons/resources/luxury.svg" alt="Port claim"></div>
+        </div>
+        <nav class="rail" id="rail" aria-label="Windows">
+          <button type="button" data-win="overview" data-tip="r-realm"><img src="icons/chrome/dossier.svg" alt="Realm"></button>
+          <button type="button" data-win="cities" data-tip="r-cities"><img src="icons/settlements/city.svg" alt="Cities"></button>
+          <button type="button" data-win="people" data-tip="r-people"><img src="icons/pops/crowd.svg" alt="People"></button>
+          <div class="gap"></div>
+          <button type="button" data-win="ideas" data-tip="r-ideas"><img src="icons/assembly/national-idea.svg" alt="Ideas"></button>
+          <button type="button" data-win="agora" data-tip="r-agora"><img src="icons/assembly/agora.svg" alt="Agora"></button>
+          <button type="button" data-win="victory" data-tip="r-victory"><img src="icons/chrome/tab-victory.svg" alt="Victory"></button>
+          <div class="gap"></div>
+          <button type="button" data-win="codex" data-tip="r-codex"><img src="icons/chrome/codex.svg" alt="Codex"></button>
+          <button type="button" data-win="costs" data-tip="r-costs"><img src="icons/market/treasury.svg" alt="Costs"></button>
+        </nav>
+
+        <div class="seats" aria-label="Seats">
+          <span class="lbl">Table</span>
+          <div class="seat" style="background:#2f5d9e" data-tip="s-Damon">Δ</div>
+          <div class="seat" style="background:#2b2420" data-tip="s-Nikos">Ν</div>
+          <div class="seat" style="background:#7c4d79" data-tip="s-Theron">Θ</div>
+          <div class="seat now" style="background:#a83226" data-tip="s-Kyros">Κ</div>
+        </div>
+
+        <div class="legend" id="legend" hidden></div>
+        <div class="dock">
+          <div class="chron"><span class="dot">Κ</span>Kyros resolved Patronage: +2 influence.<span style="margin-left:auto;color:var(--g-ink-66)">▲</span></div>
+          <div class="modes" role="group" aria-label="Map mode">
+            <button class="mode" type="button" data-mode="terrain" aria-pressed="true"><kbd>1</kbd><img src="icons/terrain/plains.svg" alt="">Terrain</button>
+            <button class="mode" type="button" data-mode="political" aria-pressed="false"><kbd>2</kbd><img src="icons/settlements/city.svg" alt="">Political</button>
+            <button class="mode" type="button" data-mode="economy" aria-pressed="false"><kbd>3</kbd><img src="icons/market/income.svg" alt="">Economy</button>
+            <button class="mode" type="button" data-mode="trade" aria-pressed="false"><kbd>4</kbd><img src="icons/market/handshake.svg" alt="">Trade</button>
+            <button class="mode plates" type="button" data-tip="plates"><img src="icons/settlements/slot.svg" alt="">Plates</button>
+          </div>
+          <button class="endturn" type="button" data-tip="endturn"><span class="disc"><img src="icons/events/end-turn.svg" alt=""></span><b>END TURN</b></button>
+        </div>
+
+        <div class="verbs" id="verbs" role="group" aria-label="Verbs"></div>
+        <div id="fan"></div>
+        <div id="insp"></div>
+        <div id="win"></div>
+        <div id="tip" class="tip" hidden></div>
+        <div id="toast" class="toast" hidden></div>
+        <div class="today"><img id="today-img" src="img/today-default.jpg" alt="The current build in the same state"></div>
+      </div>
+    </div>
+    <p class="hint" style="margin-top:10px">The picture under the prototype is a still of the 3D map, so the camera does not zoom here. A pick that would land under the inspector slides the board aside, as the real camera would. In Political the prototype draws the proposed flat realm colours over today's map.</p>
+  </div>
+</section>
+
+<section class="block" id="imperator">
+  <div class="wrap">
+    <h2>What Imperator: Rome does</h2>
+    <p class="prose">The figures below are my schematics of Imperator 2.0's screen, drawn from the screenshots listed under Sources. They show placement and proportion, not its art.</p>
+
+    <div class="qa">
+      <div>
+        <div class="q">Where does everything go?</div>
+        <p>Imperator 2.0 keeps the centre of the screen for the map. Every edge and corner has one job.</p>
+        <ul class="rules">
+          <li><b>Top bar:</b> the realm's numbers, left to right, with the date, game speed and menu at its right end.</li>
+          <li><b>Top-left:</b> the realm's emblem. A vertical strip of icon buttons runs down the left edge, one per realm window (economy, military, characters, technology, religion and so on). Alerts hang from the bar beside the emblem as pennants, in two colours, and a click acts on them.</li>
+          <li><b>Realm windows</b> (Technology, Military, a character, Diplomacy, Nation Overview) all open at the same place, top-left beside the strip, one at a time.</li>
+          <li><b>Bottom-left:</b> the selected province. It is the subject of the next question.</li>
+          <li><b>Top-right:</b> the Outliner, a dark list of what needs you (armies, navies, battles, sieges, disloyal characters and provinces, wars, great wonders). A section appears only when it has entries. "Queued Events" sits under it.</li>
+          <li><b>Bottom-right:</b> map modes and a minimap.</li>
+          <li><b>Bottom-centre:</b> transient results, such as a battle report.</li>
+          <li><b>At the cursor:</b> the map's tooltip, e.g. "City of Lavinium in Latium… Terrain: Farmland".</li>
+        </ul>
+      </div>
+      <figure>
+        <svg viewBox="0 0 800 450" role="img" aria-label="Schematic of Imperator: Rome's screen zones">
+          <defs><pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="10" stroke="#2e3d3a" stroke-width="4"/></pattern></defs>
+          <rect x="0" y="0" width="800" height="450" fill="url(#hatch)"/>
+          <text x="400" y="235" fill="#7d9a92" font-family="Alegreya Sans" font-size="15" text-anchor="middle">map</text>
+          <rect x="0" y="0" width="800" height="18" fill="#efe3c8"/>
+          <g fill="#7a6a52"><rect x="62" y="5" width="56" height="8" rx="2"/><rect x="128" y="5" width="56" height="8" rx="2"/><rect x="200" y="5" width="56" height="8" rx="2"/><rect x="266" y="5" width="56" height="8" rx="2"/><rect x="336" y="5" width="56" height="8" rx="2"/><rect x="402" y="5" width="56" height="8" rx="2"/></g>
+          <rect x="620" y="4" width="120" height="10" rx="2" fill="#2c6f7a"/>
+          <text x="680" y="12.5" fill="#efe3c8" font-family="Alegreya Sans" font-size="8" text-anchor="middle">date · speed</text>
+          <rect x="0" y="0" width="52" height="52" fill="#b33a2a"/>
+          <text x="26" y="31" fill="#fff" font-family="Alegreya Sans" font-size="9" text-anchor="middle">emblem</text>
+          <g fill="#d8822e"><path d="M60 18h14v26l-7-5-7 5z"/><path d="M78 18h14v26l-7-5-7 5z"/><path d="M96 18h14v26l-7-5-7 5z"/></g>
+          <g fill="#6f8f3a"><path d="M114 18h14v26l-7-5-7 5z"/><path d="M132 18h14v26l-7-5-7 5z"/></g>
+          <text x="150" y="40" fill="#efe3c8" font-family="Alegreya Sans" font-size="10">alert pennants</text>
+          <rect x="0" y="72" width="22" height="300" fill="#8f2a20"/>
+          <text x="11" y="225" fill="#fff" font-family="Alegreya Sans" font-size="9" text-anchor="middle" transform="rotate(-90 11 225)">window strip</text>
+          <rect x="26" y="56" width="300" height="300" fill="none" stroke="#efe3c8" stroke-dasharray="6 5" stroke-width="1.5"/>
+          <text x="40" y="80" fill="#efe3c8" font-family="Alegreya Sans" font-size="12">realm windows open here, one at a time</text>
+          <rect x="26" y="218" width="302" height="230" fill="#efe3c8"/>
+          <rect x="26" y="218" width="302" height="16" fill="#b33a2a"/>
+          <text x="177" y="230" fill="#fff" font-family="Alegreya Sans" font-size="10" text-anchor="middle">PROVINCE OF …</text>
+          <text x="177" y="330" fill="#3a2c20" font-family="Alegreya Sans" font-size="13" text-anchor="middle">selected province</text>
+          <text x="177" y="348" fill="#3a2c20" font-family="Alegreya Sans" font-size="11" text-anchor="middle">only while something is selected</text>
+          <rect x="690" y="22" width="108" height="228" fill="#1b1612"/>
+          <rect x="690" y="22" width="108" height="14" fill="#b33a2a"/>
+          <text x="744" y="32.5" fill="#fff" font-family="Alegreya Sans" font-size="9" text-anchor="middle">OUTLINER</text>
+          <text x="744" y="130" fill="#d8ccb0" font-family="Alegreya Sans" font-size="10" text-anchor="middle">what needs you</text>
+          <rect x="690" y="256" width="108" height="60" fill="#1b1612"/>
+          <text x="744" y="290" fill="#d8ccb0" font-family="Alegreya Sans" font-size="9" text-anchor="middle">queued events</text>
+          <rect x="652" y="338" width="146" height="110" fill="#efe3c8"/>
+          <rect x="652" y="338" width="146" height="12" fill="#b33a2a"/>
+          <g fill="#2c6f7a"><rect x="656" y="354" width="12" height="12"/><rect x="670" y="354" width="12" height="12"/><rect x="684" y="354" width="12" height="12" fill="#e2b04a"/><rect x="698" y="354" width="12" height="12"/><rect x="712" y="354" width="12" height="12"/><rect x="726" y="354" width="12" height="12"/><rect x="740" y="354" width="12" height="12"/><rect x="754" y="354" width="12" height="12"/><rect x="768" y="354" width="12" height="12"/><rect x="782" y="354" width="12" height="12"/><rect x="656" y="368" width="12" height="12"/><rect x="670" y="368" width="12" height="12"/><rect x="684" y="368" width="12" height="12"/><rect x="698" y="368" width="12" height="12"/></g>
+          <rect x="656" y="384" width="138" height="60" fill="#c9dcd6"/>
+          <text x="725" y="418" fill="#2c4c50" font-family="Alegreya Sans" font-size="10" text-anchor="middle">map modes + minimap</text>
+          <rect x="340" y="330" width="200" height="118" fill="none" stroke="#efe3c8" stroke-dasharray="6 5" stroke-width="1.5"/>
+          <text x="440" y="392" fill="#efe3c8" font-family="Alegreya Sans" font-size="11" text-anchor="middle">battle results (transient)</text>
+        </svg>
+        <figcaption>Imperator 2.0 at 16:9. The dashed areas are filled only by transient things.</figcaption>
+      </figure>
+    </div>
+
+    <div class="qa">
+      <div>
+        <div class="q">Is there a dedicated bottom-left area for settlements? What does it show with nothing selected?</div>
+        <p>Yes. A click on a province opens the province panel docked to the bottom-left. With nothing selected nothing is there, and the map runs into the corner. The panel has no idle or summary state.</p>
+        <p>Its size follows what is selected. Your own province gets a two-part panel of about 600×460 px on a 1600×900 screen, more than a third of the width and half the height. Someone else's or unclaimed land gets a narrow card with an image and four numbers.</p>
+        <p>The large panel, top to bottom:</p>
+        <ul class="rules">
+          <li>A title bar with the province's name, the owner's emblem, collapse and close.</li>
+          <li>The province block: governor portrait, three status dials, food and loyalty bars, trade goods, income and imports.</li>
+          <li>The settlement block, under its own title bar: a picture of the place, then a summary grid of icon and value pairs, a building count, the holder's portrait, and a row of pop portraits with counts and a "View Pops Info" button.</li>
+        </ul>
+        <p>A realm window opened while a province is selected lies over the panel, and the panel is still there when the window closes.</p>
+      </div>
+      <figure>
+        <svg viewBox="0 0 800 470" role="img" aria-label="Schematic of Imperator's province panel and its small variant">
+          <rect x="0" y="0" width="800" height="470" fill="#1e1713"/>
+          <g font-family="Alegreya Sans" font-size="12" fill="#3a2c20">
+            <rect x="20" y="20" width="480" height="430" fill="#efe3c8" rx="4"/>
+            <rect x="20" y="20" width="480" height="28" fill="#b33a2a"/>
+            <text x="58" y="39" fill="#fff" font-size="13" letter-spacing="1">PROVINCE OF TUSCIA</text>
+            <circle cx="38" cy="34" r="10" fill="#e2b04a"/>
+            <text x="470" y="39" fill="#fff">⌄ ✕</text>
+            <rect x="32" y="60" width="58" height="76" fill="#b5a68a"/><text x="61" y="102" text-anchor="middle" font-size="10">governor</text>
+            <circle cx="114" cy="74" r="12" fill="none" stroke="#b33a2a" stroke-width="3"/><circle cx="114" cy="102" r="12" fill="none" stroke="#2c6f7a" stroke-width="3"/><circle cx="114" cy="130" r="12" fill="none" stroke="#e2b04a" stroke-width="3"/>
+            <rect x="140" y="66" width="120" height="6" fill="#4b7a35"/><text x="140" y="62" font-size="10">food 1000/1000</text>
+            <rect x="140" y="96" width="120" height="6" fill="#4b7a35"/><text x="140" y="92" font-size="10">loyalty 100/100</text>
+            <g fill="#d9ccb0"><rect x="280" y="60" width="28" height="28"/><rect x="312" y="60" width="28" height="28"/><rect x="344" y="60" width="28" height="28"/><rect x="376" y="60" width="28" height="28"/><rect x="408" y="60" width="28" height="28"/><rect x="440" y="60" width="28" height="28"/><rect x="280" y="92" width="28" height="28"/><rect x="312" y="92" width="28" height="28"/><rect x="344" y="92" width="28" height="28"/><rect x="376" y="92" width="28" height="28"/></g>
+            <text x="280" y="136" font-size="10">trade goods · income +3.69 · imports 3 of 3</text>
+            <rect x="20" y="150" width="480" height="20" fill="#3a2c20"/>
+            <text x="32" y="164" fill="#efe3c8" font-size="11" letter-spacing="1">SETTLEMENT OF VISENTIUM IN TUSCIA</text>
+            <rect x="20" y="170" width="480" height="62" fill="#9fb0a6"/><text x="260" y="206" text-anchor="middle" fill="#24353a">picture of the place</text>
+            <rect x="20" y="232" width="480" height="5" fill="#4b7a35"/>
+            <rect x="20" y="242" width="200" height="16" fill="#3a2c20"/><text x="28" y="254" fill="#efe3c8" font-size="10" letter-spacing="1">SUMMARY</text>
+            <g font-size="11"><text x="30" y="280">▣ 5.00</text><text x="120" y="280">▣ 0.08</text><text x="30" y="306">▣ 0.00</text><text x="120" y="306">▣ −0.00</text><text x="30" y="340">culture · religion</text><text x="30" y="370">▣ +3%</text><text x="120" y="370">▣ 0.00</text></g>
+            <text x="232" y="256" font-size="11">buildings 5/20</text>
+            <rect x="232" y="270" width="54" height="80" fill="#b5a68a"/><text x="259" y="364" text-anchor="middle" font-size="10">holder</text>
+            <g fill="#c9bb9d"><rect x="298" y="274" width="34" height="58"/><rect x="336" y="274" width="34" height="58"/><rect x="374" y="274" width="34" height="58"/><rect x="412" y="274" width="34" height="58"/><rect x="450" y="274" width="34" height="58"/></g>
+            <text x="391" y="350" text-anchor="middle" font-size="11">0 · 0 · 1 · 0 · 4 pops by class</text>
+            <rect x="320" y="408" width="160" height="22" fill="#2c6f7a"/><text x="400" y="423" fill="#fff" text-anchor="middle" font-size="11">View Pops Info</text>
+          </g>
+          <g font-family="Alegreya Sans" font-size="11" fill="#3a2c20">
+            <rect x="560" y="230" width="110" height="220" fill="#efe3c8" rx="4"/>
+            <rect x="560" y="230" width="110" height="22" fill="#b33a2a"/>
+            <text x="572" y="245" fill="#fff" letter-spacing="1">CARPATHIA</text>
+            <rect x="560" y="252" width="110" height="50" fill="#9fb0a6"/>
+            <text x="572" y="330">⚔ 10</text><text x="572" y="360">▣ 0</text><text x="572" y="390">▣ 0.66</text><text x="572" y="420">▣ 10.50</text>
+          </g>
+          <text x="560" y="214" fill="#c8b894" font-family="Alegreya Sans" font-size="13">foreign or unclaimed land</text>
+          <text x="560" y="40" fill="#c8b894" font-family="Alegreya Sans" font-size="13">your own province ←</text>
+        </svg>
+        <figcaption>Left: your own province (after a player's 2.0 screenshot of Tuscia). Right: the narrow card for land that is not yours (Carpathia, barbarian land).</figcaption>
+      </figure>
+    </div>
+
+    <div class="qa">
+      <div>
+        <div class="q">How are resources shown?</div>
+        <p>A thin bar runs across the top. Each resource is an icon, its stock in large figures, and its monthly change underneath in small figures, green when it grows and red when it shrinks. Hairlines split the resources into groups: treasury and manpower first, then the realm's other measures. Nothing is labelled in words. The icon, the hover tooltip and its itemised breakdown of the change explain each number. Tooltips nest: a term inside a tooltip opens its own.</p>
+        <p>Our top bar already follows this pattern: icon, stock and change. Two things are missing. The change is set beside the stock instead of under it, and the tooltip does not itemise where the change comes from.</p>
+      </div>
+      <figure>
+        <svg viewBox="0 0 800 150" role="img" aria-label="Schematic of a top-bar resource cell">
+          <rect width="800" height="150" fill="#1e1713"/>
+          <rect x="20" y="30" width="760" height="64" fill="#efe3c8" rx="4"/>
+          <g font-family="Alegreya Sans">
+            <rect x="40" y="44" width="36" height="36" rx="6" fill="#c9a24a"/><text x="88" y="64" font-size="24" font-weight="700" fill="#2a1f16">415</text><text x="88" y="84" font-size="14" font-weight="700" fill="#4b7a35">+4.13</text>
+            <rect x="170" y="44" width="36" height="36" rx="6" fill="#a68a6a"/><text x="218" y="64" font-size="24" font-weight="700" fill="#2a1f16">2,519</text><text x="218" y="84" font-size="14" font-weight="700" fill="#4b7a35">+23</text>
+            <line x1="310" y1="40" x2="310" y2="84" stroke="#b5a68a"/>
+            <rect x="330" y="44" width="36" height="36" rx="6" fill="#6f8f3a"/><text x="378" y="64" font-size="24" font-weight="700" fill="#2a1f16">34.48</text><text x="378" y="84" font-size="14" font-weight="700" fill="#4b7a35">+0.35</text>
+            <rect x="480" y="44" width="36" height="36" rx="6" fill="#8a6a50"/><text x="528" y="64" font-size="24" font-weight="700" fill="#2a1f16">0.00</text><text x="528" y="84" font-size="14" font-weight="700" fill="#b33a2a">−0.42</text>
+            <text x="20" y="20" font-size="13" fill="#c8b894">icon · stock · change per month (green grows, red shrinks) · hairline between groups</text>
+            <text x="20" y="122" font-size="13" fill="#c8b894">hover: the change, itemised by source; terms inside open their own tooltip</text>
+          </g>
+        </svg>
+        <figcaption>Figures from a player's 2.0 screenshot.</figcaption>
+      </figure>
+    </div>
+
+    <div class="qa">
+      <div>
+        <div class="q">How are map modes shown?</div>
+        <p>A titled "Map Modes" panel sits in the bottom-right corner: two rows of ten square icon buttons, the active one lit gold, and four small round buttons in its header. A minimap with the camera's frame sits under the buttons, and the panel can collapse to its title.</p>
+        <p>Every mode changes the whole picture, so you can tell modes apart at a glance. In the political mode, land is flat colour by realm, borders are bold, and each realm's name is set large across its own land. Terrain mode is the bare map. A mode can add its own strip of information, such as one player's screenshot with a row of realm flags and values along the bottom.</p>
+        <p>The only words are the panel's title. Each icon names its mode in a tooltip.</p>
+      </div>
+      <figure>
+        <svg viewBox="0 0 800 250" role="img" aria-label="Schematic of the map modes panel">
+          <rect width="800" height="250" fill="#1e1713"/>
+          <g transform="translate(40 20)">
+            <rect width="420" height="212" fill="#efe3c8" rx="4"/>
+            <rect width="420" height="26" fill="#b33a2a"/>
+            <text x="12" y="18" fill="#fff" font-family="Alegreya Sans" font-size="13" letter-spacing="1">MAP MODES</text>
+            <g fill="none" stroke="#fff" stroke-width="1.5"><circle cx="330" cy="13" r="8"/><circle cx="352" cy="13" r="8"/><circle cx="374" cy="13" r="8"/><circle cx="396" cy="13" r="8"/></g>
+            <g fill="#2c6f7a">
+              <rect x="10" y="34" width="36" height="30"/><rect x="50" y="34" width="36" height="30"/><rect x="90" y="34" width="36" height="30" fill="#e2b04a"/><rect x="130" y="34" width="36" height="30"/><rect x="170" y="34" width="36" height="30"/><rect x="210" y="34" width="36" height="30"/><rect x="250" y="34" width="36" height="30"/><rect x="290" y="34" width="36" height="30"/><rect x="330" y="34" width="36" height="30"/><rect x="370" y="34" width="36" height="30"/>
+              <rect x="10" y="68" width="36" height="30"/><rect x="50" y="68" width="36" height="30"/><rect x="90" y="68" width="36" height="30"/><rect x="130" y="68" width="36" height="30"/><rect x="170" y="68" width="36" height="30"/><rect x="210" y="68" width="36" height="30"/><rect x="250" y="68" width="36" height="30"/><rect x="290" y="68" width="36" height="30"/><rect x="330" y="68" width="36" height="30"/><rect x="370" y="68" width="36" height="30"/>
+            </g>
+            <rect x="10" y="106" width="400" height="98" fill="#c9dcd6"/>
+            <rect x="120" y="128" width="90" height="46" fill="none" stroke="#24353a" stroke-width="1.5"/>
+            <text x="300" y="160" fill="#2c4c50" font-family="Alegreya Sans" font-size="13" text-anchor="middle">minimap, camera frame</text>
+          </g>
+          <g font-family="Alegreya Sans" font-size="13" fill="#c8b894">
+            <text x="480" y="44">header: four utility buttons</text>
+            <text x="480" y="74">2 × 10 icon buttons, active one gold</text>
+            <text x="480" y="100">tooltip names each mode</text>
+            <text x="480" y="170">minimap of the whole world</text>
+          </g>
+        </svg>
+        <figcaption>Bottom-right corner, 2.0. In 1.x the same corner held the same pieces with a different frame.</figcaption>
+      </figure>
+    </div>
+
+    <div class="qa">
+      <div>
+        <div class="q">What is the philosophy?</div>
+        <p>Paradox rebuilt the interface for the free 2.0 "Marius" update (February 2021). Game director Peter Nicholson described the new look as bolder and cleaner: fewer decorative corners and borders taking up screen space, decoration kept for drawing attention, signalling importance or adding immersion, and airier windows with room for art. The update also brought Crusader Kings III's nested tooltips.</p>
+        <p>The screenshots add four habits:</p>
+        <ul class="rules">
+          <li>The map owns the centre.</li>
+          <li>Each corner has one job.</li>
+          <li>A panel appears for a reason and leaves when the reason is gone.</li>
+          <li>Every window shares one frame: a coloured title bar with a Greek key band, a close button, section headers in the same band, and flat content on parchment.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="q">What we take, and what we leave</div>
+        <p><b>Take:</b> the corner jobs, a selection panel that appears and resizes with the pick, realm windows opened from a left rail, the bar's stock-over-change cells, map modes that change the picture, nested tooltips, and one frame for every panel.</p>
+        <p><b>Leave:</b> the Outliner's long lists, since we have four seats and a dozen settlements, not hundreds of armies. Also leave the minimap, since one island fits the opening view and the compass already brings it back. Leave the red-and-white Roman colouring and the portraits too: our frame stays ink, bone and ivory, with the bronze icons.</p>
+        <p><b>Already done:</b> our alarms hang from the bar the way Imperator's alerts do, and End turn has its corner.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="today">
+  <div class="wrap">
+    <h2>What ours does today</h2>
+    <p class="prose">Main at c09175c, late-game dev scene, 1440×900. The numbers on the screenshots match the list below.</p>
+    <div class="shots">
+      <div class="shot"><img src="img/today-default.jpg" alt="Today: nothing selected"><span class="cap">NOTHING SELECTED</span>
+        <span class="pin" style="left:24%;top:82%">1</span><span class="pin" style="left:10.4%;top:71.9%">2</span><span class="pin" style="left:4%;top:76.7%">3</span><span class="pin" style="left:19%;top:94.1%">4</span><span class="pin" style="left:21.6%;top:60.6%">5</span><span class="pin" style="left:84%;top:94.4%">9</span></div>
+      <div class="shot"><img src="img/today-city.jpg" alt="Today: Rhodos selected"><span class="cap">RHODOS SELECTED</span>
+        <span class="pin" style="left:31.2%;top:41%">6</span></div>
+      <div class="shot"><img src="img/today-rival.jpg" alt="Today: Korone selected"><span class="cap">KORONE (NIKOS) SELECTED</span>
+        <span class="pin" style="left:6%;top:67.4%">2</span></div>
+      <div class="shot"><img src="img/today-land.jpg" alt="Today: open forest selected"><span class="cap">OPEN FOREST SELECTED</span>
+        <span class="pin" style="left:5%;top:92.8%">7</span></div>
+    </div>
+    <ol class="find">
+      <li><b>It never leaves.</b> The panel is 496×368 px, 14% of the screen, in every state, including when nothing is selected. Its size never follows its content.</li>
+      <li><b>Two jobs share one tab strip.</b> Cities, Ladder and Build are realm ledgers, and the fourth tab is whatever the map last picked. A click on the map flips the page, and "Realm of Kyros" stays on top while you read Nikos's Korone.</li>
+      <li><b>The overview repeats the top bar.</b> Net per turn, People and Mood are three of its seven rows, and all three already sit in the bar.</li>
+      <li><b>Text overprints.</b> The Places row prints six names over each other, and Build's "Raise in" row does the same.</li>
+      <li><b>The arc costs room.</b> Six discs with boxed labels ride the curved edge. The curve cuts the right side of every page, and the top third of the panel holds discs, not information.</li>
+      <li><b>A pick barely shows on the map.</b> Picking Rhodos adds its building icons on stems. Nothing outlines the tile.</li>
+      <li><b>Dead ends.</b> "Not enough resources." sits under Found a colony without saying the realm is 3 wood and 1 food short.</li>
+      <li><b>Political looks like Terrain.</b> At the opening zoom the overview already paints owned tiles, so Political changes only the capitals' labels (below).</li>
+      <li><b>Map modes say little.</b> Four buttons with small labels. A mode's description is in the code but goes only to screen readers, and the tooltip says "Economy (3)".</li>
+    </ol>
+    <div class="crops" style="max-width:640px">
+      <div><img src="img/map-terrain.jpg" alt="Terrain mode near Rhodos"><span>Terrain</span></div>
+      <div><img src="img/map-political.jpg" alt="Political mode near Rhodos"><span>Political</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="spec">
+  <div class="wrap">
+    <h2>The overhaul</h2>
+    <h3>One job per edge</h3>
+    <div class="scroll">
+      <table class="spec">
+        <thead><tr><th>Zone</th><th>Holds</th><th>Behaviour</th><th>Comes from</th></tr></thead>
+        <tbody>
+          <tr><td>Top bar</td><td>Year, the five resources, the three pop classes and room, mood</td><td>Stock over change (green helps, red hurts). Hover itemises the change by settlement. No buttons.</td><td>Today's bar, minus the consult icons</td></tr>
+          <tr><td>Seal and alarms</td><td>The seat's seal, top-left, with the alarms hanging beside it</td><td>The seal opens the realm window. Alarms work as today.</td><td>Today's alarms, moved next to the seal</td></tr>
+          <tr><td>Left rail</td><td>Realm, Cities, People · Ideas, Agora, Victory · Codex, Costs</td><td>One window at a time, opened beside the rail. Esc or × closes it. It lies over the inspector.</td><td>Realm panel tabs and today's consult strip</td></tr>
+          <tr><td>Top-right</td><td>The table: four seat discs, the toasts lane under them</td><td>Icons only, with a hover tooltip of cities, colonies and pops (your Q70 ruling).</td><td>Today's seats above the dock</td></tr>
+          <tr><td>Bottom-left</td><td>Verb bar (always). Inspector (only while something is picked).</td><td>The inspector sizes itself to the pick. With a pick, verbs and inspector actions aim at it.</td><td>The realm panel, split</td></tr>
+          <tr><td>Bottom-right</td><td>Chronicle line, map modes, Plates, End turn</td><td>As today, plus a one-line legend above the dock when the mode isn't Terrain.</td><td>Today's corner dock</td></tr>
+          <tr><td>Centre</td><td>The board</td><td>Only moments (year card, fate card, Assembly, trade composer) cover it.</td><td>Unchanged</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:28px">The inspector</h3>
+    <div class="qa" style="margin-top:0">
+      <div>
+        <p><b>Three sizes, one frame.</b> Every size has an ink title bar with the place's name, what it is and whose it is, and a close button. Under it sits a flat ivory body with small-caps section labels and hairlines, no nested boxes.</p>
+        <ul class="rules">
+          <li><b>L, your settlement (460 px):</b> people out of room, slots used, what it makes a turn. A row of slot squares follows: built (with the building), worked, or open, and an open slot is the place to raise a building. Then the three classes with counts, what each makes here, and promote and demote. Then each building's effect in one line. The footer has Grow here, Raise a building, and Upgrade for a colony, each with its cost and its shortfall.</li>
+          <li><b>M, a rival's settlement (420 px):</b> the same facts without the controls. The footer has one action, "Offer Nikos a trade".</li>
+          <li><b>S, land, a good, the Oracle (330 px):</b> what the land is, what it would give, and the one action it allows, such as Found a colony with its cost and shortfall.</li>
+        </ul>
+      </div>
+      <div>
+        <p><b>Rules it keeps.</b></p>
+        <ul class="rules">
+          <li>It opens on a pick. Esc, ×, a click on the sea, or another pick changes or closes it. With no pick, the bottom-left shows only the verb bar.</li>
+          <li>A pick shows twice: a lit outline on the tile, and the inspector's title.</li>
+          <li>If the inspector would cover the picked tile, the camera eases the tile clear.</li>
+          <li>It never scrolls. If a settlement holds too much, the inspector grows upward, up to the alarms.</li>
+          <li>A disabled action names its shortfall: "3 wood and 1 food short", never "Not enough resources".</li>
+          <li>Read-only facts about a rival come from public state only, as the map's tooltips do today.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 style="margin-top:28px">Map modes</h3>
+    <ul class="rules prose">
+      <li>Each mode must be recognisable from a thumbnail. Political paints owned land flat in the realm's glaze and writes the realm's name large across its land. Terrain keeps today's look.</li>
+      <li>A one-line legend sits above the dock in Political, Economy and Trade, built from the descriptions the modes already carry in code.</li>
+      <li>Keys 1–4 stay as they are (your 2026-10-27 call).</li>
+    </ul>
+
+    <h3 style="margin-top:28px">Standards the shell meets</h3>
+    <ul class="rules prose">
+      <li>Text at 1440×900: names 20–22 px, body 14–15 px, small-caps labels at least 11 px. Numbers use tabular figures.</li>
+      <li>Targets: verbs 74×74 px, rail buttons 60×50 px, everything else at least 32 px.</li>
+      <li>Every panel has a title, a close button and Esc. One window at a time. Esc closes the top-most thing: fan, then window, then pick.</li>
+      <li>No text overprints, and no panel hides another's controls. The geometry audit (<code>ui:audit</code>) gates this at 1280, 1440 and 1920 wide.</li>
+      <li>Every number that changes shows its change. Colour follows helps or hurts (your DELTA-1 rule).</li>
+      <li>Tooltips open after about 300 ms. A game term inside one opens its own tooltip, linking to the Codex.</li>
+      <li>Panels rise in about 180 ms, and motion stops under reduced motion.</li>
+      <li>An empty state hides. A panel with nothing to say is not drawn.</li>
+    </ul>
+
+    <h3 style="margin-top:28px">What stays</h3>
+    <div class="keep"><span>The 3D board and its two zoom levels</span><span>Alarms</span><span>The verb fans and their options</span><span>Chronicle line and End turn in the dock</span><span>Keys 1–4 for modes</span><span>Bronze icons</span><span>Flat content inside floating cards</span><span>Moments own the centre</span><span>Engine untouched</span></div>
+  </div>
+</section>
+
+<section class="block" id="decisions">
+  <div class="wrap">
+    <h2>Your decisions</h2>
+    <p class="prose">The prototype shows the recommended answer to each.</p>
+    <div class="decisions">
+      <div class="dec"><span class="id">D1</span><span class="ask">With nothing picked, what does the bottom-left show?</span><span class="rec"><b>Recommend</b> only the verb bar, as in Imperator. The realm's figures live in the top bar and the seal's window.</span><span class="alt">Alternative: a slim realm card above the verbs (name, cities, colonies, titles).</span></div>
+      <div class="dec"><span class="id">D2</span><span class="ask">Where do the six verbs live?</span><span class="rec"><b>Recommend</b> a row along the bottom edge. That is your secondary sketch of 2026-09-25.</span><span class="alt">Alternative: keep the arc. It rode the realm panel's edge, and that edge comes and goes in this proposal.</span></div>
+      <div class="dec"><span class="id">D3</span><span class="ask">Codex, Victory, Agora and Costs: top bar or left rail?</span><span class="rec"><b>Recommend</b> the left rail, with Realm, Cities, People and Ideas. Then the bar holds numbers only.</span><span class="alt">Alternative: keep them in the bar and put only the three realm windows on the rail.</span></div>
+      <div class="dec"><span class="id">D4</span><span class="ask">Move the seat discs to the top-right, with toasts under them?</span><span class="rec"><b>Recommend</b> yes. It clears the dock's corner, and the roster stays icons only.</span><span class="alt">Alternative: leave them above the dock.</span></div>
+      <div class="dec"><span class="id">D5</span><span class="ask">Political mode: flat realm paint and large names?</span><span class="rec"><b>Recommend</b> yes, with the badges hidden in Political. Today it differs from Terrain only in labels.</span><span class="alt">Alternative: keep today's 50% tint and raise the realm name's size only.</span></div>
+      <div class="dec"><span class="id">D6</span><span class="ask">A one-line legend above the dock in Political, Economy and Trade?</span><span class="rec"><b>Recommend</b> yes. The map key left in #155 was a whole panel, and this is one line.</span><span class="alt">Alternative: put the description in the mode buttons' tooltips only.</span></div>
+      <div class="dec"><span class="id">D7</span><span class="ask">Should the camera ease a picked tile clear of the inspector?</span><span class="rec"><b>Recommend</b> yes, only when the tile would be covered.</span><span class="alt">Alternative: never move the camera on a pick. Then a pick near the left edge is hidden under its own inspector.</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="build">
+  <div class="wrap">
+    <h2>Build order</h2>
+    <p class="prose">This is UI work in the shell. The engine, the projections and the 3D map's renderer don't change. Slices 5 and 6 touch the map's mode filter and labels only. Each slice is one PR that leaves the game playable.</p>
+    <ol class="slices prose">
+      <li><b>Inspector.</b> Take the subject page out of the realm panel into a docked inspector with three sizes. It opens on a pick and closes on Esc, ×, or a click on the sea. Add the pick's outline on the tile and the shortfall wording. Today's settlement, tile, Oracle and good pages are reused inside it.</li>
+      <li><b>Verb bar.</b> Re-lay the verb discs as a bottom row, with fans opening upward. With a pick, Grow, Build and the ladder aim at it first.</li>
+      <li><b>Realm window and left rail.</b> Today's overview, cities and ladder pages move into one window opened from the seal and the rail, and the consult icons join the rail. The Build page folds into the inspector's open slots and the Build fan. The realm panel is then gone.</li>
+      <li><b>Top-right table.</b> Seat discs and the toasts lane move up.</li>
+      <li><b>Top bar.</b> Change sits under the stock, and the tooltips itemise the change by settlement.</li>
+      <li><b>Map modes.</b> Political's flat paint and large names, the legend line, and camera clearance on a pick.</li>
+    </ol>
+    <p class="prose" style="margin-top:14px">Each slice ends with screenshots at 1280, 1440 and 1920, and with <code>ui:audit</code> and <code>ui:conduct</code> green.</p>
+  </div>
+</section>
+
+<section class="block" id="sources">
+  <div class="wrap">
+    <h2>Sources</h2>
+    <ul class="rules prose src">
+      <li>Official screenshots: <a href="https://store.steampowered.com/app/859580/">Imperator: Rome on Steam</a> (technology, military, map modes, outliner) and <a href="https://store.steampowered.com/app/1437660/">Heirs of Alexander</a> (2.0 frame, with a province panel under the Great Wonder window).</li>
+      <li>Province panel, your own province, nothing else open: <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3818299258">player screenshot, Tuscia</a>.</li>
+      <li>Small card for unclaimed land, with a nested tooltip: <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3813753618">Carpathia</a>.</li>
+      <li>Nothing selected, empty bottom-left, map tooltip at the cursor: <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3679452718">Latium</a>, <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3818611895">Greece</a>.</li>
+      <li>Character window top-left: <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3824909225">one</a>, <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3824908966">two</a>. Diplomacy and Nation Overview: <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3824908285">Diplomacy</a>, <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3823165862">Nation Overview</a>.</li>
+      <li>Battle docked bottom-centre: <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3812183322">Apollonia</a>, <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3824963597">Jerusalem</a>. Multi-army list top-left: <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3798172089">17 armies</a>. Mode with a strip of realm flags: <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3784262996">example</a>.</li>
+      <li>The 2.0 redesign's aims: <a href="https://www.pcgamesn.com/imperator-rome/ui-redesign">PCGamesN on Peter Nicholson's development diary</a>.</li>
+      <li>Ours: main at c09175c, <code>?dev=late-game</code>, headless Chromium at 1440×900. Earlier owner rulings: the Three Tables pick (2026-09-28), corner dock (2026-10-22), keys 1–4 (2026-10-27), Q70 roster.</li>
+    </ul>
+  </div>
+</section>
+
+<footer class="end"><div class="wrap">Prepared for the owner, 3 November 2026. Every figure on our side is from the live build; Imperator's are from the screenshots linked above.</div></footer>
+
+<script>
+(() => {
+  const ME = 'Kyros';
+  const SEATS = {
+    Damon: { c: '#2f5d9e', b: 'Δ' }, Nikos: { c: '#2b2420', b: 'Ν' },
+    Theron: { c: '#7c4d79', b: 'Θ' }, Kyros: { c: '#a83226', b: 'Κ' },
+  };
+  const CAPITAL = { '-5,0': 'Kyros', '-5,6': 'Nikos', '2,1': 'Theron', '4,-3': 'Damon' };
+  const STOCK = { wood: 1, stone: 1, food: 0, gold: 2, influence: 9 };
+  const RES_OF = { forest: 'wood', plains: 'food', mountain: 'stone' };
+  const BUILD = {
+    Forum: { icon: 'buildings/forum', fx: 'Citizens here make 2 influence each', cost: { stone: 3 } },
+    Temple: { icon: 'buildings/temple', fx: '+1 happiness', cost: { stone: 3 } },
+    Granary: { icon: 'buildings/granary', fx: '+2 food a turn', cost: { wood: 4 } },
+    Estate: { icon: 'buildings/estate', fx: 'Slaves here make 2 each', cost: { wood: 4 } },
+    Marketplace: { icon: 'buildings/marketplace', fx: 'Freemen here make 2 gold each', cost: { wood: 3, gold: 2 } },
+    Port: { icon: 'buildings/port', fx: 'Moors a luxury good', cost: { gold: 4, stone: 2 } },
+  };
+  // real tile boxes and accessible names from the live build (1440×900 opening view)
+  const TILES = [{"id": "-6,6", "label": "Hex -6,6, forest tile, 3 slots for wood", "x": 529.9, "y": 732.3, "w": 79, "h": 91.2}, {"id": "-5,0", "label": "Hex -5,0, plains tile, 5 slots for food; RHODOS, Kyros's city: 5 pops (3 citizens, 2 slaves), 2 built, 2 worked, 1 open; Forum, Temple", "x": 413.8, "y": 366.7, "w": 73.4, "h": 78.5}, {"id": "-5,1", "label": "Hex -5,1, forest tile, 3 slots for wood", "x": 443.7, "y": 423.3, "w": 75.7, "h": 80.4}, {"id": "-5,5", "label": "Hex -5,5, mountain tile, 4 slots for stone; AIGAI, Kyros's colony: 1 pop (1 slave), 0 built, 1 worked, 3 open", "x": 572.1, "y": 666.8, "w": 78.3, "h": 87.8}, {"id": "-5,6", "label": "Hex -5,6, plains tile, 4 slots for food; KORONE, Nikos's city: 8 pops (6 citizens, 2 slaves), 2 built, 2 worked, 0 open; Forum, Temple", "x": 606.8, "y": 732.3, "w": 78.2, "h": 91.2}, {"id": "-4,-1", "label": "Hex -4,-1, mountain tile, 3 slots for stone; SAMOS, Kyros's colony: 1 pop (1 freeman), 0 built, 0 worked, 3 open", "x": 454.1, "y": 311.6, "w": 73.5, "h": 73.8}, {"id": "-4,0", "label": "Hex -4,0, forest tile, 3 slots for wood", "x": 484.1, "y": 366.7, "w": 74.1, "h": 78.5}, {"id": "-4,6", "label": "Hex -4,6, forest tile, 5 slots for wood", "x": 683.6, "y": 732.3, "w": 77.7, "h": 91.2}, {"id": "-3,3", "label": "Hex -3,3, forest tile, 4 slots for wood; NEMEA, Nikos's city: 2 pops (2 slaves), 2 built, 2 worked, 0 open; Temple, Port holding Pearls", "x": 652.8, "y": 541.5, "w": 74.3, "h": 84.4}, {"id": "-3,4", "label": "Hex -3,4, forest tile, 3 slots for wood", "x": 687.6, "y": 603.2, "w": 75.1, "h": 86.6}, {"id": "-2,-2", "label": "Hex -2,-2, hill tile, 3 slots", "x": 561.6, "y": 258, "w": 70.1, "h": 74.9}, {"id": "-2,-1", "label": "Hex -2,-1, forest tile, 3 slots for wood; GORTYN, Kyros's city: 1 pop (1 slave), 0 built, 1 worked, 2 open", "x": 592.7, "y": 311.6, "w": 70.8, "h": 76.6}, {"id": "-2,2", "label": "Hex -2,2, plains tile, 4 slots for food; OLYNTHOS, Kyros's colony: 2 pops (2 slaves), 0 built, 2 worked, 2 open", "x": 691.4, "y": 481.6, "w": 73.1, "h": 80.3}, {"id": "-2,3", "label": "Hex -2,3, forest tile, 4 slots for wood; ELIS, Theron's colony: 1 pop (1 slave), 0 built, 1 worked, 3 open", "x": 726.2, "y": 541.5, "w": 73.7, "h": 82.7}, {"id": "-2,4", "label": "Hex -2,4, mountain tile, 3 slots for stone; DELOS, Nikos's city: 1 pop (1 slave), 2 built, 1 worked, 0 open; Granary, Temple", "x": 762.1, "y": 603.2, "w": 74.5, "h": 86.6}, {"id": "-1,-2", "label": "Hex -1,-2, plains tile, 4 slots for food", "x": 630, "y": 258, "w": 70, "h": 71.8}, {"id": "-1,-1", "label": "Hex -1,-1, mountain tile, 3 slots for stone", "x": 662, "y": 311.6, "w": 70.5, "h": 76.6}, {"id": "1,1", "label": "Hex 1,1, forest tile, 4 slots for wood; LINDOS, Theron's colony: 2 pops (2 slaves), 0 built, 2 worked, 2 open; 1 pop on the way from Kydonia", "x": 870.7, "y": 423.3, "w": 72.1, "h": 80.4}, {"id": "1,2", "label": "Hex 1,2, forest tile, 2 slots for wood; NAXOS, Kyros's colony: 0 pops, 0 built, 0 worked, 1 open; FOKIS, Damon's colony: 1 pop (1 slave), 0 built, 1 worked, 0 open", "x": 907.1, "y": 481.6, "w": 73.7, "h": 82.4}, {"id": "1,4", "label": "Hex 1,4, forest tile, 3 slots for wood; PHLIOUS, Nikos's colony: 1 pop (1 slave), 1 built, 1 worked, 1 open; Port holding Glassware", "x": 983.1, "y": 603.2, "w": 77.1, "h": 86.6}, {"id": "1,5", "label": "Hex 1,5, mountain tile, 4 slots for stone; IOLKOS, Nikos's colony: 0 pops, 0 built, 0 worked, 4 open", "x": 1022.8, "y": 666.8, "w": 78.9, "h": 88.8}, {"id": "2,0", "label": "Hex 2,0, plains tile, 7 slots for food; CHALKIS, Damon's colony: 1 pop (1 slave), 0 built, 1 worked, 3 open; ARGOS, Theron's colony: 4 pops (1 freeman, 3 slaves), 0 built, 3 worked, 0 open; 1 pop on the way from Sikyon", "x": 904.6, "y": 366.7, "w": 71.6, "h": 75.9}, {"id": "2,1", "label": "Hex 2,1, plains tile, 6 slots for food; KYDONIA, Theron's city: 6 pops (5 citizens, 1 slave), 4 built, 1 worked, 1 open; Forum, Temple, Granary, Estate", "x": 941.6, "y": 423.3, "w": 72.5, "h": 78.1}, {"id": "2,2", "label": "Hex 2,2, hill tile, 4 slots", "x": 979.2, "y": 481.6, "w": 73.9, "h": 82.4}, {"id": "2,4", "label": "Hex 2,4, mountain tile, 3 slots for stone; DION, Theron's city: 6 pops (6 freemen), 3 built, 0 worked, 0 open; Temple, Marketplace, Granary", "x": 1057.8, "y": 603.2, "w": 76.9, "h": 86.6}, {"id": "3,-3", "label": "Hex 3,-3, oracle tile, 0 slots", "x": 867.9, "y": 205.8, "w": 68.1, "h": 73.2}, {"id": "3,1", "label": "Hex 3,1, forest tile, 3 slots for wood", "x": 1012.2, "y": 423.3, "w": 73.2, "h": 80.4}, {"id": "3,3", "label": "Hex 3,3, forest tile, 3 slots for wood", "x": 1089.2, "y": 541.5, "w": 77.5, "h": 84.4}, {"id": "4,-5", "label": "Hex 4,-5, mountain tile, 3 slots for stone; ERETRIA, Damon's colony: 1 pop (1 freeman), 0 built, 0 worked, 3 open", "x": 866.6, "y": 105.6, "w": 66.3, "h": 69.9}, {"id": "4,-3", "label": "Hex 4,-3, plains tile, 5 slots for food; SIKYON, Damon's city: 4 pops (4 citizens), 4 built, 0 worked, 1 open; Port holding Fine Linen, Forum, Temple, Granary", "x": 935, "y": 205.8, "w": 68.5, "h": 73.2}, {"id": "4,2", "label": "Hex 4,2, mountain tile, 6 slots for stone; MEGARA, Nikos's colony: 1 pop (1 slave), 0 built, 1 worked, 5 open", "x": 1120.9, "y": 481.6, "w": 76.9, "h": 82.4}, {"id": "5,-6", "label": "Hex 5,-6, plains tile, 3 slots for food; ABDERA, Damon's city: 3 pops (1 freeman, 2 slaves), 1 built, 2 worked, 0 open; Temple", "x": 897.9, "y": 57.5, "w": 65.9, "h": 64.5}, {"id": "5,-5", "label": "Hex 5,-5, hill tile, 3 slots", "x": 931.9, "y": 105.6, "w": 66.7, "h": 69.9}, {"id": "5,-3", "label": "Hex 5,-3, forest tile, 3 slots for wood", "x": 1001.8, "y": 205.8, "w": 69.1, "h": 73.2}, {"id": "5,-2", "label": "Hex 5,-2, hill tile, 3 slots", "x": 1037.1, "y": 258, "w": 71.5, "h": 74.9}, {"id": "5,1", "label": "Hex 5,1, hill tile, 3 slots", "x": 1151.7, "y": 423.3, "w": 76.3, "h": 80.4}, {"id": "6,-3", "label": "Hex 6,-3, forest tile, 5 slots for wood", "x": 1068.6, "y": 205.8, "w": 69.7, "h": 73.2}];
+
+  // ── parse each tile's accessible name into data ──
+  const SETTLE = /^([A-Z]+), (\w+)'s (city|colony): (\d+) pops?(?: \(([^)]*)\))?, (\d+) built, (\d+) worked, (\d+) open$/;
+  for (const t of TILES) {
+    const parts = t.label.split('; ');
+    const head = parts[0].match(/^Hex (-?\d+,-?\d+), (\w+) tile, (\d+) slots?(?: for (\w+))?/);
+    t.terrain = head[2]; t.slots = +head[3]; t.res = head[4] || null;
+    t.towns = [];
+    for (const p of parts.slice(1)) {
+      const m = p.match(SETTLE);
+      if (m) {
+        const pops = { citizens: 0, freemen: 0, slaves: 0 };
+        (m[5] || '').split(', ').filter(Boolean).forEach(s => {
+          const [n, w] = s.split(' ');
+          pops[w.startsWith('citizen') ? 'citizens' : w.startsWith('free') ? 'freemen' : 'slaves'] = +n;
+        });
+        t.towns.push({ name: m[1], owner: m[2], kind: m[3], total: +m[4], pops, built: +m[6], worked: +m[7], open: +m[8], blds: [], port: null, notes: [] });
+      } else if (t.towns.length) {
+        const town = t.towns[t.towns.length - 1];
+        if (/on the way/.test(p)) town.notes.push(p);
+        else p.split(', ').forEach(b => {
+          const pm = b.match(/^Port holding (.+)$/);
+          if (pm) { town.blds.push('Port'); town.port = pm[1]; } else town.blds.push(b);
+        });
+      }
+    }
+    if (CAPITAL[t.id] && t.towns[0]) t.towns[0].capital = true;
+  }
+  const byId = Object.fromEntries(TILES.map(t => [t.id, t]));
+
+  // what each of the viewer's settlements makes a turn (engine rules: a worked slave 1 of the land,
+  // a citizen 1 influence and −1 food, a freeman 1 gold and −1 food; a Forum doubles citizens)
+  function makes(t, town) {
+    const out = {}; const add = (k, v) => { if (v) out[k] = (out[k] || 0) + v; };
+    const per = {};
+    const sl = Math.min(town.pops.slaves, town.worked);
+    if (t.res) { add(t.res, sl); per.slaves = sl ? `+${sl} ${t.res}` : 'none working'; } else per.slaves = '';
+    const cm = town.blds.includes('Forum') ? 2 : 1, fm = town.blds.includes('Marketplace') ? 2 : 1;
+    add('influence', town.pops.citizens * cm); add('food', -town.pops.citizens);
+    add('gold', town.pops.freemen * fm); add('food', -town.pops.freemen);
+    per.citizens = town.pops.citizens ? `+${town.pops.citizens * cm} influence, −${town.pops.citizens} food` : '';
+    per.freemen = town.pops.freemen ? `+${town.pops.freemen * fm} gold, −${town.pops.freemen} food` : '';
+    return { out, per };
+  }
+
+  const $ = s => document.querySelector(s);
+  const stage = $('#stage'), wrapEl = $('#stage-wrap'), world = $('#world');
+  const st = { pick: null, win: null, tab: 'overview', mode: 'terrain', fan: null, today: false };
+
+  function fit() { stage.style.transform = `scale(${wrapEl.clientWidth / 1440})`; }
+  new ResizeObserver(fit).observe(wrapEl); fit();
+
+  const ico = p => `icons/${p}.svg`;
+  const costHtml = (cost) => `<span class="cost">${Object.entries(cost).map(([k, v]) => `<span class="${(STOCK[k] ?? 0) < v ? 'short' : ''}"><img src="${ico('resources/' + k)}" alt="${k}">${v}</span>`).join('')}</span>`;
+  function shortfall(cost) {
+    const miss = Object.entries(cost).filter(([k, v]) => (STOCK[k] ?? 0) < v).map(([k, v]) => `${v - (STOCK[k] ?? 0)} ${k}`);
+    return miss.length ? miss.join(' and ') + ' short' : null;
+  }
+  const cap = s => s[0].toUpperCase() + s.slice(1);
+  const nameCase = s => s[0] + s.slice(1).toLowerCase();
+
+  // ── hotspots ──
+  const hots = $('#hots');
+  for (const t of TILES) {
+    const b = document.createElement('button');
+    b.className = 'hot'; b.type = 'button';
+    Object.assign(b.style, { left: t.x + 'px', top: t.y + 'px', width: t.w + 'px', height: t.h + 'px' });
+    b.setAttribute('aria-label', t.label);
+    b.dataset.tile = t.id;
+    b.addEventListener('click', e => { e.stopPropagation(); pick(t.id); });
+    b.addEventListener('mousemove', e => showTip(tileTip(t), e));
+    b.addEventListener('mouseleave', hideTip);
+    hots.appendChild(b);
+  }
+  $('#map').addEventListener('click', () => { if (st.fan) st.fan = null; else st.pick = null; render(); });
+
+  function tileTip(t) {
+    const land = `${cap(t.terrain)} · ${t.slots} slot${t.slots > 1 ? 's' : ''}${t.res ? ' for ' + t.res : ''}`;
+    if (!t.towns.length) return `<b>${cap(t.terrain)}</b><br>${land}<br>Unsettled`;
+    return t.towns.map(w => `<b>${w.name}</b> · ${w.owner}'s ${w.capital ? 'capital' : w.kind}<br>${w.total} pop${w.total === 1 ? '' : 's'}${w.blds.length ? ' · ' + w.blds.join(', ') : ''}`).join('<br>') + `<br><span style="opacity:.75">${land}</span>`;
+  }
+
+  // ── tooltips for chrome ──
+  const TIPS = {
+    wood: `<b>Wood</b> 1 in store<div class="r"><span>Gortyn</span><span class="up">+1</span></div>`,
+    stone: `<b>Stone</b> 1 in store<div class="r"><span>Aigai</span><span class="up">+1</span></div>`,
+    food: `<b>Food</b> 0 in store<div class="r"><span>Olynthos</span><span class="up">+2</span></div><div class="r"><span>Rhodos</span><span class="dn">−1</span></div><div class="r"><span>Samos</span><span class="dn">−1</span></div>`,
+    gold: `<b>Gold</b> 2 in store<div class="r"><span>Samos</span><span class="up">+1</span></div>`,
+    influence: `<b>Influence</b> 9 in store<div class="r"><span>Rhodos</span><span class="up">+6</span></div>`,
+    citizens: `<b>Citizens</b> 3, all in Rhodos`,
+    freemen: `<b>Freemen</b> 1, in Samos`,
+    slaves: `<b>Slaves</b> 6<div class="r"><span>Rhodos, Olynthos</span><span>2 each</span></div><div class="r"><span>Gortyn, Aigai</span><span>1 each</span></div>`,
+    room: `<b>Room</b> 10 pops of 28: cities hold 8, colonies 3`,
+    mood: `<b>Happiness −2</b>, discontent. The alarm beside the seal says what follows.`,
+    seal: `<b>Realm of Kyros</b><br>Open the realm window`,
+    'a-unrest': `<b>Discontent</b><br>Happiness is below zero.`,
+    'a-year': `<b>This year's card</b><br>Open it to read its effect.`,
+    'a-port': `<b>A Port could claim a good</b><br>A settlement of yours can raise a Port beside a free luxury.`,
+    'r-realm': `<b>Realm</b> · overview`, 'r-cities': `<b>Cities</b> · every settlement`, 'r-people': `<b>People</b> · the ladder`,
+    'r-ideas': `<b>Ideas</b>`, 'r-agora': `<b>Agora</b> · Laws and the Assembly`, 'r-victory': `<b>Victory</b> · titles`,
+    'r-codex': `<b>Codex</b> · the rules`, 'r-costs': `<b>Costs</b> · every price`,
+    's-Damon': `<b>Damon</b><br>2 cities, 3 colonies, 10 pops`, 's-Nikos': `<b>Nikos</b><br>3 cities, 3 colonies, 13 pops`,
+    's-Theron': `<b>Theron</b><br>2 cities, 3 colonies, 19 pops`, 's-Kyros': `<b>Kyros</b> · to play<br>2 cities, 4 colonies, 10 pops`,
+    plates: `<b>Plates</b><br>How tile badges look; not a mode.`,
+    endturn: `<b>End turn</b><br>Hold to end Kyros's turn.`,
+  };
+  const tip = $('#tip');
+  function showTip(html, e) {
+    tip.innerHTML = html; tip.hidden = false;
+    const r = stage.getBoundingClientRect(), k = r.width / 1440;
+    let x = (e.clientX - r.left) / k + 16, y = (e.clientY - r.top) / k + 18;
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    if (x + w > 1430) x -= w + 32; if (y + h > 890) y -= h + 36;
+    tip.style.left = x + 'px'; tip.style.top = y + 'px';
+  }
+  function hideTip() { tip.hidden = true; }
+  stage.addEventListener('mousemove', e => {
+    const el = e.target.closest('[data-tip]');
+    if (el && TIPS[el.dataset.tip]) showTip(TIPS[el.dataset.tip], e);
+    else if (!e.target.closest('.hot')) hideTip();
+  });
+  stage.addEventListener('mouseleave', hideTip);
+
+  let toastTimer;
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 2200); }
+
+  // ── verbs ──
+  const VERBS = [
+    { id: 'grow', label: 'Grow', icon: 'pops/pop-gain' },
+    { id: 'people', label: 'People', icon: 'pops/crowd' },
+    { id: 'expand', label: 'Expand', icon: 'settlements/found', badge: 1 },
+    { id: 'build', label: 'Build', icon: 'buildings/build' },
+    { id: 'civic', label: 'Civic', icon: 'unrest/calm-verb' },
+    { id: 'trade', label: 'Trade', icon: 'market/handshake' },
+  ];
+  const verbsEl = $('#verbs');
+  verbsEl.innerHTML = VERBS.map(v => `<button class="verb" type="button" data-verb="${v.id}" aria-expanded="false"><span class="d"><img src="${ico(v.icon)}" alt=""></span>${v.label}${v.badge ? `<span class="badge">${v.badge}</span>` : ''}</button>`).join('');
+  verbsEl.addEventListener('click', e => {
+    const b = e.target.closest('.verb'); if (!b) return;
+    st.fan = st.fan === b.dataset.verb ? null : b.dataset.verb; render();
+  });
+
+  function ownTown() {
+    const t = st.pick && byId[st.pick];
+    const w = t && t.towns.find(x => x.owner === ME);
+    return w ? { t, w } : null;
+  }
+  function fanHtml(id) {
+    const own = ownTown();
+    const where = own ? nameCase(own.w.name) : null;
+    const opt = (icon, n, cost, extra) => {
+      const why = cost ? shortfall(cost) : null;
+      return `<div class="opt ${why ? 'off' : ''}" data-opt="${n}"><img class="i" src="${ico(icon)}" alt=""><span class="n">${n}</span>${cost ? costHtml(cost) : '<span></span>'}<span class="why ${why ? '' : 'ok'}">${why || extra || 'Ready'}</span></div>`;
+    };
+    let title, sub, body, foot;
+    if (id === 'grow') {
+      title = where ? `Grow in ${where}` : 'Grow'; sub = 'one pop a turn';
+      body = opt('pops/slaves', 'A slave', { food: 2 }) + opt('pops/freemen', 'A freeman', { food: 3 });
+      foot = where ? `Grows in ${where}. Pick another settlement to change it.` : 'Then pick a settlement on the map.';
+    } else if (id === 'people') {
+      title = where ? `People in ${where}` : 'People'; sub = 'the ladder';
+      body = opt('pops/promote', 'Promote', null, 'Raise a pop one rung') + opt('pops/demote', 'Demote', null, 'Lower a pop one rung') + opt('pops/move', 'Move a pop', { food: 1 });
+      foot = where ? `Aims at ${where}.` : 'Then pick a settlement on the map.';
+    } else if (id === 'expand') {
+      title = 'Expand'; sub = '1 left this turn';
+      body = opt('settlements/found', 'Found a colony', { wood: 4, food: 1 }) + opt('settlements/upgrade', 'Colony to city', { wood: 3, stone: 3 });
+      foot = 'Then pick open land, or one of your colonies.';
+    } else if (id === 'build') {
+      const canBuild = !own || own.w.kind !== 'colony';
+      title = where ? `Build in ${where}` : 'Build'; sub = own ? `${own.w.open} slot${own.w.open === 1 ? '' : 's'} open` : 'one building a slot';
+      const have = own ? own.w.blds : [];
+      body = canBuild ? Object.entries(BUILD).map(([n, b]) => have.includes(n) ? `<div class="opt off"><img class="i" src="${ico(b.icon)}" alt=""><span class="n">${n}</span><span></span><span class="why">Already built here</span></div>` : opt(b.icon, n, b.cost, b.fx)).join('') : `<div class="opt off"><img class="i" src="${ico('settlements/colony')}" alt=""><span class="n">Colonies cannot build</span><span></span><span class="why">Raise it to a city first</span></div>`;
+      foot = where ? `Builds in ${where}.` : 'Then pick one of your cities.';
+    } else if (id === 'civic') {
+      title = 'Civic'; sub = 'calm, the Dole, Ideas, cards';
+      body = opt('unrest/calm-verb', 'Calm, paid in gold', null, 'Costs as today') + opt('unrest/patronage', 'Calm, paid in influence', null, 'Costs as today') + opt('unrest/bread-dole', 'The Dole', null, 'Costs as today') + opt('assembly/national-idea', 'Ideas', null, 'Opens the Ideas window') + opt('events/convoy', 'Buy a card', null, 'Costs as today');
+      foot = 'Options and prices exactly as today’s Civic fan.';
+    } else {
+      const t = st.pick && byId[st.pick]; const rival = t && t.towns.find(x => x.owner !== ME);
+      title = 'Trade'; sub = rival ? `with ${rival.owner} first` : 'with the table';
+      body = opt('market/handshake', rival ? `Offer ${rival.owner} a trade` : 'Offer a trade', null, 'Opens the trade composer');
+      foot = 'The composer opens over the centre, as today.';
+    }
+    const i = VERBS.findIndex(v => v.id === id);
+    return `<div class="fan" style="left:${92 + 10 + i * 76}px"><header><b>${title}</b><span>${sub}</span></header>${body}<footer>${foot}</footer></div>`;
+  }
+  $('#fan').addEventListener('click', e => {
+    const o = e.target.closest('.opt'); if (!o) return;
+    toast(o.classList.contains('off') ? 'Not now: the option says why.' : 'In the game this arms the pick on the map.');
+  });
+
+  // ── inspector ──
+  function slotsHtml(t, w, own) {
+    const out = [];
+    w.blds.forEach(n => out.push(`<div class="slot" title="${n}: ${BUILD[n]?.fx || ''}"><img src="${ico(BUILD[n]?.icon || 'buildings/build')}" alt="">${n}</div>`));
+    for (let i = 0; i < w.worked; i++) out.push(`<div class="slot worked"><img src="${ico('resources/' + (t.res || 'stockpile'))}" alt="">Worked</div>`);
+    for (let i = 0; i < w.open; i++) out.push(own ? `<div class="slot open" data-act="raise"><b>+</b>${w.kind === 'colony' ? 'Open' : 'Raise'}</div>` : `<div class="slot open" style="cursor:default"><b>·</b>Open</div>`);
+    return out.join('');
+  }
+  function popsHtml(w, per, own) {
+    const P = [['slaves', 'Slaves'], ['freemen', 'Freemen'], ['citizens', 'Citizens']];
+    return P.map(([k, n]) => `<div class="pop"><img src="${ico('pops/' + k)}" alt=""><b>${w.pops[k]}<small>${n.toUpperCase()}</small></b><span>${per ? (per[k] || (w.pops[k] ? '' : 'none here')) : (w.pops[k] ? '' : 'none here')}</span>${own ? `<div class="ladder"><button type="button" data-act="promote" title="Promote a ${k === 'slaves' ? 'slave' : k === 'freemen' ? 'freeman' : 'citizen'} here">▲ Up</button><button type="button" data-act="demote" title="Demote one here">▼ Down</button></div>` : ''}</div>`).join('');
+  }
+  function inspHtml() {
+    const t = st.pick && byId[st.pick]; if (!t) return '';
+    const own = t.towns.find(x => x.owner === ME);
+    const w = own || t.towns[0];
+    const land = `${cap(t.terrain)}${t.res ? ', ' + t.res : ''}`;
+    if (!w) {
+      const cost = { wood: 4, food: 1 }, why = shortfall(cost);
+      const room = Math.min(3, t.slots);
+      return `<section class="insp s" aria-label="${cap(t.terrain)}">
+        <header class="ih"><img class="k" src="${ico('terrain/' + t.terrain)}" alt=""><div><h3>${cap(t.terrain)}</h3><p>Unsettled · ${t.slots} slot${t.slots > 1 ? 's' : ''}${t.res ? ' for ' + t.res : ''}</p></div><button class="x" type="button" data-act="close" aria-label="Close">×</button></header>
+        <div class="ib"><div class="facts">
+          ${t.res ? `<div><img src="${ico('pops/slaves')}" alt="">Slaves here make 1 ${t.res} each</div>` : ''}
+          <div><img src="${ico('pops/capacity')}" alt="">Room for ${room} pops as a colony</div>
+          <div><img src="${ico('resources/luxury')}" alt="">No luxury good moored here</div>
+        </div></div>
+        <footer class="ia"><button class="act ${why ? 'off' : 'go'}" type="button" data-act="found"><span>Found a colony here</span>${costHtml(cost)}${why ? `<span class="why">${why}</span>` : ''}</button></footer>
+      </section>`;
+    }
+    const seat = SEATS[w.owner];
+    const capacity = w.kind === 'colony' ? 3 : 8;
+    const used = w.built + w.worked;
+    const shared = t.towns.length > 1 ? t.towns.filter(x => x !== w).map(x => `${nameCase(x.name)} (${x.owner})`).join(', ') : null;
+    const what = `${w.capital ? 'capital' : w.kind}`;
+    const sub = own ? `Your ${what} · ${land}` : `${w.owner}'s ${what} · ${land}`;
+    const head = `<header class="ih">${own ? `<img class="k" src="${ico('settlements/' + (w.capital ? 'capital' : w.kind))}" alt="">` : `<span class="who" style="background:${seat.c}">${seat.b}</span>`}<div><h3>${nameCase(w.name)}</h3><p>${sub}</p></div><button class="x" type="button" data-act="close" aria-label="Close">×</button></header>`;
+    let mk = null;
+    if (own) mk = makes(t, w);
+    const makesCell = own ? `<div class="stat"><div class="k">Makes a turn</div><div class="v">${Object.entries(mk.out).filter(([, v]) => v).map(([k, v]) => `<span class="${v > 0 ? 'up' : 'dn'}" style="display:inline-flex;align-items:center;gap:3px"><img src="${ico('resources/' + k)}" alt="${k}">${v > 0 ? '+' : '−'}${Math.abs(v)}</span>`).join('') || '<small>nothing</small>'}</div></div>`
+      : `<div class="stat"><div class="k">Buildings</div><div class="v">${w.built}<small>built</small></div></div>`;
+    const stats = `<div class="stats">
+      <div class="stat"><div class="k">People</div><div class="v">${w.total}<small>/ ${capacity}</small></div><div class="bar2"><i style="width:${Math.min(100, w.total / capacity * 100)}%"></i></div></div>
+      <div class="stat"><div class="k">Slots used</div><div class="v">${used}<small>/ ${t.slots}</small></div><div class="bar2"><i style="width:${w.built / t.slots * 100}%"></i><i class="w" style="width:${w.worked / t.slots * 100}%"></i></div></div>
+      ${makesCell}</div>`;
+    const blds = w.blds.length ? `<div class="isec"><h4>Buildings</h4><div class="blds">${w.blds.map(n => `<div><img src="${ico(BUILD[n]?.icon || 'buildings/build')}" alt=""><b>${n}</b>&nbsp;${n === 'Port' && w.port ? 'holds ' + w.port : (BUILD[n]?.fx || '')}</div>`).join('')}</div></div>` : '';
+    const notes = [shared ? `Shares the tile with ${shared}.` : null, ...w.notes.map(cap)].filter(Boolean);
+    let foot;
+    if (own) {
+      const grow = { food: 2 };
+      const gw = shortfall(grow);
+      const acts = [`<button class="act ${gw ? 'off' : 'go'}" type="button" data-act="grow"><span>Grow here</span>${costHtml(grow)}${gw ? `<span class="why">${gw}</span>` : ''}</button>`];
+      if (w.kind === 'colony') {
+        const up = { wood: 3, stone: 3 }, uw = shortfall(up);
+        acts.push(`<button class="act ${uw ? 'off' : 'go'}" type="button" data-act="upgrade"><span>Make it a city</span>${costHtml(up)}${uw ? `<span class="why">${uw}</span>` : ''}</button>`);
+      } else {
+        const free = Object.entries(BUILD).filter(([n]) => !w.blds.includes(n));
+        const any = free.find(([, b]) => !shortfall(b.cost));
+        const gap = c => Object.entries(c).reduce((s, [k, v]) => s + Math.max(0, v - (STOCK[k] ?? 0)), 0);
+        const cheapest = free.map(([n, b]) => [n, shortfall(b.cost), gap(b.cost)]).sort((a, b) => a[2] - b[2])[0];
+        acts.push(`<button class="act ${w.open && any ? 'go' : 'off'}" type="button" data-act="raise"><span>Raise a building</span><span class="why">${!w.open ? 'No open slot' : any ? '' : `Nothing affordable: ${cheapest[0]} is ${cheapest[1]}`}</span></button>`);
+      }
+      foot = `<footer class="ia">${acts.join('')}</footer>`;
+    } else {
+      foot = `<footer class="ia"><button class="act go" type="button" data-act="offer"><span>Offer ${w.owner} a trade</span><span style="font-weight:500;font-size:12px;opacity:.85">opens the composer, ${w.owner} chosen</span></button></footer>`;
+    }
+    return `<section class="insp ${own ? 'l' : 'm'}" aria-label="${nameCase(w.name)}">${head}<div class="ib">${stats}
+      <div class="isec"><h4>Slots · ${t.slots}</h4><div class="slots">${slotsHtml(t, w, !!own)}</div></div>
+      <div class="isec"><h4>People</h4><div class="pops">${popsHtml(w, mk && mk.per, !!own)}</div></div>
+      ${blds}${notes.length ? `<div class="note">${notes.join(' ')}</div>` : ''}</div>${foot}</section>`;
+  }
+  $('#insp').addEventListener('click', e => {
+    const a = e.target.closest('[data-act]'); if (!a) return;
+    const act = a.dataset.act;
+    if (act === 'close') { st.pick = null; render(); return; }
+    if (act === 'raise') { st.fan = 'build'; render(); return; }
+    if (act === 'grow') { st.fan = 'grow'; render(); return; }
+    if (act === 'promote' || act === 'demote') { st.fan = 'people'; render(); return; }
+    if (act === 'offer') { toast('In the game this opens the trade composer with the seat chosen.'); return; }
+    toast(a.classList.contains('off') ? 'Not now: the button says why.' : 'In the game this arms the pick.');
+  });
+
+  // ── realm window ──
+  const MY = TILES.flatMap(t => t.towns.filter(w => w.owner === ME).map(w => ({ t, w })));
+  function winHtml() {
+    if (!st.win) return '';
+    const realmTabs = ['overview', 'cities', 'people'];
+    const isRealm = realmTabs.includes(st.win);
+    const title = isRealm ? 'Realm of Kyros' : { ideas: 'Ideas', agora: 'Agora', victory: 'Victory', codex: 'Codex', costs: 'Costs' }[st.win];
+    const head = `<header class="ih"><span class="who" style="background:#a83226">Κ</span><div><h3>${title}</h3><p>${isRealm ? '2 cities · 4 colonies · Year XII of XIV' : 'Today’s page, moved here unchanged'}</p></div><button class="x" type="button" data-act="close-win" aria-label="Close">×</button></header>`;
+    let body = '';
+    if (st.win === 'overview') {
+      body = `<dl class="ledger">
+        <dt>Settlements</dt><dd><img src="${ico('settlements/city')}" alt="">2 cities &nbsp; <img src="${ico('settlements/colony')}" alt="">4 colonies</dd>
+        <dt>People</dt><dd><img src="${ico('pops/capacity')}" alt="">10 of 28 room</dd>
+        <dt>Titles</dt><dd><img src="${ico('chrome/tab-victory')}" alt="">0 of 3 to win</dd>
+        <dt>Ideas</dt><dd><img src="${ico('assembly/national-idea')}" alt="">Frontier Charter</dd>
+        <dt>Luxury goods</dt><dd><img src="${ico('resources/luxury')}" alt="">None claimed</dd>
+      </dl><p class="note" style="margin-top:14px">Income, stores, people by class and mood are in the top bar, so the window does not repeat them.</p>`;
+    } else if (st.win === 'cities') {
+      body = `<table class="places"><thead><tr><th>Place</th><th>Land</th><th>People</th><th>Slots</th><th>Makes a turn</th></tr></thead><tbody>${MY.map(({ t, w }) => {
+        const mk = makes(t, w).out;
+        const m = Object.entries(mk).filter(([, v]) => v).map(([k, v]) => `<span class="${v > 0 ? 'up' : 'dn'}">${v > 0 ? '+' : '−'}${Math.abs(v)} ${k}</span>`).join(', ') || '<span style="color:var(--g-ink-66)">nothing</span>';
+        return `<tr class="row" data-goto="${t.id}"><td class="nm"><img src="${ico('settlements/' + (w.capital ? 'capital' : w.kind))}" alt="">${nameCase(w.name)}</td><td>${cap(t.terrain)}</td><td>${w.total} / ${w.kind === 'colony' ? 3 : 8}</td><td>${w.built + w.worked} / ${t.slots}</td><td>${m}</td></tr>`;
+      }).join('')}</tbody></table><p class="note" style="margin-top:12px">A row opens the place in the inspector.</p>`;
+    } else if (st.win === 'people') {
+      body = `<dl class="ledger">
+        <dt>Citizens · 3</dt><dd><img src="${ico('pops/citizens')}" alt="">Make 1 influence each (2 with a Forum), eat 1 food</dd>
+        <dt>Freemen · 1</dt><dd><img src="${ico('pops/freemen')}" alt="">Make 1 gold each (2 with a Marketplace), eat 1 food</dd>
+        <dt>Slaves · 6</dt><dd><img src="${ico('pops/slaves')}" alt="">Work a slot: 1 of the land’s resource each</dd>
+        <dt>Ladder</dt><dd><img src="${ico('pops/promote')}" alt="">Promote and demote, today’s Ladder page unchanged</dd>
+      </dl>`;
+    } else {
+      body = `<p class="note">The ${title} page moves into this window as it is today. Only its frame changes: this title bar, close and Esc.</p>`;
+    }
+    const tabs = isRealm ? `<nav class="tabs" role="tablist">${realmTabs.map(k => `<button type="button" role="tab" data-tab="${k}" aria-selected="${st.win === k}">${{ overview: 'Overview', cities: 'Cities', people: 'People' }[k]}</button>`).join('')}</nav>` : '';
+    return `<section class="win" aria-label="${title}">${head}${tabs}<div class="wb">${body}</div></section>`;
+  }
+  $('#win').addEventListener('click', e => {
+    const tab = e.target.closest('[data-tab]'); if (tab) { st.win = tab.dataset.tab; render(); return; }
+    if (e.target.closest('[data-act="close-win"]')) { st.win = null; render(); return; }
+    const row = e.target.closest('[data-goto]'); if (row) { st.win = null; pick(row.dataset.goto); }
+  });
+  $('#seal').addEventListener('click', () => { st.win = st.win ? null : 'overview'; st.fan = null; render(); });
+  $('#rail').addEventListener('click', e => {
+    const b = e.target.closest('[data-win]'); if (!b) return;
+    st.win = st.win === b.dataset.win ? null : b.dataset.win; st.fan = null; render();
+  });
+
+  // ── map modes ──
+  const LEGEND = {
+    political: ['Political', 'Owned land in its realm’s colour, the realm’s name across it. Badges hidden.'],
+    economy: ['Economy', 'Under each tile: what its worked slots make / slots free.'],
+    trade: ['Trade', 'Goods and their holders, ship routes, and under each capital its export ↑ and import ↓.'],
+  };
+  document.querySelectorAll('.mode[data-mode]').forEach(b => b.addEventListener('click', () => { st.mode = b.dataset.mode; render(); }));
+  function paintHtml() {
+    if (st.mode !== 'political') return '';
+    const cells = TILES.map(t => {
+      const owner = t.towns[0]?.owner;
+      const c = owner ? SEATS[owner].c : '#d8ccb0';
+      return `<div class="paint" style="left:${t.x}px;top:${t.y}px;width:${t.w}px;height:${t.h}px;background:${c};opacity:${owner ? .93 : .82}"></div>`;
+    }).join('');
+    const names = Object.entries(CAPITAL).map(([id, who]) => { const t = byId[id]; return `<div class="realm-name" style="left:${t.x + t.w / 2}px;top:${t.y + t.h * .76}px">${who.toUpperCase()}</div>`; }).join('');
+    return cells + names;
+  }
+
+  // ── pick, camera clearance ──
+  function pick(id) { st.pick = id; st.fan = null; render(); }
+  function inspRect() {
+    const el = document.querySelector('#insp .insp');
+    if (!el) return null;
+    return { x: 92, y: 900 - 108 - el.offsetHeight, w: el.offsetWidth, h: el.offsetHeight };
+  }
+
+  // ── today screenshots ──
+  function todayImg() {
+    if (st.win) return 'img/today-cities.jpg';
+    const t = st.pick && byId[st.pick];
+    if (!t) return 'img/today-default.jpg';
+    if (!t.towns.length) return 'img/today-land.jpg';
+    return t.towns.some(w => w.owner === ME) ? 'img/today-city.jpg' : 'img/today-rival.jpg';
+  }
+
+  function render() {
+    $('#map').src = `img/map-${st.mode}.jpg`;
+    $('#paint').innerHTML = paintHtml();
+    document.querySelectorAll('.mode[data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === st.mode)));
+    const lg = $('#legend');
+    if (LEGEND[st.mode]) { lg.hidden = false; lg.innerHTML = `<b>${LEGEND[st.mode][0]}</b><span>${LEGEND[st.mode][1]}</span>`; } else lg.hidden = true;
+    $('#insp').innerHTML = inspHtml();
+    $('#win').innerHTML = winHtml();
+    $('#fan').innerHTML = st.fan ? fanHtml(st.fan) : '';
+    document.querySelectorAll('.verb').forEach(b => {
+      b.setAttribute('aria-expanded', String(b.dataset.verb === st.fan));
+      b.classList.toggle('target', !!ownTown() && ['grow', 'people', 'build'].includes(b.dataset.verb));
+    });
+    document.querySelectorAll('#rail [data-win]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.win === st.win)));
+    // selection ring + camera clearance
+    const ring = $('#ring'); let dx = 0;
+    const t = st.pick && byId[st.pick];
+    if (t) {
+      const p = 6;
+      ring.setAttribute('width', t.w + 2 * p); ring.setAttribute('height', t.h + 2 * p);
+      ring.style.left = (t.x - p) + 'px'; ring.style.top = (t.y - p) + 'px';
+      const W = t.w, H = t.h;
+      ring.querySelector('polygon').setAttribute('points', [[W / 2, 0], [W, H * .25], [W, H * .75], [W / 2, H], [0, H * .75], [0, H * .25]].map(([x, y]) => `${x + p},${y + p}`).join(' '));
+      ring.style.display = '';
+      const r = inspRect();
+      const f = document.querySelector('#fan .fan');
+      const right = Math.max(r ? r.x + r.w : 0, f ? f.offsetLeft + f.offsetWidth : 0);
+      const top = Math.min(r ? r.y : 900, f ? f.offsetTop : 900);
+      if (right && t.x < right + 24 && t.y + t.h > top - 24) dx = right + 70 - t.x;
+    } else ring.style.display = 'none';
+    world.style.transform = `translateX(${dx}px)`;
+    // today
+    stage.classList.toggle('is-today', st.today);
+    $('#today-img').src = todayImg();
+    $('#stage-tag').textContent = st.today ? 'TODAY · MAIN c09175c' : 'PROPOSAL';
+  }
+
+  // controls outside the stage
+  $('#btn-prop').addEventListener('click', () => { st.today = false; $('#btn-prop').setAttribute('aria-pressed', 'true'); $('#btn-today').setAttribute('aria-pressed', 'false'); render(); });
+  $('#btn-today').addEventListener('click', () => { st.today = true; $('#btn-today').setAttribute('aria-pressed', 'true'); $('#btn-prop').setAttribute('aria-pressed', 'false'); render(); });
+  document.querySelectorAll('[data-jump]').forEach(b => b.addEventListener('click', () => {
+    const j = b.dataset.jump; st.fan = null;
+    if (j === 'none') { st.pick = null; st.win = null; }
+    else if (j === 'win') { st.win = 'cities'; }
+    else { st.win = null; st.pick = j; }
+    render();
+  }));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { if (st.fan) st.fan = null; else if (st.win) st.win = null; else st.pick = null; render(); }
+    if (['1', '2', '3', '4'].includes(e.key) && !e.target.closest('input,textarea')) { st.mode = ['terrain', 'political', 'economy', 'trade'][+e.key - 1]; render(); }
+  });
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Temple — four-column Doric facade</title>
+<defs>
+<linearGradient id="a-temple-marble" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#f7ecd2"/><stop offset="1" stop-color="#c9b48c"/></linearGradient>
+<linearGradient id="a-temple-stone" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e1d9c5"/><stop offset="0.48" stop-color="#b9b09a"/><stop offset="1" stop-color="#817a68"/></linearGradient>
+</defs>
+<path d="M6 23L32 6L58 23V29H6Z" fill="url(#a-temple-marble)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M15 22L32 12L49 22Z" fill="#c9b48c"/>
+<path d="M17 23H47" fill="none" stroke="#b49c76" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M9 29H55V49H9Z" fill="url(#a-temple-stone)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M18 30H22V49H18ZM30 30H34V49H30ZM42 30H46V49H42Z" fill="#3a2a1e"/>
+<path d="M10 30H18V49H10ZM22 30H30V49H22ZM34 30H42V49H34ZM46 30H54V49H46Z" fill="url(#a-temple-marble)"/>
+<path d="M16 32V46M28 32V46M40 32V46M52 32V46" fill="none" stroke="#c9b48c" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M9 48H55V51H57V54H58V58H6V54H7V51H9Z" fill="url(#a-temple-marble)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M10 51H54M8 54H56M9 26H54" fill="none" stroke="#b49c76" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M12 24L31 11" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M32 14L46 22H40L32 17ZM7 27H57V28H7ZM15 31H17V47H15ZM27 31H29V47H27ZM39 31H41V47H39ZM51 31H53V47H51ZM7 56H57V57H7Z" fill="#a48e69"/>
+<path d="M9 24L31 9M8 25H27M11 31V46M23 31V46M35 31V46M47 31V46M10 49H35" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M12 52L17 52M39 50H44M26 23H30" fill="none" stroke="#b49c76" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

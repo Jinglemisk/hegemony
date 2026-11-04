@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Building slot — empty square stone foundation with corner stakes</title>
+<defs>
+<linearGradient id="a-slot-stone" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e1d9c5"/><stop offset="0.48" stop-color="#b9b09a"/><stop offset="1" stop-color="#817a68"/></linearGradient>
+<linearGradient id="a-slot-marble" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#f7ecd2"/><stop offset="1" stop-color="#c9b48c"/></linearGradient>
+<linearGradient id="a-slot-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+</defs>
+<path d="M6 22L31 9L58 22V45L33 58L6 45ZM18 28V38L33 46L46 38V28L32 21Z" fill="url(#a-slot-stone)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" fill-rule="evenodd"/>
+<path d="M7 24L18 29V38L33 46L46 38V29L57 24V44L33 57L7 44ZM18 23L32 15L46 23V28L32 21L18 28Z" fill="url(#a-slot-marble)"/>
+<path d="M46 29L57 24V44L33 57V47L46 39ZM8 41L32 53V57L7 44Z" fill="#817a68"/>
+<path d="M8 24L16 28M9 40L30 51M21 21L31 16" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M8 33L17 36M19 45L19 50M32 48V56M43 45V51M48 34L57 29M22 16L27 23M41 16L37 23" fill="none" stroke="#8e826b" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M6 15H13V30H6Z" fill="url(#a-slot-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M28 6H35V20H28Z" fill="url(#a-slot-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M51 15H58V30H51Z" fill="url(#a-slot-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M29 41H36V58H29Z" fill="url(#a-slot-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M10 17H12V29H10ZM32 8H34V19H32ZM55 17H57V29H55ZM33 43H35V57H33Z" fill="#624123"/>
+<path d="M8 17V25M30 8V16M53 17V25M31 43V52" fill="none" stroke="#f6dfb0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M8 35L11 36M38 51L41 49M20 20L22 19" fill="none" stroke="#c5baa1" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

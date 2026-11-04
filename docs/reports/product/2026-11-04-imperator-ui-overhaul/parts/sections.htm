@@ -1,0 +1,195 @@
+<section class="block" id="verdict">
+  <div class="wrap">
+    <h2>Short version</h2>
+    <div class="verdict">
+      <div><b>Imperator's bottom-left</b>The settlement panel appears only while a province is selected and sizes itself to it: a large two-part panel for your own province, a small card for anyone else's. With nothing selected the corner is empty map.</div>
+      <div><b>Ours</b>Our bottom-left panel never leaves and holds five jobs at once: the verbs, the realm header, three realm ledgers, an overview that repeats the top bar, and the selection. Each one gets too little room.</div>
+      <div><b>The new shell</b>The selection owns the bottom-left corner and carries what you do to a place. Realm drawers open off the left rail and join it in one block. The menu opens windows you can move; the outliner and the dock hold the right edge. Anything that spends asks once.</div>
+      <div><b>What it costs</b>The shell's layout and its panel components change. The engine, the map and the alarms stay as they are. Eight slices, each one shippable alone.</div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="prototype">
+  <div class="wrap">
+    <h2>Prototype</h2>
+    <p class="prose">Our real board, the late-game dev scene with Kyros to play. <b>Proposal</b> is the new shell. <b>Proposal B</b> is a copy of it with your 4 November changes: the log line across the dock, a centred rail with larger buttons, drawers the outliner’s width, and drawer contents built from icons. <b>Today</b> is the live build in the same state. Everything on the screen responds to a click. Rest on a tooltip until its bar fills, then hover an underlined word. Enter says yes to a confirm, Esc closes the top-most thing, keys 1–4 switch modes and H opens the hand.</p>
+    <div class="proto-bar">
+      <div class="seg" role="group" aria-label="Which shell">
+        <button type="button" data-shell="b" aria-pressed="true">Proposal B</button>
+        <button type="button" data-shell="prop" aria-pressed="false">Proposal</button>
+        <button type="button" data-shell="today" aria-pressed="false">Today</button>
+      </div>
+    </div>
+    <div class="jumpset">
+      <div class="jumps" role="group" aria-label="Scenes"><span>Scenes</span>
+        <button type="button" data-jump="offer:arrive">An offer arrives</button>
+        <button type="button" data-jump="riot:ask">End turn at −3</button>
+        <button type="button" data-jump="riot:sheet">Riot</button>
+        <button type="button" data-jump="hunger:">Hunger, 1 food short</button>
+        <button type="button" data-jump="moment:fate">Fate card</button>
+        <button type="button" data-jump="asm:open">Assembly sitting</button>
+        <button type="button" data-jump="hand:empty">An empty hand</button>
+        <button type="button" data-jump="drawn:settlers">Buy a card: one to keep</button>
+      </div>
+      <details class="alljumps"><summary>Every other state, by name</summary><div class="jumpset">
+      <div class="jumps" role="group" aria-label="Pick"><span>Pick</span>
+        <button type="button" data-jump="pick:none">Nothing</button>
+        <button type="button" data-jump="pick:-5,0">Rhodos, your capital</button>
+        <button type="button" data-jump="pick:-2,-1">Gortyn, your city</button>
+        <button type="button" data-jump="pick:-2,2">Olynthos, your colony</button>
+        <button type="button" data-jump="pick:-4,-1">Samos, a freeman to promote</button>
+        <button type="button" data-jump="pick:-5,6">Korone, Nikos</button>
+        <button type="button" data-jump="seat:Nikos">Nikos's card</button>
+        <button type="button" data-jump="pick:-6,6">Open forest</button>
+        <button type="button" data-jump="pick:3,-3">The Oracle</button>
+      </div>
+      <div class="jumps" role="group" aria-label="Actions"><span>Act</span>
+        <button type="button" data-jump="drop:mood">Calm, from happiness</button>
+        <button type="button" data-jump="fan:grow">Grow in Rhodos</button>
+        <button type="button" data-jump="fan:build">Raise in Rhodos</button>
+        <button type="button" data-jump="trade:">Trade</button>
+        <button type="button" data-jump="trade:-5,6">Trade, Korone picked</button>
+        <button type="button" data-jump="confirm:buy">Buy a card</button>
+        <button type="button" data-jump="confirm:dole">The Dole</button>
+        <button type="button" data-jump="confirm:promote">Promote in Samos</button>
+        <button type="button" data-jump="confirm:calm">Calm, asked</button>
+        <button type="button" data-jump="confirm:idea">Take an Idea</button>
+      </div>
+      <div class="jumps" role="group" aria-label="Drawers"><span>Drawers</span>
+        <button type="button" data-jump="win:overview">Realm, from the seal</button>
+        <button type="button" data-jump="win:cities">Cities</button>
+        <button type="button" data-jump="win:people">People</button>
+        <button type="button" data-jump="win:ideas">Ideas</button>
+        <button type="button" data-jump="win:agora">Agora</button>
+        <button type="button" data-jump="winpick:cities">Cities, then pick Rhodos</button>
+      </div>
+      <div class="jumps" role="group" aria-label="Menu"><span>Menu</span>
+        <button type="button" data-jump="menu:">Open the menu</button>
+        <button type="button" data-jump="float:victory">Victory</button>
+        <button type="button" data-jump="float:codex">Codex</button>
+        <button type="button" data-jump="float:costs">Costs</button>
+        <button type="button" data-jump="float:plates">Plates</button>
+        <button type="button" data-jump="combo:">Realm beside Victory and Costs</button>
+      </div>
+      <div class="jumps" role="group" aria-label="Cards"><span>Cards</span>
+        <button type="button" data-jump="hand:sample">A sample hand of four</button>
+        <button type="button" data-jump="handview:">View the hand</button>
+        <button type="button" data-jump="play:settlers">Play Settlers</button>
+        <button type="button" data-jump="play:raiders">Play Raiders</button>
+        <button type="button" data-jump="drawn:woodcutters">Buy a card: a yield</button>
+      </div>
+      <div class="jumps" role="group" aria-label="Outliner"><span>Outliner</span>
+        <button type="button" data-jump="outl:default">As it opens</button>
+        <button type="button" data-jump="outl:cfg">Its settings</button>
+        <button type="button" data-jump="outl:rivals">With rivals' places</button>
+        <button type="button" data-jump="outl:closed">Tucked away</button>
+      </div>
+      <div class="jumps" role="group" aria-label="Dock"><span>Dock</span>
+        <button type="button" data-jump="drop:chron">The chronicle</button>
+        <button type="button" data-jump="mode:political">Political, with its legend</button>
+      </div>
+      <div class="jumps" role="group" aria-label="Alarms"><span>Alarms</span>
+        <button type="button" data-jump="drop:threat">Three titles</button>
+        <button type="button" data-jump="moment:year">Year card</button>
+        <button type="button" data-jump="drop:unrest">Discontent</button>
+        <button type="button" data-jump="drop:port">A free luxury</button>
+        <button type="button" data-jump="offer:open">Answer the offer</button>
+      </div>
+      <div class="jumps" role="group" aria-label="Moments"><span>Moments</span>
+        <button type="button" data-jump="asm:min">Sitting minimised</button>
+      </div>
+    </div>
+      </div></details>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="stage-wrap" id="stage-wrap">
+      <div class="stage-tag" id="stage-tag">PROPOSAL B</div>
+      <div class="stage" id="stage">
+        <div class="world" id="world">
+          <img class="map" id="map" src="img/map-terrain.jpg" alt="The late-game island seen from the opening view">
+          <div id="paint"></div>
+          <div id="hots"></div>
+          <svg class="ring" id="ring" width="0" height="0" aria-hidden="true"><polygon points=""/></svg>
+        </div>
+
+        <div class="bar" id="bar">
+          <div class="yr"><b>Year XII</b><span>of XIV · 2 left</span></div>
+          <div class="grp">
+            <div class="cell" data-tip="wood"><img src="icons/resources/wood.svg" alt=""><div class="v"><b>1</b><i class="up">+1</i></div></div>
+            <div class="cell" data-tip="stone"><img src="icons/resources/stone.svg" alt=""><div class="v"><b>1</b><i class="up">+1</i></div></div>
+            <div class="cell" data-tip="food"><img src="icons/resources/food.svg" alt=""><div class="v"><b>0</b><i>±0</i></div></div>
+            <div class="cell" data-tip="gold"><img src="icons/resources/gold.svg" alt=""><div class="v"><b>2</b><i class="up">+1</i></div></div>
+          </div>
+          <div class="grp">
+            <div class="cell" data-tip="influence"><img src="icons/resources/influence.svg" alt=""><div class="v"><b>9</b><i class="up">+6</i></div></div>
+          </div>
+          <div class="grp">
+            <div class="cell" data-tip="citizens"><img src="icons/pops/citizens.svg" alt=""><div class="v"><b>3</b><i>citizens</i></div></div>
+            <div class="cell" data-tip="freemen"><img src="icons/pops/freemen.svg" alt=""><div class="v"><b>1</b><i>freemen</i></div></div>
+            <div class="cell" data-tip="slaves"><img src="icons/pops/slaves.svg" alt=""><div class="v"><b>6</b><i>slaves</i></div></div>
+            <div class="cell" data-tip="room"><img src="icons/pops/capacity.svg" alt=""><div class="v"><b>10<small style="font-size:13px;color:var(--g-ink-66)">/28</small></b><i>room</i></div></div>
+          </div>
+          <div class="grp">
+            <button class="cell mood" id="mood" type="button" data-tip="mood" aria-expanded="false" aria-label="Happiness −2, discontent: open for Calm"><img src="icons/resources/unhappiness.svg" alt=""><div class="v"><b class="dn">−2</b><i>discontent</i></div><span class="mood-meter" aria-hidden="true"></span></button>
+          </div>
+          <button class="menu-btn" id="menu-btn" type="button" aria-expanded="false" aria-haspopup="menu" data-tip="menu"><i aria-hidden="true"></i>MENU</button>
+        </div>
+
+        <button class="seal" id="seal" type="button" aria-label="Realm of Kyros: open the realm window" data-tip="seal">Κ</button>
+        <div class="alarms" aria-label="Alarms">
+          <button class="alarm offer" type="button" data-alarm="offer" data-tip="a-offer" aria-expanded="false" hidden><img src="icons/market/handshake.svg" alt="Theron offers you a trade"><span class="pip" style="background:#7c4d79;color:#fff8e7">Θ</span></button>
+          <button class="alarm hurt" type="button" data-alarm="threat" data-tip="a-threat" aria-expanded="false"><img src="icons/victory/laurel.svg" alt="Three titles: Nikos"></button>
+          <button class="alarm" type="button" data-alarm="year" data-tip="a-year" aria-expanded="false"><img src="icons/events/year.svg" alt="Year card"></button>
+          <button class="alarm hurt" type="button" data-alarm="unrest" data-tip="a-unrest" aria-expanded="false"><img src="icons/unrest/discontent.svg" alt="Discontent"></button>
+          <button class="alarm help" type="button" data-alarm="port" data-tip="a-port" aria-expanded="false"><img src="icons/resources/luxury.svg" alt="A free luxury"></button>
+        </div>
+        <nav class="rail panel" id="rail" aria-label="Realm drawers">
+          <button type="button" data-win="cities" data-tip="r-cities"><img src="icons/settlements/city.svg" alt="Cities"></button>
+          <button type="button" data-win="people" data-tip="r-people"><img src="icons/pops/crowd.svg" alt="People"></button>
+          <button type="button" data-win="ideas" data-tip="r-ideas"><img src="icons/assembly/national-idea.svg" alt="Ideas"></button>
+          <button type="button" data-win="agora" data-tip="r-agora"><img src="icons/assembly/agora.svg" alt="Agora"></button>
+        </nav>
+
+        <div class="dock" id="dock">
+          <div class="legend" id="legend" hidden></div>
+          <div class="dk panel">
+            <div class="logw" id="logw"></div>
+            <div class="dgrid">
+              <button class="chron" id="chron" type="button" data-tip="chron" aria-expanded="false"><span class="dot">Κ</span><span class="t">Kyros resolved Patronage: +2 influence.</span><i aria-hidden="true">▲</i></button>
+              <div class="modes" role="group" aria-label="Map mode">
+                <button class="mode" type="button" data-mode="terrain" aria-pressed="true" aria-label="Terrain" data-tip="m-terrain"><img src="icons/terrain/plains.svg" alt=""></button>
+                <button class="mode" type="button" data-mode="political" aria-pressed="false" aria-label="Political" data-tip="m-political"><img src="icons/settlements/city.svg" alt=""></button>
+                <button class="mode" type="button" data-mode="economy" aria-pressed="false" aria-label="Economy" data-tip="m-economy"><img src="icons/market/income.svg" alt=""></button>
+                <button class="mode" type="button" data-mode="trade" aria-pressed="false" aria-label="Trade" data-tip="m-trade"><img src="icons/market/handshake.svg" alt=""></button>
+              </div>
+              <div class="acts">
+                <button class="dact" type="button" data-dact="trade" data-tip="d-trade"><img src="icons/market/handshake.svg" alt=""><b>Trade</b><span class="c sub">Offer ▸</span></button>
+                <button class="dact" type="button" data-dact="buy" data-tip="d-buy"><img src="icons/events/convoy.svg" alt=""><b>Buy a card</b><span class="c"></span></button>
+                <button class="dact" type="button" data-dact="dole" data-tip="d-dole"><img src="icons/unrest/bread-dole.svg" alt=""><b>The Dole</b><span class="c"></span></button>
+              </div>
+              <button class="endturn" type="button" data-tip="endturn"><span class="disc"><img src="icons/events/end-turn.svg" alt=""></span><b>END TURN</b></button>
+            </div>
+          </div>
+        </div>
+
+        <button class="asm-pill" id="asm-pill" type="button" hidden><img src="icons/assembly/agora.svg" alt="">Assembly, Year XIV: your proposal. <b>Return to the sitting</b></button>
+        <div id="outl"></div>
+        <div class="hand" id="hand" aria-label="Your hand"></div>
+        <div id="win"></div>
+        <div class="corner" id="corner"><div id="insp"></div></div>
+        <div id="float"></div>
+        <div id="menu"></div>
+        <div id="fan"></div>
+        <div id="drop"></div>
+        <div id="moment"></div>
+        <div id="cfm"></div>
+        <div id="tips"></div>
+        <div id="toast" class="toast" hidden></div>
+        <div class="today"><img id="today-img" src="img/today-default.jpg" alt="The current build in the same state"></div>
+      </div>
+    </div>
+  </div>
+</section>
+

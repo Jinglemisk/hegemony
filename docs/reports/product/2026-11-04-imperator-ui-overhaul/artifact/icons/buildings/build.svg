@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Build — mason’s mallet and chisel over a dressed block</title>
+<defs>
+<linearGradient id="a-build-stone" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e1d9c5"/><stop offset="0.48" stop-color="#b9b09a"/><stop offset="1" stop-color="#817a68"/></linearGradient>
+<linearGradient id="a-build-marble" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#f7ecd2"/><stop offset="1" stop-color="#c9b48c"/></linearGradient>
+<linearGradient id="a-build-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+<linearGradient id="a-build-iron" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c0b9a4"/><stop offset="0.48" stop-color="#8e8a7a"/><stop offset="1" stop-color="#514e45"/></linearGradient>
+</defs>
+<path d="M6 37L18 29H47L58 37V58H6Z" fill="url(#a-build-stone)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M7 38H46V57H7Z" fill="url(#a-build-marble)"/>
+<path d="M47 38L57 37V57H47Z" fill="#817a68"/>
+<path d="M7 38H46L56 36M46 38V56" fill="none" stroke="#8e826b" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M17 13L25 9L48 41L41 47Z" fill="url(#a-build-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M23 13L46 42L42 44L20 15Z" fill="#8b633b"/>
+<path d="M9 6L34 12L30 28L6 22Z" fill="url(#a-build-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M28 13L33 14L29 27L24 25Z" fill="#624123"/>
+<path d="M9 9L27 13M9 14L8 19M25 29L34 41" fill="none" stroke="#f6dfb0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M12 17L21 19M17 11L22 13" fill="none" stroke="#a67b48" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M48 7L56 13L57 17L43 33L34 51L20 40L34 29L35 25L45 9Z" fill="url(#a-build-iron)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M52 14L56 17L41 34L33 49L29 46L36 31Z" fill="#514e45"/>
+<path d="M23 38L35 47L34 50L21 40Z" fill="#e1d9c5"/>
+<path d="M34 29L42 35M45 10L53 16L55 14" fill="none" stroke="#514e45" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M46 13L37 25M24 39L32 33M24 41L31 47" fill="none" stroke="#e1d9c5" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M46 10L49 11L46 15L43 14Z" fill="#fff8e9"/>
+<path d="M8 54H45V57H8ZM51 42L57 40V57H48V54H51Z" fill="#665f50"/>
+<path d="M9 42H19M9 45V50" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 49L18 48M36 52H41M51 47V50" fill="none" stroke="#b49c76" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>
