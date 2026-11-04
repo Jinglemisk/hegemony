@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Treasury — tied linen money sack and coins</title>
+<defs>
+<linearGradient id="a-treasury-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+<linearGradient id="a-treasury-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+<linearGradient id="a-treasury-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0b0"/><stop offset="0.48" stop-color="#d8b45e"/><stop offset="1" stop-color="#997035"/></linearGradient>
+</defs>
+<path d="M23 22L17 7L27 10L32 6L38 10L45 7L40 22C48 27 56 38 55 47C55 56 44 58 29 58C15 58 6 55 7 45C8 35 15 27 23 22Z" fill="url(#a-treasury-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M38 24Q53 34 53 46Q55 56 31 57L27 54Q43 54 43 43Q44 33 38 24Z" fill="#aa9572"/>
+<path d="M49 38Q58 56 32 57L24 55Q47 54 49 38Z" fill="#806c50"/>
+<path d="M22 11L27 19M39 12L35 19M24 29Q17 36 17 43M35 28L38 37M22 49L29 51" fill="none" stroke="#aa9572" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M22 18Q31 21 41 18V24Q31 27 22 24Z" fill="url(#a-treasury-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M35 22L41 21V24L34 25Z" fill="#795025"/>
+<path d="M24 20Q29 22 34 21M12 40Q14 32 21 28M11 46Q10 50 16 52M21 9L24 14" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M15 46L18 48M30 31L29 34M40 45L42 42" fill="none" stroke="#c1ad84" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M36 49H57V54C57 59 36 59 36 54Z" fill="url(#a-treasury-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<ellipse cx="46.5" cy="49" rx="10.5" ry="5" fill="url(#a-treasury-gold)" stroke="#181210" stroke-width="2.5"/>
+<path d="M40 48L45 46M39 54L45 55" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M53 52L56 51V54Q53 57 47 57V55Z" fill="#795025"/>
+<ellipse cx="29" cy="53" rx="9" ry="5" fill="url(#a-treasury-gold)" stroke="#181210" stroke-width="2.5"/>
+<path d="M35 51Q39 56 29 57L26 56Q35 55 35 51Z" fill="#997035"/>
+<path d="M24 52L28 50" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M26 50L28 49L30 50L27 52Z" fill="#fff8e9"/>
+</svg>

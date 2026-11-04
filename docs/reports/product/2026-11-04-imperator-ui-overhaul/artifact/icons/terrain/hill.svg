@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Hill — two rounded grassy slopes</title>
+<defs>
+<linearGradient id="a-hill-leaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a8b976"/><stop offset="0.48" stop-color="#7d8f51"/><stop offset="1" stop-color="#48542c"/></linearGradient>
+<linearGradient id="a-hill-wheat" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3dda0"/><stop offset="0.48" stop-color="#d8be73"/><stop offset="1" stop-color="#a07b38"/></linearGradient>
+</defs>
+<path d="M6 58V41Q7 16 24 15Q41 14 46 39L58 58Z" fill="url(#a-hill-leaf)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M24 16Q36 17 42 36L45 48L30 43Q27 29 17 22Z" fill="url(#a-hill-wheat)"/>
+<path d="M35 23Q43 31 45 43L51 54H39L36 42Z" fill="#48542c"/>
+<path d="M6 58Q11 43 21 40Q25 24 41 26Q56 28 58 47V58Z" fill="url(#a-hill-leaf)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M40 27Q52 29 55 42L57 57H43Q47 41 40 27Z" fill="#48542c"/>
+<path d="M21 41Q27 29 38 29Q34 34 32 43Q19 48 14 57H7Z" fill="url(#a-hill-wheat)"/>
+<path d="M42 54Q49 49 56 51L57 57H32Z" fill="#344321"/>
+<path d="M9 39Q11 21 23 18M25 39Q29 31 35 30M9 55Q15 48 21 46" fill="none" stroke="#d3dba5" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M15 31L19 29M33 47L37 46M46 39L49 41" fill="none" stroke="#809352" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M17 52L21 50M29 35L31 33" fill="none" stroke="#b18d49" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

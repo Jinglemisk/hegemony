@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Expedition die — three faces of an ivory die</title>
+<defs>
+<linearGradient id="a-die-marble" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#f7ecd2"/><stop offset="1" stop-color="#c9b48c"/></linearGradient>
+<linearGradient id="a-die-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+</defs>
+<path d="M32 6L58 20V44L32 58L6 44V20Z" fill="url(#a-die-marble)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M32 33L57 20V44L32 57Z" fill="#c9b48c"/>
+<path d="M7 21L32 34V57L7 44Z" fill="url(#a-die-linen)"/>
+<path d="M7 20L32 34L57 20M32 34V57" fill="none" stroke="#8e7958" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M53 24L57 22V43L33 56V52L53 41Z" fill="#a48e69"/>
+<ellipse cx="20" cy="20" rx="4" ry="3" fill="#3a2a1e"/>
+<ellipse cx="32" cy="20" rx="4" ry="3" fill="#3a2a1e"/>
+<ellipse cx="44" cy="20" rx="4" ry="3" fill="#3a2a1e"/>
+<ellipse cx="16" cy="33" rx="4" ry="4.5" fill="#3a2a1e"/>
+<ellipse cx="24" cy="46" rx="4" ry="4.5" fill="#3a2a1e"/>
+<ellipse cx="45" cy="38" rx="4" ry="5" fill="#3a2a1e"/>
+<path d="M10 19L31 8L50 18M9 25V41M35 35L51 26" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 43L17 46M38 49L41 47" fill="none" stroke="#b49c76" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

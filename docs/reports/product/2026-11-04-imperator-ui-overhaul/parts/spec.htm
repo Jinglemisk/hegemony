@@ -1,0 +1,150 @@
+<section class="block" id="spec">
+  <div class="wrap">
+    <h2>The overhaul</h2>
+    <h3>Proposal B</h3>
+    <p class="prose">A copy of the Proposal with four changes. Everything below describes the Proposal; where B differs, these points stand in its place.</p>
+    <ul class="prose">
+      <li><b>The dock.</b> The log line runs across the whole dock, End turn included. End turn sits under it, beside the map modes and Trade, Buy a card and the Dole, and is 126 px tall instead of 162.</li>
+      <li><b>The rail</b> is a tab centred on the left edge, with buttons 56 by 50 and 33 px icons. It rises to stay clear of the inspector, and when a drawer opens it runs the drawer's height with its buttons where they were.</li>
+      <li><b>Drawers</b> are 320 px wide, the outliner's width, so the two edges hold the same width. The inspector keeps its own width beside a drawer, so the hand's fixed place moves to 560 px, right of the large inspector, and widens to 544 px.</li>
+      <li><b>Drawer contents</b> follow Imperator's panels: tabs are equal buttons across the drawer, sections open under a dark band, and figures are icon tiles. Rules and effects moved into tooltips. Cities is one two-line row a place, People three class columns, Ideas tiles with free ones first, Agora four stelae and the orators' grid.</li>
+    </ul>
+    <h3 style="margin-top:28px">Zone by zone</h3>
+    <div class="scroll">
+      <table class="spec">
+        <thead><tr><th>Zone</th><th>What sits there</th></tr></thead>
+        <tbody>
+          <tr><td>Top bar</td><td>Year, the five resources, the three pop classes and room, happiness. Each shows its stock over its change (green helps, red hurts), and hovering one breaks the change down by settlement. A click on happiness opens its card, with Calm. Menu sits at the right end.</td></tr>
+          <tr><td>Seal and alarms</td><td>The seal top-left opens your Realm drawer (Overview, Cities, People). A rival's icon, in the inspector of any of their places, opens their card. The alarms hang beside it, and each opens its own card under it: three titles, the year card, discontent, a free luxury, an offer from a rival. A minimised Assembly waits there as a pill.</td></tr>
+          <tr><td>Left rail and drawers</td><td>Four buttons: Cities, People, Ideas, Agora. The seal is the fifth way in, to Realm. A drawer sits flush against the rail and runs to the inspector's top edge, or to the foot of the screen with nothing picked. The rail runs down with it, so no map shows between them. When you pick a place the drawer shortens to make room, and the inspector widens to the drawer's right-hand edge, so the two read as one block. Every drawer is 640 px wide.</td></tr>
+          <tr><td>Bottom-left corner</td><td>The inspector, only while something is picked. With nothing picked the corner is map.</td></tr>
+          <tr><td>Bottom centre</td><td>The hand, in one fixed place: right of the widest the corner gets (the inspector beside a drawer, 704 px) and left of the dock. Held cards peek from the bottom edge and rise on hover. Nothing that opens beside it moves or resizes it.</td></tr>
+          <tr><td>Right edge</td><td>The outliner, from under the top bar to the dock: your settlements, trade, the Assembly, and rivals' places if you turn them on. It is the dock's width.</td></tr>
+          <tr><td>Top-right</td><td>The menu, and nothing else. Victory, Codex, Costs and Plates open from the menu as windows. They start top-right, you can drag them anywhere, and several can stay open.</td></tr>
+          <tr><td>Bottom-right</td><td>The dock, flush in the corner, three rows: the chronicle's last line, four square map-mode buttons, then Trade, Buy a card and the Dole side by side with their costs under them. End turn spans all three rows. The riot warning opens above it.</td></tr>
+          <tr><td>Centre</td><td>The board. Only moments cover it: the fate and year cards, the Assembly, the trade composer, the hand, a riot, hunger.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:28px">The corner: the inspector</h3>
+    <div class="qa" style="margin-top:0">
+      <div>
+        <p><b>What you do to a place, you do from the place.</b> Nothing picked: the corner is map. On a pick, the inspector slides in from the left edge at its own height. Its Grow and Raise options pop to its right, level with its foot.</p>
+        <ul class="rules">
+          <li><b>L, your settlement (540 px):</b> people out of room, slots used, what it makes a turn. Below that, two columns: slot squares on the left (built, worked, open; an open slot raises a building) and the three classes on the right, each with what it makes here and ▲ ▼ to promote or demote. The footer holds Grow here, Raise a building (or Make it a city) and Move a pop out, each with its cost and shortfall.</li>
+          <li><b>M, a rival's settlement (540 px):</b> the same facts without the controls, and one action, "Offer Nikos a trade", which opens the composer with Nikos chosen. The owner's icon in the title opens their card beside the inspector: people, places, happiness, gold, titles, Assembly, cards, Ideas.</li>
+          <li><b>With a drawer open,</b> any size widens to the drawer's edge (704 px), and the drawer's foot meets the inspector's top.</li>
+          <li><b>S, land and the Oracle (360 px):</b> what the land is, what it would give, and the one action it allows: Found a colony here.</li>
+        </ul>
+      </div>
+      <div>
+        <p><b>Rules it keeps.</b></p>
+        <ul class="rules">
+          <li>It opens on a pick. Esc, ×, a click on the sea, or another pick changes or closes it.</li>
+          <li>It is flush to the screen's edges, never floating.</li>
+          <li>A pick shows twice: a lit outline on the tile, and the inspector's title.</li>
+          <li>If any panel would cover the picked tile, the camera eases the tile clear.</li>
+          <li>It never scrolls. A settlement with more to say grows the corner upward.</li>
+          <li>A disabled action names its shortfall: "1 stone short", never "Not enough resources".</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 style="margin-top:28px">The dock</h3>
+    <ul class="rules prose">
+      <li><b>Order, top to bottom:</b> the chronicle's last line, the map modes, the three buttons. End turn spans all three rows on the right.</li>
+      <li><b>Map modes</b> are square framed buttons with no names, as in Imperator. The tooltip names the mode and its key (1–4), and the legend above the dock says what the mode shows.</li>
+      <li><b>The chronicle</b> shows its last line. A click opens the full log upward out of that line at the dock's width, oldest at the top and the newest next to the line. The outliner shortens to make room. The line, ×, or Esc closes it.</li>
+      <li><b>Trade, Buy a card, the Dole</b> sit side by side, each with its cost under its name (the Dole shows 3 influence → 1 food). Trade opens the composer, with the picked rival chosen if there is one. Buy a card and the Dole ask first.</li>
+      <li><b>End turn</b> spans the three rows. Hold to end, as today.</li>
+    </ul>
+
+    <h3 style="margin-top:28px">Are you sure?</h3>
+    <ul class="rules prose">
+      <li>Every action that spends asks once: Buy a card, the Dole, Calm, grow, raise, promote and demote, found, make it a city, a second Idea, and the Assembly's draw and repeal.</li>
+      <li>One component for all of them: a wide, quiet bar over the centre, the board dimmed only a little. "Are you sure you want to promote a freeman to citizen in Samos? This will cost 2 gold: gold 2 → 0. Up to three ladder moves a turn." Cancel, and the action's own verb.</li>
+      <li>Enter says yes, Esc or a click outside says no. An action you can't pay for never reaches it: its button names the shortfall.</li>
+    </ul>
+
+    <h3 style="margin-top:28px">Drawers and menu windows</h3>
+    <ul class="rules prose">
+      <li><b>Drawers</b> are the windows about your realm, all 640 px wide. One is open at a time, opened from the rail, or from the seal for Realm. They slide out of the rail, take the full height, and shorten when the inspector opens. A row in Cities picks the place without closing the drawer.</li>
+      <li><b>Realm</b> (Overview, Cities, People) shows no figure the top bar already shows. Cities has a Next column: what each place is short of. People is the ladder as a table with each move's price. <b>Ideas</b> is the draft's eleven cards with their holders. <b>Agora</b> shows the next sitting, the standing Laws side by side on their stelae (the Assembly sheet's cards), and the orators by seat.</li>
+      <li><b>Menu windows</b> are what you consult or set while you play: Victory, Codex, Costs, Plates. Each opens top-right, moves by its title bar, stays inside the screen, and comes to the front on a click. Esc closes the one on top. The menu marks the ones already open.</li>
+      <li><b>Victory</b> leads with the threat when a seat is on three titles. <b>Codex</b> is a two-pane reader with search, holding all fifteen chapters. <b>Costs</b> is the price card in two columns: red marks what today's store cannot pay, and a tinted row is moved by a standing Law. <b>Plates</b> holds the badge settings.</li>
+    </ul>
+
+    <h3 style="margin-top:28px">The outliner</h3>
+    <ul class="rules prose">
+      <li>A dark glass list down the right edge, as in Imperator, but short, since ours has a dozen places, not hundreds of armies.</li>
+      <li><b>Your settlements:</b> one row each, with people over room and the next thing it needs ("Empty: grow or move a pop in", "A Port claims Tyrian Dye"). A row picks the place, and the camera eases it clear.</li>
+      <li><b>Trade:</b> open offers first, then the luxury goods and who holds each, then the free ones beside you. An offer's row opens its card.</li>
+      <li><b>The Assembly:</b> the next sitting, your votes, the standing Laws and their authors. A row opens the Agora drawer.</li>
+      <li><b>Settings</b> (the gear): which sections show, rivals' settlements included, and the order of your places (needs you first, by people, A–Z). Every section folds. The dash tucks the whole outliner into a tab on the edge.</li>
+    </ul>
+
+    <h3 style="margin-top:28px">The hand</h3>
+    <ul class="rules prose">
+      <li>Held cards peek from the bottom edge, in one fixed place between the corner's widest and the dock, and rise when you hover them. A click, or H, opens the hand.</li>
+      <li>The hand view lays the cards out full size. Each card has Play, or the engine's reason it can't be played ("A card is never played on the turn it came in", "You have no Unrest token to clear"). Playing asks for the card's choice in place: a settlement with room for Settlers, a rival and a kind for Raiders.</li>
+      <li>Under the cards, three facts the player otherwise has to know: buying is 2 gold once a turn, a free card comes at +3 happiness, and a Riot or an Informer can take a held card.</li>
+      <li>A new card shows "plays from your next turn" on its face. The table sees how many cards you hold, never which, as it does today.</li>
+    </ul>
+
+    <h3 style="margin-top:28px">Moments</h3>
+    <ul class="rules prose">
+      <li>These keep today's components and copy. The shell only decides where each one sits.</li>
+      <li><b>Assembly:</b> a sheet over the map with the stage rail (Proposal, Ballot, Vote, Rises). Minimise sends it to a pill under the alarms, so a player can check the board and the outliner before sealing.</li>
+      <li><b>An offer from a rival</b> lands as a disc on the alarms row and as the first row of the outliner's Trade section. Its card opens under the seal and shows what you would hold after accepting.</li>
+      <li><b>Riot:</b> the warning opens above End turn, where the press happened. The sheet keeps today's insurance and table. <b>Hunger</b> keeps today's card.</li>
+      <li><b>A card drawn</b> keeps today's reveal: a yield pays at once ("Take the wood"), any other card goes to the hand ("Keep it").</li>
+    </ul>
+
+    <h3 style="margin-top:28px">Map modes</h3>
+    <ul class="rules prose">
+      <li>Each mode must be recognisable from a thumbnail. Political paints owned land flat in the realm's glaze and writes the realm's name large across its land. Terrain keeps today's look.</li>
+      <li>A short legend sits above the dock in Political, Economy and Trade, built from the descriptions the modes already carry in code. It rides up with the chronicle when that opens.</li>
+      <li>Keys 1–4 stay as they are.</li>
+    </ul>
+
+    <h3 style="margin-top:28px">Tooltips</h3>
+    <ul class="rules prose">
+      <li>A tooltip shows the cause behind a figure: each stock itemises its change by settlement, and happiness lists what raises and lowers it.</li>
+      <li>A tooltip with underlined words locks when you rest on it. A bar along its foot fills in 0.6 s, then the pointer can move into it, and an underlined word opens its own tooltip beside it. That one can nest again. Leaving them all closes the stack after 0.3 s.</li>
+      <li>The words come from one glossary in the shell, worded to match the Codex, so each rule is written once: happiness, Riot, revolt, Calm, Unrest token, luxury good, Port, the three classes, influence, titles, Beloved of the People.</li>
+    </ul>
+
+    <h3 style="margin-top:28px">Standards the shell meets</h3>
+    <ul class="rules prose">
+      <li>Text at 1440×900: names 20–22 px, body 14–15 px, small-caps labels at least 10 px. Numbers use tabular figures.</li>
+      <li>Targets: map-mode squares 46 px, rail buttons 54×44 px, dock buttons 77×66 px, End turn 88×162 px; everything else at least 32 px.</li>
+      <li>Every panel is flush to an edge or to another panel, except the menu windows, which you place. Every panel has a title, a close button and Esc. Esc closes the top-most thing: the confirm, card, menu, pop, alarm or player card, chronicle, the window on top, then the pick.</li>
+      <li>No text overprints. No panel hides another's controls, unless you have put it on top. The geometry audit (<code>ui:audit</code>) gates this at 1280, 1440 and 1920 wide.</li>
+      <li>Every number that changes shows its change, coloured by whether it helps or hurts.</li>
+      <li>Panels move in about 240 ms (drawers, inspector, chronicle, outliner and hand together), and motion stops under reduced motion.</li>
+      <li>An empty state hides, or says what would fill it: "No cards held · Buy one in the dock".</li>
+    </ul>
+
+    <h3 style="margin-top:28px">What stays</h3>
+    <div class="keep"><span>The 3D board and its two zoom levels</span><span>Alarms</span><span>Grow and Build options, now popping from the inspector</span><span>Chronicle line and End turn in the dock</span><span>Keys 1–4 for modes</span><span>Bronze icons</span><span>Today's card faces and moments</span><span>Flat content inside floating cards</span><span>Engine untouched</span></div>
+  </div>
+</section>
+
+<section class="block" id="build">
+  <div class="wrap">
+    <h2>Build order</h2>
+    <p class="prose">This is UI work in the shell. The engine, the projections and the 3D map's renderer don't change; in slice 7 the map changes only its mode filter and labels. Each slice is one PR that leaves the game playable.</p>
+    <ol class="slices prose">
+      <li><b>The corner.</b> Take the subject page out of the realm panel into a docked inspector with three sizes, carrying Grow, the ladder, Move a pop, Found, Make it a city and Raise, and widening to an open drawer's edge. The verb discs go. Build the confirm here, and route every spending action through it. Add the pick's outline on the tile and the shortfall wording. Today's settlement, tile, Oracle and good pages are reused inside it.</li>
+      <li><b>Drawers.</b> Today's overview, cities and ladder pages move into one Realm drawer, joined by Ideas and Agora, opened from the rail and the seal and sized to the inspector. The Build page folds into the inspector's open slots and the Build fan. The realm panel is then gone.</li>
+      <li><b>Menu and its windows.</b> Victory, Codex and Costs leave the top bar for the menu, joined by Plates from the dock, and open as movable windows.</li>
+      <li><b>Outliner.</b> Three sections and its settings, built from data the realm panel already reads.</li>
+      <li><b>Hand.</b> The tray in its fixed place on the bottom edge and the hand view, reusing today's card faces, hand modal and play choices.</li>
+      <li><b>Top-right, top bar and tooltips.</b> The seat discs go, and a rival's icon in the inspector opens their card. Change sits under each stock, and tooltips itemise it by settlement. Tooltips lock on a rest and open their terms from one glossary. The happiness readout opens its card, with Calm.</li>
+      <li><b>The dock and map modes.</b> The dock becomes three rows: the chronicle opening from its last line, square map modes, Trade, Buy a card and the Dole with their costs, End turn spanning them. Political's flat paint and large names, the legend, and camera clearance on a pick.</li>
+      <li><b>Moments, re-anchored.</b> The Assembly's minimise pill, alarm cards under the seal, the riot warning above End turn. Their contents stay as they are.</li>
+    </ol>
+    <p class="prose" style="margin-top:14px">Each slice ends with screenshots at 1280, 1440 and 1920, and with <code>ui:audit</code> and <code>ui:conduct</code> green.</p>
+  </div>
+</section>

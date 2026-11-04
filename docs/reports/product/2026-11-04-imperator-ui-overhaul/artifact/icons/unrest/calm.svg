@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Calm — white dove carrying an olive twig</title>
+<defs>
+<linearGradient id="a-calm-marble" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#f7ecd2"/><stop offset="1" stop-color="#c9b48c"/></linearGradient>
+<linearGradient id="a-calm-leaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a8b976"/><stop offset="0.48" stop-color="#7d8f51"/><stop offset="1" stop-color="#48542c"/></linearGradient>
+<linearGradient id="a-calm-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+</defs>
+<path d="M7 7C23 7 35 14 39 25Q43 18 49 21Q55 23 53 30L57 33L51 36C49 47 39 54 26 51L13 58L14 47L6 42L18 35C10 26 8 15 7 7Z" fill="url(#a-calm-marble)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M50 31L52 34Q48 48 35 51L26 49L15 56L17 46L27 44Q43 45 50 31Z" fill="#c9b48c"/>
+<path d="M45 43Q38 52 27 49L16 55L18 49L27 46L34 48Z" fill="#a48e69"/>
+<path d="M9 9C24 11 36 21 40 35C29 40 16 32 12 24Z" fill="url(#a-calm-marble)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M29 20Q37 27 39 34Q30 37 21 31L17 27L29 31Z" fill="#c9b48c"/>
+<path d="M14 15Q23 19 29 27M16 23L24 30M22 15Q31 20 34 28" fill="none" stroke="#b49c76" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M10 10Q25 12 33 23M10 40L18 38M29 46Q36 47 40 44M43 25Q46 22 49 25" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<ellipse cx="48" cy="27" rx="1.5" ry="1.5" fill="#181210" stroke="#181210" stroke-width="0"/>
+<path d="M52 29L58 32L52 34Z" fill="url(#a-calm-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M55 33L56 47" fill="none" stroke="#48542c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M56 40Q44 40 45 33Q53 31 56 40Z" fill="url(#a-calm-leaf)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M56 44Q51 49 48 44Q47 38 56 44Z" fill="url(#a-calm-leaf)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M48 35L53 38" fill="none" stroke="#d3dba5" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M27 42L30 43M20 48L22 47" fill="none" stroke="#c4ad84" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

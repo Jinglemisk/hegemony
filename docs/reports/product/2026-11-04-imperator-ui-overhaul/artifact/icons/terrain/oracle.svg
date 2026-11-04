@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Oracle — Delphic bronze tripod with rising vapour</title>
+<defs>
+<linearGradient id="a-oracle-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+<linearGradient id="a-oracle-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+</defs>
+<path d="M23 25Q16 20 20 14Q22 11 25 13Q28 15 26 18Q32 16 29 12Q25 7 31 6Q39 5 40 11Q40 15 35 17Q32 20 36 25Z" fill="url(#a-oracle-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M32 7Q38 7 38 11Q38 14 33 17L31 22L27 22Q28 18 31 15Q35 12 32 7Z" fill="#aa9572"/>
+<path d="M22 15Q20 18 24 20M30 9Q32 7 34 9" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M16 36H27L23 53L24 58H10L14 50ZM37 36H48L50 50L54 58H40L41 53ZM27 37H37V58H27Z" fill="url(#a-oracle-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M21 41H26L22 53L23 57H18ZM43 40H47L49 51L52 57H45ZM33 43H36V57H32Z" fill="#795025"/>
+<path d="M18 43L15 52M29 47V55M40 43L43 51" fill="none" stroke="#ffe6a0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M7 23Q32 15 57 23L54 34Q50 45 32 46Q14 45 10 34Z" fill="url(#a-oracle-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M45 22L56 24L53 34Q47 44 32 45L25 43Q47 39 45 22Z" fill="#795025"/>
+<ellipse cx="32" cy="23" rx="25" ry="7" fill="url(#a-oracle-bronze)" stroke="#181210" stroke-width="2.5"/>
+<ellipse cx="32" cy="23" rx="18" ry="3" fill="#51351f" stroke="#795025" stroke-width="1.5"/>
+<path d="M44 33Q49 31 53 28Q52 39 37 43L29 43L30 40Q40 39 44 33Z" fill="#6b491f"/>
+<path d="M10 22Q20 17 34 19M12 31Q15 37 22 39" fill="none" stroke="#ffe6a0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M21 33L25 34M40 32L43 31M30 50V53" fill="none" stroke="#b18a40" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M15 21L20 20L22 22L17 23Z" fill="#fff8e9"/>
+</svg>

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Population capacity — three busts in an open marble doorway</title>
+<defs>
+<linearGradient id="a-capacity-marble" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#f7ecd2"/><stop offset="1" stop-color="#c9b48c"/></linearGradient>
+<linearGradient id="a-capacity-skin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#edc393"/><stop offset="0.48" stop-color="#c38d5e"/><stop offset="1" stop-color="#895438"/></linearGradient>
+<linearGradient id="a-capacity-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+</defs>
+<g stroke-linejoin="round" stroke-linecap="round">
+<path d="M5.5 14H13.5V58H5.5ZM50.5 14H58.5V58H50.5Z" fill="url(#a-capacity-marble)" stroke="#181210" stroke-width="2.5"/>
+<path d="M10.5 16H12.5V57H10.5ZM55 16H57.5V57H55Z" fill="#c9b48c"/>
+<path d="M11.5 18H12.5V57H6.5V55H11.5ZM56.5 18H57.5V57H51.5V55H56.5Z" fill="#a48e69"/>
+<path d="M5.5 6H58.5V16H5.5Z" fill="url(#a-capacity-marble)" stroke="#181210" stroke-width="2.5"/>
+<path d="M52 7H57.5V15H6.5V13H52Z" fill="#c9b48c"/>
+<path d="M6.5 14H57.5V15H6.5Z" fill="#a48e69"/>
+<path d="M8 8H42M7.5 20V51M52.5 20V51" fill="none" stroke="#fff8e9" stroke-width="1.5"/>
+<path d="M8 29H10M53 40H55M44 10H48" fill="none" stroke="#b49c76" stroke-width="1.75"/>
+<path d="M17 42H23L25 47Q29 49 30 58H12.5L13 52Q14 48 17 47Z" fill="url(#a-capacity-linen)" stroke="#181210" stroke-width="2.5"/>
+<path d="M41 42H47L47 47Q50 48 51 52L51.5 58H34Q35 49 39 47Z" fill="url(#a-capacity-linen)" stroke="#181210" stroke-width="2.5"/>
+<path d="M45 48L49 51L50.5 57H46L43 53Z" fill="#aa9572"/>
+<path d="M17 41H23V47L20 50L17 47ZM41 41H47V47L44 50L41 47Z" fill="url(#a-capacity-skin)" stroke="#181210" stroke-width="1.75"/>
+<path d="M28 37H36V44Q42 46 44 58H20Q22 46 28 44Z" fill="url(#a-capacity-linen)" stroke="#181210" stroke-width="2.5"/>
+<path d="M36 46Q41 48 43 57H35L37 52Z" fill="#aa9572"/>
+<path d="M39 51L42 56V57H37Z" fill="#806c50"/>
+<path d="M28 36H36V44L32 48L28 44Z" fill="url(#a-capacity-skin)" stroke="#181210" stroke-width="1.75"/>
+<path d="M14 36Q13.5 29 20 29Q26.5 29 26 36V41Q24 46 20 46Q16 45 14 41Z" fill="url(#a-capacity-skin)" stroke="#181210" stroke-width="2.5"/>
+<path d="M22 33L25 35V40Q24 44 20 45L22 40Z" fill="#895438"/>
+<path d="M15 36V34Q15 30 20 30Q25 30 25 35L21 33L17 35L16 38Z" fill="#51351f"/>
+<path d="M38 36Q37.5 29 44 29Q50.5 29 50 36V41Q48 46 44 46Q40 45 38 41Z" fill="url(#a-capacity-skin)" stroke="#181210" stroke-width="2.5"/>
+<path d="M46 33L49 35V40Q48 44 44 45L46 40Z" fill="#895438"/>
+<path d="M39 36V34Q39 30 44 30Q49 30 49 35L45 33L41 35L40 38Z" fill="#51351f"/>
+<path d="M24.5 28Q24 20.5 32 20.5Q40 20.5 39.5 28L39 35Q37 41 32 42Q27 41 25 35Z" fill="url(#a-capacity-skin)" stroke="#181210" stroke-width="2.5"/>
+<path d="M35 25L38.5 28L38 35Q36 39 32 40.5L34 34Z" fill="#895438"/>
+<path d="M25.5 29V27Q26 21.5 32 21.5Q38.5 21.5 38.5 28L34 26L29 27L27 31Z" fill="#51351f"/>
+<path d="M29 32H30M35 32H36M32 33L31 36M30 38H33M20 38V41M44 38V41" fill="none" stroke="#714c34" stroke-width="1.5"/>
+<path d="M16 37L17 40M40 37L41 40M27 32L28 35M28 25L31 23.5" fill="none" stroke="#f4d2aa" stroke-width="1.5"/>
+<path d="M25 48L32 52L38 47M17 52L16 55M47 52L49 55M28 54L27 57" fill="none" stroke="#aa9572" stroke-width="1.75"/>
+<path d="M15 51L17 49M23 51L26 48M27 49L31 51M41 50L42 53" fill="none" stroke="#fff8e9" stroke-width="1.5"/>
+</g>
+</svg>

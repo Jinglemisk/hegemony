@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Build — asymmetric timber jib crane with a suspended block and winch</title>
+<defs>
+<linearGradient id="a-tab-build-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+<linearGradient id="a-tab-build-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+<linearGradient id="a-tab-build-stone" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e1d9c5"/><stop offset="0.48" stop-color="#b9b09a"/><stop offset="1" stop-color="#817a68"/></linearGradient>
+</defs>
+<g stroke-linejoin="round" stroke-linecap="round">
+<path d="M10 8H22V54H10Z" fill="url(#a-tab-build-wood)" stroke="#181210" stroke-width="2.5"/>
+<path d="M17 10H21V53H17Z" fill="#8b633b"/>
+<path d="M19 24L49 7L57 13L22 34Z" fill="url(#a-tab-build-wood)" stroke="#181210" stroke-width="2.5"/>
+<path d="M22 29L53 10L56 13L22 33Z" fill="#8b633b"/>
+<path d="M22 38L39 20L43 23L22 48Z" fill="url(#a-tab-build-wood)" stroke="#181210" stroke-width="2.5"/>
+<path d="M49 15V33L42 38M51 14V32L56 38" fill="none" stroke="#51351f" stroke-width="2.5"/>
+<path d="M49 17V30" fill="none" stroke="#ecd3a0" stroke-width="1.5"/>
+<path d="M37 35L53 33L58 39V55H34V41Z" fill="url(#a-tab-build-stone)" stroke="#181210" stroke-width="2.5"/>
+<path d="M53 34L57 40V54H50V41Z" fill="#817a68"/>
+<path d="M35 41H50L57 39M50 41V53" fill="none" stroke="#8e826b" stroke-width="1.75"/>
+<path d="M42 35L47 34V54H42Z" fill="url(#a-tab-build-wood)" stroke="#51351f" stroke-width="1.75"/>
+<path d="M54 43L57 42V54H48V51H54Z" fill="#665f50"/>
+<path d="M7 52H29L33 58H6Z" fill="url(#a-tab-build-wood)" stroke="#181210" stroke-width="2.5"/>
+<circle cx="18" cy="45" r="11" fill="url(#a-tab-build-bronze)" stroke="#181210" stroke-width="2.5"/>
+<circle cx="18" cy="45" r="7" fill="#795025" stroke="#a47a36" stroke-width="1.5"/>
+<path d="M18 38V52M11 45H25" fill="none" stroke="#e5bd73" stroke-width="2"/>
+<circle cx="18" cy="45" r="3" fill="url(#a-tab-build-bronze)" stroke="#624123" stroke-width="1.5"/>
+<path d="M25 40Q31 48 23 53L19 55L16 54Q27 50 25 40ZM7 56H30L31 57H7Z" fill="#624123"/>
+<path d="M12 10V28M24 24L48 10M10 42Q11 37 16 37M36 43V49M38 38L40 37" fill="none" stroke="#f6dfb0" stroke-width="1.5"/>
+<path d="M15 18V24M28 25L32 23M37 48L40 47" fill="none" stroke="#a67b48" stroke-width="1.75"/>
+<path d="M11 39L14 37L16 38L13 41Z" fill="#fff8e9"/>
+</g>
+</svg>

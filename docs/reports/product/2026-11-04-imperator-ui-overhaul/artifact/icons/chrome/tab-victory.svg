@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Victory — single golden wing of Nike</title>
+<defs>
+<linearGradient id="a-tab-victory-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0b0"/><stop offset="0.48" stop-color="#d8b45e"/><stop offset="1" stop-color="#997035"/></linearGradient>
+</defs>
+<path d="M9 58Q4 43 10 29Q19 9 57 6L54 17L48 23L58 18L56 29L46 36L54 31L51 42L40 47L46 43L43 52L31 55L25 58Z" fill="url(#a-tab-victory-gold)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M55 9Q49 24 34 35L18 54L11 57Q16 35 35 24Z" fill="#d8b45e"/>
+<path d="M47 25L56 21L54 28L44 35L35 40ZM44 37L51 34L49 41L39 46L30 48ZM38 48L43 46L41 51L30 54L20 57Z" fill="#997035"/>
+<path d="M14 53Q22 30 51 14M19 43L14 33M25 35L22 24M32 29L31 19M22 47L39 39M30 36L47 27" fill="none" stroke="#b08a44" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M48 14Q41 29 30 37L17 56H12Q24 36 35 29Z" fill="#b08a44"/>
+<path d="M10 44Q10 27 27 18Q38 12 50 10M17 51Q23 38 31 32" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M18 29L20 26M30 21L33 19M36 43L40 41" fill="none" stroke="#c69d4c" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M21 23L25 20L27 21L23 24Z" fill="#fff8e9"/>
+</svg>

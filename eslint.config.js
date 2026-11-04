@@ -9,6 +9,7 @@ export default tseslint.config(
   {
     // .playwright-mcp/ is a gitignored scratch directory for screenshot output and
     // the throwaway scripts that drive it; linting build artefacts is noise.
+    // docs/reports/ holds dated evidence kept verbatim, scripts included.
     ignores: [
       "dist/",
       "node_modules/",
@@ -16,6 +17,7 @@ export default tseslint.config(
       "coverage/",
       ".worktrees/",
       ".playwright-mcp/",
+      "docs/reports/",
       "**/*.html",
     ],
   },

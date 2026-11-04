@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Forest — tall cypress and two rounded oaks</title>
+<defs>
+<linearGradient id="a-forest-leaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a8b976"/><stop offset="0.48" stop-color="#7d8f51"/><stop offset="1" stop-color="#48542c"/></linearGradient>
+<linearGradient id="a-forest-bark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bd8c55"/><stop offset="0.48" stop-color="#8f5e35"/><stop offset="1" stop-color="#51351f"/></linearGradient>
+</defs>
+<path d="M6 52Q21 47 32 50Q46 47 58 52V58H6Z" fill="url(#a-forest-leaf)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M27 37H37V55H27Z" fill="url(#a-forest-bark)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M32 6Q40 16 43 29Q47 41 39 46Q32 51 24 46Q16 41 21 29Q25 15 32 6Z" fill="url(#a-forest-leaf)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M33 10Q42 25 42 37Q42 44 35 46L29 46Q36 37 33 10Z" fill="#48542c"/>
+<path d="M30 13Q25 24 24 32" fill="none" stroke="#d3dba5" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M31 23L28 28M33 35L29 39" fill="none" stroke="#66783e" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M12 35H21V53L25 56H9L13 52Z" fill="url(#a-forest-bark)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M42 35H51V52L55 56H39L43 52Z" fill="url(#a-forest-bark)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M18 38H20V53H17ZM48 38H50V53H47Z" fill="#35251a"/>
+<path d="M8 28Q6 20 13 18Q17 11 24 18Q33 18 32 27Q37 35 29 40Q21 47 14 42Q7 43 7 35Q5 32 8 28Z" fill="url(#a-forest-leaf)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M35 28Q33 20 41 19Q48 13 54 21Q61 24 57 32Q61 40 53 43Q45 47 40 42Q31 42 32 34Z" fill="url(#a-forest-leaf)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M26 20Q32 24 29 29Q35 36 27 39Q20 44 14 40Q24 37 26 20ZM53 23Q59 26 54 33Q59 39 51 41L42 40Q51 36 53 23Z" fill="#48542c"/>
+<path d="M9 26Q10 21 15 21M16 18Q20 16 24 21M36 28Q37 23 42 23M45 21L49 22" fill="none" stroke="#d3dba5" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M11 33L15 35M22 28L25 29M39 35L43 36M48 29L51 30" fill="none" stroke="#809352" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M15 46V51M45 47V51M8 54L13 53" fill="none" stroke="#c19a61" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M7 56H57V57H7Z" fill="#344321"/>
+</svg>

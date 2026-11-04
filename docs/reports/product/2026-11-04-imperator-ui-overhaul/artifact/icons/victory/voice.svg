@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Voice — open palm and draped forearm</title>
+<defs>
+<linearGradient id="a-voice-skin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#edc393"/><stop offset="0.48" stop-color="#c38d5e"/><stop offset="1" stop-color="#895438"/></linearGradient>
+<linearGradient id="a-voice-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+</defs>
+<path d="M19 42L12 32L7 25Q5 21 8 19Q12 16 16 21L21 27L17 13Q16 8 20 7Q24 6 26 12L29 22V10Q29 6 33 6Q37 6 37 10V22L40 11Q41 7 45 9Q48 10 47 14L45 27L49 20Q52 17 55 20Q58 22 55 27L49 40L45 45V58H19Z" fill="url(#a-voice-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M48 27L53 23L48 39L42 45V57H34L37 40Z" fill="#895438"/>
+<path d="M25 29Q34 26 40 31M23 33Q28 34 29 40M34 33L39 35" fill="none" stroke="#895438" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 42L25 46L45 40L51 58H11Z" fill="url(#a-voice-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M25 47L45 41L47 48L27 56L13 51L14 45Z" fill="#c9b48c"/>
+<path d="M16 46L25 50L43 45M29 58L46 52" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M20 13L23 24M32 12V22" fill="none" stroke="#f4d2aa" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M48 32L52 27L47 38L42 43L38 42L43 37Z" fill="#68432d"/>
+<path d="M44 49L47 48L49 56H32L37 53H46Z" fill="#806c50"/>
+<path d="M8 22L13 28M19 11L22 20M31 10V19M42 12L41 22M15 44L24 47" fill="none" stroke="#f7d6ab" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M18 53L23 55M33 51L40 49M28 36L30 37" fill="none" stroke="#b09a74" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

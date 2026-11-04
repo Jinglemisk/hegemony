@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Concession — two clasped hands in dexiosis</title>
+<defs>
+<linearGradient id="a-concession-skin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#edc393"/><stop offset="0.48" stop-color="#c38d5e"/><stop offset="1" stop-color="#895438"/></linearGradient>
+<linearGradient id="a-concession-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+</defs>
+<path d="M6 21L16 20L26 26L35 26L46 36Q49 39 46 42L42 44Q43 48 39 49Q37 53 33 51Q29 55 25 51L14 43L6 44Z" fill="url(#a-concession-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M15 38L27 47L32 49L37 47L41 43L46 40Q48 43 42 45Q42 48 38 49L35 51L32 50Q28 53 25 50L15 43L7 43V38Z" fill="#895438"/>
+<path d="M58 15L46 17L37 23L29 21Q26 20 23 24L18 30Q16 34 21 36Q24 37 28 33L32 29L43 40L50 36L58 35Z" fill="url(#a-concession-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M53 31L57 29V34L49 35L43 39L33 29L31 29L27 33Q23 36 21 34L27 29L32 26L43 35Z" fill="#895438"/>
+<path d="M30 37L39 46M26 41L35 49M23 45L29 50M35 32L43 40" fill="none" stroke="#714c34" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M20 29L25 24Q27 22 30 24L36 25M10 24L15 23L23 29M43 23L48 20M26 32L30 28" fill="none" stroke="#f4d2aa" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M6 15L16 18L20 23L14 47L6 49Z" fill="url(#a-concession-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M14 26L18 25L13 46L7 48V44L11 42Z" fill="#aa9572"/>
+<path d="M49 16L58 11V42L50 40L44 34Z" fill="url(#a-concession-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M55 14L57 13V41L51 39L48 35L51 34L55 37Z" fill="#aa9572"/>
+<path d="M12 42L14 41L13 46L7 48V46ZM53 37L57 39V41L51 39L48 35L50 35Z" fill="#806c50"/>
+<path d="M8 18L14 20M8 24V39M51 18L55 16M47 30L49 24" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M10 30L11 26M52 31V28M31 44L33 46" fill="none" stroke="#b09a74" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

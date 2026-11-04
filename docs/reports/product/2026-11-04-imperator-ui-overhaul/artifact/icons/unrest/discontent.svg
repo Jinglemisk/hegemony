@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Discontent — grey storm cloud and lightning</title>
+<defs>
+<linearGradient id="a-discontent-grey" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d4d1c7"/><stop offset="0.48" stop-color="#9c9d94"/><stop offset="1" stop-color="#62665f"/></linearGradient>
+<linearGradient id="a-discontent-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0b0"/><stop offset="0.48" stop-color="#d8b45e"/><stop offset="1" stop-color="#997035"/></linearGradient>
+</defs>
+<path d="M27 37H43L36 46H44L25 58L28 48H21Z" fill="url(#a-discontent-gold)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M38 40L32 48H37L27 55L30 47L27 46Z" fill="#997035"/>
+<path d="M28 41L25 45" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M17 43C8 43 5 37 6 30Q6 20 17 19C17 10 24 6 32 6Q42 6 45 17C54 15 58 22 58 30C58 39 53 43 46 43Z" fill="url(#a-discontent-grey)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M44 18Q53 17 56 25C60 37 52 42 45 42H17Q9 42 8 37Q21 39 30 35Q38 42 47 35Q54 31 49 24Z" fill="#62665f"/>
+<path d="M53 32Q55 39 46 41H18L12 39H26Q33 36 37 39L45 39Z" fill="#464c46"/>
+<path d="M10 29Q11 23 18 23M21 19Q20 11 29 10M34 10Q40 11 42 17" fill="none" stroke="#e9e6dc" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M18 24Q24 23 27 29M39 22Q44 21 47 24M15 34L18 35" fill="none" stroke="#777e73" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

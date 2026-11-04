@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Polis builder — incised clay city plan</title>
+<defs>
+<linearGradient id="a-polis-builder-clay" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e5a268"/><stop offset="0.48" stop-color="#c08243"/><stop offset="1" stop-color="#8b4d28"/></linearGradient>
+<linearGradient id="a-polis-builder-marble" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#f7ecd2"/><stop offset="1" stop-color="#c9b48c"/></linearGradient>
+</defs>
+<path d="M11 6H51L58 12V52L52 58H10L6 53V12Z" fill="url(#a-polis-builder-clay)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M51 8L57 13V51L51 57H11L8 53H50Z" fill="#8b4d28"/>
+<path d="M53 17H57V51L51 57H15V54H50L53 50Z" fill="#68371f"/>
+<path d="M13 15H49M13 27H49M13 40H50M24 13V50M39 13V50M13 51H49" fill="none" stroke="#87522e" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M14 17H21M14 29H21M14 42H21M27 29H36M27 42H36M42 42H49" fill="none" stroke="#e8b37c" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M32 21L43 13L54 21V34H32Z" fill="url(#a-polis-builder-marble)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M43 14L53 21H33Z" fill="#c9b48c"/>
+<path d="M35 25H39V33H35ZM46 25H50V33H46Z" fill="#8e7958"/>
+<path d="M33 23H53" fill="none" stroke="#b49c76" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M12 9H47M9 14V47M35 21L42 16" fill="none" stroke="#f9d69b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M28 47H33M15 22L18 22M43 47H47" fill="none" stroke="#a76535" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

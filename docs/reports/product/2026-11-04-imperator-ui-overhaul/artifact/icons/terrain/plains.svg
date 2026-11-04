@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Plains — open golden furrows, olive horizon and three standing wheat ears</title>
+<defs>
+<linearGradient id="a-plains-wheat" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3dda0"/><stop offset="0.48" stop-color="#d8be73"/><stop offset="1" stop-color="#a07b38"/></linearGradient>
+<linearGradient id="a-plains-sky" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3f2e5"/><stop offset="0.48" stop-color="#dce4d9"/><stop offset="1" stop-color="#becfc8"/></linearGradient>
+<linearGradient id="a-plains-leaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a8b976"/><stop offset="0.48" stop-color="#7d8f51"/><stop offset="1" stop-color="#48542c"/></linearGradient>
+</defs>
+<path d="M7 35L10 29Q31 27 54 29L57 35Z" fill="url(#a-plains-sky)"/>
+<path d="M7 36L8 33Q10 30 13 33Q16 30 19 33Q22 31 25 33Q28 30 31 33Q34 31 37 33Q40 30 43 33Q47 30 50 33Q54 30 56 33L57 36Z" fill="url(#a-plains-leaf)"/>
+<path d="M8 36H56L57 44L58.5 54L54 58H10L5.5 54L7 44Z" fill="url(#a-plains-wheat)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M8 37H28L20 57H10L7 53Z" fill="#f3dda0"/>
+<path d="M33 37H36L45 57H23Z" fill="url(#a-plains-wheat)"/>
+<path d="M39 37H55L57 53L53 57H47Z" fill="#c5a65a"/>
+<path d="M29 37L19 58H24L32 37ZM35 37L43 58H48L38 37Z" fill="#89662e"/>
+<path d="M28 38L19 54M34 39L39 54M40 39L51 54" fill="none" stroke="#fff0c0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M9 55L18 56L24 55L40 56L47 55L56 55L53 57H11Z" fill="#795b2d"/>
+<path d="M10 37H25M39 37H53M9 48L8 52" fill="none" stroke="#fff0c0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13.5 34H16.5V52H13.5ZM30.5 29H33.5V48H30.5ZM47.5 36H50.5V54H47.5Z" fill="url(#a-plains-wheat)" stroke="#89662e" stroke-width="1.75" stroke-linejoin="round"/>
+<path d="M15 13Q10 18 11 22L9.5 22Q8.5 27 11.5 29L10 30Q10 35 15 39Q20 35 20 30L18.5 29Q21.5 27 20.5 22L19 22Q20 18 15 13Z" fill="url(#a-plains-wheat)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M16 17Q20 20 18 24Q21 28 17 31Q19 34 15 38V22Z" fill="#a07b38"/>
+<path d="M15 19V35M11 24L15 27L19 24M12 31L15 34L18 31" fill="none" stroke="#89662e" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M12 20L14 17M11 25L12 27" fill="none" stroke="#fff0c0" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M32 8Q27 13 28 17L26.5 17Q25.5 22 28.5 24L27 25Q27 30 32 34Q37 30 37 25L35.5 24Q38.5 22 37.5 17L36 17Q37 13 32 8Z" fill="url(#a-plains-wheat)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M33 12Q37 15 35 19Q38 23 34 26Q36 29 32 33V17Z" fill="#a07b38"/>
+<path d="M32 14V30M28 19L32 22L36 19M29 26L32 29L35 26" fill="none" stroke="#89662e" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M29 15L31 12M28 20L29 22" fill="none" stroke="#fff0c0" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M49 15Q44 20 45 24L43.5 24Q42.5 29 45.5 31L44 32Q44 37 49 41Q54 37 54 32L52.5 31Q55.5 29 54.5 24L53 24Q54 20 49 15Z" fill="url(#a-plains-wheat)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M50 19Q54 22 52 26Q55 30 51 33Q53 36 49 40V24Z" fill="#a07b38"/>
+<path d="M49 21V37M45 26L49 29L53 26M46 33L49 36L52 33" fill="none" stroke="#89662e" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M46 22L48 19M45 27L46 29" fill="none" stroke="#fff0c0" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M10 42L12 41M26 52L28 50M53 47L55 49" fill="none" stroke="#b18d49" stroke-width="1.75" stroke-linecap="round"/>
+</svg>

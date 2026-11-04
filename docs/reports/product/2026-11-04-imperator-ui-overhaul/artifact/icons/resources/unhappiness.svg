@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Unhappiness — sorrowful marble tragedy mask</title>
+<defs>
+<linearGradient id="a-unhappiness-grey" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecf0ed"/><stop offset="0.48" stop-color="#b5c1c0"/><stop offset="1" stop-color="#727f82"/></linearGradient>
+</defs>
+<path d="M10 13Q12 5 23 6L32 9L41 6Q52 5 54 13L57 27L53 34Q52 49 40 56Q32 61 24 56Q12 49 11 34L7 27Z" fill="url(#a-unhappiness-grey)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M48 15L53 28L48 34Q48 49 35 56Q50 54 53 34L56 27L53 14Z" fill="#727f82"/>
+<path d="M17 24L28 20L29 28Q22 27 17 31ZM35 20L47 24V31Q42 27 35 28Z" fill="#303a3a"/>
+<path d="M18 49Q20 35 32 35Q44 35 46 49Q32 43 18 49Z" fill="#303a3a"/>
+<path d="M23 43Q32 36 41 43Q32 40 23 43Z" fill="#ecf0ed"/>
+<path d="M16 19L27 14M37 14L48 19M32 24L29 33H35" fill="none" stroke="#627174" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M47 44Q44 53 34 56L30 56Q41 53 43 48ZM49 26L52 25L51 31L48 33Z" fill="#4e5d60"/>
+<path d="M17 33L23 30L25 33L20 36ZM39 32L44 32L46 36L40 35Z" fill="#cbd4d0"/>
+<path d="M12 21L13 15Q15 9 21 9M16 37Q17 44 21 47M29 54H33" fill="none" stroke="#f5f6ee" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M22 50L25 51M40 48L42 50M21 11L25 12" fill="none" stroke="#94a2a2" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

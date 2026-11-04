@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Unrest threshold — square bronze boundary post with two terracotta bands</title>
+<defs>
+<linearGradient id="a-threshold-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+<linearGradient id="a-threshold-clay" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e5a268"/><stop offset="0.48" stop-color="#c08243"/><stop offset="1" stop-color="#8b4d28"/></linearGradient>
+</defs>
+<g stroke-linejoin="round" stroke-linecap="round">
+<path d="M18 49V14L31 6L46 14V49Z" fill="url(#a-threshold-bronze)" stroke="#181210" stroke-width="2.5"/>
+<path d="M31 7L45 14V48H38V14Z" fill="#795025"/>
+<path d="M43 16H45V48H42Z" fill="#6b491f"/>
+<path d="M19 14H45M31 7L38 14V48" fill="none" stroke="#997035" stroke-width="1.75"/>
+<path d="M19.25 20H38L44.75 18.5V26.5L38 28H19.25Z" fill="url(#a-threshold-clay)"/>
+<path d="M38 20L44.75 18.5V26.5L38 28Z" fill="#8b4d28"/>
+<path d="M19.25 36H38L44.75 34.5V42.5L38 44H19.25Z" fill="url(#a-threshold-clay)"/>
+<path d="M38 36L44.75 34.5V42.5L38 44Z" fill="#8b4d28"/>
+<path d="M19.5 20H38L44.5 18.5M19.5 28H38L44.5 26.5M19.5 36H38L44.5 34.5M19.5 44H38L44.5 42.5" fill="none" stroke="#8b4d28" stroke-width="1.5"/>
+<path d="M42 20L44.5 19.5V26L42 26.5ZM42 36L44.5 35.5V42L42 42.5Z" fill="#68371f"/>
+<path d="M21 21.5H34M21 37.5H34" fill="none" stroke="#f3c081" stroke-width="1.5"/>
+<path d="M20 13L30 8M20 16V18M20 30V34M20 46V48" fill="none" stroke="#ffe6a0" stroke-width="1.5"/>
+<path d="M22 16H26L25 18H22Z" fill="#fff8e9"/>
+<path d="M25 32H28M30 47H33M25 24H28" fill="none" stroke="#a87643" stroke-width="1.75"/>
+<path d="M14 49H50V53H54V58H10V53H14Z" fill="url(#a-threshold-bronze)" stroke="#181210" stroke-width="2.5"/>
+<path d="M42 50H49V54H53V57H11V55H42Z" fill="#795025"/>
+<path d="M48 54H53V57H11V56H48Z" fill="#6b491f"/>
+<path d="M15 53H49" fill="none" stroke="#997035" stroke-width="1.75"/>
+<path d="M16 50.5H36M12 54H31" fill="none" stroke="#ffe6a0" stroke-width="1.5"/>
+</g>
+</svg>

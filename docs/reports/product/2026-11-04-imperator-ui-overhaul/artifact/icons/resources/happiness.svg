@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Happiness — smiling comedy mask</title>
+<defs>
+<linearGradient id="a-happiness-clay" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e5a268"/><stop offset="0.48" stop-color="#c08243"/><stop offset="1" stop-color="#8b4d28"/></linearGradient>
+</defs>
+<path d="M10 13Q12 5 23 6L32 9L41 6Q52 5 54 13L57 27L53 34Q52 49 40 56Q32 61 24 56Q12 49 11 34L7 27Z" fill="url(#a-happiness-clay)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M48 15L53 28L48 34Q48 49 35 56Q50 54 53 34L56 27L53 14Z" fill="#8b4d28"/>
+<path d="M17 22Q23 15 29 22L28 28Q22 25 17 28ZM35 22Q41 15 47 22V28Q41 25 36 28Z" fill="#3a2a1e"/>
+<path d="M18 36Q32 43 46 36Q43 53 32 53Q21 53 18 36Z" fill="#3a2a1e"/>
+<path d="M20 37Q32 43 44 37L41 43Q32 47 23 42Z" fill="#fff8e9"/>
+<path d="M32 24L28 34L34 35M15 17L22 14M41 14L49 17" fill="none" stroke="#87522e" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 29L15 34M18 12L25 13" fill="none" stroke="#fff0b0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M47 44Q44 53 34 56L30 56Q41 53 43 48ZM49 26L52 25L51 31L48 33Z" fill="#68371f"/>
+<path d="M20 31Q23 28 26 31L25 33L20 34ZM36 32Q39 29 44 31L43 33H37Z" fill="#de9a5f"/>
+<path d="M12 21L13 15Q15 9 21 9M16 37Q17 44 21 47M29 54H33" fill="none" stroke="#f3c081" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M24 49L27 50M38 46L40 44" fill="none" stroke="#a26335" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M14 17L16 15L18 16L16 19Z" fill="#fff0b0"/>
+</svg>

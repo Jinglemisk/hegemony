@@ -2,7 +2,7 @@
 title: UI — what is genuinely left
 status: active
 phase: "—"
-updated: 2026-11-03
+updated: 2026-11-04
 ---
 
 # UI — what is genuinely left
@@ -39,6 +39,7 @@ resource chips, two token tables) are scheduled in the
 | `TYPE-1` | a decision | Two type sizes sit under spec, on purpose     |
 | `DUP-1`  | nothing    | Four repeated glossary words, judged and left |
 | `RIOT-1` | later      | Redesign the riot screen in the current UI    |
+| `IMP-1`  | later      | The Imperator-style overhaul, parked          |
 
 ### Shipped or closed
 
@@ -449,3 +450,10 @@ Owner note, 2026-11-01: not yet. The riot screen predates the current UI. Redesi
 each effect of the rolled row is shown as a card, in the shared card format, with one line per
 loss (pops, burned buildings, resources, cards given up). Today the result shows one headline
 loss and lists the rest in a caption under it.
+
+## IMP-1 — the Imperator-style overhaul · **later**
+
+Owner, 2026-11-04: the UI is overhauled at a later date. The proposal page and its source are in
+[the report](../reports/product/2026-11-04-imperator-ui-overhaul/README.md). When it resumes, the
+owner picks the Proposal or Proposal B and says what "notification circle icons" meant, the design
+freezes, and it is built in eight UI-only slices, one PR each.

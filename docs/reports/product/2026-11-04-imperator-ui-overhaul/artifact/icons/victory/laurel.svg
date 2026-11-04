@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Victory — open laurel wreath with ribbon</title>
+<defs>
+<linearGradient id="a-laurel-olive" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a8b976"/><stop offset="0.48" stop-color="#7d8f51"/><stop offset="1" stop-color="#48542c"/></linearGradient>
+<linearGradient id="a-laurel-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+<linearGradient id="a-laurel-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+</defs>
+<path d="M29 53C9 50 4 35 6 21L12 24Q7 15 15 7L21 18Q18 11 24 6Q31 17 23 27L23 34L27 41L32 46L37 41L41 34L41 27Q33 17 40 6Q46 11 43 18L49 7Q57 15 52 24L58 21C60 35 55 50 35 53Z" fill="url(#a-laurel-olive)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M9 27L18 34L21 42L13 36ZM17 15L23 25L19 31L16 24ZM55 27L46 34L43 42L51 36ZM47 15L41 25L45 31L48 24Z" fill="#48542c"/>
+<path d="M14 16C12 36 22 46 30 48M50 16C52 36 42 46 34 48" fill="none" stroke="#c6d28f" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M27 48L18 49L15 58L25 56L32 58L39 56L49 58L46 49L37 48L32 51Z" fill="url(#a-laurel-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M28 48H36V56H28Z" fill="url(#a-laurel-bronze)" stroke="#795025" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M53 30L56 27Q56 41 43 48L38 49L40 46Q51 40 53 30ZM10 34L16 41L23 45L26 49L19 46Q13 42 10 34Z" fill="#344321"/>
+<path d="M40 51L45 51L47 56L40 54L37 56L36 53Z" fill="#806c50"/>
+<path d="M33 49H35V55H32Z" fill="#795025"/>
+<path d="M8 25L9 29M14 11L17 18M24 10L24 16M41 10L40 16M49 11L51 16M19 51L25 50" fill="none" stroke="#d3dba5" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M17 30L20 32M45 32L48 30M21 40L24 40" fill="none" stroke="#809352" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M30 49V52" fill="none" stroke="#fff0b0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

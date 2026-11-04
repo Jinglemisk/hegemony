@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Realm — square ochre standard with a terracotta meander hem</title>
+<defs>
+<linearGradient id="a-seal-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+<linearGradient id="a-seal-wheat" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3dda0"/><stop offset="0.48" stop-color="#d8be73"/><stop offset="1" stop-color="#a07b38"/></linearGradient>
+<linearGradient id="a-seal-clay" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e5a268"/><stop offset="0.48" stop-color="#c08243"/><stop offset="1" stop-color="#8b4d28"/></linearGradient>
+<linearGradient id="a-seal-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+</defs>
+<path d="M28 6H36V58H28Z" fill="url(#a-seal-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M33 8H35V57H32Z" fill="#624123"/>
+<path d="M10 12H54V20H10Z" fill="url(#a-seal-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 18H51V50Q41 47 32 50Q22 52 13 49Z" fill="url(#a-seal-wheat)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M44 20H50V49L41 48L36 49L36 46L43 44Z" fill="#a07b38"/>
+<path d="M14 39Q24 42 32 40Q41 38 50 39V48Q41 46 32 49Q23 51 14 48Z" fill="url(#a-seal-clay)"/>
+<path d="M16 42H23V46H28V42H35V46H40V42H47" fill="none" stroke="#f3dda0" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M16 21V34M19 20H34M12 14H43M30 8V11M30 53V56" fill="none" stroke="#fff0c0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M24 23Q22 29 24 35M36 22Q38 28 36 34M18 30L19 33" fill="none" stroke="#b18d49" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M47 14H53V19H47Z" fill="#6b491f"/>
+<path d="M14 14H17V16H14Z" fill="#fff8e9"/>
+<path d="M15 47Q22 50 31 47" fill="none" stroke="#8b4d28" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

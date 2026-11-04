@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Dossier — hinged wax tablets and bronze stylus</title>
+<defs>
+<linearGradient id="a-dossier-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+<linearGradient id="a-dossier-wax" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#65503a"/><stop offset="0.48" stop-color="#493727"/><stop offset="1" stop-color="#291f18"/></linearGradient>
+<linearGradient id="a-dossier-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+</defs>
+<path d="M6 12L29 8L33 13L55 7L58 11V50L34 57L30 53L9 57L6 53Z" fill="url(#a-dossier-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M53 11L57 11V49L34 56L31 52L9 56V52L30 48L34 51L53 46Z" fill="#8b633b"/>
+<path d="M11 17L26 14V46L11 49Z" fill="url(#a-dossier-wax)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M36 17L52 13V44L36 49Z" fill="url(#a-dossier-wax)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M29 12V50M33 16V52" fill="none" stroke="#51351f" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M27 18L34 20V26L27 24ZM27 38L34 40V46L27 44Z" fill="url(#a-dossier-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M15 23L22 22M15 30L22 29M15 37L22 36M40 22L48 20M40 29L48 27M40 36L46 34" fill="none" stroke="#b49c76" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M17 55L45 20L50 17L54 21L51 26L23 57Z" fill="url(#a-dossier-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M49 24L52 21L52 24L22 56L20 55Z" fill="#795025"/>
+<path d="M8 15V46M13 13L24 11M38 13L51 10M23 50L46 23" fill="none" stroke="#f6dfb0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M46 21L49 19L51 21L49 23Z" fill="#fff8e9"/>
+</svg>

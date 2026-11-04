@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Year — upright sun card</title>
+<defs>
+<linearGradient id="a-year-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+<linearGradient id="a-year-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+<linearGradient id="a-year-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0b0"/><stop offset="0.48" stop-color="#d8b45e"/><stop offset="1" stop-color="#997035"/></linearGradient>
+</defs>
+<path d="M12 6H52Q56 6 56 11V53Q56 58 51 58H12Q8 58 8 53V11Q8 6 12 6Z" fill="url(#a-year-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M49 7H52Q55 7 55 11V53Q55 57 51 57H49Z" fill="#aa9572"/>
+<path d="M13 12H46V51H13Z" fill="none" stroke="#c19a61" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M32 14L36 22L45 19L42 28L50 32L42 36L45 45L36 42L32 50L28 42L19 45L22 36L14 32L22 28L19 19L28 22Z" fill="url(#a-year-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<ellipse cx="32" cy="32" rx="10" ry="10" fill="url(#a-year-gold)" stroke="#997035" stroke-width="1.75"/>
+<path d="M26 29Q28 25 32 25" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M12 9H25" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M52 10H54V53Q54 56 50 56H15V54H51Z" fill="#806c50"/>
+<path d="M38 27Q46 36 36 41L32 42L32 39Q39 37 38 27Z" fill="#997035"/>
+<path d="M40 37L43 42L36 40L34 45L34 41Z" fill="#795025"/>
+<path d="M10 13V45M16 14H20M25 25L28 23M22 31L21 29" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M15 47L18 48M42 48L45 47M17 16H20" fill="none" stroke="#c1ad84" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M26 27L29 25L30 27L28 29Z" fill="#fff8e9"/>
+</svg>
