@@ -8,7 +8,7 @@ import { createSimRng, deriveBotSeed } from "../sim/rng";
 import { buildNewGame } from "../sim/setup";
 import { botsToYear } from "./botsToYear";
 
-/** Plays a quick start to Year 12 with the master bots and stores the board, so
+/** Plays a quick start to Year 9 with the master bots and stores the board, so
  *  `?dev=late-game` opens at once. Run `npm run dev:late-game` again after a change to
  *  the rules or the state's shape; until then the scene plays the bots itself. The board
  *  records the commit and the date it was made from. */
@@ -27,7 +27,7 @@ const start = buildNewGame({
   boardLayout: "archipelago",
   simRng: createSimRng(deriveBotSeed(SEED)),
 });
-const state = botsToYear(start, 12);
+const state = botsToYear(start, 9);
 const madeFrom = {
   commit: execSync("git rev-parse --short HEAD", { encoding: "utf8" }).trim(),
   date: new Date().toISOString().slice(0, 10),
