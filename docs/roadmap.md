@@ -167,13 +167,19 @@ are being built, with no balance batches until both are in the engine and the bo
 10. The combined check.
 11. The bot overhaul: [outcome-driven AI](plans/outcome-driven-ai.md), reopened 2026-11-01.
 12. The [game settings](plans/game-settings.md) setup screen, after card balance (owner,
-    2026-10-29). Recurring deals are dropped (owner, 2026-10-29).
+    2026-10-29).
 13. Networked multiplayer (Phase 6 below).
+
+**Built by 2026-11-03:** steps 1, 2, 3, 6 and 7, and step 4's forecast; its bot use waits for
+step 5.
+
+**Trade deals (owner, 2026-11-03).** Leased goods and deals that repeat every year are back,
+after recurring deals were dropped on 2026-10-29. The [trade deals](plans/trade-deals.md) spec
+holds the open questions for a study. Nothing is built until the owner picks.
 
 **Small items**, taken when convenient:
 
-- `RIOT-1` and `MAP-3` in the [UI ledger](plans/ui-remaining.md): the riot screen redesign and
-  overlapping map labels.
+- `RIOT-1` in the [UI ledger](plans/ui-remaining.md): the riot screen redesign.
 - After the comparisons, delete the sim's `--restore` switch and the Capital Works slot effect it
   keeps.
 

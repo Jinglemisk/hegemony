@@ -21,7 +21,8 @@ so the sim shows who trades what, and the balance check measures a game that has
 - Bots that bargain well. They price deals with the scorer they have and model no rival.
 - Networked play. The commands carry over to a server in Phase 6, which adds answer timers and a
   disconnect rule.
-- Promises, loans or deals about later turns. A trade exchanges what is held now.
+- Promises, loans or deals about later turns. A trade exchanges what is held now. Leases and
+  deals that repeat every year are reopened in [trade deals](trade-deals.md) (owner, 2026-11-03).
 
 ## Settled inputs
 
