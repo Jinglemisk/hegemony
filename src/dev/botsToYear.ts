@@ -4,7 +4,7 @@ import { playTurn } from "../sim/runner";
 import { createSimRng, deriveBotSeed } from "../sim/rng";
 
 /** A board as a real game leaves it: the sim's master bots play every seat until the
- *  year opens (past any sitting). Master searches every turn, so Year 12 takes a
+ *  year opens (past any sitting). Master searches every turn, so Year 9 takes a
  *  minute or more. */
 export function botsToYear(initial: HegemonyState, year: number): HegemonyState {
   const rng = createSimRng(deriveBotSeed(initial.seed));
