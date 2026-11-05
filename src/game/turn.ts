@@ -19,6 +19,12 @@ import { drawFreeCard, freeCardDue } from "./devCards";
 import { checkVictoryAtTurnStart } from "./victory";
 import { tickLuxurySuppression } from "./luxury";
 import { closeOffers } from "./trade";
+import {
+  closeDealsAtYearEnd,
+  dealEndTurnReason,
+  returnLoansAtTurnEnd,
+  startLoanTurns,
+} from "./deals";
 import { openAssembly, shouldOpenAssembly } from "./assembly/assembly";
 import { GAME_MODES } from "./ruleset";
 import type { Ruleset } from "./ruleset";
@@ -130,7 +136,7 @@ export function advanceSetupTurn(G: HegemonyState) {
 }
 
 /** Start-of-turn automation: reveal the year's card, check victory, expire luxury
- *  suppression, then collect income (including the player-card draw). */
+ *  suppression, then collect income (including the player-card draw) and settle deals. */
 export function beginGameplayTurn(G: HegemonyState) {
   if (G.phase !== "gameplay") {
     return;
@@ -148,6 +154,7 @@ export function beginGameplayTurn(G: HegemonyState) {
   }
 
   tickLuxurySuppression(G, G.currentPlayer);
+  startLoanTurns(G, G.currentPlayer);
   collectIncome(G, G.currentPlayer, "automatic");
 }
 
@@ -159,6 +166,8 @@ export function endTurn(G: HegemonyState): MoveResult {
   if (pendingDecisionReasons(G).length > 0) {
     return { ok: false, reasons: [] };
   }
+  const deal = dealEndTurnReason(G);
+  if (deal) return { ok: false, reasons: [deal] };
 
   closeOffers(G);
   const unfed = unfedAtTurnEnd(G, G.currentPlayer);
@@ -190,9 +199,11 @@ export function commitTurn(G: HegemonyState): MoveResult {
 /** Pass a committed turn, after its riot or revolt. The unrest check must not run twice. */
 export function finishTurn(G: HegemonyState): MoveResult {
   const current = G.currentPlayer;
+  returnLoansAtTurnEnd(G, current);
   let next = nextPlayer(current);
 
   if (next === G.yearOpener) {
+    closeDealsAtYearEnd(G);
     startNewYear(G);
 
     if (G.phase !== "gameplay") {
@@ -218,7 +229,7 @@ export function finishTurn(G: HegemonyState): MoveResult {
 }
 
 /**
- * Open one player's turn: arrivals, victory, luxury expiry and income.
+ * Open one player's turn: arrivals, victory, luxury expiry, income and deals.
  * Extracted from {@link endTurn} because the Assembly suspends play *between* the
  * year turning and the opener's turn — so `closeAssembly` needs to run exactly this
  * sequence, and there must be only one copy of it.
@@ -235,6 +246,7 @@ export function beginTurnFor(G: HegemonyState, playerID: PlayerId) {
   }
 
   tickLuxurySuppression(G, playerID);
+  startLoanTurns(G, playerID);
   collectIncome(G, playerID, "automatic");
 }
 

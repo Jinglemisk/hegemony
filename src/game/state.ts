@@ -126,6 +126,7 @@ export function createInitialStateFromDefinition(
     transfers: [],
     offers: [],
     offersMade: {},
+    deals: [],
     yearDrawPile: years.cards,
     yearDiscardPile: [],
     playerDrawPile: player.cards,

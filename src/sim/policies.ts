@@ -54,7 +54,7 @@ import {
 import type { AssemblySession, BallotItem, LawEffect, ResolutionCard } from "../game/assembly";
 import type { GameCommand } from "../game/legalMoves";
 import { enumerateLegalCommands, enumerateLegalOptions, transition } from "../game/legalMoves";
-import { claimableLuxuriesAt, ownedClaims } from "../game/luxury";
+import { claimableLuxuriesAt, heldClaims } from "../game/luxury";
 import {
   getBuildBuildingStatus,
   getFoundColonyStatus,
@@ -74,6 +74,7 @@ import {
   tradePlaceChoices,
   tradeShortfalls,
 } from "../game/trade";
+import { isDealTerms } from "../game/deals";
 import {
   titleChanges,
   titleHolders,
@@ -270,6 +271,8 @@ const RULE_MOVE_TYPES: ReadonlySet<GameCommand["type"]> = new Set([
   "tradeAnswer",
   "tradeSettle",
   "tradeWithdraw",
+  "dealEnd",
+  "dealShortfall",
   "buyDevCard",
   "playDevCard",
 ]);
@@ -1103,7 +1106,7 @@ function evaluateSmart(
   // A good's +2 is already priced by the level term, point for point with a Temple.
   // This adds what that term cannot see: a good keeps its worth past the level cap,
   // where Beloved is decided, and a good claimed is one no rival can claim.
-  const luxuryValue = weights.luxury * ownedClaims(G, playerID).length;
+  const luxuryValue = weights.luxury * heldClaims(G, playerID).length;
   const shortfall = foodShortfallValue(G, playerID);
   const opportunity = ideaOpportunityValue(G, playerID, weights);
   const hand = handValue(G, playerID, weights);
@@ -2556,7 +2559,8 @@ function counterTerms(G: HegemonyState, offer: TradeOffer): TradeTerms[] {
  * A bot's answer to an offer naming it: accept when the trade is worth the margin to it
  * and hands the offering seat no title; else counter once, with the one-unit change
  * that would make it so; else decline. The first accept trades, so a bot answers at
- * once. A bot gives no held card: it declines an offer that asks it for one.
+ * once. A bot gives no held card: it declines an offer that asks it for one. Nor does
+ * it make deals yet: it declines yearly lines and lent goods (docs/plans/trade-deals.md).
  */
 function answerOffer(
   G: HegemonyState,
@@ -2565,7 +2569,7 @@ function answerOffer(
   me: PlayerId,
   weights: ScoreWeights,
 ): GameCommand {
-  if (offer.terms.get.cards > 0)
+  if (offer.terms.get.cards > 0 || isDealTerms(offer.terms))
     return { type: "tradeAnswer", offerId: offer.id, answer: { kind: "decline" } };
   const { score } = tradeScorer(G, me, weights);
   const floor = score(G) + TRADE_MARGIN;

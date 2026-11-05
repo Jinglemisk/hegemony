@@ -7,6 +7,7 @@ import { getLuxuryGood } from "./content";
 import { PLAYER_IDS } from "./data";
 import { allocateEntityId } from "./entity";
 import { hasPortBeside, luxuryName, transferLuxury } from "./luxury";
+import { anyRival, endDeal, getDeal, loanOf, makeDeal } from "./deals";
 import { settlementRoom } from "./settlement";
 import { formatPops } from "./core/format";
 import { EMPTY_POPS, POP_TYPES, clonePops, hasPops, subtractPops, totalPops } from "./core/pops";
@@ -14,10 +15,13 @@ import { addLog, getOwnedSettlement, getPlayerName } from "./core/query";
 import { MOVE_OK, invalid } from "./core/results";
 import type { ActionStatus, MoveResult } from "./core/results";
 import type {
+  Deal,
   HegemonyState,
+  LeaseLength,
   PlayerId,
   Pops,
   Resource,
+  Resources,
   TradableMaterial,
   TradeAnswer,
   TradeBundle,
@@ -33,7 +37,8 @@ import type {
  * moves everything at once, and the offer closes. A counter waits for the offering
  * seat to take it, and dies with the offer if another seat accepts first. Offers are
  * public but for the held cards a giver picks, which projections hide: an offer names how
- * many cards, never which.
+ * many cards, never which. Yearly lines and lent goods leave a standing deal behind
+ * (deals.ts); their first exchange is part of the trade.
  */
 
 /** Every stock trades. */
@@ -45,37 +50,66 @@ export function emptyBundle(): TradeBundle {
 
 export function isEmptyBundle(bundle: TradeBundle): boolean {
   return (
-    TRADE_RESOURCES.every((resource) => (bundle.resources[resource] ?? 0) === 0) &&
+    TRADE_RESOURCES.every(
+      (resource) =>
+        (bundle.resources[resource] ?? 0) === 0 && (bundle.yearly?.[resource] ?? 0) === 0,
+    ) &&
     bundle.goods.length === 0 &&
+    (bundle.lent?.length ?? 0) === 0 &&
     totalPops(bundle.pops) === 0 &&
     bundle.cards === 0
   );
 }
 
+/** The stocks a side hands over now: its one-off stocks and its first yearly line. */
+export function nowResources(bundle: TradeBundle): Partial<Resources> {
+  return Object.fromEntries(
+    TRADE_RESOURCES.map((resource) => [
+      resource,
+      (bundle.resources[resource] ?? 0) + (bundle.yearly?.[resource] ?? 0),
+    ]),
+  );
+}
+
 function bundleShapeReason(bundle: TradeBundle): string | null {
   const keys = Object.keys(bundle.resources) as Resource[];
-  if (keys.some((key) => !TRADE_RESOURCES.includes(key))) return "Unknown resource.";
+  const yearly = Object.keys(bundle.yearly ?? {}) as Resource[];
+  if ([...keys, ...yearly].some((key) => !TRADE_RESOURCES.includes(key))) {
+    return "Unknown resource.";
+  }
   const counts = [
     ...keys.map((key) => bundle.resources[key] ?? 0),
+    ...yearly.map((key) => bundle.yearly?.[key] ?? 0),
     ...POP_TYPES.map((pop) => bundle.pops[pop]),
     bundle.cards,
   ];
   if (counts.some((count) => !Number.isInteger(count) || count < 0)) {
     return "Counts are whole numbers.";
   }
-  if (new Set(bundle.goods).size !== bundle.goods.length) return "A good is named twice.";
+  const goods = [...bundle.goods, ...(bundle.lent ?? [])];
+  if (new Set(goods).size !== goods.length) return "A good is named twice.";
   return null;
 }
+
+const LEASE_LENGTHS: readonly LeaseLength[] = ["turn", "standing"];
 
 /** Why terms cannot be offered at all, whoever holds what: each side gives at least
  *  one thing (no gifts), counts are whole, and goods are real. */
 function termsReason(G: HegemonyState, terms: TradeTerms): string | null {
   const shape = bundleShapeReason(terms.give) ?? bundleShapeReason(terms.get);
   if (shape) return shape;
+  if (terms.lease !== undefined && !LEASE_LENGTHS.includes(terms.lease)) {
+    return "Unknown lease length.";
+  }
   if (isEmptyBundle(terms.give) || isEmptyBundle(terms.get)) {
     return "Each side gives at least one thing.";
   }
-  const goods = [...terms.give.goods, ...terms.get.goods];
+  const goods = [
+    ...terms.give.goods,
+    ...terms.get.goods,
+    ...(terms.give.lent ?? []),
+    ...(terms.get.lent ?? []),
+  ];
   if (new Set(goods).size !== goods.length) return "A good is named on both sides.";
   if (!goods.every((id) => G.board.luxuries.some((asset) => asset.id === id))) {
     return "No such luxury good.";
@@ -140,18 +174,20 @@ export function tradeShortfalls(
 ): string[] {
   const reasons: string[] = [];
   const held = G.players[seat].resources;
+  const now = nowResources(bundle);
   for (const resource of TRADE_RESOURCES) {
-    const amount = bundle.resources[resource] ?? 0;
+    const amount = now[resource] ?? 0;
     if (amount > 0 && held[resource] < amount) {
       reasons.push(`Holds ${Math.max(0, held[resource])} ${resource}, not ${amount}.`);
     }
   }
-  for (const id of bundle.goods) {
+  // A lent good stays its owner's but moves in no other trade until it comes back.
+  for (const id of [...bundle.goods, ...(bundle.lent ?? [])]) {
     const asset = G.board.luxuries.find((candidate) => candidate.id === id);
-    if (asset?.owner !== seat) {
-      const name = asset ? getLuxuryGood(G.definition.content, asset.goodId)?.name : null;
-      reasons.push(`Does not hold ${name ?? "that good"}.`);
-    }
+    const name = asset ? getLuxuryGood(G.definition.content, asset.goodId)?.name : null;
+    const loan = loanOf(G, id);
+    if (asset?.owner !== seat) reasons.push(`Does not hold ${name ?? "that good"}.`);
+    else if (loan) reasons.push(`${name} is lent to ${getPlayerName(G, loan.loan.borrower)}.`);
   }
   if (totalPops(bundle.pops) > 0) {
     const sources = tradePopSources(G, seat, bundle.pops);
@@ -263,7 +299,8 @@ export function getTradeOfferStatus(
   if (shape) reasons.push(shape);
   else {
     reasons.push(...sideReasons(G, seat, terms.give, terms.get, places));
-    if (terms.get.goods.some((id) => G.board.luxuries.find((a) => a.id === id)?.owner === seat)) {
+    const asked = [...terms.get.goods, ...(terms.get.lent ?? [])];
+    if (asked.some((id) => G.board.luxuries.find((a) => a.id === id)?.owner === seat)) {
       reasons.push("You already hold that good.");
     }
     for (const id of recipients(seat, to)) reasons.push(...noPortReasons(G, id, terms.give.goods));
@@ -417,8 +454,9 @@ function handOver(
   giverPlaces: TradePlaces,
   receiverPlaces: TradePlaces,
 ) {
+  const now = nowResources(bundle);
   for (const resource of TRADE_RESOURCES) {
-    const amount = bundle.resources[resource] ?? 0;
+    const amount = now[resource] ?? 0;
     G.players[giver].resources[resource] -= amount;
     G.players[receiver].resources[resource] += amount;
   }
@@ -463,6 +501,7 @@ function settle(
   const seat = offer.from;
   handOver(G, seat, partner, terms.give, ownPlaces, theirPlaces);
   handOver(G, partner, seat, terms.get, theirPlaces, ownPlaces);
+  makeDeal(G, seat, partner, terms);
   G.offers = G.offers.filter((open) => open.id !== offer.id);
   addLog(
     G,
@@ -536,7 +575,7 @@ export function tradeWithdraw(G: HegemonyState, seat: PlayerId, offerId: string)
 /**
  * A seat's stocks and standing level as they would be after handing over `gives` for
  * `gets`: the offer card's footer. Pops count from the moment they trade, as on the
- * move; holdings are not checked here.
+ * move, and yearly lines with their first exchange; holdings are not checked here.
  */
 export function tradePreview(
   G: HegemonyState,
@@ -546,12 +585,30 @@ export function tradePreview(
 ): { resources: HegemonyState["players"][PlayerId]["resources"]; happiness: number } {
   const after = produce(G, (draft) => {
     const resources = draft.players[seat].resources;
+    const [given, got] = [nowResources(gives), nowResources(gets)];
     for (const resource of TRADE_RESOURCES) {
-      resources[resource] += (gets.resources[resource] ?? 0) - (gives.resources[resource] ?? 0);
+      resources[resource] += (got[resource] ?? 0) - (given[resource] ?? 0);
     }
     for (const asset of draft.board.luxuries) {
       if (gets.goods.includes(asset.id)) asset.owner = seat;
       else if (gives.goods.includes(asset.id)) asset.owner = null;
+    }
+    // A lent good counts for its borrower: a stand-in deal moves the count.
+    const loans = [
+      ...(gets.lent ?? []).map((assetId) => ({ assetId, borrower: seat })),
+      ...(gives.lent ?? []).map((assetId) => ({ assetId, borrower: anyRival(seat) })),
+    ];
+    if (loans.length > 0) {
+      const preview: Deal = {
+        id: "preview",
+        seats: [seat, anyRival(seat)],
+        yearly: {},
+        loans: loans.map((loan) => ({ ...loan, length: "standing", turn: null })),
+        madeYear: draft.year,
+        endsYear: null,
+        short: {},
+      };
+      draft.deals.push(preview);
     }
     const source = tradePopSources(draft, seat, gives.pops)[0];
     const settlement = source ? getOwnedSettlement(draft, source, seat) : undefined;
@@ -571,22 +628,49 @@ export function tradePreview(
   return { resources: after.players[seat].resources, happiness: standingHappiness(after, seat) };
 }
 
+/** Either seat may end a standing deal where it could make an offer: on its own turn, or
+ *  in the Assembly's preparation before it is Ready. */
+export function getDealEndStatus(G: HegemonyState, seat: PlayerId, dealId: string): ActionStatus {
+  const deal = getDeal(G, dealId);
+  const reason = !deal
+    ? "No such deal."
+    : !deal.seats.includes(seat)
+      ? "Not your deal."
+      : deal.endsYear !== null
+        ? "This deal is already ending."
+        : offerWindowReason(G, seat);
+  return { can: reason === null, reasons: reason ? [reason] : [] };
+}
+
+export function dealEnd(G: HegemonyState, seat: PlayerId, dealId: string): MoveResult {
+  const status = getDealEndStatus(G, seat, dealId);
+  if (!status.can) return invalid(...status.reasons);
+  endDeal(G, seat, dealId);
+  return MOVE_OK;
+}
+
 /** The trading window closes: a turn ends, or the Assembly's preparation does. */
 export function closeOffers(G: HegemonyState) {
   G.offers = [];
   G.offersMade = {};
 }
 
-/** "2 wood, 1 gold, Pearls, 1 slave and 2 cards", or "nothing". */
+/** "2 wood, 1 gold, 2 food a year, Pearls, Wine on loan, 1 slave and 2 cards", or
+ *  "nothing". */
 export function describeBundle(G: HegemonyState, bundle: TradeBundle): string {
+  const goodName = (id: string) => {
+    const asset = G.board.luxuries.find((candidate) => candidate.id === id);
+    return (asset && getLuxuryGood(G.definition.content, asset.goodId)?.name) ?? id;
+  };
   const parts = [
     ...TRADE_RESOURCES.filter((resource) => (bundle.resources[resource] ?? 0) > 0).map(
       (resource) => `${bundle.resources[resource]} ${resource}`,
     ),
-    ...bundle.goods.map((id) => {
-      const asset = G.board.luxuries.find((candidate) => candidate.id === id);
-      return (asset && getLuxuryGood(G.definition.content, asset.goodId)?.name) ?? id;
-    }),
+    ...TRADE_RESOURCES.filter((resource) => (bundle.yearly?.[resource] ?? 0) > 0).map(
+      (resource) => `${bundle.yearly?.[resource]} ${resource} a year`,
+    ),
+    ...bundle.goods.map(goodName),
+    ...(bundle.lent ?? []).map((id) => `${goodName(id)} on loan`),
     ...(totalPops(bundle.pops) > 0 ? [formatPops(bundle.pops)] : []),
     ...(bundle.cards > 0 ? [`${bundle.cards} card${bundle.cards === 1 ? "" : "s"}`] : []),
   ];
