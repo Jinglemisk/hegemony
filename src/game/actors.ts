@@ -31,6 +31,7 @@ const ASSEMBLY_PROPOSAL_COMMANDS: ReadonlySet<GameCommand["type"]> = new Set([
   "assemblyPass",
   "assemblyReady",
   ...TRADE_COMMANDS,
+  "dealEnd",
 ]);
 
 const ASSEMBLY_VOTE_COMMANDS: ReadonlySet<GameCommand["type"]> = new Set([

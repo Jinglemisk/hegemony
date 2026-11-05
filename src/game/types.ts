@@ -444,12 +444,60 @@ export interface TradeBundle {
   pops: Pops;
   /** Held development cards, by count only: the giver picks which (TradePlaces.cards). */
   cards: number;
+  /** Stocks handed over now and again every later year, at the giver's own income: a
+   *  deal (docs/plans/trade-deals.md). */
+  yearly?: Partial<Resources>;
+  /** Goods lent, by asset id: the taker counts them while the deal stands, the giver
+   *  keeps them. */
+  lent?: string[];
 }
+
+/** How long lent goods stay: through the borrower's next turn, or until the deal ends. */
+export type LeaseLength = "turn" | "standing";
 
 /** An offer's terms, read from the offering seat: what it gives and what it gets. */
 export interface TradeTerms {
   give: TradeBundle;
   get: TradeBundle;
+  /** The lent goods' length, both ways; standing when unnamed. */
+  lease?: LeaseLength;
+}
+
+/** A good lent in a deal. Its owner lends it; the borrower counts it. */
+export interface DealLoan {
+  assetId: string;
+  borrower: PlayerId;
+  length: LeaseLength;
+  /** A one-turn loan's turn, once the borrower's turn has begun: it goes back at that
+   *  turn's end. Null until then, and for a standing loan. */
+  turn: number | null;
+}
+
+/** What a seat owed its partner and paid, summed over its short settlements since the
+ *  partner last answered. */
+export interface DealShortfall {
+  owed: Partial<Resources>;
+  paid: Partial<Resources>;
+}
+
+/**
+ * A standing deal between two seats (docs/plans/trade-deals.md). Its first exchange
+ * happened when it was made. From the next year each seat settles once a year at its
+ * own income: it pays its yearly line and takes its partner's.
+ */
+export interface Deal {
+  id: string;
+  /** The offering seat, then its partner. */
+  seats: [PlayerId, PlayerId];
+  /** What each seat hands the other every year. */
+  yearly: Partial<Record<PlayerId, Partial<Resources>>>;
+  loans: DealLoan[];
+  /** The year it was made, whose exchange it made then. */
+  madeYear: number;
+  /** The last year it settles, once a seat ends it; null while it stands. */
+  endsYear: number | null;
+  /** A seat that paid short, by seat: its partner answers at its next income. */
+  short: Partial<Record<PlayerId, DealShortfall>>;
 }
 
 /** What a seat names for its own side of a trade: where the pops it gives leave, where
@@ -591,6 +639,8 @@ export interface HegemonyState {
   /** Offers each seat has made in this trading window, the turn or the preparation.
    *  No rule limits offers; the bots read this to limit their own. */
   offersMade: Partial<Record<PlayerId, number>>;
+  /** Standing deals, oldest first: yearly lines and lent goods. Public. */
+  deals: Deal[];
   /** The year deck: fourteen cards in a hidden order, one turned each year. A game
    *  longer than the deck shuffles the discards back in when the pile runs out. */
   yearDrawPile: YearCard[];

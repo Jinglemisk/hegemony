@@ -918,10 +918,15 @@ const trade: RuleChapter = {
     "bank",
     "dole",
     "price",
+    "deal",
+    "yearly",
+    "loan",
+    "lease",
   ],
   entries: [
     { id: anchor("trade", "offers"), label: "Offers" },
     { id: anchor("trade", "settling"), label: "Settling" },
+    { id: anchor("trade", "deals"), label: "Standing deals" },
     { id: anchor("trade", "prices"), label: "No bank" },
     { id: anchor("trade", "assembly"), label: "In the Assembly" },
   ],
@@ -950,6 +955,20 @@ const trade: RuleChapter = {
           new holder. Pops leave at once, travel like a move to a settlement with room picked on the
           map, and arrive at the start of their new owner&rsquo;s next turn; from the trade on they
           are its pops.
+        </Note>
+      </Entry>
+      <Entry id={anchor("trade", "deals")} title="Standing deals">
+        <Note>
+          An offer may also carry stocks every year and luxury goods on loan. The trade is this
+          year&rsquo;s exchange; from next year each seat settles at its own income, paying its line
+          and taking its partner&rsquo;s, so your stocks never move on another seat&rsquo;s turn.
+        </Note>
+        <Note>
+          A lent good stays its owner&rsquo;s, Port and all; the borrower needs no Port and counts
+          its +{G.ruleset.economy.luxury.happinessPerGood} while the loan stands, for one turn or
+          until the deal ends. Either seat may end a deal on its own turn: the year runs out, then
+          it closes. A seat short of its line pays what it holds, and its partner keeps the deal or
+          cancels it at its next income. Bots decline deals for now.
         </Note>
       </Entry>
       <Entry id={anchor("trade", "prices")} title="No bank">

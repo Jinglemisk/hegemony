@@ -17,6 +17,7 @@ import { Tooltip } from "../overlays/Tooltip";
 import { effectTurns, turnsLeftInYear, turnsUntilYear } from "../../ui/frameSelectors";
 import type { HungerShortfall } from "../../ui/frameSelectors";
 import { ThreatAlarm, YearDisc } from "./MomentDiscs";
+import { DealDisc } from "./trade/DealDisc";
 import { OfferDisc } from "./trade/OfferDisc";
 import { Ico, Tip, TipBody, Turns } from "./parts";
 
@@ -47,6 +48,7 @@ export function Alarms({
   hunger,
   onOpenYear,
   threatOpen = false,
+  dealAsk = 0,
 }: {
   G: HegemonyState;
   viewerId: PlayerId;
@@ -55,6 +57,8 @@ export function Alarms({
   hunger: HungerShortfall | null;
   onOpenYear: () => void;
   threatOpen?: boolean;
+  /** Bumped when End turn is pressed while a short payment waits: its deal opens. */
+  dealAsk?: number;
 }) {
   if (alarms.length === 0) return null;
   return (
@@ -75,6 +79,10 @@ export function Alarms({
             return <OneTitleShortDisc G={G} key="short" seats={alarm.seats} />;
           case "offer":
             return <OfferDisc key={alarm.offer.id} offer={alarm.offer} />;
+          case "deal":
+            return (
+              <DealDisc ask={dealAsk} asking={alarm.asking} deal={alarm.deal} key={alarm.deal.id} />
+            );
           case "yearCard":
             return <YearDisc G={G} key="year" onOpen={onOpenYear} viewerId={viewerId} />;
           case "unrest":

@@ -19,7 +19,7 @@ import { atFreeCardLevel, devCardOf } from "../game/devCards";
 import { riotPopNext } from "../game/riot";
 import { standingHappiness } from "../game/happiness";
 import { getAddPopsEffect } from "../game/events";
-import { activeClaims, ownedClaims } from "../game/luxury";
+import { activeClaims, heldClaims } from "../game/luxury";
 import { getBuilding } from "../game/content";
 import { playerStandings } from "../game/score";
 import { getOwnedSettlement, getTile } from "../game/core/query";
@@ -2078,7 +2078,7 @@ export class Aggregator {
         popsLostToHunger: G.players[id].popsLostToHunger,
         popsLostToUnrest: G.players[id].popsLostToUnrest,
         luxuries: {
-          goodsHeld: ownedClaims(G, id).length,
+          goodsHeld: heldClaims(G, id).length,
           goodsActive,
           // What the goods are worth in a year that counts them: a game whose last
           // card is Blockade would otherwise read 0.

@@ -48,6 +48,9 @@ import lateGameJson from "./late-game.json?raw";
  * every seat to the start of Year 6 or Year 9; Year 9 is a stored board, seed 42), and
  * `?dev=shared-tiles` (two neighbouring tiles near the centre, each shared by two rivals'
  * colonies, as Continental allows: their plates stand side by side close in).
+ * `?dev=deals`: on the Year 9 board, Damon's two standing deals, a yearly swap with Nikos
+ * and Theron's Pearls on loan; `?dev=deal-short` a year on, with Nikos's short payment
+ * waiting on Damon's answer.
  */
 
 /** What a scene asks of the board's first render, beside its state. */
@@ -271,7 +274,50 @@ export const DEV_SCENES: Record<string, (G: HegemonyState) => DevScene> = {
   "mid-game": (G) => ({ G: botsToYear(G, 6) }),
   "shared-tiles": (G) => ({ G: shareTwoTiles(clearFate(G)) }),
   "late-game": (G) => ({ G: storedLateGame(G) ?? botsToYear(G, 9) }),
+  deals: (G) => ({ G: standingDeals(G) }),
+  "deal-short": (G) => ({ G: shortPayment(standingDeals(G)) }),
 };
+
+/** On the Year 9 board, Damon's two standing deals: 3 stone a year to Nikos for 2 food
+ *  a year, and Theron's Pearls on loan for 2 influence a year. Made by real offers. */
+function standingDeals(initial: HegemonyState): HegemonyState {
+  const board = storedLateGame(initial);
+  if (!board) return initial;
+  let G = produce(clearFate(board), (draft) => {
+    Object.assign(draft.players["1"].resources, { food: 6, wood: 3 });
+    Object.assign(draft.players["0"].resources, { food: 4, gold: 3 });
+  });
+  const none = { citizens: 0, freemen: 0, slaves: 0 };
+  const side = (more: object) => ({ resources: {}, goods: [], pops: none, cards: 0, ...more });
+  const deal = (partner: PlayerId, give: object, get: object) => {
+    G = applyAs(G, "0", {
+      type: "tradeOffer",
+      to: [partner],
+      terms: { give: side(give), get: side(get) },
+      places: {},
+    });
+    const offerId = G.offers.at(-1)?.id ?? "";
+    G = applyAs(G, partner, {
+      type: "tradeAnswer",
+      offerId,
+      answer: { kind: "accept", places: {} },
+    });
+  };
+  deal("1", { yearly: { stone: 3 } }, { yearly: { food: 2 } });
+  const pearls = G.board.luxuries.find((asset) => asset.owner === "2");
+  if (pearls) deal("2", { yearly: { influence: 2 } }, { lent: [pearls.id] });
+  return G;
+}
+
+/** `?dev=deals` a year on: Nikos paid 1 of his 2 food, and Damon's answer waits. */
+function shortPayment(G: HegemonyState): HegemonyState {
+  return produce(G, (draft) => {
+    const deal = draft.deals.find((open) => open.seats.includes("1"));
+    if (!deal) return;
+    deal.madeYear -= 1;
+    deal.short["1"] = { owed: { food: 2 }, paid: { food: 1 } };
+  });
+}
 
 /** Two rivals' colonies on each of two neighbouring open tiles, the pair nearest the
  *  centre. Placed directly, so the scene holds on any board. */
@@ -410,7 +456,12 @@ function rivalHungerAndPurchase(start: HegemonyState): HegemonyState {
 }
 
 function apply(G: HegemonyState, command: GameCommand): HegemonyState {
-  const result = transition(G.definition, G, G.currentPlayer, command);
+  return applyAs(G, G.currentPlayer, command);
+}
+
+function applyAs(G: HegemonyState, actor: PlayerId, command: GameCommand): HegemonyState {
+  const result = transition(G.definition, G, actor, command);
+  if (!result.ok) console.warn(`dev scene: ${command.type} refused`, result.reasons);
   return result.ok ? result.state : G;
 }
 

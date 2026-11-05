@@ -216,6 +216,7 @@ export function collectInvariantViolations(
   }
 
   validateOffers(G, add);
+  validateDeals(G, add);
 
   // Luxury goods (luxury-goods.md §3.4/§3.5): unique physical objects with at most
   // one owner, a real claim origin, and non-negative suppression. Activity is never
@@ -438,6 +439,51 @@ function validateOffers(
       if (!offer.to.includes(seat)) {
         add("offer.answer", `${path}.answers.${seat}`, "only a recipient answers");
       }
+    }
+  }
+}
+
+/** A deal joins two seats, stands no later than its year, and lends each good once, from
+ *  its owner in the deal to the other seat. */
+function validateDeals(
+  G: HegemonyState,
+  add: (code: string, path: string, message: string) => void,
+) {
+  const ids = new Set<string>();
+  const lent = new Set<string>();
+  for (const [index, deal] of G.deals.entries()) {
+    const path = `deals[${index}]`;
+    if (!deal.id || ids.has(deal.id))
+      add("deal.identity", `${path}.id`, "deal id is missing or duplicated");
+    ids.add(deal.id);
+    const [a, b] = deal.seats;
+    if (a === b || !PLAYER_IDS.includes(a) || !PLAYER_IDS.includes(b)) {
+      add("deal.seats", `${path}.seats`, "must name two distinct seats");
+    }
+    if (deal.madeYear > G.year || (deal.endsYear !== null && deal.endsYear !== G.year)) {
+      add("deal.calendar", path, "made after this year, or ended in another year and still open");
+    }
+    for (const [seat, line] of Object.entries(deal.yearly)) {
+      if (!deal.seats.includes(seat as PlayerId))
+        add("deal.line", `${path}.yearly.${seat}`, "not a seat of the deal");
+      for (const amount of Object.values(line ?? {})) {
+        if (!Number.isInteger(amount) || (amount ?? 0) < 0) {
+          add("deal.line", `${path}.yearly.${seat}`, "yearly counts are whole and not negative");
+        }
+      }
+    }
+    for (const loan of deal.loans) {
+      const asset = G.board.luxuries.find((candidate) => candidate.id === loan.assetId);
+      if (!asset || asset.owner === null || lent.has(loan.assetId)) {
+        add("deal.loan", `${path}.loans`, "lends an unowned good, or one lent twice");
+      } else if (
+        !deal.seats.includes(asset.owner) ||
+        loan.borrower === asset.owner ||
+        !deal.seats.includes(loan.borrower)
+      ) {
+        add("deal.loan", `${path}.loans`, "a good goes from its owner to the deal's other seat");
+      }
+      lent.add(loan.assetId);
     }
   }
 }

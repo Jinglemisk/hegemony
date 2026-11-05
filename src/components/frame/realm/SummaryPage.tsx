@@ -6,7 +6,7 @@ import {
   POP_TYPES,
   activeClaims,
   getLuxuryGood,
-  ownedClaims,
+  heldClaims,
   realmPops,
   settlementCapacity,
   unrestStatus,
@@ -47,7 +47,7 @@ export function SummaryPage({
   );
   const mood = unrestStatus(G, viewerId);
   const held = victoryStandings(G).filter((standing) => standing.holder === viewerId);
-  const claims = ownedClaims(G, viewerId);
+  const claims = heldClaims(G, viewerId);
   const active = new Set(activeClaims(G, viewerId).map((asset) => asset.id));
 
   return (
