@@ -8,6 +8,7 @@ import {
 import type { ActiveEffectDescriptor } from "../game/activeEffects";
 import { nextAssemblyYear } from "../game/assembly";
 import { capitalize } from "../game/core/format";
+import { dealEndTurnReason } from "../game/deals";
 import { PLAYER_IDS } from "../game/data";
 import { playerDole } from "../game/ideaRules";
 import { presentUnrestOutcome } from "./effects";
@@ -19,6 +20,8 @@ import type { HegemonyState, LogEntry, PlayerId } from "../game/types";
  *  thresholds. Hunger is settled first, then the riot or revolt: the label names the
  *  riot when both wait, and the message names both. */
 export function endTurnWarning(G: HegemonyState, playerID: PlayerId) {
+  const deal = G.currentPlayer === playerID ? dealEndTurnReason(G) : null;
+  if (deal) return { label: "Answer first", message: deal };
   const outcome = unrestOutcome(G, playerID);
   const hunger = hungerShortfall(G, playerID);
   const leaving = hunger
