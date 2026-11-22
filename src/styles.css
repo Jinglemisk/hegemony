@@ -53,6 +53,8 @@
 @import "./styles/frame/chrome.css";
 /* The shell's right side: the dock, the legend and the outliner. */
 @import "./styles/frame/right.css";
+/* The left window: the sidebar, its drawers and the place panel. */
+@import "./styles/frame/left.css";
 @import "./styles/sitting.css";
 /* The top's floating parts, after the sitting: they place its minimised pill. */
 @import "./styles/frame/top.css";

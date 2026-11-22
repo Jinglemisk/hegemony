@@ -515,3 +515,52 @@
     --dur-drop: 0ms;
   }
 }
+
+/* ---- the left window (src/components/left/, frame/left.css) -------------------
+   The sidebar drawn as a Greek column: a capital with two volutes under the top
+   bar, a fluted ink shaft edged in the windows' key pattern, an anthemion between
+   its two groups of buttons, and a base at the foot. Inline art, ochre on ink. */
+:root {
+  --col-capital: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='26' viewBox='0 0 64 26'%3E%3Cg fill='none' stroke='%23d98a35' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M1 2.5H63'/%3E%3Cpath d='M3 6.5H61'/%3E%3Cpath d='M12 8.5C20 15 44 15 52 8.5'/%3E%3Cpath d='M22 10.2V13.4M32 11V14.6M42 10.2V13.4' stroke-width='1.2'/%3E%3Ccircle cx='9' cy='14' r='6'/%3E%3Ccircle cx='9' cy='14' r='2.6'/%3E%3Ccircle cx='55' cy='14' r='6'/%3E%3Ccircle cx='55' cy='14' r='2.6'/%3E%3Cpath d='M10 21.5H54' /%3E%3Cpath d='M14 24.5H50' stroke-opacity='.55'/%3E%3C/g%3E%3C/svg%3E")
+    center top / 64px 26px no-repeat;
+  --col-base: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='16' viewBox='0 0 64 16'%3E%3Cg fill='none' stroke='%23d98a35' stroke-width='1.6'%3E%3Cpath d='M10 2.5H54' stroke-opacity='.55'/%3E%3Cpath d='M6 6.5H58'/%3E%3Cpath d='M3 10.5H61'/%3E%3Cpath d='M1 14.5H63'/%3E%3C/g%3E%3C/svg%3E")
+    center bottom / 64px 16px no-repeat;
+  --col-flutes: repeating-linear-gradient(
+    90deg,
+    rgb(255 248 231 / 0%) 0 5px,
+    rgb(255 248 231 / 4.5%) 5px 7px,
+    rgb(0 0 0 / 18%) 7px 8px,
+    rgb(255 248 231 / 0%) 8px 10px
+  );
+  --col-key: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='12' viewBox='0 0 9 12'%3E%3Cg fill='none' stroke='%23d98a35' stroke-width='1.3' stroke-opacity='.8'%3E%3Cpath d='M7.6 0V4.5H2.4V8.2H5.4V6.4'/%3E%3Cpath d='M7.6 4.5V12'/%3E%3Cpath d='M0.7 0V12' stroke-opacity='.35'/%3E%3C/g%3E%3C/svg%3E")
+    right top / 9px 12px repeat-y;
+  --col-anthemion: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='18' viewBox='0 0 50 18'%3E%3Cg fill='%23d98a35'%3E%3Cpath d='M25 15C22.6 11 22.6 6 25 1.5C27.4 6 27.4 11 25 15Z'/%3E%3Cpath d='M25 15C20.5 13 18 9 18.4 4.6C21.6 7 23.6 10.6 25 15Z' fill-opacity='.85'/%3E%3Cpath d='M25 15C29.5 13 32 9 31.6 4.6C28.4 7 26.4 10.6 25 15Z' fill-opacity='.85'/%3E%3Cpath d='M25 15C18.6 15.2 14.4 12.4 13 8.6C17.2 9.4 21.6 11.8 25 15Z' fill-opacity='.7'/%3E%3Cpath d='M25 15C31.4 15.2 35.6 12.4 37 8.6C32.8 9.4 28.4 11.8 25 15Z' fill-opacity='.7'/%3E%3C/g%3E%3Cg fill='none' stroke='%23d98a35' stroke-width='1.3'%3E%3Cpath d='M20.5 16.6C22.4 15.4 23.6 15.4 25 16.6C26.4 15.4 27.6 15.4 29.5 16.6'/%3E%3Cpath d='M2 16.6H12M38 16.6H48' stroke-opacity='.6'/%3E%3Ccircle cx='15' cy='16.6' r='1.3' fill='%23d98a35' stroke='none'/%3E%3Ccircle cx='35' cy='16.6' r='1.3' fill='%23d98a35' stroke='none'/%3E%3C/g%3E%3C/svg%3E")
+    center / 50px 18px no-repeat;
+  --col-shadow: 6px 0 18px rgb(10 34 41 / 32%);
+  --col-top: 30px; /* the capital, above the first button */
+  --col-btn-d: 50px;
+  --col-sep-h: 18px;
+  --col-pointer: 7px; /* the pressed button's arrow into its drawer */
+  /* A sidebar button: a parchment plaque framed in bronze; pressed, ringed in ochre. */
+  --col-btn: linear-gradient(#fbf2df, var(--bone));
+  --col-btn-rim:
+    inset 0 0 0 2px var(--bz), inset 0 0 0 4px var(--ivory-70), 0 2px 4px rgb(0 0 0 / 35%);
+  --col-btn-hover-rim:
+    inset 0 0 0 2px var(--clay), inset 0 0 0 4px var(--ivory-70), 0 2px 6px rgb(0 0 0 / 40%);
+  --col-btn-on-rim:
+    inset 0 0 0 3px var(--ochre), 0 0 0 2px rgb(217 138 53 / 35%), 0 2px 6px rgb(0 0 0 / 40%);
+  /* A drawer's tile: a raised parchment plaque; yours, washed in clay. */
+  --tile-face: linear-gradient(#fbf1da, #ecdcb8);
+  --tile-rim:
+    inset 0 1px 0 var(--ivory-lit), 0 0 0 1px rgb(107 69 33 / 45%), 0 1px 2px rgb(0 0 0 / 18%);
+  --tile-hover-rim:
+    inset 0 1px 0 var(--ivory-lit), 0 0 0 1.5px var(--bz), 0 0 10px rgb(233 194 122 / 55%),
+    0 3px 5px rgb(0 0 0 / 22%);
+  --tile-lit: inset 0 0 0 2px var(--ochre);
+  --tile-yours: linear-gradient(#f6dfc6, #e9c6a2);
+  --tile-warn: rgb(192 70 28 / 14%);
+  --lw-foot-h: 56px; /* a drawer's foot line: two lines of its sentence */
+  --pp-foot-wash: rgb(214 190 145 / 38%); /* the place panel's footer of acts */
+  --pp-pop-w: 340px; /* what opens beside the place panel, above the hand's row … */
+  --pp-pop-lift: 80px; /* … clear of the hand's row (900 − 828 + 8) */
+}

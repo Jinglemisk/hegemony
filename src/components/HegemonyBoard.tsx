@@ -92,6 +92,7 @@ import { CornerDock } from "./frame/CornerDock";
 import { Dock } from "./frame/dock/Dock";
 import { Outliner } from "./frame/outliner/Outliner";
 import { Seats } from "./frame/Seats";
+import { LeftShell } from "./left/LeftShell";
 import { MAP_MODES } from "./frame/map3d/modes";
 import type { MapMode } from "./frame/map3d/modes";
 import { loadPlates, savePlates } from "./frame/map3d/plates";
@@ -228,11 +229,12 @@ export function HegemonyBoard({
   const [consultTab, setConsultTab] = useState<ConsultTab | null>(null);
   // The offer card, composing from the Trade disc: it floats by the disc and holds up
   // no one, so it is not a dialog.
+  // `partner`: the seat it starts addressed to (a rival picked on the map, or a rival's
+  // place panel), else the table.
   const [composing, setComposing] = useState<{
     seat: PlayerId;
     anchor: DOMRect;
-    /** The rival offered to first: the picked place's owner. */
-    to?: PlayerId;
+    partner?: PlayerId | null;
   } | null>(null);
   // Deep-links (two-panel.md piece 4): a Codex-term click opens the consult panel's
   // rulebook at a chapter. The nonce lets the same term re-navigate the codex even if
@@ -765,6 +767,33 @@ export function HegemonyBoard({
                       />
                     </div>
 
+                    {/* The left window: the sidebar's drawers and the place panel. */}
+                    <LeftShell
+                      actions={{
+                        onFound: foundHere,
+                        onMoveOut: (tileId) =>
+                          armSelection({ kind: "movePops", sourceTileId: tileId }),
+                        onBuild: requestBuildBuilding,
+                        onOpenHand: () => setActiveModal({ kind: "hand" }),
+                        onBuyCard: () => {
+                          setActiveModal({ kind: "drawnCard", mark: deckMark(G, viewerId) });
+                          moves.buyDevCard();
+                        },
+                        onCompose: (partner, anchor) =>
+                          setComposing({ seat: viewerId, anchor, partner }),
+                        onIdeasModal: () => setActiveModal({ kind: "ideas" }),
+                      }}
+                      income={projectedIncome}
+                      mapArmed={Boolean(mapSelection.selection)}
+                      onPick={(next) => {
+                        setSubject(next);
+                        setSelectedTileId(next.kind === "tile" ? next.tileId : null);
+                        setRealmTab("subject");
+                      }}
+                      placeable={!isSetup}
+                      subject={subject}
+                    />
+
                     {/* The right side: the outliner down the edge, the dock in the corner. */}
                     <Outliner
                       onOpenDrawer={(drawer) => setConsultTab(drawer)}
@@ -783,7 +812,7 @@ export function HegemonyBoard({
                       onTrade={(anchor) => {
                         const picked = G.board.tiles.find((tile) => tile.id === selectedTileId);
                         const rival = picked?.settlements.find((s) => s.owner !== viewerId)?.owner;
-                        setComposing({ seat: viewerId, anchor, to: rival });
+                        setComposing({ seat: viewerId, anchor, partner: rival ?? null });
                       }}
                       plates={plates}
                     >
@@ -865,9 +894,10 @@ export function HegemonyBoard({
                     onDismiss={() => setComposing(null)}
                   >
                     <ComposeCard
+                      key={composing.partner ?? "table"}
                       onClose={() => setComposing(null)}
+                      partner={composing.partner}
                       seat={composing.seat}
-                      to={composing.to}
                     />
                   </Popover>
                 ) : null}

@@ -6,14 +6,6 @@ async function visit(page: Page, path: string) {
   await page.locator(".living-map[data-ready]").waitFor();
 }
 
-/** Open the Civic disc's fan from the keyboard (a click runs its own option), then take
- *  the named option. */
-async function civic(page: Page, option: string) {
-  await page.locator('.verb-btn[aria-label^="Civic"]').first().focus();
-  await page.keyboard.press("Enter");
-  await page.locator(`.is-open > .fan > .fan-item > .fan-btn[aria-label^="${option}."]`).click();
-}
-
 /** The viewer's own seat as the menu's View as names it ("Damon, acting, your seat"). */
 async function ownSeat(page: Page) {
   await page.locator('[data-c="menu-btn"]').click();
@@ -30,15 +22,22 @@ test("buys a development card, then plays one from the hand", async ({ page }) =
   // The seat holds a Caravan from an earlier turn: its disc counts one card.
   expect(await ownSeat(page)).toMatch(/acting, 1 card, your seat/);
 
-  // Buying draws the Foraging on top of the pile: a yield, which lands at once.
-  await civic(page, "Buy a card");
+  // The sidebar's Cards drawer buys a card, through the confirm bar. Buying draws the
+  // Foraging on top of the pile: a yield, which lands at once.
+  await page
+    .getByRole("navigation", { name: "Drawers" })
+    .getByRole("button", { name: "Cards" })
+    .click();
+  const cards = page.getByRole("region", { name: "Cards", exact: true });
+  await cards.getByRole("button", { name: /^Buy a card/ }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Buy a card" }).click();
   const drawn = page.getByRole("dialog", { name: "Foraging", exact: true });
   await expect(drawn).toContainText(/\+\d+ food/i);
   await drawn.getByRole("button", { name: "Take the Food" }).click();
   await expect(drawn).toBeHidden();
 
   // The hand plays the Caravan, its kind chosen; the table is told what it did.
-  await civic(page, "Your hand");
+  await cards.getByRole("button", { name: "View the hand" }).click();
   const hand = page.getByRole("dialog", { name: "Your hand", exact: true });
   await hand.getByRole("button", { name: "Play Caravan" }).click();
   await expect(hand.getByRole("button", { name: "Play Caravan" })).toBeDisabled();
@@ -78,8 +77,12 @@ test("a seat gives a held card in trade, picked in private behind a handover", a
 
   // 2 wood for a card, to the table: the offer names a card, never which.
   await page
-    .locator(".rd-acts")
-    .getByRole("button", { name: /^Trade/ })
+    .getByRole("navigation", { name: "Drawers" })
+    .getByRole("button", { name: "Trade" })
+    .click();
+  await page
+    .getByRole("region", { name: "Trade", exact: true })
+    .getByRole("button", { name: "Offer a trade" })
     .click();
   const compose = page.getByRole("region", { name: "Offer a trade" });
   await compose.getByRole("button", { name: "Add to I give" }).click();

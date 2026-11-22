@@ -121,8 +121,15 @@ test("ending a turn short of food asks who leaves, with a way back", async ({ pa
 test("an offer to the table is countered, then the first accept trades", async ({ page }) => {
   await visit(page, "/?dev=trade&seed=42");
 
-  // The Trade disc opens the offer card: 2 wood for 1 stone, to the table.
-  await page.getByRole("button", { name: /^Trade: Offer/ }).click();
+  // The sidebar's Trade drawer opens the offer card: 2 wood for 1 stone, to the table.
+  await page
+    .getByRole("navigation", { name: "Drawers" })
+    .getByRole("button", { name: "Trade" })
+    .click();
+  await page
+    .getByRole("region", { name: "Trade", exact: true })
+    .getByRole("button", { name: "Offer a trade" })
+    .click();
   const compose = page.getByRole("region", { name: "Offer a trade" });
   await compose.getByRole("button", { name: "Add to I give" }).click();
   await compose.getByRole("button", { name: "wood, you hold 8" }).click();

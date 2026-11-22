@@ -569,8 +569,10 @@ function LivingMap({
     runtime.current?.setMarks({ selected: selectedTileId, focus: focusRing, candidates });
   }, [shape, selectedTileId, focusRing, candidates]);
 
-  // A pick (from the map or the outliner) eases the camera until the place is clear of
-  // the chrome. Not while a mode is armed: its popover is pinned where the tile stands.
+  // A pick (from the map, a drawer or the outliner) eases the camera until the place is
+  // clear of the chrome that opens for it (the place panel, the sidebar: anything marked
+  // `data-exclude`). Not while placing: its popover is pinned where the tile stands, and
+  // disarming must not jump the camera after the fact.
   const revealPick = useEffectEvent((id: string) => {
     if (!placementActive) runtime.current?.reveal(id);
   });

@@ -418,18 +418,19 @@ function CardHead({
  *  two sides. Pops it trades are placed on the map as it offers. */
 export function ComposeCard({
   seat,
-  to: chosen,
+  partner,
   onClose,
 }: {
   seat: PlayerId;
-  /** A rival to offer to first (the picked place's owner); the table without one. */
-  to?: PlayerId;
+  /** A rival to offer to alone (the picked place's owner, or the rival picked when the
+   *  dock's Trade opens it); the table without one. */
+  partner?: PlayerId | null;
   onClose: () => void;
 }) {
   const { G, moves } = useGameUi();
   const pick = useTradePick();
   const rivals = PLAYER_IDS.filter((id) => id !== seat);
-  const [to, setTo] = useState<PlayerId[]>(chosen && chosen !== seat ? [chosen] : []);
+  const [to, setTo] = useState<PlayerId[]>(() => (partner && partner !== seat ? [partner] : []));
   const [sides, setSides] = useState<Sides>({ gives: emptyBundle(), gets: emptyBundle() });
   const [lease, setLease] = useState<LeaseLength>("standing");
   const terms = termsOf(sides, lease);

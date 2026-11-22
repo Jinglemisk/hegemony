@@ -45,9 +45,14 @@ export function PanelHead({
   onBack,
   onClose,
   closeLabel = "Close",
+  onCoin,
+  coinLabel,
 }: {
   icon?: string;
   coin?: PlayerId;
+  /** The coin is a button (a rival's coin opens their card); `coinLabel` names it. */
+  onCoin?: () => void;
+  coinLabel?: string;
   title: ReactNode;
   sub?: ReactNode;
   /** Where the back plaque returns to, shown as "‹ {back}". */
@@ -59,7 +64,11 @@ export function PanelHead({
 }) {
   return (
     <header className="ch-head">
-      {coin !== undefined ? (
+      {coin !== undefined && onCoin ? (
+        <button aria-label={coinLabel} className="ch-head-coinbtn" onClick={onCoin} type="button">
+          <SeatCoin className="ch-head-coin" seat={coin} />
+        </button>
+      ) : coin !== undefined ? (
         <SeatCoin className="ch-head-coin" seat={coin} />
       ) : icon ? (
         <span className="ch-head-icon">
