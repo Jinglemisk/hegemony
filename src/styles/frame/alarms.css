@@ -93,11 +93,7 @@
   background: var(--bone);
   border-radius: var(--r-8) var(--r-8) 0 0;
 }
-.threat-glaze.idea-seat {
-  width: var(--s-12);
-  height: var(--s-12);
-  font: 700 var(--t-20) / var(--lh-24) var(--f-name);
-}
+
 .threat-words,
 .threat-row-words {
   display: flex;

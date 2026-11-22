@@ -6,15 +6,7 @@
    ========================================================================== */
 
 /* ---- what this replaces: hidden, removed at integration ---------------------- */
-/* replaced by the left window (Sidebar, Drawer, PlacePanel); removed at integration */
-.frame .realm {
-  display: none;
-}
-/* Victory and Agora are drawers now (src/components/left/); removed at integration */
-.consult-btn[aria-label="Victory"],
-.consult-btn[aria-label="Agora"] {
-  display: none;
-}
+
 /* The map's question and its compass stand clear of the sidebar. The compass draws
    with the map, at the screen's own resolution, so its offset is design px times --k. */
 .frame .map-caption {

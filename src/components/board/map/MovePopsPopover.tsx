@@ -18,55 +18,10 @@ import { PopulationStepper } from "../modals/PopulationStepper";
 import { TilePopover } from "./TilePopover";
 
 /**
- * Move Pops, map-first and two-step (refit scope 3): click the settlement they
- * leave from, then the one they travel to.
- *
- * The old modal asked for source, target AND travellers at once, behind two
- * dropdowns, on top of the board holding the answer. Splitting it in two matches
- * how the decision is actually made — you look at where they are, then at where
- * they're needed — and each step is a click on the thing itself.
- *
- * SOURCE step: name the settlement and confirm it's the one. The travellers are
- * chosen on the TARGET step, once both ends are known — a pop count only means
- * something when you can see what it leaves behind and what it joins.
+ * Move Pops, map-first: the place panel names the settlement they leave from, the
+ * map picks the one they travel to, and this popover chooses exactly who travels,
+ * once both ends are known.
  */
-export function MovePopsSourcePopover({
-  tileId,
-  anchor,
-  onCancel,
-  onConfirm,
-}: {
-  tileId: string;
-  anchor: DOMRect;
-  onCancel: () => void;
-  onConfirm: (sourceTileId: string) => void;
-}) {
-  const { G, viewerId: playerID } = useGameUi();
-  const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
-  const settlement = tile?.settlements.find((candidate) => candidate.owner === playerID);
-
-  if (!tile || !settlement) {
-    return null;
-  }
-
-  return (
-    <TilePopover anchor={anchor} label="Move pops from" onCancel={onCancel} title="Move From">
-      <TileSubject G={G} playerID={playerID} tile={tile} />
-      <p className="placementCostNote">
-        <Prose>{`Holds ${formatPops(settlement.pops)}.`}</Prose>
-      </p>
-
-      <PopoverActions
-        confirmLabel="Move From Here"
-        disabled={totalPops(settlement.pops) === 0}
-        onCancel={onCancel}
-        onConfirm={() => onConfirm(tileId)}
-      />
-    </TilePopover>
-  );
-}
-
-/** TARGET step: both ends are known, so now choose exactly who travels. */
 export function MovePopsTargetPopover({
   sourceTileId,
   tileId,

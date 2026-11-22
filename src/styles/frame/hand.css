@@ -254,8 +254,3 @@
   justify-content: flex-end;
   gap: var(--s-3);
 }
-
-/* replaced by the hand tray (a seat's held count); removed at integration */
-.rival .rival-cards {
-  display: none;
-}

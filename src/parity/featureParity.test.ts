@@ -230,7 +230,7 @@ describe("feature and content parity manifests", () => {
         evidence: ["presentLawEffect", "presentDirectiveEffect", "MechanicsDetails"],
       },
       {
-        implementation: "src/components/frame/realm/BuildPage.tsx",
+        implementation: "src/components/left/PlacePops.tsx",
         evidence: ["presentBuildingEffects"],
       },
       {

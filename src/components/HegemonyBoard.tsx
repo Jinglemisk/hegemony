@@ -13,43 +13,27 @@ import { privateMoment } from "../client/controller";
 import { PLAYER_IDS } from "../game/data";
 import type { GameEvents, GameMoves, LocalContext } from "../client/controller";
 import {
-  EMPTY_POPS,
-  GROWABLE_POPS,
-  POP_TYPES,
   calculateEconomyProjection,
   canPlaceColonyOnTile,
-  getBuildBuildingOptions,
   claimableLuxuriesAt,
   getBuildBuildingStatus,
   getActiveEffects,
-  getFoundColonyStatus,
-  getGrowPopStatus,
-  getMovePopsStatus,
-  getUpgradeColonyToCityStatus,
   toPlayerId,
   turnEndUnrest,
-  victoryThreats,
 } from "../game/rules";
 import { requiredDecision } from "../game/actors";
 import { realmAlarms } from "../game/alarms";
 import type { BuildingId, HegemonyState, PlayerId, TradePlaces } from "../game/types";
 import type { DevShell } from "../dev/scenes";
-import { BuildPopover } from "./board/map/BuildPopover";
 import { IdeasModal } from "./board/modals/IdeasModal";
 import { HungerModal } from "./board/modals/HungerModal";
 import { PopulationPickerModal } from "./board/modals/PopulationPickerModal";
-import { UpgradeCityModal } from "./board/modals/UpgradeCityModal";
 import { FoundColonyPopover } from "./board/modals/FoundColonyPopover";
-import { GrowPopPopover } from "./board/map/GrowPopPopover";
-import { LadderPopover } from "./board/map/LadderPopover";
-import { MovePopsSourcePopover, MovePopsTargetPopover } from "./board/map/MovePopsPopover";
+import { MovePopsTargetPopover } from "./board/map/MovePopsPopover";
 import { selectionCaption, type MapSelectionMode } from "./board/map/mapSelection";
 import { useMapSelection } from "./board/map/useMapSelection";
-import { armedVerbOf, turnBlocked, turnCommitTitle, turnPending } from "./board/command/verbs";
-import type { VerbContext } from "./board/command/verbs";
+import { turnBlocked, turnCommitTitle, turnPending } from "./board/command/verbs";
 import { GameOverModal } from "./board/modals/GameOverModal";
-import { ConsultPanel } from "./board/ledger/ConsultPanel";
-import type { ConsultTab } from "./board/types";
 import { PendingPlayerEventModal } from "./board/modals/PendingPlayerEventModal";
 import { RiotModal } from "./board/modals/RiotModal";
 import { RevoltModal } from "./board/modals/RevoltModal";
@@ -60,7 +44,7 @@ import { useSitting, type Sitting } from "./board/assembly/sitting";
 import { GameUiProvider } from "./board/GameUiProvider";
 import type { GameUi } from "./board/GameUiContext";
 import { CodexLinkProvider } from "./codexLink";
-import { deckMark, getOwnedHoldings } from "./board/helpers";
+import { deckMark } from "./board/helpers";
 import type { DeckMark } from "./board/helpers";
 import { endTurnWarning, happinessDisplay, hungerShortfall } from "../ui/frameSelectors";
 import { isTyping } from "../ui/keys";
@@ -72,15 +56,12 @@ import { Seal } from "./frame/top/Seal";
 import { HudCanvas } from "./chrome/HudCanvas";
 import { useFitScale } from "./chrome/canvas";
 import { ConfirmHost, ConfirmProvider } from "./chrome/Confirm";
-import { ConsultStrip } from "./frame/ConsultStrip";
 import { ToastLane } from "./frame/Toasts";
 import { useMomentToasts, useOwnMoment } from "./frame/moments";
 import { TurnNotice } from "./frame/TurnNotice";
-import { RealmPanel, type RealmSubject, type RealmTab } from "./frame/RealmPanel";
 import { Alarms } from "./frame/Alarms";
 import { dealEndTurnReason } from "../game/deals";
 import { EndTurn } from "./frame/EndTurn";
-import { discGroups } from "./frame/discs";
 import { CardPick } from "./frame/trade/CardPick";
 import { HandTray } from "./frame/hand/HandTray";
 import { ComposeCard } from "./frame/trade/OfferCard";
@@ -88,11 +69,11 @@ import { TradePickContext, nextTradePick, usedPlaces } from "./frame/trade/trade
 import type { PickTradePlaces, TradePickRequest } from "./frame/trade/tradePick";
 import { TradePopsPopover } from "./board/map/TradePopsPopover";
 import { Popover } from "./overlays/Popover";
-import { CornerDock } from "./frame/CornerDock";
 import { Dock } from "./frame/dock/Dock";
 import { Outliner } from "./frame/outliner/Outliner";
-import { Seats } from "./frame/Seats";
 import { LeftShell } from "./left/LeftShell";
+import { isRealmDrawer, useLeftDrawer } from "./left/drawerState";
+import type { PlaceSubject } from "./left/PlacePanel";
 import { MAP_MODES } from "./frame/map3d/modes";
 import type { MapMode } from "./frame/map3d/modes";
 import { loadPlates, savePlates } from "./frame/map3d/plates";
@@ -133,7 +114,6 @@ const PLACEMENT_LABELS: Record<SetupPlacement, string> = {
  */
 type ActiveModal =
   | { kind: "populationPrompt"; placement: SetupPlacement; tileId: string }
-  | { kind: "upgradeCity" }
   /** The card a buy drew, found from where the seat stood before it. */
   | { kind: "drawnCard"; mark: DeckMark }
   | { kind: "hand" }
@@ -220,13 +200,16 @@ export function HegemonyBoard({
     setSeenPhase(ctx.phase);
     if (seenPhase === "setupIdeas") setHeld("draftRead");
   }
-  // The realm sheet's page, and the consult page open on the right (null: none).
-  // The realm boots on its overview; picking a place on the map opens its page.
-  const [realmTab, setRealmTab] = useState<RealmTab>("subject");
-  // What the map last picked, which the realm's last tab shows: the sea (the
-  // realm itself), a tile, or a luxury good's mooring.
-  const [subject, setSubject] = useState<RealmSubject>({ kind: "realm" });
-  const [consultTab, setConsultTab] = useState<ConsultTab | null>(null);
+  // What the map last picked, which the place panel shows: the sea (nothing), a tile,
+  // or a luxury good's mooring.
+  const [subject, setSubject] = useState<PlaceSubject>({ kind: "realm" });
+  // A pick from a drawer, the outliner or the map: the subject and its lit tile.
+  const pick = useCallback((next: PlaceSubject) => {
+    setSubject(next);
+    setSelectedTileId(next.kind === "tile" ? next.tileId : null);
+  }, []);
+  // The sidebar's open drawer; the seal and the outliner open drawers too.
+  const drawer = useLeftDrawer(subject, pick);
   // The offer card, composing from the Trade disc: it floats by the disc and holds up
   // no one, so it is not a dialog.
   // `partner`: the seat it starts addressed to (a rival picked on the map, or a rival's
@@ -236,8 +219,8 @@ export function HegemonyBoard({
     anchor: DOMRect;
     partner?: PlayerId | null;
   } | null>(null);
-  // Deep-links (two-panel.md piece 4): a Codex-term click opens the consult panel's
-  // rulebook at a chapter. The nonce lets the same term re-navigate the codex even if
+  // Deep-links (two-panel.md piece 4): a Codex-term click opens the Codex window at a
+  // chapter. The nonce lets the same term re-navigate the codex even if
   // the target chapter is unchanged (you clicked away and clicked the link again).
   const [codexTarget, setCodexTarget] = useState<{ chapter: string; nonce: number } | null>(null);
   // The menu's movable windows: Codex, Costs, Plates. A term link opens the Codex's.
@@ -270,7 +253,6 @@ export function HegemonyBoard({
   const toasts = useMomentToasts(G, viewerId, dev.toastReplayFrom, dev.titlesFrom);
   // A revolt is the seat's own card in hotseat; against bots it is only a toast.
   const revolt = useOwnMoment(G, viewerId, "revolt", hotseat, dev.momentsFrom);
-  const threats = useMemo(() => victoryThreats(G), [G]);
   const alarms = useMemo(() => realmAlarms(G, viewerId), [G, viewerId]);
 
   const decision = requiredDecision(G, viewerId);
@@ -334,46 +316,6 @@ export function HegemonyBoard({
   const projectedIncomeBreakdown = projectedEconomy.breakdown;
   const isSetup =
     ctx.phase === "setupCapital" || ctx.phase === "setupCity" || ctx.phase === "setupColony";
-  const canFoundColony = G.board.tiles.some(
-    (tile) => getFoundColonyStatus(G, viewerId, tile.id).can,
-  );
-  const canUpgradeCity = G.board.tiles.some(
-    (tile) => getUpgradeColonyToCityStatus(G, viewerId, tile.id).can,
-  );
-  // A verb must never offer a mode the board can't answer. These ask the engine the
-  // same question the glow does, so "Grow" is live exactly when some settlement can
-  // actually grow — not merely when the player owns one.
-  const canGrowPops = useMemo(
-    () =>
-      getOwnedHoldings(G, viewerId).some(({ tile }) =>
-        GROWABLE_POPS.some((pop) => getGrowPopStatus(G, viewerId, tile.id, pop).can),
-      ),
-    [G, viewerId],
-  );
-  // Move is live when the engine would move one pop somewhere: it knows the
-  // once-a-turn limit, the price and the room at the far end.
-  const canMovePops = useMemo(() => {
-    const holdings = getOwnedHoldings(G, viewerId);
-
-    return holdings.some((from) =>
-      holdings.some((to) =>
-        POP_TYPES.some(
-          (pop) =>
-            getMovePopsStatus(G, viewerId, from.tile.id, to.tile.id, { ...EMPTY_POPS, [pop]: 1 })
-              .can,
-        ),
-      ),
-    );
-  }, [G, viewerId]);
-  // Build is live when some settlement could raise some building — the same engine
-  // check the glow and the popover use, so the verb never offers an empty map.
-  const canBuild = useMemo(
-    () =>
-      getOwnedHoldings(G, viewerId).some(({ tile }) =>
-        getBuildBuildingOptions(G, viewerId, tile.id).some(({ status }) => status.can),
-      ),
-    [G, viewerId],
-  );
   // The map is the picker (refit scope 3): every "which settlement?" flow arms a
   // mode here, the board glows its legal tiles, and a popover confirms on the
   // spot — no dialog is laid over the answer.
@@ -558,10 +500,9 @@ export function HegemonyBoard({
         return;
       }
 
-      // Otherwise the pick becomes the realm's last page; an armed mode keeps
-      // the page it was armed from.
+      // Otherwise the pick opens its place panel; an armed mode keeps the window it
+      // was armed from.
       setSubject({ kind: "tile", tileId });
-      setRealmTab("subject");
 
       if (
         ctx.phase === "setupCapital" ||
@@ -596,25 +537,8 @@ export function HegemonyBoard({
     [turnOpen, G, viewerId, moves],
   );
 
-  const verbContext: VerbContext = {
-    G,
-    playerID: viewerId,
-    phase: ctx.phase,
-    isActive,
-    pending: turnGate.pending,
-    canGrowPops,
-    canMovePops,
-    canFoundColony,
-    canUpgradeCity,
-    canBuild,
-    armedVerb: armedVerbOf(mapSelection.selection?.mode),
-  };
   // A luxury good's mooring picked, from its raft or the outliner: its page opens.
-  const pickMooring = (vertexId: string) => {
-    setSelectedTileId(null);
-    setSubject({ kind: "mooring", vertexId });
-    setRealmTab("subject");
-  };
+  const pickMooring = (vertexId: string) => pick({ kind: "mooring", vertexId });
   // Found, from a tile's page: arm the mode and open its popover on that tile.
   const foundHere = (tileId: string) => {
     const element = document.querySelector(`[data-tile-id="${tileId}"]`);
@@ -644,11 +568,7 @@ export function HegemonyBoard({
                         : setupColonyValidTileIds
                     }
                     mode={mapMode}
-                    onBackgroundAction={() => {
-                      setSelectedTileId(null);
-                      setSubject({ kind: "realm" });
-                      setRealmTab("subject");
-                    }}
+                    onBackgroundAction={() => pick({ kind: "realm" })}
                     onMooringAction={pickMooring}
                     onTileAction={handleTileAction}
                     plates={plates}
@@ -671,26 +591,12 @@ export function HegemonyBoard({
                         income={projectedIncome}
                         viewerId={viewerId}
                       >
-                        <ConsultStrip
-                          onClose={() => setConsultTab(null)}
-                          onConsult={(tab) => {
-                            // Only a term link opens the Codex at a chapter; the strip opens its contents.
-                            setCodexTarget(null);
-                            setConsultTab((open) => (open === tab ? null : tab));
-                          }}
-                          open={consultTab}
-                        />
                         <Menu onViewAs={onPlayerIDChange} windows={windows} />
                       </TopBar>
-                      {/* The seal opens the Realm drawer; until the sidebar's drawers land,
-                          the realm sheet's overview stands in for it. */}
+                      {/* The seal opens the Realm drawer, and is pressed while a Realm tab is. */}
                       <Seal
-                        onOpen={() => {
-                          setSelectedTileId(null);
-                          setSubject({ kind: "realm" });
-                          setRealmTab("subject");
-                        }}
-                        open={false}
+                        onOpen={() => drawer.toggle("overview")}
+                        open={isRealmDrawer(drawer.open)}
                         seat={viewerId}
                       />
                       {sitting?.minimised ? <AssemblyDock sitting={sitting} /> : null}
@@ -721,52 +627,6 @@ export function HegemonyBoard({
                       <HandTray onOpen={() => setActiveModal({ kind: "hand" })} />
                     ) : null}
 
-                    <div className="hud hud-bottom">
-                      <RealmPanel
-                        locked={inAssembly}
-                        groups={discGroups(
-                          verbContext,
-                          {
-                            // The fans arm the map for the exact choice; nothing covers the answer.
-                            onArm: armSelection,
-                            onMovePopsRequest: () => armSelection({ kind: "movePops" }),
-                            onFoundColonyRequest: () => armSelection({ kind: "foundColony" }),
-                            onUpgradeCityRequest: () => setActiveModal({ kind: "upgradeCity" }),
-                            onCardsRequest: (view) => {
-                              if (view === "hand") return setActiveModal({ kind: "hand" });
-                              setActiveModal({ kind: "drawnCard", mark: deckMark(G, viewerId) });
-                              moves.buyDevCard();
-                            },
-                            onCalm: moves.civicCalm,
-                            onDole: moves.dole,
-                            onIdeasRequest: () => setActiveModal({ kind: "ideas" }),
-                            onTrade: () => {
-                              const disc = document.querySelector(
-                                '[data-group="trade"] .verb-disc',
-                              );
-                              if (disc)
-                                setComposing({
-                                  seat: viewerId,
-                                  anchor: disc.getBoundingClientRect(),
-                                });
-                            },
-                          },
-                          mapSelection.selection?.mode ?? null,
-                        )}
-                        onBuildBuildingRequest={requestBuildBuilding}
-                        onLadderRequest={(request) => armSelection({ kind: "ladder", request })}
-                        income={projectedIncome}
-                        onFound={foundHere}
-                        onSubject={(next) => {
-                          setSubject(next);
-                          setSelectedTileId(next.kind === "tile" ? next.tileId : null);
-                        }}
-                        onTab={setRealmTab}
-                        subject={subject}
-                        tab={realmTab}
-                      />
-                    </div>
-
                     {/* The left window: the sidebar's drawers and the place panel. */}
                     <LeftShell
                       actions={{
@@ -784,19 +644,16 @@ export function HegemonyBoard({
                         onIdeasModal: () => setActiveModal({ kind: "ideas" }),
                       }}
                       income={projectedIncome}
+                      drawer={drawer}
                       mapArmed={Boolean(mapSelection.selection)}
-                      onPick={(next) => {
-                        setSubject(next);
-                        setSelectedTileId(next.kind === "tile" ? next.tileId : null);
-                        setRealmTab("subject");
-                      }}
+                      onPick={pick}
                       placeable={!isSetup}
                       subject={subject}
                     />
 
                     {/* The right side: the outliner down the edge, the dock in the corner. */}
                     <Outliner
-                      onOpenDrawer={(drawer) => setConsultTab(drawer)}
+                      onOpenDrawer={drawer.show}
                       onPickMooring={pickMooring}
                       onPickTile={handleTileAction}
                       selectedTileId={selectedTileId}
@@ -808,13 +665,12 @@ export function HegemonyBoard({
                         moves.buyDevCard();
                       }}
                       onMode={setMapMode}
-                      onPlates={changePlates}
                       onTrade={(anchor) => {
+                        // A rival's place picked: the offer starts addressed to them.
                         const picked = G.board.tiles.find((tile) => tile.id === selectedTileId);
                         const rival = picked?.settlements.find((s) => s.owner !== viewerId)?.owner;
                         setComposing({ seat: viewerId, anchor, partner: rival ?? null });
                       }}
-                      plates={plates}
                     >
                       <EndTurn
                         actingId={currentPlayerId}
@@ -837,44 +693,6 @@ export function HegemonyBoard({
                       />
                     </Dock>
 
-                    {/* The right column under the consult names: a dropped page, the seats,
-                    then the corner dock. Its pages scroll at the window's edge, so the
-                    map does not edge-scroll under it. */}
-                    <div className={`dock-col${consultTab ? " has-sheet" : ""}`} data-no-edge-pan>
-                      {consultTab ? (
-                        <aside
-                          aria-label="Consult"
-                          className="consult-sheet"
-                          data-c="consult-sheet"
-                          data-tab={consultTab}
-                          onKeyDown={(event) => {
-                            if (event.key === "Escape") {
-                              event.stopPropagation();
-                              setConsultTab(null);
-                            }
-                          }}
-                        >
-                          <ConsultPanel activeTab={consultTab} codexTarget={codexTarget} />
-                        </aside>
-                      ) : null}
-                      <Seats
-                        G={G}
-                        actingId={currentPlayerId}
-                        onSeat={onPlayerIDChange}
-                        threats={threats.map((threat) => threat.seat)}
-                        viewerId={viewerId}
-                      />
-                      {/* The old dock and seats, hidden by right.css; removed at integration. */}
-                      <CornerDock
-                        G={G}
-                        mode={mapMode}
-                        onMode={setMapMode}
-                        onPlates={changePlates}
-                        plates={plates}
-                      >
-                        {null}
-                      </CornerDock>
-                    </div>
                     <MenuWindows
                       codexTarget={codexTarget}
                       onPlates={changePlates}
@@ -964,36 +782,6 @@ export function HegemonyBoard({
                         );
                       }
 
-                      if (mode.kind === "growPop") {
-                        return (
-                          <GrowPopPopover
-                            anchor={anchor}
-                            initialPop={mode.pop}
-                            onCancel={mapSelection.clear}
-                            onConfirm={(target, pop) => {
-                              moves.growPop(target, pop);
-                              mapSelection.clear();
-                            }}
-                            tileId={tileId}
-                          />
-                        );
-                      }
-
-                      if (mode.kind === "build") {
-                        return (
-                          <BuildPopover
-                            anchor={anchor}
-                            initialBuildingId={mode.buildingId}
-                            onCancel={mapSelection.clear}
-                            onConfirm={(target, buildingId, claimVertexId) => {
-                              requestBuildBuilding(target, buildingId, claimVertexId);
-                              mapSelection.clear();
-                            }}
-                            tileId={tileId}
-                          />
-                        );
-                      }
-
                       if (mode.kind === "tradePops") {
                         return (
                           <TradePopsPopover
@@ -1006,38 +794,7 @@ export function HegemonyBoard({
                         );
                       }
 
-                      if (mode.kind === "ladder") {
-                        return (
-                          <LadderPopover
-                            anchor={anchor}
-                            onCancel={mapSelection.clear}
-                            onConfirm={(target, from, kind) => {
-                              if (kind === "promote") {
-                                moves.promotePop(target, from);
-                              } else {
-                                moves.demotePop(target, from);
-                              }
-                              mapSelection.clear();
-                            }}
-                            request={mode.request}
-                            tileId={tileId}
-                          />
-                        );
-                      }
-
-                      // Move is the two-step flow: the source click re-arms for the target.
-                      if (mode.kind === "movePops" && !mode.sourceTileId) {
-                        return (
-                          <MovePopsSourcePopover
-                            anchor={anchor}
-                            onCancel={mapSelection.clear}
-                            onConfirm={mapSelection.advanceToTarget}
-                            tileId={tileId}
-                          />
-                        );
-                      }
-
-                      if (mode.kind === "movePops" && mode.sourceTileId) {
+                      if (mode.kind === "movePops") {
                         return (
                           <MovePopsTargetPopover
                             anchor={anchor}
@@ -1055,15 +812,6 @@ export function HegemonyBoard({
                       return null;
                     })()
                   : null}
-                {activeModal?.kind === "upgradeCity" ? (
-                  <UpgradeCityModal
-                    onCancel={closeModal}
-                    onConfirm={(tileId) => {
-                      moves.upgradeColonyToCity(tileId);
-                      closeModal();
-                    }}
-                  />
-                ) : null}
                 {activeModal?.kind === "drawnCard" ? (
                   <DrawnCardModal mark={activeModal.mark} onClose={closeModal} />
                 ) : null}

@@ -221,16 +221,6 @@
   background: var(--parch);
 }
 
-/* The setup pickers and placement cards: the frame is their card. */
-.ch-moment.placementCardReveal .placementCardSurface {
-  border: 0;
-  background: none;
-  box-shadow: none;
-}
-.ch-moment.placementCardReveal .placementCardSurface::before {
-  display: none;
-}
-
 /* ---- the controls: lacquer for the verb, plaques for the rest ---------------- */
 :is(.ch-moment, .trade-card, .sharedPopover)
   :is(.ceremonyCommit, .eventResolveButton, .btn.is-primary, .sit-btn.is-primary, .confirm-btn) {
@@ -515,10 +505,7 @@
     inset 0 0 0 var(--rule-2) var(--clay),
     var(--plaque-rim);
 }
-.sharedPopover .growPopBenefitPanel > div {
-  border-radius: var(--r-panel);
-  background: var(--bz-dk-12);
-}
+
 .foundColonyArrow {
   border-color: var(--bz-lo);
   background: var(--parch-fill);

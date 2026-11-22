@@ -220,13 +220,6 @@
 .lm-hint b {
   font-size: 1.1em;
 }
-/* The corner dock: a mode's name at the floor, the Chronicle's deeds at reading size. */
-.dock-mode {
-  font-size: var(--t-13);
-}
-.dock-log .chron-row {
-  font-size: var(--t-14);
-}
 
 /* A number set in the frame's numeral face, after the roles so it wins over them. */
 .num {
@@ -371,10 +364,8 @@
 /* The legacy sheets the moments use (modals, overlays, intel, assembly, ceremony,
    ledger), raised to the floor: their tags at 13, secondary lines at 14, body at 15,
    numbers at 16. */
-.eventCardCrest b,
 .placementSectionLabel,
 .placementPreviewTag,
-.placementUpgradeArrow,
 .mechanicsSlot > span:first-child,
 .mechanicsBlockedReason strong,
 .codexSearchHitContext,
@@ -384,17 +375,13 @@
 .fieldGroup em,
 .placementChipText strong,
 .placementChipText em,
-.placementUpgradeStat em,
 .placementCostNote,
-.growPopChoiceGrid strong,
-.growPopBenefitPanel strong,
 .eventTableRow,
 .eventTableDie,
 .eventTableEffect,
 .codexSearchHitLabel,
 .codexSearchEmpty,
 .placementTargetName,
-.ladderMoveRow,
 .mechanicsHeading,
 .mechanicsEffectRows li,
 .mechanicsSlot,
@@ -413,13 +400,11 @@
 .compendiumFlavor,
 .compendiumNote,
 .placementEmptyState,
-.growPopBenefitPanel > div > span:not(.chips, .resourceDeltaList),
 .mechanicsExplanation,
 .modalHeader p,
 .popStepperLabel strong {
   font-size: var(--t-15);
 }
-.placementUpgradeStat strong,
 .stepperControls button {
   font-size: var(--t-16);
 }

@@ -91,24 +91,17 @@ export const COMMAND_PARITY = {
   },
   foundColony: {
     frontend: interactive(
-      "src/components/frame/VerbDiscs.tsx",
       "src/components/board/modals/FoundColonyPopover.tsx",
       "src/components/left/PlacePanel.tsx",
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   upgradeColonyToCity: {
-    frontend: interactive(
-      "src/components/frame/VerbDiscs.tsx",
-      "src/components/board/modals/UpgradeCityModal.tsx",
-      "src/components/left/PlacePanel.tsx",
-    ),
+    frontend: interactive("src/components/left/PlacePanel.tsx"),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   buildBuilding: {
     frontend: interactive(
-      "src/components/frame/VerbDiscs.tsx",
-      "src/components/board/map/BuildPopover.tsx",
       "src/components/left/PlacePanel.tsx",
       "src/components/left/PlacePops.tsx",
     ),
@@ -116,8 +109,6 @@ export const COMMAND_PARITY = {
   },
   growPop: {
     frontend: interactive(
-      "src/components/frame/VerbDiscs.tsx",
-      "src/components/board/map/GrowPopPopover.tsx",
       "src/components/left/PlacePanel.tsx",
       "src/components/left/PlacePops.tsx",
     ),
@@ -125,7 +116,6 @@ export const COMMAND_PARITY = {
   },
   movePops: {
     frontend: interactive(
-      "src/components/frame/VerbDiscs.tsx",
       "src/components/board/map/MovePopsPopover.tsx",
       "src/components/left/PlacePanel.tsx",
     ),
@@ -148,11 +138,7 @@ export const COMMAND_PARITY = {
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   dole: {
-    frontend: interactive(
-      "src/components/frame/VerbDiscs.tsx",
-      "src/components/frame/discs.ts",
-      "src/components/frame/dock/Dock.tsx",
-    ),
+    frontend: interactive("src/components/frame/dock/Dock.tsx"),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   pickIdea: {
@@ -162,38 +148,27 @@ export const COMMAND_PARITY = {
   buyIdea: {
     frontend: interactive(
       "src/components/board/modals/IdeasModal.tsx",
-      "src/components/frame/discs.ts",
       "src/components/left/drawers/TableDrawers.tsx",
     ),
     simulation: simulated("master-search", "beamPlan → scoreMaster"),
   },
   civicCalm: {
     frontend: interactive(
-      "src/components/frame/VerbDiscs.tsx",
-      "src/components/frame/discs.ts",
       "src/components/frame/top/HappinessCard.tsx",
+      "src/components/frame/EndTurn.tsx",
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   promotePop: {
-    frontend: interactive(
-      "src/components/frame/VerbDiscs.tsx",
-      "src/components/board/map/LadderPopover.tsx",
-      "src/components/left/PlacePanel.tsx",
-    ),
+    frontend: interactive("src/components/left/PlacePanel.tsx"),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   demotePop: {
-    frontend: interactive(
-      "src/components/frame/VerbDiscs.tsx",
-      "src/components/board/map/LadderPopover.tsx",
-      "src/components/left/PlacePanel.tsx",
-    ),
+    frontend: interactive("src/components/left/PlacePanel.tsx"),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   buyDevCard: {
     frontend: interactive(
-      "src/components/frame/discs.ts",
       "src/components/board/modals/DevCardModal.tsx",
       "src/components/frame/dock/Dock.tsx",
       "src/components/left/drawers/CardsDrawer.tsx",
@@ -202,7 +177,6 @@ export const COMMAND_PARITY = {
   },
   playDevCard: {
     frontend: interactive(
-      "src/components/frame/discs.ts",
       "src/components/board/modals/DevCardModal.tsx",
       "src/components/frame/hand/HandTray.tsx",
       "src/components/left/drawers/CardsDrawer.tsx",
@@ -259,7 +233,6 @@ export const COMMAND_PARITY = {
   },
   tradeOffer: {
     frontend: interactive(
-      "src/components/frame/discs.ts",
       "src/components/frame/trade/OfferCard.tsx",
       "src/components/board/assembly/AssemblySitting.tsx",
       "src/components/frame/dock/Dock.tsx",

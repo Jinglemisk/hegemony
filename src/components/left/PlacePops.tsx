@@ -7,12 +7,20 @@ import {
   getGrowPopStatus,
   growUsesLeft,
   happinessLevel,
+  luxuriesBeside,
   luxuryName,
   playerNationalIdeas,
   victoryMetricValue,
   victoryStandings,
 } from "../../game/rules";
-import type { BuildingId, HexTile, LuxuryAsset, PlayerId } from "../../game/types";
+import type {
+  BuildingDefinition,
+  BuildingId,
+  HegemonyState,
+  HexTile,
+  LuxuryAsset,
+  PlayerId,
+} from "../../game/types";
 import { presentBuildingEffects } from "../../ui/effects";
 import { publicCensus } from "../../ui/frameSelectors";
 import { sign } from "../../ui/frameFormat";
@@ -21,11 +29,11 @@ import { BUILDING_RASTERS, POP_RASTERS } from "../../ui/iconRegistry";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { AnnotatedText } from "../AnnotatedText";
 import { useGameUi } from "../board/GameUiContext";
+import { getBuildingBenefitText } from "../board/helpers";
 import { Panel, PanelHead } from "../chrome/Panel";
 import { Lacquer } from "../chrome/controls";
 import { useConfirm } from "../chrome/confirmContext";
 import { Chips, Ico, Tip, TipBody } from "../frame/parts";
-import { cellLine } from "../frame/realm/BuildPage";
 import { Tooltip } from "../overlays/Tooltip";
 import { CostDetail } from "./atoms";
 import { refusal } from "./words";
@@ -296,4 +304,25 @@ export function SeatCard({
       </footer>
     </Panel>
   );
+}
+
+/** What a building does in this place, short enough for one line of a cell. */
+function cellLine(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tile: HexTile,
+  building: BuildingDefinition,
+) {
+  if (building.claimsLuxury) {
+    const goods = claimableLuxuriesAt(G, tile.id).map((asset) => luxuryName(G, asset));
+    if (goods.length > 0) return `claims ${goods.join(" or ")}`;
+    // Under the Port rule it may stand beside a claimed good: a backup for its holder, or
+    // a rival's way to take it in trade.
+    const [held] = luxuriesBeside(G, tile.id);
+    if (!held) return "no good adjoins";
+    return held.owner === playerID
+      ? `a second Port for ${luxuryName(G, held)}`
+      : `takes ${luxuryName(G, held)} in trade`;
+  }
+  return getBuildingBenefitText(G, playerID, tile, building);
 }

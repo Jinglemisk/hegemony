@@ -12,10 +12,6 @@
   font: var(--t-body) / var(--l-body) var(--f-body);
 }
 /* The frame's own controls take their colour from where they sit. */
-.verb-btn,
-.fan-btn,
-.consult-btn,
-.rival,
 .endturn {
   color: inherit;
   transition: none;
@@ -83,10 +79,7 @@
   font-variant-numeric: tabular-nums lining-nums;
   white-space: nowrap;
 }
-.price-or {
-  margin: 0 var(--s-1);
-  color: var(--ink-45);
-}
+
 .price.is-short {
   color: var(--clay-ink);
 }
@@ -104,12 +97,9 @@
    --paper-edge. */
 .btn,
 .alarm-badge,
-.sock.is-built,
 .sharedTooltip,
 .map-caption,
-.threat-panel,
-.verb-name,
-.fan-label {
+.threat-panel {
   background: var(--ivory);
   box-shadow: var(--paper-edge);
 }

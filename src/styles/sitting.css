@@ -632,10 +632,3 @@
 .sit-dock:hover .sit-dock-back {
   background: var(--clay);
 }
-
-/* Minimised, every verb disc wears a lock: the sitting owns the actions. */
-.verb-lock {
-  position: absolute;
-  top: 0;
-  left: 0;
-}

@@ -1,14 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  GROWABLE_POPS,
-  getBuildBuildingOptions,
-  getBuildBuildingStatus,
-  getDemotePopStatus,
-  getFoundColonyStatus,
-  getGrowPopStatus,
-  getPromotePopStatus,
-  totalPops,
-} from "../../../game/rules";
+import { getFoundColonyStatus } from "../../../game/rules";
 import { tradePopSources, tradePopTargets } from "../../../game/trade";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { getOwnedHoldings } from "../helpers";
@@ -35,28 +26,17 @@ export function useMapSelection({
 
   const clear = useCallback(() => setSelection(null), []);
 
-  /** Arm a mode, or disarm it if the same choice is pressed again; a different
-   *  choice of the same verb (another pop, another building) re-arms. Move's
-   *  picked source is progress, not a choice, so pressing Move again cancels. */
+  /** Arm a mode, or disarm it if the same mode is armed again. */
   const arm = useCallback((mode: MapSelectionMode) => {
-    const choice = (m: MapSelectionMode) =>
-      JSON.stringify(m.kind === "movePops" ? { kind: m.kind } : m);
     setSelection((current) =>
-      current && choice(current.mode) === choice(mode) ? null : { mode, target: null },
+      current && JSON.stringify(current.mode) === JSON.stringify(mode)
+        ? null
+        : { mode, target: null },
     );
   }, []);
 
   const setTarget = useCallback((target: MapSelection["target"]) => {
     setSelection((current) => (current ? { ...current, target } : current));
-  }, []);
-
-  /** Move-pops is the only two-step flow: commit the source, re-glow for the target. */
-  const advanceToTarget = useCallback((sourceTileId: string) => {
-    setSelection((current) =>
-      current && current.mode.kind === "movePops"
-        ? { mode: { kind: "movePops", sourceTileId }, target: null }
-        : current,
-    );
   }, []);
 
   // One Escape route for every mode, rather than a handler per flow.
@@ -98,49 +78,14 @@ export function useMapSelection({
           .filter((tile) => getFoundColonyStatus(G, playerID, tile.id).can)
           .map((tile) => tile.id);
 
-      case "growPop": {
-        // The picked pop, or any pop type being growable, offers the settlement.
-        const pops = selection.mode.pop ? [selection.mode.pop] : GROWABLE_POPS;
-        return holdings
-          .filter(({ tile }) => pops.some((pop) => getGrowPopStatus(G, playerID, tile.id, pop).can))
-          .map(({ tile }) => tile.id);
-      }
-
       case "movePops": {
+        // Anywhere of mine that isn't where they started.
         const { sourceTileId } = selection.mode;
-
-        return sourceTileId
-          ? // Step two: anywhere of mine that isn't where they started.
-            holdings.filter(({ tile }) => tile.id !== sourceTileId).map(({ tile }) => tile.id)
-          : // Step one: only settlements with a body to spare.
-            holdings
-              .filter(({ settlement }) => totalPops(settlement.pops) > 0)
-              .map(({ tile }) => tile.id);
-      }
-
-      case "build": {
-        // The picked building, or any building being buildable, offers the settlement.
-        const { buildingId } = selection.mode;
-        return holdings
-          .filter(({ tile }) =>
-            buildingId
-              ? getBuildBuildingStatus(G, playerID, tile.id, buildingId).can
-              : getBuildBuildingOptions(G, playerID, tile.id).some(({ status }) => status.can),
-          )
-          .map(({ tile }) => tile.id);
-      }
-
-      case "ladder": {
-        const { kind, from } = selection.mode.request;
-        const status = kind === "promote" ? getPromotePopStatus : getDemotePopStatus;
-
-        return holdings
-          .filter(({ tile }) => status(G, playerID, tile.id, from).can)
-          .map(({ tile }) => tile.id);
+        return holdings.filter(({ tile }) => tile.id !== sourceTileId).map(({ tile }) => tile.id);
       }
     }
     return [];
   }, [selection, G, playerID, isActive]);
 
-  return { selection, arm, clear, setTarget, advanceToTarget, candidateTileIds };
+  return { selection, arm, clear, setTarget, candidateTileIds };
 }

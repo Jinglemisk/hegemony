@@ -68,10 +68,7 @@
 .endturn.is-waiting .endturn-label {
   box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
 }
-.endturn-blazon {
-  font: 700 var(--t-24) / var(--lh-32) var(--f-name);
-  color: var(--ivory);
-}
+
 /* The hold fills the disc's ring (--hold carries the fraction). */
 .endturn.is-held .endturn-disc {
   background: conic-gradient(var(--clay-deep) calc(var(--hold) * 1turn), var(--clay) 0);

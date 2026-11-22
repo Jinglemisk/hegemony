@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent, MouseEvent, ReactNode, Ref } from "react";
 import { canAfford, getBuyDevCardStatus, getDoleStatus, usesLeft } from "../../../game/rules";
 import { playerDole } from "../../../game/ideaRules";
@@ -14,10 +14,8 @@ import { useConfirm } from "../../chrome/confirmContext";
 import { Panel, PanelHead } from "../../chrome/Panel";
 import { SeatCoin } from "../../chrome/SeatCoin";
 import { Tooltip } from "../../overlays/Tooltip";
-import { FittedLine, PlatesMenu } from "../CornerDock";
 import { MAP_MODES } from "../map3d/modes";
 import type { MapMode } from "../map3d/modes";
-import type { Plates } from "../map3d/plates";
 import { Chips, Delta, Ico, Tip, TipBody, TipWarn } from "../parts";
 
 /**
@@ -30,16 +28,12 @@ import { Chips, Delta, Ico, Tip, TipBody, TipWarn } from "../parts";
 export function Dock({
   mode,
   onMode,
-  plates,
-  onPlates,
   onTrade,
   onBuyCard,
   children,
 }: {
   mode: MapMode;
   onMode: (mode: MapMode) => void;
-  plates: Plates;
-  onPlates: (plates: Plates) => void;
   /** Open the offer composer, anchored to the Trade button. */
   onTrade: (anchor: DOMRect) => void;
   /** Buy a development card (asked first): the board opens the drawn card. */
@@ -81,10 +75,6 @@ export function Dock({
             open={open}
             ref={line}
           />
-          {/* Until the menu takes Plates (the top bar's slice), it stays reachable here. */}
-          <span className="rd-plates">
-            <PlatesMenu onPlates={onPlates} plates={plates} />
-          </span>
         </div>
         <div aria-label="Map mode" className="rd-modes" role="group">
           {MAP_MODES.map((m, i) => (
@@ -323,5 +313,46 @@ function MapLegend({ mode }: { mode: MapMode }) {
         <AnnotatedText links={false} text={shown.note} />
       </p>
     </Panel>
+  );
+}
+
+/**
+ * One line, cut at a word with an ellipsis when it would not fit the dock's line. The
+ * cut is made in the text rather than by `text-overflow`, so nothing runs on past the
+ * line under whatever lies beside it. The Chronicle page keeps every line whole.
+ */
+export function FittedLine({ text }: { text: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const words = text.split(" ");
+  // A search for the most words that fit: `lo` fits (one word always does), `hi` is
+  // the most still possible, `n` is on screen now.
+  const [fit, setFit] = useState({ lo: 1, hi: words.length, n: words.length });
+
+  // The face's width changes once the web font arrives: search again then.
+  useEffect(() => {
+    let live = true;
+    void document.fonts?.ready.then(() => {
+      if (live) setFit({ lo: 1, hi: words.length, n: words.length });
+    });
+    return () => {
+      live = false;
+    };
+  }, [words.length]);
+
+  useLayoutEffect(() => {
+    const line = ref.current;
+    if (!line || fit.lo === fit.hi) return;
+    const fits = line.scrollWidth <= line.clientWidth;
+    const lo = fits ? fit.n : fit.lo;
+    const hi = fits ? fit.hi : fit.n - 1;
+    setFit({ lo, hi, n: lo === hi ? lo : Math.ceil((lo + hi) / 2) });
+  }, [fit]);
+
+  const shown = fit.n < words.length ? `${words.slice(0, fit.n).join(" ")}…` : text;
+
+  return (
+    <span className="dock-line-text" data-truncates="summary" ref={ref}>
+      <AnnotatedText links={false} text={shown} />
+    </span>
   );
 }

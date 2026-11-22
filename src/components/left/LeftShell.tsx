@@ -2,6 +2,7 @@ import { useEffect, useEffectEvent, useState } from "react";
 import type { BuildingId, PlayerId, Resources } from "../../game/types";
 import { isTyping } from "../../ui/keys";
 import { Drawer, type DrawerId } from "./Drawer";
+import type { LeftDrawer } from "./drawerState";
 import { PlacePanel, type PlacePop, type PlaceSubject } from "./PlacePanel";
 import { Sidebar } from "./Sidebar";
 
@@ -33,6 +34,7 @@ export type LeftActions = {
 export function LeftShell({
   subject,
   onPick,
+  drawer,
   income,
   mapArmed,
   placeable,
@@ -42,6 +44,8 @@ export function LeftShell({
   subject: PlaceSubject;
   /** Set the board's pick (and its lit tile). */
   onPick: (subject: PlaceSubject) => void;
+  /** The open drawer (see {@link useLeftDrawer}). */
+  drawer: LeftDrawer;
   /** The viewer's projected net income per turn. */
   income: Resources;
   /** A map mode is armed: Escape is the map's. */
@@ -50,23 +54,14 @@ export function LeftShell({
   placeable: boolean;
   actions: LeftActions;
 }) {
-  // Each window remembers the pick it opened on, and shows only while that pick holds.
-  const [drawer, setDrawer] = useState<{ id: DrawerId; at: PlaceSubject } | null>(null);
   const [back, setBack] = useState<{ to: DrawerId; at: PlaceSubject } | null>(null);
   const [pop, setPop] = useState<{ kind: PlacePop; at: PlaceSubject } | null>(null);
 
-  const openDrawer = drawer?.at === subject ? drawer.id : null;
+  const openDrawer = drawer.open;
   const placeOpen = placeable && subject.kind !== "realm";
   const backTo = back?.at === subject ? back.to : null;
   const openPop = pop?.at === subject ? pop.kind : null;
 
-  const showDrawer = (id: DrawerId | null) => {
-    if (id === null) return setDrawer(null);
-    // The sea, picked afresh: the place panel closes and the drawer holds to it.
-    const sea: PlaceSubject = subject.kind === "realm" ? subject : { kind: "realm" };
-    if (sea !== subject) onPick(sea);
-    setDrawer({ id, at: sea });
-  };
   const pickFrom = (from: DrawerId) => (next: PlaceSubject) => {
     setBack({ to: from, at: next });
     onPick(next);
@@ -78,7 +73,7 @@ export function LeftShell({
     if (event.key !== "Escape" || isTyping(event.target) || mapArmed) return;
     if (document.querySelector('[aria-modal="true"]')) return;
     if (openPop) setPop(null);
-    else if (openDrawer) setDrawer(null);
+    else if (openDrawer) drawer.show(null);
     else if (placeOpen) closePlace();
   });
   useEffect(() => {
@@ -88,25 +83,22 @@ export function LeftShell({
 
   return (
     <>
-      <Sidebar
-        open={openDrawer}
-        onOpen={(id) => showDrawer(openDrawer !== null && sameDrawer(openDrawer, id) ? null : id)}
-      />
+      <Sidebar open={openDrawer} onOpen={drawer.toggle} />
       {openDrawer ? (
         <Drawer
           actions={actions}
           id={openDrawer}
           income={income}
-          onClose={() => setDrawer(null)}
+          onClose={() => drawer.show(null)}
           onPick={pickFrom(openDrawer)}
-          onTab={(id) => setDrawer({ id, at: subject })}
+          onTab={drawer.tab}
         />
       ) : null}
       {placeOpen ? (
         <PlacePanel
           actions={actions}
           back={backTo}
-          onBack={() => (backTo ? showDrawer(backTo) : undefined)}
+          onBack={() => (backTo ? drawer.show(backTo) : undefined)}
           onClose={closePlace}
           onPop={(kind) => setPop(kind ? { kind, at: subject } : null)}
           pop={openPop}
@@ -116,8 +108,3 @@ export function LeftShell({
     </>
   );
 }
-
-/** Realm's three tabs are one drawer: its button closes whichever is open. */
-const REALM: readonly DrawerId[] = ["overview", "cities", "people"];
-const sameDrawer = (a: DrawerId, b: DrawerId) =>
-  a === b || (REALM.includes(a) && REALM.includes(b));

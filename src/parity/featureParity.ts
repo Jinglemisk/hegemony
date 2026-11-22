@@ -693,8 +693,8 @@ export const CONTENT_MANIFEST = {
     ids: BUILDING_CONTENT_IDS,
     engine: { implementation: "src/game/content.ts", evidence: "getBuildings" },
     frontend: {
-      implementation: "src/components/frame/realm/BuildPage.tsx",
-      evidence: "getBuildings",
+      implementation: "src/components/left/PlacePops.tsx",
+      evidence: "getBuildBuildingOptions",
     },
     simulation: { implementation: "src/sim/policies.ts", evidence: "projectPolicyHorizon" },
     telemetry: { implementation: "src/sim/telemetry.ts", evidence: "buildings" },
@@ -813,7 +813,7 @@ export const CONTENT_MANIFEST = {
     ids: LUXURY_GOOD_CONTENT_IDS,
     engine: { implementation: "src/game/luxury.ts", evidence: "activeClaims" },
     frontend: {
-      implementation: "src/components/frame/RealmPanel.tsx",
+      implementation: "src/components/left/drawers/RealmDrawer.tsx",
       evidence: "heldClaims",
     },
     simulation: { implementation: "src/sim/policies.ts", evidence: "scoreMaster" },
@@ -824,7 +824,7 @@ export const CONTENT_MANIFEST = {
     ids: VICTORY_CARD_CONTENT_IDS,
     engine: { implementation: "src/game/victory.ts", evidence: "victoryStandings" },
     frontend: {
-      implementation: "src/components/board/ledger/VictoryTab.tsx",
+      implementation: "src/components/left/drawers/TableDrawers.tsx",
       evidence: "victoryStandings",
     },
     simulation: { implementation: "src/sim/policies.ts", evidence: "victoryCardsHeld" },
@@ -848,7 +848,7 @@ export const FEATURE_PARITY = {
     ids: ["slots", "workingSlaves", "idleSlaves"],
     engine: { implementation: "src/game/settlement.ts", evidence: "settlementWorkingSlaves" },
     frontend: {
-      implementation: "src/components/frame/SettlementPage.tsx",
+      implementation: "src/components/left/PlacePanel.tsx",
       evidence: "settlementIdleSlaves",
     },
     simulation: { implementation: "src/sim/policies.ts", evidence: "tile.slots" },
@@ -909,7 +909,7 @@ export const FEATURE_PARITY = {
     ids: ["portRelease", "portBackup", "tradeNeedsPort"],
     engine: { implementation: "src/game/luxury.ts", evidence: "releaseLuxuriesAfterPortLoss" },
     frontend: {
-      implementation: "src/components/frame/realm/BuildPage.tsx",
+      implementation: "src/components/left/PlacePops.tsx",
       evidence: "luxuriesBeside",
     },
     simulation: {

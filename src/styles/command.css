@@ -1,11 +1,3 @@
-/* command — Command bar: candidate/build buttons, command toolbar, end-turn, turn-log panel, selected-tile panel, deck shelf
-   Split from styles.css (Phase 2e); original source order preserved. */
-
-.resourceDeltaList.neutral {
-  color: var(--subtle);
-  font-size: 0.78rem;
-}
-
 /* ── Chronicle player filters ────────────────────────────────────────────────── */
 .chronicleFilters {
   display: flex;

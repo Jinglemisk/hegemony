@@ -404,8 +404,3 @@ button.alarm-disc {
   top: calc(var(--u) * 28); /* 112 */
   left: calc(var(--u) * 25); /* 100 */
 }
-
-/* replaced by the menu's View as (frame/top/Menu.tsx); removed at integration */
-.seats {
-  display: none;
-}

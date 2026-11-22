@@ -92,13 +92,11 @@
   text-transform: uppercase;
 }
 
-.popoverActionTooltipTrigger,
-.popoverChoiceTooltipTrigger {
+.popoverActionTooltipTrigger {
   display: flex;
   width: 100%;
 }
 
-.popoverActionTooltipTrigger > button,
-.popoverChoiceTooltipTrigger > button {
+.popoverActionTooltipTrigger > button {
   width: 100%;
 }

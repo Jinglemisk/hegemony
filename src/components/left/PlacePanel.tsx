@@ -25,6 +25,7 @@ import {
   settlementPopCapacity,
   settlementSlaveResource,
   settlementSlots,
+  settlementIdleSlaves,
   settlementWorkingSlaves,
   tileSlaveColumn,
   totalPops,
@@ -61,7 +62,6 @@ import { Knob, Lacquer, Plaque } from "../chrome/controls";
 import { Socket, SocketMeter } from "../chrome/Socket";
 import { useConfirm } from "../chrome/confirmContext";
 import { Chips, Ico, Tip, TipBody } from "../frame/parts";
-import { OraclePage } from "../frame/realm/PlacePages";
 import { Tooltip } from "../overlays/Tooltip";
 import { CostDetail } from "./atoms";
 import { composeAnchor, refusal, titleCase } from "./words";
@@ -296,6 +296,7 @@ function SettlementBody({
   const slots = settlementSlots(tile, settlement, G);
   const built = occupiedBuildingSlots(G, settlement);
   const working = settlementWorkingSlaves(tile, settlement, G);
+  const idle = settlementIdleSlaves(tile, settlement, G);
   const open = settlementOpenSlots(tile, settlement, G);
   const resource = settlementSlaveResource(tile, G);
   const ground = buildingGround(G, settlement.owner, tile.id);
@@ -402,8 +403,11 @@ function SettlementBody({
           </div>
         </section>
       </div>
-      {held.length || others.length ? (
+      {held.length || others.length || idle ? (
         <p className="pp-note">
+          {idle
+            ? `${idle} ${idle === 1 ? "slave stands" : "slaves stand"} idle: no slot to work. `
+            : ""}
           {held.length ? `Its Port holds ${held.join(", ")}. ` : ""}
           {others.length ? `Shares the tile with ${others.join(", ")}.` : ""}
         </p>
@@ -770,6 +774,26 @@ function LuxuryBody({ asset }: { asset: LuxuryAsset }) {
           {asset.owner ? `Held by ${PLAYER_GLAZES[asset.owner].name}` : "Unclaimed"}
         </li>
       </ul>
+    </>
+  );
+}
+
+/** The oracle: sacred ground that nobody may settle. */
+function OraclePage() {
+  return (
+    <>
+      <p className="settle-meta caps">
+        <span className="meta-i">
+          <Ico path="terrain/oracle" size="chip" />
+          oracle
+        </span>
+        <span className="meta-i">sacred ground</span>
+      </p>
+      <p className="lore">
+        Here the god speaks for every polis and belongs to none. Envoys climb the road with gifts
+        and come down with riddles; the wise build their year on the answer.
+      </p>
+      <p className="lore-rule cap">No one may found, raise or settle on it, by any act or event.</p>
     </>
   );
 }

@@ -7,12 +7,6 @@
    header keeps its words whatever is open.
    ========================================================================== */
 
-/* replaced by Dock and Outliner; removed at integration */
-.dock-col > .dock,
-.dock-col > .seats {
-  display: none;
-}
-
 /* ---- the dock ---------------------------------------------------------------- */
 .rd-dock {
   position: fixed;
@@ -87,33 +81,6 @@
 }
 .rd-line[aria-expanded="true"] .rd-caret {
   rotate: 180deg;
-}
-.rd-plates {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: calc(var(--hit) + var(--s-2));
-  height: 100%;
-  box-shadow: inset var(--rule) 0 0 var(--bz-dk-30);
-}
-/* Plates' own button, drawn as an icon-only square here (its name stays its name). */
-.rd-plates .dock-plates {
-  width: var(--hit);
-  height: var(--hit);
-  padding: 0;
-  grid-template-rows: var(--hit) 0;
-  align-content: start;
-  gap: 0;
-  place-items: center;
-  overflow: hidden;
-  border-radius: var(--r-panel);
-  color: transparent;
-  box-shadow: none;
-  clip-path: inset(0);
-}
-.rd-plates .dock-plates:hover,
-.rd-plates .dock-plates[aria-expanded="true"] {
-  background: var(--ink-07);
 }
 
 /* ---- row b: the four map modes, square framed buttons with no names ---------- */
