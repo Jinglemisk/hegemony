@@ -78,6 +78,7 @@ import { dealEndTurnReason } from "../game/deals";
 import { EndTurn } from "./frame/EndTurn";
 import { discGroups } from "./frame/discs";
 import { CardPick } from "./frame/trade/CardPick";
+import { HandTray } from "./frame/hand/HandTray";
 import { ComposeCard } from "./frame/trade/OfferCard";
 import { TradePickContext, nextTradePick, usedPlaces } from "./frame/trade/tradePick";
 import type { PickTradePlaces, TradePickRequest } from "./frame/trade/tradePick";
@@ -686,6 +687,10 @@ export function HegemonyBoard({
                       </div>
                     ) : null}
 
+                    {G.phase === "gameplay" ? (
+                      <HandTray onOpen={() => setActiveModal({ kind: "hand" })} />
+                    ) : null}
+
                     <div className="hud hud-bottom">
                       <RealmPanel
                         locked={inAssembly}
@@ -794,10 +799,10 @@ export function HegemonyBoard({
                   <Popover
                     anchor={composing.anchor}
                     ariaLabel="Offer a trade"
+                    centre
                     className="trade-pop"
                     dismissOnOutside
                     onDismiss={() => setComposing(null)}
-                    preferredPlacement="above"
                   >
                     <ComposeCard onClose={() => setComposing(null)} seat={composing.seat} />
                   </Popover>
@@ -968,7 +973,15 @@ export function HegemonyBoard({
                 {activeModal?.kind === "drawnCard" ? (
                   <DrawnCardModal mark={activeModal.mark} onClose={closeModal} />
                 ) : null}
-                {activeModal?.kind === "hand" ? <HandModal onClose={closeModal} /> : null}
+                {activeModal?.kind === "hand" ? (
+                  <HandModal
+                    onBuy={() => {
+                      setActiveModal({ kind: "drawnCard", mark: deckMark(G, viewerId) });
+                      moves.buyDevCard();
+                    }}
+                    onClose={closeModal}
+                  />
+                ) : null}
                 {(() => {
                   switch (moment?.kind) {
                     case "draft":

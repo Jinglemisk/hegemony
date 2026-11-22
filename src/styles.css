@@ -52,4 +52,7 @@
    seat's coin restyles the older marks it now draws. */
 @import "./styles/frame/chrome.css";
 @import "./styles/sitting.css";
+/* The hand and the moments in the Imperator frame: after the sheets they re-skin. */
+@import "./styles/frame/hand.css";
+@import "./styles/frame/moments.css";
 @import "./styles/responsive.css";

@@ -466,6 +466,7 @@ function Trade({ G, session }: { G: HegemonyState; session: AssemblySession }) {
         <Popover
           anchor={anchor}
           ariaLabel="Offer a trade"
+          centre
           className="trade-pop"
           dismissOnOutside
           onDismiss={() => setSeat(null)}

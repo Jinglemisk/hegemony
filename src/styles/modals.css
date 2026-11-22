@@ -32,7 +32,6 @@
 .eventCardCrest b {
   overflow: hidden;
   color: var(--fg);
-  font-size: 0.68rem;
   letter-spacing: 0.08em;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -41,7 +40,6 @@
 .fieldGroup em {
   color: var(--muted);
   font-family: var(--f-body);
-  font-size: 0.8rem;
   font-style: normal;
   font-weight: 400;
   line-height: 1.25;
@@ -126,7 +124,6 @@
 .placementSectionLabel {
   color: var(--clay-deep);
   font-family: var(--f-name);
-  font-size: 0.64rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -187,7 +184,6 @@
   overflow: hidden;
   color: var(--fg);
   font-family: var(--f-name);
-  font-size: 0.72rem;
   text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;
@@ -195,7 +191,6 @@
 
 .placementChipText em {
   color: var(--muted);
-  font-size: 0.7rem;
   font-style: normal;
 }
 
@@ -213,7 +208,6 @@
 .placementPreviewTag {
   color: var(--clay-deep);
   font-family: var(--f-name);
-  font-size: 0.56rem;
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
@@ -225,7 +219,6 @@
   gap: 9px;
   color: var(--clay-deep);
   font-family: var(--f-name);
-  font-size: 0.6rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -252,7 +245,6 @@
 
 .placementUpgradeStat em {
   color: var(--muted);
-  font-size: 0.68rem;
   font-style: normal;
   text-transform: uppercase;
 }
@@ -260,7 +252,6 @@
 .placementUpgradeStat strong {
   color: var(--fg);
   font-family: var(--f-name);
-  font-size: 0.92rem;
   font-variant-numeric: tabular-nums;
 }
 
@@ -280,14 +271,12 @@
 
 .placementCostNote {
   color: var(--muted);
-  font-size: 0.72rem;
 }
 
 .placementEmptyState {
   margin: 0;
   padding: 28px 8px;
   color: rgb(36 25 16 / 76%);
-  font-size: 0.86rem;
   text-align: center;
 }
 
@@ -381,7 +370,6 @@
   border-radius: 6px;
   color: var(--clay-deep);
   background: rgb(255 248 231 / 50%);
-  font-size: 1.1rem;
   line-height: 1;
 }
 
@@ -429,7 +417,6 @@
 .growPopChoiceGrid strong {
   color: var(--muted);
   font-family: var(--f-body);
-  font-size: 0.72rem;
   font-weight: 700;
   line-height: 1.15;
   overflow-wrap: anywhere;
@@ -454,13 +441,11 @@
 .growPopBenefitPanel strong {
   color: var(--fg);
   font-family: var(--f-name);
-  font-size: 0.78rem;
   text-transform: uppercase;
 }
 
 .growPopBenefitPanel > div > span:not(.chips, .resourceDeltaList) {
   color: var(--muted);
-  font-size: 0.82rem;
 }
 
 /* What is left below dresses the Codex's READ-ONLY table listings. The rolled
@@ -482,7 +467,6 @@
   gap: 9px;
   padding: 5px 8px;
   border-left: 2px solid rgb(143 46 19 / 26%);
-  font-size: 0.78rem;
 }
 
 .eventTableRowLanded {
@@ -500,7 +484,6 @@
   border-radius: 5px;
   background: rgb(255 248 231 / 72%);
   font-family: var(--f-name);
-  font-size: 0.78rem;
 }
 
 /* Table-row effect chips — card-style icon+number summaries with gain/loss color
@@ -518,7 +501,6 @@
 }
 
 .eventTableEffect {
-  font-size: 0.76rem;
   font-style: normal;
   font-weight: 700;
   white-space: nowrap;
@@ -571,14 +553,12 @@
 .compendiumFlavor {
   margin: 0;
   color: var(--muted);
-  font-size: 0.76rem;
   font-style: italic;
 }
 
 .compendiumNote {
   margin: 0;
   color: var(--muted);
-  font-size: 0.75rem;
   line-height: 1.45;
 }
 
@@ -731,21 +711,18 @@
 
 .codexSearchHitLabel {
   font-family: var(--f-name);
-  font-size: 0.76rem;
   letter-spacing: 0.01em;
 }
 
 .codexSearchHitContext {
   color: var(--muted);
   font-family: var(--f-body);
-  font-size: 0.64rem;
   font-weight: 400;
 }
 
 .codexSearchEmpty {
   padding: 6px 8px;
   color: var(--muted);
-  font-size: 0.72rem;
 }
 
 /* The contents page (owner, 2026-10-16). The Codex opens on its chapters as large
@@ -896,7 +873,6 @@
   font-family: var(--f-name);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  font-size: 0.66rem;
 }
 
 /* The deck gallery inside the Years chapter: compact one-per-row card faces. */
@@ -974,7 +950,6 @@
 .placementTargetName {
   margin: 0 0 8px;
   color: var(--fg);
-  font-size: 0.78rem;
 }
 
 .ladderMoveRow {
@@ -983,7 +958,6 @@
   justify-content: center;
   gap: 6px;
   margin-bottom: 8px;
-  font-size: 0.8rem;
 }
 
 /* Three pop choices side by side fitted a 620px modal; in a 312px popover each

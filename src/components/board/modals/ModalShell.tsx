@@ -28,7 +28,15 @@ type ModalShellProps = {
    * payment — stay plain, because if every dialog is a rite then none of them is.
    */
   ceremony?: "gift" | "wound" | "rite";
+  /**
+   * The Imperator frame: parchment in the cast bronze rule, a bronze corner on each
+   * corner, settling into place (moments.css). Off for a surface that is not a box —
+   * a drawn card standing on the table, a takeover that fills the screen.
+   */
+  framed?: boolean;
 };
+
+const CORNERS = ["tl", "tr", "bl", "br"] as const;
 
 /** Everything the browser will let a player reach with Tab. */
 const FOCUSABLE =
@@ -51,6 +59,7 @@ export function ModalShell({
   onDismiss,
   dismissOnBackdrop = true,
   ceremony,
+  framed = true,
 }: ModalShellProps) {
   const surfaceRef = useRef<HTMLElement>(null);
 
@@ -154,7 +163,11 @@ export function ModalShell({
         aria-modal="true"
         // No shared plate under the card: the old `logModal` one was undone by
         // every ceremony, the sitting, the Idea draft and the turn notice.
-        className={[ceremony && `ceremony ceremony-${ceremony}`, className]
+        className={[
+          ceremony && `ceremony ceremony-${ceremony}`,
+          framed && "ch-moment ch-settle",
+          className,
+        ]
           .filter(Boolean)
           .join(" ")}
         ref={surfaceRef}
@@ -162,6 +175,11 @@ export function ModalShell({
         tabIndex={-1}
       >
         {children}
+        {framed
+          ? CORNERS.map((at) => (
+              <span aria-hidden="true" className="ch-corner" data-at={at} key={at} />
+            ))
+          : null}
       </section>
     </div>
   );

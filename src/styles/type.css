@@ -275,3 +275,91 @@
   font-size: var(--t-16);
   line-height: var(--lh-20);
 }
+
+/* The hand's tray and view (frame/hand.css): the tab and a fact's head at the floor,
+   a reason and the facts at 14. */
+.hand-tab,
+.hand-view-fact {
+  font-size: var(--t-13);
+  line-height: var(--lh-16);
+}
+.hand-empty,
+.hand-view-why,
+.hand-view-facts p {
+  font-size: var(--t-14);
+  line-height: var(--lh-20);
+}
+
+/* The legacy sheets the moments use (modals, overlays, intel, assembly, ceremony,
+   ledger), raised to the floor: their tags at 13, secondary lines at 14, body at 15,
+   numbers at 16. */
+.eventCardCrest b,
+.placementSectionLabel,
+.placementPreviewTag,
+.placementUpgradeArrow,
+.mechanicsSlot > span:first-child,
+.mechanicsBlockedReason strong,
+.codexSearchHitContext,
+.ruleDeckLabel {
+  font-size: var(--t-13);
+}
+.fieldGroup em,
+.placementChipText strong,
+.placementChipText em,
+.placementUpgradeStat em,
+.placementCostNote,
+.growPopChoiceGrid strong,
+.growPopBenefitPanel strong,
+.eventTableRow,
+.eventTableDie,
+.eventTableEffect,
+.codexSearchHitLabel,
+.codexSearchEmpty,
+.placementTargetName,
+.ladderMoveRow,
+.mechanicsHeading,
+.mechanicsEffectRows li,
+.mechanicsSlot,
+.mechanicsBlockedReason,
+.cityIdentity strong,
+.holdingSummaryMetrics,
+.holdingSummaryMetrics .cityMeterText strong,
+.holdingNetYield strong,
+.ruleCardList li strong,
+.ruleCardList li span,
+.popStepperLabel em,
+.selectionSummary,
+.fieldGroup {
+  font-size: var(--t-14);
+}
+.compendiumFlavor,
+.compendiumNote,
+.placementEmptyState,
+.growPopBenefitPanel > div > span:not(.chips, .resourceDeltaList),
+.mechanicsExplanation,
+.modalHeader p,
+.popStepperLabel strong {
+  font-size: var(--t-15);
+}
+.placementUpgradeStat strong,
+.stepperControls button {
+  font-size: var(--t-16);
+}
+.foundColonyClose {
+  font-size: var(--t-20);
+  line-height: 1;
+}
+/* The riot's sum: the one carved numeral on its sheet. */
+.riotSum {
+  font-size: calc(var(--t-22) * 2);
+}
+/* The Idea draft and purchase (frame/ideas.css). */
+.ideas-heading p,
+.ideas-title p,
+.ideas-close,
+.idea-target {
+  font-size: var(--t-16);
+}
+.ideas-legend {
+  font-size: var(--t-14);
+}

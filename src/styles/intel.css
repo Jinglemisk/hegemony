@@ -144,7 +144,6 @@
   overflow: hidden;
   color: var(--fg);
   font-family: var(--f-name);
-  font-size: 0.78rem;
   line-height: 1;
   text-overflow: ellipsis;
   text-transform: uppercase;
@@ -189,7 +188,6 @@
   justify-self: end;
   gap: 6px;
   color: var(--muted);
-  font-size: 0.72rem;
   white-space: nowrap;
 }
 
@@ -205,7 +203,6 @@
 }
 
 .holdingSummaryMetrics .cityMeterText strong {
-  font-size: 0.7rem;
   font-weight: 700;
 }
 
@@ -274,7 +271,6 @@
 
 .holdingNetYield strong {
   color: var(--fg);
-  font-size: 0.8rem;
   font-weight: 700;
 }
 
