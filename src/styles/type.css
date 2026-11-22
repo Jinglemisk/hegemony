@@ -6,10 +6,9 @@
  * treats this file (and fonts.css) as the only legal home for `font-size`, and
  * ratchets the grandfathered violations elsewhere down to zero.
  *
- * Sizes are the @1440 values from docs/archive/plans/ui-overhaul.md. They ride --ui-scale
- * through rem, exactly like the rest of the chrome: :root's font-size is already
- * `16px * --ui-scale`, so 1rem is one scaled step and the whole register shrinks
- * together at 1280.
+ * Sizes are design px on the 1440×900 canvas (the HUD scales as one, see chrome.css),
+ * spent from the --t-* tokens so the Text size setting (--text-scale) reaches every
+ * role. Nothing here is under the 13px floor (the Imperator shell plan's Standards).
  *
  * Choosing a role:
  *   display   a rite is happening — one per scene, never twice on screen
@@ -32,7 +31,7 @@
 }
 
 .display {
-  font-size: 1.5rem; /* 24px @1440 */
+  font-size: var(--t-24);
   font-weight: 700;
   letter-spacing: 0.06em;
   line-height: 1.14;
@@ -40,31 +39,31 @@
 
 /* The one step up, for a scene's own head (game over, the Assembly). */
 .display.display-xl {
-  font-size: 2.125rem;
+  font-size: var(--t-34);
 }
 
 .title {
-  font-size: 0.9375rem; /* 15px */
+  font-size: var(--t-15);
   font-weight: 700;
   letter-spacing: 0.1em;
   line-height: 1.2;
 }
 
 .verb {
-  font-size: 0.75rem; /* 12px */
+  font-size: var(--t-13);
   font-weight: 700;
   letter-spacing: 0.12em;
   line-height: 1.2;
 }
 
 .verb.verb-lg {
-  font-size: 0.8125rem;
+  font-size: var(--t-14);
 }
 
-/* The 11px floor. Below this the display face stops being readable at all, and
+/* The 13px floor. Below this the display face stops being readable at all, and
    the audit found several labels at 7.5px. There is no smaller role on purpose. */
 .label {
-  font-size: 0.6875rem; /* 11px */
+  font-size: var(--t-13);
   font-weight: 600;
   letter-spacing: 0.14em;
   line-height: 1.25;
@@ -79,16 +78,13 @@
   text-transform: none;
 }
 
-/* Step 13's ceremony cards keep the frame's 12px floor (--t-12) as the register
-   scales. A label and a verb never reach it from below (11px and 12px at full
-   size), so on these cards they sit at the floor; captions and the large verb
-   only touch it at narrow widths. */
+/* Step 13's ceremony cards keep the frame's floor (--t-13). */
 .hungerCard .label,
 .lossCard .label,
 .drawnReveal .label,
 .riotSheet .label,
 .ageEnd .label {
-  font-size: var(--t-12);
+  font-size: var(--t-13);
 }
 
 .hungerCard .caption,
@@ -96,7 +92,7 @@
 .drawnReveal .caption,
 .riotSheet .caption,
 .ageEnd .caption {
-  font-size: max(var(--t-12), 0.78125rem);
+  font-size: var(--t-13);
 }
 
 .ageEnd .verb,
@@ -104,28 +100,28 @@
 .lossCard .verb,
 .hungerCard .verb,
 .drawnReveal .verb {
-  font-size: var(--t-12);
+  font-size: var(--t-13);
 }
 
 .ageEnd .verb.verb-lg,
 .riotSheet .verb.verb-lg,
 .lossCard .verb.verb-lg,
 .drawnReveal .verb.verb-lg {
-  font-size: max(var(--t-12), 0.8125rem);
+  font-size: var(--t-14);
 }
 
 .body {
-  font-size: 0.9375rem; /* 15px */
+  font-size: var(--t-15);
   font-weight: 400;
   line-height: 1.45;
 }
 
 .body.body-sm {
-  font-size: 0.875rem;
+  font-size: var(--t-14);
 }
 
 .body-em {
-  font-size: 0.875rem; /* 14px */
+  font-size: var(--t-14);
   font-style: italic;
   font-weight: 500;
   line-height: 1.45;
@@ -143,13 +139,13 @@
 }
 
 .stat {
-  font-size: 0.9375rem; /* 15px */
+  font-size: var(--t-16);
   font-weight: 600;
   line-height: 1.1;
 }
 
 .stat-lg {
-  font-size: 1.1875rem; /* 19px */
+  font-size: var(--t-20);
   font-weight: 800;
   line-height: 1;
 }
@@ -163,17 +159,17 @@
    not a page numeral; giving it its own role would make the size table longer
    than the thing it disciplines. */
 .stat-lg.stat-hero {
-  font-size: 2.125rem;
+  font-size: var(--t-34);
 }
 
 .caption {
-  font-size: 0.78125rem; /* 12.5px */
+  font-size: var(--t-13);
   font-weight: 400;
   line-height: 1.35;
 }
 
 /* The living map's labels take one size, --lab, which the camera sets as
-   the map comes closer, and keep the frame's 12px floor. A tile's resource badge is
+   the map comes closer, and keep the frame's 13px floor. A tile's resource badge is
    sized to its hex by the camera; its parts scale with it. */
 .lm-oracle,
 .lm-realm {
@@ -184,27 +180,27 @@
 .lm-plate,
 .lm-plate .pl-name,
 .lm-plate .pips i {
-  font-size: max(var(--t-12), calc(var(--lab) * 0.9));
+  font-size: max(var(--t-13), calc(var(--lab) * 0.9));
 }
 .lm-plate.capital .pl-name {
-  font-size: max(var(--t-12), calc(var(--lab) * 0.99));
+  font-size: max(var(--t-13), calc(var(--lab) * 0.99));
 }
 .lm-plate .pl-pops {
-  font-size: max(var(--t-12), calc(var(--lab) * 0.9));
+  font-size: max(var(--t-13), calc(var(--lab) * 0.9));
 }
 .lm-ship {
-  font-size: max(var(--t-12), calc(var(--lab) * 0.95));
+  font-size: max(var(--t-13), calc(var(--lab) * 0.95));
 }
 .lm-moor,
 .lm-tokens {
-  font-size: max(var(--t-12), calc(var(--lab) * 0.92));
+  font-size: max(var(--t-13), calc(var(--lab) * 0.92));
 }
 .lm-res b,
 .lm-res img {
   font-size: 1.39em;
 }
 .lm-compass b {
-  font-size: var(--t-12);
+  font-size: var(--t-13);
 }
 /* The modes' labels: a realm's name a quarter larger than the board's size, the
    cards and chips a little under it. */
@@ -214,7 +210,7 @@
 .lm-realm small,
 .lm-chip,
 .lm-eco {
-  font-size: max(var(--t-12), calc(var(--lab) * 0.98));
+  font-size: max(var(--t-13), calc(var(--lab) * 0.98));
 }
 /* Trade's hint, the plate's size, its arrows a little larger: any taller and it
    reached the next row's badges. */
@@ -226,7 +222,7 @@
 }
 /* The corner dock: a mode's name at the floor, the Chronicle's deeds at reading size. */
 .dock-mode {
-  font-size: var(--t-12);
+  font-size: var(--t-13);
 }
 .dock-log .chron-row {
   font-size: var(--t-14);
@@ -249,4 +245,33 @@
    spend, --clay-ink the clay that reads at AA on bone. */
 .neg {
   color: var(--clay-ink);
+}
+
+/* The Imperator shell's primitives (frame/chrome.css): a panel's name at 22, its
+   sub line and every control at 14, a band's small caps at the 13 floor, the
+   confirm's question at 16. */
+.ch-head-title {
+  font-size: var(--t-22);
+  line-height: var(--lh-28);
+}
+.ch-head-sub,
+.ch-ctl,
+.ch-socket,
+.ch-banner,
+.ch-confirm-d {
+  font-size: var(--t-14);
+  line-height: var(--lh-20);
+}
+.ch-close {
+  font-size: var(--t-20);
+  line-height: 1;
+}
+.ch-band-label,
+.ch-band-end {
+  font-size: var(--t-13);
+  line-height: var(--lh-16);
+}
+.ch-confirm-q {
+  font-size: var(--t-16);
+  line-height: var(--lh-20);
 }

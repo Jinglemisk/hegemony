@@ -3,6 +3,7 @@ import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, MouseEvent } f
 import type { Resources } from "../../game/types";
 import { canPay } from "../../ui/frameFormat";
 import type { DiscGroup, DiscOption } from "./discs";
+import { overlayScale } from "../chrome/canvas";
 import { Chips, Ico } from "./parts";
 
 const token = (name: string, fallback: number) =>
@@ -65,9 +66,10 @@ const armedLeaf = (options: DiscOption[]): DiscOption | undefined =>
 const BLOCK_COST = 64;
 
 type Box = { l: number; t: number; r: number; b: number };
+type Box4 = [number, number, number, number];
 
 /** An option's circle and its label, relative to the circle's centre. */
-function fanShapes(item: HTMLElement, d: number): Array<[number, number, number, number]> {
+function fanShapes(item: HTMLElement, d: number): Box4[] {
   const label = item.querySelector<HTMLElement>(":scope > .fan-btn .fan-label")!;
   const top = label.offsetTop - d / 2;
   return [
@@ -103,9 +105,14 @@ function placeFan(host: HTMLElement, fanAt: WeakMap<Element, [number, number]>) 
   const items = [...host.querySelectorAll<HTMLElement>(":scope > .fan > .fan-item")];
   const n = items.length;
   if (n === 0) return;
-  const d = items[0].querySelector<HTMLElement>(":scope > .fan-btn .fan-disc")!.offsetWidth;
-  const gap = token("--board-gap", 8);
-  const shapes = items.map((item) => fanShapes(item, d));
+  // Rects are screen px, offsets design px (the HUD canvas is scaled): all in screen px here.
+  const scale = overlayScale();
+  const dDesign = items[0].querySelector<HTMLElement>(":scope > .fan-btn .fan-disc")!.offsetWidth;
+  const d = dDesign * scale;
+  const gap = token("--board-gap", 8) * scale;
+  const shapesOf = (item: HTMLElement) =>
+    fanShapes(item, dDesign).map((box) => box.map((v) => v * scale) as Box4);
+  const shapes = items.map(shapesOf);
   const chord = Math.max(d, ...shapes.map((shape) => shape[1][2] - shape[1][0])) + 2 * gap;
   const group = host.closest<HTMLElement>(".verb-group")!;
   const disc = group.querySelector(".verb-disc")!.getBoundingClientRect();
@@ -132,10 +139,11 @@ function placeFan(host: HTMLElement, fanAt: WeakMap<Element, [number, number]>) 
   );
   const realm = group.closest(".realm");
   const sheet = realm?.getBoundingClientRect();
-  const curve = realm ? parseFloat(getComputedStyle(realm).borderTopRightRadius) || 0 : 0;
+  const curve = realm ? (parseFloat(getComputedStyle(realm).borderTopRightRadius) || 0) * scale : 0;
   // The open disc's name tab reads as its hint: wall off the wider of the two.
   const plate = group.querySelector(".verb-name")!.getBoundingClientRect();
-  const hintW = (group.querySelector<HTMLElement>(".verb-name-p")?.offsetWidth ?? 0) + 2 * gap;
+  const hintW =
+    (group.querySelector<HTMLElement>(".verb-name-p")?.offsetWidth ?? 0) * scale + 2 * gap;
   chrome.push(
     pad({ left: dx - hintW / 2, right: dx + hintW / 2, top: plate.top, bottom: plate.bottom }),
   );
@@ -143,7 +151,7 @@ function placeFan(host: HTMLElement, fanAt: WeakMap<Element, [number, number]>) 
     for (const peer of host.parentElement!.children) {
       const at = fanAt.get(peer);
       if (!at) continue;
-      for (const [l, t, r, b] of fanShapes(peer as HTMLElement, d)) {
+      for (const [l, t, r, b] of shapesOf(peer as HTMLElement)) {
         chrome.push(pad({ left: at[0] + l, top: at[1] + t, right: at[0] + r, bottom: at[1] + b }));
       }
     }
@@ -251,11 +259,11 @@ function placeFan(host: HTMLElement, fanAt: WeakMap<Element, [number, number]>) 
     search(chrome, 0) ??
     items.map(() => [cx, cy] as [number, number]);
   ps.forEach(([x, y], k) => {
-    const fx = Math.round(x - cx);
-    const fy = Math.round(y - cy);
+    const fx = Math.round((x - cx) / scale);
+    const fy = Math.round((y - cy) / scale);
     items[k].style.setProperty("--fx", `${fx}px`);
     items[k].style.setProperty("--fy", `${fy}px`);
-    fanAt.set(items[k], [cx + fx, cy + fy]);
+    fanAt.set(items[k], [cx + fx * scale, cy + fy * scale]);
   });
 }
 

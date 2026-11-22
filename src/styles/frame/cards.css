@@ -580,18 +580,18 @@
   display: grid;
   justify-items: center;
   gap: var(--s-3);
-  width: min(calc(var(--u) * 100), calc(100vw - var(--s-8))); /* 400 */
+  width: min(calc(var(--u) * 100), calc(var(--vw) - var(--s-8))); /* 400 */
   margin: auto;
 }
 .drawnReveal:focus {
   outline: none;
 }
 .drawnReveal .gc-ceremony {
-  --gc-w: min(var(--card-ceremony), 40vh);
+  --gc-w: min(var(--card-ceremony), calc(var(--vh) * 0.4));
 }
 /* The hand: the seat's development cards in a row over the same deck line and tray. */
 .drawnReveal.handReveal {
-  width: min(calc(var(--u) * 190), calc(100vw - var(--s-8))); /* 760 */
+  width: min(calc(var(--u) * 190), calc(var(--vw) - var(--s-8))); /* 760 */
 }
 .handReveal .drawn-tray {
   width: min(100%, calc(var(--u) * 100));

@@ -50,7 +50,7 @@
   bottom: 0;
   width: var(--endturn-w);
   color: var(--clay-deep);
-  font: 700 var(--t-12) / var(--price-h) var(--f-sans);
+  font: 700 var(--t-13) / var(--price-h) var(--f-sans);
   text-align: center;
   white-space: nowrap;
 }

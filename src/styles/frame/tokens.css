@@ -4,30 +4,20 @@
    (scripts/check-ui-system.mjs counts a colour written anywhere else). On :root,
    so anything portalled out of the frame (overlays, the dev tune panel) keeps it.
 
-   Region sizes are multiples of the 4px grid unit; gaps and insets use the one
-   spacing scale, in one rhythm: 4 inside an item (icon to number), 8 between
-   items of a group, 16 between groups. Components size themselves from role
-   tokens (--t-body, --ic-ui, --ic-disc …), so a tier is a token swap: at 1680
-   and wider the realm, its discs and the end turn step up together; the bar
-   stays one control tall.
+   Lengths are DESIGN px: the HUD is drawn on a 1440×900 canvas and scaled
+   uniformly to the screen (--k, set on .frame by useFitScale; see chrome.css), so
+   no token steps up or down with the viewport. Region sizes are multiples of the
+   4px grid unit; gaps and insets use the one spacing scale, in one rhythm: 4
+   inside an item (icon to number), 8 between items of a group, 16 between groups.
    ========================================================================== */
 
 :root {
-  /* ---- responsive uniform-scale (two-panel.md, piece 3) -------------------
-     One dial: the whole KYKLOS chrome shrinks PROPORTIONALLY as the viewport
-     narrows — identical layout, only smaller — so 600px of left+right chrome stays
-     in proportion and never reflows (the board is covered, never reshaped). Full
-     size at ≥1440px, floored at 0.82 by ≤1024px, linear between. rem text rides
-     this one factor through the scaled root font-size (base.css). The map sizes
-     itself by its camera, so it is untouched. Per-element minimums are a later pass. */
-  --ui-scale: clamp(0.82, calc(0.82 + (100vw - 1024px) * 0.18 / 416px), 1);
-
   /* ---- gate contract ---------------------------------------------------- */
   --gate-space: "0 4 8 12 16 24 32 48 64";
   --gate-grid: 4;
   --gate-icons: "16 24 32 48";
   --gate-hit: 32;
-  --gate-text: 12;
+  --gate-text: 13;
 
   /* ---- grid unit and the one spacing scale ------------------------------ */
   --u: 4px;
@@ -40,28 +30,36 @@
   --s-12: calc(var(--u) * 12); /* 48 */
   --s-16: calc(var(--u) * 16); /* 64 */
 
-  /* ---- type scale --------------------------------------------------------- */
+  /* ---- type scale ---------------------------------------------------------
+     The floor is 13 at design size (15.6 at 1080p); see the plan's Standards.
+     --text-scale is the player's Text size setting (1 / 1.15 / 1.3, written on
+     <html> by useTextScale): every size and leading below rides it, so text grows
+     inside boxes that keep their size. */
+  --text-scale: 1;
   --f-name: "Cinzel", Copperplate, Georgia, serif; /* proper names, titles only */
   --f-body: "Alegreya", "Iowan Old Style", Palatino, Georgia, serif;
   --f-sans: "Alegreya Sans", "Gill Sans", Helvetica, Arial, sans-serif;
-  --t-12: 12px;
-  --t-14: 14px;
-  --t-16: 16px;
-  --t-20: 20px;
-  --t-24: 24px;
-  --t-28: 28px;
-  --t-72: 72px; /* the year's numeral on its card's back */
-  --lh-16: 16px;
-  --lh-20: 20px;
-  --lh-24: 24px;
-  --lh-28: 28px;
-  --lh-32: 32px;
+  --t-13: calc(13px * var(--text-scale)); /* the floor: small-caps tags, units */
+  --t-14: calc(14px * var(--text-scale)); /* secondary lines, a tooltip's body */
+  --t-15: calc(15px * var(--text-scale)); /* body */
+  --t-16: calc(16px * var(--text-scale)); /* body, numbers in panels */
+  --t-20: calc(20px * var(--text-scale));
+  --t-22: calc(22px * var(--text-scale)); /* a panel's name */
+  --t-24: calc(24px * var(--text-scale));
+  --t-28: calc(28px * var(--text-scale));
+  --t-34: calc(34px * var(--text-scale)); /* a scene's one figure */
+  --t-72: calc(72px * var(--text-scale)); /* the year's numeral on its card's back */
+  --lh-16: calc(16px * var(--text-scale));
+  --lh-20: calc(20px * var(--text-scale));
+  --lh-24: calc(24px * var(--text-scale));
+  --lh-28: calc(28px * var(--text-scale));
+  --lh-32: calc(32px * var(--text-scale));
   --track-caps: 0.08em;
   --track-name: 0.04em;
   /* roles */
-  --t-cap: var(--t-12);
+  --t-cap: var(--t-13);
   --l-cap: var(--lh-16); /* the floor: chips, caps labels, deltas */
-  --t-body: var(--t-14);
+  --t-body: var(--t-15);
   --l-body: var(--lh-20); /* panel body */
   --t-num: var(--t-16);
   --l-num: var(--lh-20); /* bar numbers */
@@ -295,6 +293,7 @@
      surface, or lifted over its neighbours. */
   --z-under: -1;
   --z-lift: 1;
+  --z-trim: 2; /* a panel's bronze corners, over its rule and its content */
 
   /* ---- rules, radii, shadows, states -------------------------------------- */
   --rule: 1px;
@@ -328,10 +327,153 @@
   --fan-from: 0.4; /* a sub-circle grows out of its disc from this scale */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 
+  /* ==== the Imperator shell (docs/plans/imperator-shell.md) =================
+     The material: parchment and black glaze in a cast bronze frame. Spent by
+     src/styles/frame/chrome.css and the primitives in src/components/chrome/. */
+
+  /* ---- the canvas: the HUD's logical box, in design px ----------------------
+     --k is the canvas's scale (useFitScale writes it on .frame); inside
+     .hud-canvas, --vw and --vh are the logical viewport, so chrome sized by the
+     viewport writes var(--vw) where it once wrote 100vw. */
+  --k: 1;
+  --vw: 100vw;
+  --vh: 100vh;
+
+  /* ---- shell geometry at design size (1440×900) ------------------------- */
+  --sh-top-h: 50px; /* the top bar */
+  --sh-side-w: 64px; /* the sidebar's column of buttons */
+  --sh-drawer-w: 320px; /* a drawer, full height beside the sidebar */
+  --sh-place-w: 604px; /* the place panel, from the screen's left edge */
+  --sh-place-h: 404px;
+  --sh-dock-w: 320px; /* the dock, bottom right */
+  --sh-log-h: 36px; /* … its log line */
+  --sh-modes-h: 60px; /* … its map modes */
+  --sh-acts-h: 66px; /* … its Trade / Buy a card / the Dole */
+  --sh-end-w: 88px; /* … End turn, beside the modes and buttons */
+  --sh-outliner-w: 320px; /* the outliner, from under the top bar to the dock */
+  --sh-outliner-top: 60px;
+  --sh-hand-x: 624px; /* the hand's tray */
+  --sh-hand-w: 480px;
+  --sh-hand-h: 72px;
+  --sh-confirm-w: 680px; /* the confirm bar over the board's centre */
+  --sh-corner: 38px; /* a bronze corner piece … */
+  --sh-corner-out: 9px; /* … and how far it stands proud of the panel */
+  --sh-meander-h: 7px; /* the meander strip under a head or the top bar */
+
+  /* ---- bronze: highlight, body, shadow, dark ------------------------------ */
+  --bz-hi: #e9c27a;
+  --bz: #b5874a;
+  --bz-lo: #6b4521;
+  --bz-dk: #3c2612;
+  --bz-hi-45: rgb(233 194 122 / 45%);
+  --bz-hi-25: rgb(233 194 122 / 25%);
+  --bz-dk-30: rgb(60 38 18 / 30%);
+  --bz-dk-12: rgb(60 38 18 / 12%);
+
+  /* ---- the two fills: parchment (light) and black glaze (dark) --------------
+     A texture tile with its fallback colour, each a whole background value. */
+  --parch-fill: #f1e3c4;
+  --glaze-fill: #1f1610;
+  --parch: url("../../../assets/chrome/tex-parchment.webp") 0 0 / 512px var(--parch-fill);
+  --glaze: url("../../../assets/chrome/tex-glaze.webp") 0 0 / 512px var(--glaze-fill);
+  --glaze-ink: #f8e7c4; /* words on the glaze */
+  --glaze-ink-66: rgb(248 231 196 / 66%);
+  --glaze-ink-shadow: 0 1px 0 #000, 0 0 10px var(--bz-hi-25);
+
+  /* ---- the frame -------------------------------------------------------------- */
+  --rule-frame:
+    inset 0 0 0 1px var(--bz-lo), inset 0 0 0 2px var(--bz-hi), inset 0 0 0 3px var(--bz-lo),
+    inset 0 0 26px rgb(110 70 25 / 22%);
+  --shadow-panel: 0 18px 40px rgb(6 18 22 / 55%), 0 3px 8px rgb(0 0 0 / 35%);
+  --shadow-corner: drop-shadow(0 2px 2px rgb(0 0 0 / 45%));
+  --r-panel: 3px; /* a panel's, a control's and a socket's corner */
+  --head-edge:
+    inset 0 1px 0 var(--bz-hi-45), inset 0 -1px 0 var(--bz-lo); /* a glaze band's gilt edge */
+  --medallion: radial-gradient(
+    circle at 35% 30%,
+    #fff3d6,
+    #d8bd8a
+  ); /* an icon's disc on the glaze */
+  --medallion-rim: 0 0 0 1.5px var(--bz), 0 0 0 3px var(--bz-dk);
+  /* The meander strip: a 14×7 key, bronze on bronze-dark, repeated along an edge. */
+  --meander: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='7'%3E%3Crect width='14' height='7' fill='%233c2612'/%3E%3Cpath d='M0 6.5h14M0 .5h14' stroke='%23b5874a'/%3E%3Cpath d='M1 5V2h5v2H4' fill='none' stroke='%23e9c27a' stroke-width='1'/%3E%3Cpath d='M8 2v3h5V3h-2' fill='none' stroke='%23e9c27a' stroke-width='1'/%3E%3C/svg%3E")
+    0 0 / 14px 7px repeat-x;
+  --shadow-meander: drop-shadow(0 2px 2px rgb(0 0 0 / 35%));
+
+  /* ---- controls --------------------------------------------------------------- */
+  /* Primary: red lacquer with a gilt rim. */
+  --lacquer: linear-gradient(#cf5a2e, #9a3216);
+  --lacquer-ink: #fff3dc;
+  --lacquer-rim:
+    inset 0 1px 0 rgb(255 210 170 / 55%), inset 0 -2px 0 rgb(0 0 0 / 25%), 0 0 0 1.5px var(--bz-hi),
+    0 0 0 3px var(--bz-dk), 0 3px 6px rgb(0 0 0 / 40%);
+  --ink-shadow: 0 1px 0 rgb(0 0 0 / 40%);
+  /* Secondary: a parchment plaque in bronze. */
+  --plaque: linear-gradient(#fbefd4, #e2cc9e);
+  --plaque-rim:
+    inset 0 1px 0 var(--ivory), 0 0 0 1.5px var(--bz), 0 0 0 3px rgb(60 38 18 / 35%),
+    0 2px 4px rgb(0 0 0 / 25%);
+  /* A bronze knob, disc and back plaque. */
+  --knob: radial-gradient(circle at 35% 30%, #f6dca4, var(--bz) 60%, var(--bz-lo));
+  --knob-rim:
+    inset 0 0 0 1px rgb(255 240 200 / 50%), 0 0 0 1.5px var(--bz-dk), 0 2px 3px rgb(0 0 0 / 50%);
+  --knob-press: inset 0 2px 3px rgb(0 0 0 / 40%), 0 0 0 1.5px var(--bz-dk);
+  --back: linear-gradient(#5a3a1c, #2c1c0e);
+  --back-hover: linear-gradient(#6d4724, #382412);
+  --back-rim: inset 0 1px 0 var(--bz-hi-45), 0 0 0 1px var(--bz), 0 2px 3px rgb(0 0 0 / 45%);
+  /* Pressed (a toggle that is on): glaze with a gilt ring. */
+  --pressed-rim: inset 0 0 0 2px var(--bz-hi), 0 0 0 1.5px var(--bz-dk), 0 0 10px var(--bz-hi-45);
+  /* Unavailable: hatched, keeps its place and its focus. */
+  --hatch:
+    repeating-linear-gradient(135deg, rgb(60 38 18 / 6%) 0 6px, transparent 6px 12px),
+    rgb(60 38 18 / 10%);
+  --hatch-rim: inset 0 1px 3px rgb(0 0 0 / 22%), 0 0 0 1px rgb(60 38 18 / 25%);
+  --hover-glow: brightness(1.07);
+  --press-dim: brightness(0.95);
+
+  /* ---- sockets and meters ----------------------------------------------------- */
+  --socket: linear-gradient(#f9ecd0, #e6d1a6);
+  --socket-worked: linear-gradient(#f2d9a4, #ddb974);
+  --socket-rim: inset 0 1px 0 var(--ivory), 0 0 0 1px var(--bz), 0 2px 3px rgb(0 0 0 / 20%);
+  --socket-open-rim:
+    inset 0 2px 5px rgb(0 0 0 / 35%), inset 0 0 0 1px rgb(60 38 18 / 30%), 0 1px 0 var(--ivory-70);
+  --socket-open-hover: rgb(192 70 28 / 14%);
+  --meter-well: inset 0 1px 2px rgb(0 0 0 / 30%);
+  --meter-glaze: linear-gradient(#4a3420, #1f1610);
+  --meter-gold: linear-gradient(#f0b25e, #c27a2a);
+
+  /* ---- section bands ---------------------------------------------------------- */
+  --band-wash: linear-gradient(90deg, rgb(181 135 74 / 22%), transparent 80%);
+  --band-ink: #f0d9aa;
+
+  /* ---- lacquer red, the alarm's ember ------------------------------------------ */
+  --lacquer-red: #b23a1a;
+  --ember: #f3a14a;
+
+  /* ---- seats: each glaze, and its coin (the art is in assets/chrome/) -----------
+     The same four values as src/ui/playerGlazes.ts, which the map reads in TS. */
+  --seat-kyanos: #2f5d9e; /* the owl */
+  --seat-melas: #2b2420; /* the winged horse */
+  --seat-porphyra: #7c4d79; /* the turtle */
+  --seat-kinnabari: #a83226; /* the lion */
+  --coin-shine: radial-gradient(circle at 40% 35%, rgb(255 255 255 / 22%), transparent 70%);
+  --coin-rim: inset 0 0 0 1px rgb(0 0 0 / 30%), 0 0 0 1px var(--bz-hi), 0 1px 3px rgb(0 0 0 / 55%);
+
+  /* ---- messages and the confirm ------------------------------------------------ */
+  --shadow-banner: 0 8px 20px rgb(0 0 0 / 45%);
+  --scrim-confirm: rgb(12 26 30 / 16%); /* the board dims only slightly */
+
+  /* ---- motion: 200–320ms for anything that moves; all zero under reduced motion */
+  --dur-press: 90ms; /* a control's lift and press */
+  --dur-hover: 120ms; /* a glow coming up */
+  --dur-settle: 220ms; /* a card or dialog settling into place */
+  --dur-unroll: 300ms; /* a panel unrolling from an edge */
+  --dur-drop: 320ms; /* an alarm dropping in, a banner unfurling */
+  --ease-drop: cubic-bezier(0.2, 1.4, 0.4, 1); /* lands with a small bounce */
+
   color-scheme: light;
 }
 
-/* 1920-class viewports: the realm and end turn step up a tier */
 /* Inside the top bar a control is 40 tall and its icons 32, so the bar reads at a
    glance; the bar's numbers and the seats' discs step up with them. */
 .topbar {
@@ -343,41 +485,16 @@
   --l-cap: var(--lh-20);
 }
 
-@media (min-width: 1680px) {
+/* Reduced motion: nothing moves. Every duration above is zeroed, so a transition
+   or keyframe spent through them jumps to its end. */
+@media (prefers-reduced-motion: reduce) {
   :root {
-    --area-w: calc(var(--u) * 156); /* 624 */
-    --area-h: calc(var(--u) * 112); /* 448 */
-    --area-curve: calc(var(--u) * 80); /* 320 */
-    --verb-inset: calc(var(--u) * 16); /* 64: the disc edge 32 from the screen edge */
-    --body-right: calc(var(--u) * 20); /* 80 */
-    --verb-d: calc(var(--u) * 16); /* 64 */
-    --name-h: var(--lh-24);
-    --fan-d: calc(var(--u) * 12); /* 48 */
-    --fan-w: calc(var(--u) * 28); /* 112 */
-    --clock-w: calc(var(--u) * 100); /* 400 */
-    --disc-end: calc(var(--u) * 20); /* 80 */
-    --endturn-w: calc(var(--u) * 28); /* 112 */
-    --endturn-h: calc(var(--u) * 30); /* 120 */
-    --dock-line-h: calc(var(--u) * 12); /* 48 */
-    --chip-h: calc(var(--u) * 6); /* 24 */
-    --price-h: var(--ic-24);
-    --ic-disc: var(--ic-48);
-  }
-  .realm,
-  .endturn {
-    --t-cap: var(--t-14);
-    --l-cap: var(--lh-20);
-    --ic-chip: var(--ic-24);
-  }
-  .realm {
-    --t-body: var(--t-16);
-    --l-body: var(--lh-24);
-    --t-lead: var(--t-20);
-    --l-lead: var(--lh-24);
-    --t-count: var(--t-28);
-    --l-count: var(--lh-28);
-    --ic-ui: var(--ic-32);
-    --hit: calc(var(--u) * 10); /* 40 */
-    --row-h: calc(var(--u) * 12); /* 48 */
+    --t-fan: 0ms;
+    --t-stagger: 0ms;
+    --dur-press: 0ms;
+    --dur-hover: 0ms;
+    --dur-settle: 0ms;
+    --dur-unroll: 0ms;
+    --dur-drop: 0ms;
   }
 }

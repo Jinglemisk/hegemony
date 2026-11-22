@@ -6,7 +6,7 @@
    right.
    ========================================================================== */
 .dock-col {
-  --col-h: calc(100vh - var(--bar-h));
+  --col-h: calc(var(--vh) - var(--bar-h));
   position: fixed;
   z-index: var(--z-bar);
   top: var(--bar-h);

@@ -57,7 +57,7 @@
   height: var(--badge);
   padding: 0 var(--s-1);
   border-radius: calc(var(--badge) / 2);
-  font: 700 var(--t-12) / var(--badge) var(--f-sans);
+  font: 700 var(--t-13) / var(--badge) var(--f-sans);
   text-align: center;
   background: var(--ink);
   color: var(--ivory);

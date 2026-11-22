@@ -1,14 +1,9 @@
 /* responsive — Responsive overrides (@media breakpoints). MUST load LAST — these override earlier rules by cascade order
    Split from styles.css (Phase 2e); original source order preserved. */
 
-/* Swept for the uniform-scale pass (two-panel.md, 2026-07-18). The KYKLOS chrome now
-   scales DOWN proportionally as the viewport narrows (one --ui-scale dial in frame/tokens.css)
-   — identical layout, only smaller. The old docked-layout breakpoints REFLOWED the
-   shell/workbench/topbar to single-column at ≤1120px, which contradicts that, so they
-   are gone. What remains is narrow-screen content niceties (tooltip placement, mobile
-   grid columns) that don't fight the scale. Per-element minimums — a floor below which
-   a disc or card stops shrinking — are a later pass; below ~1024px the scale simply
-   holds at its 0.82 floor and the panels float over the (never-reflowed) sea. */
+/* The HUD is drawn on a 1440×900 canvas and scaled as one (chrome.css), so nothing
+   here reflows the shell. What remains is narrow-screen content niceties that the
+   Imperator shell's slices retire with the surfaces they belong to. */
 
 /* Below about 1180px the purse (goods, then people) reaches the clock: the year's
    total leaves the bar; the years left stay. */

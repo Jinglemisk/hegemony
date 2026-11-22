@@ -4,6 +4,7 @@ import {
   type AnchoringOptions,
   type FloatingPosition,
 } from "../../ui/anchoring";
+import { overlayScale } from "../chrome/canvas";
 
 export function useAnchoredOverlay(
   anchor: DOMRect | RefObject<HTMLElement | null> | null,
@@ -20,12 +21,21 @@ export function useAnchoredOverlay(
 
     if (!overlay || !anchorRect || typeof window === "undefined") return;
 
+    // Measured in screen px, placed in the HUD canvas's design px: divide by its scale.
+    const k = overlayScale();
     const { width, height } = overlay.getBoundingClientRect();
     setPosition(
       positionAnchoredOverlay(
-        anchorRect,
-        { width, height },
-        { width: window.innerWidth, height: window.innerHeight },
+        {
+          top: anchorRect.top / k,
+          right: anchorRect.right / k,
+          bottom: anchorRect.bottom / k,
+          left: anchorRect.left / k,
+          width: anchorRect.width / k,
+          height: anchorRect.height / k,
+        },
+        { width: width / k, height: height / k },
+        { width: window.innerWidth / k, height: window.innerHeight / k },
         { align, arrowInset, gap, margin, preferredPlacement },
       ),
     );

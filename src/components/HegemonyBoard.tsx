@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { ComponentProps } from "react";
+import type { CSSProperties, ComponentProps } from "react";
 import { privateMoment } from "../client/controller";
 import { PLAYER_IDS } from "../game/data";
 import type { GameEvents, GameMoves, LocalContext } from "../client/controller";
@@ -65,6 +65,9 @@ import type { DeckMark } from "./board/helpers";
 import { endTurnWarning, happinessDisplay, hungerShortfall } from "../ui/frameSelectors";
 import { isTyping } from "../ui/keys";
 import { TopBar } from "./frame/TopBar";
+import { HudCanvas } from "./chrome/HudCanvas";
+import { useFitScale } from "./chrome/canvas";
+import { ConfirmHost, ConfirmProvider } from "./chrome/Confirm";
 import { ConsultStrip } from "./frame/ConsultStrip";
 import { ToastLane } from "./frame/Toasts";
 import { useMomentToasts, useOwnMoment } from "./frame/moments";
@@ -162,6 +165,8 @@ export function HegemonyBoard({
   humans = PLAYER_IDS,
   dev = {},
 }: BoardProps) {
+  // The HUD canvas's scale: the 1440×900 design drawn to fit the screen.
+  const fitScale = useFitScale();
   // What the map shows: the shell's view state, never the game's.
   const [mapMode, setMapMode] = useState<MapMode>("terrain");
   // How the map draws the resource badges: the player's choice, kept in the browser.
@@ -596,9 +601,14 @@ export function HegemonyBoard({
     <GameUiProvider value={gameUi}>
       <TradePickContext.Provider value={pickTradePlaces}>
         <CodexLinkProvider value={codexLink}>
-          <main className={`frame${moment?.kind === "assembly" ? " is-sitting" : ""}`}>
-            {!drafting ? (
-              <>
+          <ConfirmProvider>
+            <main
+              className={`frame${moment?.kind === "assembly" ? " is-sitting" : ""}`}
+              style={{ "--k": fitScale } as CSSProperties}
+            >
+              {/* The map draws at the screen's own resolution; the HUD over it on the
+                scaled design canvas. */}
+              {!drafting ? (
                 <Suspense fallback={null}>
                   <LivingMap
                     G={G}
@@ -627,405 +637,420 @@ export function HegemonyBoard({
                     selectedTileId={selectedTileId}
                   />
                 </Suspense>
+              ) : null}
+              <HudCanvas>
+                {!drafting ? (
+                  <>
+                    <div className="hud hud-top">
+                      <TopBar
+                        G={G}
+                        breakdown={projectedIncomeBreakdown}
+                        happiness={happinessDisplay(G, viewerId)}
+                        income={projectedIncome}
+                        viewerId={viewerId}
+                      >
+                        <ConsultStrip
+                          onClose={() => setConsultTab(null)}
+                          onConsult={(tab) => {
+                            // Only a term link opens the Codex at a chapter; the strip opens its contents.
+                            setCodexTarget(null);
+                            setConsultTab((open) => (open === tab ? null : tab));
+                          }}
+                          open={consultTab}
+                        />
+                      </TopBar>
+                      {sitting?.minimised ? (
+                        <AssemblyDock sitting={sitting} />
+                      ) : (
+                        <ToastLane onDismiss={toasts.dismiss} toast={toasts.toast} />
+                      )}
+                      <Alarms
+                        alarms={alarms}
+                        dealAsk={dealAsk}
+                        G={G}
+                        hunger={shortfall}
+                        onOpenYear={() => setHeld("yearFace")}
+                        threatOpen={Boolean(dev.titlesFrom)}
+                        viewerId={viewerId}
+                      />
+                    </div>
 
-                <div className="hud hud-top">
-                  <TopBar
-                    G={G}
-                    breakdown={projectedIncomeBreakdown}
-                    happiness={happinessDisplay(G, viewerId)}
-                    income={projectedIncome}
-                    viewerId={viewerId}
-                  >
-                    <ConsultStrip
-                      onClose={() => setConsultTab(null)}
-                      onConsult={(tab) => {
-                        // Only a term link opens the Codex at a chapter; the strip opens its contents.
-                        setCodexTarget(null);
-                        setConsultTab((open) => (open === tab ? null : tab));
-                      }}
-                      open={consultTab}
-                    />
-                  </TopBar>
-                  {sitting?.minimised ? (
-                    <AssemblyDock sitting={sitting} />
-                  ) : (
-                    <ToastLane onDismiss={toasts.dismiss} toast={toasts.toast} />
-                  )}
-                  <Alarms
-                    alarms={alarms}
-                    dealAsk={dealAsk}
-                    G={G}
-                    hunger={shortfall}
-                    onOpenYear={() => setHeld("yearFace")}
-                    threatOpen={Boolean(dev.titlesFrom)}
-                    viewerId={viewerId}
-                  />
-                </div>
+                    {isSetup || mapSelection.selection ? (
+                      <div className="map-caption" role="status">
+                        {mapSelection.selection
+                          ? selectionCaption(
+                              mapSelection.selection.mode,
+                              mapSelection.candidateTileIds.length,
+                            )
+                          : pendingSetupCopy}
+                      </div>
+                    ) : null}
 
-                {isSetup || mapSelection.selection ? (
-                  <div className="map-caption" role="status">
-                    {mapSelection.selection
-                      ? selectionCaption(
-                          mapSelection.selection.mode,
-                          mapSelection.candidateTileIds.length,
-                        )
-                      : pendingSetupCopy}
-                  </div>
-                ) : null}
+                    <div className="hud hud-bottom">
+                      <RealmPanel
+                        locked={inAssembly}
+                        groups={discGroups(
+                          verbContext,
+                          {
+                            // The fans arm the map for the exact choice; nothing covers the answer.
+                            onArm: armSelection,
+                            onMovePopsRequest: () => armSelection({ kind: "movePops" }),
+                            onFoundColonyRequest: () => armSelection({ kind: "foundColony" }),
+                            onUpgradeCityRequest: () => setActiveModal({ kind: "upgradeCity" }),
+                            onCardsRequest: (view) => {
+                              if (view === "hand") return setActiveModal({ kind: "hand" });
+                              setActiveModal({ kind: "drawnCard", mark: deckMark(G, viewerId) });
+                              moves.buyDevCard();
+                            },
+                            onCalm: moves.civicCalm,
+                            onDole: moves.dole,
+                            onIdeasRequest: () => setActiveModal({ kind: "ideas" }),
+                            onTrade: () => {
+                              const disc = document.querySelector(
+                                '[data-group="trade"] .verb-disc',
+                              );
+                              if (disc)
+                                setComposing({
+                                  seat: viewerId,
+                                  anchor: disc.getBoundingClientRect(),
+                                });
+                            },
+                          },
+                          mapSelection.selection?.mode ?? null,
+                        )}
+                        onBuildBuildingRequest={requestBuildBuilding}
+                        onLadderRequest={(request) => armSelection({ kind: "ladder", request })}
+                        income={projectedIncome}
+                        onFound={foundHere}
+                        onSubject={(next) => {
+                          setSubject(next);
+                          setSelectedTileId(next.kind === "tile" ? next.tileId : null);
+                        }}
+                        onTab={setRealmTab}
+                        subject={subject}
+                        tab={realmTab}
+                      />
+                    </div>
 
-                <div className="hud hud-bottom">
-                  <RealmPanel
-                    locked={inAssembly}
-                    groups={discGroups(
-                      verbContext,
-                      {
-                        // The fans arm the map for the exact choice; nothing covers the answer.
-                        onArm: armSelection,
-                        onMovePopsRequest: () => armSelection({ kind: "movePops" }),
-                        onFoundColonyRequest: () => armSelection({ kind: "foundColony" }),
-                        onUpgradeCityRequest: () => setActiveModal({ kind: "upgradeCity" }),
-                        onCardsRequest: (view) => {
-                          if (view === "hand") return setActiveModal({ kind: "hand" });
-                          setActiveModal({ kind: "drawnCard", mark: deckMark(G, viewerId) });
-                          moves.buyDevCard();
-                        },
-                        onCalm: moves.civicCalm,
-                        onDole: moves.dole,
-                        onIdeasRequest: () => setActiveModal({ kind: "ideas" }),
-                        onTrade: () => {
-                          const disc = document.querySelector('[data-group="trade"] .verb-disc');
-                          if (disc)
-                            setComposing({ seat: viewerId, anchor: disc.getBoundingClientRect() });
-                        },
-                      },
-                      mapSelection.selection?.mode ?? null,
-                    )}
-                    onBuildBuildingRequest={requestBuildBuilding}
-                    onLadderRequest={(request) => armSelection({ kind: "ladder", request })}
-                    income={projectedIncome}
-                    onFound={foundHere}
-                    onSubject={(next) => {
-                      setSubject(next);
-                      setSelectedTileId(next.kind === "tile" ? next.tileId : null);
-                    }}
-                    onTab={setRealmTab}
-                    subject={subject}
-                    tab={realmTab}
-                  />
-                </div>
-
-                {/* The right column under the consult names: a dropped page, the seats,
+                    {/* The right column under the consult names: a dropped page, the seats,
                     then the corner dock. Its pages scroll at the window's edge, so the
                     map does not edge-scroll under it. */}
-                <div className={`dock-col${consultTab ? " has-sheet" : ""}`} data-no-edge-pan>
-                  {consultTab ? (
-                    <aside
-                      aria-label="Consult"
-                      className="consult-sheet"
-                      data-c="consult-sheet"
-                      data-tab={consultTab}
-                      onKeyDown={(event) => {
-                        if (event.key === "Escape") {
-                          event.stopPropagation();
-                          setConsultTab(null);
-                        }
-                      }}
-                    >
-                      <ConsultPanel activeTab={consultTab} codexTarget={codexTarget} />
-                    </aside>
-                  ) : null}
-                  <Seats
-                    G={G}
-                    actingId={currentPlayerId}
-                    onSeat={onPlayerIDChange}
-                    threats={threats.map((threat) => threat.seat)}
-                    viewerId={viewerId}
-                  />
-                  <CornerDock
-                    G={G}
-                    mode={mapMode}
-                    onMode={setMapMode}
-                    onPlates={changePlates}
-                    plates={plates}
-                  >
-                    <EndTurn
-                      actingId={currentPlayerId}
-                      canEndTurn={turnOpen}
-                      confirmOpen={dev.endTurnConfirm}
-                      onCalm={moves.civicCalm}
-                      onEndTurn={() =>
-                        // A partner's short payment is answered first, on its deal's card.
-                        dealEndTurnReason(G)
-                          ? setDealAsk((n) => n + 1)
-                          : shortfall
-                            ? setHeld("hungerAsk")
-                            : events.endTurn()
-                      }
-                      ruleset={G.ruleset}
-                      title={turnCommitTitle(turnGate)}
-                      waitingLabel={inAssembly ? "In Assembly" : undefined}
-                      unrest={turnOpen ? turnEndUnrest(G, currentPlayerId) : null}
-                      warning={endTurnWarning(G, currentPlayerId)}
-                    />
-                  </CornerDock>
-                </div>
-              </>
-            ) : null}
+                    <div className={`dock-col${consultTab ? " has-sheet" : ""}`} data-no-edge-pan>
+                      {consultTab ? (
+                        <aside
+                          aria-label="Consult"
+                          className="consult-sheet"
+                          data-c="consult-sheet"
+                          data-tab={consultTab}
+                          onKeyDown={(event) => {
+                            if (event.key === "Escape") {
+                              event.stopPropagation();
+                              setConsultTab(null);
+                            }
+                          }}
+                        >
+                          <ConsultPanel activeTab={consultTab} codexTarget={codexTarget} />
+                        </aside>
+                      ) : null}
+                      <Seats
+                        G={G}
+                        actingId={currentPlayerId}
+                        onSeat={onPlayerIDChange}
+                        threats={threats.map((threat) => threat.seat)}
+                        viewerId={viewerId}
+                      />
+                      <CornerDock
+                        G={G}
+                        mode={mapMode}
+                        onMode={setMapMode}
+                        onPlates={changePlates}
+                        plates={plates}
+                      >
+                        <EndTurn
+                          actingId={currentPlayerId}
+                          canEndTurn={turnOpen}
+                          confirmOpen={dev.endTurnConfirm}
+                          onCalm={moves.civicCalm}
+                          onEndTurn={() =>
+                            // A partner's short payment is answered first, on its deal's card.
+                            dealEndTurnReason(G)
+                              ? setDealAsk((n) => n + 1)
+                              : shortfall
+                                ? setHeld("hungerAsk")
+                                : events.endTurn()
+                          }
+                          ruleset={G.ruleset}
+                          title={turnCommitTitle(turnGate)}
+                          waitingLabel={inAssembly ? "In Assembly" : undefined}
+                          unrest={turnOpen ? turnEndUnrest(G, currentPlayerId) : null}
+                          warning={endTurnWarning(G, currentPlayerId)}
+                        />
+                      </CornerDock>
+                    </div>
+                  </>
+                ) : null}
 
-            {composing ? (
-              <Popover
-                anchor={composing.anchor}
-                ariaLabel="Offer a trade"
-                className="trade-pop"
-                dismissOnOutside
-                onDismiss={() => setComposing(null)}
-                preferredPlacement="above"
-              >
-                <ComposeCard onClose={() => setComposing(null)} seat={composing.seat} />
-              </Popover>
-            ) : null}
-            {cardPick ? (
-              <CardPick
-                count={cardPick.request.cards}
-                onCancel={endCardPick}
-                onPick={(cards) => {
-                  cardPick.send({ ...cardPick.places, cards });
-                  endCardPick();
-                }}
-                onReveal={() => onPlayerIDChange(cardPick.request.seat)}
-                partner={cardPick.request.partner}
-                seat={cardPick.request.seat}
-              />
-            ) : null}
-            {activeModal?.kind === "ideas" && !drafting ? (
-              <IdeasModal onClose={closeModal} />
-            ) : null}
-            {activeModal?.kind === "populationPrompt" ? (
-              <PopulationPickerModal
-                title={`Choose ${PLACEMENT_LABELS[activeModal.placement]} pops`}
-                description={`Allocate exactly ${G.ruleset.placementPopCounts[activeModal.placement]} starting ${
-                  G.ruleset.placementPopCounts[activeModal.placement] === 1 ? "pop" : "pops"
-                } before placing this ${PLACEMENT_LABELS[activeModal.placement]}: ${
-                  G.ruleset.placementCitizens[activeModal.placement] === 0
-                    ? "no citizens"
-                    : `${G.ruleset.placementCitizens[activeModal.placement]} citizen`
-                }, the rest slaves or freemen.`}
-                requiredTotal={G.ruleset.placementPopCounts[activeModal.placement]}
-                requiredCitizens={G.ruleset.placementCitizens[activeModal.placement]}
-                confirmLabel={`Place ${PLACEMENT_LABELS[activeModal.placement]}`}
-                onCancel={() => setActiveModal(null)}
-                onConfirm={(pops) => {
-                  if (activeModal.placement === "capital") {
-                    moves.placeCapital(activeModal.tileId, pops);
-                  } else if (activeModal.placement === "city") {
-                    moves.placeCity(activeModal.tileId, pops);
-                  } else {
-                    moves.placeColony(activeModal.tileId, pops);
-                  }
-                }}
-              />
-            ) : null}
-            {/* Map-first selection (refit scope 3): the mode is armed, the board has
+                {composing ? (
+                  <Popover
+                    anchor={composing.anchor}
+                    ariaLabel="Offer a trade"
+                    className="trade-pop"
+                    dismissOnOutside
+                    onDismiss={() => setComposing(null)}
+                    preferredPlacement="above"
+                  >
+                    <ComposeCard onClose={() => setComposing(null)} seat={composing.seat} />
+                  </Popover>
+                ) : null}
+                {cardPick ? (
+                  <CardPick
+                    count={cardPick.request.cards}
+                    onCancel={endCardPick}
+                    onPick={(cards) => {
+                      cardPick.send({ ...cardPick.places, cards });
+                      endCardPick();
+                    }}
+                    onReveal={() => onPlayerIDChange(cardPick.request.seat)}
+                    partner={cardPick.request.partner}
+                    seat={cardPick.request.seat}
+                  />
+                ) : null}
+                {activeModal?.kind === "ideas" && !drafting ? (
+                  <IdeasModal onClose={closeModal} />
+                ) : null}
+                {activeModal?.kind === "populationPrompt" ? (
+                  <PopulationPickerModal
+                    title={`Choose ${PLACEMENT_LABELS[activeModal.placement]} pops`}
+                    description={`Allocate exactly ${G.ruleset.placementPopCounts[activeModal.placement]} starting ${
+                      G.ruleset.placementPopCounts[activeModal.placement] === 1 ? "pop" : "pops"
+                    } before placing this ${PLACEMENT_LABELS[activeModal.placement]}: ${
+                      G.ruleset.placementCitizens[activeModal.placement] === 0
+                        ? "no citizens"
+                        : `${G.ruleset.placementCitizens[activeModal.placement]} citizen`
+                    }, the rest slaves or freemen.`}
+                    requiredTotal={G.ruleset.placementPopCounts[activeModal.placement]}
+                    requiredCitizens={G.ruleset.placementCitizens[activeModal.placement]}
+                    confirmLabel={`Place ${PLACEMENT_LABELS[activeModal.placement]}`}
+                    onCancel={() => setActiveModal(null)}
+                    onConfirm={(pops) => {
+                      if (activeModal.placement === "capital") {
+                        moves.placeCapital(activeModal.tileId, pops);
+                      } else if (activeModal.placement === "city") {
+                        moves.placeCity(activeModal.tileId, pops);
+                      } else {
+                        moves.placeColony(activeModal.tileId, pops);
+                      }
+                    }}
+                  />
+                ) : null}
+                {/* Map-first selection (refit scope 3): the mode is armed, the board has
           answered, and the popover pins to the tile the player clicked. One
           router — every flow shares the anchoring and the Escape route. */}
-            {mapSelection.selection?.target
-              ? (() => {
-                  const { mode } = mapSelection.selection!;
-                  const { tileId, anchor } = mapSelection.selection!.target!;
+                {mapSelection.selection?.target
+                  ? (() => {
+                      const { mode } = mapSelection.selection!;
+                      const { tileId, anchor } = mapSelection.selection!.target!;
 
-                  if (mode.kind === "foundColony") {
-                    return (
-                      <FoundColonyPopover
-                        anchor={anchor}
-                        onCancel={mapSelection.clear}
-                        onConfirm={(sourceTileId, pop) => {
-                          moves.foundColony(tileId, sourceTileId, pop);
-                          mapSelection.clear();
-                        }}
-                        tileId={tileId}
-                      />
-                    );
-                  }
+                      if (mode.kind === "foundColony") {
+                        return (
+                          <FoundColonyPopover
+                            anchor={anchor}
+                            onCancel={mapSelection.clear}
+                            onConfirm={(sourceTileId, pop) => {
+                              moves.foundColony(tileId, sourceTileId, pop);
+                              mapSelection.clear();
+                            }}
+                            tileId={tileId}
+                          />
+                        );
+                      }
 
-                  if (mode.kind === "growPop") {
-                    return (
-                      <GrowPopPopover
-                        anchor={anchor}
-                        initialPop={mode.pop}
-                        onCancel={mapSelection.clear}
-                        onConfirm={(target, pop) => {
-                          moves.growPop(target, pop);
-                          mapSelection.clear();
-                        }}
-                        tileId={tileId}
-                      />
-                    );
-                  }
+                      if (mode.kind === "growPop") {
+                        return (
+                          <GrowPopPopover
+                            anchor={anchor}
+                            initialPop={mode.pop}
+                            onCancel={mapSelection.clear}
+                            onConfirm={(target, pop) => {
+                              moves.growPop(target, pop);
+                              mapSelection.clear();
+                            }}
+                            tileId={tileId}
+                          />
+                        );
+                      }
 
-                  if (mode.kind === "build") {
-                    return (
-                      <BuildPopover
-                        anchor={anchor}
-                        initialBuildingId={mode.buildingId}
-                        onCancel={mapSelection.clear}
-                        onConfirm={(target, buildingId, claimVertexId) => {
-                          requestBuildBuilding(target, buildingId, claimVertexId);
-                          mapSelection.clear();
-                        }}
-                        tileId={tileId}
-                      />
-                    );
-                  }
+                      if (mode.kind === "build") {
+                        return (
+                          <BuildPopover
+                            anchor={anchor}
+                            initialBuildingId={mode.buildingId}
+                            onCancel={mapSelection.clear}
+                            onConfirm={(target, buildingId, claimVertexId) => {
+                              requestBuildBuilding(target, buildingId, claimVertexId);
+                              mapSelection.clear();
+                            }}
+                            tileId={tileId}
+                          />
+                        );
+                      }
 
-                  if (mode.kind === "tradePops") {
-                    return (
-                      <TradePopsPopover
-                        anchor={anchor}
-                        mode={mode}
-                        onCancel={mapSelection.clear}
-                        onConfirm={() => placeTradePops(tileId, mode.direction)}
-                        tileId={tileId}
-                      />
-                    );
-                  }
+                      if (mode.kind === "tradePops") {
+                        return (
+                          <TradePopsPopover
+                            anchor={anchor}
+                            mode={mode}
+                            onCancel={mapSelection.clear}
+                            onConfirm={() => placeTradePops(tileId, mode.direction)}
+                            tileId={tileId}
+                          />
+                        );
+                      }
 
-                  if (mode.kind === "ladder") {
-                    return (
-                      <LadderPopover
-                        anchor={anchor}
-                        onCancel={mapSelection.clear}
-                        onConfirm={(target, from, kind) => {
-                          if (kind === "promote") {
-                            moves.promotePop(target, from);
-                          } else {
-                            moves.demotePop(target, from);
+                      if (mode.kind === "ladder") {
+                        return (
+                          <LadderPopover
+                            anchor={anchor}
+                            onCancel={mapSelection.clear}
+                            onConfirm={(target, from, kind) => {
+                              if (kind === "promote") {
+                                moves.promotePop(target, from);
+                              } else {
+                                moves.demotePop(target, from);
+                              }
+                              mapSelection.clear();
+                            }}
+                            request={mode.request}
+                            tileId={tileId}
+                          />
+                        );
+                      }
+
+                      // Move is the two-step flow: the source click re-arms for the target.
+                      if (mode.kind === "movePops" && !mode.sourceTileId) {
+                        return (
+                          <MovePopsSourcePopover
+                            anchor={anchor}
+                            onCancel={mapSelection.clear}
+                            onConfirm={mapSelection.advanceToTarget}
+                            tileId={tileId}
+                          />
+                        );
+                      }
+
+                      if (mode.kind === "movePops" && mode.sourceTileId) {
+                        return (
+                          <MovePopsTargetPopover
+                            anchor={anchor}
+                            onCancel={mapSelection.clear}
+                            onConfirm={(source, target, pops) => {
+                              moves.movePops(source, target, pops);
+                              mapSelection.clear();
+                            }}
+                            sourceTileId={mode.sourceTileId}
+                            tileId={tileId}
+                          />
+                        );
+                      }
+
+                      return null;
+                    })()
+                  : null}
+                {activeModal?.kind === "upgradeCity" ? (
+                  <UpgradeCityModal
+                    onCancel={closeModal}
+                    onConfirm={(tileId) => {
+                      moves.upgradeColonyToCity(tileId);
+                      closeModal();
+                    }}
+                  />
+                ) : null}
+                {activeModal?.kind === "drawnCard" ? (
+                  <DrawnCardModal mark={activeModal.mark} onClose={closeModal} />
+                ) : null}
+                {activeModal?.kind === "hand" ? <HandModal onClose={closeModal} /> : null}
+                {(() => {
+                  switch (moment?.kind) {
+                    case "draft":
+                      return moment.done ? (
+                        <IdeasModal draftDone onClose={() => setHeld(null)} />
+                      ) : (
+                        <IdeasModal key={viewerId} />
+                      );
+                    case "riot":
+                      return (
+                        <RiotModal
+                          onRolled={() => setHeld("riotResult")}
+                          onDismissResult={() => setHeld(null)}
+                        />
+                      );
+                    case "revolt":
+                      return <RevoltModal entry={moment.entry} onClose={revolt.dismiss} />;
+                    case "yearCard":
+                      return moment.reveal ? (
+                        <YearCardModal
+                          holdBack={dev.yearBack}
+                          onClose={() => setSeen((current) => ({ ...current, year: G.year }))}
+                          reveal
+                        />
+                      ) : (
+                        <YearCardModal onClose={() => setHeld(null)} reveal={false} />
+                      );
+                    case "gameOver":
+                      return (
+                        <GameOverModal
+                          G={G}
+                          onInspectBoard={() =>
+                            setSeen((current) => ({ ...current, gameOver: true }))
                           }
-                          mapSelection.clear();
-                        }}
-                        request={mode.request}
-                        tileId={tileId}
-                      />
-                    );
+                          viewerId={viewerId}
+                        />
+                      );
+                    case "turnNotice":
+                      return (
+                        <TurnNotice
+                          onBegin={() => {
+                            setSeen((current) => ({ ...current, moment: moment.begins }));
+                            onPlayerIDChange(currentPlayerId);
+                          }}
+                          proposal={G.assembly?.phase === "proposal"}
+                          seat={currentPlayerId}
+                        />
+                      );
+                    // Asked from End turn, the card ends the turn and names who leaves in one
+                    // go. A turn already committed (a restored game) only waits for the names.
+                    case "hunger":
+                      return (
+                        <HungerModal
+                          key={
+                            moment.asked ? `ask-${ctx.turn}-${moment.unfed}` : `pending-${ctx.turn}`
+                          }
+                          onBack={moment.asked ? () => setHeld(null) : undefined}
+                          onCommit={(leave) => {
+                            if (moment.asked) {
+                              setHeld(null);
+                              events.endTurn();
+                            }
+                            moves.resolveHunger(leave);
+                          }}
+                          unfed={moment.unfed}
+                        />
+                      );
+                    case "event":
+                      return <PendingPlayerEventModal />;
+                    // The Assembly sits in a modal over the shell. It mounts off engine state;
+                    // minimised, it is the dock under the compass. A proposal is private, and
+                    // its seat begins it at the turn notice.
+                    case "assembly":
+                      return <AssemblySitting sitting={moment.sitting} />;
+                    default:
+                      return null;
                   }
-
-                  // Move is the two-step flow: the source click re-arms for the target.
-                  if (mode.kind === "movePops" && !mode.sourceTileId) {
-                    return (
-                      <MovePopsSourcePopover
-                        anchor={anchor}
-                        onCancel={mapSelection.clear}
-                        onConfirm={mapSelection.advanceToTarget}
-                        tileId={tileId}
-                      />
-                    );
-                  }
-
-                  if (mode.kind === "movePops" && mode.sourceTileId) {
-                    return (
-                      <MovePopsTargetPopover
-                        anchor={anchor}
-                        onCancel={mapSelection.clear}
-                        onConfirm={(source, target, pops) => {
-                          moves.movePops(source, target, pops);
-                          mapSelection.clear();
-                        }}
-                        sourceTileId={mode.sourceTileId}
-                        tileId={tileId}
-                      />
-                    );
-                  }
-
-                  return null;
-                })()
-              : null}
-            {activeModal?.kind === "upgradeCity" ? (
-              <UpgradeCityModal
-                onCancel={closeModal}
-                onConfirm={(tileId) => {
-                  moves.upgradeColonyToCity(tileId);
-                  closeModal();
-                }}
-              />
-            ) : null}
-            {activeModal?.kind === "drawnCard" ? (
-              <DrawnCardModal mark={activeModal.mark} onClose={closeModal} />
-            ) : null}
-            {activeModal?.kind === "hand" ? <HandModal onClose={closeModal} /> : null}
-            {(() => {
-              switch (moment?.kind) {
-                case "draft":
-                  return moment.done ? (
-                    <IdeasModal draftDone onClose={() => setHeld(null)} />
-                  ) : (
-                    <IdeasModal key={viewerId} />
-                  );
-                case "riot":
-                  return (
-                    <RiotModal
-                      onRolled={() => setHeld("riotResult")}
-                      onDismissResult={() => setHeld(null)}
-                    />
-                  );
-                case "revolt":
-                  return <RevoltModal entry={moment.entry} onClose={revolt.dismiss} />;
-                case "yearCard":
-                  return moment.reveal ? (
-                    <YearCardModal
-                      holdBack={dev.yearBack}
-                      onClose={() => setSeen((current) => ({ ...current, year: G.year }))}
-                      reveal
-                    />
-                  ) : (
-                    <YearCardModal onClose={() => setHeld(null)} reveal={false} />
-                  );
-                case "gameOver":
-                  return (
-                    <GameOverModal
-                      G={G}
-                      onInspectBoard={() => setSeen((current) => ({ ...current, gameOver: true }))}
-                      viewerId={viewerId}
-                    />
-                  );
-                case "turnNotice":
-                  return (
-                    <TurnNotice
-                      onBegin={() => {
-                        setSeen((current) => ({ ...current, moment: moment.begins }));
-                        onPlayerIDChange(currentPlayerId);
-                      }}
-                      proposal={G.assembly?.phase === "proposal"}
-                      seat={currentPlayerId}
-                    />
-                  );
-                // Asked from End turn, the card ends the turn and names who leaves in one
-                // go. A turn already committed (a restored game) only waits for the names.
-                case "hunger":
-                  return (
-                    <HungerModal
-                      key={moment.asked ? `ask-${ctx.turn}-${moment.unfed}` : `pending-${ctx.turn}`}
-                      onBack={moment.asked ? () => setHeld(null) : undefined}
-                      onCommit={(leave) => {
-                        if (moment.asked) {
-                          setHeld(null);
-                          events.endTurn();
-                        }
-                        moves.resolveHunger(leave);
-                      }}
-                      unfed={moment.unfed}
-                    />
-                  );
-                case "event":
-                  return <PendingPlayerEventModal />;
-                // The Assembly sits in a modal over the shell. It mounts off engine state;
-                // minimised, it is the dock under the compass. A proposal is private, and
-                // its seat begins it at the turn notice.
-                case "assembly":
-                  return <AssemblySitting sitting={moment.sitting} />;
-                default:
-                  return null;
-              }
-            })()}
-          </main>
+                })()}
+                <ConfirmHost />
+              </HudCanvas>
+            </main>
+          </ConfirmProvider>
         </CodexLinkProvider>
       </TradePickContext.Provider>
     </GameUiProvider>

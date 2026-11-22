@@ -34,7 +34,7 @@
   display: grid;
   gap: 12px;
   width: min(100%, 620px);
-  max-height: calc(100vh - 48px);
+  max-height: calc(var(--vh) - 48px);
   overflow: auto;
   padding: 16px;
   border: 1px solid var(--line);

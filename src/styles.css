@@ -48,5 +48,8 @@
 @import "./styles/frame/toasts.css";
 @import "./styles/frame/trade.css";
 @import "./styles/frame/dock.css";
+/* The Imperator shell's material and primitives: after every frame surface, so a
+   seat's coin restyles the older marks it now draws. */
+@import "./styles/frame/chrome.css";
 @import "./styles/sitting.css";
 @import "./styles/responsive.css";

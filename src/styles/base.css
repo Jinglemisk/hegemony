@@ -2,7 +2,7 @@
    buttons. Every token lives in frame/tokens.css. */
 
 :root {
-  font-size: calc(16px * var(--ui-scale));
+  font-size: 16px;
   color: var(--ink);
   background: var(--bone);
   font-family: var(--f-body);

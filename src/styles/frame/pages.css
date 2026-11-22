@@ -15,19 +15,6 @@
   --held-w: calc(var(--u) * 16); /* 64 */
   --sum-k: calc(var(--u) * 22); /* 88: the overview's label column */
 }
-@media (min-width: 1680px) {
-  .realm,
-  .consult-sheet {
-    --ln: calc(var(--u) * 8); /* 32 */
-    --c-pop: calc(var(--u) * 12);
-    --c-gr: calc(var(--u) * 10);
-    --c-res: calc(var(--u) * 11);
-    --name-w: calc(var(--u) * 28);
-    --count-w: calc(var(--u) * 10);
-    --held-w: calc(var(--u) * 20);
-    --sum-k: calc(var(--u) * 26);
-  }
-}
 .realm-page .cap {
   font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
   color: var(--ink-66);

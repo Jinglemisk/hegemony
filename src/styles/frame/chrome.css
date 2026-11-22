@@ -1,0 +1,451 @@
+/* ============================================================================
+   The Imperator shell's material and primitives (src/components/chrome/):
+   the scaled HUD canvas, panels, heads, bands, drawn controls, sockets, seat
+   coins, the banner, the confirm bar and the motion. Every value is a token
+   (frame/tokens.css); every size of type is a role in type.css.
+   ========================================================================== */
+
+/* ---- the canvas -------------------------------------------------------------
+   The HUD's logical box, (100vw / k) × (100vh / k) design px, scaled by --k from
+   its top-left corner. A transformed box is the containing block of its fixed
+   descendants, so `position: fixed; inset: 0` inside it is the logical screen.
+   It passes the pointer through to the map; each direct child takes it back. */
+.hud-canvas {
+  --vw: calc(100vw / var(--k));
+  --vh: calc(100vh / var(--k));
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--vw);
+  height: var(--vh);
+  transform: scale(var(--k));
+  transform-origin: 0 0;
+  pointer-events: none;
+  z-index: var(--z-lift);
+}
+:where(.hud-canvas, .hud-overlays) > * {
+  pointer-events: auto;
+}
+/* Tooltips and popovers portal here; it draws no box of its own. */
+.hud-overlays {
+  display: contents;
+}
+
+/* ---- panel: parchment or glaze in a cast bronze rule ----------------------- */
+:where(.ch-panel) {
+  position: relative;
+}
+.ch-panel {
+  border-radius: var(--r-panel);
+  color: var(--ink);
+  background: var(--parch);
+  box-shadow: var(--shadow-panel);
+}
+.ch-panel[data-tone="glaze"] {
+  color: var(--glaze-ink);
+  background: var(--glaze);
+}
+/* The rule is drawn over the content's edge, so a band or a scroller meets it cleanly. */
+.ch-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-lift);
+  border-radius: inherit;
+  box-shadow: var(--rule-frame);
+  pointer-events: none;
+}
+/* A bronze meander corner, standing proud of a free corner. */
+.ch-corner {
+  position: absolute;
+  z-index: var(--z-trim);
+  width: var(--sh-corner);
+  height: var(--sh-corner);
+  background: no-repeat 0 0 / 100%;
+  filter: var(--shadow-corner);
+  pointer-events: none;
+}
+.ch-corner[data-at="tl"] {
+  top: calc(-1 * var(--sh-corner-out));
+  left: calc(-1 * var(--sh-corner-out));
+  background-image: url("../../../assets/chrome/corner-tl.webp");
+}
+.ch-corner[data-at="tr"] {
+  top: calc(-1 * var(--sh-corner-out));
+  right: calc(-1 * var(--sh-corner-out));
+  background-image: url("../../../assets/chrome/corner-tr.webp");
+}
+.ch-corner[data-at="bl"] {
+  bottom: calc(-1 * var(--sh-corner-out));
+  left: calc(-1 * var(--sh-corner-out));
+  background-image: url("../../../assets/chrome/corner-bl.webp");
+}
+.ch-corner[data-at="br"] {
+  right: calc(-1 * var(--sh-corner-out));
+  bottom: calc(-1 * var(--sh-corner-out));
+  background-image: url("../../../assets/chrome/corner-br.webp");
+}
+
+/* ---- head and band: glaze with a gilt edge, the meander under it ----------- */
+.ch-head,
+.ch-band {
+  position: relative;
+  display: flex;
+  align-items: center;
+  color: var(--glaze-ink);
+  background: var(--glaze);
+  box-shadow: var(--head-edge);
+}
+.ch-head::after,
+.ch-band::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: calc(-1 * var(--sh-meander-h));
+  left: 0;
+  z-index: var(--z-lift);
+  height: var(--sh-meander-h);
+  background: var(--meander);
+  filter: var(--shadow-meander);
+  pointer-events: none;
+}
+.ch-head {
+  gap: var(--s-3);
+  min-height: var(--s-16);
+  padding: var(--s-2) var(--s-3) var(--s-2) var(--s-4);
+  border-radius: var(--r-panel) var(--r-panel) 0 0;
+}
+.ch-head-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--ic-32);
+  height: var(--ic-32);
+  border-radius: var(--r-round);
+  background: var(--medallion);
+  box-shadow: var(--medallion-rim);
+}
+.ch-head .ch-head-coin {
+  --coin-d: var(--ic-32);
+}
+.ch-head-words {
+  flex: 1;
+  min-width: 0;
+}
+.ch-head-title {
+  margin: 0;
+  overflow: hidden;
+  color: var(--glaze-ink);
+  font-family: var(--f-name);
+  font-weight: 700;
+  letter-spacing: var(--track-name);
+  text-overflow: ellipsis;
+  text-shadow: var(--glaze-ink-shadow);
+  white-space: nowrap;
+}
+.ch-head-sub {
+  margin: 0;
+  overflow: hidden;
+  color: var(--glaze-ink-66);
+  font-family: var(--f-sans);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ch-band {
+  justify-content: space-between;
+  gap: var(--s-2);
+  min-height: var(--s-8);
+  margin-bottom: var(--sh-meander-h);
+  padding: 0 var(--s-3);
+  color: var(--band-ink);
+}
+.ch-band-label,
+.ch-band-end {
+  margin: 0;
+  font-family: var(--f-sans);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ---- controls: lacquer, plaque, knob, close disc, back plaque -------------- */
+.ch-ctl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-width: var(--hit);
+  min-height: var(--hit);
+  margin: 0;
+  padding: var(--s-1) var(--s-4);
+  border: 0;
+  border-radius: var(--r-panel);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform var(--dur-press) var(--ease-out),
+    filter var(--dur-hover) var(--ease-out);
+}
+.ch-ctl:focus-visible {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: var(--rule-2);
+}
+.ch-ctl:hover:not([aria-disabled="true"]) {
+  filter: var(--hover-glow);
+  transform: translateY(-1px);
+}
+.ch-ctl:active:not([aria-disabled="true"]) {
+  filter: var(--press-dim);
+  transform: translateY(1px);
+}
+.ch-lacquer {
+  color: var(--lacquer-ink);
+  background: var(--lacquer);
+  box-shadow: var(--lacquer-rim);
+  text-shadow: var(--ink-shadow);
+}
+.ch-plaque {
+  color: var(--ink);
+  background: var(--plaque);
+  box-shadow: var(--plaque-rim);
+}
+.ch-plaque[aria-pressed="true"] {
+  color: var(--glaze-ink);
+  background: var(--glaze);
+  box-shadow: var(--pressed-rim);
+}
+.ch-knob {
+  width: var(--hit);
+  height: var(--hit);
+  padding: 0;
+  border-radius: var(--r-round);
+  color: var(--bz-dk);
+  background: var(--knob);
+  box-shadow: var(--knob-rim);
+}
+.ch-knob:active:not([aria-disabled="true"]) {
+  box-shadow: var(--knob-press);
+}
+.ch-close {
+  flex: none;
+  letter-spacing: 0;
+}
+.ch-back {
+  flex: none;
+  padding: 0 var(--s-3);
+  color: var(--glaze-ink);
+  background: var(--back);
+  box-shadow: var(--back-rim);
+  font-family: var(--f-name);
+  letter-spacing: var(--track-name);
+  text-transform: none;
+}
+.ch-back:hover {
+  background: var(--back-hover);
+}
+/* Unavailable: hatched, still focusable, its click swallowed in code. */
+.ch-ctl[aria-disabled="true"] {
+  color: var(--ink-66);
+  background: var(--hatch);
+  box-shadow: var(--hatch-rim);
+  text-shadow: none;
+  cursor: default;
+}
+
+/* ---- sockets and meters ----------------------------------------------------- */
+.ch-socket {
+  display: grid;
+  place-items: center;
+  gap: var(--s-1);
+  min-width: var(--hit);
+  min-height: var(--hit);
+  padding: var(--s-2);
+  border: 0;
+  border-radius: var(--r-panel);
+  color: var(--ink);
+  background: var(--socket);
+  box-shadow: var(--socket-rim);
+  font-family: var(--f-sans);
+}
+.ch-socket[data-state="worked"] {
+  background: var(--socket-worked);
+}
+.ch-socket[data-state="open"] {
+  color: var(--ink-66);
+  background: var(--bz-dk-12);
+  box-shadow: var(--socket-open-rim);
+}
+button.ch-socket {
+  cursor: pointer;
+}
+button.ch-socket[data-state="open"]:hover {
+  color: var(--clay-ink);
+  background: var(--socket-open-hover);
+}
+button.ch-socket:focus-visible {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: var(--rule-2);
+}
+/* One socket per place: glaze for a filled place, gold for a worked one. */
+.ch-meter {
+  display: flex;
+  gap: 3px;
+  height: 9px;
+}
+.ch-meter > i {
+  flex: 1;
+  border-radius: 2px;
+  background: var(--bz-dk-12);
+  box-shadow: var(--meter-well);
+}
+.ch-meter > i[data-fill="glaze"] {
+  background: var(--meter-glaze);
+}
+.ch-meter > i[data-fill="gold"] {
+  background: var(--meter-gold);
+}
+
+/* ---- seat coins: the coin struck in the seat's glaze, ringed in bronze ------ */
+.ch-coin {
+  --coin-d: var(--ic-ui);
+  display: inline-block;
+  flex: none;
+  width: var(--coin-d);
+  height: var(--coin-d);
+  border-radius: var(--r-round);
+  box-shadow: var(--coin-rim);
+}
+.ch-coin[data-glaze] {
+  background:
+    var(--coin-art) center / 76% no-repeat,
+    var(--coin-shine),
+    var(--sc);
+}
+.ch-coin[data-glaze="kyanos"] {
+  --sc: var(--seat-kyanos);
+  --coin-art: url("../../../assets/chrome/coin-damon.webp");
+}
+.ch-coin[data-glaze="melas"] {
+  --sc: var(--seat-melas);
+  --coin-art: url("../../../assets/chrome/coin-nikos.webp");
+}
+.ch-coin[data-glaze="porphyra"] {
+  --sc: var(--seat-porphyra);
+  --coin-art: url("../../../assets/chrome/coin-theron.webp");
+}
+.ch-coin[data-glaze="kinnabari"] {
+  --sc: var(--seat-kinnabari);
+  --coin-art: url("../../../assets/chrome/coin-kyros.webp");
+}
+
+/* ---- the banner: a message that drops from the top bar, notched at its ends -- */
+.ch-banner {
+  padding: var(--s-2) var(--s-8);
+  border-radius: var(--rule-2);
+  color: var(--bz-dk);
+  background: var(--parch);
+  box-shadow: var(--rule-frame), var(--shadow-banner);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 50%, 100% 100%, 0 100%, 14px 50%);
+  font-family: var(--f-name);
+  font-weight: 700;
+  letter-spacing: var(--track-name);
+  animation: ch-banner var(--dur-drop) var(--ease-out);
+}
+
+/* ---- the confirm bar: one wide quiet bar over the board's centre ------------ */
+.ch-confirm-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: grid;
+  place-items: center;
+  background: var(--scrim-confirm);
+  pointer-events: auto;
+}
+.ch-confirm {
+  display: grid;
+  grid-template-columns: var(--ic-32) 1fr auto;
+  align-items: center;
+  gap: var(--s-4);
+  width: var(--sh-confirm-w);
+  padding: var(--s-3) var(--s-4);
+}
+.ch-confirm-words {
+  min-width: 0;
+}
+.ch-confirm-q {
+  margin: 0;
+  font-family: var(--f-sans);
+  font-weight: 700;
+}
+.ch-confirm-d {
+  margin: var(--s-1) 0 0;
+  color: var(--ink-66);
+  font-family: var(--f-sans);
+}
+.ch-confirm-acts {
+  display: flex;
+  gap: var(--s-3);
+}
+
+/* ---- motion: a class per movement; durations are tokens, zero under reduced
+   motion. Keyframes move with `translate` and `scale`, so a caller's own
+   `transform` (a centring) is kept. ------------------------------------------- */
+.ch-unroll-x {
+  animation: ch-unroll-x var(--dur-unroll) var(--ease-out);
+}
+.ch-unroll-y {
+  animation: ch-unroll-y var(--dur-unroll) var(--ease-out);
+}
+.ch-drop {
+  animation: ch-drop var(--dur-drop) var(--ease-drop) both;
+}
+.ch-settle {
+  animation: ch-settle var(--dur-settle) var(--ease-out) both;
+}
+/* A panel unrolls out of the screen's left edge … */
+@keyframes ch-unroll-x {
+  from {
+    clip-path: inset(-24px 100% -24px -24px);
+  }
+  to {
+    clip-path: inset(-24px);
+  }
+}
+/* … a drawer unrolls down … */
+@keyframes ch-unroll-y {
+  from {
+    clip-path: inset(-24px -24px 100% -24px);
+  }
+  to {
+    clip-path: inset(-24px);
+  }
+}
+/* … an alarm drops in, landing with a small bounce … */
+@keyframes ch-drop {
+  from {
+    opacity: 0;
+    translate: 0 -26px;
+    scale: 0.7;
+  }
+}
+/* … a card or a dialog settles into place … */
+@keyframes ch-settle {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+    scale: 0.985;
+  }
+}
+/* … and a banner unfurls from the top bar. */
+@keyframes ch-banner {
+  from {
+    opacity: 0;
+    translate: 0 -18px;
+  }
+}

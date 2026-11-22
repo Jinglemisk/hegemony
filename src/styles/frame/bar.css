@@ -9,9 +9,7 @@
   height: var(--bar-h);
   background: var(--bone);
 }
-/* The three groups ride --ui-scale together, as the rest of the chrome does: under
-   1440 the bar's contents shrink in place, each from its own anchor, so the clock,
-   the purse and the consult names keep clear of each other down to 1024. */
+/* The three groups, each from its own anchor. */
 .clock,
 .purse,
 .court {
@@ -20,7 +18,6 @@
   height: var(--hit);
   display: flex;
   align-items: center;
-  transform: scale(var(--ui-scale));
 }
 .clock {
   left: var(--s-4);

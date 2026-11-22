@@ -89,7 +89,7 @@
 /* ---- the card: paper over the table, never a dialog ------------------------- */
 .trade-pop .trade-card {
   width: calc(var(--u) * 112); /* 448 */
-  max-width: calc(100vw - 2 * var(--s-4));
+  max-width: calc(var(--vw) - 2 * var(--s-4));
   border-radius: var(--r-8);
   color: var(--ink);
   background: var(--ivory);

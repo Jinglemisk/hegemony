@@ -1,6 +1,7 @@
 import { useEffect, useEffectEvent, useRef, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import type { AnchoringOptions, VerticalPlacement } from "../../ui/anchoring";
+import { overlayRoot, overlayScale } from "../chrome/canvas";
 import { isElementRef, useAnchoredOverlay } from "./useAnchoredOverlay";
 
 export function Popover({
@@ -63,6 +64,8 @@ export function Popover({
   }, [anchor, dismissOnOutside]);
 
   if (typeof document === "undefined") return null;
+  const root = overlayRoot();
+  const k = overlayScale(root);
 
   return createPortal(
     <div
@@ -85,8 +88,10 @@ export function Popover({
           : isElementRef(anchor)
             ? { opacity: 0 }
             : {
-                left: anchor.left,
-                top: preferredPlacement === "below" ? anchor.bottom + 12 : anchor.top - 12,
+                left: anchor.left / k,
+                top:
+                  (preferredPlacement === "below" ? anchor.bottom : anchor.top) / k +
+                  (preferredPlacement === "below" ? 12 : -12),
                 opacity: 0,
               }
       }
@@ -99,7 +104,7 @@ export function Popover({
       />
       {children}
     </div>,
-    document.body,
+    root,
   );
 }
 

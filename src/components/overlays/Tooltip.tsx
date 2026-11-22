@@ -14,6 +14,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import type { VerticalPlacement } from "../../ui/anchoring";
+import { overlayRoot } from "../chrome/canvas";
 import { useAnchoredOverlay } from "./useAnchoredOverlay";
 
 export function Tooltip({
@@ -147,7 +148,7 @@ export function Tooltip({
             >
               {content}
             </div>,
-            document.body,
+            overlayRoot(),
           )
         : null}
     </>

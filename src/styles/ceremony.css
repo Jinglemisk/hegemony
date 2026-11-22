@@ -97,7 +97,7 @@
 .fateCard {
   position: relative;
   overflow: hidden;
-  width: min(470px, calc(100vw - 34px));
+  width: min(470px, calc(var(--vw) - 34px));
   border-radius: 6px;
   text-align: center;
   background: linear-gradient(180deg, var(--ivory-lit), var(--ivory) 50%, var(--ivory-settled));
@@ -185,7 +185,7 @@
    round toggle; the marked ones take the wound's band and ring. */
 .hungerCard,
 .lossCard {
-  width: min(560px, calc(100vw - var(--s-8)));
+  width: min(560px, calc(var(--vw) - var(--s-8)));
   padding: var(--s-6) var(--s-8);
 }
 
@@ -321,8 +321,8 @@
    rows it puts out of reach, so the trade reads as rows, not arithmetic. */
 .riotSheet {
   display: grid;
-  width: min(960px, calc(100vw - var(--s-8)));
-  max-height: calc(100vh - var(--s-8));
+  width: min(960px, calc(var(--vw) - var(--s-8)));
+  max-height: calc(var(--vh) - var(--s-8));
   overflow-y: auto;
   border-radius: var(--r-8);
   background: var(--ivory);
@@ -600,8 +600,8 @@
    is an inset and the lift is a filter — which follows the chamfered silhouette
    instead of the bounding box. */
 .ceremonyTablet {
-  width: min(560px, calc(100vw - 34px));
-  max-height: min(92vh, 880px);
+  width: min(560px, calc(var(--vw) - 34px));
+  max-height: min(calc(var(--vh) * 0.92), 880px);
   overflow-y: auto;
   padding: 26px 34px;
   text-align: center;
@@ -746,7 +746,7 @@
    ceremony uses. Each seat carries its glaze AND its blazon: a glaze never
    travels alone, least of all on the screen where the four are compared. */
 .ageEnd {
-  width: min(600px, calc(100vw - 34px));
+  width: min(600px, calc(var(--vw) - 34px));
 }
 
 .ageEnd .tabletVoice {

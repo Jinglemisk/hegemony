@@ -32,8 +32,8 @@ img.icon {
   stroke: none;
 }
 
-/* The three sizes, and only these three. They ride --ui-scale through rem like
-   the type roles, so an icon never drifts out of step with the label beside it. */
+/* The three sizes, and only these three, in rem off the fixed 16px root: design px
+   that the HUD canvas scales with everything else. */
 .icon-inline {
   width: 0.875rem; /* 14px @1440 — beside body text */
   height: 0.875rem;

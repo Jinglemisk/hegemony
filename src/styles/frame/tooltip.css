@@ -7,7 +7,7 @@
   z-index: var(--z-tooltip);
   width: max-content;
   max-width: var(--tip-w);
-  max-height: min(440px, calc(100vh - 20px));
+  max-height: min(440px, calc(var(--vh) - 20px));
   overflow: auto;
   padding: var(--s-2) var(--s-3);
   display: grid;
