@@ -101,7 +101,13 @@ export function CornerDock({
 
 /** How the map draws each tile's resource badge: its look, its size, and whether it
  *  fades close in. A display choice, not a map mode, so it sits after the modes. */
-function PlatesMenu({ plates, onPlates }: { plates: Plates; onPlates: (plates: Plates) => void }) {
+export function PlatesMenu({
+  plates,
+  onPlates,
+}: {
+  plates: Plates;
+  onPlates: (plates: Plates) => void;
+}) {
   const [open, setOpen] = useState(false);
   const opener = useRef<HTMLButtonElement>(null);
   return (
@@ -155,7 +161,7 @@ function PlatesMenu({ plates, onPlates }: { plates: Plates; onPlates: (plates: P
  * cut is made in the text rather than by `text-overflow`, so nothing runs on past the
  * line under whatever lies beside it. The Chronicle page keeps every line whole.
  */
-function FittedLine({ text }: { text: string }) {
+export function FittedLine({ text }: { text: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const words = text.split(" ");
   // A search for the most words that fit: `lo` fits (one word always does), `hi` is

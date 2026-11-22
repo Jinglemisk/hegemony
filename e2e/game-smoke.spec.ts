@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
+import { PLAYER_NAMES } from "../src/game/data";
 
 /** Each walk starts once the map has drawn: without a GPU its first frame stalls the
  *  animation frames that End turn's hold runs on. */
@@ -158,10 +159,12 @@ test("one person plays three bots: they answer at once, and the screen stays wit
     );
   });
   await visit(page, "/?dev=trade&seed=42");
-  const seat = page.getByRole("button", { name: /, your seat$/ });
-  const person = (await seat.getAttribute("aria-label"))!.split(",")[0];
+  const person = PLAYER_NAMES["0"];
 
-  await page.getByRole("button", { name: /^Trade: Offer/ }).click();
+  await page
+    .locator(".rd-acts")
+    .getByRole("button", { name: /^Trade/ })
+    .click();
   const compose = page.getByRole("region", { name: "Offer a trade" });
   await compose.getByRole("button", { name: "Add to I give" }).click();
   await compose.getByRole("button", { name: "wood, you hold 8" }).click();
@@ -191,8 +194,8 @@ test("one person plays three bots: they answer at once, and the screen stays wit
   await page.keyboard.down("Enter");
   await page.waitForTimeout(900);
   await page.keyboard.up("Enter");
+  // The screen stays with the person: End turn names the bot that acts.
   await expect(page.getByRole("img", { name: / is acting\.$/ })).not.toHaveAccessibleName(
     `${person} is acting.`,
   );
-  await expect(seat).toHaveAccessibleName(`${person}, your seat`);
 });

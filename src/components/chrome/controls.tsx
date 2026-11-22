@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, MouseEvent } from "react";
+import type { ButtonHTMLAttributes, MouseEvent, Ref } from "react";
 
 /**
  * The shell's drawn controls, never a browser widget. Every one is a real
@@ -10,6 +10,8 @@ import type { ButtonHTMLAttributes, MouseEvent } from "react";
 type ControlProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "disabled"> & {
   /** Unavailable: focusable, hatched, and its click does nothing. */
   disabled?: boolean;
+  /** The button itself, for a popover to anchor to. */
+  ref?: Ref<HTMLButtonElement>;
 };
 
 function Control({

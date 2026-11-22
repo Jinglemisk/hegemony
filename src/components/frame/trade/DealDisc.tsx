@@ -46,6 +46,7 @@ export function DealDisc({ deal, asking, ask }: { deal: Deal; asking: boolean; a
           aria-label={`${title}. ${words}.${asking ? " A short payment waits on your answer." : ""}`}
           className={`alarm-disc deal-disc${asking ? " is-loud" : ""}${deal.endsYear !== null ? " is-ending" : ""}`}
           data-c="deal-disc"
+          data-deal={deal.id}
           onClick={() => setOpen((value) => !value)}
           ref={disc}
           style={{ "--owner": glaze.color } as CSSProperties}

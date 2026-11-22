@@ -1,4 +1,13 @@
-import { Fragment, memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  Fragment,
+  memo,
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { sign } from "../../../ui/frameFormat";
 import type { HegemonyState, PlayerId } from "../../../game/types";
@@ -559,6 +568,15 @@ function LivingMap({
   useLayoutEffect(() => {
     runtime.current?.setMarks({ selected: selectedTileId, focus: focusRing, candidates });
   }, [shape, selectedTileId, focusRing, candidates]);
+
+  // A pick (from the map or the outliner) eases the camera until the place is clear of
+  // the chrome. Not while a mode is armed: its popover is pinned where the tile stands.
+  const revealPick = useEffectEvent((id: string) => {
+    if (!placementActive) runtime.current?.reveal(id);
+  });
+  useEffect(() => {
+    if (selectedTileId) revealPick(selectedTileId);
+  }, [selectedTileId]);
 
   const tabStop =
     (roving && model.tiles.some((tile) => tile.id === roving) ? roving : null) ??

@@ -51,5 +51,7 @@
 /* The Imperator shell's material and primitives: after every frame surface, so a
    seat's coin restyles the older marks it now draws. */
 @import "./styles/frame/chrome.css";
+/* The shell's right side: the dock, the legend and the outliner. */
+@import "./styles/frame/right.css";
 @import "./styles/sitting.css";
 @import "./styles/responsive.css";

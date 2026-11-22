@@ -17,9 +17,7 @@ async function civic(page: Page, option: string) {
 test("buys a development card, then plays one from the hand", async ({ page }) => {
   await visit(page, "/?dev=cards&seed=42");
 
-  // The seat holds a Caravan from an earlier turn: its disc counts one card.
-  await expect(page.getByRole("button", { name: /acting, 1 card, your seat/ })).toBeVisible();
-
+  // The seat holds a Caravan from an earlier turn, which its hand plays below.
   // Buying draws the Foraging on top of the pile: a yield, which lands at once.
   await civic(page, "Buy a card");
   const drawn = page.getByRole("dialog", { name: "Foraging", exact: true });
@@ -37,7 +35,6 @@ test("buys a development card, then plays one from the hand", async ({ page }) =
   await expect(played).toContainText(/\+\d+ wood/i);
   await played.getByRole("button", { name: "Done", exact: true }).click();
   await expect(played).toBeHidden();
-  await expect(page.getByRole("button", { name: /acting, your seat/ })).toBeVisible();
 });
 
 test("a riot takes a held card in place of a pop, the seat's choice", async ({ page }) => {
@@ -63,11 +60,12 @@ test("a riot takes a held card in place of a pop, the seat's choice", async ({ p
 test("a seat gives a held card in trade, picked in private behind a handover", async ({ page }) => {
   // Every seat holds a Caravan and a Raiders from an earlier turn.
   await visit(page, "/?dev=trade-cards&seed=42");
-  const seat = page.getByRole("button", { name: /, your seat$/ });
-  const person = (await seat.getAttribute("aria-label"))!.split(",")[0];
 
   // 2 wood for a card, to the table: the offer names a card, never which.
-  await page.getByRole("button", { name: /^Trade: Offer/ }).click();
+  await page
+    .locator(".rd-acts")
+    .getByRole("button", { name: /^Trade/ })
+    .click();
   const compose = page.getByRole("region", { name: "Offer a trade" });
   await compose.getByRole("button", { name: "Add to I give" }).click();
   await compose.getByRole("button", { name: "wood, you hold 8" }).click();
@@ -91,5 +89,6 @@ test("a seat gives a held card in trade, picked in private behind a handover", a
   await pick.getByRole("button", { name: "Give a card" }).click();
 
   await expect(page.getByText(/gave 2 wood; .* gave 1 card\./i)).toBeVisible();
-  await expect(seat).toHaveAccessibleName(`${person}, acting, 3 cards, your seat`);
+  // The screen came back to the offering seat: its End turn is live again.
+  await expect(page.getByRole("button", { name: /^End turn/ })).toBeVisible();
 });

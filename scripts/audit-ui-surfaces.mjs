@@ -88,10 +88,10 @@ const pickTile = async (p, test) => {
   await p.waitForTimeout(400);
 };
 
-/** The Chronicle rises from the corner dock's line; it stays open until the line is
+/** The Chronicle rises from the dock's line; it stays open until the line is
  *  pressed again. */
 const setChronicle = async (p, open) => {
-  const t = p.locator(".dock-line");
+  const t = p.locator(".rd-line");
   if ((await t.count()) && ((await t.getAttribute("aria-expanded")) === "true") !== open) {
     await t.click().catch(() => {});
     await p.waitForTimeout(250);

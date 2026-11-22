@@ -8,6 +8,7 @@ import { presentUnrestOutcome } from "../../ui/effects";
 import { sign } from "../../ui/frameFormat";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { Prose } from "../AnnotatedText";
+import { SeatCoin } from "../chrome/SeatCoin";
 import { Popover } from "../overlays/Popover";
 import { Tooltip } from "../overlays/Tooltip";
 import { Chips, Ico, Tip, TipBody, TipWarn } from "./parts";
@@ -114,7 +115,7 @@ export function EndTurn({
         style={{ "--owner": acting.color } as CSSProperties}
       >
         <span className="endturn-disc" data-c="disc">
-          <span className="endturn-blazon">{acting.blazon}</span>
+          <SeatCoin aria-hidden="true" className="endturn-coin" seat={actingId} />
         </span>
         <span className="kicker endturn-label" data-c="chip">
           {waitingLabel ?? acting.name}

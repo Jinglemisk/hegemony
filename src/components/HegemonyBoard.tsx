@@ -84,6 +84,8 @@ import type { PickTradePlaces, TradePickRequest } from "./frame/trade/tradePick"
 import { TradePopsPopover } from "./board/map/TradePopsPopover";
 import { Popover } from "./overlays/Popover";
 import { CornerDock } from "./frame/CornerDock";
+import { Dock } from "./frame/dock/Dock";
+import { Outliner } from "./frame/outliner/Outliner";
 import { Seats } from "./frame/Seats";
 import { MAP_MODES } from "./frame/map3d/modes";
 import type { MapMode } from "./frame/map3d/modes";
@@ -221,7 +223,12 @@ export function HegemonyBoard({
   const [consultTab, setConsultTab] = useState<ConsultTab | null>(null);
   // The offer card, composing from the Trade disc: it floats by the disc and holds up
   // no one, so it is not a dialog.
-  const [composing, setComposing] = useState<{ seat: PlayerId; anchor: DOMRect } | null>(null);
+  const [composing, setComposing] = useState<{
+    seat: PlayerId;
+    anchor: DOMRect;
+    /** The rival offered to first: the picked place's owner. */
+    to?: PlayerId;
+  } | null>(null);
   // Deep-links (two-panel.md piece 4): a Codex-term click opens the consult panel's
   // rulebook at a chapter. The nonce lets the same term re-navigate the codex even if
   // the target chapter is unchanged (you clicked away and clicked the link again).
@@ -589,6 +596,12 @@ export function HegemonyBoard({
     canBuild,
     armedVerb: armedVerbOf(mapSelection.selection?.mode),
   };
+  // A luxury good's mooring picked, from its raft or the outliner: its page opens.
+  const pickMooring = (vertexId: string) => {
+    setSelectedTileId(null);
+    setSubject({ kind: "mooring", vertexId });
+    setRealmTab("subject");
+  };
   // Found, from a tile's page: arm the mode and open its popover on that tile.
   const foundHere = (tileId: string) => {
     const element = document.querySelector(`[data-tile-id="${tileId}"]`);
@@ -623,11 +636,7 @@ export function HegemonyBoard({
                       setSubject({ kind: "realm" });
                       setRealmTab("subject");
                     }}
-                    onMooringAction={(vertexId) => {
-                      setSelectedTileId(null);
-                      setSubject({ kind: "mooring", vertexId });
-                      setRealmTab("subject");
-                    }}
+                    onMooringAction={pickMooring}
                     onTileAction={handleTileAction}
                     plates={plates}
                     // A popover pinned to a tile's old spot closes when the map moves;
@@ -732,6 +741,49 @@ export function HegemonyBoard({
                       />
                     </div>
 
+                    {/* The right side: the outliner down the edge, the dock in the corner. */}
+                    <Outliner
+                      onOpenDrawer={(drawer) => setConsultTab(drawer)}
+                      onPickMooring={pickMooring}
+                      onPickTile={handleTileAction}
+                      selectedTileId={selectedTileId}
+                    />
+                    <Dock
+                      mode={mapMode}
+                      onBuyCard={() => {
+                        setActiveModal({ kind: "drawnCard", mark: deckMark(G, viewerId) });
+                        moves.buyDevCard();
+                      }}
+                      onMode={setMapMode}
+                      onPlates={changePlates}
+                      onTrade={(anchor) => {
+                        const picked = G.board.tiles.find((tile) => tile.id === selectedTileId);
+                        const rival = picked?.settlements.find((s) => s.owner !== viewerId)?.owner;
+                        setComposing({ seat: viewerId, anchor, to: rival });
+                      }}
+                      plates={plates}
+                    >
+                      <EndTurn
+                        actingId={currentPlayerId}
+                        canEndTurn={turnOpen}
+                        confirmOpen={dev.endTurnConfirm}
+                        onCalm={moves.civicCalm}
+                        onEndTurn={() =>
+                          // A partner's short payment is answered first, on its deal's card.
+                          dealEndTurnReason(G)
+                            ? setDealAsk((n) => n + 1)
+                            : shortfall
+                              ? setHeld("hungerAsk")
+                              : events.endTurn()
+                        }
+                        ruleset={G.ruleset}
+                        title={turnCommitTitle(turnGate)}
+                        waitingLabel={inAssembly ? "In Assembly" : undefined}
+                        unrest={turnOpen ? turnEndUnrest(G, currentPlayerId) : null}
+                        warning={endTurnWarning(G, currentPlayerId)}
+                      />
+                    </Dock>
+
                     {/* The right column under the consult names: a dropped page, the seats,
                     then the corner dock. Its pages scroll at the window's edge, so the
                     map does not edge-scroll under it. */}
@@ -759,6 +811,7 @@ export function HegemonyBoard({
                         threats={threats.map((threat) => threat.seat)}
                         viewerId={viewerId}
                       />
+                      {/* The old dock and seats, hidden by right.css; removed at integration. */}
                       <CornerDock
                         G={G}
                         mode={mapMode}
@@ -766,25 +819,7 @@ export function HegemonyBoard({
                         onPlates={changePlates}
                         plates={plates}
                       >
-                        <EndTurn
-                          actingId={currentPlayerId}
-                          canEndTurn={turnOpen}
-                          confirmOpen={dev.endTurnConfirm}
-                          onCalm={moves.civicCalm}
-                          onEndTurn={() =>
-                            // A partner's short payment is answered first, on its deal's card.
-                            dealEndTurnReason(G)
-                              ? setDealAsk((n) => n + 1)
-                              : shortfall
-                                ? setHeld("hungerAsk")
-                                : events.endTurn()
-                          }
-                          ruleset={G.ruleset}
-                          title={turnCommitTitle(turnGate)}
-                          waitingLabel={inAssembly ? "In Assembly" : undefined}
-                          unrest={turnOpen ? turnEndUnrest(G, currentPlayerId) : null}
-                          warning={endTurnWarning(G, currentPlayerId)}
-                        />
+                        {null}
                       </CornerDock>
                     </div>
                   </>
@@ -799,7 +834,11 @@ export function HegemonyBoard({
                     onDismiss={() => setComposing(null)}
                     preferredPlacement="above"
                   >
-                    <ComposeCard onClose={() => setComposing(null)} seat={composing.seat} />
+                    <ComposeCard
+                      onClose={() => setComposing(null)}
+                      seat={composing.seat}
+                      to={composing.to}
+                    />
                   </Popover>
                 ) : null}
                 {cardPick ? (

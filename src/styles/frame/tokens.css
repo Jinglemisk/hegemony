@@ -379,6 +379,8 @@
   --glaze-ink: #f8e7c4; /* words on the glaze */
   --glaze-ink-66: rgb(248 231 196 / 66%);
   --glaze-ink-shadow: 0 1px 0 #000, 0 0 10px var(--bz-hi-25);
+  --glaze-hover: rgb(255 248 231 / 9%); /* a row under the pointer on the glaze */
+  --glaze-on: rgb(255 248 231 / 13%); /* the picked row on the glaze */
 
   /* ---- the frame -------------------------------------------------------------- */
   --rule-frame:

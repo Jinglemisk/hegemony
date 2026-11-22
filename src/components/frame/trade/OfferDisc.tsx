@@ -57,6 +57,7 @@ export function OfferDisc({ offer }: { offer: TradeOffer }) {
           aria-label={`${title}, ${sub}. ${terms}`}
           className="alarm-disc offer-disc"
           data-c="offer-disc"
+          data-offer={offer.id}
           onClick={() => setOpen((value) => !value)}
           ref={disc}
           style={{ "--owner": glaze.color, "--ring": ring } as CSSProperties}

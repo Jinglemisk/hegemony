@@ -141,7 +141,11 @@ export const COMMAND_PARITY = {
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   dole: {
-    frontend: interactive("src/components/frame/VerbDiscs.tsx", "src/components/frame/discs.ts"),
+    frontend: interactive(
+      "src/components/frame/VerbDiscs.tsx",
+      "src/components/frame/discs.ts",
+      "src/components/frame/dock/Dock.tsx",
+    ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   pickIdea: {
@@ -177,6 +181,7 @@ export const COMMAND_PARITY = {
     frontend: interactive(
       "src/components/frame/discs.ts",
       "src/components/board/modals/DevCardModal.tsx",
+      "src/components/frame/dock/Dock.tsx",
     ),
     simulation: simulated("master-rule", "planTurn → buyCard"),
   },
@@ -240,6 +245,7 @@ export const COMMAND_PARITY = {
       "src/components/frame/discs.ts",
       "src/components/frame/trade/OfferCard.tsx",
       "src/components/board/assembly/AssemblySitting.tsx",
+      "src/components/frame/dock/Dock.tsx",
     ),
     simulation: simulated("master-rule", "turnOffer, speechOffer and voteOffer"),
   },
