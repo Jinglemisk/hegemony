@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { PLAYER_NAMES } from "../src/game/data";
 
 /** Each walk starts once the map has drawn: without a GPU its first frame stalls the
  *  animation frames that End turn's hold runs on. */
