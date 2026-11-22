@@ -52,7 +52,6 @@
 .ideas-title p {
   margin: 0;
   color: var(--ink-66);
-  font-size: var(--t-16);
   line-height: var(--lh-24);
 }
 .ideas-head {
@@ -68,7 +67,6 @@
 .ideas-close {
   min-height: var(--hit);
   padding: 0 var(--s-4);
-  font-size: var(--t-16);
 }
 /* The Ideas as hand-size cards, six to a row, each with its holder's mark under it. */
 .ideas-list {
@@ -178,7 +176,6 @@
   flex: 1;
   min-width: 0;
   gap: var(--s-4);
-  font-size: var(--t-16);
 }
 .idea-target select {
   min-width: 0;
@@ -197,7 +194,6 @@
   flex: 1;
   min-width: 0;
   color: var(--ink-66);
-  font-size: var(--t-14);
   line-height: var(--lh-20);
 }
 /* The footer's confirm: the primary in the name face, a row tall. It takes no

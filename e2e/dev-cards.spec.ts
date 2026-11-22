@@ -40,6 +40,7 @@ test("buys a development card, then plays one from the hand", async ({ page }) =
   // The hand plays the Caravan, its kind chosen; the table is told what it did.
   await civic(page, "Your hand");
   const hand = page.getByRole("dialog", { name: "Your hand", exact: true });
+  await hand.getByRole("button", { name: "Play Caravan" }).click();
   await expect(hand.getByRole("button", { name: "Play Caravan" })).toBeDisabled();
   await hand.getByRole("option", { name: /^Wood/ }).click();
   await hand.getByRole("button", { name: "Play Caravan" }).click();

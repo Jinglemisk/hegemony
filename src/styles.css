@@ -56,4 +56,7 @@
 @import "./styles/sitting.css";
 /* The top's floating parts, after the sitting: they place its minimised pill. */
 @import "./styles/frame/top.css";
+/* The hand and the moments in the Imperator frame: after the sheets they re-skin. */
+@import "./styles/frame/hand.css";
+@import "./styles/frame/moments.css";
 @import "./styles/responsive.css";

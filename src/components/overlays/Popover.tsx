@@ -8,6 +8,7 @@ export function Popover({
   align,
   anchor,
   ariaLabel,
+  centre = false,
   children,
   className,
   dismissOnOutside = false,
@@ -19,6 +20,9 @@ export function Popover({
   /** A spot on the map, or the control that opens the popover. */
   anchor: DOMRect | RefObject<HTMLElement | null>;
   ariaLabel: string;
+  /** Centre it on the board instead of beside the anchor (a card that holds up no one,
+   *  like the trade composer); the anchor only takes focus back. */
+  centre?: boolean;
   children: ReactNode;
   className?: string;
   /** A press outside the popover and its control closes it. */
@@ -29,7 +33,7 @@ export function Popover({
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const position = useAnchoredOverlay(
-    anchor,
+    centre ? null : anchor,
     ref,
     { align, preferredPlacement, gap: 12 },
     measureKey,
@@ -71,7 +75,11 @@ export function Popover({
     <div
       aria-label={ariaLabel}
       aria-modal="false"
-      className={["sharedPopover", position ? `placement-${position.placement}` : "", className]
+      className={[
+        "sharedPopover",
+        centre ? "is-centre" : position ? `placement-${position.placement}` : "",
+        className,
+      ]
         .filter(Boolean)
         .join(" ")}
       onKeyDown={(event) => {
@@ -83,25 +91,29 @@ export function Popover({
       ref={ref}
       role="dialog"
       style={
-        position
-          ? { left: position.left, top: position.top, opacity: 1 }
-          : isElementRef(anchor)
-            ? { opacity: 0 }
-            : {
-                left: anchor.left / k,
-                top:
-                  (preferredPlacement === "below" ? anchor.bottom : anchor.top) / k +
-                  (preferredPlacement === "below" ? 12 : -12),
-                opacity: 0,
-              }
+        centre
+          ? undefined
+          : position
+            ? { left: position.left, top: position.top, opacity: 1 }
+            : isElementRef(anchor)
+              ? { opacity: 0 }
+              : {
+                  left: anchor.left / k,
+                  top:
+                    (preferredPlacement === "below" ? anchor.bottom : anchor.top) / k +
+                    (preferredPlacement === "below" ? 12 : -12),
+                  opacity: 0,
+                }
       }
       tabIndex={-1}
     >
-      <span
-        aria-hidden="true"
-        className="foundColonyArrow sharedPopoverArrow"
-        style={{ left: position ? position.arrowLeft : "50%" }}
-      />
+      {centre ? null : (
+        <span
+          aria-hidden="true"
+          className="foundColonyArrow sharedPopoverArrow"
+          style={{ left: position ? position.arrowLeft : "50%" }}
+        />
+      )}
       {children}
     </div>,
     root,

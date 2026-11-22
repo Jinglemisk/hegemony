@@ -193,6 +193,7 @@ export const COMMAND_PARITY = {
     frontend: interactive(
       "src/components/frame/discs.ts",
       "src/components/board/modals/DevCardModal.tsx",
+      "src/components/frame/hand/HandTray.tsx",
     ),
     simulation: simulated("master-rule", "planTurn → playCard and playBuilder"),
   },

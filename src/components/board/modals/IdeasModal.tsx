@@ -263,6 +263,7 @@ export function IdeasModal({
     <ModalShell
       backdropClassName="ideas-backdrop ideas-setup"
       className="ideas-modal"
+      framed={false}
       labelledBy="ideas-heading"
       onDismiss={draftDone ? onClose : undefined}
     >
