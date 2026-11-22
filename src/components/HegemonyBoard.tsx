@@ -85,6 +85,7 @@ import { TradePopsPopover } from "./board/map/TradePopsPopover";
 import { Popover } from "./overlays/Popover";
 import { CornerDock } from "./frame/CornerDock";
 import { Seats } from "./frame/Seats";
+import { LeftShell } from "./left/LeftShell";
 import { MAP_MODES } from "./frame/map3d/modes";
 import type { MapMode } from "./frame/map3d/modes";
 import { loadPlates, savePlates } from "./frame/map3d/plates";
@@ -221,7 +222,12 @@ export function HegemonyBoard({
   const [consultTab, setConsultTab] = useState<ConsultTab | null>(null);
   // The offer card, composing from the Trade disc: it floats by the disc and holds up
   // no one, so it is not a dialog.
-  const [composing, setComposing] = useState<{ seat: PlayerId; anchor: DOMRect } | null>(null);
+  // `partner`: the seat it starts addressed to (a rival's place panel), else the table.
+  const [composing, setComposing] = useState<{
+    seat: PlayerId;
+    anchor: DOMRect;
+    partner?: PlayerId | null;
+  } | null>(null);
   // Deep-links (two-panel.md piece 4): a Codex-term click opens the consult panel's
   // rulebook at a chapter. The nonce lets the same term re-navigate the codex even if
   // the target chapter is unchanged (you clicked away and clicked the link again).
@@ -732,6 +738,33 @@ export function HegemonyBoard({
                       />
                     </div>
 
+                    {/* The left window: the sidebar's drawers and the place panel. */}
+                    <LeftShell
+                      actions={{
+                        onFound: foundHere,
+                        onMoveOut: (tileId) =>
+                          armSelection({ kind: "movePops", sourceTileId: tileId }),
+                        onBuild: requestBuildBuilding,
+                        onOpenHand: () => setActiveModal({ kind: "hand" }),
+                        onBuyCard: () => {
+                          setActiveModal({ kind: "drawnCard", mark: deckMark(G, viewerId) });
+                          moves.buyDevCard();
+                        },
+                        onCompose: (partner, anchor) =>
+                          setComposing({ seat: viewerId, anchor, partner }),
+                        onIdeasModal: () => setActiveModal({ kind: "ideas" }),
+                      }}
+                      income={projectedIncome}
+                      mapArmed={Boolean(mapSelection.selection)}
+                      onPick={(next) => {
+                        setSubject(next);
+                        setSelectedTileId(next.kind === "tile" ? next.tileId : null);
+                        setRealmTab("subject");
+                      }}
+                      placeable={!isSetup}
+                      subject={subject}
+                    />
+
                     {/* The right column under the consult names: a dropped page, the seats,
                     then the corner dock. Its pages scroll at the window's edge, so the
                     map does not edge-scroll under it. */}
@@ -799,7 +832,12 @@ export function HegemonyBoard({
                     onDismiss={() => setComposing(null)}
                     preferredPlacement="above"
                   >
-                    <ComposeCard onClose={() => setComposing(null)} seat={composing.seat} />
+                    <ComposeCard
+                      key={composing.partner ?? "table"}
+                      onClose={() => setComposing(null)}
+                      partner={composing.partner}
+                      seat={composing.seat}
+                    />
                   </Popover>
                 ) : null}
                 {cardPick ? (

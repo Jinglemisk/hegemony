@@ -1,0 +1,889 @@
+/* ============================================================================
+   The left window (src/components/left/): the sidebar's column of drawers, the
+   drawers, and the place panel with what opens beside it. One left window at a
+   time; every box keeps its size whatever it holds, and its body scrolls. Sizes
+   are type roles (type.css), values tokens (tokens.css).
+   ========================================================================== */
+
+/* ---- what this replaces: hidden, removed at integration ---------------------- */
+/* replaced by the left window (Sidebar, Drawer, PlacePanel); removed at integration */
+.frame .realm {
+  display: none;
+}
+/* Victory and Agora are drawers now (src/components/left/); removed at integration */
+.consult-btn[aria-label="Victory"],
+.consult-btn[aria-label="Agora"] {
+  display: none;
+}
+/* The map's question and its compass stand clear of the sidebar. The compass draws
+   with the map, at the screen's own resolution, so its offset is design px times --k. */
+.frame .map-caption {
+  left: calc(var(--sh-side-w) + var(--s-4));
+}
+.frame .lm-compass-anchor {
+  top: calc((var(--sh-top-h) + var(--s-3)) * var(--k));
+  left: calc((var(--sh-side-w) + var(--s-3)) * var(--k));
+}
+
+/* ---- the sidebar: a Greek column under the top bar --------------------------- */
+.lw-side {
+  position: fixed;
+  top: var(--sh-top-h);
+  bottom: 0;
+  left: 0;
+  z-index: var(--z-bar);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-1);
+  box-sizing: border-box;
+  width: var(--sh-side-w);
+  padding: var(--col-top) var(--s-3) 0 var(--s-1);
+  background: var(--col-capital), var(--col-base), var(--col-flutes), var(--ink);
+  box-shadow: var(--col-shadow);
+}
+/* The key pattern down the shaft's right edge. */
+.lw-side::after {
+  content: "";
+  position: absolute;
+  top: 28px;
+  right: 0;
+  bottom: 18px;
+  width: 9px;
+  background: var(--col-key);
+  pointer-events: none;
+}
+.lw-side-tip {
+  display: block;
+}
+.lw-side-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--col-btn-d);
+  height: var(--col-btn-d);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-8);
+  background: var(--col-btn);
+  box-shadow: var(--col-btn-rim);
+  cursor: pointer;
+  transition:
+    transform var(--dur-press) var(--ease-out),
+    box-shadow var(--dur-hover) var(--ease-out);
+}
+.lw-side-btn:hover {
+  background: var(--ivory);
+  box-shadow: var(--col-btn-hover-rim);
+}
+.lw-side-btn:focus-visible {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: var(--rule-2);
+}
+.lw-side-btn[aria-pressed="true"] {
+  background: var(--ivory);
+  box-shadow: var(--col-btn-on-rim);
+}
+/* The open drawer's button points into it. */
+.lw-side-btn[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 2px);
+  border: var(--col-pointer) solid transparent;
+  border-left-color: var(--ochre);
+  translate: 0 -50%;
+}
+.lw-side-sep {
+  display: block;
+  flex: none;
+  width: var(--col-btn-d);
+  height: var(--col-sep-h);
+  background: var(--col-anthemion);
+}
+
+/* ---- a drawer: full height beside the sidebar -------------------------------- */
+.lw-drawer {
+  position: fixed;
+  top: var(--sh-top-h);
+  bottom: 0;
+  left: var(--sh-side-w);
+  z-index: var(--z-bar);
+  display: flex;
+  flex-direction: column;
+  width: var(--sh-drawer-w);
+  border-radius: 0 var(--r-panel) var(--r-panel) 0;
+}
+.lw-drawer > .ch-head {
+  gap: var(--s-2);
+  padding-left: var(--s-3);
+  border-radius: 0 var(--r-panel) 0 0;
+}
+.lw-tabs {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  gap: var(--s-2);
+  padding: var(--s-4) var(--s-3) var(--s-2);
+  border-bottom: var(--rule) solid var(--line);
+}
+.lw-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: var(--hit);
+  padding: var(--s-2) var(--s-1) 6px;
+  border: 0;
+  border-radius: var(--r-panel);
+  color: var(--ink);
+  background: var(--plaque);
+  box-shadow: var(--plaque-rim);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.lw-tab:focus-visible {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: var(--rule-2);
+}
+.lw-tab[aria-selected="true"] {
+  color: var(--glaze-ink);
+  background: var(--glaze);
+  box-shadow: var(--pressed-rim);
+}
+.lw-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--s-3) 14px var(--s-4);
+  scrollbar-color: var(--bz) transparent;
+  scrollbar-width: thin;
+}
+/* A band runs the drawer's full width, flush with its rule. */
+.lw-body .ch-band,
+.pp-body .ch-band {
+  margin: var(--s-4) -14px calc(var(--s-2) + var(--sh-meander-h));
+}
+.lw-body > .ch-band:first-child {
+  margin-top: 0;
+}
+/* The foot line: the sentence of the tile last pointed at, which stays. */
+.lw-foot {
+  display: -webkit-box;
+  flex: none;
+  height: var(--lw-foot-h);
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: var(--s-2) 14px;
+  border-radius: 0 0 var(--r-panel) 0;
+  color: var(--glaze-ink);
+  background: var(--glaze);
+  box-shadow: var(--head-edge);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.lw-foot b {
+  margin-right: var(--s-1);
+}
+.lw-foot-idle {
+  color: var(--glaze-ink-66);
+}
+
+/* ---- tiles, rows and the rest of a drawer's furniture ------------------------ */
+.lw-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-2);
+}
+.lw-tip {
+  display: block;
+  min-width: 0;
+}
+.lw-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-1);
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-height: 88px;
+  padding: var(--s-2) var(--s-1) 6px;
+  border: 0;
+  border-radius: var(--r-panel);
+  color: var(--ink);
+  background: var(--tile-face);
+  box-shadow: var(--tile-rim);
+  text-align: center;
+  overflow-wrap: break-word;
+}
+.lw-tile.is-press {
+  cursor: pointer;
+  transition:
+    transform var(--dur-press) var(--ease-out),
+    box-shadow var(--dur-hover) var(--ease-out);
+}
+.lw-tile.is-press:hover:not([aria-disabled="true"]) {
+  box-shadow: var(--tile-hover-rim);
+  transform: translateY(-1px);
+}
+.lw-tile.is-press:focus-visible {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: var(--rule-2);
+}
+.lw-tile.is-lit,
+.lw-row.is-lit,
+.lw-warn.is-lit,
+.lw-next.is-lit {
+  box-shadow: var(--tile-lit), var(--tile-rim);
+}
+.lw-tile[aria-disabled="true"] {
+  cursor: default;
+}
+.lw-tile.is-yours {
+  background: var(--tile-yours);
+  box-shadow:
+    inset 0 0 0 2px var(--clay),
+    var(--tile-rim);
+}
+.lw-tile.is-taken > .ico {
+  opacity: var(--dim);
+}
+.lw-tile-v {
+  font-family: var(--f-name);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+/* A place's name keeps to one line; its tooltip and foot line carry it whole. */
+.lw-tile.is-place .lw-tile-v {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lw-tile-k {
+  color: var(--ink-66);
+  font-family: var(--f-sans);
+  font-weight: 700;
+}
+.lw-tile.is-idea .lw-tile-k,
+.lw-tile.is-stele .lw-tile-k {
+  color: var(--ink);
+  font-family: var(--f-name);
+}
+.lw-tile-k.is-free {
+  color: var(--pos);
+}
+.lw-tile-coin {
+  margin-top: auto;
+}
+.lw-tile .price {
+  margin-top: auto;
+}
+.lw-warn {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: var(--s-2) 0;
+  padding: 6px var(--s-2);
+  border-radius: var(--r-panel);
+  background: var(--tile-warn);
+}
+.lw-warn-end {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+  font-family: var(--f-sans);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.lw-center {
+  display: flex;
+  justify-content: center;
+  margin: var(--s-2) 0;
+}
+.lw-none {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  margin: var(--s-1) 0;
+  color: var(--ink-66);
+}
+.lw-quiet {
+  color: var(--ink-66);
+}
+.lw-why {
+  margin: 0;
+  color: var(--clay-ink);
+  text-align: center;
+}
+
+/* A row a place (Cities), an offer, a deal: two lines. */
+.lw-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+.lw-row {
+  display: grid;
+  grid-template-rows: auto auto;
+  grid-template-columns: var(--ic-32) minmax(0, 1fr);
+  align-items: center;
+  gap: 2px var(--s-2);
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--s-2) 10px var(--s-2) var(--s-2);
+  border: 0;
+  border-radius: var(--r-panel);
+  color: var(--ink);
+  background: var(--tile-face);
+  box-shadow: var(--tile-rim);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform var(--dur-press) var(--ease-out),
+    box-shadow var(--dur-hover) var(--ease-out);
+}
+.lw-row:hover {
+  box-shadow: var(--tile-hover-rim);
+  transform: translateY(-1px);
+}
+.lw-row:focus-visible {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: var(--rule-2);
+}
+.lw-row[data-tone="warn"] {
+  box-shadow:
+    inset 4px 0 0 var(--neg),
+    var(--tile-rim);
+}
+.lw-row[data-tone="good"] {
+  box-shadow:
+    inset 4px 0 0 var(--pos),
+    var(--tile-rim);
+}
+.lw-row > .ico,
+.lw-row > .ch-coin {
+  grid-row: 1 / 3;
+}
+.lw-row-a,
+.lw-row-b {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  min-width: 0;
+}
+.lw-row-name {
+  overflow: hidden;
+  font-family: var(--f-name);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lw-row-next {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink-66);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lw-row-n {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--f-sans);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* People: three class columns, the pips, where they live, the net. */
+.lw-classes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-2);
+}
+.lw-tile.is-class {
+  min-height: 196px;
+}
+.lw-class-y {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  min-height: 40px;
+}
+.lw-class-y .chips {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.lw-rung {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  min-height: var(--ic-24);
+  padding-top: var(--s-1);
+  border-top: var(--rule) solid var(--line);
+}
+.lw-pips {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+}
+.lw-pips i {
+  width: var(--ic-16);
+  height: var(--ic-16);
+  border-radius: var(--r-round);
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 2px var(--bz);
+}
+.lw-pips i[data-used] {
+  background: var(--ochre);
+}
+.lw-where {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--s-1);
+}
+.lw-where .lw-tile {
+  min-height: 0;
+  padding: var(--s-1) 0;
+}
+.lw-net .chips {
+  gap: var(--s-3);
+}
+
+/* Agora: the next sitting, the stelae side by side, the orators' grid. */
+.lw-next {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 10px var(--s-3);
+  border-radius: var(--r-panel);
+  background: var(--tile-face);
+  box-shadow: var(--tile-rim);
+}
+.lw-next-when {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.lw-next-when b {
+  font-family: var(--f-sans);
+  font-weight: 700;
+}
+.lw-next-votes {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 0 6px;
+  margin-left: auto;
+  padding-left: var(--s-3);
+  border-left: var(--rule) solid var(--line);
+}
+.lw-next-votes > .ico {
+  grid-row: 1 / 3;
+}
+.lw-stelae {
+  display: grid;
+  gap: 6px;
+}
+.lw-tile.is-stele {
+  min-height: 112px;
+  padding-inline: 2px;
+  border-radius: var(--r-8) var(--r-8) var(--r-panel) var(--r-panel);
+}
+.lw-tile.is-stele.is-empty {
+  background: none;
+  box-shadow: none;
+  outline: var(--rule-2) dashed var(--ink-30);
+  outline-offset: calc(-1 * var(--rule-2));
+}
+.lw-tile.is-stele.is-empty > .ico {
+  opacity: 0.3;
+}
+.lw-tile.is-stele.is-empty .lw-tile-k {
+  color: var(--ink-66);
+  font-family: var(--f-sans);
+}
+.lw-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.lw-table thead th {
+  padding: 0 0 6px;
+}
+.lw-table th[scope="row"] {
+  padding: 6px 4px 6px 0;
+  font-family: var(--f-name);
+  font-weight: 700;
+  letter-spacing: var(--track-name);
+  text-align: left;
+}
+.lw-table th[scope="row"] .ico {
+  display: inline-block;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.lw-table td {
+  padding: 6px 0;
+  border-top: var(--rule) solid var(--line);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  text-align: center;
+}
+.lw-table th[scope="row"] {
+  border-top: var(--rule) solid var(--line);
+}
+.lw-table td[data-held] {
+  color: var(--clay-ink);
+  box-shadow: inset 0 -3px 0 var(--clay);
+}
+.lw-table tr.is-lit {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: calc(-1 * var(--rule-2));
+}
+.lw-table tr:focus-visible {
+  outline: var(--rule-2) solid var(--ochre);
+}
+
+/* ---- the place panel: 604×404 out of the sidebar, at the bottom-left ---------- */
+.pp {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: var(--z-bar);
+  display: flex;
+  flex-direction: column;
+  width: var(--sh-place-w);
+  height: var(--sh-place-h);
+  border-radius: 0 var(--r-panel) 0 0;
+}
+/* Its icon stands under the sidebar's buttons, its head continuing the shaft's ink. */
+.pp > .ch-head {
+  padding-left: var(--s-4);
+  border-radius: 0 var(--r-panel) 0 0;
+}
+.ch-head-coinbtn {
+  display: grid;
+  flex: none;
+  place-items: center;
+  min-width: var(--hit);
+  min-height: var(--hit);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-round);
+  background: none;
+  cursor: pointer;
+}
+.ch-head-coinbtn:focus-visible {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: var(--rule-2);
+}
+.ch-head-coinbtn:hover .ch-coin {
+  filter: var(--hover-glow);
+}
+.pp-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-height: 0;
+  overflow: auto;
+  padding: var(--s-4) var(--s-4) var(--s-2);
+  scrollbar-color: var(--bz) transparent;
+  scrollbar-width: thin;
+}
+.pp-foot {
+  display: flex;
+  flex: none;
+  gap: var(--s-3);
+  box-sizing: border-box;
+  height: 80px;
+  padding: 10px var(--s-4) var(--s-3);
+  border-top: var(--rule) solid var(--line);
+  background: var(--pp-foot-wash);
+}
+.pp-k {
+  margin: 0;
+  color: var(--ink-66);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+.pp-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-4);
+}
+.pp-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.pp-v {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 6px;
+  font-family: var(--f-name);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.pp-v small {
+  color: var(--ink-66);
+  font-family: var(--f-sans);
+  font-weight: 600;
+}
+.pp-makes .chips {
+  flex-wrap: wrap;
+}
+.pp-two {
+  display: grid;
+  grid-template-columns: 252px minmax(0, 1fr);
+  gap: var(--s-4);
+}
+.pp-sec {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.pp-slots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.pp-slots .ch-socket {
+  height: 56px;
+  min-width: 0;
+  padding: var(--s-1) 2px;
+  gap: 2px;
+  align-content: center;
+  overflow: hidden;
+}
+.pp-slots .ch-socket > span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pp-classes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pp-class {
+  display: grid;
+  grid-template-rows: auto auto;
+  grid-template-columns: var(--ic-32) minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--s-2);
+}
+.pp-class > .ico {
+  grid-row: 1 / 3;
+}
+.pp-class-n {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.pp-class-n b {
+  font-family: var(--f-name);
+  font-weight: 700;
+}
+.pp-class-y {
+  grid-row: 2;
+  grid-column: 2;
+  min-width: 0;
+}
+.pp-knobs {
+  display: flex;
+  grid-row: 1 / 3;
+  grid-column: 3;
+  gap: var(--s-1);
+}
+.ch-knob.is-short[aria-disabled="true"] {
+  color: var(--clay-ink);
+}
+.pp-note {
+  margin: 0;
+  color: var(--ink-66);
+}
+.pp-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pp-facts li {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.pp-lore,
+.pp-lore .lore {
+  margin: 0;
+  font-family: var(--f-body);
+  font-style: italic;
+}
+.pp-lore .lore-rule {
+  margin: var(--s-2) 0 0;
+  color: var(--ink-66);
+  font-style: normal;
+}
+/* A footer act: its name and price, and under it the engine's reason. */
+.pp-act-tip {
+  display: block;
+  flex: 1 1 0;
+  min-width: 0;
+}
+.pp-act.ch-ctl {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+  padding: 6px 10px;
+  letter-spacing: 0;
+  text-align: left;
+  text-transform: none;
+  white-space: normal;
+}
+.pp-foot > .pp-act.ch-ctl {
+  flex: 1;
+}
+.pp-act-n {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+.pp-act-why {
+  font-weight: 600;
+}
+.pp-act[aria-disabled="true"] .pp-act-why {
+  color: var(--clay-ink);
+}
+
+/* ---- beside the place panel, above the hand's row ---------------------------- */
+.pp-pop {
+  position: fixed;
+  bottom: var(--pp-pop-lift);
+  left: calc(var(--sh-place-w) + var(--s-2));
+  z-index: var(--z-bar);
+  display: flex;
+  flex-direction: column;
+  width: var(--pp-pop-w);
+}
+.pp-pop.is-grow {
+  height: 252px;
+}
+.pp-pop.is-build {
+  height: 476px;
+}
+.pp-pop.is-seat {
+  width: 360px;
+  height: var(--sh-place-h);
+}
+.pp-pop-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--s-2) 0;
+}
+.pp-opt-tip {
+  display: block;
+}
+.pp-opt {
+  display: grid;
+  grid-template-rows: auto auto;
+  grid-template-columns: var(--ic-32) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2px 10px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 52px;
+  padding: var(--s-2) 14px;
+  border: 0;
+  border-top: var(--rule) solid var(--line);
+  color: var(--ink);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.pp-opt-tip:first-child .pp-opt,
+.pp-pop-body > .pp-opt:first-child {
+  border-top: 0;
+}
+.pp-opt:hover:not([aria-disabled="true"]) {
+  background: var(--socket-open-hover);
+}
+.pp-opt:focus-visible {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: calc(-1 * var(--rule-2));
+}
+.pp-opt[aria-disabled="true"] {
+  cursor: default;
+}
+.pp-opt[aria-disabled="true"] > .ico {
+  opacity: var(--dim);
+}
+.pp-opt > .ico {
+  grid-row: 1 / 3;
+}
+.pp-opt-n {
+  font-family: var(--f-sans);
+  font-weight: 700;
+}
+.pp-opt-line {
+  grid-column: 2 / 4;
+  color: var(--ink-66);
+}
+.pp-opt-line.is-why {
+  color: var(--clay-ink);
+}
+.pp-seat {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-height: 0;
+  margin: 0;
+  overflow: auto;
+  padding: var(--s-4) var(--s-4) var(--s-2);
+}
+.pp-seat > div {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--s-3);
+}
+.pp-seat dd {
+  margin: 0;
+}
+.pp-pop-foot {
+  display: flex;
+  flex: none;
+  padding: 10px var(--s-4) var(--s-3);
+  border-top: var(--rule) solid var(--line);
+  background: var(--pp-foot-wash);
+}
+.pp-pop-foot > * {
+  flex: 1;
+}

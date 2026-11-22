@@ -560,6 +560,13 @@ function LivingMap({
     runtime.current?.setMarks({ selected: selectedTileId, focus: focusRing, candidates });
   }, [shape, selectedTileId, focusRing, candidates]);
 
+  // A pick eases its tile clear of the chrome that opens for it (the place panel, the
+  // sidebar: anything marked `data-exclude`). Not while placing: a popover is pinned
+  // to the tile where it stands.
+  useEffect(() => {
+    if (selectedTileId && !placementActive) runtime.current?.reveal(selectedTileId);
+  }, [selectedTileId, placementActive]);
+
   const tabStop =
     (roving && model.tiles.some((tile) => tile.id === roving) ? roving : null) ??
     selectedTileId ??

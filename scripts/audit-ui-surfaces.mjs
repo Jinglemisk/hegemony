@@ -25,9 +25,18 @@ export const SIZES = [
 ];
 
 // ── surfaces ─────────────────────────────────────────────────────────────────
-// The realm sheet's pages (tabs) and the bar's consult pages (toggle buttons).
-const LEFT = ["Cities", "Ladder", "Build"];
-const RIGHT = ["Codex", "Victory", "Agora"];
+// The sidebar's drawers (Realm's tabs among them) and the bar's consult pages.
+const LEFT = [
+  ["Realm", null],
+  ["Realm", "Cities"],
+  ["Realm", "People"],
+  ["Ideas", null],
+  ["Agora", null],
+  ["Trade", null],
+  ["Victory", null],
+  ["Cards", null],
+];
+const RIGHT = ["Codex"];
 
 const dismissDialogs = async (p) => {
   for (let i = 0; i < 4; i += 1) {
@@ -44,7 +53,21 @@ const dismissDialogs = async (p) => {
   }
 };
 
-const realmTab = (p, tab) => p.locator(".realm-tabs").getByRole("tab", { name: tab, exact: true });
+const sidebar = (p, name) =>
+  p.getByRole("navigation", { name: "Drawers" }).getByRole("button", { name, exact: true });
+/** Open a drawer from the sidebar (a pressed button stays open), then a tab in it. */
+const openDrawer = async (p, name, tab) => {
+  const b = sidebar(p, name);
+  if ((await b.count()) && (await b.getAttribute("aria-pressed")) !== "true") {
+    await b.click().catch(() => {});
+    await p.waitForTimeout(350);
+  }
+  if (tab) {
+    const t = p.locator(".lw-tabs").getByRole("tab", { name: tab, exact: true });
+    if (await t.count()) await t.click().catch(() => {});
+  }
+  await p.waitForTimeout(400);
+};
 const consultButton = (p, tab) => p.locator(`.consult-btn[aria-label="${tab}"]`).first();
 const verb = (p, name) => p.locator(`.verb-btn[aria-label^="${name}"]`).first();
 
@@ -115,25 +138,14 @@ export const SURFACES = [
     },
   },
   { name: "table", go: async (p) => dismissDialogs(p) },
-  {
-    name: "tab-subject",
-    go: async (p) => {
-      const t = p.locator(".realm-tab.is-subject").first();
-      if (await t.count()) await t.click().catch(() => {});
-      await p.waitForTimeout(400);
-    },
-  },
-  ...LEFT.map((tab) => ({
-    name: `tab-${tab.toLowerCase()}`,
-    go: async (p) => {
-      const t = realmTab(p, tab);
-      if (await t.count()) await t.click().catch(() => {});
-      await p.waitForTimeout(500);
-    },
+  ...LEFT.map(([drawer, tab]) => ({
+    name: `drawer-${(tab ?? drawer).toLowerCase()}`,
+    go: (p) => openDrawer(p, drawer, tab),
   })),
   {
     name: "tab-chronicle",
     go: async (p) => {
+      await p.keyboard.press("Escape");
       await setChronicle(p, true);
       await p.waitForTimeout(250);
     },
@@ -215,7 +227,17 @@ export const SURFACES = [
   {
     name: "card-drawn",
     go: async (p) => {
-      await pressVerb(p, "Civic", ["Buy a card"]);
+      await openDrawer(p, "Cards", null);
+      const buy = p.locator(".lw-drawer").getByRole("button", { name: /^Buy a card/ });
+      if ((await buy.count()) && (await buy.getAttribute("aria-disabled")) !== "true") {
+        await buy.click().catch(() => {});
+        await p.waitForTimeout(300);
+        await p
+          .getByRole("alertdialog")
+          .getByRole("button", { name: "Buy a card" })
+          .click()
+          .catch(() => {});
+      }
       await p.waitForTimeout(1000);
     },
     after: async (p) => {
@@ -225,6 +247,7 @@ export const SURFACES = [
         .getByRole("button", { name: /keep it|take the/i })
         .first();
       if (await done.count()) await done.click().catch(() => {});
+      await p.keyboard.press("Escape");
       await p.waitForTimeout(400);
     },
   },
@@ -267,7 +290,7 @@ export const SURFACES = [
     },
   },
   {
-    // The realm's last tab shows whatever the map last picked. These start from
+    // The place panel shows whatever the map last picked. These start from
     // their own `goto` because they run after the Assembly surfaces and would
     // inherit their scene otherwise.
     name: "pick-rival",
@@ -291,9 +314,23 @@ export const SURFACES = [
     },
   },
   {
+    name: "pick-seat-card",
+    go: async (p) => {
+      await pickTile(p, (plate) => plate && !["PHLIOUS", "NEMEA"].includes(plate));
+      const coin = p.locator(".pp .ch-head-coinbtn");
+      if (await coin.count()) await coin.click().catch(() => {});
+      await p.waitForTimeout(400);
+    },
+    after: async (p) => {
+      await p.keyboard.press("Escape");
+      await p.waitForTimeout(300);
+    },
+  },
+  {
+    // The place panel closes, as a click on the sea closes it.
     name: "pick-sea",
     go: async (p) => {
-      await p.mouse.click(60, 300);
+      await p.keyboard.press("Escape");
       await p.waitForTimeout(400);
     },
   },

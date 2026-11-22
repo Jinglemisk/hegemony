@@ -415,12 +415,21 @@ function CardHead({
 }
 
 /** Compose an offer for `seat`: the seats it goes to, none meaning the table, and the
- *  two sides. Pops it trades are placed on the map as it offers. */
-export function ComposeCard({ seat, onClose }: { seat: PlayerId; onClose: () => void }) {
+ *  two sides. Pops it trades are placed on the map as it offers. `partner` starts it
+ *  addressed to that seat alone (a rival's place panel offers them a trade). */
+export function ComposeCard({
+  seat,
+  partner,
+  onClose,
+}: {
+  seat: PlayerId;
+  partner?: PlayerId | null;
+  onClose: () => void;
+}) {
   const { G, moves } = useGameUi();
   const pick = useTradePick();
   const rivals = PLAYER_IDS.filter((id) => id !== seat);
-  const [to, setTo] = useState<PlayerId[]>([]);
+  const [to, setTo] = useState<PlayerId[]>(() => (partner && partner !== seat ? [partner] : []));
   const [sides, setSides] = useState<Sides>({ gives: emptyBundle(), gets: emptyBundle() });
   const [lease, setLease] = useState<LeaseLength>("standing");
   const terms = termsOf(sides, lease);

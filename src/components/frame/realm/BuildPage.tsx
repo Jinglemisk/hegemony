@@ -28,7 +28,8 @@ import type { OwnedHolding } from "../../board/types";
 import { Chips, Ico } from "../parts";
 
 /** What a building does in this place, short enough for one line of a cell. */
-function cellLine(
+// eslint-disable-next-line react-refresh/only-export-components -- the place panel's Build options read the same line
+export function cellLine(
   G: HegemonyState,
   playerID: PlayerId,
   tile: HexTile,

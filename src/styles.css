@@ -51,5 +51,7 @@
 /* The Imperator shell's material and primitives: after every frame surface, so a
    seat's coin restyles the older marks it now draws. */
 @import "./styles/frame/chrome.css";
+/* The left window: the sidebar, its drawers and the place panel. */
+@import "./styles/frame/left.css";
 @import "./styles/sitting.css";
 @import "./styles/responsive.css";

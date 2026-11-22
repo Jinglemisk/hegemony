@@ -275,3 +275,52 @@
   font-size: var(--t-16);
   line-height: var(--lh-20);
 }
+
+/* The left window (frame/left.css): a figure at 20, names and body at 15–16, the
+   foot line and secondary lines at 14, small caps at the 13 floor. */
+.lw-drawer .ch-head-title,
+.pp-pop .ch-head-title,
+.lw-tile-v,
+.pp-v,
+.pp-class-n b,
+.lw-next-when b {
+  font-size: var(--t-20);
+  line-height: var(--lh-24);
+}
+.lw-tile.is-place .lw-tile-v,
+.lw-row-name,
+.lw-table td,
+.pp-opt-n,
+.pp-facts,
+.pp-lore,
+.pp-seat dd {
+  font-size: var(--t-16);
+  line-height: var(--lh-20);
+}
+.lw-body,
+.pp-body,
+.lw-warn,
+.pp-act-n {
+  font-size: var(--t-15);
+  line-height: var(--lh-20);
+}
+.lw-foot,
+.lw-none,
+.lw-why,
+.lw-table th[scope="row"],
+.pp-note,
+.pp-opt-line,
+.pp-act-why {
+  font-size: var(--t-14);
+  line-height: var(--lh-20);
+}
+.lw-tab,
+.lw-tile-k,
+.lw-row-next,
+.lw-row-n,
+.pp-k,
+.pp-v small,
+.pp-slots .ch-socket {
+  font-size: var(--t-13);
+  line-height: var(--lh-16);
+}
