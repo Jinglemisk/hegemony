@@ -1,26 +1,32 @@
 /* ============================================================================
-   Tooltip (one layer, placed by script)
+   Tooltip: black glaze with a gilt rule, placed by script. A card whose words
+   hold underlined terms locks after resting (a bar fills along its foot); then
+   a term opens its own card beside it (overlays/TipCard).
    ========================================================================== */
-/* The one tooltip layer (components/overlays/Tooltip places it). */
 .sharedTooltip {
   position: fixed;
   z-index: var(--z-tooltip);
   width: max-content;
-  max-width: var(--tip-w);
+  max-width: var(--tip-max-w);
   max-height: min(440px, calc(var(--vh) - 20px));
   overflow: auto;
-  padding: var(--s-2) var(--s-3);
+  padding: 9px var(--s-3);
   display: grid;
   gap: var(--s-1);
-  color: var(--ink);
-  font: var(--t-body) / var(--l-body) var(--f-body);
-  box-shadow: var(--paper-edge), var(--shadow-hud);
+  border-radius: var(--r-panel);
+  color: var(--glaze-ink);
+  background: var(--glaze);
+  box-shadow: var(--tip-rim);
+  font-family: var(--f-sans);
   pointer-events: none;
-  animation: sharedOverlayIn 120ms ease-out;
+  animation: sharedOverlayIn var(--dur-hover) var(--ease-out);
 }
 /* The island's own tip stays under a popover opened from its tile. */
 .sharedTooltip.map-tip {
   z-index: var(--z-map-tip);
+}
+.sharedTooltip.is-locked {
+  pointer-events: auto;
 }
 @keyframes sharedOverlayIn {
   from {
@@ -30,6 +36,58 @@
     opacity: 1;
   }
 }
+/* On the glaze, judgement and quiet words take inks that read on it. */
+.sharedTooltip .pos {
+  color: var(--glaze-pos);
+}
+.sharedTooltip .neg {
+  color: var(--glaze-neg);
+}
+.sharedTooltip .caps,
+.sharedTooltip .caption {
+  color: var(--glaze-ink-66);
+}
+.sharedTooltip .richTokenLink {
+  color: var(--band-ink);
+}
+/* An underlined term: once the card locks, it opens its own card. */
+.sharedTooltip [data-term]:not([data-term-open]) {
+  text-decoration: underline dotted var(--bz-hi);
+  text-underline-offset: 3px;
+}
+.sharedTooltip.is-locked [data-term]:not([data-term-open]) {
+  cursor: help;
+}
+.sharedTooltip.is-locked [data-term]:not([data-term-open]):hover {
+  color: var(--band-ink);
+}
+/* The lock's bar, filling along the foot of a card that has a term to open. */
+.tip-lock {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--ochre);
+}
+.sharedTooltip:has([data-term]:not([data-term-open])) > .tip-lock {
+  animation: tip-lock 600ms linear forwards;
+}
+.sharedTooltip.is-locked > .tip-lock {
+  width: 100%;
+  animation: none;
+}
+@keyframes tip-lock {
+  to {
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sharedTooltip:has([data-term]:not([data-term-open])) > .tip-lock {
+    animation: none;
+  }
+}
+
 .tip-row {
   display: contents;
 }
@@ -48,17 +106,26 @@
   display: flex;
   align-items: baseline;
   gap: var(--s-2);
-  font: 700 var(--t-body) / var(--l-body) var(--f-name);
+  color: var(--band-ink);
+  font-family: var(--f-name);
+  font-weight: 700;
   letter-spacing: var(--track-name);
 }
 /* The title's line holds the name and, at its far end, a countdown. */
-.tip-title .turns {
+.tip-title .turns,
+.term-tip-ch {
   margin-left: auto;
+}
+.term-tip-ch {
+  color: var(--glaze-ink-66);
+  font-family: var(--f-sans);
+  font-weight: 500;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
 }
 .tip-ledger {
   display: grid;
   grid-template-columns: 1fr auto;
-  font: 400 var(--t-body) / var(--l-body) var(--f-sans);
 }
 .tip-ledger b {
   padding-left: var(--s-4);
@@ -71,18 +138,18 @@
   gap: var(--s-2);
 }
 .tip-ledger .is-total {
-  box-shadow: inset 0 var(--rule) 0 var(--ink-30);
+  box-shadow: inset 0 var(--rule) 0 var(--glaze-ink-66);
   padding-top: var(--s-1);
 }
 .tip-warn {
   display: flex;
   align-items: center;
   gap: var(--s-2);
-  color: var(--clay-ink);
-  font: 500 var(--t-body) / var(--l-body) var(--f-sans);
+  color: var(--glaze-neg);
+  font-weight: 500;
 }
 .tip-act {
   margin-top: var(--s-1);
-  color: var(--clay-ink);
-  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+  color: var(--ember);
+  font-weight: 700;
 }

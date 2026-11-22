@@ -4,6 +4,7 @@ import { partnerIn } from "../../../game/deals";
 import type { Deal } from "../../../game/types";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { useGameUi } from "../../board/GameUiContext";
+import { SeatCoin } from "../../chrome/SeatCoin";
 import { Popover } from "../../overlays/Popover";
 import { Tooltip } from "../../overlays/Tooltip";
 import { Ico, Tip, TipBody } from "../parts";
@@ -54,9 +55,7 @@ export function DealDisc({ deal, asking, ask }: { deal: Deal; asking: boolean; a
         >
           <span aria-hidden="true" className="deal-ring" />
           <Ico path="market/handshake" size="ui" />
-          <span aria-hidden="true" className="name offer-badge">
-            {glaze.blazon}
-          </span>
+          <SeatCoin aria-hidden="true" className="offer-badge" seat={partner} />
           {asking ? (
             <span aria-hidden="true" className="name offer-mark">
               !

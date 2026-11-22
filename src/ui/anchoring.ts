@@ -18,8 +18,9 @@ export type ViewportSize = { width: number; height: number };
 
 export type AnchoringOptions = {
   preferredPlacement?: VerticalPlacement;
-  /** `start` hangs the overlay from the anchor's left edge instead of centring it. */
-  align?: "center" | "start";
+  /** `start` hangs the overlay from the anchor's left edge instead of centring it;
+   *  `end` from its right edge. */
+  align?: "center" | "start" | "end";
   margin?: number;
   gap?: number;
   arrowInset?: number;
@@ -66,7 +67,11 @@ export function positionAnchoredOverlay(
         : "below";
   const rawTop = placement === "below" ? anchor.bottom + gap : anchor.top - floating.height - gap;
   const left = clampToViewport(
-    options.align === "start" ? anchor.left : centerX - floating.width / 2,
+    options.align === "start"
+      ? anchor.left
+      : options.align === "end"
+        ? anchor.right - floating.width
+        : centerX - floating.width / 2,
     floating.width,
     viewport.width,
     margin,

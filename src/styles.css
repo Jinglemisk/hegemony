@@ -54,4 +54,6 @@
 /* The shell's right side: the dock, the legend and the outliner. */
 @import "./styles/frame/right.css";
 @import "./styles/sitting.css";
+/* The top's floating parts, after the sitting: they place its minimised pill. */
+@import "./styles/frame/top.css";
 @import "./styles/responsive.css";

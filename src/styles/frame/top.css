@@ -1,0 +1,411 @@
+/* ============================================================================
+   The top's floating parts (frame/top/): the alarms under the bar, the menu and
+   its movable windows, the happiness card, the minimised Assembly's place.
+   After chrome.css and the sitting, so the restyles here win.
+   ========================================================================== */
+/* The bar draws its own foot and shadow. */
+.hud-top {
+  filter: none;
+}
+
+/* ---- the alarms: bronze-rimmed parchment discs beside the seal, dropping in --- */
+.alarms {
+  position: fixed;
+  top: calc(var(--u) * 14); /* 56 */
+  left: calc(var(--u) * 25); /* 100 */
+  display: flex;
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.alarm-disc {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: calc(var(--u) * 11.5); /* 46 */
+  height: calc(var(--u) * 11.5);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-round);
+  background: var(--alarm-face);
+  box-shadow: var(--alarm-rim);
+  animation: ch-drop var(--dur-drop) var(--ease-drop) both;
+}
+button.alarm-disc {
+  cursor: pointer;
+}
+.alarm-disc .ico,
+.alarm-disc.is-year > .ico,
+.threat > .alarm-disc .ico {
+  width: calc(var(--u) * 7);
+  height: calc(var(--u) * 7);
+}
+.alarm-disc.is-down {
+  background: var(--alarm-face-hurt);
+  box-shadow:
+    inset 0 0 0 2px var(--clay),
+    var(--alarm-rim);
+}
+.alarm-disc.is-up {
+  box-shadow:
+    inset 0 0 0 2px var(--pos),
+    var(--alarm-rim);
+}
+.alarm-disc.is-loud,
+.alarm-disc.is-up.is-loud {
+  background: var(--alarm-face-hurt);
+  box-shadow:
+    inset 0 0 0 2px var(--clay),
+    var(--alarm-rim),
+    var(--alarm-loud);
+}
+.alarm-disc.is-up.is-loud {
+  background: var(--alarm-face);
+  box-shadow:
+    inset 0 0 0 2px var(--pos),
+    var(--alarm-rim),
+    var(--alarm-loud);
+}
+.alarm-disc:hover,
+.alarm-disc[aria-expanded="true"] {
+  filter: var(--hover-glow);
+}
+.alarm-disc[aria-expanded="true"] {
+  outline: 3px solid var(--ochre);
+  outline-offset: 3px;
+}
+.alarm-badge {
+  right: -6px;
+  bottom: -6px;
+  width: var(--s-6);
+  height: var(--s-6);
+  background: var(--alarm-face);
+  box-shadow: var(--alarm-rim);
+}
+.alarm-badge .ico {
+  width: var(--ic-16);
+  height: var(--ic-16);
+}
+/* The seat on an offer or a deal: its coin on the rim. */
+.alarm-disc .ch-coin.offer-badge {
+  --coin-d: 22px;
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: var(--coin-d);
+  height: var(--coin-d);
+  border-radius: var(--r-round);
+}
+.offer-disc,
+.deal-disc {
+  background: var(--alarm-face);
+  box-shadow: var(--alarm-rim);
+}
+.offer-disc:hover,
+.offer-disc[aria-expanded="true"],
+.deal-disc:hover,
+.deal-disc[aria-expanded="true"] {
+  box-shadow: var(--alarm-rim);
+}
+
+/* ---- an alarm's card: parchment in the bronze rule, a glaze head --------------- */
+.threat-panel {
+  overflow: hidden;
+  border-radius: var(--r-panel);
+  background: var(--parch);
+  box-shadow: var(--rule-frame), var(--shadow-panel);
+}
+.threat-head {
+  position: relative;
+  border-radius: 0;
+  color: var(--glaze-ink);
+  background: var(--glaze);
+  box-shadow: var(--head-edge);
+}
+.threat-head .threat-title {
+  color: var(--glaze-ink);
+  font-family: var(--f-name);
+}
+.threat-head .caption,
+.threat-head .kicker {
+  color: var(--glaze-ink-66);
+}
+.threat-coin {
+  --coin-d: var(--ic-48);
+}
+.threat-rows {
+  padding-top: var(--s-4);
+}
+.threat-rows li {
+  border-radius: 0;
+  box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--bz-dk-12);
+}
+
+/* ---- popovers from the bar: no arrow, the panel is the card -------------------- */
+.top-pop .sharedPopoverArrow {
+  display: none;
+}
+
+/* ---- the menu ------------------------------------------------------------------ */
+.menu-card {
+  display: flex;
+  flex-direction: column;
+  width: calc(var(--u) * 75); /* 300 */
+  height: calc(var(--u) * 93); /* 372 */
+  overflow: visible;
+}
+.menu-rows {
+  margin: 0;
+  padding: var(--s-1) 0;
+  list-style: none;
+}
+.menu-row {
+  display: grid;
+  grid-template-columns: var(--ic-32) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2px var(--s-3);
+  width: 100%;
+  min-height: calc(var(--u) * 13);
+  padding: var(--s-2) var(--s-4);
+  border: 0;
+  color: var(--ink);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.menu-rows li + li .menu-row {
+  box-shadow: inset 0 var(--rule) 0 var(--bz-dk-12);
+}
+.menu-row:hover {
+  background: var(--bar-hover);
+}
+.menu-row-words {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.menu-row-name {
+  font-family: var(--f-name);
+  font-weight: 700;
+  letter-spacing: var(--track-name);
+}
+.menu-row-sub {
+  color: var(--ink-66);
+  font-family: var(--f-sans);
+}
+.menu-row-open {
+  color: var(--clay-ink);
+  font-family: var(--f-sans);
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+.menu-sec {
+  padding: var(--s-2) var(--s-4) var(--s-3);
+  box-shadow: inset 0 var(--rule) 0 var(--bz-dk-30);
+}
+.menu-sec-label {
+  margin: 0 0 var(--s-2);
+  color: var(--ink-66);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+.menu-seats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-1);
+}
+.menu-seat {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: calc(var(--u) * 9);
+  padding: var(--s-1) var(--s-2);
+  border: 0;
+  border-radius: var(--r-panel);
+  color: var(--ink);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.menu-seat:hover {
+  background: var(--bar-hover);
+}
+.menu-seat[aria-pressed="true"] {
+  color: var(--glaze-ink);
+  background: var(--glaze);
+  box-shadow: var(--pressed-rim);
+}
+.menu-seat-name {
+  overflow: hidden;
+  font-family: var(--f-name);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.menu-seat-tag {
+  margin-left: auto;
+  color: var(--clay-ink);
+  font-family: var(--f-sans);
+  font-weight: 700;
+}
+.menu-seat[aria-pressed="true"] .menu-seat-tag {
+  color: var(--ember);
+}
+.menu-sizes {
+  display: flex;
+  gap: var(--s-3);
+}
+.menu-sizes .ch-plaque {
+  flex: 1;
+  padding-inline: var(--s-1);
+}
+.menu-row:focus-visible,
+.menu-seat:focus-visible,
+.menu-btn:focus-visible,
+.top-seal:focus-visible {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: var(--rule-2);
+}
+
+/* ---- the menu's windows: movable panels, the head their handle ---------------- */
+.menu-windows {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-bar); /* over the HUD it follows in the DOM */
+  pointer-events: none;
+}
+.menu-window {
+  position: absolute;
+  pointer-events: auto;
+}
+.menu-window-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+.menu-window-grip {
+  cursor: grab;
+  touch-action: none;
+}
+.menu-window-grip:active {
+  cursor: grabbing;
+}
+.menu-window-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding: calc(var(--sh-meander-h) + var(--s-3)) var(--s-4) var(--s-4);
+}
+.plates-body {
+  display: grid;
+  gap: var(--s-3);
+}
+.plates-line {
+  display: grid;
+  grid-template-columns: calc(var(--u) * 18) 1fr;
+  align-items: center;
+}
+.plates-opts {
+  display: flex;
+  gap: var(--s-3);
+}
+.plates-hint {
+  margin: 0;
+  color: var(--ink-66);
+  font-family: var(--f-sans);
+}
+
+/* ---- the happiness card -------------------------------------------------------- */
+.mood-card {
+  display: flex;
+  flex-direction: column;
+  width: calc(var(--u) * 110); /* 440 */
+  height: calc(var(--u) * 106); /* 424 */
+}
+.mood-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--sh-meander-h) 0 var(--s-2);
+  scrollbar-color: var(--bz) transparent;
+  scrollbar-width: thin;
+}
+.mood-sec {
+  display: flex;
+  justify-content: space-between;
+  margin: var(--s-2) var(--s-4) 0;
+  padding-bottom: 2px;
+  color: var(--bz-lo);
+  box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--bz);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+.mood-sec span {
+  color: var(--ink-66);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.mood-lines {
+  margin: 0;
+  padding: 0 var(--s-4);
+  list-style: none;
+}
+.mood-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-height: calc(var(--u) * 6.5);
+  box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--bz-dk-12);
+}
+.mood-line-k {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-family: var(--f-sans);
+}
+.mood-note {
+  margin: 0;
+  padding: var(--s-1) var(--s-4) 0;
+  color: var(--ink-66);
+  font-family: var(--f-sans);
+}
+.mood-acts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4) var(--s-4);
+  box-shadow: inset 0 var(--rule) 0 var(--bz-dk-30);
+}
+.mood-calm {
+  justify-content: space-between;
+  min-height: calc(var(--u) * 11);
+  padding-inline: var(--s-3);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.mood-calm .price {
+  display: flex;
+  gap: var(--s-1);
+}
+
+/* ---- the minimised Assembly waits under the alarms ----------------------------- */
+.sit-dock {
+  position: fixed;
+  top: calc(var(--u) * 28); /* 112 */
+  left: calc(var(--u) * 25); /* 100 */
+}
+
+/* replaced by the menu's View as (frame/top/Menu.tsx); removed at integration */
+.seats {
+  display: none;
+}

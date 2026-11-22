@@ -361,7 +361,7 @@ button.ch-socket:focus-visible {
 .ch-confirm-scrim {
   position: fixed;
   inset: 0;
-  z-index: var(--z-modal);
+  z-index: var(--z-confirm);
   display: grid;
   place-items: center;
   background: var(--scrim-confirm);
