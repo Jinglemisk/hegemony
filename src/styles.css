@@ -52,4 +52,6 @@
    seat's coin restyles the older marks it now draws. */
 @import "./styles/frame/chrome.css";
 @import "./styles/sitting.css";
+/* The top's floating parts, after the sitting: they place its minimised pill. */
+@import "./styles/frame/top.css";
 @import "./styles/responsive.css";

@@ -25,9 +25,9 @@ export const SIZES = [
 ];
 
 // ── surfaces ─────────────────────────────────────────────────────────────────
-// The realm sheet's pages (tabs) and the bar's consult pages (toggle buttons).
+// The realm sheet's pages (tabs) and the menu's windows (Codex, Costs, Plates).
 const LEFT = ["Cities", "Ladder", "Build"];
-const RIGHT = ["Codex", "Victory", "Agora"];
+const RIGHT = ["Codex", "Costs", "Plates"];
 
 const dismissDialogs = async (p) => {
   for (let i = 0; i < 4; i += 1) {
@@ -45,7 +45,22 @@ const dismissDialogs = async (p) => {
 };
 
 const realmTab = (p, tab) => p.locator(".realm-tabs").getByRole("tab", { name: tab, exact: true });
-const consultButton = (p, tab) => p.locator(`.consult-btn[aria-label="${tab}"]`).first();
+const menuWindow = (p, name) => p.locator(`.menu-window[data-window="${name.toLowerCase()}"]`);
+
+/** Open one of the menu's windows: the menu's plaque, then its row. */
+const openWindow = async (p, name) => {
+  if (await menuWindow(p, name).count()) return;
+  await p
+    .locator('[data-c="menu-btn"]')
+    .click()
+    .catch(() => {});
+  await p.waitForTimeout(250);
+  await p
+    .locator(`[data-c="menu-row"][data-window="${name.toLowerCase()}"]`)
+    .click()
+    .catch(() => {});
+  await p.waitForTimeout(250);
+};
 const verb = (p, name) => p.locator(`.verb-btn[aria-label^="${name}"]`).first();
 
 /** Open a verb's fan from the keyboard (Enter never runs the disc's own
@@ -98,10 +113,10 @@ const setChronicle = async (p, open) => {
   }
 };
 
-const closeConsult = async (p, tab) => {
-  const t = consultButton(p, tab);
-  if ((await t.count()) && (await t.getAttribute("aria-pressed")) === "true") {
-    await t.click().catch(() => {});
+const closeWindow = async (p, name) => {
+  const close = menuWindow(p, name).getByRole("button", { name: `Close ${name}`, exact: true });
+  if (await close.count()) {
+    await close.click().catch(() => {});
     await p.waitForTimeout(250);
   }
 };
@@ -142,10 +157,7 @@ export const SURFACES = [
     name: `tab-${tab.toLowerCase()}`,
     go: async (p) => {
       await setChronicle(p, false);
-      const t = consultButton(p, tab);
-      if ((await t.count()) && (await t.getAttribute("aria-pressed")) !== "true") {
-        await t.click().catch(() => {});
-      }
+      await openWindow(p, tab);
       await p.waitForTimeout(500);
     },
   })),
@@ -153,10 +165,7 @@ export const SURFACES = [
     name: "codex-cards",
     go: async (p) => {
       // The Codex opens on its contents page; a chapter is one click from there.
-      const codex = consultButton(p, "Codex");
-      if ((await codex.count()) && (await codex.getAttribute("aria-pressed")) !== "true") {
-        await codex.click().catch(() => {});
-      }
+      await openWindow(p, "Codex");
       for (const name of [/How to Win/i, /^The Cards$/i]) {
         const t = p.getByRole("button", { name }).first();
         if (await t.count()) await t.click().catch(() => {});
@@ -167,7 +176,7 @@ export const SURFACES = [
   {
     name: "board-clear",
     go: async (p) => {
-      for (const tab of RIGHT) await closeConsult(p, tab);
+      for (const tab of RIGHT) await closeWindow(p, tab);
       await p.waitForTimeout(300);
     },
   },

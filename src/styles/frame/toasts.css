@@ -1,11 +1,13 @@
 /* ============================================================================
-   Toasts: one moment another seat had, under the compass, then gone
+   Toasts: one moment another seat had, as a banner that drops in under the top
+   bar, centred, then goes. Fixed width; its words wrap to two lines at most.
    ========================================================================== */
 .toast-lane {
-  position: absolute;
-  top: calc(var(--bar-h) + var(--s-16));
-  left: var(--s-4);
-  width: var(--strip-w);
+  position: fixed;
+  top: calc(var(--sh-top-h) + var(--s-3));
+  left: 50%;
+  width: calc(var(--u) * 120); /* 480 */
+  translate: -50% 0;
 }
 .toast {
   display: grid;
@@ -13,39 +15,37 @@
   align-items: center;
   gap: var(--s-3);
   width: 100%;
-  padding: var(--s-3) var(--s-4);
+  min-height: calc(var(--u) * 16);
   border: 0;
-  border-radius: var(--r-8);
-  color: var(--ink);
-  background: var(--ivory);
   text-align: left;
-  animation: toastIn 240ms var(--ease-out) both;
+  cursor: pointer;
 }
-.toast .idea-seat {
-  width: var(--ic-tile);
-  height: var(--ic-tile);
+.toast-coin {
+  --coin-d: var(--ic-32);
 }
 .toast-words {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  font-size: var(--t-14);
-  line-height: var(--lh-20);
-}
-.toast-words b {
-  font-family: var(--f-name);
 }
 .toast-kicker {
-  color: var(--ink-63);
+  color: var(--bz-lo);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
 }
-@keyframes toastIn {
-  from {
-    opacity: 0;
-    transform: translateY(calc(-1 * var(--s-2)));
-  }
+.toast-body {
+  display: -webkit-box;
+  font-family: var(--f-sans);
+  font-weight: 600;
+  letter-spacing: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
-@media (prefers-reduced-motion: reduce) {
-  .toast {
-    animation: none;
-  }
+.toast-body .richIcon {
+  width: var(--ic-chip);
+  height: var(--ic-chip);
 }

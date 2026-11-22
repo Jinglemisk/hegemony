@@ -14,11 +14,21 @@ async function civic(page: Page, option: string) {
   await page.locator(`.is-open > .fan > .fan-item > .fan-btn[aria-label^="${option}."]`).click();
 }
 
+/** The viewer's own seat as the menu's View as names it ("Damon, acting, your seat"). */
+async function ownSeat(page: Page) {
+  await page.locator('[data-c="menu-btn"]').click();
+  const name = await page
+    .locator('[data-c="view-as"][aria-pressed="true"]')
+    .getAttribute("aria-label");
+  await page.keyboard.press("Escape");
+  return name ?? "";
+}
+
 test("buys a development card, then plays one from the hand", async ({ page }) => {
   await visit(page, "/?dev=cards&seed=42");
 
   // The seat holds a Caravan from an earlier turn: its disc counts one card.
-  await expect(page.getByRole("button", { name: /acting, 1 card, your seat/ })).toBeVisible();
+  expect(await ownSeat(page)).toMatch(/acting, 1 card, your seat/);
 
   // Buying draws the Foraging on top of the pile: a yield, which lands at once.
   await civic(page, "Buy a card");
@@ -37,7 +47,7 @@ test("buys a development card, then plays one from the hand", async ({ page }) =
   await expect(played).toContainText(/\+\d+ wood/i);
   await played.getByRole("button", { name: "Done", exact: true }).click();
   await expect(played).toBeHidden();
-  await expect(page.getByRole("button", { name: /acting, your seat/ })).toBeVisible();
+  expect(await ownSeat(page)).toMatch(/acting, your seat/);
 });
 
 test("a riot takes a held card in place of a pop, the seat's choice", async ({ page }) => {
@@ -63,8 +73,7 @@ test("a riot takes a held card in place of a pop, the seat's choice", async ({ p
 test("a seat gives a held card in trade, picked in private behind a handover", async ({ page }) => {
   // Every seat holds a Caravan and a Raiders from an earlier turn.
   await visit(page, "/?dev=trade-cards&seed=42");
-  const seat = page.getByRole("button", { name: /, your seat$/ });
-  const person = (await seat.getAttribute("aria-label"))!.split(",")[0];
+  const person = (await ownSeat(page)).split(",")[0];
 
   // 2 wood for a card, to the table: the offer names a card, never which.
   await page.getByRole("button", { name: /^Trade: Offer/ }).click();
@@ -91,5 +100,5 @@ test("a seat gives a held card in trade, picked in private behind a handover", a
   await pick.getByRole("button", { name: "Give a card" }).click();
 
   await expect(page.getByText(/gave 2 wood; .* gave 1 card\./i)).toBeVisible();
-  await expect(seat).toHaveAccessibleName(`${person}, acting, 3 cards, your seat`);
+  expect(await ownSeat(page)).toBe(`${person}, acting, 3 cards, your seat`);
 });

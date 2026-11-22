@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import type { TradeOffer } from "../../../game/types";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { useGameUi } from "../../board/GameUiContext";
+import { SeatCoin } from "../../chrome/SeatCoin";
 import { Popover } from "../../overlays/Popover";
 import { Tooltip } from "../../overlays/Tooltip";
 import { Ico, Tip, TipBody } from "../parts";
@@ -64,9 +65,7 @@ export function OfferDisc({ offer }: { offer: TradeOffer }) {
         >
           <span aria-hidden="true" className="offer-ring" />
           <Ico path="market/handshake" size="ui" />
-          <span aria-hidden="true" className="name offer-badge">
-            {glaze.blazon}
-          </span>
+          <SeatCoin aria-hidden="true" className="offer-badge" seat={offer.from} />
           {mine ? (
             <span aria-hidden="true" className="name offer-mark">
               {MARK_GLYPH[answerMark(G, offer, viewerId)]}

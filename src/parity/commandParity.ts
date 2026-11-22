@@ -156,7 +156,11 @@ export const COMMAND_PARITY = {
     simulation: simulated("master-search", "beamPlan → scoreMaster"),
   },
   civicCalm: {
-    frontend: interactive("src/components/frame/VerbDiscs.tsx", "src/components/frame/discs.ts"),
+    frontend: interactive(
+      "src/components/frame/VerbDiscs.tsx",
+      "src/components/frame/discs.ts",
+      "src/components/frame/top/HappinessCard.tsx",
+    ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   promotePop: {

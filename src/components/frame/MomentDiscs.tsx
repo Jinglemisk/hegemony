@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import type { CSSProperties } from "react";
 import { seatsBefore } from "../../game/turn";
 import type { VictoryThreat } from "../../game/victory";
 import type { HegemonyState, PlayerId, VictoryMetric } from "../../game/types";
@@ -8,8 +7,8 @@ import { listed, numberWord, seatName } from "../../ui/formatters";
 import { titleValue } from "../../ui/frameFormat";
 import { turnsLeftInYear } from "../../ui/frameSelectors";
 import { yearCardIcon } from "../../ui/iconRegistry";
-import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { Prose } from "../AnnotatedText";
+import { SeatCoin } from "../chrome/SeatCoin";
 import { Popover } from "../overlays/Popover";
 import { Tooltip } from "../overlays/Tooltip";
 import { Ico, Tip, TipBody } from "./parts";
@@ -111,16 +110,10 @@ export function ThreatAlarm({
         >
           {threats.map((threat) => {
             const before = seatsBefore(G, threat.seat).map((seat) => seatName(G, seat, viewerId));
-            const glaze = PLAYER_GLAZES[threat.seat];
             return (
               <section className="threat-seat" key={threat.seat}>
                 <header className="threat-head">
-                  <span
-                    className="idea-seat threat-glaze"
-                    style={{ "--owner": glaze.color } as CSSProperties}
-                  >
-                    {glaze.blazon}
-                  </span>
+                  <SeatCoin className="threat-coin" seat={threat.seat} />
                   <span className="threat-words">
                     <span className="kicker toast-kicker">{capitalize(toWin)} titles</span>
                     <b className="name threat-title">{headline(threat.seat)}</b>

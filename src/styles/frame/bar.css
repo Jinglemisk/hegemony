@@ -1,138 +1,199 @@
 /* ============================================================================
-   Top bar: the clock, the purse, and the consult pages' names at its right end
+   Top bar: parchment, 50 high across the screen, with a bronze foot and the
+   meander under it. The seal stands over its left end; the year, the purse and
+   the mood run from there, gilt dividers between their groups; the menu's
+   bronze plaque sits at its right end.
    ========================================================================== */
 .topbar {
-  position: absolute;
+  position: fixed;
   top: 0;
-  left: 0;
   right: 0;
-  height: var(--bar-h);
-  background: var(--bone);
+  left: 0;
+  display: flex;
+  align-items: center;
+  height: var(--sh-top-h);
+  padding-left: calc(var(--u) * 24); /* 96: clear of the seal */
+  color: var(--ink);
+  background: var(--parch);
+  box-shadow: var(--bar-foot);
 }
-/* The three groups, each from its own anchor. */
-.clock,
-.purse,
-.court {
+.topbar::after {
+  content: "";
   position: absolute;
-  top: calc((var(--bar-h) - var(--hit)) / 2);
-  height: var(--hit);
-  display: flex;
-  align-items: center;
-}
-.clock {
-  left: var(--s-4);
-  width: var(--clock-w);
-  gap: var(--s-4);
-  transform-origin: left center;
-}
-.purse {
-  left: calc(50% - var(--purse-w) / 2);
-  width: var(--purse-w);
-  justify-content: center;
-  gap: var(--s-4);
-}
-.court {
-  right: var(--s-4);
-  gap: var(--s-4);
-  transform-origin: right center;
-}
-/* Goods, people and the mood each sit in a plate pressed into the bar. */
-.purse-seg {
-  height: var(--hit);
-  display: flex;
-  align-items: center;
-  padding: 0 var(--s-1);
-  border-radius: var(--r-8);
-  background: var(--ink-07);
-  box-shadow:
-    inset 0 var(--rule) var(--rule-2) var(--ink-12),
-    inset 0 calc(var(--rule) * -1) 0 var(--ivory-70);
-}
-/* Bar controls are flat until hovered: the bar is one control tall. */
-.res:hover,
-.level:hover,
-.year:hover {
-  background: var(--ivory);
+  right: 0;
+  bottom: calc(-1 * var(--sh-meander-h));
+  left: 0;
+  height: var(--sh-meander-h);
+  background: var(--meander);
+  filter: var(--shadow-meander);
+  pointer-events: none;
 }
 
-.year {
+/* ---- the clock ----------------------------------------------------------------- */
+/* Every box on the bar keeps its width whatever it holds and at any Text size;
+   a word that outgrows its box is cut, never the bar. */
+.clock {
   flex: none;
-  height: var(--hit);
+  width: calc(var(--u) * 53); /* 212 */
+  padding-right: var(--s-3);
+}
+.year {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: var(--s-2);
+  overflow: hidden;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-panel);
   white-space: nowrap;
 }
 .year-n {
-  font: 700 var(--t-num) / var(--l-num) var(--f-name);
+  color: var(--bz-dk);
+  font-family: var(--f-name);
+  font-weight: 700;
   letter-spacing: var(--track-name);
+  text-shadow: var(--bar-num-shadow);
 }
 .year-left {
-  display: flex;
-  align-items: center;
-  gap: var(--s-1);
-  margin-left: var(--s-2);
-  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--ink-66);
+  font-family: var(--f-sans);
 }
-.res,
-.level {
-  height: var(--hit);
+
+/* ---- the purse: goods, influence, people and room, the mood -------------------- */
+.purse {
   display: flex;
   align-items: center;
-  gap: var(--s-1);
+  height: 100%;
 }
-.res {
-  width: var(--res-w);
+.bar-grp {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: calc(var(--u) * 9);
+  padding: 0 10px;
+  background: var(--bar-divider);
 }
-.res.pop {
-  width: var(--pop-w);
+.bar-cell {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  width: calc(var(--u) * 20); /* 80: a resource */
+  min-height: calc(var(--u) * 10);
+  padding: 3px var(--s-1);
+  border-radius: var(--r-panel);
+  cursor: default;
 }
-.res,
-.level {
-  border-radius: var(--r-4);
+.bar-cell:hover {
+  background: var(--bar-hover);
 }
-.res-val {
-  font-size: var(--t-num);
-  line-height: var(--l-num);
+.year:hover {
+  background: var(--bar-hover);
 }
-.res-delta {
-  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+.bar-cell.pop {
+  width: calc(var(--u) * 22.5); /* 90: a class of people, or the room */
+}
+.bar-cell.mood {
+  width: calc(var(--u) * 39); /* 156 */
+}
+.bar-cell .ico {
+  flex: none;
+  width: calc(var(--u) * 7);
+  height: calc(var(--u) * 7);
+}
+.bar-cell-v {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+.bar-cell-n {
+  font-family: var(--f-name);
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
+  text-shadow: var(--bar-num-shadow);
+  white-space: nowrap;
 }
-/* Danger reads at a glance: a store that goes below zero next year, a level at riot. */
-.res.is-short,
-.level.is-riot {
-  box-shadow: inset 0 calc(var(--rule-2) * -1) 0 var(--clay);
+.bar-cell-of {
+  color: var(--ink-66);
+  font-family: var(--f-sans);
 }
-.res.is-short .res-val,
-.level.is-riot .res-val {
+.bar-cell-d {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+  color: var(--ink-66);
+  font-family: var(--f-sans);
+  font-style: normal;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.bar-cell-d.pos {
+  color: var(--pos);
+}
+.bar-cell-d.neg,
+.bar-cell-n.neg {
   color: var(--clay-ink);
 }
-.level {
-  width: var(--level-w);
+/* Danger reads at a glance: a store below zero next turn, a level at riot. */
+.bar-cell.is-short,
+.bar-cell.is-riot {
+  box-shadow: inset 0 calc(var(--rule-2) * -1) 0 var(--clay);
 }
-/* The happiness gauge: its ends are the display's floor and ceiling; revolt is clay,
-   the riot band ochre, calm above. --g-revolt, --g-riot and --g-value are fractions
-   of its width (the data it carries). */
-.gauge {
+.bar-cell.is-short .bar-cell-n {
+  color: var(--clay-ink);
+}
+
+/* The mood: a button that drops the happiness card. */
+.bar-cell.mood {
+  border: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.bar-cell.mood:hover,
+.bar-cell.mood[aria-expanded="true"] {
+  background: var(--bar-hover);
+}
+.bar-cell.mood[aria-expanded="true"] {
+  box-shadow: inset 0 calc(var(--rule-2) * -1 - 1px) 0 var(--clay);
+}
+/* The meter: revolt and riot in clay and ochre, calm in olive; the tick is the level,
+   a clay pip above it each Unrest token. --g-* are fractions of its width. */
+.mood-meter {
   position: relative;
-  width: var(--gauge-w);
-  height: var(--gauge-h);
+  flex: none;
+  width: calc(var(--u) * 12);
+  height: 6px;
   margin-left: var(--s-1);
+  border-radius: 3px;
   background: linear-gradient(
-    to right,
-    var(--clay) 0 calc(var(--g-revolt) * 100% + var(--rule)),
-    var(--ochre) calc(var(--g-revolt) * 100% + var(--rule)) calc(var(--g-riot) * 100%),
-    var(--ink-12) calc(var(--g-riot) * 100%)
+    90deg,
+    var(--clay) 0 calc(var(--g-revolt) * 100%),
+    var(--ochre) calc(var(--g-revolt) * 100%) calc(var(--g-riot) * 100%),
+    var(--ink-30) calc(var(--g-riot) * 100%) 50%,
+    var(--pos) 50% 100%
   );
-  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+  box-shadow: var(--meter-well);
 }
-/* One clay pip per Unrest token, above the gauge. */
+.mood-meter::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--s-1) * -1);
+  left: calc(var(--g-value) * 100% - 1.5px);
+  width: 3px;
+  height: 14px;
+  border-radius: 1px;
+  background: var(--ink);
+}
 .gauge-tokens {
   position: absolute;
-  left: 0;
   bottom: calc(100% + var(--s-1) + var(--rule));
+  left: 0;
   display: flex;
   gap: var(--rule-2);
 }
@@ -141,28 +202,78 @@
   height: var(--u);
   background: var(--clay);
 }
-.gauge::after {
-  content: "";
-  position: absolute;
-  top: calc(var(--s-1) * -1);
-  bottom: calc(var(--s-1) * -1);
-  left: calc(var(--g-value) * 100% - var(--rule));
-  width: var(--rule-2);
-  background: var(--ink);
-}
 
-.consult-btn .ico {
-  filter: var(--at-rest);
-}
-.consult-btn:hover .ico,
-.consult-btn.is-on .ico {
-  filter: none;
-}
-
-/* Inline icons in the bar's text take the chip size. */
+/* Inline icons in the HUD's text take the chip size. */
 .hud .richIcon {
   width: var(--ic-chip);
   height: var(--ic-chip);
+}
+
+/* ---- the menu's plaque: bronze, at the bar's right end -------------------------- */
+.menu-btn {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--u) * 26); /* 104 */
+  overflow: hidden;
+  gap: 9px;
+  height: calc(var(--u) * 9.5);
+  margin: 0 var(--s-2) 0 auto;
+  padding: 0 var(--s-3) 0 10px;
+  border: 0;
+  border-radius: var(--r-panel);
+  color: var(--glaze-ink);
+  background: var(--back);
+  box-shadow: var(--back-rim);
+  font-family: var(--f-name);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.menu-btn:hover,
+.menu-btn[aria-expanded="true"] {
+  background: var(--back-hover);
+}
+.menu-bars {
+  display: block;
+  flex: none;
+  width: 20px;
+  height: 2.5px;
+  border-radius: 2px;
+  background: var(--bz-hi);
+  box-shadow:
+    0 -6px 0 var(--bz-hi),
+    0 6px 0 var(--bz-hi);
+}
+
+/* ---- the seal: the viewer's coin over the bar's left end ------------------------ */
+.top-seal {
+  position: fixed;
+  top: 6px;
+  left: var(--s-3);
+  display: grid;
+  place-items: center;
+  width: calc(var(--u) * 18); /* 72 */
+  height: calc(var(--u) * 18);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-round);
+  background: none;
+  box-shadow: var(--seal-rim);
+  cursor: pointer;
+  transition: scale var(--dur-hover) var(--ease-out);
+}
+.top-seal:hover {
+  scale: 1.04;
+}
+.top-seal[aria-pressed="true"] {
+  outline: 3px solid var(--ochre);
+  outline-offset: 2px;
+}
+.top-seal .ch-coin {
+  box-shadow: none;
 }
 
 /* ---- the consult names at the bar's right end ---------------------------------- */
@@ -224,4 +335,9 @@
 }
 .consult-sheet[data-tab="codex"] {
   flex-grow: 1;
+}
+
+/* replaced by the menu (frame/top/Menu.tsx); removed at integration */
+.consult-strip {
+  display: none;
 }

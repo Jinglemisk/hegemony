@@ -15,6 +15,8 @@ import {
 import { createPortal } from "react-dom";
 import type { VerticalPlacement } from "../../ui/anchoring";
 import { overlayRoot } from "../chrome/canvas";
+import { TipCard } from "./TipCard";
+import { TIP_GRACE_MS } from "./tipTiming";
 import { useAnchoredOverlay } from "./useAnchoredOverlay";
 
 export function Tooltip({
@@ -41,8 +43,26 @@ export function Tooltip({
   const tooltipId = useId();
   const triggerRef = useRef<HTMLElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
-  const [open, setOpen] = useState(false);
+  const [open, setOpenState] = useState(false);
   const suppressedTouchPointerRef = useRef<number | null>(null);
+  // A tooltip with underlined terms locks after resting (TipCard): then the pointer
+  // may leave the trigger for the card, and the stack closes only after a grace.
+  const lockedRef = useRef(false);
+  const closeTimer = useRef<number | undefined>(undefined);
+  const cancelClose = () => {
+    window.clearTimeout(closeTimer.current);
+    closeTimer.current = undefined;
+  };
+  const setOpen = (next: boolean) => {
+    cancelClose();
+    if (!next) lockedRef.current = false;
+    setOpenState(next);
+  };
+  const closeSoon = () => {
+    cancelClose();
+    closeTimer.current = window.setTimeout(() => setOpen(false), TIP_GRACE_MS);
+  };
+  useEffect(() => () => window.clearTimeout(closeTimer.current), []);
   const position = useAnchoredOverlay(
     open ? triggerRef : null,
     tooltipRef,
@@ -54,10 +74,17 @@ export function Tooltip({
     if (!open) return;
 
     const dismiss = (event: globalThis.PointerEvent) => {
-      if (!triggerRef.current?.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Element;
+      // A press on a locked card (or a term's card it opened) keeps the stack.
+      if (triggerRef.current?.contains(target) || target.closest?.(".sharedTooltip")) return;
+      lockedRef.current = false;
+      setOpenState(false);
     };
     const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        lockedRef.current = false;
+        setOpenState(false);
+      }
     };
 
     document.addEventListener("pointerdown", dismiss);
@@ -117,7 +144,7 @@ export function Tooltip({
         onClickCapture={handleClickCapture}
         onFocus={() => setOpen(true)}
         onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
+        onMouseLeave={() => (lockedRef.current ? closeSoon() : setOpen(false))}
         onPointerCancel={handlePointerCancel}
         onPointerDown={handlePointerDown}
         ref={(element) => {
@@ -129,7 +156,8 @@ export function Tooltip({
       </Trigger>
       {open && content && typeof document !== "undefined"
         ? createPortal(
-            <div
+            <TipCard
+              cardRef={tooltipRef}
               className={[
                 "sharedTooltip",
                 position ? `placement-${position.placement}` : "",
@@ -138,8 +166,11 @@ export function Tooltip({
                 .filter(Boolean)
                 .join(" ")}
               id={tooltipId}
-              ref={tooltipRef}
-              role="tooltip"
+              onEnter={cancelClose}
+              onLeave={closeSoon}
+              onLock={() => {
+                lockedRef.current = true;
+              }}
               style={
                 position
                   ? { left: position.left, top: position.top, opacity: 1 }
@@ -147,7 +178,7 @@ export function Tooltip({
               }
             >
               {content}
-            </div>,
+            </TipCard>,
             overlayRoot(),
           )
         : null}

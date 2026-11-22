@@ -65,6 +65,10 @@ import type { DeckMark } from "./board/helpers";
 import { endTurnWarning, happinessDisplay, hungerShortfall } from "../ui/frameSelectors";
 import { isTyping } from "../ui/keys";
 import { TopBar } from "./frame/TopBar";
+import { Menu } from "./frame/top/Menu";
+import { MenuWindows } from "./frame/top/MenuWindows";
+import { useMenuWindows } from "./frame/top/windowState";
+import { Seal } from "./frame/top/Seal";
 import { HudCanvas } from "./chrome/HudCanvas";
 import { useFitScale } from "./chrome/canvas";
 import { ConfirmHost, ConfirmProvider } from "./chrome/Confirm";
@@ -226,10 +230,16 @@ export function HegemonyBoard({
   // rulebook at a chapter. The nonce lets the same term re-navigate the codex even if
   // the target chapter is unchanged (you clicked away and clicked the link again).
   const [codexTarget, setCodexTarget] = useState<{ chapter: string; nonce: number } | null>(null);
-  const openCodexTo = useCallback((chapter: string) => {
-    setCodexTarget((current) => ({ chapter, nonce: (current?.nonce ?? 0) + 1 }));
-    setConsultTab("codex");
-  }, []);
+  // The menu's movable windows: Codex, Costs, Plates. A term link opens the Codex's.
+  const windows = useMenuWindows();
+  const { show: showWindow, toggle: toggleWindow } = windows;
+  const openCodexTo = useCallback(
+    (chapter: string) => {
+      setCodexTarget((current) => ({ chapter, nonce: (current?.nonce ?? 0) + 1 }));
+      showWindow("codex");
+    },
+    [showWindow],
+  );
   const codexLink = useMemo(() => ({ openCodexTo }), [openCodexTo]);
   const currentPlayerId = toPlayerId(ctx.currentPlayer);
   const viewerId = toPlayerId(playerID);
@@ -494,7 +504,7 @@ export function HegemonyBoard({
 
       if (event.key === "?") {
         setCodexTarget(null);
-        setConsultTab((open) => (open === "codex" ? null : "codex"));
+        toggleWindow("codex");
       }
       // Never behind a dialog, never on a held key.
       const mode = MAP_MODES[Number(event.key) - 1];
@@ -511,7 +521,7 @@ export function HegemonyBoard({
 
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, []);
+  }, [toggleWindow]);
 
   const handleTileAction = useCallback(
     (tileId: string) => {
@@ -658,12 +668,21 @@ export function HegemonyBoard({
                           }}
                           open={consultTab}
                         />
+                        <Menu onViewAs={onPlayerIDChange} windows={windows} />
                       </TopBar>
-                      {sitting?.minimised ? (
-                        <AssemblyDock sitting={sitting} />
-                      ) : (
-                        <ToastLane onDismiss={toasts.dismiss} toast={toasts.toast} />
-                      )}
+                      {/* The seal opens the Realm drawer; until the sidebar's drawers land,
+                          the realm sheet's overview stands in for it. */}
+                      <Seal
+                        onOpen={() => {
+                          setSelectedTileId(null);
+                          setSubject({ kind: "realm" });
+                          setRealmTab("subject");
+                        }}
+                        open={false}
+                        seat={viewerId}
+                      />
+                      {sitting?.minimised ? <AssemblyDock sitting={sitting} /> : null}
+                      <ToastLane onDismiss={toasts.dismiss} toast={toasts.toast} />
                       <Alarms
                         alarms={alarms}
                         dealAsk={dealAsk}
@@ -787,6 +806,12 @@ export function HegemonyBoard({
                         />
                       </CornerDock>
                     </div>
+                    <MenuWindows
+                      codexTarget={codexTarget}
+                      onPlates={changePlates}
+                      plates={plates}
+                      windows={windows}
+                    />
                   </>
                 ) : null}
 

@@ -366,7 +366,7 @@ function termNode(
       {label}
     </span>
   ) : (
-    <span className="richToken" key={key} style={style}>
+    <span className="richToken" data-term={term.chapter} key={key} style={style}>
       {termIcon(term)}
       {label}
     </span>
