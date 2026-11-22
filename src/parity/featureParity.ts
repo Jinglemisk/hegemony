@@ -814,7 +814,7 @@ export const CONTENT_MANIFEST = {
     engine: { implementation: "src/game/luxury.ts", evidence: "activeClaims" },
     frontend: {
       implementation: "src/components/frame/RealmPanel.tsx",
-      evidence: "ownedClaims",
+      evidence: "heldClaims",
     },
     simulation: { implementation: "src/sim/policies.ts", evidence: "scoreMaster" },
     telemetry: { implementation: "src/sim/telemetry.ts", evidence: "luxuries" },

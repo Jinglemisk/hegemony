@@ -71,6 +71,7 @@ import { useMomentToasts, useOwnMoment } from "./frame/moments";
 import { TurnNotice } from "./frame/TurnNotice";
 import { RealmPanel, type RealmSubject, type RealmTab } from "./frame/RealmPanel";
 import { Alarms } from "./frame/Alarms";
+import { dealEndTurnReason } from "../game/deals";
 import { EndTurn } from "./frame/EndTurn";
 import { discGroups } from "./frame/discs";
 import { CardPick } from "./frame/trade/CardPick";
@@ -174,6 +175,8 @@ export function HegemonyBoard({
   const [activeModal, setActiveModal] = useState<ActiveModal | null>(
     dev.ideasOpen ? { kind: "ideas" } : null,
   );
+  // Bumped when End turn waits on a partner's short payment: its deal card opens.
+  const [dealAsk, setDealAsk] = useState(0);
   const [held, setHeld] = useState<Held | null>(
     dev.riotResult
       ? "riotResult"
@@ -650,6 +653,7 @@ export function HegemonyBoard({
                   )}
                   <Alarms
                     alarms={alarms}
+                    dealAsk={dealAsk}
                     G={G}
                     hunger={shortfall}
                     onOpenYear={() => setHeld("yearFace")}
@@ -749,7 +753,14 @@ export function HegemonyBoard({
                       canEndTurn={turnOpen}
                       confirmOpen={dev.endTurnConfirm}
                       onCalm={moves.civicCalm}
-                      onEndTurn={() => (shortfall ? setHeld("hungerAsk") : events.endTurn())}
+                      onEndTurn={() =>
+                        // A partner's short payment is answered first, on its deal's card.
+                        dealEndTurnReason(G)
+                          ? setDealAsk((n) => n + 1)
+                          : shortfall
+                            ? setHeld("hungerAsk")
+                            : events.endTurn()
+                      }
                       ruleset={G.ruleset}
                       title={turnCommitTitle(turnGate)}
                       waitingLabel={inAssembly ? "In Assembly" : undefined}

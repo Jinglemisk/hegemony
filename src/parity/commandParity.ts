@@ -261,6 +261,16 @@ export const COMMAND_PARITY = {
     frontend: interactive("src/components/frame/trade/OfferCard.tsx"),
     simulation: simulated("master-rule", "withdrawAnswered"),
   },
+  // Bots make no deals and decline every offer that would leave one (docs/plans/trade-deals.md),
+  // so no bot ever holds a deal to end or a short payment to answer.
+  dealEnd: {
+    frontend: interactive("src/components/frame/trade/DealCard.tsx"),
+    simulation: simulated("master-rule", "answerOffer declines deal terms"),
+  },
+  dealShortfall: {
+    frontend: interactive("src/components/frame/trade/DealCard.tsx"),
+    simulation: simulated("master-rule", "answerOffer declines deal terms"),
+  },
   endTurn: {
     frontend: interactive("src/components/frame/EndTurn.tsx"),
     simulation: simulated("turn-control", "beamPlan fallback and forceEndTurn"),

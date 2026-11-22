@@ -24,7 +24,8 @@ import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { canPlaceColonyOnTile, isAdjacentToCity, settlementRoom } from "./settlement";
 import { setupCapitalCount } from "./ruleset";
-import { calculateIncome } from "./economy/income";
+import { calculateIncomeBreakdown, summarizeIncome } from "./economy/income";
+import { settleDealsAtIncome } from "./deals";
 import {
   getBuildBuildingStatus,
   getFoundColonyStatus,
@@ -321,11 +322,16 @@ export function collectIncome(
     player.incomeSuppressedTurns -= 1;
     player.collectedThisTurn = true;
     addLog(G, `${getPlayerName(G, playerID)} collects nothing — the city is on strike.`, playerID);
+    // A strike stops the work, not the seat's deals.
+    settleDealsAtIncome(G, playerID);
     drawPlayerEvent(G, playerID);
     return MOVE_OK;
   }
 
-  const income = calculateIncome(G, playerID);
+  // What the realm makes; its deals settle after, from what it then holds.
+  const income = summarizeIncome(
+    calculateIncomeBreakdown(G, playerID).filter((line) => !line.dealId),
+  );
   const beforeIncome = cloneResources(player.resources);
   // Food may go below zero here: the seat has its turn to cover it before hunger.
   applyIncome(player.resources, income, G.ruleset.economy.stockpileFloors);
@@ -336,6 +342,7 @@ export function collectIncome(
     `${getPlayerName(G, playerID)} ${mode === "automatic" ? "automatically collected" : "collected"} income (${formatRuleResourceDelta(appliedIncome)}).`,
     playerID,
   );
+  settleDealsAtIncome(G, playerID);
 
   drawPlayerEvent(G, playerID);
   return MOVE_OK;

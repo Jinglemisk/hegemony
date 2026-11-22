@@ -2,7 +2,8 @@ import { getActiveEffects } from "./activeEffects";
 import type { ActiveEffectDescriptor } from "./activeEffects";
 import { nextAssemblyYear } from "./assembly/assembly";
 import { portClaimSites } from "./status";
-import type { HegemonyState, PlayerId, TradeOffer, YearCard } from "./types";
+import { dealsAwaitingAnswer, dealsOf } from "./deals";
+import type { Deal, HegemonyState, PlayerId, TradeOffer, YearCard } from "./types";
 import { unrestStatus } from "./unrest";
 import type { UnrestStatus } from "./unrest";
 import { oneTitleShort, victoryThreats } from "./victory";
@@ -20,6 +21,9 @@ export type RealmAlarm =
   | { kind: "oneTitleShort"; seats: VictoryThreat[] }
   /** An open trade offer: every seat sees it, the seats it names answer it. */
   | { kind: "offer"; offer: TradeOffer }
+  /** One of the seat's standing deals; `asking` while its partner's short payment waits
+   *  on the seat's answer. */
+  | { kind: "deal"; deal: Deal; asking: boolean }
   | { kind: "yearCard"; card: YearCard }
   /** The realm's happiness below zero. */
   | { kind: "unrest"; status: UnrestStatus }
@@ -41,6 +45,9 @@ export function realmAlarms(G: HegemonyState, playerID: PlayerId): RealmAlarm[] 
   const short = oneTitleShort(G).filter((holding) => holding.seat !== playerID);
   if (short.length) alarms.push({ kind: "oneTitleShort", seats: short });
   for (const offer of G.offers) alarms.push({ kind: "offer", offer });
+  const asking = dealsAwaitingAnswer(G, playerID);
+  for (const deal of dealsOf(G, playerID))
+    alarms.push({ kind: "deal", deal, asking: asking.includes(deal) });
   if (G.activeYearCard) alarms.push({ kind: "yearCard", card: G.activeYearCard });
 
   const unrest = unrestStatus(G, playerID);

@@ -13,7 +13,7 @@ import type {
   YearTerm,
 } from "../types";
 import { formatPopName } from "../core/format";
-import { getTile, zeroedYearTerm } from "../core/query";
+import { getPlayerName, getTile, zeroedYearTerm } from "../core/query";
 import {
   countPlayerPopType,
   settlementIncomeSource,
@@ -22,6 +22,7 @@ import {
 } from "../settlement";
 import type { Ruleset } from "../ruleset";
 import { hungerMouths } from "../hunger";
+import { dealIncomeLines } from "../deals";
 import {
   buildingIdle,
   getLawIncomeContributions,
@@ -45,6 +46,9 @@ export type IncomeContribution = {
    * reads it.
    */
   settlementId?: string;
+  /** The standing deal this line settles (deals.ts): paid out of stock at income, not
+   *  produced. */
+  dealId?: string;
 };
 
 /** Where the granary stands. Free pops eat at income, which may take food below zero.
@@ -270,6 +274,17 @@ export function calculateIncomeBreakdown(
           source: source.label,
           detail: source.kind === "idea" ? "National Idea" : "Standing law",
         });
+  }
+
+  // A deal's lines come last: they move stock between seats rather than make it.
+  for (const line of dealIncomeLines(G, playerID)) {
+    addIncomeContribution(contributions, income, {
+      resource: line.resource,
+      amount: line.amount,
+      source: `Deal with ${getPlayerName(G, line.partner)}`,
+      detail: "Yearly deal",
+      dealId: line.dealId,
+    });
   }
   return contributions;
 }

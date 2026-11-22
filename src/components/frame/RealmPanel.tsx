@@ -4,7 +4,7 @@ import {
   activeClaims,
   getLuxuryGood,
   luxuryHappinessBonus,
-  ownedClaims,
+  heldClaims,
   realmPops,
   settlementCapacity,
   totalPops,
@@ -117,7 +117,7 @@ export function RealmPanel({
   );
   const laurels = victoryCardsHeld(G, viewerId);
   // Claimed luxury goods: how many are held, and how many are active right now.
-  const claims = ownedClaims(G, viewerId);
+  const claims = heldClaims(G, viewerId);
   const active = activeClaims(G, viewerId);
   const names = settlementNames(G.board.tiles);
   const view = viewOf(G, viewerId, subject);

@@ -9,7 +9,7 @@ import {
   activeClaims,
   claimableLuxuriesAt,
   luxuryHappinessBonus,
-  ownedClaims,
+  heldClaims,
   transferLuxury,
 } from "./luxury";
 import { isCoastalTile } from "./mapTopology";
@@ -168,7 +168,7 @@ describe("the Port and the claim", () => {
     expect(result.ok).toBe(true);
     expect(asset.owner).toBe("0");
     expect(asset.claimedAtSettlementId).toBeTruthy();
-    expect(ownedClaims(G, "0").map((claim) => claim.id)).toContain(asset.id);
+    expect(heldClaims(G, "0").map((claim) => claim.id)).toContain(asset.id);
 
     // The rival's Port on the OTHER adjacent tile now has nothing to claim there.
     const rivalTile = asset.tileIds[1];
@@ -223,7 +223,7 @@ describe("activity and suppression", () => {
     const G = preloadedGame(SEED);
     grantGoods(G, "0", 5);
 
-    expect(ownedClaims(G, "0")).toHaveLength(5);
+    expect(heldClaims(G, "0")).toHaveLength(5);
     expect(activeClaims(G, "0")).toHaveLength(5);
     expect(luxuryHappinessBonus(G, "0")).toBe(5 * G.ruleset.economy.luxury.happinessPerGood);
   });
@@ -231,7 +231,7 @@ describe("activity and suppression", () => {
   it("suppression expires at turn start, before the turn-end check", () => {
     const G = preloadedGame(SEED);
     grantGoods(G, "0", 1);
-    const asset = ownedClaims(G, "0")[0];
+    const asset = heldClaims(G, "0")[0];
 
     expect(luxuryHappinessBonus(G, "0")).toBe(2);
     asset.suppressedTurns = 1;

@@ -59,6 +59,8 @@ describe("behavioral command-consumer parity", () => {
     moves.tradeAnswer("1", "offer-9", { kind: "counter", terms, places: { from: "tile-b" } });
     moves.tradeSettle("0", "offer-9", "1", { to: "tile-a" });
     moves.tradeWithdraw("0", "offer-9");
+    moves.dealEnd("1", "deal-4");
+    moves.dealShortfall("0", "deal-4", false);
     events.endTurn();
 
     expect(calls).toEqual([
@@ -158,6 +160,8 @@ describe("behavioral command-consumer parity", () => {
         actor: "0",
       },
       { command: { type: "tradeWithdraw", offerId: "offer-9" }, actor: "0" },
+      { command: { type: "dealEnd", dealId: "deal-4" }, actor: "1" },
+      { command: { type: "dealShortfall", dealId: "deal-4", keep: false }, actor: "0" },
       { command: { type: "endTurn" }, actor: undefined },
     ]);
     // Every command a screen offers; a batch-only one has no browser move.

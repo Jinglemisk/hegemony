@@ -13,10 +13,12 @@ import {
 } from "../../../game/trade";
 import type {
   HegemonyState,
+  LeaseLength,
   PlayerId,
   TradeBundle,
   TradeOffer,
   TradePlaces,
+  TradeTerms,
 } from "../../../game/types";
 import { seatName } from "../../../ui/formatters";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
@@ -26,9 +28,12 @@ import { Prose } from "../../AnnotatedText";
 import { Delta, Ico } from "../parts";
 import {
   MARK_GLYPH,
+  ROW_LABEL,
+  TRADE_ROWS,
   answerMark,
   bundleWords,
   heldOf,
+  isGood,
   itemCount,
   itemIcon,
   itemKey,
@@ -36,10 +41,11 @@ import {
   itemsOf,
   offerTitle,
   pickable,
+  rowOf,
   stocksAfter,
   withCount,
 } from "./tradeView";
-import type { Sides, TradeItem } from "./tradeView";
+import type { Sides, TradeItem, TradeRow } from "./tradeView";
 import { useTradePick } from "./tradePick";
 
 /**
@@ -54,6 +60,17 @@ import { useTradePick } from "./tradePick";
 const ASK_CAP = 99;
 
 const both = (sides: Sides) => [...itemsOf(sides.gives), ...itemsOf(sides.gets)];
+const lends = (sides: Sides) => both(sides).some((item) => item.kind === "lent");
+
+/** The terms a card sends: its two sides, and the lent goods' length when any are lent. */
+function termsOf(sides: Sides, lease: LeaseLength): TradeTerms {
+  return { give: sides.gives, get: sides.gets, ...(lends(sides) ? { lease } : {}) };
+}
+
+const LEASE_WORDS: Record<LeaseLength, string> = {
+  turn: "One turn",
+  standing: "Until ended",
+};
 const sameSides = (a: Sides, b: Sides) =>
   both(a).length === both(b).length &&
   (["gives", "gets"] as const).every((side) =>
@@ -78,12 +95,15 @@ function Column({
   G,
   label,
   bundle,
+  rows,
   was,
   edit,
 }: {
   G: HegemonyState;
   label: string;
   bundle: TradeBundle;
+  /** The rows either side fills, so both columns line up. */
+  rows: readonly TradeRow[];
   was?: TradeBundle;
   edit?: {
     cap: (item: TradeItem) => number;
@@ -99,63 +119,79 @@ function Column({
     ...(was ? itemsOf(was).filter((item) => itemCount(bundle, item) === 0) : []),
   ];
 
+  const labelled = rows.some((row) => row !== "now");
+  const chip = (item: TradeItem) => {
+    const n = itemCount(bundle, item);
+    const before = was ? itemCount(was, item) : n;
+    const name = itemName(G, item, n);
+    const cap = edit?.cap(item) ?? 0;
+    return (
+      <span
+        className={`trade-chip${n === 0 ? " is-zero" : ""}${before !== n ? " is-changed" : ""}`}
+        key={itemKey(item)}
+      >
+        <Ico path={itemIcon(item)} size="chip" />
+        {edit && !isGood(item) ? (
+          <button
+            aria-label={`One less ${itemName(G, item, 1)}`}
+            className="name trade-step"
+            onClick={() => edit.onChange(withCount(bundle, item, n - 1))}
+            type="button"
+          >
+            −
+          </button>
+        ) : null}
+        <b className="stat num trade-n">{isGood(item) ? name : n}</b>
+        <span className="visuallyHidden">
+          {isGood(item) ? "" : ` ${name}`}
+          {item.kind === "yearly" ? " every year" : item.kind === "lent" ? " on loan" : ""}
+        </span>
+        {edit ? (
+          isGood(item) ? (
+            <button
+              aria-label={`Take ${name} off`}
+              className="name trade-step"
+              onClick={() => edit.onChange(withCount(bundle, item, 0))}
+              type="button"
+            >
+              ×
+            </button>
+          ) : (
+            <button
+              aria-disabled={n >= cap ? true : undefined}
+              aria-label={`One more ${itemName(G, item, 1)}`}
+              className="name trade-step"
+              onClick={() => n < cap && edit.onChange(withCount(bundle, item, n + 1))}
+              type="button"
+            >
+              +
+            </button>
+          )
+        ) : null}
+        {before !== n ? (
+          <span className="caption trade-was">
+            was <s>{before}</s>
+          </span>
+        ) : null}
+      </span>
+    );
+  };
+
   return (
     <div className="trade-col">
       <span className="caps trade-label">{label}</span>
+      {rows.map((row) => {
+        const here = items.filter((item) => rowOf(item) === row);
+        return (
+          <div className="trade-line" key={row}>
+            {labelled ? <span className="caption trade-line-label">{ROW_LABEL[row]}</span> : null}
+            <div className="trade-chips">
+              {here.length ? here.map(chip) : <span className="caption trade-none">—</span>}
+            </div>
+          </div>
+        );
+      })}
       <div className="trade-chips">
-        {items.map((item) => {
-          const n = itemCount(bundle, item);
-          const before = was ? itemCount(was, item) : n;
-          const name = itemName(G, item, n);
-          const cap = edit?.cap(item) ?? 0;
-          return (
-            <span
-              className={`trade-chip${n === 0 ? " is-zero" : ""}${before !== n ? " is-changed" : ""}`}
-              key={itemKey(item)}
-            >
-              <Ico path={itemIcon(item)} size="chip" />
-              {edit && item.kind !== "good" ? (
-                <button
-                  aria-label={`One less ${itemName(G, item, 1)}`}
-                  className="name trade-step"
-                  onClick={() => edit.onChange(withCount(bundle, item, n - 1))}
-                  type="button"
-                >
-                  −
-                </button>
-              ) : null}
-              <b className="stat num trade-n">{item.kind === "good" ? name : n}</b>
-              <span className="visuallyHidden">{item.kind === "good" ? "" : ` ${name}`}</span>
-              {edit ? (
-                item.kind === "good" ? (
-                  <button
-                    aria-label={`Take ${name} off`}
-                    className="name trade-step"
-                    onClick={() => edit.onChange(withCount(bundle, item, 0))}
-                    type="button"
-                  >
-                    ×
-                  </button>
-                ) : (
-                  <button
-                    aria-disabled={n >= cap ? true : undefined}
-                    aria-label={`One more ${itemName(G, item, 1)}`}
-                    className="name trade-step"
-                    onClick={() => n < cap && edit.onChange(withCount(bundle, item, n + 1))}
-                    type="button"
-                  >
-                    +
-                  </button>
-                )
-              ) : null}
-              {before !== n ? (
-                <span className="caption trade-was">
-                  was <s>{before}</s>
-                </span>
-              ) : null}
-            </span>
-          );
-        })}
         {edit && edit.picks.length > 0 ? (
           <button
             aria-expanded={picking}
@@ -169,26 +205,38 @@ function Column({
         ) : null}
         {edit && picking ? (
           <span className="trade-picker">
-            {edit.picks.map((item) => {
-              const held = edit.held?.(item);
-              const off = held === 0;
+            {TRADE_ROWS.map((row) => {
+              const picks = edit.picks.filter((item) => rowOf(item) === row);
+              if (picks.length === 0) return null;
               return (
-                <button
-                  aria-disabled={off ? true : undefined}
-                  aria-label={`${itemName(G, item, 1)}${held === undefined ? "" : `, you hold ${held}`}`}
-                  className="trade-pick"
-                  key={itemKey(item)}
-                  onClick={() => {
-                    if (off) return;
-                    setPicking(false);
-                    edit.onChange(withCount(bundle, item, 1));
-                  }}
-                  title={itemName(G, item, 1)}
-                  type="button"
-                >
-                  <Ico path={itemIcon(item)} size="ui" />
-                  {held === undefined ? null : <span className="caption trade-held">{held}</span>}
-                </button>
+                <span className="trade-pickrow" key={row}>
+                  <span className="caption trade-pickcap">{ROW_LABEL[row]}</span>
+                  {picks.map((item) => {
+                    const held = edit.held?.(item);
+                    const off = held === 0;
+                    const words = `${itemName(G, item, 1)}${row === "now" ? "" : `, ${ROW_LABEL[row].toLowerCase()}`}`;
+                    return (
+                      <button
+                        aria-disabled={off ? true : undefined}
+                        aria-label={`${words}${held === undefined ? "" : `, you hold ${held}`}`}
+                        className="trade-pick"
+                        key={itemKey(item)}
+                        onClick={() => {
+                          if (off) return;
+                          setPicking(false);
+                          edit.onChange(withCount(bundle, item, 1));
+                        }}
+                        title={words}
+                        type="button"
+                      >
+                        <Ico path={itemIcon(item)} size="ui" />
+                        {held === undefined ? null : (
+                          <span className="caption trade-held">{held}</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </span>
               );
             })}
           </span>
@@ -209,6 +257,8 @@ function Exchange({
   sides,
   was,
   onChange,
+  lease = "standing",
+  onLease,
 }: {
   G: HegemonyState;
   actor: PlayerId;
@@ -219,8 +269,13 @@ function Exchange({
   sides: Sides;
   was?: Sides;
   onChange?: (sides: Sides) => void;
+  /** How long lent goods stay; a choice while composing or countering. */
+  lease?: LeaseLength;
+  onLease?: (lease: LeaseLength) => void;
 }) {
   const name = G.players[actor].name;
+  const present = new Set([...both(sides), ...(was ? both(was) : [])].map(rowOf));
+  const rows = TRADE_ROWS.filter((row) => row === "now" || present.has(row));
   const edit = (side: keyof Sides) =>
     onChange && {
       cap: (item: TradeItem) => (side === "gives" ? heldOf(G, actor, item) : ASK_CAP),
@@ -229,25 +284,62 @@ function Exchange({
       onChange: (bundle: TradeBundle) => onChange({ ...sides, [side]: bundle }),
     };
   return (
-    <div className="trade-xchg">
-      <Column
-        G={G}
-        bundle={sides.gets}
-        edit={edit("gets")}
-        label={named ? `${name} wants` : "I want"}
-        was={was?.gets}
-      />
-      <span aria-hidden="true" className="trade-flow">
-        <span className="trade-arrow is-out" />
-        <span className="trade-arrow is-in" />
+    <>
+      <div className="trade-xchg">
+        <Column
+          G={G}
+          bundle={sides.gets}
+          edit={edit("gets")}
+          label={named ? `${name} wants` : "I want"}
+          rows={rows}
+          was={was?.gets}
+        />
+        <span aria-hidden="true" className="trade-flow">
+          <span className="trade-arrow is-out" />
+          <span className="trade-arrow is-in" />
+        </span>
+        <Column
+          G={G}
+          bundle={sides.gives}
+          edit={edit("gives")}
+          label={named ? `${name} gives` : "I give"}
+          rows={rows}
+          was={was?.gives}
+        />
+      </div>
+      {lends(sides) ? <Lease lease={lease} onLease={onLease} /> : null}
+    </>
+  );
+}
+
+/** How long the lent goods stay: through the borrower's next turn, or until a seat ends
+ *  the deal. A choice while the card is being written; words once it is sent. */
+function Lease({ lease, onLease }: { lease: LeaseLength; onLease?: (lease: LeaseLength) => void }) {
+  return (
+    <div className="trade-lease">
+      <span className="caps">Lent for</span>
+      {onLease ? (
+        <span className="trade-lease-pick" role="group" aria-label="Lent for">
+          {(["turn", "standing"] as const).map((length) => (
+            <button
+              aria-pressed={lease === length}
+              className={`btn kicker${lease === length ? " is-on" : ""}`}
+              key={length}
+              onClick={() => onLease(length)}
+              type="button"
+            >
+              {LEASE_WORDS[length]}
+            </button>
+          ))}
+        </span>
+      ) : (
+        <span className="body body-sm">{LEASE_WORDS[lease]}</span>
+      )}
+      <span className="caption trade-caption">
+        {lease === "turn"
+          ? "Back after the borrower's next turn."
+          : "Back when a seat ends the deal, at the year's end."}
       </span>
-      <Column
-        G={G}
-        bundle={sides.gives}
-        edit={edit("gives")}
-        label={named ? `${name} gives` : "I give"}
-        was={was?.gives}
-      />
     </div>
   );
 }
@@ -330,7 +422,8 @@ export function ComposeCard({ seat, onClose }: { seat: PlayerId; onClose: () => 
   const rivals = PLAYER_IDS.filter((id) => id !== seat);
   const [to, setTo] = useState<PlayerId[]>([]);
   const [sides, setSides] = useState<Sides>({ gives: emptyBundle(), gets: emptyBundle() });
-  const terms = { give: sides.gives, get: sides.gets };
+  const [lease, setLease] = useState<LeaseLength>("standing");
+  const terms = termsOf(sides, lease);
   const status = getTradeOfferStatus(G, seat, to, terms, firstPlaces(G, seat, sides));
   const names = to.map((id) => G.players[id].name);
   const listed =
@@ -370,7 +463,9 @@ export function ComposeCard({ seat, onClose }: { seat: PlayerId; onClose: () => 
       <Exchange
         G={G}
         actor={seat}
+        lease={lease}
         onChange={setSides}
+        onLease={setLease}
         others={to.length ? to : rivals}
         sides={sides}
       />
@@ -428,14 +523,17 @@ function Counter({
   const { G, moves, viewerId } = useGameUi();
   const pick = useTradePick();
   const base: Sides = { gives: offer.terms.get, gets: offer.terms.give };
+  const baseLease = offer.terms.lease ?? "standing";
   const [draft, setDraft] = useState<Sides>(base);
-  const counterTerms = { give: draft.gets, get: draft.gives };
+  const [lease, setLease] = useState<LeaseLength>(baseLease);
+  // A counter's terms read from the offering seat, like the offer's.
+  const counterTerms = termsOf({ gives: draft.gets, gets: draft.gives }, lease);
   const status = getTradeAnswerStatus(G, seat, offer.id, {
     kind: "counter",
     terms: counterTerms,
     places: firstPlaces(G, seat, draft),
   });
-  const changed = !sameSides(draft, base);
+  const changed = !sameSides(draft, base) || (lends(draft) && lease !== baseLease);
   const who = seatName(G, seat, viewerId, true);
 
   return (
@@ -444,7 +542,9 @@ function Counter({
       <Exchange
         G={G}
         actor={seat}
+        lease={lease}
         onChange={setDraft}
+        onLease={setLease}
         others={[offer.from]}
         sides={draft}
         was={base}
@@ -672,6 +772,7 @@ export function OfferCard({ offer, onClose }: { offer: TradeOffer; onClose: () =
           <Exchange
             G={G}
             actor={offer.from}
+            lease={offer.terms.lease}
             named
             others={offer.to}
             sides={{ gives: offer.terms.give, gets: offer.terms.get }}

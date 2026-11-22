@@ -173,9 +173,9 @@ are being built, with no balance batches until both are in the engine and the bo
 **Built by 2026-11-03:** steps 1, 2, 3, 6 and 7, and step 4's forecast; its bot use waits for
 step 5.
 
-**Trade deals (owner, 2026-11-03).** Leased goods and deals that repeat every year are back,
-after recurring deals were dropped on 2026-10-29. The [trade deals](plans/trade-deals.md) spec
-holds the open questions for a study. Nothing is built until the owner picks.
+**Trade deals (owner, 2026-11-03; built 2026-11-05).** Yearly lines and lent goods are in the
+game ([trade deals](plans/trade-deals.md)). Bots decline them until the bot work teaches them
+to value, offer and end deals.
 
 **Small items**, taken when convenient:
 

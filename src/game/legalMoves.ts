@@ -102,6 +102,8 @@ import { PLAYER_IDS } from "./data";
 import { commandActorEligibility, eligibleActors, outOfTurnActors } from "./actors";
 import {
   counterOf,
+  dealEnd,
+  getDealEndStatus,
   getTradeAnswerStatus,
   getTradeSettleStatus,
   getTradeWithdrawStatus,
@@ -111,6 +113,7 @@ import {
   tradeSettle,
   tradeWithdraw,
 } from "./trade";
+import { dealEndTurnReason, dealShortfall, dealsAwaitingAnswer, dealsOf } from "./deals";
 import type {
   BuildingId,
   HegemonyState,
@@ -222,6 +225,10 @@ export type GameCommand =
   | { type: "tradeAnswer"; offerId: string; answer: TradeAnswer }
   | { type: "tradeSettle"; offerId: string; partner: PlayerId; places: TradePlaces }
   | { type: "tradeWithdraw"; offerId: string }
+  // ── Standing deals (docs/plans/trade-deals.md). A seat ends one on its own turn, and
+  //    answers a partner's short payment at its income: keep takes what was paid.
+  | { type: "dealEnd"; dealId: string }
+  | { type: "dealShortfall"; dealId: string; keep: boolean }
   | { type: "endTurn" };
 
 /** Engine-derived presentation for one currently legal command. */
@@ -413,6 +420,10 @@ function applyCommandMutable(G: HegemonyState, playerID: PlayerId, move: GameCom
       return tradeSettle(G, playerID, move.offerId, move.partner, move.places);
     case "tradeWithdraw":
       return tradeWithdraw(G, playerID, move.offerId);
+    case "dealEnd":
+      return dealEnd(G, playerID, move.dealId);
+    case "dealShortfall":
+      return dealShortfall(G, playerID, move.dealId, move.keep);
     case "endTurn":
       return endTurn(G);
   }
@@ -595,6 +606,14 @@ function enumerateTradeCommands(G: HegemonyState, playerID: PlayerId): DerivedCo
       moves.push({ type: "tradeWithdraw", offerId: offer.id });
     }
   }
+  for (const deal of dealsAwaitingAnswer(G, playerID)) {
+    moves.push({ type: "dealShortfall", dealId: deal.id, keep: true });
+    moves.push({ type: "dealShortfall", dealId: deal.id, keep: false });
+  }
+  for (const deal of dealsOf(G, playerID)) {
+    if (getDealEndStatus(G, playerID, deal.id).can)
+      moves.push({ type: "dealEnd", dealId: deal.id });
+  }
   return moves;
 }
 
@@ -681,6 +700,10 @@ export function describeCommand(
       return `settle ${move.offerId} with seat ${move.partner}`;
     case "tradeWithdraw":
       return `withdraw ${move.offerId}`;
+    case "dealEnd":
+      return `end ${move.dealId}`;
+    case "dealShortfall":
+      return `${move.keep ? "keep" : "cancel"} ${move.dealId} after a short payment`;
     case "endTurn":
       return "end turn";
   }
@@ -992,7 +1015,7 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
 
   moves.push(...enumerateIdeaCommands(G, playerID, "buyIdea"));
   moves.push(...enumerateTradeCommands(G, playerID));
-  moves.push({ type: "endTurn" });
+  if (!dealEndTurnReason(G)) moves.push({ type: "endTurn" });
   return moves;
 }
 

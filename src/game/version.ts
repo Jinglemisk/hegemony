@@ -96,8 +96,12 @@ export const ENGINE_VERSION = "0.1.0";
  *  than the deck shuffles the spent years back in a year earlier, so the next card can
  *  show. Such a v28 recording replays differently, so older saves are rejected. Commands
  *  are unchanged. */
-export const STATE_SCHEMA_VERSION = 29;
-export const COMMAND_SCHEMA_VERSION = 11;
+/** v30 (trade deals): a trade may carry yearly lines and lent goods, which leave a
+ *  standing deal on the state; seats settle deals at their own income, and a lent good
+ *  counts for its borrower. Command v12 carries the new terms and adds ending a deal and
+ *  answering a short payment. Older saves are rejected, not migrated. */
+export const STATE_SCHEMA_VERSION = 30;
+export const COMMAND_SCHEMA_VERSION = 12;
 
 export const SAVE_FORMAT_VERSION = 2;
 export const SCRIPT_FORMAT_VERSION = 2;

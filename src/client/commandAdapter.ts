@@ -62,6 +62,8 @@ export type GameMoves = {
     places: TradePlaces,
   ) => void;
   tradeWithdraw: (playerID: PlayerId, offerId: string) => void;
+  dealEnd: (playerID: PlayerId, dealId: string) => void;
+  dealShortfall: (playerID: PlayerId, dealId: string, keep: boolean) => void;
 };
 
 export type DispatchGameCommand = (command: GameCommand, actor?: PlayerId) => void;
@@ -130,6 +132,9 @@ export function createCommandMoves(dispatch: DispatchGameCommand): GameMoves {
     tradeSettle: (playerID, offerId, partner, places) =>
       dispatch({ type: "tradeSettle", offerId, partner, places }, playerID),
     tradeWithdraw: (playerID, offerId) => dispatch({ type: "tradeWithdraw", offerId }, playerID),
+    dealEnd: (playerID, dealId) => dispatch({ type: "dealEnd", dealId }, playerID),
+    dealShortfall: (playerID, dealId, keep) =>
+      dispatch({ type: "dealShortfall", dealId, keep }, playerID),
   };
 }
 

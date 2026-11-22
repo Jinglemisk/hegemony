@@ -321,15 +321,19 @@
   border: var(--rule-2) solid var(--clay);
   color: var(--clay);
 }
+/* It opens upward, centred on its column: three short rows (now, every year, on loan)
+   stay on screen whether the card hangs from the alarms row or rises from the verbs. */
 .trade-picker {
   position: absolute;
   z-index: var(--z-lift);
-  top: 42px;
-  left: 0;
+  bottom: 42px;
+  left: 50%;
   display: flex;
   flex-wrap: wrap;
   gap: 2px;
-  max-width: calc(var(--u) * 64);
+  width: max-content;
+  max-width: calc(var(--u) * 88);
+  transform: translateX(-50%);
   padding: 6px;
   border-radius: var(--r-8);
   background: var(--ivory);
@@ -481,4 +485,124 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--s-2);
+}
+
+/* ---- deals: the card's rows, the lease, and the standing deal's disc and card ---- */
+/* A column's rows (now, every year, on loan), named once any row past "now" is in use. */
+.trade-line {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-1);
+  width: 100%;
+}
+.trade-line-label,
+.trade-none {
+  color: var(--ink-66);
+}
+.trade-pickrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+}
+.trade-pickcap {
+  width: 100%;
+  padding: 2px var(--s-1) 0;
+  color: var(--ink-66);
+}
+.trade-lease {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1) var(--s-3);
+  padding: 0 var(--s-4) var(--s-3);
+}
+.trade-lease-pick {
+  display: inline-flex;
+  gap: var(--s-1);
+}
+.trade-lease-pick .btn {
+  height: var(--s-8);
+  border: 0;
+  border-radius: var(--r-4);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+  background: var(--ivory);
+  cursor: pointer;
+}
+.trade-lease-pick .btn.is-on {
+  box-shadow: inset 0 0 0 var(--rule-2) var(--ink);
+}
+
+.deal-disc {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+  cursor: pointer;
+}
+.deal-disc:hover,
+.deal-disc[aria-expanded="true"] {
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+.deal-ring {
+  position: absolute;
+  inset: calc(-1 * var(--s-1));
+  border-radius: var(--r-round);
+  background: var(--owner);
+  mask: radial-gradient(farthest-side, transparent calc(100% - 5px), black calc(100% - 4.5px));
+}
+/* A deal running out with the year: its ring broken. */
+.deal-disc.is-ending .deal-ring {
+  background: repeating-conic-gradient(var(--owner) 0deg 24deg, transparent 24deg 36deg);
+}
+.deal-terms {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--s-1) var(--s-3);
+  margin: 0;
+  padding: var(--s-3) var(--s-4);
+}
+.deal-terms dt {
+  grid-column: 1;
+  color: var(--ink-66);
+}
+.deal-terms dd {
+  grid-column: 2;
+  margin: 0;
+}
+.deal-income {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-3);
+}
+.deal-income .is-up {
+  color: var(--olive);
+}
+.deal-income .is-down {
+  color: var(--clay-ink);
+}
+.deal-ask {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+  border-top: var(--rule-2) solid var(--clay);
+  background: var(--bone);
+}
+.deal-ask p {
+  margin: 0;
+}
+.deal-ask-acts {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s-2);
+}
+.deal-ask-acts .btn {
+  height: 36px;
+  border: 0;
+  border-radius: var(--r-4);
+  cursor: pointer;
 }

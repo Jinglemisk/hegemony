@@ -1,5 +1,6 @@
 import { getBuilding, getLuxuryGood, getLuxuryGoods } from "./content";
 import type { GameContent } from "./content";
+import { endDealLending, holderOf } from "./deals";
 import { allocateEntityId } from "./entity";
 import { selectLuxuryVertices } from "./mapTopology";
 import type { HegemonyState, HexTile, LuxuryAsset, PlayerId } from "./types";
@@ -52,16 +53,17 @@ export function createLuxuryAssets(
 }
 
 const assetIdOrder = new Intl.Collator(undefined, { numeric: true });
-/** Every asset the player owns, in stable asset-id order. */
-export function ownedClaims(G: HegemonyState, playerID: PlayerId): LuxuryAsset[] {
+/** Every good that counts for the player, in stable asset-id order: its own, but those
+ *  it lent out, and those lent to it (deals.ts). */
+export function heldClaims(G: HegemonyState, playerID: PlayerId): LuxuryAsset[] {
   return G.board.luxuries
-    .filter((asset) => asset.owner === playerID)
+    .filter((asset) => holderOf(G, asset) === playerID)
     .sort((a, b) => assetIdOrder.compare(a.id, b.id));
 }
 
-/** The player's active goods: owned and unsuppressed. There is no cap on how many. */
+/** The player's active goods: held and unsuppressed. There is no cap on how many. */
 export function activeClaims(G: HegemonyState, playerID: PlayerId): LuxuryAsset[] {
-  return ownedClaims(G, playerID).filter((asset) => asset.suppressedTurns === 0);
+  return heldClaims(G, playerID).filter((asset) => asset.suppressedTurns === 0);
 }
 
 /** The luxury term of the level: every active good adds `happinessPerGood`, and
@@ -100,7 +102,7 @@ export function luxuryName(G: HegemonyState, asset: LuxuryAsset): string {
 /**
  * The one ownership-transfer seam. The Port's claim, player trade and the Port rule's
  * release all go through it, so "one good, one owner" is checked in exactly one place.
- * A release (`null`) clears the claim origin with the owner.
+ * A release (`null`) clears the claim origin with the owner, and ends a deal lending it.
  */
 export function transferLuxury(
   G: HegemonyState,
@@ -117,7 +119,10 @@ export function transferLuxury(
   }
 
   asset.owner = newOwner;
-  if (newOwner === null) asset.claimedAtSettlementId = null;
+  if (newOwner === null) {
+    asset.claimedAtSettlementId = null;
+    endDealLending(G, asset.id);
+  }
   return MOVE_OK;
 }
 
