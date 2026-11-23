@@ -589,6 +589,84 @@
   outline-offset: calc(-1 * var(--rule-2));
 }
 
+/* ---- Victory: the six titles as cards ------------------------------------------
+   One card a title, the full width, so all six stand without scrolling. A title held
+   takes its holder's glaze as a frame, and the holder's count stands in a pill of it,
+   so who holds it reads by shape as well as colour. */
+.vc-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.vc-card {
+  display: grid;
+  gap: 1px;
+  padding: 5px var(--s-2);
+  border-radius: var(--r-panel);
+  color: var(--ink);
+  background: var(--tile-face);
+  box-shadow: var(--tile-rim);
+}
+.vc-card[data-held] {
+  box-shadow:
+    inset 0 0 0 3px var(--vc-seat),
+    var(--tile-rim);
+}
+.vc-card[data-held="kyanos"] {
+  --vc-seat: var(--seat-kyanos);
+}
+.vc-card[data-held="melas"] {
+  --vc-seat: var(--seat-melas);
+}
+.vc-card[data-held="porphyra"] {
+  --vc-seat: var(--seat-porphyra);
+}
+.vc-card[data-held="kinnabari"] {
+  --vc-seat: var(--seat-kinnabari);
+}
+.vc-card.is-lit {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: var(--rule-2);
+}
+.vc-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-family: var(--f-name);
+  font-weight: 700;
+  letter-spacing: var(--track-name);
+  text-transform: none;
+}
+.vc-rule {
+  margin: 0;
+  color: var(--ink-72);
+}
+.vc-counts {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.vc-counts li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: 0 var(--s-2) 0 0;
+  border-radius: var(--r-24);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.vc-counts li.is-held {
+  color: var(--ivory);
+  background: var(--vc-seat);
+  box-shadow: 0 0 0 var(--rule) var(--bz-hi);
+}
+
 /* ---- the place panel: 604×404 out of the sidebar, at the bottom-left ---------- */
 .pp {
   position: fixed;

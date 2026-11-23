@@ -503,6 +503,8 @@
 .lw-tile.is-place .lw-tile-v,
 .lw-row-name,
 .lw-table td,
+.vc-name,
+.vc-counts b,
 .pp-opt-n,
 .pp-facts,
 .pp-lore,
@@ -525,6 +527,7 @@
 .lw-none,
 .lw-why,
 .lw-table th[scope="row"],
+.vc-rule,
 .pp-opt-line,
 .pp-pop-line {
   font-size: var(--t-14);

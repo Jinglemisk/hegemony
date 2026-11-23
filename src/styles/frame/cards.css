@@ -740,6 +740,20 @@
 .ceremony .drawn-slip .fateTarget .placementPickerChip {
   padding-inline: var(--s-4);
 }
+/* The commit and any way out beside it, each as wide as its words, centred. */
+.drawn-acts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-3);
+}
+.drawn-acts .ch-ctl {
+  min-height: calc(var(--u) * 11); /* 44: the moment's one press */
+  padding-inline: var(--s-6);
+}
+.drawn-acts .drawn-commit {
+  gap: var(--s-1);
+}
 .drawn-caption {
   display: grid;
   gap: var(--s-1);
@@ -751,14 +765,6 @@
 }
 .drawn-wait {
   color: var(--ochre);
-}
-/* Decline beside the commit sits on the scrim, so it reads in ivory, not ink. */
-.drawn-tray .ghostVerb {
-  color: var(--ivory-70);
-}
-.drawn-tray .ghostVerb:not(:disabled):hover {
-  color: var(--ivory);
-  background: color-mix(in srgb, var(--ivory) 10%, transparent);
 }
 @keyframes drawnTray {
   from {

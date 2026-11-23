@@ -44,7 +44,7 @@ const dismissDialogs = async (p) => {
     if (!(await d.count())) return;
     const btn = d
       .getByRole("button", {
-        name: /^(Endure It|Take It|Take the .+|So Be It|Place Pop|Place Unrest|Clear Unrest|Continue|Close)$/,
+        name: /^(Endure It|Take It|So Be It|(Take|Lose|Settle|Place|Clear|Keep) the .+|Continue|Close)$/,
       })
       .first();
     if (!(await btn.count())) return;
@@ -351,7 +351,7 @@ export const SURFACES = [
       // A yield's commit names what it gave ("Take the Food"); a held card is kept.
       const done = p
         .getByRole("dialog")
-        .getByRole("button", { name: /keep it|take the/i })
+        .getByRole("button", { name: /^(keep|take) the /i })
         .first();
       if (await done.count()) await done.click().catch(() => {});
       await p.keyboard.press("Escape");

@@ -4,11 +4,10 @@ import { presentYearCard } from "../../../ui/effects";
 import { toRoman } from "../../../ui/formatters";
 import { DeckLine } from "../../cards/DeckLine";
 import { GameCard } from "../../cards/GameCard";
-import { Ico } from "../../frame/parts";
 import { yearCardArtUrl } from "../events";
 import { useGameUi } from "../GameUiContext";
 import { ceremonyMood } from "./ceremonyMood";
-import { DrawnReveal } from "./DrawnReveal";
+import { DrawnCommit, DrawnReveal } from "./DrawnReveal";
 
 const FLIP_MS = 1000;
 
@@ -49,7 +48,6 @@ export function YearCardModal({
   if (!card) return null;
 
   const sits = G.assembly && G.assembly.year === G.year;
-  const convene = reveal && sits;
 
   return (
     <DrawnReveal
@@ -70,10 +68,16 @@ export function YearCardModal({
       onDismiss={face ? onClose : undefined}
       waiting={!face}
     >
-      <button className="ceremonyCommit verb verb-lg" onClick={onClose} type="button">
-        {convene ? <Ico path="assembly/agora" size="ui" /> : null}
-        {!reveal ? "Close" : sits ? "Convene the Assembly" : `Begin Year ${toRoman(G.year)}`}
-      </button>
+      <DrawnCommit
+        label={
+          !reveal
+            ? { verb: "Close" }
+            : sits
+              ? { verb: "Convene the", icon: "assembly/agora", noun: "Assembly" }
+              : { verb: `Begin Year ${toRoman(G.year)}` }
+        }
+        onClick={onClose}
+      />
     </DrawnReveal>
   );
 }

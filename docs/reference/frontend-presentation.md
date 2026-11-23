@@ -37,7 +37,8 @@ keyboard-focusable, and guards its click handler in code. The tooltip is connect
 the focusable tooltip trigger only with an accessible label that identifies the object.
 
 Keyboard focus and pointer hover show the explanation; blur, outside pointer activity,
-or Escape dismisses it. On touch, the first tap explains and suppresses its associated
+or Escape dismisses it. One tooltip shows at a time: opening one closes the last at
+once, even inside a locked card's grace (owner, 2026-11-23). On touch, the first tap explains and suppresses its associated
 click, while the second tap activates. Pointer cancellation clears suppression. This
 touch contract requires owner verification on real hardware; DOM or browser touch
 emulation is useful regression coverage but is not equivalent to a device test.
@@ -109,7 +110,10 @@ face from the engine's typed card, so the face cannot disagree with the rules:
   selector for what a deck makes public: the year deck's cards left and what is left of
   each kind, the fates' count with the kinds on hover, an Assembly draw's politician
   deck. It reads only the projected state, so it never shows an order or a next card.
-  The year card has no slip: card, deck line, commit. Next year's card shows on the
+  The year card has no slip: card, deck line, commit. The commit (`DrawnCommit`) is the
+  moment's one lacquer, as wide as its words, which name what the card does from its
+  typed effect, with the icon of what it acts on: "Clear the Unrest", "Settle the
+  Freeman", "Keep the Raiders" (owner, 2026-11-23). Next year's card shows on the
   clock's hover in the top bar (owner, 2026-11-03); the final year has none.
 - **Nothing moves** (owner, 2026-10-28). A card lands at its final place: it turns over
   or fades in where it lies, never sliding or scaling. The stack under it is laid out at

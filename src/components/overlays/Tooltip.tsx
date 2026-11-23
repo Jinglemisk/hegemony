@@ -16,7 +16,7 @@ import { createPortal } from "react-dom";
 import type { VerticalPlacement } from "../../ui/anchoring";
 import { overlayRoot } from "../chrome/canvas";
 import { TipCard } from "./TipCard";
-import { TIP_GRACE_MS } from "./tipTiming";
+import { TIP_GRACE_MS, claimTip, releaseTip } from "./tipTiming";
 import { useAnchoredOverlay } from "./useAnchoredOverlay";
 
 export function Tooltip({
@@ -68,9 +68,17 @@ export function Tooltip({
     window.clearTimeout(closeTimer.current);
     closeTimer.current = undefined;
   };
+  // Closes this tip at once, from anywhere: another tooltip opening calls it.
+  const [shut] = useState(() => () => {
+    window.clearTimeout(closeTimer.current);
+    closeTimer.current = undefined;
+    lockedRef.current = false;
+    setOpenState(false);
+  });
   const setOpen = (next: boolean) => {
     cancelClose();
-    if (!next) lockedRef.current = false;
+    if (next) claimTip(shut);
+    else lockedRef.current = false;
     setOpenState(next);
   };
   const closeSoon = () => {
@@ -78,6 +86,7 @@ export function Tooltip({
     closeTimer.current = window.setTimeout(() => setOpen(false), TIP_GRACE_MS);
   };
   useEffect(() => () => window.clearTimeout(closeTimer.current), []);
+  useEffect(() => () => releaseTip(shut), [shut]);
   const position = useAnchoredOverlay(
     open ? triggerRef : null,
     tooltipRef,

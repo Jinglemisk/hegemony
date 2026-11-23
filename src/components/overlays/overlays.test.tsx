@@ -15,6 +15,7 @@ import { EndTurn } from "../frame/EndTurn";
 import { MechanicsDetails } from "../MechanicsDetails";
 import { ModalShell } from "../board/modals/ModalShell";
 import { Popover } from "./Popover";
+import { TIP_LOCK_MS } from "./tipTiming";
 import { Tooltip } from "./Tooltip";
 
 let container: HTMLDivElement;
@@ -161,6 +162,39 @@ describe("Tooltip", () => {
     });
     pointer("mouseover", document.body);
     expect(tip()).not.toBeNull();
+  });
+
+  it("shows one tooltip at a time: the next one closes the last at once", () => {
+    vi.useFakeTimers();
+    act(() => {
+      root.render(
+        <>
+          <Tooltip content={<span data-term="resources">Food</span>}>
+            <button type="button">Granary</button>
+          </Tooltip>
+          <Tooltip content="Dole">
+            <button type="button">Dole</button>
+          </Tooltip>
+        </>,
+      );
+    });
+    const [granary, dole] = container.querySelectorAll("button");
+    const tips = () => [...document.body.querySelectorAll("[role=tooltip]")];
+    const move = (from: Element | null, to: Element) =>
+      act(() => {
+        from?.dispatchEvent(new MouseEvent("mouseout", { bubbles: true, relatedTarget: to }));
+        to.dispatchEvent(new MouseEvent("mouseover", { bubbles: true, relatedTarget: from }));
+      });
+
+    move(document.body, granary);
+    // Rested on, the tip with a term locks, so leaving it waits out a grace…
+    act(() => vi.advanceTimersByTime(TIP_LOCK_MS));
+    move(granary, dole);
+    // …but the next tip takes the screen at once rather than standing beside it.
+    expect(tips().map((tip) => tip.textContent)).toEqual(["Dole"]);
+
+    move(dole, granary);
+    expect(tips().map((tip) => tip.textContent)).toEqual(["Food"]);
   });
 
   it("supports a block trigger without nesting block content inside a span", () => {

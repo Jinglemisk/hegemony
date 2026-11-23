@@ -170,9 +170,6 @@
 .ch-moment .drawn-wait {
   color: var(--clay-ink);
 }
-.ch-moment .drawn-tray .ghostVerb {
-  color: var(--ink);
-}
 
 /* The game's end: no longer a chamfered tablet; the frame holds it. */
 .ch-moment.ceremonyTablet {

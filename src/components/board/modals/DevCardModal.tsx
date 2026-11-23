@@ -31,7 +31,8 @@ import { deckMark } from "../helpers";
 import type { DeckMark } from "../helpers";
 import { TileListbox } from "../TileListbox";
 import type { TileListboxOption } from "../TileListbox";
-import { DrawnReveal } from "./DrawnReveal";
+import { devDrawCommit } from "./ceremonyMood";
+import { DrawnCommit, DrawnReveal } from "./DrawnReveal";
 import { ModalShell } from "./ModalShell";
 
 /**
@@ -98,10 +99,8 @@ export function DrawnCardModal({ mark, onClose }: { mark: DeckMark; onClose: () 
         </p>
       }
     >
-      <button className="ceremonyCommit verb verb-lg" onClick={onClose} type="button">
-        {/* A yield is paid on the draw: the slip says what it gave, the button only closes. */}
-        {kept ? "Keep It" : "Done"}
-      </button>
+      {/* A yield is paid on the draw: the slip says what it gave, the commit takes it. */}
+      <DrawnCommit label={devDrawCommit(card)} onClick={onClose} />
     </DrawnReveal>
   );
 }
@@ -145,9 +144,7 @@ export function HandModal({ onClose, onBuy }: { onClose: () => void; onBuy: () =
           </p>
         }
       >
-        <button className="ceremonyCommit verb verb-lg" onClick={onClose} type="button">
-          Done
-        </button>
+        <DrawnCommit label={{ verb: "Done" }} onClick={onClose} />
       </DrawnReveal>
     );
   }

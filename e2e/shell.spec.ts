@@ -5,10 +5,10 @@ import { expect, test } from "@playwright/test";
 test("one left window: the seal, the outliner and a drawer's pick share it", async ({ page }) => {
   await page.goto("/?dev=late-game&seed=42");
   await page.locator(".living-map[data-ready]").waitFor();
-  // The seat's fate card comes first.
+  // The seat's fate card comes first: Rats.
   await page
     .getByRole("dialog")
-    .getByRole("button", { name: /^Endure it$/i })
+    .getByRole("button", { name: "Lose the Food", exact: true })
     .click();
 
   const left = page.locator('[data-c="drawer"], [data-c="place"]');

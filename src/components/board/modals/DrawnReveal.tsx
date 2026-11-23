@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
-import type { CeremonyMood } from "./ceremonyMood";
+import { Lacquer } from "../../chrome/controls";
+import { Ico } from "../../frame/parts";
+import type { CeremonyMood, CommitLabel } from "./ceremonyMood";
 import { ModalShell } from "./ModalShell";
 
 /**
@@ -33,7 +35,7 @@ export function DrawnReveal({
   caption?: ReactNode;
   /** Hold the tray hidden, in its place, until the card is face up. */
   waiting?: boolean;
-  /** The commit. */
+  /** The commit (a `DrawnCommit`), with any way out beside it. */
   children?: ReactNode;
 }) {
   return (
@@ -54,9 +56,43 @@ export function DrawnReveal({
         >
           {slip ? <div className="drawn-slip">{slip}</div> : null}
           {caption ? <div className="drawn-caption caption">{caption}</div> : null}
-          {children}
+          {children ? <div className="drawn-acts">{children}</div> : null}
         </div>
       ) : null}
     </ModalShell>
+  );
+}
+
+/**
+ * The commit under a drawn card: the moment's one lacquer, as wide as its words, which
+ * name what it does with the icon of what it acts on ("Clear the [unrest] Unrest").
+ */
+export function DrawnCommit({
+  label,
+  disabled,
+  onClick,
+}: {
+  label: CommitLabel;
+  disabled?: boolean;
+  onClick: () => void;
+}) {
+  const { verb, icon, noun } = label;
+  return (
+    <Lacquer
+      aria-label={noun ? `${verb} ${noun}` : undefined}
+      className="drawn-commit"
+      disabled={disabled}
+      onClick={onClick}
+    >
+      {noun ? (
+        <>
+          <span>{verb}</span>
+          {icon ? <Ico path={icon} size="ui" /> : null}
+          <span>{noun}</span>
+        </>
+      ) : (
+        verb
+      )}
+    </Lacquer>
   );
 }
