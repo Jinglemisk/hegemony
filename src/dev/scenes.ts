@@ -3,6 +3,7 @@ import { mulberry32 } from "../game/core/rng";
 import { enumerateLegalCommands, transition } from "../game/legalMoves";
 import type { GameCommand } from "../game/legalMoves";
 import type { HegemonyState, HexTile, PlayerId } from "../game/types";
+import { devCardOf } from "../game/devCards";
 import { allocateEntityId } from "../game/entity";
 import { areNeighbours, hexDistance } from "../game/mapTopology";
 import { PLAYER_IDS } from "../game/data";
@@ -262,11 +263,14 @@ export const DEV_SCENES: Record<string, (G: HegemonyState) => DevScene> = {
       draft.devDrawPile.unshift(take("foraging"));
     }),
   }),
-  // Five cards in hand, one bought this turn: the tray at its fullest.
+  // Five cards in hand (a yield pays on the draw, so none of those), one bought this
+  // turn: the tray at its fullest.
   "full-hand": (G) => ({
     G: produce(clearFate(G), (draft) => {
       const seat = draft.currentPlayer;
-      for (const [index, id] of draft.devDrawPile.splice(0, 5).entries())
+      const held = draft.devDrawPile.filter((id) => devCardOf(G, id)?.kind !== "yield").slice(0, 5);
+      draft.devDrawPile = draft.devDrawPile.filter((id) => !held.includes(id));
+      for (const [index, id] of held.entries())
         draft.devHands[seat].push({ id, turn: index === 4 ? draft.turn : draft.turn - 1 });
     }),
   }),
