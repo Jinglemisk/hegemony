@@ -157,7 +157,13 @@ it("seats the Assembly in a modal that folds to a read-only dock and keeps a dra
   act(() => container.querySelector<HTMLButtonElement>(".sit-dock")!.click());
   expect(container.querySelector('[role="dialog"] h2')?.textContent).toBe("The Assembly");
 
+  // A draw spends influence, so it asks first; nothing is drawn until yes.
   act(() => button("Draw from Perdiccas").click());
+  expect(G.assembly!.held[seat]).toBeFalsy();
+  const confirm = container.querySelector('[role="alertdialog"]')!;
+  expect(confirm.textContent).toContain("Are you sure you want to draw from Perdiccas?");
+  expect(confirm.textContent).toMatch(/This will cost \d+ influence: Influence 5→\d/);
+  act(() => button("Draw").click());
   const drawn = G.assembly!.held[seat]!.card.name;
   expect(container.textContent).toContain(drawn);
   expect(container.textContent).toContain("Only you can see this card");

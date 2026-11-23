@@ -308,6 +308,7 @@
   --z-under: -1;
   --z-lift: 1;
   --z-trim: 2; /* a panel's bronze corners, over its rule and its content */
+  --z-pick: 3; /* a picker opened inside a card: over the card's rule and corners */
 
   /* ---- rules, radii, shadows, states -------------------------------------- */
   --rule: 1px;
@@ -380,7 +381,14 @@
   --sh-hand-x: 624px; /* the hand's tray */
   --sh-hand-w: 480px;
   --sh-hand-h: 72px;
-  --sh-confirm-w: 680px; /* the confirm bar over the board's centre */
+  --sh-confirm-w: 680px; /* the confirm bar over the board's centre … */
+  --sh-confirm-h: 96px; /* … one height at every text size: its words scroll inside */
+  --sh-compose-h: 312px; /* the trade composer: one height, its rows scroll */
+  --sh-deal-h: 406px; /* an open offer and a standing deal: one height, their bodies scroll */
+  --sh-threat-h: 268px; /* the three-titles card */
+  --sh-pill-h: 92px; /* the Assembly's pill, minimised under the alarms */
+  --sh-notice-w: 400px; /* the turn notice, the same at every text size */
+  --sh-notice-h: 304px;
   --sh-corner: 38px; /* a bronze corner piece … */
   --sh-corner-out: 9px; /* … and how far it stands proud of the panel */
   --sh-meander-h: 7px; /* the meander strip under a head or the top bar */
@@ -489,6 +497,7 @@
   /* ---- messages and the confirm ------------------------------------------------ */
   --shadow-banner: 0 8px 20px rgb(0 0 0 / 45%);
   --scrim-confirm: rgb(12 26 30 / 16%); /* the board dims only slightly */
+  --scrim-compose: rgb(12 26 30 / 30%); /* the board behind the trade composer */
 
   /* ---- motion: 200–320ms for anything that moves; all zero under reduced motion */
   --dur-press: 90ms; /* a control's lift and press */

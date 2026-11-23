@@ -10,7 +10,9 @@ import {
 } from "../game/rules";
 import type { ActiveEffectDescriptor } from "../game/activeEffects";
 import { nextAssemblyYear } from "../game/assembly";
+import { getBuilding } from "../game/content";
 import { capitalize } from "../game/core/format";
+import { getOwnedSettlement } from "../game/core/query";
 import { dealEndTurnReason } from "../game/deals";
 import { PLAYER_IDS } from "../game/data";
 import { playerDole } from "../game/ideaRules";
@@ -93,8 +95,19 @@ export type HappinessDisplay = {
   lines: Array<{ label: string; amount: number; turns?: number }>;
 };
 
-function termLabel(G: HegemonyState, term: HappinessContribution): string {
+function termLabel(G: HegemonyState, playerID: PlayerId, term: HappinessContribution): string {
   switch (term.id) {
+    case "temples": {
+      // Counted like the rest ("3 Slaves"): the buildings that state happiness.
+      const count = G.players[playerID].settlements
+        .flatMap((tileId) => getOwnedSettlement(G, tileId, playerID)?.buildings ?? [])
+        .filter((id) =>
+          getBuilding(G.definition.content, id)?.effects.some(
+            (effect) => effect.type === "happiness",
+          ),
+        ).length;
+      return `${count} ${capitalize(term.detail)}`;
+    }
     case "slaves":
       return `${capitalize(term.detail)}, 1 per ${G.ruleset.economy.slavesPerUnhappiness}`;
     case "calm":
@@ -168,7 +181,7 @@ export function happinessDisplay(G: HegemonyState, playerID: PlayerId): Happines
     lines: terms
       .filter((term) => term.amount !== 0 || always.includes(term.id))
       .map((term) => ({
-        label: termLabel(G, term),
+        label: termLabel(G, playerID, term),
         amount: term.amount,
         ...(term.id === "calm" ? { turns: turnsLeftInYear(G, playerID) } : {}),
       })),

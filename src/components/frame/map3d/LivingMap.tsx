@@ -32,6 +32,7 @@ import type { Plates } from "./plates";
 import { createRuntime } from "./runtime";
 import type { Runtime } from "./runtime";
 import { ARROWS, tileTip } from "./tileTip";
+import { SeatCoin } from "../../chrome/SeatCoin";
 import "../../../styles/frame/map3d.css";
 
 /**
@@ -268,7 +269,8 @@ function RealmName({ realm }: { realm: MapRealm }) {
         ) : null}
       </span>
       <small>
-        {seat.glaze} {seat.blazon} · {cities} {cities === 1 ? "city" : "cities"}, {colonies}{" "}
+        <SeatCoin aria-hidden="true" className="lm-realm-coin" seat={realm.owner} />
+        {seat.glaze} · {cities} {cities === 1 ? "city" : "cities"}, {colonies}{" "}
         {colonies === 1 ? "colony" : "colonies"}
       </small>
     </div>
@@ -760,7 +762,7 @@ function LivingMap({
             {/* The good's icon on its raft, ringed in its holder's colour once claimed,
                 the holder's seat mark under it; its name under that. */}
             <b style={own(m.owner)}>{icon(LUXURY_GOOD_RASTERS[m.goodId])}</b>
-            {m.owner ? <i style={own(m.owner)}>{PLAYER_GLAZES[m.owner].blazon}</i> : null}
+            {m.owner ? <SeatCoin className="lm-moor-coin" seat={m.owner} /> : null}
             <span className="m-name">{m.name}</span>
           </button>
         ))}

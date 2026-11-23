@@ -429,25 +429,12 @@
   width: 82%;
   height: 82%;
 }
-/* The holder's seat mark, as the dock draws it, tucked over the icon's foot. */
-.lm-moor > i {
+/* The holder's seat coin, tucked over the icon's foot. */
+.lm-moor > .lm-moor-coin {
+  --coin-d: 1.5em;
   position: relative;
-  display: grid;
-  place-items: center;
-  width: 1.5em;
-  height: 1.5em;
   margin-top: -0.6em;
-  border-radius: var(--r-round);
-  background: var(--own);
-  color: var(--ivory);
-  font-family: var(--f-name);
-  font-style: normal;
-  font-weight: 700;
-  line-height: 1;
-  box-shadow:
-    inset 0 0 0 var(--rule) var(--ivory-45),
-    0 0 0 var(--rule) var(--ink),
-    var(--map-label-shadow);
+  box-shadow: var(--coin-rim), var(--map-label-shadow);
 }
 /* The name on a dark chip: a raft lies off the coast, so the name often falls on a
    tile and its plate. */
@@ -528,6 +515,11 @@
 }
 .lm-realm small {
   opacity: var(--a-realmline, 0);
+}
+.lm-realm-coin {
+  --coin-d: 1.3em;
+  margin-right: 0.3em;
+  vertical-align: -0.35em;
 }
 .lm-realm b {
   font-family: var(--f-name);

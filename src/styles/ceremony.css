@@ -308,14 +308,6 @@
   color: var(--ink-63);
 }
 
-.ceremonyCommit.is-dark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--s-2);
-  background: linear-gradient(180deg, var(--lacquer-lit), var(--vase-black));
-}
-
 /* ── The riot sheet ──────────────────────────────────────────────────────────
    Insurance on the left, the table on the right: each declaration strikes the
    rows it puts out of reach, so the trade reads as rows, not arithmetic. */

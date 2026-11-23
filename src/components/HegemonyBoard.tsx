@@ -255,7 +255,12 @@ export function HegemonyBoard({
   // The one turn gate: the seat, the phase, and any decision the engine waits on (a
   // fate card, hunger, a riot, the Assembly). The verbs, the turn dial and every realm
   // page read it (verbs.tsx), asked without a board fact in sight.
-  const turnGate = { isActive, phase: ctx.phase, pending: turnPending(G) };
+  const turnGate = {
+    isActive,
+    phase: ctx.phase,
+    pending: turnPending(G),
+    acting: G.players[currentPlayerId].name,
+  };
   const blocked = turnBlocked(turnGate);
   const turnOpen = blocked === null;
   const activeEffects = useMemo(() => getActiveEffects(G, viewerId), [G, viewerId]);

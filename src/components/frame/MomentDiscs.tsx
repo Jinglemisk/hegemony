@@ -114,54 +114,56 @@ export function ThreatAlarm({
             label={`Close ${toWin} titles`}
             onClick={() => setOpen(false)}
           />
-          {threats.map((threat) => {
-            const before = seatsBefore(G, threat.seat).map((seat) => seatName(G, seat, viewerId));
-            return (
-              <section className="threat-seat" key={threat.seat}>
-                <header className="threat-head">
-                  <SeatCoin className="threat-coin" seat={threat.seat} />
-                  <span className="threat-words">
-                    <span className="kicker toast-kicker">{capitalize(toWin)} titles</span>
-                    <b className="name threat-title">{headline(threat.seat)}</b>
-                    <span className="caption">
-                      {threat.seat === viewerId
-                        ? `if you still hold them · after ${listed(before)}`
-                        : `after ${listed(before)} · break one title before then`}
+          <div className="threat-body">
+            {threats.map((threat) => {
+              const before = seatsBefore(G, threat.seat).map((seat) => seatName(G, seat, viewerId));
+              return (
+                <section className="threat-seat" key={threat.seat}>
+                  <header className="threat-head">
+                    <SeatCoin className="threat-coin" seat={threat.seat} />
+                    <span className="threat-words">
+                      <span className="kicker toast-kicker">{capitalize(toWin)} titles</span>
+                      <b className="name threat-title">{headline(threat.seat)}</b>
+                      <span className="caption">
+                        {threat.seat === viewerId
+                          ? `if you still hold them · after ${listed(before)}`
+                          : `after ${listed(before)} · break one title before then`}
+                      </span>
                     </span>
-                  </span>
-                </header>
-                <ul className="threat-rows">
-                  {threat.titles.map(({ card, value, runnerUp }) => {
-                    const gap = runnerUp ? value - runnerUp.value : null;
-                    const yours = runnerUp?.seat === viewerId;
-                    return (
-                      <li className={yours ? "is-yours" : undefined} key={card.id}>
-                        <Ico path={`victory/${card.id}`} size="tile" />
-                        <span className="threat-row-words">
-                          <b className="name">{card.name}</b>
-                          <span className="caption">
+                  </header>
+                  <ul className="threat-rows">
+                    {threat.titles.map(({ card, value, runnerUp }) => {
+                      const gap = runnerUp ? value - runnerUp.value : null;
+                      const yours = runnerUp?.seat === viewerId;
+                      return (
+                        <li className={yours ? "is-yours" : undefined} key={card.id}>
+                          <Ico path={`victory/${card.id}`} size="tile" />
+                          <span className="threat-row-words">
+                            <b className="name">{card.name}</b>
+                            <span className="caption">
+                              <Prose links={false}>
+                                {`${G.players[threat.seat].name} ${titleValue(card.metric, value)}`}
+                                {runnerUp
+                                  ? ` · next best ${seatName(G, runnerUp.seat, viewerId)} ${runnerUp.value}`
+                                  : ""}
+                              </Prose>
+                            </span>
+                          </span>
+                          <span className="threat-gap caption">
                             <Prose links={false}>
-                              {`${G.players[threat.seat].name} ${titleValue(card.metric, value)}`}
-                              {runnerUp
-                                ? ` · next best ${seatName(G, runnerUp.seat, viewerId)} ${runnerUp.value}`
-                                : ""}
+                              {gap === null
+                                ? "no challenger"
+                                : `${capitalize(yours ? "you are" : `${seatName(G, runnerUp!.seat, viewerId)} is`)} ${shortBy(card.metric, gap)} short of a tie`}
                             </Prose>
                           </span>
-                        </span>
-                        <span className="threat-gap caption">
-                          <Prose links={false}>
-                            {gap === null
-                              ? "no challenger"
-                              : `${capitalize(yours ? "you are" : `${seatName(G, runnerUp!.seat, viewerId)} is`)} ${shortBy(card.metric, gap)} short of a tie`}
-                          </Prose>
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </section>
-            );
-          })}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              );
+            })}
+          </div>
         </Popover>
       ) : null}
     </li>

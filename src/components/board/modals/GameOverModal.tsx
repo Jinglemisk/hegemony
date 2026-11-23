@@ -4,10 +4,10 @@ import type { HegemonyState, PlayerId } from "../../../game/types";
 import { numberWord } from "../../../ui/formatters";
 import { sign } from "../../../ui/frameFormat";
 import { TIEBREAK_RASTERS } from "../../../ui/iconRegistry";
-import { PLAYER_GLAZES, glazeOf } from "../../../ui/playerGlazes";
 import { Prose } from "../../AnnotatedText";
 import { Ico } from "../../frame/parts";
 import { ModalShell } from "./ModalShell";
+import { SeatCoin } from "../../chrome/SeatCoin";
 
 /**
  * The end of the game: someone opened their turn holding enough titles (the race),
@@ -76,9 +76,7 @@ export function GameOverModal({
           return (
             <li className={id === winner ? "ageSeat ageSeatCrowned" : "ageSeat"} key={id}>
               <span className="ageRank num stat">{index + 1}</span>
-              <span className="seatGlaze label" style={{ background: glazeOf(id) }}>
-                {PLAYER_GLAZES[id].blazon}
-              </span>
+              <SeatCoin seat={id} size={32} />
               <span className="ageWho">
                 <b className="title">
                   {name(id)}

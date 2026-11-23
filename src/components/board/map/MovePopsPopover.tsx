@@ -14,8 +14,8 @@ import { settlementNameOf } from "../../../ui/settlementNames";
 import { Panel, PanelHead } from "../../chrome/Panel";
 import { Knob, Lacquer } from "../../chrome/controls";
 import { useConfirm } from "../../chrome/confirmContext";
+import { SpendDetail } from "../../chrome/confirmDetail";
 import { Chips, Ico } from "../../frame/parts";
-import { CostDetail } from "../../left/atoms";
 import { useReturnFocus } from "../../overlays/focus";
 import { refusal, titleCase } from "../../left/words";
 import { useGameUi } from "../GameUiContext";
@@ -124,7 +124,20 @@ export function MovePopsTargetPopover({
             ask({
               icon: "pops/move",
               question: `Are you sure you want to send ${formatPops(pops)} from ${from} to ${to}?`,
-              detail: <CostDetail cost={cost} more="They arrive next turn." store={store} />,
+              detail: (
+                <SpendDetail
+                  command={{
+                    type: "movePops",
+                    sourceTileId,
+                    targetTileId: tileId,
+                    pops: clonePops(pops),
+                  }}
+                  cost={cost}
+                  G={G}
+                  note="They arrive next turn."
+                  viewerId={viewerId}
+                />
+              ),
               verb: "Send",
               onYes: () => onConfirm(sourceTileId, tileId, clonePops(pops)),
             })

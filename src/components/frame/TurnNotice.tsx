@@ -1,7 +1,7 @@
-import type { CSSProperties } from "react";
 import type { PlayerId } from "../../game/types";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { ModalShell } from "../board/modals/ModalShell";
+import { SeatCoin } from "../chrome/SeatCoin";
 
 /**
  * The turn notice in hotseat: a small card over the table telling the players to pass
@@ -31,11 +31,13 @@ export function TurnNotice({
       labelledBy="turn-notice-title"
       onDismiss={onBegin}
     >
-      <span className="turn-disc" style={{ "--owner": glaze.color } as CSSProperties}>
-        {glaze.blazon}
-      </span>
+      <SeatCoin className="turn-disc" seat={seat} size={64} />
       <span className="kicker">Pass the screen</span>
-      <h2 className="name turn-title" id="turn-notice-title">
+      <h2
+        className="name turn-title"
+        id="turn-notice-title"
+        title={`${glaze.name}’s ${proposal ? "proposal" : "turn"}`}
+      >
         {glaze.name}’s {proposal ? "proposal" : "turn"}
       </h2>
       <button className="btn kicker confirm-btn is-primary" onClick={onBegin} type="button">

@@ -4,9 +4,10 @@ import type { HegemonyState } from "../../../game/types";
 
 /** The turn gate: whether the viewer may take a turn action now, and why not. */
 
-/** What the turn gate ({@link turnBlocked}) reads: the seat, the phase, and what the
- *  table waits on instead of the turn ({@link turnPending}), or null. */
-type TurnGate = { isActive: boolean; phase: Phase; pending: string | null };
+/** What the turn gate ({@link turnBlocked}) reads: the seat, the phase, what the
+ *  table waits on instead of the turn ({@link turnPending}), or null, and the name of
+ *  the seat whose turn it is. */
+type TurnGate = { isActive: boolean; phase: Phase; pending: string | null; acting: string };
 
 const IN_ASSEMBLY = "The Assembly is sitting: return to it to act.";
 
@@ -21,7 +22,7 @@ export function turnPending(G: HegemonyState): string | null {
  *  table waits on first, then the seat, then the phase. */
 export function turnBlocked(gate: TurnGate): string | null {
   if (gate.pending) return gate.pending;
-  if (!gate.isActive) return "Current player's turn only.";
+  if (!gate.isActive) return `${gate.acting} is acting.`;
   return gate.phase === "gameplay" ? null : "Gameplay only.";
 }
 

@@ -263,12 +263,6 @@
   background: var(--back);
   box-shadow: var(--back-rim);
 }
-/* The dark commit (Convene the Assembly) is a glaze plaque. */
-.ch-moment .ceremonyCommit.is-dark {
-  color: var(--glaze-ink);
-  background: var(--back);
-  box-shadow: var(--back-rim);
-}
 :is(.ch-moment, .trade-card, .sharedPopover)
   :is(
     .ceremonyCommit,
@@ -540,6 +534,17 @@
   background: var(--glaze);
   box-shadow: var(--head-edge), var(--shadow-panel);
   animation: ch-drop var(--dur-drop) var(--ease-drop) both;
+}
+/* One height at every text size: the line under the name ellipsizes; the pill's
+   tooltip carries it whole. */
+.sit-dock {
+  height: var(--sh-pill-h);
+  overflow: hidden;
+}
+.sit-dock .sit-dock-words > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 /* Ivory on the clay plaque: 5.7:1 at rest, 4.8:1 on the hover's lighter clay. */
 .sit-dock .sit-dock-back {

@@ -13,19 +13,5 @@
 
 /* ── The roster ───────────────────────────────────────────────────────────── */
 
-/* Every glaze carries an ivory keyline and an ink halo, because a disc has to
-   survive on bone here and on open sea when the same mark lands on the board. */
-.seatGlaze {
-  display: grid;
-  place-items: center;
-  width: 27px;
-  height: 27px;
-  border-radius: 50%;
-  color: var(--ivory);
-  box-shadow:
-    inset 0 0 0 1.5px rgb(255 248 231 / 85%),
-    0 0 0 1px rgb(24 18 16 / 55%);
-}
-
 /* Hovering a tablet used to raise it above the rest of the chrome. It is docked
    now; there is nothing to raise it over. */

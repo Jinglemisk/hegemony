@@ -22,6 +22,8 @@ import { ActionButton } from "../../ActionButton";
 import { Prose } from "../../AnnotatedText";
 import { EffectLine } from "../../EffectLine";
 import { GameCard } from "../../cards/GameCard";
+import { useConfirm } from "../../chrome/confirmContext";
+import { SpendDetail } from "../../chrome/confirmDetail";
 import { useGameUi } from "../GameUiContext";
 import { Chips, Ico, SeatMark } from "../../frame/parts";
 import { ModalShell } from "./ModalShell";
@@ -45,6 +47,7 @@ export function IdeasModal({
   initial?: NationalIdeaId | null;
 }) {
   const { G, viewerId, currentPlayerId, moves } = useGameUi();
+  const ask = useConfirm();
   const [selected, setSelected] = useState<NationalIdeaId | null>(initial);
   const [target, setTarget] = useState<IdeaPopChoice | undefined>();
   const setup = G.phase === "setupIdeas" || draftDone;
@@ -110,8 +113,25 @@ export function IdeasModal({
       setSelected(null);
       setTarget(undefined);
     } else {
-      moves.buyIdea(choice.command.ideaId, choice.command.target);
-      onClose?.();
+      const { command } = choice;
+      ask({
+        icon: "assembly/national-idea",
+        question: `Are you sure you want to buy ${selectedIdea?.name ?? "this Idea"}?`,
+        detail: (
+          <SpendDetail
+            command={command}
+            cost={choice.cost ?? {}}
+            G={G}
+            note={selectedIdea?.text}
+            viewerId={viewerId}
+          />
+        ),
+        verb: "Buy the Idea",
+        onYes: () => {
+          moves.buyIdea(command.ideaId, command.target);
+          onClose?.();
+        },
+      });
     }
   };
 

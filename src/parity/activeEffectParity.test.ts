@@ -31,6 +31,7 @@ import { EndTurn } from "../components/frame/EndTurn";
 import { endTurnWarning } from "../ui/frameSelectors";
 import { RiotModal } from "../components/board/modals/RiotModal";
 import { GameUiContext } from "../components/board/GameUiContext";
+import { ConfirmProvider } from "../components/chrome/Confirm";
 import { createCommandEvents, createCommandMoves } from "../client/commandAdapter";
 import { endTurn } from "../game/turn";
 import { resolveRiot } from "../game/riot";
@@ -276,13 +277,17 @@ describe("frontend active-effect parity", () => {
             activeEffects: [],
             phase: G.phase,
             isActive: false,
-            turnBlocked: "Current player's turn only.",
+            turnBlocked: `${G.players["1"].name} is acting.`,
             humans: ["0", "1", "2", "3"],
             moves: createCommandMoves(dispatch),
             events: createCommandEvents(dispatch),
           },
         },
-        createElement(RiotModal, { onRolled: dispatch, onDismissResult: dispatch }),
+        createElement(
+          ConfirmProvider,
+          null,
+          createElement(RiotModal, { onRolled: dispatch, onDismissResult: dispatch }),
+        ),
       ),
     );
     // The result card reads seat 0's riot although seat 1's turn has opened.

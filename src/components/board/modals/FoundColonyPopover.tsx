@@ -14,8 +14,8 @@ import { settlementNameOf } from "../../../ui/settlementNames";
 import { Panel, PanelHead } from "../../chrome/Panel";
 import { Lacquer } from "../../chrome/controls";
 import { useConfirm } from "../../chrome/confirmContext";
+import { SpendDetail } from "../../chrome/confirmDetail";
 import { Chips, Ico } from "../../frame/parts";
-import { CostDetail } from "../../left/atoms";
 import { useReturnFocus } from "../../overlays/focus";
 import { refusal, titleCase } from "../../left/words";
 import { useGameUi } from "../GameUiContext";
@@ -145,7 +145,15 @@ export function FoundColonyPopover({
             ask({
               icon: "settlements/found",
               question: `Are you sure you want to found a colony on the ${target.terrain}, a ${formatPopLabel(pop, 1)} from ${from}?`,
-              detail: <CostDetail cost={cost} more="The pop arrives next turn." store={store} />,
+              detail: (
+                <SpendDetail
+                  command={{ type: "foundColony", tileId, sourceTileId: source.tile.id, pop }}
+                  cost={cost}
+                  G={G}
+                  note="The pop arrives next turn."
+                  viewerId={viewerId}
+                />
+              ),
               verb: "Found it",
               onYes: () => onConfirm(source.tile.id, pop),
             })

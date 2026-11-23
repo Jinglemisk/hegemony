@@ -77,10 +77,21 @@
   width: var(--ic-48);
   height: var(--ic-48);
 }
+/* One size at every text size and count of threats: the seats scroll inside. */
 .threat-panel {
+  display: flex;
+  flex-direction: column;
   width: calc(var(--u) * 150); /* 600 */
+  height: var(--sh-threat-h);
   border-radius: var(--r-8);
   box-shadow: var(--paper-edge), var(--shadow-float);
+}
+.threat-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  border-radius: inherit;
+  scrollbar-width: thin;
 }
 .threat-seat + .threat-seat {
   border-top: var(--rule) solid var(--ink-30);

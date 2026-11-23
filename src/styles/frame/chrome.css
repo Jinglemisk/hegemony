@@ -384,13 +384,19 @@ button.ch-socket[data-state="open"]:hover {
 .ch-confirm {
   display: grid;
   grid-template-columns: var(--ic-32) 1fr auto;
+  grid-template-rows: minmax(0, 1fr);
   align-items: center;
   gap: var(--s-4);
   width: var(--sh-confirm-w);
+  height: var(--sh-confirm-h);
   padding: var(--s-3) var(--s-4);
 }
 .ch-confirm-words {
   min-width: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
 }
 .ch-confirm-q {
   margin: 0;
@@ -401,6 +407,10 @@ button.ch-socket[data-state="open"]:hover {
   margin: var(--s-1) 0 0;
   color: var(--ink-66);
   font-family: var(--f-sans);
+}
+.ch-confirm-warn {
+  color: var(--neg);
+  font-weight: 700;
 }
 .ch-confirm-acts {
   display: flex;
@@ -415,6 +425,9 @@ button.ch-socket[data-state="open"]:hover {
 }
 .ch-unroll-y {
   animation: ch-unroll-y var(--dur-unroll) var(--ease-out);
+}
+.ch-unroll-up {
+  animation: ch-unroll-up var(--dur-unroll) var(--ease-out);
 }
 .ch-drop {
   animation: ch-drop var(--dur-drop) var(--ease-drop) both;
@@ -435,6 +448,15 @@ button.ch-socket[data-state="open"]:hover {
 @keyframes ch-unroll-y {
   from {
     clip-path: inset(-24px -24px 100% -24px);
+  }
+  to {
+    clip-path: inset(-24px);
+  }
+}
+/* … the Chronicle rises out of its line … */
+@keyframes ch-unroll-up {
+  from {
+    clip-path: inset(100% -24px -24px -24px);
   }
   to {
     clip-path: inset(-24px);
