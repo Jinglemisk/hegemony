@@ -40,22 +40,70 @@ export function useReturnFocus(
   }, []);
 }
 
+/** Traps in the order they were set: only the last one, the top-most surface, holds
+ *  Tab (the confirm over the Assembly or the Ideas sheet; a dialog over the table).
+ *  It matches the Escape order: whatever opened last over the others closes first. */
+const traps: HTMLElement[] = [];
+/** A popover portaled out of the surface that opened it, and the control it came from. */
+const lent = new WeakMap<Element, HTMLElement>();
+
+/**
+ * A popover portaled into the overlay root from inside a trapped surface (the
+ * Assembly's bribe): the surface's trap counts it as inside, by the control it came
+ * from, until the returned function is called.
+ */
+export function lendFocus(popover: Element, from: HTMLElement): () => void {
+  lent.set(popover, from);
+  return () => lent.delete(popover);
+}
+
+/** The control a lent popover holding `node` came from, if any. */
+function lender(node: Node): HTMLElement | null {
+  for (let at: Node | null = node; at; at = at.parentNode) {
+    const from = at instanceof Element ? lent.get(at) : undefined;
+    if (from) return from;
+  }
+  return null;
+}
+
+/** Inside `surface`, or inside a popover it lent the focus to (and so on outward). */
+function within(surface: HTMLElement, node: Node): boolean {
+  for (let at: Node | null = node, hops = 0; at && hops < 8; hops++) {
+    if (surface.contains(at)) return true;
+    at = lender(at);
+  }
+  return false;
+}
+
 /**
  * Keeps Tab inside `surface` until the returned function is called: from its last
  * control Tab goes to its first, and Shift+Tab the other way; focus found outside it
- * comes back in. A surface with no control holds the focus itself.
+ * comes back in. A surface with no control holds the focus itself. Only the top-most
+ * trap acts, and a popover the surface opened counts as inside it: Tab moves through
+ * the popover, and off its edge returns to the control that opened it.
  */
 export function trapTab(surface: HTMLElement): () => void {
   const doc = surface.ownerDocument;
-  const reachable = () =>
-    [...surface.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+  const reachable = (root: Element) =>
+    [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
       (element) => element.offsetParent !== null || element === surface,
     );
   const trap = (event: KeyboardEvent) => {
-    if (event.key !== "Tab") return;
-    const items = reachable();
+    if (event.key !== "Tab" || traps[traps.length - 1] !== surface) return;
     const active = doc.activeElement;
     const inside = active instanceof Node && surface.contains(active);
+    // In a popover the surface lent the focus to: its own controls, then back home.
+    if (!inside && active instanceof Node && within(surface, active)) {
+      const from = lender(active)!;
+      const popover = [...reachable(doc.body)].filter((element) => lender(element) === from);
+      const edge = event.shiftKey ? popover[0] : popover[popover.length - 1];
+      if (popover.length === 0 || active === edge) {
+        event.preventDefault();
+        from.focus();
+      }
+      return;
+    }
+    const items = reachable(surface);
     if (items.length === 0) {
       event.preventDefault();
       surface.focus();
@@ -67,8 +115,12 @@ export function trapTab(surface: HTMLElement): () => void {
       (event.shiftKey ? items[items.length - 1] : items[0])!.focus();
     }
   };
+  traps.push(surface);
   doc.addEventListener("keydown", trap, true);
-  return () => doc.removeEventListener("keydown", trap, true);
+  return () => {
+    traps.splice(traps.lastIndexOf(surface), 1);
+    doc.removeEventListener("keydown", trap, true);
+  };
 }
 
 /**

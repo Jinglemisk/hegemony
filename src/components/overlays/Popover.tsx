@@ -10,7 +10,7 @@ import { createPortal } from "react-dom";
 import type { AnchoringOptions, VerticalPlacement } from "../../ui/anchoring";
 import { overlayRoot, overlayScale } from "../chrome/canvas";
 import { ESCAPE, useEscapeLayer } from "./escapeStack";
-import { FOCUSABLE } from "./focus";
+import { FOCUSABLE, lendFocus } from "./focus";
 import { isElementRef, useAnchoredOverlay } from "./useAnchoredOverlay";
 
 export function Popover({
@@ -75,7 +75,12 @@ export function Popover({
       (first ?? element).focus({ preventScroll: true });
     }
 
+    // Opened from inside a trapped dialog (the Assembly), it counts as part of it.
+    const from = (isElementRef(anchor) ? anchor.current : null) ?? returnTarget;
+    const unlend = from instanceof HTMLElement ? lendFocus(element, from) : null;
+
     return () => {
+      unlend?.();
       if (returnTarget?.isConnected) {
         returnTarget.focus({ preventScroll: true });
       }
