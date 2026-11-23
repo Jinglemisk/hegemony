@@ -696,6 +696,7 @@ export function HegemonyBoard({
                 <Suspense fallback={null}>
                   <LivingMap
                     G={G}
+                    framedSeat={isRealmDrawer(drawer.open) ? viewerId : null}
                     highlightTileIds={
                       mapSelection.selection
                         ? mapSelection.candidateTileIds

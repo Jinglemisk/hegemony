@@ -545,8 +545,12 @@
    tokens; its glaze and counts close in, where there is room. It never takes a click
    from the tiles under it. */
 .lm-banner {
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(var(--fit, 1));
   pointer-events: none;
+}
+/* Crowded out by a larger realm's name, even shrunk and moved along its land. */
+.lm-banner.is-crowded {
+  visibility: hidden;
 }
 .lm-realm {
   display: grid;

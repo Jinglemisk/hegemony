@@ -24,6 +24,8 @@ import type { Plates } from "./plates";
 import { BONE, GLAZE, SEA, glazeOf } from "./palette";
 import { createScene } from "./scene";
 import type { Border, Ring } from "./scene";
+import { meets, settleRealmNames } from "./crowd";
+import type { Box, RealmName } from "./crowd";
 import { nextTileInDirection } from "./tileTip";
 
 /**
@@ -62,6 +64,8 @@ export type Marks = {
   focus: string | null;
   /** While a placement asks for a tile: the answers. The rest recede. */
   candidates: ReadonlySet<string> | null;
+  /** While the Realm drawer is open: the viewing seat's tiles, framed like the pick. */
+  framed: ReadonlySet<string> | null;
 };
 
 /** Mix two colours channel by channel, as the prototype does. */
@@ -102,18 +106,14 @@ type Placed = {
   ship?: number;
   /** A building's badge: in Economy it keeps above its tile's chip at (x, y). */
   chip?: { x: number; y: number };
+  /** A realm's name: its land's tiles, where it may move to clear another name, and
+   *  how many tiles the realm holds. */
+  realm?: { along: { x: number; y: number }[]; size: number };
   /** Where it was last put on screen (its `translate`). */
   sx?: number;
   sy?: number;
 };
 
-/** A label's box on the stage, in px. */
-type Box = { left: number; top: number; right: number; bottom: number };
-const meets = (a: Box, b: Box, pad = 2) =>
-  a.left < b.right + pad &&
-  a.right > b.left - pad &&
-  a.top < b.bottom + pad &&
-  a.bottom > b.top - pad;
 const overlap = (a: Box, b: Box) =>
   Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) *
   Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
@@ -144,7 +144,7 @@ export function createRuntime({
   let model: MapModel | null = null;
   let mode: MapMode = "terrain";
   let plateSize: Plates["size"] = "small";
-  let marks: Marks = { selected: null, focus: null, candidates: null };
+  let marks: Marks = { selected: null, focus: null, candidates: null, framed: null };
   let placed: Placed[] = [];
   let tileEls: (HTMLElement | undefined)[] = [];
   let camDirty = true;
@@ -284,12 +284,15 @@ export function createRuntime({
     };
     scene.setMarks({
       candidates: [...(marks.candidates ?? [])].flatMap((id) => at(id) ?? []),
+      framed: [...(marks.framed ?? [])].flatMap((id) => at(id) ?? []),
       selected: at(marks.selected),
       focus: at(marks.focus),
     });
     // The rings are drawn, not styled; the stage names the ringed tile for the DOM.
     if (marks.focus) stage.dataset.focusRing = marks.focus;
     else delete stage.dataset.focusRing;
+    if (marks.framed?.size) stage.dataset.framed = String(marks.framed.size);
+    else delete stage.dataset.framed;
   }
 
   // ---- the HTML layers --------------------------------------------------------------
@@ -349,7 +352,7 @@ export function createRuntime({
    * it back); and a good's name hangs under its icon, or above it, or beside it,
    * wherever it covers no tile's badge, no plate and no other good.
    */
-  function settleLabels(html: Record<string, number>) {
+  function settleLabels(v: View, html: Record<string, number>) {
     const origin = stage.getBoundingClientRect();
     const box = (el: Element): Box => {
       const r = el.getBoundingClientRect();
@@ -362,14 +365,19 @@ export function createRuntime({
     };
     const shows = (L: Placed) => L.el.style.display !== "none";
 
-    // Political: each realm's name moved the least way out of any chrome it lies under.
+    // Political: each realm's name moved the least way out of any chrome it lies under,
+    // then clear of the other realms' names (see `settleRealmNames`).
     const realms: Box[] = [];
     if ((html.realm ?? 0) > 0.01) {
       const chrome = chromeRects();
       const W = origin.width;
       const H = origin.height;
+      const banners: { L: Placed; dx: number; dy: number }[] = [];
+      const asks: RealmName[] = [];
       for (const L of placed) {
-        if (!L.el.classList.contains("lm-banner") || !shows(L) || L.sx === undefined) continue;
+        if (!L.realm || !shows(L) || L.sx === undefined) continue;
+        // Measured at full size; the last settle's shrink is undone first.
+        L.el.style.removeProperty("--fit");
         const named = L.el.querySelector(".rn") ?? L.el;
         let b = box((html.realmline ?? 0) > 0.01 ? L.el : named);
         let dx = 0;
@@ -391,10 +399,35 @@ export function createRuntime({
           dy += my;
           b = { left: b.left + mx, right: b.right + mx, top: b.top + my, bottom: b.bottom + my };
         }
-        if (dx || dy)
-          L.el.style.translate = `${(L.sx + dx).toFixed(1)}px ${(L.sy! + dy).toFixed(1)}px`;
-        realms.push(b);
+        banners.push({ L, dx, dy });
+        asks.push({
+          box: b,
+          size: L.realm.size,
+          // A tile's centre as a spot for the name's box: the name's anchor on it.
+          along: L.realm.along.map((p) => {
+            const q = project(v, p.x, p.y, H_TILE);
+            return {
+              x: q.x + (b.left + b.right) / 2 - (L.sx! + dx),
+              y: q.y + (b.top + b.bottom) / 2 - (L.sy! + dy),
+            };
+          }),
+        });
       }
+      settleRealmNames(asks, chrome, W, H).forEach((at, i) => {
+        const { L, dx, dy } = banners[i];
+        const b = asks[i].box;
+        L.el.classList.toggle("is-crowded", at.hidden);
+        if (at.scale !== 1) L.el.style.setProperty("--fit", String(at.scale));
+        const x = L.sx! + dx + at.dx;
+        const y = L.sy! + dy + at.dy;
+        L.el.style.translate = `${x.toFixed(1)}px ${y.toFixed(1)}px`;
+        if (at.hidden) return;
+        const cx = (b.left + b.right) / 2 + at.dx;
+        const cy = (b.top + b.bottom) / 2 + at.dy;
+        const hw = ((b.right - b.left) / 2) * at.scale;
+        const hh = ((b.bottom - b.top) / 2) * at.scale;
+        realms.push({ left: cx - hw, right: cx + hw, top: cy - hh, bottom: cy + hh });
+      });
     }
 
     // What a good's name must not cover: the badges and plates on show.
@@ -555,7 +588,7 @@ export function createRuntime({
     // Trade's hint takes the pointer only where it shows.
     stage.classList.toggle("hint-on", B.html.hint > 0.01);
     placeLabels(v, B.html);
-    settleLabels(B.html);
+    settleLabels(v, B.html);
     placeTiles(v);
     stage.style.setProperty("--turn", `${v.rot.toFixed(4)}rad`);
   }
@@ -604,6 +637,7 @@ export function createRuntime({
       }
     }
     if (live) scene.animate(clock);
+    else scene.rest();
     if (camDirty) {
       camDirty = false;
       placeHtml(v);
@@ -927,6 +961,16 @@ export function createRuntime({
           el.dataset.chipX === undefined
             ? undefined
             : { x: Number(el.dataset.chipX), y: Number(el.dataset.chipY) },
+        realm:
+          el.dataset.along === undefined
+            ? undefined
+            : {
+                along: (JSON.parse(el.dataset.along) as [number, number][]).map(([x, y]) => ({
+                  x,
+                  y,
+                })),
+                size: Number(el.dataset.size),
+              },
       }));
       // Place what React just added before the browser paints it at the corner.
       if (frame.W) placeHtml(viewOf(cam, frame));

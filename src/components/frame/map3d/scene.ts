@@ -43,6 +43,7 @@ import { createTemplates, disposeTemplate, groundGeometry, laneGeometry } from "
 import type { Template } from "./models";
 import {
   BONE,
+  FRAME,
   GLOW,
   INK,
   LIGHT,
@@ -310,6 +311,19 @@ export function createScene(canvas: HTMLCanvasElement, shape: BoardShape) {
     new InstancedMesh(ringGeo(R_OWN - 0.04, R_OWN + 0.04), flat(0xffffff), shape.cells.length * 2),
   );
   const candidates = own(new InstancedMesh(edgeRing, flat(OCHRE), shape.cells.length));
+  // The pick's frame: a gold band between ink keylines, wider than the frame the Realm
+  // drawer puts on its seat's own tiles, so the pick stays the one that stands out. The
+  // gold breathes (see `animate`); one material, so every frame breathes together.
+  const gold = flat(FRAME.bright);
+  const frameAt = (inset: number, band: number) =>
+    [
+      ringGeo(R_TOP - inset - band - 0.028, R_TOP),
+      ringGeo(R_TOP - inset - band, R_TOP - inset),
+    ] as const;
+  const [framedInkGeo, framedGoldGeo] = frameAt(0.018, 0.09);
+  const [pickInkGeo, pickGoldGeo] = frameAt(0.022, 0.13);
+  const framedInk = own(new InstancedMesh(framedInkGeo, flat(INK), shape.cells.length));
+  const framedGold = own(new InstancedMesh(framedGoldGeo, gold, shape.cells.length));
   // Political's realm borders: a band inside each owned tile's side that faces another
   // realm, open land or the sea. One segment, turned to each side by its instance.
   const r0 = R_TOP - 0.1 / Math.cos(30 * DEG);
@@ -327,18 +341,38 @@ export function createScene(canvas: HTMLCanvasElement, shape: BoardShape) {
   borderMat.side = DoubleSide;
   const borders = own(new InstancedMesh(sideGeo, borderMat, shape.cells.length * 6));
   owners.frustumCulled = candidates.frustumCulled = borders.frustumCulled = false;
+  framedInk.frustumCulled = framedGold.frustumCulled = false;
   // Colour every instanced mesh now: a colour attribute added later is a new shader
   // program, compiled mid-game in one long frame.
   owners.setColorAt(0, colour);
   borders.setColorAt(0, colour);
   owners.count = candidates.count = borders.count = 0;
-  const selected = new Mesh(edgeRing, flat(INK));
+  framedInk.count = framedGold.count = 0;
+  const pickInk = new Mesh(pickInkGeo, flat(INK));
+  const pickGold = new Mesh(pickGoldGeo, gold);
+  const selected = new Group().add(pickInk, pickGold);
   const focus = new Group().add(focusInk, focusOchre);
   selected.visible = focus.visible = false;
-  [owners, borders, candidates, selected, focusInk, focusOchre].forEach(
-    (ring, i) => (ring.renderOrder = i + 1),
-  );
-  scene.add(owners, borders, candidates, selected, focus);
+  [
+    owners,
+    borders,
+    candidates,
+    framedInk,
+    framedGold,
+    pickInk,
+    pickGold,
+    focusInk,
+    focusOchre,
+  ].forEach((ring, i) => (ring.renderOrder = i + 1));
+  scene.add(owners, borders, candidates, framedInk, framedGold, selected, focus);
+  const goldBright = new Color(FRAME.bright);
+  const goldDeep = new Color(FRAME.deep);
+  /** The frames' gold at a moment: white gold, a slow breath toward the deeper gold
+   *  and back, once every 1.8 s; still (and white gold) at rest. */
+  const breathe = (seconds: number | null) => {
+    const k = seconds === null ? 0 : 0.5 - 0.5 * Math.cos((seconds / 1.8) * Math.PI * 2);
+    gold.color.lerpColors(goldBright, goldDeep, k);
+  };
 
   // The models, instanced: one mesh per material plus the keyline hull. Every model
   // has its meshes from the start, empty, so the warm-up builds every shader.
@@ -821,6 +855,7 @@ export function createScene(canvas: HTMLCanvasElement, shape: BoardShape) {
     },
     setMarks(marks: {
       candidates: readonly { x: number; y: number }[];
+      framed: readonly { x: number; y: number }[];
       selected: { x: number; y: number } | null;
       focus: { x: number; y: number } | null;
     }) {
@@ -829,6 +864,13 @@ export function createScene(canvas: HTMLCanvasElement, shape: BoardShape) {
       );
       candidates.count = marks.candidates.length;
       candidates.instanceMatrix.needsUpdate = true;
+      for (const mesh of [framedInk, framedGold]) {
+        marks.framed.forEach((c, i) =>
+          mesh.setMatrixAt(i, m4.makeTranslation(c.x, H_TILE + 0.0055, c.y)),
+        );
+        mesh.count = marks.framed.length;
+        mesh.instanceMatrix.needsUpdate = true;
+      }
       selected.visible = Boolean(marks.selected);
       if (marks.selected) selected.position.set(marks.selected.x, H_TILE + 0.006, marks.selected.y);
       focus.visible = Boolean(marks.focus);
@@ -927,9 +969,11 @@ export function createScene(canvas: HTMLCanvasElement, shape: BoardShape) {
       });
     },
     /** The ambient clock: the sea's waves, the swell, the wind, the walkers, the ships,
-     *  the boats and gulls, the laurel, the smoke and the Oracle's vapour. */
+     *  the boats and gulls, the laurel, the smoke, the Oracle's vapour and the frames'
+     *  gold. */
     animate(seconds: number) {
       time = seconds;
+      breathe(seconds);
       sea.uniforms.uTime.value = seconds;
       steer(seconds);
       if (vapour.visible) steam(seconds);
@@ -938,6 +982,10 @@ export function createScene(canvas: HTMLCanvasElement, shape: BoardShape) {
       for (const model of models) {
         if (model.meshes[0]?.visible && countOf(model)) motion(model)?.(model, seconds);
       }
+    },
+    /** Nothing moving (reduced motion, the page hidden): the frames' gold at rest. */
+    rest() {
+      breathe(null);
     },
     /** Where each ship is now, for its chip. */
     decks: () => decks as readonly { x: number; z: number }[],

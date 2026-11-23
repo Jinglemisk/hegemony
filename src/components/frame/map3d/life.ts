@@ -7,6 +7,9 @@ import { axialToPlane, hexDistance } from "../../../game/mapTopology";
  * its clock (`walkAt`). Coordinates are the scene's: x east, z south.
  */
 
+/** The Oracle's platform: three steps, each this high (the tholos stands on the third). */
+export const ORACLE_STEP = 0.045;
+
 type XZ = { x: number; z: number };
 type Stop = XZ & { y?: number; pause: number };
 type Leg = { a: Stop; b: Stop; t0: number; walk: number; end: number };
@@ -67,9 +70,9 @@ export function pilgrimagePlan(oracle: Ground, index: number): Walk {
   const stops = [
     [0.56, 0.35, 0],
     [0.4, 0.3, 0],
-    [0.27, 0.2, 0.025],
-    [0.19, 0.13, 0.075],
-    [0.29, 0.19, 0.025],
+    [0.27, 0.2, ORACLE_STEP],
+    [0.19, 0.13, 3 * ORACLE_STEP],
+    [0.29, 0.19, ORACLE_STEP],
     [0.44, 0.21, 0],
     [0.6, 0.19, 0],
   ].map(([x, z, y], i) => ({

@@ -18,6 +18,10 @@ export const GLAZE: Record<Terrain, number> = {
 export const BONE = 0xe2d4b6;
 export const INK = 0x241910;
 export const OCHRE = 0xd98a35;
+/** The pick's frame, and the Realm drawer's own tiles': a bright white gold that
+ *  breathes toward a deeper gold (still under reduced motion), between ink keylines so
+ *  it reads on the palest land as well as on a realm's paint. */
+export const FRAME = { bright: 0xfff4cf, deep: 0xf0ae2c };
 export const VASE_BLACK = 0x181210;
 /** A ship's dashed route over the water. */
 export const ROUTE = 0xfff8e7;
