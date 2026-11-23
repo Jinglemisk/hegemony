@@ -193,10 +193,6 @@ button.alarm-disc {
   scrollbar-color: var(--bz) transparent;
   scrollbar-width: thin;
 }
-/* Open, it lies over the outliner's head: the outliner's corner there stays under it. */
-.hud-canvas:has(.menu-pop) .rd-outl > .ch-corner[data-at="tl"] {
-  display: none;
-}
 .menu-rows {
   margin: 0;
   padding: var(--s-1) 0;

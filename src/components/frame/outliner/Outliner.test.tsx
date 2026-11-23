@@ -84,14 +84,18 @@ it("keeps every outliner header's words through folds and a tuck, and asks befor
     expect(head.getAttribute("aria-expanded")).toBe("false");
     expect(heads()).toEqual(before);
   }
-  // Tucked, the focus goes to the tab that brings it back; shown, to the knob again.
-  act(() => button("Tuck the outliner away").click());
-  expect(container.querySelector(".rd-outl")).toBeNull();
-  await settle();
-  expect(document.activeElement).toBe(button("Show the outliner"));
+  // Tucked, it folds up to its head: the same title and knobs, the body gone. The knob
+  // that tucks it brings it back, and keeps the focus both ways.
+  const tuck = button("Tuck the outliner away");
+  tuck.focus();
+  act(() => tuck.click());
+  expect(container.querySelector(".rd-outl")?.classList.contains("is-tucked")).toBe(true);
+  expect(container.querySelector(".rd-outl-body")).toBeNull();
+  expect(container.querySelector(".rd-outl-title")?.textContent).toBe("Outliner");
+  expect(button("Show the outliner")).toBe(tuck);
+  expect(document.activeElement).toBe(tuck);
   act(() => button("Show the outliner").click());
   expect(heads()).toEqual(before);
-  await settle();
   expect(document.activeElement).toBe(button("Tuck the outliner away"));
 
   // The Dole names its price from the engine, and spends only on yes.

@@ -322,7 +322,6 @@
 .rd-act-sub,
 .rd-legend-title,
 .rd-outl-title,
-.rd-outl-tab,
 .rd-sec-head,
 .rd-row-fig .rd-row-lent,
 .rd-row-go,
@@ -513,8 +512,7 @@
 }
 .lw-body,
 .pp-body,
-.lw-warn,
-.pp-act-n {
+.lw-warn {
   font-size: var(--t-15);
   line-height: var(--lh-20);
 }
@@ -528,8 +526,7 @@
 .lw-why,
 .lw-table th[scope="row"],
 .pp-opt-line,
-.pp-pop-line,
-.pp-act-why {
+.pp-pop-line {
   font-size: var(--t-14);
   line-height: var(--lh-20);
 }

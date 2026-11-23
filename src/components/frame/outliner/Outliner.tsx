@@ -20,7 +20,6 @@ import { useGameUi } from "../../board/GameUiContext";
 import { Knob, Plaque } from "../../chrome/controls";
 import { Panel } from "../../chrome/Panel";
 import { SeatCoin } from "../../chrome/SeatCoin";
-import { focusSoon } from "../../overlays/focus";
 import { Popover } from "../../overlays/Popover";
 import { Tooltip } from "../../overlays/Tooltip";
 import { bundleWords, dealTitle, dealWords, loanWords, offerTitle } from "../trade/tradeView";
@@ -70,8 +69,9 @@ type Row = {
 /**
  * The outliner: a fixed glaze column down the right edge from under the top bar to the
  * dock, as in Imperator, but short. Its sections fold; the gear chooses which show and
- * how your places sort; the dash tucks it into a tab on the edge. Nothing in it changes
- * the column's size, and no header changes its words whatever is folded or open. Every
+ * how your places sort; the dash tucks it up to its head, which stays where it was, as
+ * wide and with the same words and knobs. Nothing else changes the column's size, and no
+ * header changes its words whatever is folded, open or tucked. Every
  * row reads the engine's own selectors and picks the place, opens a card, or opens the
  * Agora.
  */
@@ -102,30 +102,7 @@ export function Outliner({
     onOpenDrawer,
   });
 
-  if (settings.tucked) {
-    return (
-      <Tooltip
-        content={<Tip title="Bring the outliner back" />}
-        preferredPlacement="below"
-        triggerClassName="rd-outl-tab-tip"
-      >
-        <button
-          aria-label="Show the outliner"
-          className="rd-outl-tab"
-          data-exclude
-          onClick={() => {
-            setSettings({ ...settings, tucked: false });
-            // The tab goes away: the focus goes to the knob that tucks it again.
-            focusSoon(() => document.querySelector<HTMLElement>(".rd-outl [data-tuck]"));
-          }}
-          type="button"
-        >
-          Outliner <span aria-hidden="true">◂</span>
-        </button>
-      </Tooltip>
-    );
-  }
-
+  const { tucked } = settings;
   const shown = (Object.keys(SECTION_NAMES) as OutlinerSection[]).filter(
     (key) => settings.show[key],
   );
@@ -133,8 +110,7 @@ export function Outliner({
   return (
     <Panel
       aria-label="Outliner"
-      className="rd-outl"
-      corners={["tl", "bl"]}
+      className={`rd-outl${tucked ? " is-tucked" : ""}`}
       data-c="outliner"
       data-exclude
       role="complementary"
@@ -153,59 +129,62 @@ export function Outliner({
             <Ico path="chrome/settings" size="chip" />
           </Knob>
         </Tooltip>
-        <Tooltip content={<Tip title="Tuck it away" />} triggerClassName="rd-knob-tip">
+        {/* One knob, tucking and showing: it stays put, so the focus stays on it. */}
+        <Tooltip
+          content={<Tip title={tucked ? "Bring the outliner back" : "Tuck it away"} />}
+          triggerClassName="rd-knob-tip"
+        >
           <Knob
-            data-tuck
-            label="Tuck the outliner away"
+            label={tucked ? "Show the outliner" : "Tuck the outliner away"}
             onClick={() => {
               setCfgOpen(false);
-              setSettings({ ...settings, tucked: true });
-              // The column goes away: the focus goes to the tab that brings it back.
-              focusSoon(() => document.querySelector<HTMLElement>(".rd-outl-tab"));
+              setSettings({ ...settings, tucked: !tucked });
             }}
           >
-            <span aria-hidden="true">—</span>
+            <span aria-hidden="true">{tucked ? "▾" : "—"}</span>
           </Knob>
         </Tooltip>
       </header>
-      <div className="rd-outl-body ch-scroll-fade">
-        {shown.length === 0 ? (
-          <p className="rd-outl-empty">Nothing chosen to show. The gear chooses.</p>
-        ) : null}
-        {shown.map((key) => {
-          const section = sections[key];
-          const shut = settings.shut[key];
-          return (
-            <section aria-label={SECTION_NAMES[key]} className="rd-sec" key={key}>
-              <h3 className="rd-sec-h">
-                <button
-                  aria-expanded={!shut}
-                  className="rd-sec-head"
-                  onClick={() =>
-                    setSettings({ ...settings, shut: { ...settings.shut, [key]: !shut } })
-                  }
-                  type="button"
-                >
-                  <span aria-hidden="true" className="rd-sec-caret" />
-                  <span className="rd-sec-name">{SECTION_NAMES[key]}</span>
-                  <span className={`rd-sec-end${/^\d+$/.test(section.end) ? " is-count" : ""}`}>
-                    {section.end}
-                  </span>
-                </button>
-              </h3>
-              {shut ? null : section.rows.length === 0 ? (
-                <p className="rd-outl-empty">{section.empty}</p>
-              ) : (
-                <ul className="rd-rows">
-                  {section.rows.map((row) => (
-                    <OutlinerRow key={row.key} row={row} />
-                  ))}
-                </ul>
-              )}
-            </section>
-          );
-        })}
-      </div>
+      {tucked ? null : (
+        <div className="rd-outl-body ch-scroll-fade">
+          {shown.length === 0 ? (
+            <p className="rd-outl-empty">Nothing chosen to show. The gear chooses.</p>
+          ) : null}
+          {shown.map((key) => {
+            const section = sections[key];
+            const shut = settings.shut[key];
+            return (
+              <section aria-label={SECTION_NAMES[key]} className="rd-sec" key={key}>
+                <h3 className="rd-sec-h">
+                  <button
+                    aria-expanded={!shut}
+                    className="rd-sec-head"
+                    onClick={() =>
+                      setSettings({ ...settings, shut: { ...settings.shut, [key]: !shut } })
+                    }
+                    type="button"
+                  >
+                    <span aria-hidden="true" className="rd-sec-caret" />
+                    <span className="rd-sec-name">{SECTION_NAMES[key]}</span>
+                    <span className={`rd-sec-end${/^\d+$/.test(section.end) ? " is-count" : ""}`}>
+                      {section.end}
+                    </span>
+                  </button>
+                </h3>
+                {shut ? null : section.rows.length === 0 ? (
+                  <p className="rd-outl-empty">{section.empty}</p>
+                ) : (
+                  <ul className="rd-rows">
+                    {section.rows.map((row) => (
+                      <OutlinerRow key={row.key} row={row} />
+                    ))}
+                  </ul>
+                )}
+              </section>
+            );
+          })}
+        </div>
+      )}
       {cfgOpen ? (
         <Popover
           anchor={gear}

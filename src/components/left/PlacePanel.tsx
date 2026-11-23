@@ -61,7 +61,7 @@ import { settlementNames } from "../../ui/settlementNames";
 import { useGameUi } from "../board/GameUiContext";
 import { capitalize, getOwnedHoldings } from "../board/helpers";
 import { Panel, PanelHead } from "../chrome/Panel";
-import { Knob, Lacquer, Plaque } from "../chrome/controls";
+import { Knob, Plaque } from "../chrome/controls";
 import { Socket, SocketMeter } from "../chrome/Socket";
 import { useConfirm } from "../chrome/confirmContext";
 import { SpendDetail } from "../chrome/confirmDetail";
@@ -188,15 +188,13 @@ export function PlacePanel({
     foot = own ? (
       <OwnActions actions={actions} name={name} onPop={onPop} settlement={settlement} tile={tile} />
     ) : (
-      <Lacquer
-        className="pp-act"
+      <Act
+        icon="market/handshake"
+        label={`Offer ${owner} a trade`}
+        note={`Opens the composer, ${owner} chosen.`}
         onClick={() => actions.onCompose(settlement.owner, composeAnchor())}
-      >
-        <span className="pp-act-n">Offer {owner} a trade</span>
-        <span className="pp-act-d">
-          <span className="pp-act-why">opens the composer, {owner} chosen</span>
-        </span>
-      </Lacquer>
+        why={null}
+      />
     );
   } else if (view.kind === "oracle") {
     label = "The Oracle";
@@ -283,12 +281,12 @@ export function PlacePanel({
   );
 }
 
-/** A small-caps stat over its figure. */
+/** A small-caps stat over one line: its figure, and its meter beside it. */
 function Stat({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="pp-stat">
       <span className="pp-k">{label}</span>
-      {children}
+      <div className="pp-stat-line">{children}</div>
     </div>
   );
 }
@@ -329,6 +327,7 @@ function SettlementBody({
   const arriving = arrivingPops(G, tile.id, settlement.owner);
   const coming = totalPops(arriving);
   const filled = settlement.buildings.length + working;
+  const buildingNames = settlement.buildings.map((id) => capitalize(id)).join(", ");
 
   return (
     <>
@@ -367,7 +366,9 @@ function SettlementBody({
           <Stat label="Buildings">
             <span className="pp-v">
               {settlement.buildings.length}
-              <small>{settlement.buildings.map((id) => capitalize(id)).join(", ") || "none"}</small>
+              <small data-truncates="summary" title={buildingNames || undefined}>
+                {buildingNames || "none"}
+              </small>
             </span>
           </Stat>
         )}
@@ -636,25 +637,37 @@ const costWords = (cost: Partial<Resources>) =>
     .map(([resource, n]) => `${n} ${resource}`)
     .join(", ");
 
-/** A footer act: its name, its price, and the engine's reason when it cannot be taken. */
+/**
+ * A footer act: a bronze plaque with its own icon, its verb and its price as a chip.
+ * Red lacquer is kept for the one primary act of a moment (End turn, a confirm's
+ * yes), so these stay plaques. The reason it can't be taken is in its tooltip and
+ * its name; a price the store can't meet reads red.
+ */
 function Act({
+  icon,
   label,
   cost,
   why,
+  note,
   onClick,
 }: {
+  icon: string;
   label: string;
   cost?: Partial<Resources>;
   why: string | null;
+  /** What the tooltip says of a free act that can be taken. */
+  note?: string;
   onClick: () => void;
 }) {
-  const Control = why ? Plaque : Lacquer;
+  const { G, viewerId } = useGameUi();
+  const priced = cost && costWords(cost) ? cost : undefined;
+  const short = priced ? gap(G.players[viewerId].resources, priced) > 0 : false;
   return (
     <Tooltip
       content={
         <Tip title={label}>
           <TipBody>
-            {[cost && costWords(cost) ? `Costs ${costWords(cost)}.` : null, why]
+            {[priced ? `Costs ${costWords(priced)}.` : null, why ?? note]
               .filter(Boolean)
               .join(" ") || "Ready."}
           </TipBody>
@@ -662,24 +675,23 @@ function Act({
       }
       triggerClassName="pp-act-tip"
     >
-      <Control
+      <Plaque
         aria-label={why ? `${label}: ${why}` : label}
         className="pp-act"
         disabled={why !== null}
         onClick={onClick}
       >
-        {/* Two fixed lines at every Text size: the verb, then its price and the reason
-            (cut to fit; the tooltip says both whole). */}
-        <span className="pp-act-n">{label}</span>
-        <span className="pp-act-d" data-truncates="summary">
-          {cost ? <Chips amounts={cost} short={why !== null} /> : null}
-          {why ? (
-            <span className="pp-act-why" data-truncates="summary">
-              {why}
-            </span>
-          ) : null}
+        <Ico path={icon} size="ui" />
+        {/* One line at every Text size: cut to fit, the tooltip says it whole. */}
+        <span className="pp-act-n" data-truncates="summary">
+          {label}
         </span>
-      </Control>
+        {priced ? (
+          <span className="pp-act-cost">
+            <Chips amounts={priced} short={short} />
+          </span>
+        ) : null}
+      </Plaque>
     </Tooltip>
   );
 }
@@ -717,6 +729,7 @@ function OwnActions({
     second = (
       <Act
         cost={up.cost}
+        icon="settlements/upgrade"
         label="Make it a city"
         onClick={() =>
           ask({
@@ -761,7 +774,14 @@ function OwnActions({
           : nearest
             ? `Nothing affordable: ${nearest.building.name} is ${refusal(nearest.status, null, store)}`
             : "Nothing to raise");
-    second = <Act label="Raise a building" onClick={() => onPop("build")} why={why} />;
+    second = (
+      <Act
+        icon="buildings/build"
+        label="Raise a building"
+        onClick={() => onPop("build")}
+        why={why}
+      />
+    );
   }
 
   const holdings = getOwnedHoldings(G, viewerId).filter((other) => other.tile.id !== tile.id);
@@ -781,6 +801,7 @@ function OwnActions({
     <>
       <Act
         cost={growCost}
+        icon="pops/pop-gain"
         label="Grow here"
         onClick={() => onPop("grow")}
         why={refusal(grow, turnBlocked, store)}
@@ -788,6 +809,7 @@ function OwnActions({
       {second}
       <Act
         cost={move.cost}
+        icon="pops/move"
         label="Move a pop out"
         onClick={() => actions.onMoveOut(tile.id)}
         why={refusal(move, turnBlocked, store)}
@@ -843,6 +865,7 @@ function FoundAction({ tile, onOpen }: { tile: HexTile; onOpen: () => void }) {
   return (
     <Act
       cost={found.cost}
+      icon="settlements/found"
       label="Found a colony here"
       onClick={onOpen}
       why={refusal(found, turnBlocked, store)}

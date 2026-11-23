@@ -628,17 +628,20 @@
   gap: var(--s-2);
   min-height: 0;
   overflow: auto;
-  padding: var(--s-3) var(--s-4) var(--s-2);
+  padding: var(--s-2) var(--s-4) 6px;
   scrollbar-color: var(--bz) transparent;
   scrollbar-width: thin;
 }
+/* The acts' row: three plaques one line high, 44 at every Text size, so the body
+   above holds a full city without a scroll. */
 .pp-foot {
   display: flex;
   flex: none;
-  gap: var(--s-3);
+  align-items: center;
+  gap: 6px;
   box-sizing: border-box;
-  height: 80px;
-  padding: var(--s-2) var(--s-4);
+  height: 56px;
+  padding: 0 var(--s-3);
   border-top: var(--rule) solid var(--line);
   background: var(--pp-foot-wash);
 }
@@ -650,33 +653,55 @@
   letter-spacing: var(--track-caps);
   text-transform: uppercase;
 }
+/* What it makes takes the room its chips need; the two meters share the rest. */
 .pp-stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
   gap: var(--s-4);
 }
 .pp-stat {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--s-1);
   min-width: 0;
+}
+.pp-stat:last-child {
+  max-width: calc(var(--u) * 60); /* 240: five chips at Largest; a rival's buildings cut */
+}
+/* The figure and its meter on one line, so a stat is two lines at every Text size. */
+.pp-stat-line {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+}
+.pp-stat-line > .ch-meter {
+  flex: 1;
+  min-width: 0;
+}
+.pp-stat-line > .pp-v:only-child {
+  flex: 1;
 }
 .pp-v {
   display: flex;
   align-items: baseline;
-  flex-wrap: wrap;
   gap: 0 6px;
+  min-width: 0;
+  white-space: nowrap;
   font-family: var(--f-name);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 .pp-v small {
+  overflow: hidden;
+  min-width: 0;
   color: var(--ink-66);
   font-family: var(--f-sans);
   font-weight: 600;
+  text-overflow: ellipsis;
 }
 .pp-makes .chips {
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 .pp-two {
   display: grid;
@@ -708,7 +733,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* Seven slots or more: three short rows, icon beside the word, in the same box. */
+/* Seven slots or more: three short rows, a small icon beside the word, in the same box. */
 .pp-slots:has(> :nth-child(7)) .ch-socket {
   display: flex;
   justify-content: center;
@@ -717,11 +742,13 @@
 }
 .pp-slots:has(> :nth-child(7)) .ch-socket > .ico {
   flex: none;
+  width: var(--ic-chip);
+  height: var(--ic-chip);
 }
 .pp-classes {
   display: flex;
   flex-direction: column;
-  gap: var(--s-1);
+  gap: 2px;
 }
 .pp-class {
   display: grid;
@@ -821,53 +848,49 @@
   font-family: var(--f-body);
   font-style: italic;
 }
-/* A footer act: its name and price, and under it the engine's reason. */
+/* A footer act: a plaque one line high, its icon, its verb, its price in a chip. The
+   three share the row by their words' length; a lone act keeps its own width. */
 .pp-act-tip {
   display: block;
-  flex: 1 1 0;
+  flex: 1 1 auto;
   min-width: 0;
+}
+.pp-act-tip:only-child {
+  flex-grow: 0;
 }
 .pp-act.ch-ctl {
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: center;
-  gap: 0;
+  justify-content: flex-start;
+  gap: var(--s-1);
   width: 100%;
-  height: 100%;
-  padding: var(--s-1) 10px;
+  height: calc(var(--u) * 11); /* 44: a control pressed most turns */
+  padding: 0 var(--s-1) 0 6px;
   letter-spacing: 0;
-  text-align: left;
   text-transform: none;
-  white-space: normal;
-}
-.pp-foot > .pp-act.ch-ctl {
-  flex: 1;
-}
-/* Two lines, each one line high at every Text size: the verb; then its price and,
-   when it can't be taken, the reason, cut with an ellipsis (the tooltip has it). */
-.pp-act-n,
-.pp-act-d {
-  overflow: hidden;
-  min-width: 0;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
-.pp-act-d {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-}
-.pp-act-d > .price {
+.pp-act > .ico {
   flex: none;
 }
-.pp-act-why {
+.pp-act[aria-disabled="true"] > .ico {
+  opacity: var(--dim);
+}
+.pp-act-n {
+  flex: 1 1 auto;
   overflow: hidden;
   min-width: 0;
-  font-weight: 600;
+  text-align: left;
   text-overflow: ellipsis;
 }
-.pp-act[aria-disabled="true"] .pp-act-why {
-  color: var(--neg-ink);
+/* The price: a small sunk chip at the plaque's end, red when the store is short. */
+.pp-act-cost {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  height: var(--s-6);
+  padding: 0 var(--s-1);
+  border-radius: var(--r-panel);
+  background: var(--ink-07);
+  box-shadow: inset 0 0 0 var(--rule) var(--bz-dk-30);
 }
 
 /* ---- beside the place panel, above the hand's row ---------------------------- */

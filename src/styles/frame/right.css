@@ -29,8 +29,7 @@
   border-radius: var(--r-panel) 0 0 0;
 }
 /* The log line and every row below keep their place; only the log's foot is the
-   dock's top edge, so the dock carries no corner of its own: the outliner's
-   bottom-left corner, a gap above, is the one there. */
+   dock's top edge, so the dock carries no corner of its own. */
 
 /* ---- row a: the Chronicle's newest line, and the Plates menu at its end ------ */
 .rd-line-row {
@@ -374,10 +373,9 @@
 .hud-canvas:has(.rd-log) .rd-outl {
   --chron-open: calc(var(--sh-chron-h) + var(--sh-corner-out));
 }
-/* The riot warning docked over the outliner's foot takes that corner too. */
-.hud-canvas:has(.rd-log) .rd-outl > .ch-corner[data-at="bl"],
-.hud-canvas:has(.endturn-confirm) .rd-outl > .ch-corner[data-at="bl"] {
-  display: none;
+/* Tucked: the column folds up to its head, which keeps its place, width and knobs. */
+.rd-outl.is-tucked {
+  height: var(--s-12);
 }
 .rd-outl-head {
   display: flex;
@@ -551,33 +549,6 @@
   padding: var(--s-2) var(--s-4);
   color: var(--glaze-ink-66);
   font-family: var(--f-sans);
-}
-
-/* Tucked away: a tab on the edge brings it back. */
-.rd-outl-tab-tip {
-  position: fixed;
-  top: var(--sh-outliner-top);
-  right: 0;
-  z-index: var(--z-bar);
-}
-.rd-outl-tab {
-  /* One width at every Text size: what Largest needs. */
-  width: calc(var(--u) * 33); /* 132 */
-  height: var(--s-8);
-  overflow: hidden;
-  padding: 0 var(--s-4);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  border: 0;
-  border-radius: var(--r-panel) 0 0 var(--r-panel);
-  color: var(--bz-hi);
-  background: var(--glaze);
-  box-shadow: var(--rule-frame), var(--shadow-panel);
-  font-family: var(--f-sans);
-  font-weight: 700;
-  letter-spacing: var(--track-caps);
-  text-transform: uppercase;
-  cursor: pointer;
 }
 
 /* ---- the outliner's settings, dropped from its gear ------------------------- */
