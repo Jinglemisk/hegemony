@@ -1,6 +1,5 @@
 import { EMPTY_RESOURCES } from "../../game/data";
 import { capitalize } from "../../game/core/format";
-import type { ActionStatus } from "../../game/rules";
 import {
   POP_TYPES,
   claimableLuxuriesAt,
@@ -110,17 +109,6 @@ export function getBuildingBenefitText(
   const deltaText = formatResourceDelta(projected);
 
   return deltaText === "none" ? presentBuildingEffects(building.effects).text : deltaText;
-}
-
-/** A map popover's reason: the turn gate's (`turnBlocked`) first, then the engine's. */
-export function actionRequirementText(status: ActionStatus | null, blocked: string | null) {
-  return blocked ?? (status?.reasons.length ? status.reasons.join(" ") : "Available.");
-}
-
-/** The shared "can this act fire right now" gate for the map popovers' confirm buttons:
- *  the action is legal and the turn gate (`turnBlocked`) is open. */
-export function gameplayActionDisabled(status: ActionStatus | null, blocked: string | null) {
-  return !status?.can || blocked !== null;
 }
 
 /** One consistent line for every settlement picker: the place's NAME and rank,

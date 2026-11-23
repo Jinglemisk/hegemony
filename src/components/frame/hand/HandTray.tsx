@@ -1,5 +1,6 @@
 import { useEffect, useEffectEvent, type CSSProperties } from "react";
 import { devCardBlocked, devCardOf } from "../../../game/devCards";
+import type { DevCardKind } from "../../../game/types";
 import { devCardFace } from "../../../ui/cardFace";
 import { isTyping } from "../../../ui/keys";
 import { GameCard } from "../../cards/GameCard";
@@ -10,8 +11,9 @@ import { Ico, Tip, TipBody } from "../parts";
 /**
  * The hand's tray: the seat's held development cards peeking from the bottom edge in
  * one fixed box (x 624, 480 × 72 at design size) that never moves or resizes, whatever
- * opens beside it. A card rises out of the tray under the pointer or focus — the tray
- * lifts the card's slot, never the face. A click, or H anywhere, opens the hand view.
+ * opens beside it. Each card shows as a plate (its kind and name); under the pointer or
+ * focus the whole card stands above its plate, fading in where it lies. A click, or H
+ * anywhere, opens the hand view.
  */
 export function HandTray({ onOpen }: { onOpen: () => void }) {
   const { G, viewerId } = useGameUi();
@@ -68,42 +70,57 @@ export function HandTray({ onOpen }: { onOpen: () => void }) {
       role="group"
       style={{ "--n": hand.length } as CSSProperties}
     >
+      {/* The tab stands inside the tray, so nothing that opens above the hand's row
+          (a place's pops, a rival's card) can cover it. */}
       <div className="hand-tab">
         <span>Hand · {hand.length}</span>
         <button aria-label="View the hand" className="hand-view-btn" onClick={onOpen} type="button">
           View <kbd>H</kbd>
         </button>
       </div>
-      {hand.map((held, index) => {
-        const card = devCardOf(G, held.id);
-        if (!card) return null;
-        const blocked = devCardBlocked(G, viewerId, held.id);
-        return (
-          <Tooltip
-            content={
-              <Tip title={card.name}>
-                <TipBody>{card.text}</TipBody>
-                {blocked ? <TipBody>{blocked}</TipBody> : null}
-                <p className="tip-act">Click to open the hand</p>
-              </Tip>
-            }
-            key={held.id}
-            preferredPlacement="above"
-            tooltipClassName="hand-tip"
-            triggerClassName="hand-slot"
-            triggerStyle={{ "--i": index } as CSSProperties}
-          >
-            <button
-              aria-label={`${card.name}. ${blocked ?? "Can be played now."} Open the hand.`}
-              className="hand-card-btn"
-              onClick={onOpen}
-              type="button"
+      <div className="hand-slots">
+        {hand.map((held, index) => {
+          const card = devCardOf(G, held.id);
+          if (!card) return null;
+          const blocked = devCardBlocked(G, viewerId, held.id);
+          return (
+            <Tooltip
+              content={
+                <Tip title={card.name}>
+                  <TipBody>{card.text}</TipBody>
+                  {blocked ? <TipBody>{blocked}</TipBody> : null}
+                  <p className="tip-act">Click to open the hand</p>
+                </Tip>
+              }
+              key={held.id}
+              preferredPlacement="above"
+              triggerClassName="hand-slot"
+              triggerStyle={{ "--i": index } as CSSProperties}
             >
-              <GameCard face={devCardFace(card)} size="hand" />
-            </button>
-          </Tooltip>
-        );
-      })}
+              <button
+                aria-label={`${card.name}. ${blocked ?? "Can be played now."} Open the hand.`}
+                className="hand-card-btn"
+                onClick={onOpen}
+                type="button"
+              >
+                {/* The risen card: shown whole above the tray under the pointer or focus.
+                    The slot grows to hold it, so the tooltip stands above the card. */}
+                <span className="hand-face">
+                  <GameCard face={devCardFace(card)} size="hand" />
+                </span>
+                {/* The plate in the tray: the card's kind over its name. */}
+                <span aria-hidden="true" className="hand-plate">
+                  <span className="hand-plate-k">{KICKERS[card.kind]}</span>
+                  <span className="hand-plate-n">{card.name}</span>
+                </span>
+              </button>
+            </Tooltip>
+          );
+        })}
+      </div>
     </div>
   );
 }
+
+/** A plate's kicker: how the card is played. */
+const KICKERS: Record<DevCardKind, string> = { held: "Held", rival: "Rival", yield: "Yield" };

@@ -56,7 +56,7 @@ export function IdeasDrawer({ actions }: DrawerProps) {
   });
 
   const buy = (idea: NationalIdeaDefinition) => {
-    if (ideaTakesPop(idea)) return actions.onIdeasModal();
+    if (ideaTakesPop(idea)) return actions.onIdeasModal(idea.id);
     const status = getTakeIdeaStatus(G, viewerId, idea.id);
     ask({
       icon: "assembly/national-idea",
@@ -81,14 +81,14 @@ export function IdeasDrawer({ actions }: DrawerProps) {
         : (why ?? "Free");
     return (
       <Tile
-        ariaLabel={`${idea.name}. ${state}.`}
+        ariaLabel={`${idea.name}. ${sentence(state)}`}
         className={`is-idea${holder ? (holder.playerID === viewerId ? " is-yours" : " is-taken") : ""}`}
         disabled={!open}
         icon={IDEA_RASTERS[idea.id]}
         key={idea.id}
         label={idea.name}
         onClick={holder ? undefined : () => buy(idea)}
-        tip={{ key: `i-${idea.id}`, title: idea.name, line: `${idea.text} ${state}.` }}
+        tip={{ key: `i-${idea.id}`, title: idea.name, line: `${idea.text} ${sentence(state)}` }}
       >
         {holder ? (
           <SeatCoin className="lw-tile-coin" seat={holder.playerID} size={20} />
@@ -115,6 +115,9 @@ export function IdeasDrawer({ actions }: DrawerProps) {
     </>
   );
 }
+
+/** A line ended by one full stop, whether or not the engine's reason brought its own. */
+const sentence = (line: string) => `${line.replace(/\.+$/, "")}.`;
 
 /** Agora: the next sitting, the standing Laws as stelae, the orators by seat. */
 export function AgoraDrawer() {

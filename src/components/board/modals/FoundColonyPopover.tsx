@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   POP_TYPES,
   formatPops,
@@ -9,167 +9,150 @@ import {
 import { previewFoundedSettlement } from "../../../game/economy/preview";
 import type { PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
+import { POP_RASTERS } from "../../../ui/iconRegistry";
 import { settlementNameOf } from "../../../ui/settlementNames";
-import { Prose } from "../../AnnotatedText";
-import { Turns } from "../../frame/parts";
-import { SettlementSummaryCard } from "../../SettlementCard";
-import { POP_GLYPHS, SETTLEMENT_GLYPHS } from "../../../ui/iconRegistry";
-import { Icon } from "../../../ui/icons/Icon";
+import { Panel, PanelHead } from "../../chrome/Panel";
+import { Lacquer } from "../../chrome/controls";
+import { useConfirm } from "../../chrome/confirmContext";
+import { Chips, Ico } from "../../frame/parts";
+import { CostDetail } from "../../left/atoms";
+import { refusal, titleCase } from "../../left/words";
 import { useGameUi } from "../GameUiContext";
-import { TileListbox } from "../TileListbox";
-import {
-  capitalize,
-  firstAvailablePop,
-  getSettlementEntries,
-  settlementPickerLabel,
-} from "../helpers";
-import { PopoverActions } from "../PopoverActions";
-import { TilePopover } from "../map/TilePopover";
-import { CostRow } from "./PlacementModalShell";
+import { capitalize, firstAvailablePop, getSettlementEntries } from "../helpers";
 
 /**
- * Map-anchored founding flow. The target tile is already chosen on the map; this
- * floating panel pops just above or below that tile (whichever fits the viewport)
- * so the board stays visible while the player picks a source pop and confirms.
+ * Found a colony on a picked piece of land: it opens beside the place panel, above the
+ * hand's row, like Grow and Build. The land is fixed (the place panel shows it); this
+ * asks which place a pop leaves from and who goes, shows what the colony would make, and
+ * the Found act asks through the confirm bar.
  */
 export function FoundColonyPopover({
   tileId,
-  anchor,
   onCancel,
   onConfirm,
 }: {
   tileId: string;
-  anchor: DOMRect;
   onCancel: () => void;
   onConfirm: (sourceTileId: string, pop: PopType) => void;
 }) {
-  const { G, viewerId: playerID } = useGameUi();
-  const targetTile = getTile(G, tileId);
-  const sources = useMemo(
-    () => getSettlementEntries(G, playerID).filter((entry) => totalPops(entry.pops) > 0),
-    [G, playerID],
-  );
-
+  const { G, viewerId, turnBlocked } = useGameUi();
+  const ask = useConfirm();
+  const target = getTile(G, tileId);
+  const sources = getSettlementEntries(G, viewerId).filter((entry) => totalPops(entry.pops) > 0);
   const [sourceTileId, setSourceTileId] = useState(() => sources[0]?.tile.id ?? "");
   const source = sources.find((entry) => entry.tile.id === sourceTileId) ?? sources[0];
-  const [pop, setPop] = useState<PopType>(() => firstAvailablePop(source?.pops));
+  const [picked, setPop] = useState<PopType>(() => firstAvailablePop(source?.pops));
+  // A source without the class picked sends the first class it has.
+  const pop = source && source.pops[picked] > 0 ? picked : firstAvailablePop(source?.pops);
 
+  // Opening moves focus in, to the first choice.
   useEffect(() => {
-    if (source && source.pops[pop] <= 0) {
-      setPop(firstAvailablePop(source.pops));
-    }
-  }, [pop, source]);
+    document.querySelector<HTMLElement>(".pp-pop.is-found .pp-opt")?.focus();
+  }, []);
 
-  if (!targetTile) {
-    return null;
-  }
-
+  if (!target) return null;
+  const store = G.players[viewerId].resources;
+  const status = getFoundColonyStatus(G, viewerId, tileId);
+  const cost = status.cost ?? G.ruleset.actionCosts.foundColony;
   const preview = source
-    ? previewFoundedSettlement(G, playerID, tileId, source.tile.id, pop)
+    ? previewFoundedSettlement(G, viewerId, tileId, source.tile.id, pop)
     : null;
-  // Fall back to the LIVE ruleset, never the ACTION_COSTS default: the status cost
-  // has standing Laws already applied, and the ruleset itself is
-  // patchable (R7). This branch is defensive — the status always carries a cost.
-  const cost =
-    getFoundColonyStatus(G, playerID, targetTile.id).cost ?? G.ruleset.actionCosts.foundColony;
-  const canConfirm = preview !== null;
+  const why =
+    sources.length === 0
+      ? "No place of yours has a pop to spare."
+      : (refusal(status, turnBlocked, store) ?? (preview ? null : "This pop cannot found here."));
+  const from = source
+    ? titleCase(
+        settlementNameOf(
+          G.board.tiles,
+          source.tile.settlements.find((s) => s.owner === viewerId)!.id,
+        ),
+      )
+    : "";
 
   return (
-    <TilePopover
-      anchor={anchor}
-      label="Found colony"
-      measureKey={`${sources.length}-${sourceTileId}-${pop}`}
-      onCancel={onCancel}
-      title="Found Colony"
+    <Panel
+      aria-label={`Found a colony on the ${target.terrain}`}
+      className="pp-pop is-found ch-settle"
+      corners={["tr", "br"]}
+      data-exclude
+      role="dialog"
     >
-      {sources.length === 0 ? (
-        <p className="placementEmptyState">
-          <Prose>No settlement has a pop to spare for a new colony.</Prose>
+      <PanelHead
+        closeLabel="Close Found a colony"
+        icon="settlements/found"
+        onClose={onCancel}
+        sub={`On the ${target.terrain} · the pop arrives next turn`}
+        title="Found a colony"
+      />
+      <div className="pp-pop-body">
+        <h3 className="pp-k pp-pop-k">It would make a turn</h3>
+        <p className="pp-pop-line">
+          {preview ? <Chips amounts={preview.income} empty="nothing" signed /> : "—"}
         </p>
-      ) : (
-        <>
-          {preview ? (
-            <article className="placementPreviewCard settlement-colony foundColonyPreview">
-              <SettlementSummaryCard
-                name="NEW COLONY"
-                netYield={preview.income}
-                G={preview.state}
-                settlement={preview.settlement}
-                tile={preview.tile}
-              />
-            </article>
-          ) : null}
-
-          <section className="placementSection">
-            <span className="placementSectionLabel">Send a pop from</span>
-            {/* The TARGET was picked on the map; the SOURCE is a list because the
-                popover is already open over the board — a second map pick would
-                fight the first. Scope 4's listbox, not a native select. */}
-            <TileListbox
-              ariaLabel="Settlement the pop leaves from"
-              onChange={setSourceTileId}
-              options={sources.map(({ tile, pops }) => {
-                const own = tile.settlements.find((s) => s.owner === playerID)!;
-                const ground = `${capitalize(tile.terrain)}, ${tile.slots} slots${tile.resource ? ` for ${tile.resource.type}` : ""}`;
-                return {
-                  value: tile.id,
-                  icon: own.kind === "colony" ? SETTLEMENT_GLYPHS.colony : SETTLEMENT_GLYPHS.city,
-                  // The kind is the glyph, so the title skips it; the label keeps it.
-                  title: (
-                    <Prose links={false}>
-                      {`${settlementNameOf(G.board.tiles, own.id)} · ${ground}`}
-                    </Prose>
-                  ),
-                  detail: <Prose links={false}>{formatPops(pops)}</Prose>,
-                  label: `Send a pop from ${settlementPickerLabel(G, tile, playerID)} — holds ${formatPops(pops)}.`,
-                };
-              })}
-              value={source?.tile.id ?? null}
-            />
-            {/* Stacked, not 3-up: in a 312px popover the columns clipped "Citizen" to
-                  "C." — same squeeze the Grow popover hit. */}
-            <div
-              className="popChoiceGrid foundColonyPopGrid popoverChoiceStack"
-              role="group"
-              aria-label="Founding pop type"
+        <h3 className="pp-k pp-pop-k">Send a pop from</h3>
+        {sources.map(({ tile, pops }) => {
+          const own = tile.settlements.find((s) => s.owner === viewerId)!;
+          const name = titleCase(settlementNameOf(G.board.tiles, own.id));
+          const on = tile.id === source?.tile.id;
+          return (
+            <button
+              aria-label={`From ${name}, which holds ${formatPops(pops)}`}
+              aria-pressed={on}
+              className="pp-opt"
+              key={tile.id}
+              onClick={() => setSourceTileId(tile.id)}
+              type="button"
             >
-              {POP_TYPES.map((candidate) => (
-                <button
-                  className={candidate === pop ? "selectedChoice" : ""}
-                  disabled={(source?.pops[candidate] ?? 0) <= 0}
-                  key={candidate}
-                  onClick={() => setPop(candidate)}
-                  type="button"
-                >
-                  <Icon glyph={POP_GLYPHS[candidate]} size="rail" className="miniIcon" />
-                  <span>{formatPopLabel(candidate, 1)}</span>
-                  <strong>{source?.pops[candidate] ?? 0}</strong>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <CostRow
-            cost={cost}
-            note={
-              <>
-                Arrives in <Turns n={1} />
-              </>
-            }
-          />
-
-          <PopoverActions
-            confirmLabel="Found Colony"
-            disabled={!canConfirm}
-            onCancel={onCancel}
-            onConfirm={() => {
-              if (source) {
-                onConfirm(source.tile.id, pop);
-              }
-            }}
-          />
-        </>
-      )}
-    </TilePopover>
+              <Ico path={`settlements/${own.kind}`} size="tile" />
+              <span className="pp-opt-n">{name}</span>
+              <span className="pp-opt-line">
+                {capitalize(tile.terrain)} · {formatPops(pops)}
+              </span>
+            </button>
+          );
+        })}
+        <h3 className="pp-k pp-pop-k">Who goes</h3>
+        {POP_TYPES.map((candidate) => {
+          const here = source?.pops[candidate] ?? 0;
+          const label = `A ${formatPopLabel(candidate, 1)}`;
+          return (
+            <button
+              aria-disabled={here <= 0 || undefined}
+              aria-label={here > 0 ? label : `${label}: none in ${from}`}
+              aria-pressed={candidate === pop}
+              className="pp-opt"
+              key={candidate}
+              onClick={here > 0 ? () => setPop(candidate) : undefined}
+              type="button"
+            >
+              <Ico path={POP_RASTERS[candidate]} size="tile" />
+              <span className="pp-opt-n">{label}</span>
+              <span className="pp-opt-line">
+                {here} in {from}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <footer className="pp-pop-foot">
+        <Lacquer
+          aria-label={why ? `Found it: ${why}` : "Found it"}
+          disabled={why !== null}
+          onClick={() =>
+            source &&
+            ask({
+              icon: "settlements/found",
+              question: `Are you sure you want to found a colony on the ${target.terrain}, a ${formatPopLabel(pop, 1)} from ${from}?`,
+              detail: <CostDetail cost={cost} more="The pop arrives next turn." store={store} />,
+              verb: "Found it",
+              onYes: () => onConfirm(source.tile.id, pop),
+            })
+          }
+        >
+          Found it <Chips amounts={cost} short={why !== null} />
+        </Lacquer>
+      </footer>
+    </Panel>
   );
 }

@@ -343,6 +343,7 @@
   /* ---- shell geometry at design size (1440×900) ------------------------- */
   --sh-top-h: 50px; /* the top bar */
   --sh-side-w: 64px; /* the sidebar's column of buttons */
+  --sh-side-top: 108px; /* the sidebar and its drawers start under the alarms' row */
   --sh-drawer-w: 320px; /* a drawer, full height beside the sidebar */
   --sh-place-w: 604px; /* the place panel, from the screen's left edge */
   --sh-place-h: 404px;

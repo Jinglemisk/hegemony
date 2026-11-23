@@ -7,6 +7,7 @@ import {
   PROMOTE_FROM,
   buildingGround,
   demotionTarget,
+  formatPops,
   getBuildBuildingOptions,
   getDemotePopStatus,
   getFoundColonyStatus,
@@ -53,6 +54,7 @@ import {
   POP_RASTERS,
   RESOURCE_RASTERS,
 } from "../../ui/iconRegistry";
+import { arrivingPops } from "../../ui/frameSelectors";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { settlementNames } from "../../ui/settlementNames";
 import { useGameUi } from "../board/GameUiContext";
@@ -68,13 +70,14 @@ import { composeAnchor, refusal, titleCase } from "./words";
 import type { DrawerId } from "./Drawer";
 import type { LeftActions } from "./LeftShell";
 import { BuildOptions, GrowOptions, SeatCard } from "./PlacePops";
+import { FoundColonyPopover } from "../board/modals/FoundColonyPopover";
 
 /** What the map last picked: the empty sea, a tile, or a luxury good's mooring. */
 export type PlaceSubject =
   { kind: "realm" } | { kind: "tile"; tileId: string } | { kind: "mooring"; vertexId: string };
 
 /** What opens beside the place panel, above the hand's row. */
-export type PlacePop = "grow" | "build" | "seat";
+export type PlacePop = "grow" | "build" | "seat" | "found";
 
 const BACK_NAMES: Record<DrawerId, string> = {
   overview: "Realm",
@@ -140,7 +143,7 @@ export function PlacePanel({
   onPop: (pop: PlacePop | null) => void;
   actions: LeftActions;
 }) {
-  const { G, viewerId } = useGameUi();
+  const { G, viewerId, moves } = useGameUi();
   const view = viewOf(G, viewerId, subject);
   const names = settlementNames(G.board.tiles);
   if (view.kind === "none") return null;
@@ -193,12 +196,14 @@ export function PlacePanel({
     );
   } else if (view.kind === "oracle") {
     label = "The Oracle";
-    headProps = { ...head, icon: "terrain/oracle", title: "The Oracle", sub: "Sacred ground" };
-    body = (
-      <div className="pp-lore">
-        <OraclePage />
-      </div>
-    );
+    headProps = {
+      ...head,
+      icon: "terrain/oracle",
+      title: "The Oracle",
+      sub: "Sacred ground",
+      closeLabel: "Close the Oracle",
+    };
+    body = <OraclePage tile={view.tile} />;
   } else if (view.kind === "land") {
     const { tile } = view;
     label = capitalize(tile.terrain);
@@ -208,9 +213,10 @@ export function PlacePanel({
       icon: `terrain/${tile.terrain}`,
       title: capitalize(tile.terrain),
       sub: `Unsettled · ${tile.slots} ${tile.slots === 1 ? "slot" : "slots"}${resource ? ` for ${resource}` : ""}`,
+      closeLabel: `Close ${capitalize(tile.terrain)}`,
     };
     body = <LandBody tile={tile} />;
-    foot = <FoundAction onFound={actions.onFound} tile={tile} />;
+    foot = <FoundAction onOpen={() => onPop(pop === "found" ? null : "found")} tile={tile} />;
   } else {
     const { asset } = view;
     const good = getLuxuryGood(G.definition.content, asset.goodId);
@@ -220,13 +226,13 @@ export function PlacePanel({
       icon: LUXURY_GOOD_RASTERS[asset.goodId as LuxuryGoodId] ?? LUXURY_RASTER,
       title: label,
       sub: `Luxury good · ${asset.owner ? `held by ${PLAYER_GLAZES[asset.owner].name}` : "unclaimed"}`,
+      closeLabel: `Close ${label}`,
     };
     body = <LuxuryBody asset={asset} />;
   }
 
-  // Each pick unrolls out of the sidebar afresh.
-  const key =
-    subject.kind === "tile" ? subject.tileId : subject.kind === "mooring" ? subject.vertexId : "";
+  // The panel unrolls out of the sidebar when it opens; a new pick only changes what
+  // it shows. Without acts, the body takes the foot's room: the box keeps its size.
   return (
     <>
       <Panel
@@ -235,12 +241,11 @@ export function PlacePanel({
         corners={["tr"]}
         data-c="place"
         data-exclude
-        key={key}
         role="region"
       >
         <PanelHead {...headProps} />
         <div className="pp-body">{body}</div>
-        <footer className="pp-foot">{foot}</footer>
+        {foot ? <footer className="pp-foot">{foot}</footer> : null}
       </Panel>
       {view.kind === "settlement" && pop === "grow" && view.own ? (
         <GrowOptions name={label} onClose={() => onPop(null)} tile={view.tile} />
@@ -251,6 +256,16 @@ export function PlacePanel({
           onBuild={actions.onBuild}
           onClose={() => onPop(null)}
           tile={view.tile}
+        />
+      ) : null}
+      {view.kind === "land" && pop === "found" ? (
+        <FoundColonyPopover
+          onCancel={() => onPop(null)}
+          onConfirm={(sourceTileId, popType) => {
+            onPop(null);
+            moves.foundColony(view.tile.id, sourceTileId, popType);
+          }}
+          tileId={view.tile.id}
         />
       ) : null}
       {view.kind === "settlement" && pop === "seat" && !view.own ? (
@@ -290,7 +305,7 @@ function SettlementBody({
   name: string;
   onPop: (pop: PlacePop | null) => void;
 }) {
-  const { G } = useGameUi();
+  const { G, turnBlocked } = useGameUi();
   const pops = totalPops(settlement.pops);
   const capacity = settlementCapacity(settlement, G);
   const slots = settlementSlots(tile, settlement, G);
@@ -307,6 +322,9 @@ function SettlementBody({
   const others = tile.settlements
     .filter((other) => other !== settlement)
     .map((other) => PLAYER_GLAZES[other.owner].name);
+  const arriving = arrivingPops(G, tile.id, settlement.owner);
+  const coming = totalPops(arriving);
+  const filled = settlement.buildings.length + working;
 
   return (
     <>
@@ -315,6 +333,7 @@ function SettlementBody({
           <span className="pp-v">
             {pops}
             <small>/ {capacity}</small>
+            {coming ? <small className="pp-coming">+{coming}</small> : null}
           </span>
           <SocketMeter label={`People ${pops} of ${capacity}`} n={capacity} value={pops} />
         </Stat>
@@ -351,7 +370,25 @@ function SettlementBody({
       </div>
       <div className="pp-two">
         <section aria-label="Slots" className="pp-sec">
-          <h3 className="pp-k">Slots · {slots}</h3>
+          <h3 className="pp-k pp-sec-head">
+            Slots · {slots}
+            <span className="pp-marks">
+              {idle ? (
+                <Mark
+                  icon={POP_RASTERS.slaves}
+                  line={`${idle} ${idle === 1 ? "slave stands" : "slaves stand"} idle: no slot to work.`}
+                  word={`${idle} idle`}
+                />
+              ) : null}
+              {held.length ? (
+                <Mark
+                  icon={LUXURY_RASTER}
+                  line={`Its Port holds ${held.join(", ")}.`}
+                  word={held.length === 1 ? held[0] : `${held.length} goods`}
+                />
+              ) : null}
+            </span>
+          </h3>
           <div className="pp-slots">
             {settlement.buildings.map((id, i) => (
               <Socket key={`${id}-${i}`} state="filled">
@@ -370,15 +407,12 @@ function SettlementBody({
             ))}
             {Array.from({ length: Math.max(0, open - working) }, (_, i) =>
               raise ? (
-                <Socket
-                  aria-label={`Raise a building in ${name}`}
+                <RaiseSlot
                   key={`o-${i}`}
-                  onClick={raise}
-                  state="open"
-                >
-                  <b aria-hidden="true">+</b>
-                  <span>Raise</span>
-                </Socket>
+                  label={`Raise a building in ${name}, slot ${filled + i + 1} of ${slots}`}
+                  lock={turnBlocked}
+                  onRaise={raise}
+                />
               ) : (
                 <Socket key={`o-${i}`} state="open">
                   <span>Open</span>
@@ -388,7 +422,25 @@ function SettlementBody({
           </div>
         </section>
         <section aria-label="People" className="pp-sec">
-          <h3 className="pp-k">People</h3>
+          <h3 className="pp-k pp-sec-head">
+            People
+            <span className="pp-marks">
+              {coming ? (
+                <Mark
+                  icon="pops/pop-gain"
+                  line={`${formatPops(arriving)} ${coming === 1 ? "is" : "are"} on the way here, arriving next turn.`}
+                  word={`+${coming} arriving`}
+                />
+              ) : null}
+              {others.length ? (
+                <Mark
+                  icon="settlements/seal"
+                  line={`Shares the tile with ${others.join(", ")}.`}
+                  word="Shared"
+                />
+              ) : null}
+            </span>
+          </h3>
           <div className="pp-classes">
             {CLASS_ORDER.map((pop) => (
               <ClassRow
@@ -403,16 +455,58 @@ function SettlementBody({
           </div>
         </section>
       </div>
-      {held.length || others.length || idle ? (
-        <p className="pp-note">
-          {idle
-            ? `${idle} ${idle === 1 ? "slave stands" : "slaves stand"} idle: no slot to work. `
-            : ""}
-          {held.length ? `Its Port holds ${held.join(", ")}. ` : ""}
-          {others.length ? `Shares the tile with ${others.join(", ")}.` : ""}
-        </p>
-      ) : null}
     </>
+  );
+}
+
+/** A notice on a section's head: a short word, its whole sentence in the tooltip. */
+function Mark({ icon, word, line }: { icon: string; word: string; line: string }) {
+  return (
+    <Tooltip
+      ariaLabel={line}
+      content={
+        <Tip title={word}>
+          <TipBody>{line}</TipBody>
+        </Tip>
+      }
+      focusable
+      triggerClassName="pp-mark"
+    >
+      <Ico path={icon} size="chip" />
+      <span>{word}</span>
+    </Tooltip>
+  );
+}
+
+/** An open slot of yours: raises a building, or says why not while the turn is shut. */
+function RaiseSlot({
+  label,
+  lock,
+  onRaise,
+}: {
+  label: string;
+  lock: string | null;
+  onRaise: () => void;
+}) {
+  return (
+    <Tooltip
+      content={
+        <Tip title="Raise a building">
+          <TipBody>{lock ?? "Opens the buildings that fit here."}</TipBody>
+        </Tip>
+      }
+      triggerClassName="pp-slot-tip"
+    >
+      <Socket
+        aria-disabled={lock ? true : undefined}
+        aria-label={lock ? `${label}: ${lock}` : label}
+        onClick={lock ? () => undefined : onRaise}
+        state="open"
+      >
+        <b aria-hidden="true">+</b>
+        <span>Raise</span>
+      </Socket>
+    </Tooltip>
   );
 }
 
@@ -709,33 +803,17 @@ function LandBody({ tile }: { tile: HexTile }) {
   );
 }
 
-/** Found a colony here, through the confirm; the map then asks which pop goes. */
-function FoundAction({ tile, onFound }: { tile: HexTile; onFound: (tileId: string) => void }) {
+/** Found a colony here: opens the Found pop beside the panel, which asks who goes. */
+function FoundAction({ tile, onOpen }: { tile: HexTile; onOpen: () => void }) {
   const { G, viewerId, turnBlocked } = useGameUi();
-  const ask = useConfirm();
   const store = G.players[viewerId].resources;
   const found = getFoundColonyStatus(G, viewerId, tile.id);
-  const why = refusal(found, turnBlocked, store);
   return (
     <Act
       cost={found.cost}
       label="Found a colony here"
-      onClick={() =>
-        ask({
-          icon: "settlements/found",
-          question: `Are you sure you want to found a colony on this ${tile.terrain}?`,
-          detail: (
-            <CostDetail
-              cost={found.cost ?? {}}
-              more="Then pick the place a pop leaves from."
-              store={store}
-            />
-          ),
-          verb: "Found it",
-          onYes: () => onFound(tile.id),
-        })
-      }
-      why={why}
+      onClick={onOpen}
+      why={refusal(found, turnBlocked, store)}
     />
   );
 }
@@ -778,22 +856,24 @@ function LuxuryBody({ asset }: { asset: LuxuryAsset }) {
   );
 }
 
-/** The oracle: sacred ground that nobody may settle. */
-function OraclePage() {
+/** The oracle: sacred ground that nobody may settle, in the Land page's rows. */
+function OraclePage({ tile }: { tile: HexTile }) {
+  const { G } = useGameUi();
+  const coastal = isCoastalTile(tile, G.board.tiles);
   return (
-    <>
-      <p className="settle-meta caps">
-        <span className="meta-i">
-          <Ico path="terrain/oracle" size="chip" />
-          oracle
-        </span>
-        <span className="meta-i">sacred ground</span>
-      </p>
-      <p className="lore">
-        Here the god speaks for every polis and belongs to none. Envoys climb the road with gifts
-        and come down with riddles; the wise build their year on the answer.
-      </p>
-      <p className="lore-rule cap">No one may found, raise or settle on it, by any act or event.</p>
-    </>
+    <ul className="pp-facts">
+      <li>
+        <Ico path="terrain/oracle" size="ui" />
+        The god speaks here for every polis and belongs to none
+      </li>
+      <li>
+        <Ico path="settlements/found" size="ui" />
+        No one may found, raise or settle on it, by any act or event
+      </li>
+      <li>
+        <Ico path="settlements/slot" size="ui" />
+        {tile.slots} {tile.slots === 1 ? "slot" : "slots"} · {coastal ? "on the coast" : "inland"}
+      </li>
+    </ul>
   );
 }
