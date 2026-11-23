@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { HegemonyState, LogEntry, PlayerId } from "../../../game/types";
 import { deedSeat } from "../../../ui/frameSelectors";
-import { yearLabel } from "../../../ui/formatters";
+import { withTrueMinus, yearLabel } from "../../../ui/formatters";
 import { PLAYER_GLAZE_LIST } from "../../../ui/playerGlazes";
 import { AnnotatedText } from "../../AnnotatedText";
 import { SeatCoin } from "../../chrome/SeatCoin";
@@ -121,7 +121,7 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
         ))}
       </div>
 
-      <div className="chronicleList" ref={list} tabIndex={0}>
+      <div aria-label="Chronicle" className="chronicleList" ref={list} role="log" tabIndex={0}>
         {groups.length === 0 ? <p className="page-empty">No deeds recorded here yet.</p> : null}
         {groups.map((group) => (
           <div key={`${group.year}-${group.rows[0].entry.id}`}>
@@ -139,7 +139,7 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
                     link does not. Every one of those terms is still a link on
                     the pages where you act on it. */}
                 <span className="chron-text">
-                  <AnnotatedText links={false} text={entry.message} />
+                  <AnnotatedText links={false} text={withTrueMinus(entry.message)} />
                 </span>
               </p>
             ))}

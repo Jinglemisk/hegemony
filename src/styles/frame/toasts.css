@@ -1,6 +1,7 @@
 /* ============================================================================
    Toasts: one moment another seat had, as a banner that drops in under the top
-   bar, right of the alarms, then goes. Fixed width; its words wrap to two lines at most.
+   bar, right of the alarms, then goes. One size at every Text size: its words wrap to
+   two lines at most, one at Largest, and the Chronicle keeps them whole.
    ========================================================================== */
 /* The lane starts right of the alarm card's slot, which is wider than the longest
    alarms row (eight discs end at x 552): a banner never lands on a disc or on an
@@ -17,10 +18,15 @@
   align-items: center;
   gap: var(--s-3);
   width: 100%;
-  min-height: var(--sh-toast-h);
+  height: var(--sh-toast-h);
+  overflow: hidden;
   border: 0;
   text-align: left;
   cursor: pointer;
+}
+/* Room for a kicker over two lines at Large (one at Largest) inside the fixed height. */
+.toast.ch-banner {
+  padding-block: var(--s-1);
 }
 .toast-coin {
   --coin-d: var(--ic-32);
@@ -46,6 +52,10 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
+}
+:root[data-text-scale="largest"] .toast-body {
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
 }
 .toast-body .richIcon {
   width: var(--ic-chip);

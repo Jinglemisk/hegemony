@@ -152,9 +152,9 @@
 }
 
 /* A drawn card on the table: the card, its deck line, the slip and the commit in one
-   parchment panel. */
+   parchment panel, as wide as an alarm's card (the year's card opens from its alarm). */
 .ch-moment.drawnReveal {
-  width: min(calc(var(--u) * 116), calc(var(--vw) - var(--s-8))); /* 464 */
+  width: min(var(--sh-card-w), calc(var(--vw) - var(--s-8))); /* 480 */
   padding: var(--s-6);
 }
 .ch-moment.drawnReveal.handReveal {

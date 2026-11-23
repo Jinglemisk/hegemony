@@ -45,12 +45,34 @@
   box-shadow: var(--focus-at, 0 0 0 calc(var(--focus-gap, var(--focus-w)) + 2 * var(--focus-w)))
     var(--focus-halo);
 }
-:is(.rd-act, .rd-line, .rd-row, .rd-sec-head, .rd-outl-tab, .pp-opt, .lw-table tr) {
+:is(
+  .rd-act,
+  .rd-line,
+  .rd-row,
+  .rd-sec-head,
+  .rd-outl-tab,
+  .pp-opt,
+  .lw-table tr,
+  .chronicleList,
+  .intelBody,
+  .endturn
+) {
   --focus-gap: calc(-2 * var(--focus-w));
   --focus-at: inset 0 0 0 calc(3 * var(--focus-w));
 }
 .deal-disc {
   --focus-gap: 7px; /* clear of its .deal-ring, drawn 4px outside it */
+}
+
+/* ---- the scroll fade: a scroller with more below fades into its foot ---------
+   Driven by its own scroll position (intel.css's edge cue): gone at the end of the
+   scroll, and never there when nothing overflows. */
+@supports (animation-timeline: scroll(self)) {
+  .ch-scroll-fade {
+    animation: intelScrollEdge linear both;
+    animation-timeline: scroll(self);
+    animation-range: 88% 100%;
+  }
 }
 
 /* ---- panel: parchment or glaze in a cast bronze rule ----------------------- */

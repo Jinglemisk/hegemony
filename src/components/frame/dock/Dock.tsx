@@ -4,6 +4,7 @@ import { canAfford, getBuyDevCardStatus, getDoleStatus, usesLeft } from "../../.
 import { playerDole } from "../../../game/ideaRules";
 import { offerWindowReason } from "../../../game/trade";
 import { deedSeat } from "../../../ui/frameSelectors";
+import { withTrueMinus } from "../../../ui/formatters";
 import { AnnotatedText } from "../../AnnotatedText";
 import { ActionLogPanel } from "../../board/command/ActionLogPanel";
 import { useGameUi } from "../../board/GameUiContext";
@@ -23,7 +24,8 @@ import { Chips, Ico, Tip, TipBody, TipWarn } from "../parts";
  * across the whole dock, which opens the full log upward out of it; the four map modes
  * as square framed buttons; then Trade, Buy a card and the Dole with their costs. End
  * turn stands right of the modes and the buttons. The dock never changes size: the log
- * opens over the outliner above it, and the legend floats to its left.
+ * opens over the outliner above it, and the legend floats to its left. The tips of its
+ * modes, buttons and End turn open left of the dock, never over its other controls.
  */
 export function Dock({
   mode,
@@ -70,7 +72,8 @@ export function Dock({
                 </Tip>
               }
               key={m.id}
-              preferredPlacement="above"
+              side="left"
+              sideOf=".rd-dock"
             >
               <button
                 aria-keyshortcuts={String(i + 1)}
@@ -128,32 +131,39 @@ function ChronicleLine({
 }) {
   const { G } = useGameUi();
   const latest = G.log[G.log.length - 1];
-  const text = latest?.message ?? "The table is set.";
+  const text = withTrueMinus(latest?.message ?? "The table is set.");
   const seat = latest ? deedSeat(G, latest) : null;
   return (
-    <Tooltip
-      content={open ? null : <Tip title="Open the Chronicle" />}
-      preferredPlacement="above"
-      triggerClassName="rd-line-tip"
-    >
-      <button
-        aria-controls={controls}
-        aria-expanded={open}
-        aria-label={`Chronicle: ${text}`}
-        className="rd-line"
-        onClick={onToggle}
-        ref={ref}
-        type="button"
+    <>
+      {/* Read out as each deed lands, the player's own included: the line is cut to fit,
+          this says it whole. */}
+      <p aria-live="polite" className="visuallyHidden">
+        {latest ? text : ""}
+      </p>
+      <Tooltip
+        content={open ? null : <Tip title="Open the Chronicle" />}
+        preferredPlacement="above"
+        triggerClassName="rd-line-tip"
       >
-        {seat ? (
-          <SeatCoin aria-hidden="true" className="rd-line-coin" seat={seat} />
-        ) : (
-          <span aria-hidden="true" className="rd-line-coin is-empty" />
-        )}
-        <FittedLine key={latest?.id} text={text} />
-        <span aria-hidden="true" className="rd-caret" />
-      </button>
-    </Tooltip>
+        <button
+          aria-controls={controls}
+          aria-expanded={open}
+          aria-label={`Chronicle: ${text}`}
+          className="rd-line"
+          onClick={onToggle}
+          ref={ref}
+          type="button"
+        >
+          {seat ? (
+            <SeatCoin aria-hidden="true" className="rd-line-coin" seat={seat} />
+          ) : (
+            <span aria-hidden="true" className="rd-line-coin is-empty" />
+          )}
+          <FittedLine key={latest?.id} text={text} />
+          <span aria-hidden="true" className="rd-caret" />
+        </button>
+      </Tooltip>
+    </>
   );
 }
 
@@ -263,7 +273,8 @@ function DockAct({
           {blocked ? <TipWarn>{blocked}</TipWarn> : null}
         </Tip>
       }
-      preferredPlacement="above"
+      side="left"
+      sideOf=".rd-dock"
       triggerClassName="rd-act-tip"
     >
       <button

@@ -58,6 +58,7 @@
      are 44 high in a 50 bar, a 20 figure over a 13 label already fills them, and
      every cell's tooltip (which does scale) carries its words whole. */
   --t-bar-13: 13px;
+  --t-bar-14: 14px; /* the Menu plaque's word */
   --t-bar-20: 20px;
   --lh-bar-16: 16px;
   --lh-bar-20: 20px;
@@ -381,7 +382,7 @@
   /* The toast lane, right of the alarm card's slot: it ends short of the compass at
      the board's top-right (1052 against 1068). */
   --sh-toast-w: 456px;
-  --sh-toast-h: 64px; /* one toast */
+  --sh-toast-h: 72px; /* one toast, at every text size */
   --sh-hand-x: 624px; /* the hand's tray */
   --sh-hand-w: 480px;
   --sh-hand-h: 72px;

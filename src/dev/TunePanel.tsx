@@ -3,7 +3,6 @@ import "./tunePanel.css";
 import { getBuildings, getTerrainDeck } from "../game/content";
 import { PLAYER_IDS } from "../game/data";
 import type { HegemonyState, PlayerId } from "../game/types";
-import { CHROME_PLACEHOLDERS } from "../ui/icons/placeholders";
 import { isTyping } from "../ui/keys";
 import { useFitScale } from "../components/chrome/canvas";
 import { buildingSummary, describeBuildingEffect, terrainStats } from "./aggregates";
@@ -39,12 +38,12 @@ import type { TuningPresetId } from "./tuningPresets";
 const OPEN_KEY = "hegemony-dev-tune-open";
 /** Where the TUNE button was dragged to, so it stays off whatever it covered. */
 const FAB_KEY = "hegemony-dev-tune-fab";
-/** Its spot in design px: left of the outliner (320 wide, tokens.css), under the banner
- *  lane (62 to 126, a two-line banner at Largest text to about 144): over open board,
- *  clear of the alarms and their cards (left of 580), the menu and every panel. */
-const FAB_RIGHT = 320;
-const FAB_GAP = 8;
-const FAB_TOP = 152;
+/** Its spot in design px: the sidebar's foot, under its last button, inside its 64 px
+ *  column (tunePanel.css keeps it narrower): no drawer, alarm, window or card opens
+ *  there. The place panel and every dialog do cover that corner, so the stylesheet
+ *  hides it while one is open. */
+const FAB_LEFT = 6;
+const FAB_BOTTOM = 8;
 type FabSpot = { x: number; y: number };
 
 function loadFabSpot(): FabSpot | null {
@@ -214,19 +213,14 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
             y: Math.min(Math.max(event.clientY - press.dy, 0), window.innerHeight - box.height),
           });
         }}
-        // Undragged, it waits at the map's top-right corner, in the shell's scale.
+        // Undragged, it waits at the sidebar's foot, in the shell's scale.
         style={
           fabSpot
             ? { left: fabSpot.x, top: fabSpot.y }
-            : { right: (FAB_RIGHT + FAB_GAP) * scale, top: FAB_TOP * scale }
+            : { left: FAB_LEFT * scale, bottom: FAB_BOTTOM * scale }
         }
         title="Open parameter dashboard ( ` ) · drag to move"
       >
-        {CHROME_PLACEHOLDERS.settings ? (
-          <img alt="" className="icon icon-inline" src={CHROME_PLACEHOLDERS.settings} />
-        ) : (
-          "⚙"
-        )}{" "}
         TUNE{preset ? " · LOW" : ""}
         {changeCount > 0 ? ` · ${changeCount}` : ""}
       </button>

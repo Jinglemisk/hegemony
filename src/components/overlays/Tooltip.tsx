@@ -30,6 +30,8 @@ export function Tooltip({
   tooltipClassName,
   preferredPlacement = "below",
   side,
+  sideOf,
+  triggerRole,
 }: {
   children: ReactNode;
   content: ReactNode;
@@ -43,6 +45,12 @@ export function Tooltip({
   /** Beside the trigger instead of above or below it (a column of controls, or a
    *  list whose tips open clear of it). */
   side?: "right" | "left";
+  /** With `side`: beside this ancestor (a selector) rather than the trigger, so the
+   *  tip never lies over the rest of that surface (the dock's other controls). */
+  sideOf?: string;
+  /** With `focusable`: the trigger's role, so its name is read (a span takes no name).
+   *  "img" for a figure the tip explains: a stock on the bar, an alarm's disc. */
+  triggerRole?: "img";
 }) {
   const tooltipId = useId();
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -73,7 +81,7 @@ export function Tooltip({
   const position = useAnchoredOverlay(
     open ? triggerRef : null,
     tooltipRef,
-    { preferredPlacement, side, gap: 8, margin: 10 },
+    { preferredPlacement, side, sideOf, gap: 8, margin: 10 },
     open,
   );
 
@@ -152,6 +160,7 @@ export function Tooltip({
         aria-describedby={wrapperIsTrigger ? tooltipId : undefined}
         aria-label={wrapperIsTrigger ? ariaLabel : undefined}
         className={["tooltipTrigger", triggerClassName].filter(Boolean).join(" ")}
+        role={wrapperIsTrigger ? triggerRole : undefined}
         style={triggerStyle}
         onBlur={handleBlur}
         onClickCapture={handleClickCapture}

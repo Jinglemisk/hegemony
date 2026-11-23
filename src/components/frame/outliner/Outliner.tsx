@@ -20,9 +20,11 @@ import { useGameUi } from "../../board/GameUiContext";
 import { Knob, Plaque } from "../../chrome/controls";
 import { Panel } from "../../chrome/Panel";
 import { SeatCoin } from "../../chrome/SeatCoin";
+import { FOCUSABLE, focusSoon } from "../../overlays/focus";
 import { Popover } from "../../overlays/Popover";
 import { Tooltip } from "../../overlays/Tooltip";
 import { bundleWords, dealTitle, dealWords, loanWords, offerTitle } from "../trade/tradeView";
+import { titleCase } from "../../left/words";
 import { Ico, Tip, TipBody } from "../parts";
 import { loadOutliner, saveOutliner } from "./settings";
 import type { OutlinerSection, OutlinerSettings, OutlinerSort } from "./settings";
@@ -52,6 +54,8 @@ type Row = {
   icon?: string;
   coin?: PlayerId;
   name: string;
+  /** A settlement's name, set in capitals by the stylesheet (the DOM keeps "Sikyon"). */
+  place?: boolean;
   /** The figure at the right: people over room, a count, a coin. */
   figure?: ReactNode;
   /** What the figure says, for the row's accessible name. */
@@ -60,6 +64,8 @@ type Row = {
   /** Needs the seat: an ochre mark, and first in "needs you" order. */
   needs?: boolean;
   selected?: boolean;
+  /** Its press opens the place panel: from the keyboard, the focus goes with it. */
+  opensPlace?: boolean;
   onPress: () => void;
 };
 
@@ -109,7 +115,11 @@ export function Outliner({
           aria-label="Show the outliner"
           className="rd-outl-tab"
           data-exclude
-          onClick={() => setSettings({ ...settings, tucked: false })}
+          onClick={() => {
+            setSettings({ ...settings, tucked: false });
+            // The tab goes away: the focus goes to the knob that tucks it again.
+            focusSoon(() => document.querySelector<HTMLElement>(".rd-outl [data-tuck]"));
+          }}
           type="button"
         >
           Outliner <span aria-hidden="true">◂</span>
@@ -147,17 +157,20 @@ export function Outliner({
         </Tooltip>
         <Tooltip content={<Tip title="Tuck it away" />} triggerClassName="rd-knob-tip">
           <Knob
+            data-tuck
             label="Tuck the outliner away"
             onClick={() => {
               setCfgOpen(false);
               setSettings({ ...settings, tucked: true });
+              // The column goes away: the focus goes to the tab that brings it back.
+              focusSoon(() => document.querySelector<HTMLElement>(".rd-outl-tab"));
             }}
           >
             <span aria-hidden="true">—</span>
           </Knob>
         </Tooltip>
       </header>
-      <div className="rd-outl-body">
+      <div className="rd-outl-body ch-scroll-fade">
         {shown.length === 0 ? (
           <p className="rd-outl-empty">Nothing chosen to show. The gear chooses.</p>
         ) : null}
@@ -177,7 +190,9 @@ export function Outliner({
                 >
                   <span aria-hidden="true" className="rd-sec-caret" />
                   <span className="rd-sec-name">{SECTION_NAMES[key]}</span>
-                  <span className="rd-sec-end">{section.end}</span>
+                  <span className={`rd-sec-end${/^\d+$/.test(section.end) ? " is-count" : ""}`}>
+                    {section.end}
+                  </span>
                 </button>
               </h3>
               {shut ? null : section.rows.length === 0 ? (
@@ -254,7 +269,13 @@ function OutlinerRow({ row }: { row: Row }) {
           aria-label={`${row.name}${row.figureWords ? `, ${row.figureWords}` : ""}${row.needs ? ", needs you" : ""}`}
           aria-pressed={row.selected ?? undefined}
           className={`rd-row${row.selected ? " is-on" : ""}${row.needs ? " is-needed" : ""}`}
-          onClick={row.onPress}
+          onClick={(event) => {
+            row.onPress();
+            // A keyboard press (no pointer, detail 0) follows the place it opened: the
+            // panel's first control, rather than some forty stops back down the page.
+            if (row.opensPlace && event.detail === 0)
+              focusSoon(() => document.querySelector(".pp")?.querySelector(FOCUSABLE) ?? null);
+          }}
           type="button"
         >
           {row.coin !== undefined ? (
@@ -264,7 +285,7 @@ function OutlinerRow({ row }: { row: Row }) {
               <Ico path={row.icon ?? "settlements/city"} size="chip" />
             </span>
           )}
-          <span className="rd-row-name">{row.name}</span>
+          <span className={`rd-row-name${row.place ? " is-place" : ""}`}>{row.name}</span>
           {row.needs ? <i aria-hidden="true" className="rd-row-mark" /> : null}
           <span className="rd-row-fig">{row.figure}</span>
         </button>
@@ -294,7 +315,7 @@ function useSections(
     tile.settlements
       .filter((settlement) => settlement.owner === viewerId)
       .map((settlement) => {
-        const name = names.get(settlement.id) ?? "Polis";
+        const name = titleCase(names.get(settlement.id) ?? "Polis");
         const pops = totalPops(settlement.pops);
         const room = settlementCapacity(settlement, G);
         // Pops on the move here: they stand in it from the seat's next turn.
@@ -323,6 +344,8 @@ function useSections(
             key: settlement.id,
             icon: `settlements/${settlement.kind}`,
             name,
+            place: true,
+            opensPlace: true,
             figure: (
               <span className="num">
                 {pops}
@@ -377,7 +400,9 @@ function useSections(
     };
   });
   const holderOf = (asset: (typeof G.board.luxuries)[number], verb = "holds") => {
-    const at = asset.claimedAtSettlementId ? names.get(asset.claimedAtSettlementId) : undefined;
+    const at = asset.claimedAtSettlementId
+      ? titleCase(names.get(asset.claimedAtSettlementId) ?? "")
+      : undefined;
     return `${G.players[asset.owner!].name} ${verb} it${at ? `, claimed by the Port at ${at}` : ""}.`;
   };
   const goods: Row[] = G.board.luxuries
@@ -404,6 +429,7 @@ function useSections(
         detail: loan
           ? `${holderOf(asset, "owns")} ${loanWords(G, loan, viewerId)}.`
           : holderOf(asset),
+        opensPlace: true,
         onPress: () => on.onPickMooring(asset.vertexId),
       };
     });
@@ -414,7 +440,8 @@ function useSections(
       name: luxuryName(G, asset),
       figure: <span className="rd-row-go is-good">Free</span>,
       figureWords: "free",
-      detail: `Free. A Port at ${names.get(site.settlementId) ?? "your settlement"} would claim it.`,
+      detail: `Free. A Port at ${titleCase(names.get(site.settlementId) ?? "your settlement")} would claim it.`,
+      opensPlace: true,
       onPress: () => on.onPickMooring(asset.vertexId),
     })),
   );
@@ -488,11 +515,13 @@ function useSections(
       )
       .sort((a, b) => b.pops - a.pops)
       .map(({ tile, settlement, pops }): Row => {
-        const name = names.get(settlement.id) ?? "Polis";
+        const name = titleCase(names.get(settlement.id) ?? "Polis");
         return {
           key: settlement.id,
           coin: owner,
           name,
+          place: true,
+          opensPlace: true,
           figure: <span className="num">{pops}</span>,
           figureWords: `${pops} people`,
           detail: `${PLAYER_GLAZES[owner].name}’s ${KIND[settlement.kind].toLowerCase()}, ${pops} people.`,

@@ -31,7 +31,10 @@ afterEach(() => {
   container.remove();
 });
 
-it("keeps every outliner header's words through folds and a tuck, and asks before the Dole spends", () => {
+/** Let a focus hand-off scheduled for after the render (focusSoon) land. */
+const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+
+it("keeps every outliner header's words through folds and a tuck, and asks before the Dole spends", async () => {
   let G = buildNewGame({
     seed: 42,
     mode: "standard",
@@ -81,10 +84,15 @@ it("keeps every outliner header's words through folds and a tuck, and asks befor
     expect(head.getAttribute("aria-expanded")).toBe("false");
     expect(heads()).toEqual(before);
   }
+  // Tucked, the focus goes to the tab that brings it back; shown, to the knob again.
   act(() => button("Tuck the outliner away").click());
   expect(container.querySelector(".rd-outl")).toBeNull();
+  await settle();
+  expect(document.activeElement).toBe(button("Show the outliner"));
   act(() => button("Show the outliner").click());
   expect(heads()).toEqual(before);
+  await settle();
+  expect(document.activeElement).toBe(button("Tuck the outliner away"));
 
   // The Dole names its price from the engine, and spends only on yes.
   const dole = [...container.querySelectorAll<HTMLButtonElement>(".rd-act")].find((el) =>
@@ -98,7 +106,7 @@ it("keeps every outliner header's words through folds and a tuck, and asks befor
   expect(sent).toEqual(["dole"]);
 });
 
-it("names two deals with one seat by their terms, marks a lent good and counts pops on the way", () => {
+it("names two deals with one seat by their terms, marks a lent good and counts pops on the way", async () => {
   let G = buildNewGame({
     seed: 42,
     mode: "standard",
@@ -163,5 +171,17 @@ it("names two deals with one seat by their terms, marks a lent good and counts p
   expect(rows.find((name) => name?.startsWith(luxuryName(G, good)))).toMatch(/lent to Nikos/);
   // The slave on its way in shows beside the place's count.
   expect(rows.find((name) => name?.includes("1 arriving next turn"))).toBeTruthy();
-  expect(container.textContent).toContain("(+1)");
+  expect(container.querySelector(".rd-row-coming")?.textContent).toContain("(+1)");
+  // The top bar's room counts it the same way: in its place next turn, at sea now.
+  const room = container.querySelector(".bar-cell.room")!;
+  expect(room.textContent).toContain("(+1)");
+  expect(room.getAttribute("aria-label")).toMatch(/1 more at sea$/);
+
+  // A place's name is in capitals by the stylesheet only; read, it is "Sikyon".
+  const placeRow = container.querySelector<HTMLButtonElement>(".rd-row-name.is-place")!;
+  expect(placeRow.textContent).toMatch(/^[A-Z][a-z]+$/);
+  // Opened from the keyboard (a click with no pointer), the focus follows into the place.
+  act(() => placeRow.closest("button")!.click());
+  await settle();
+  expect(container.querySelector(".pp")?.contains(document.activeElement)).toBe(true);
 });

@@ -9,15 +9,25 @@ import { overlayScale } from "../chrome/canvas";
 export function useAnchoredOverlay(
   anchor: DOMRect | RefObject<HTMLElement | null> | null,
   overlayRef: RefObject<HTMLElement | null>,
-  options: AnchoringOptions,
+  options: AnchoringOptions & {
+    /** With `side`: stand beside this ancestor of the anchor (a selector), level with
+     *  the anchor, so the overlay clears the whole surface the anchor sits in. */
+    sideOf?: string;
+  },
   measureKey?: unknown,
 ) {
   const [position, setPosition] = useState<FloatingPosition | null>(null);
-  const { align, arrowInset, gap, margin, preferredPlacement, side } = options;
+  const { align, arrowInset, gap, margin, preferredPlacement, side, sideOf } = options;
 
   const updatePosition = useCallback(() => {
     const overlay = overlayRef.current;
-    const anchorRect = isElementRef(anchor) ? anchor.current?.getBoundingClientRect() : anchor;
+    const element = isElementRef(anchor) ? anchor.current : null;
+    const own = isElementRef(anchor) ? element?.getBoundingClientRect() : anchor;
+    const surface = side && sideOf ? element?.closest(sideOf)?.getBoundingClientRect() : null;
+    const anchorRect =
+      own && surface
+        ? { top: own.top, bottom: own.bottom, height: own.height, ...horizontal(surface) }
+        : own;
 
     if (!overlay || !anchorRect || typeof window === "undefined") return;
 
@@ -39,7 +49,7 @@ export function useAnchoredOverlay(
         { align, arrowInset, gap, margin, preferredPlacement, side },
       ),
     );
-  }, [align, anchor, arrowInset, gap, margin, overlayRef, preferredPlacement, side]);
+  }, [align, anchor, arrowInset, gap, margin, overlayRef, preferredPlacement, side, sideOf]);
 
   useLayoutEffect(() => {
     const anchorElement = isElementRef(anchor) ? anchor.current : anchor;
@@ -63,6 +73,8 @@ export function useAnchoredOverlay(
 
   return position;
 }
+
+const horizontal = ({ left, right, width }: DOMRect) => ({ left, right, width });
 
 export function isElementRef(
   value: DOMRect | RefObject<HTMLElement | null> | null,

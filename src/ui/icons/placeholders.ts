@@ -127,7 +127,3 @@ export const TERRAIN_PLACEHOLDERS: Record<Terrain, string | undefined> = {
   hill: placeholder("terrain/hill"),
   oracle: placeholder("terrain/oracle"),
 };
-
-export const CHROME_PLACEHOLDERS = {
-  settings: placeholder("chrome/settings"),
-} as const;

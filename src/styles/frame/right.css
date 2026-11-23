@@ -298,6 +298,12 @@
   width: var(--knob-d);
   height: var(--knob-d);
 }
+/* "All" holds its word at every Text size: as wide as it needs, never under a knob. */
+.rd-log-body .chronFilterAll {
+  width: auto;
+  min-width: var(--knob-d);
+  padding-inline: var(--s-2);
+}
 .rd-log-body .chronicleFilters {
   justify-content: flex-end;
   padding: var(--s-2) var(--s-3) var(--s-1) var(--s-4);
@@ -363,10 +369,10 @@
   border-radius: var(--r-panel) 0 0 var(--r-panel);
   transition: height var(--dur-fold) var(--ease-out);
 }
-/* The Chronicle open: the outliner ends a gap above it, and the log's corner is
-   the one where they meet. */
+/* The Chronicle open: the outliner ends a gap above the log's corner, which stands
+   proud of the log's top edge, so the corner never lies on the outliner's rim. */
 .hud-canvas:has(.rd-log) .rd-outl {
-  --chron-open: var(--sh-chron-h);
+  --chron-open: calc(var(--sh-chron-h) + var(--sh-corner-out));
 }
 /* The riot warning docked over the outliner's foot takes that corner too. */
 .hud-canvas:has(.rd-log) .rd-outl > .ch-corner[data-at="bl"],
@@ -504,6 +510,10 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* A settlement's name in capitals, as on the map's plates; the DOM keeps "Sikyon". */
+.rd-row-name.is-place {
+  text-transform: uppercase;
+}
 .rd-row-mark {
   width: var(--s-2);
   height: var(--s-2);
@@ -551,8 +561,13 @@
   z-index: var(--z-bar);
 }
 .rd-outl-tab {
+  /* One width at every Text size: what Largest needs. */
+  width: calc(var(--u) * 33); /* 132 */
   height: var(--s-8);
+  overflow: hidden;
   padding: 0 var(--s-4);
+  text-overflow: ellipsis;
+  white-space: nowrap;
   border: 0;
   border-radius: var(--r-panel) 0 0 var(--r-panel);
   color: var(--bz-hi);
@@ -568,8 +583,13 @@
 /* ---- the outliner's settings, dropped from its gear ------------------------- */
 .rd-ocfg {
   display: grid;
+  align-content: start;
   gap: var(--s-2);
   width: calc(var(--u) * 78); /* 312 */
+  /* One height at every Text size: what Largest needs; its rows scroll past that. */
+  height: calc(var(--u) * 74); /* 296 */
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: var(--s-3) var(--s-4) var(--s-4);
   border-radius: var(--r-panel);
   color: var(--glaze-ink);
