@@ -76,11 +76,12 @@
     inset 0 0 0 var(--rule) var(--ivory-70),
     0 0 0 var(--rule-2) var(--ivory);
 }
+/* Inside the ring's square, clear of the bar's meander and the seal. */
 .offer-mark {
-  left: calc(-1 * var(--s-2));
-  top: calc(-1 * var(--s-2));
-  width: var(--s-6);
-  height: var(--s-6);
+  left: calc(-1 * var(--s-1));
+  top: calc(-1 * var(--s-1));
+  width: calc(var(--u) * 5); /* 20 */
+  height: calc(var(--u) * 5);
   color: var(--ivory);
   background: var(--ink);
   box-shadow: 0 0 0 var(--rule-2) var(--ivory);

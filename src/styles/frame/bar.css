@@ -80,7 +80,8 @@
   align-items: center;
   gap: 6px;
   width: calc(var(--u) * 20); /* 80: a resource */
-  min-height: calc(var(--u) * 10);
+  height: calc(var(--u) * 11); /* 44 inside the 50 bar, at any Text size */
+  overflow: hidden;
   padding: 3px var(--s-1);
   border-radius: var(--r-panel);
   cursor: default;
@@ -210,6 +211,12 @@
 }
 
 /* ---- the menu's plaque: bronze, at the bar's right end -------------------------- */
+/* Its tooltip's trigger is the bar's last flex item: pinned to the right end at
+   every screen width. */
+.menu-tip {
+  flex: none;
+  margin: 0 var(--s-2) 0 auto;
+}
 .menu-btn {
   display: flex;
   flex: none;
@@ -219,7 +226,6 @@
   overflow: hidden;
   gap: 9px;
   height: calc(var(--u) * 9.5);
-  margin: 0 var(--s-2) 0 auto;
   padding: 0 var(--s-3) 0 10px;
   border: 0;
   border-radius: var(--r-panel);

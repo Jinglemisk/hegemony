@@ -1,11 +1,9 @@
 /* DEV parameter dashboard. Deliberately utilitarian — a tool, not game chrome —
    but tinted to the Kerameikos palette so it doesn't clash with the board. */
 
-/* Docked to the top-left corner of the MAP WELL — inboard of the left tablet, not
-   over it. It used to sit bottom-right, where it lay on top of END TURN and
-   swallowed clicks on the one button that must never be blocked; the first move
-   put it at the screen's left edge, where the docked ledger then covered it.
-   337 and 73 are the v1 tablet's width and top bar's height, as they measured. */
+/* Undragged it stands at the board's top-right corner (TunePanel.tsx sets the spot):
+   left of the outliner, under the banners, clear of all chrome. It once sat on END
+   TURN and swallowed its clicks; never put it over a control. */
 .tune-fab {
   position: fixed;
   z-index: var(--z-fab);

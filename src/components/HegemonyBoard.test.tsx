@@ -149,7 +149,7 @@ it("seats the Assembly in a modal that folds to a read-only dock and keeps a dra
 
   expect(container.querySelector('[role="dialog"] h2')?.textContent).toBe("The Assembly");
   // Behind the sitting the shell reads, and end turn says why it is locked.
-  expect(container.querySelector(".endturn-label")?.textContent).toBe("In Assembly");
+  expect(container.querySelector(".endturn-label")?.textContent).toBe("Sitting");
 
   act(() => button(/Minimise/).click());
   expect(container.querySelector('[role="dialog"]')).toBeNull();

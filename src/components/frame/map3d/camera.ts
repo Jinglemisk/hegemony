@@ -212,7 +212,17 @@ export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain
   };
   const layers: Record<MapMode, Record<string, number>> = {
     terrain: board,
-    political: board,
+    // Political paints owned land flat in its realm's glaze (the runtime's wash): the
+    // land's trees, rocks, fields and people step back so the paint reads.
+    political: {
+      ...board,
+      terrain: 0.35,
+      detail: 0,
+      landmark: 0,
+      landmarkVapour: 0,
+      pops: 0,
+      lifeAmb: 0,
+    },
     economy: { ...board, terrain: 0.35, pops: close * 0.3 },
     trade: { ...board, lifeShips: 1, tradeRoutes: 1 },
   };
@@ -238,9 +248,17 @@ export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain
   };
   const html: Record<MapMode, Record<string, number>> = {
     terrain: { ...labels, event: 1 },
-    // The realm's name hangs under its capital, in place of the capital's plate.
-    // Its glaze and counts, a second line, wait for the room of Economy's full card.
-    political: { ...labels, capital: 0, event: 1, realm: fits, realmline: card },
+    // The realm's name lies large across its land at every zoom, in place of the
+    // capitals' plates and the tiles' badges; close in, every plate still names its
+    // place. Its glaze and counts, a second line, wait for the room of Economy's card.
+    political: {
+      ...labels,
+      res: 0,
+      capital: 0,
+      event: 1,
+      realm: 1,
+      realmline: card,
+    },
     // Economy's cards hang under every tile instead.
     economy: {
       ...labels,

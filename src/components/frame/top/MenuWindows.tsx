@@ -11,9 +11,11 @@ import type { Plates } from "../map3d/plates";
 import { MENU_WINDOWS, WINDOW_FACE } from "./windowState";
 import type { MenuWindow, MenuWindows as Windows, WindowSpot } from "./windowState";
 
-/** Where an unmoved window opens: top right, each stepped down and in from the last. */
+/** Where an unmoved window opens: top right, as in the prototype; each further window
+ *  steps down past the head above it, and in, so no head or corner lies on another. */
 const FIRST_TOP = 64;
-const STEP = 30;
+const STEP_X = 48;
+const STEP_Y = 88;
 const EDGE = 12;
 /** The bar's height: a window is never dragged under it. */
 const BAR = 50;
@@ -58,6 +60,7 @@ export function MenuWindows({
           onMove={(spot) => windows.move(id, spot)}
           order={windows.open.indexOf(id)}
           spot={windows.spots[id]}
+          step={windows.steps[id] ?? 0}
         >
           {body[id]}
         </MovableWindow>
@@ -70,6 +73,7 @@ function MovableWindow({
   id,
   order,
   spot,
+  step,
   layer,
   onFront,
   onMove,
@@ -80,6 +84,8 @@ function MovableWindow({
   /** Its place in the stack, 0 at the bottom. */
   order: number;
   spot: WindowSpot | undefined;
+  /** Its step down the cascade while unmoved. */
+  step: number;
   layer: RefObject<HTMLDivElement | null>;
   onFront: () => void;
   onMove: (spot: WindowSpot) => void;
@@ -87,8 +93,6 @@ function MovableWindow({
   children: ReactNode;
 }) {
   const face = WINDOW_FACE[id];
-  // An unmoved window keeps one step of the cascade, whatever else is open.
-  const cascade = MENU_WINDOWS.indexOf(id);
   const self = useRef<HTMLDivElement>(null);
   const drag = useRef<{ sx: number; sy: number; x: number; y: number; k: number } | null>(null);
   // Opened, it takes the focus to its first control (the Codex's search), and gives
@@ -101,7 +105,7 @@ function MovableWindow({
         left: `clamp(0px, ${spot.x}px, calc(var(--vw) - ${face.w}px))`,
         top: `clamp(${BAR}px, ${spot.y}px, calc(var(--vh) - ${face.h}px))`,
       }
-    : { right: EDGE + cascade * STEP, top: FIRST_TOP + cascade * STEP };
+    : { right: EDGE + step * STEP_X, top: FIRST_TOP + step * STEP_Y };
 
   const grab = (event: ReactPointerEvent<HTMLDivElement>) => {
     const box = self.current;
@@ -155,6 +159,7 @@ function MovableWindow({
           onPointerMove={follow}
           onPointerUp={drop}
         >
+          <span aria-hidden="true" className="menu-window-dots" />
           <PanelHead
             closeLabel={`Close ${face.title}`}
             icon={face.icon}

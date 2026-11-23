@@ -202,10 +202,10 @@
 .lm-compass b {
   font-size: var(--t-13);
 }
-/* The modes' labels: a realm's name a quarter larger than the board's size, the
-   cards and chips a little under it. */
+/* The modes' labels: a realm's name, lying across its land, well over the board's
+   size; the cards and chips a little under it. */
 .lm-realm b {
-  font-size: min(calc(var(--lab) * 1.25), 5vw);
+  font-size: min(calc(var(--lab) * 2.2), 5vw);
 }
 .lm-realm small,
 .lm-chip,
@@ -302,18 +302,22 @@
 
 /* The top (frame/bar.css, top.css, tooltip.css, toasts.css): the year's name at 20
    and the bar's numbers at 20 over a 13 change; menu rows named at 16; a tooltip's
-   body at 14 under a 15 title; a banner's kicker at 13 over 14. */
+   body at 14 under a 15 title; a banner's kicker at 13 over 14. The bar's own words
+   keep their size at every Text size (see --t-bar-* in tokens.css). */
 .year-n {
-  font-size: var(--t-20);
-  line-height: var(--lh-24);
+  font-size: var(--t-bar-20);
+  line-height: var(--lh-bar-24);
 }
 .bar-cell-n {
-  font-size: var(--t-20);
-  line-height: var(--lh-20);
+  font-size: var(--t-bar-20);
+  line-height: var(--lh-bar-20);
 }
 .year-left,
 .bar-cell-of,
-.bar-cell-d,
+.bar-cell-d {
+  font-size: var(--t-bar-13);
+  line-height: var(--lh-bar-16);
+}
 .menu-row-sub,
 .menu-row-open,
 .menu-sec-label,

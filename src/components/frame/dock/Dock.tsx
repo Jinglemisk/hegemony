@@ -52,7 +52,7 @@ export function Dock({
   return (
     <div className="rd-dock" data-c="dock" data-exclude>
       <MapLegend mode={mode} />
-      <Panel className="rd-dk" corners={open ? [] : ["tl"]}>
+      <Panel className="rd-dk">
         <div className="rd-line-row">
           <ChronicleLine
             controls={open ? logId : undefined}
@@ -100,7 +100,7 @@ function ChronicleLog({ id, onClose }: { id: string; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   useReturnFocus(ref, ".rd-log-body button");
   return (
-    <Panel className="rd-log ch-unroll-y" corners={["tl"]} id={id} ref={ref}>
+    <Panel className="rd-log" corners={["tl"]} id={id} ref={ref}>
       <PanelHead closeLabel="Close the Chronicle" onClose={onClose} title="Chronicle" />
       <div className="rd-log-body" data-gate-skip>
         <LogBody />
@@ -302,17 +302,17 @@ function DockAct({
 
 /**
  * What the map mode shows, said in a short panel left of the dock above the hand row,
- * in every mode but Terrain: the words each mode already carries. Fixed size; longer
- * text scrolls inside it.
+ * in every mode but Terrain. One size in every mode; at a larger Text size the words
+ * scroll inside it.
  */
 function MapLegend({ mode }: { mode: MapMode }) {
   const shown = MAP_MODES.find((m) => m.id === mode);
-  if (!shown || mode === "terrain") return null;
+  if (!shown?.legend) return null;
   return (
     <Panel aria-label={`${shown.label} legend`} className="rd-legend" role="note" tone="glaze">
       <p className="rd-legend-title">{shown.label}</p>
       <p className="rd-legend-text">
-        <AnnotatedText links={false} text={shown.note} />
+        <AnnotatedText links={false} text={shown.legend} />
       </p>
     </Panel>
   );

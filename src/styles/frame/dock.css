@@ -6,7 +6,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  animation: dockLineIn 450ms var(--ease-out);
+  animation: dockLineIn var(--dur-drop) var(--ease-out);
 }
 @keyframes dockLineIn {
   from {

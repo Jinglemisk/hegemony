@@ -28,6 +28,9 @@
     "acts end";
   border-radius: var(--r-panel) 0 0 0;
 }
+/* The log line and every row below keep their place; only the log's foot is the
+   dock's top edge, so the dock carries no corner of its own: the outliner's
+   bottom-left corner, a gap above, is the one there. */
 
 /* ---- row a: the Chronicle's newest line, and the Plates menu at its end ------ */
 .rd-line-row {
@@ -131,6 +134,8 @@
 .rd-act-tip {
   display: block;
   min-width: 0;
+  height: 100%;
+  overflow: hidden;
 }
 .rd-act-tip + .rd-act-tip {
   box-shadow: inset var(--rule) 0 0 var(--bz-dk-30);
@@ -157,6 +162,12 @@
   color: var(--ink-66);
   background: var(--hatch);
   cursor: default;
+}
+.rd-act > .ico {
+  /* At Large and Largest text the icon gives way, so the name and cost stay whole
+     inside the row's fixed height. */
+  flex: 0 1 var(--ic-ui);
+  min-height: 0;
 }
 .rd-act[aria-disabled="true"] .ico {
   opacity: var(--dim);
@@ -221,7 +232,12 @@
 .rd-end .endturn-label {
   position: static;
   width: auto;
+  display: block;
+  max-width: 100%;
   height: auto;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
   color: var(--ink);
   background: none;
   box-shadow: none;
@@ -265,8 +281,20 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: calc(var(--u) * 80); /* 320 */
+  height: var(--sh-chron-h);
+  overflow: visible; /* its corner stands proud; the body scrolls */
   border-radius: var(--r-panel) 0 0 0;
+  animation: rd-log-rise var(--dur-fold) var(--ease-out);
+}
+/* It rises out of its line: revealed from the bottom up, as the outliner above
+   shortens by the same height over the same time. */
+@keyframes rd-log-rise {
+  from {
+    clip-path: inset(100% -24px 0 -24px);
+  }
+  to {
+    clip-path: inset(-24px);
+  }
 }
 .rd-log-body {
   display: flex;
@@ -308,9 +336,9 @@
   position: absolute;
   right: calc(100% + var(--s-2));
   bottom: calc(var(--sh-hand-h) + var(--s-2));
-  width: calc(var(--u) * 75); /* 300 */
-  height: calc(var(--u) * 42); /* 168 */
-  padding: var(--s-3) var(--s-4);
+  width: calc(var(--u) * 65); /* 260 */
+  height: calc(var(--u) * 24); /* 96: a title and three lines */
+  padding: var(--s-2) var(--s-4);
   overflow: auto;
   overscroll-behavior: contain;
 }
@@ -339,9 +367,20 @@
   width: var(--sh-outliner-w);
   height: calc(
     var(--vh) - var(--sh-outliner-top) - var(--sh-log-h) - var(--sh-modes-h) - var(--sh-acts-h) -
-      var(--s-4)
+      var(--s-2) - var(--chron-open, 0px)
   );
   border-radius: var(--r-panel) 0 0 var(--r-panel);
+  transition: height var(--dur-fold) var(--ease-out);
+}
+/* The Chronicle open: the outliner ends a gap above it, and the log's corner is
+   the one where they meet. */
+.hud-canvas:has(.rd-log) .rd-outl {
+  --chron-open: var(--sh-chron-h);
+}
+/* The riot warning docked over the outliner's foot takes that corner too. */
+.hud-canvas:has(.rd-log) .rd-outl > .ch-corner[data-at="bl"],
+.hud-canvas:has(.endturn-confirm) .rd-outl > .ch-corner[data-at="bl"] {
+  display: none;
 }
 .rd-outl-head {
   display: flex;
@@ -490,6 +529,13 @@
 }
 .rd-row-fig small {
   color: var(--glaze-ink-66);
+}
+/* Pops on the way in, and a good lent out: quiet words beside the figure. */
+.rd-row-fig .rd-row-coming {
+  color: var(--glaze-pos);
+}
+.rd-row-lent {
+  margin-right: var(--s-1);
 }
 .rd-row-go {
   color: var(--bz-hi);

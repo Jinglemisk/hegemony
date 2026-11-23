@@ -74,14 +74,17 @@ describe("the living map's camera", () => {
       for (const mode of ["terrain", "political", "economy", "trade"] as const) {
         const { layers } = bandAlphas(t, Infinity, mode);
         expect([layers.towns, layers.ports, layers.goods]).toEqual([1, 1, 1]);
-        // Economy fades the land's trees, rocks and fields; no mode hides them.
-        expect(layers.terrain).toBe(mode === "economy" ? 0.35 : 1);
+        // Economy and Political fade the land's trees, rocks and fields; no mode hides them.
+        expect(layers.terrain).toBe(mode === "economy" || mode === "political" ? 0.35 : 1);
       }
     // Each mode hangs its own labels under the badge: Political the realm's name in
     // place of its capital's plate, Economy its readout, Trade its hint by the capital.
     const html = (mode: "terrain" | "political" | "economy" | "trade") =>
       bandAlphas(T_FIT, Infinity, mode).html;
     expect([html("political").realm, html("political").capital]).toEqual([1, 0]);
+    // Political's realm names show at every zoom; its badges step aside for the paint.
+    expect(bandAlphas(0, 30, "political").html.realm).toBe(1);
+    expect(html("political").res).toBe(0);
     expect([html("economy").ecoC, html("economy").ecoF, html("economy").plates]).toEqual([1, 0, 0]);
     expect([html("trade").hint, html("terrain").hint]).toEqual([1, 0]);
     // Trade's hint, a row under its capital's plate, waits for hexes wide enough that it

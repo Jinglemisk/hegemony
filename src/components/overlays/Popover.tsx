@@ -26,6 +26,7 @@ export function Popover({
   preferredPlacement = "below",
   escapeRank = ESCAPE.card,
   focusFirst = false,
+  slot = false,
 }: {
   align?: AnchoringOptions["align"];
   /** A spot on the map, or the control that opens the popover. */
@@ -46,10 +47,14 @@ export function Popover({
   /** Take the focus to its first control outside its header (a list of options),
    *  instead of to the card itself. */
   focusFirst?: boolean;
+  /** Stand in a fixed slot its class places (an alarm's card under the alarms row),
+   *  never measured off the anchor; the anchor only takes focus back. */
+  slot?: boolean;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
+  const placed = centre || slot;
   const position = useAnchoredOverlay(
-    centre ? null : anchor,
+    placed ? null : anchor,
     ref,
     { align, preferredPlacement, gap: 12 },
     measureKey,
@@ -102,7 +107,7 @@ export function Popover({
       aria-modal="false"
       className={[
         "sharedPopover",
-        centre ? "is-centre" : position ? `placement-${position.placement}` : "",
+        centre ? "is-centre" : slot ? "is-slot" : position ? `placement-${position.placement}` : "",
         className,
       ]
         .filter(Boolean)
@@ -110,7 +115,7 @@ export function Popover({
       ref={ref}
       role="dialog"
       style={
-        centre
+        placed
           ? undefined
           : position
             ? { left: position.left, top: position.top, opacity: 1 }
@@ -126,7 +131,7 @@ export function Popover({
       }
       tabIndex={-1}
     >
-      {centre ? null : (
+      {placed ? null : (
         <span
           aria-hidden="true"
           className="foundColonyArrow sharedPopoverArrow"

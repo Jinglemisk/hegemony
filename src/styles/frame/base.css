@@ -5,7 +5,8 @@
 .frame {
   position: fixed;
   inset: 0;
-  overflow: hidden;
+  /* clip, not hidden: focus can never scroll the frame and shift the chrome. */
+  overflow: clip;
   color: var(--ink);
   background: var(--sea)
     radial-gradient(ellipse at 60% 40%, var(--sea-lit) 0%, var(--sea) 50%, var(--sea-deep) 100%);

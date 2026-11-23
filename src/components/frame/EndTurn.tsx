@@ -8,6 +8,7 @@ import { presentUnrestOutcome } from "../../ui/effects";
 import { sign } from "../../ui/frameFormat";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { Prose } from "../AnnotatedText";
+import { CloseDisc } from "../chrome/controls";
 import { SeatCoin } from "../chrome/SeatCoin";
 import { Popover } from "../overlays/Popover";
 import { Tooltip } from "../overlays/Tooltip";
@@ -211,18 +212,22 @@ function EndTurnConfirm({
   // Calm bought more than once says how many times.
   const times = calm && calm.payments.length > 1 ? ` ×${calm.payments.length}` : "";
   const { share } = presentUnrestOutcome(ruleset, unrest.tier);
-  const title = revolt ? "Ending your turn now means revolt" : "Ending your turn starts a riot";
+  // One line in the dock's width; the dialog's name says it whole.
+  const title = revolt ? "Revolt at turn end" : "Riot at turn end";
 
   return (
     <Popover
       anchor={anchor}
-      ariaLabel={title}
+      ariaLabel={revolt ? "Ending your turn now means revolt" : "Ending your turn starts a riot"}
       className={`endturn-confirm${revolt ? " is-revolt" : ""}`}
       dismissOnOutside
       onDismiss={onClose}
-      preferredPlacement="above"
+      slot
     >
-      <h2 className="name confirm-title">{title}</h2>
+      <header className="confirm-head">
+        <h2 className="name confirm-title">{title}</h2>
+        <CloseDisc label="Close the warning" onClick={onClose} />
+      </header>
       <p className="confirm-body">
         <Prose links={false}>
           {revolt ? (

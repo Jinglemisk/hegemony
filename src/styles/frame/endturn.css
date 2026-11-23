@@ -80,8 +80,30 @@
 }
 
 /* ---- End turn's confirm at the riot and revolt lines ----------------------- */
+/* Docked on the dock: flush right, the dock's width, a gap above it. */
+.sharedPopover.is-slot.endturn-confirm {
+  right: 0;
+  bottom: calc(var(--sh-log-h) + var(--sh-modes-h) + var(--sh-acts-h) + var(--s-2));
+  border-radius: var(--r-panel) 0 0 var(--r-panel);
+}
+/* Its one free corner is the top-left: the right edge is the screen's. */
+.sharedPopover.is-slot.endturn-confirm::before {
+  background: url("../../../assets/chrome/corner-tl.webp") left top / var(--sh-corner) no-repeat;
+}
+.endturn-confirm .confirm-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.endturn-confirm .confirm-head .confirm-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .endturn-confirm {
-  width: calc(var(--u) * 96); /* 384 */
+  width: var(--sh-dock-w);
   display: grid;
   gap: var(--s-2);
   padding: var(--s-4);

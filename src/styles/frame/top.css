@@ -110,11 +110,29 @@ button.alarm-disc {
 }
 
 /* ---- an alarm's card: parchment in the bronze rule, a glaze head --------------- */
+/* Every alarm's card (the threat, a deal, an offer) opens in one slot under the
+   alarms row, wherever its disc stands, so it never covers the row or lands
+   where a disc was mid-drop. */
+.sharedPopover.is-slot.alarm-card {
+  top: var(--sh-card-y);
+  left: var(--sh-card-x);
+  max-width: var(--sh-card-w);
+}
+.alarm-card-x {
+  position: absolute;
+  top: var(--s-3);
+  right: var(--s-3);
+  z-index: var(--z-trim);
+}
 .threat-panel {
-  overflow: hidden;
+  width: var(--sh-card-w);
   border-radius: var(--r-panel);
   background: var(--parch);
   box-shadow: var(--rule-frame), var(--shadow-panel);
+}
+.threat-seat:first-of-type .threat-head {
+  padding-right: calc(var(--s-3) + var(--hit) + var(--s-2));
+  border-radius: var(--r-panel) var(--r-panel) 0 0;
 }
 .threat-head {
   position: relative;
@@ -148,12 +166,32 @@ button.alarm-disc {
 }
 
 /* ---- the menu ------------------------------------------------------------------ */
+/* Flush right under the bar, the outliner's width, so it covers the outliner's head
+   whole and leaves no sliver of it beside. */
+.sharedPopover.is-slot.menu-pop {
+  top: calc(var(--sh-top-h) + var(--sh-meander-h));
+  right: 0;
+}
 .menu-card {
   display: flex;
   flex-direction: column;
-  width: calc(var(--u) * 75); /* 300 */
+  width: var(--sh-outliner-w);
   height: calc(var(--u) * 93); /* 372 */
   overflow: visible;
+  border-radius: var(--r-panel) 0 0 var(--r-panel);
+}
+/* At Large and Largest text its rows scroll inside the card's fixed height. */
+.menu-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: var(--bz) transparent;
+  scrollbar-width: thin;
+}
+/* Open, it lies over the outliner's head: the outliner's corner there stays under it. */
+.hud-canvas:has(.menu-pop) .rd-outl > .ch-corner[data-at="tl"] {
+  display: none;
 }
 .menu-rows {
   margin: 0;
@@ -290,8 +328,24 @@ button.alarm-disc {
   height: 100%;
 }
 .menu-window-grip {
+  position: relative;
   cursor: grab;
   touch-action: none;
+}
+/* The grip: a column of bronze dots at the head's left end says it moves. */
+.menu-window-dots {
+  position: absolute;
+  top: 50%;
+  left: var(--s-2);
+  z-index: var(--z-lift);
+  width: var(--s-3);
+  height: calc(var(--u) * 6);
+  translate: 0 -50%;
+  background: radial-gradient(circle, var(--bz-hi) 1.4px, transparent 1.8px) 0 0 / 6px 6px;
+  pointer-events: none;
+}
+.menu-window-grip .ch-head {
+  padding-left: calc(var(--s-4) + var(--s-3));
 }
 .menu-window-grip:active {
   cursor: grabbing;

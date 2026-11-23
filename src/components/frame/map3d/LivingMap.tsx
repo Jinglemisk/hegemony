@@ -251,8 +251,8 @@ function EcoEmpty({ tile }: { tile: MapTile }) {
   );
 }
 
-/** Political's realm name, under its capital in place of the capital's plate, with its
- *  Unrest tokens when it holds any; close in, its glaze and counts. */
+/** Political's realm name, large across its land (RealmBanners), with its Unrest
+ *  tokens when it holds any; close in, its glaze and counts. */
 function RealmName({ realm }: { realm: MapRealm }) {
   const seat = PLAYER_GLAZES[realm.owner];
   const { cities, colonies } = realm.census;
@@ -361,7 +361,6 @@ function TileTag({
               tile={tile}
             />
             <EcoCards tile={tile} />
-            {realm ? <RealmName realm={realm} /> : null}
           </>
         ) : (
           <EcoEmpty tile={tile} />
@@ -399,6 +398,56 @@ function Badges({
         {icon(BUILDING_RASTERS[site.building])}
       </div>
     ));
+  });
+}
+
+/** Neighbouring tiles' centres stand √3 apart: anything under 2 touches. */
+const TOUCH = 2;
+
+/** A realm's largest stretch of touching land (its capital's on a tie). */
+function heartland(tiles: readonly MapTile[], home: string | null): MapTile[] {
+  const left = new Set(tiles);
+  let best: MapTile[] = [];
+  while (left.size > 0) {
+    const [first] = left;
+    const group = [first];
+    left.delete(first);
+    for (let i = 0; i < group.length; i++) {
+      for (const t of [...left]) {
+        if (Math.hypot(t.x - group[i].x, t.y - group[i].y) < TOUCH) {
+          group.push(t);
+          left.delete(t);
+        }
+      }
+    }
+    const homeHere = group.some((t) => t.id === home);
+    if (group.length > best.length || (group.length === best.length && homeHere)) best = group;
+  }
+  return best;
+}
+
+/** Political's realm names, large across each realm's land: at the middle of its
+ *  largest stretch of touching tiles, at every zoom. */
+function RealmBanners({ model }: { model: MapModel }) {
+  return model.realms.flatMap((realm) => {
+    const land = heartland(
+      model.tiles.filter((t) => t.settlements[0]?.owner === realm.owner),
+      realm.home,
+    );
+    if (land.length === 0) return [];
+    const mid = (pick: (t: MapTile) => number) =>
+      land.reduce((sum, t) => sum + pick(t), 0) / land.length;
+    return [
+      <div
+        className="lm-banner"
+        data-alpha="realm"
+        data-wx={mid((t) => t.x)}
+        data-wy={mid((t) => t.y)}
+        key={`realm-${realm.owner}`}
+      >
+        <RealmName realm={realm} />
+      </div>,
+    ];
   });
 }
 
@@ -675,6 +724,7 @@ function LivingMap({
             tile={tile}
           />
         ))}
+        <RealmBanners model={model} />
         <RealmEvents layout={layout} model={model} />
         <PortChips model={model} towns={layout.towns} />
         <Badges model={model} selected={selectedTileId} towns={layout.towns} />

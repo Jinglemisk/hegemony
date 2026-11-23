@@ -11,7 +11,7 @@ import {
   settlementCapacity,
   totalPops,
 } from "../../../game/rules";
-import { dealsAwaitingAnswer, dealsOf, partnerIn } from "../../../game/deals";
+import { dealsAwaitingAnswer, dealsOf, loanOf, partnerIn } from "../../../game/deals";
 import type { PlayerId, SettlementKind } from "../../../game/types";
 import { turnsUntilYear } from "../../../ui/frameSelectors";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
@@ -22,7 +22,7 @@ import { Panel } from "../../chrome/Panel";
 import { SeatCoin } from "../../chrome/SeatCoin";
 import { Popover } from "../../overlays/Popover";
 import { Tooltip } from "../../overlays/Tooltip";
-import { bundleWords, dealWords, offerTitle } from "../trade/tradeView";
+import { bundleWords, dealTitle, dealWords, loanWords, offerTitle } from "../trade/tradeView";
 import { Ico, Tip, TipBody } from "../parts";
 import { loadOutliner, saveOutliner } from "./settings";
 import type { OutlinerSection, OutlinerSettings, OutlinerSort } from "./settings";
@@ -297,12 +297,20 @@ function useSections(
         const name = names.get(settlement.id) ?? "Polis";
         const pops = totalPops(settlement.pops);
         const room = settlementCapacity(settlement, G);
+        // Pops on the move here: they stand in it from the seat's next turn.
+        const arriving = G.transfers
+          .filter((transfer) => transfer.toSettlementId === settlement.id)
+          .reduce((sum, transfer) => sum + totalPops(transfer.pops), 0);
         const { open } = buildingGround(G, viewerId, tile.id);
         const claim = claims.find((site) => site.tileId === tile.id);
         const goods = claim?.luxuries.map((asset) => luxuryName(G, asset)).join(" or ");
-        const needs = pops === 0;
+        const needs = pops === 0 && arriving === 0;
+        const coming = arriving > 0 ? `${arriving} arriving next turn` : null;
         const parts = [
           `${KIND[settlement.kind]}, ${pops} of ${room} people`,
+          coming
+            ? `${arriving} ${arriving === 1 ? "pop is" : "pops are"} on the way, here next turn`
+            : null,
           needs ? "Stands empty: grow or move a pop in" : null,
           goods ? `A Port here would claim ${goods}` : null,
           open > 0 ? `${open} building ${open === 1 ? "slot" : "slots"} open` : null,
@@ -319,9 +327,10 @@ function useSections(
               <span className="num">
                 {pops}
                 <small>/{room}</small>
+                {arriving > 0 ? <small className="rd-row-coming"> (+{arriving})</small> : null}
               </span>
             ),
-            figureWords: `${pops} of ${room} people`,
+            figureWords: `${pops} of ${room} people${coming ? `, ${coming}` : ""}`,
             detail: `${parts.join(". ")}.`,
             needs,
             selected: tile.id === selectedTileId,
@@ -359,7 +368,7 @@ function useSections(
     return {
       key: deal.id,
       coin: partner,
-      name: `Deal with ${G.players[partner].name}`,
+      name: dealTitle(G, deal, viewerId),
       figure: <span className="rd-row-go">{short ? "Answer ▸" : "Yearly"}</span>,
       figureWords: short ? "a short payment waits on your answer" : "yearly",
       detail: `${dealWords(G, deal, viewerId)}.`,
@@ -367,21 +376,37 @@ function useSections(
       onPress: () => openAlarm(`[data-deal="${deal.id}"]`),
     };
   });
-  const holderOf = (asset: (typeof G.board.luxuries)[number]) => {
+  const holderOf = (asset: (typeof G.board.luxuries)[number], verb = "holds") => {
     const at = asset.claimedAtSettlementId ? names.get(asset.claimedAtSettlementId) : undefined;
-    return `${G.players[asset.owner!].name} holds it${at ? `, claimed by the Port at ${at}` : ""}.`;
+    return `${G.players[asset.owner!].name} ${verb} it${at ? `, claimed by the Port at ${at}` : ""}.`;
   };
   const goods: Row[] = G.board.luxuries
     .filter((asset) => asset.owner !== null)
-    .map((asset) => ({
-      key: asset.id,
-      icon: "resources/luxury",
-      name: luxuryName(G, asset),
-      figure: <SeatCoin aria-hidden="true" className="rd-row-coin" seat={asset.owner!} />,
-      figureWords: `held by ${G.players[asset.owner!].name}`,
-      detail: holderOf(asset),
-      onPress: () => on.onPickMooring(asset.vertexId),
-    }));
+    .map((asset) => {
+      // A lent good counts for its borrower: the row says so, with the borrower's coin.
+      const loan = loanOf(G, asset.id)?.loan;
+      const borrower = loan ? G.players[loan.borrower].name : null;
+      return {
+        key: asset.id,
+        icon: "resources/luxury",
+        name: luxuryName(G, asset),
+        figure: loan ? (
+          <>
+            <small className="rd-row-lent">lent to</small>
+            <SeatCoin aria-hidden="true" className="rd-row-coin" seat={loan.borrower} />
+          </>
+        ) : (
+          <SeatCoin aria-hidden="true" className="rd-row-coin" seat={asset.owner!} />
+        ),
+        figureWords: loan
+          ? `${G.players[asset.owner!].name}'s, lent to ${borrower}`
+          : `held by ${G.players[asset.owner!].name}`,
+        detail: loan
+          ? `${holderOf(asset, "owns")} ${loanWords(G, loan, viewerId)}.`
+          : holderOf(asset),
+        onPress: () => on.onPickMooring(asset.vertexId),
+      };
+    });
   const free: Row[] = claims.flatMap((site) =>
     site.luxuries.map((asset) => ({
       key: `${site.tileId}-${asset.id}`,

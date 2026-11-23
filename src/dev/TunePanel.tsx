@@ -39,9 +39,12 @@ import type { TuningPresetId } from "./tuningPresets";
 const OPEN_KEY = "hegemony-dev-tune-open";
 /** Where the TUNE button was dragged to, so it stays off whatever it covered. */
 const FAB_KEY = "hegemony-dev-tune-fab";
-/** The shell's outliner width, in design px (tokens.css). */
+/** Its spot in design px: left of the outliner (320 wide, tokens.css), under the banner
+ *  lane (62 to 126, a two-line banner at Largest text to about 144): over open board,
+ *  clear of the alarms and their cards (left of 580), the menu and every panel. */
 const FAB_RIGHT = 320;
-const FAB_GAP = 12;
+const FAB_GAP = 8;
+const FAB_TOP = 152;
 type FabSpot = { x: number; y: number };
 
 function loadFabSpot(): FabSpot | null {
@@ -211,12 +214,11 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
             y: Math.min(Math.max(event.clientY - press.dy, 0), window.innerHeight - box.height),
           });
         }}
-        // Undragged, it waits at the map's right edge, halfway down beside the outliner:
-        // clear of the drawers, the menu and the banners, in the shell's scale.
+        // Undragged, it waits at the map's top-right corner, in the shell's scale.
         style={
           fabSpot
             ? { left: fabSpot.x, top: fabSpot.y }
-            : { right: (FAB_RIGHT + FAB_GAP) * scale, top: "50%" }
+            : { right: (FAB_RIGHT + FAB_GAP) * scale, top: FAB_TOP * scale }
         }
         title="Open parameter dashboard ( ` ) · drag to move"
       >
