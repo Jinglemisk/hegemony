@@ -431,6 +431,8 @@ export const SURFACES = [
       // Year 4 seats can afford a draw. A Directive has no protected replacement.
       await visit(p, "dev=assembly2&seed=42", 1400);
       await p.getByRole("button", { name: "Draw from Stratokles", exact: true }).click();
+      // A draw spends influence, so it asks first.
+      await p.getByRole("alertdialog").getByRole("button", { name: "Draw" }).click();
       await p.locator(".sit-pick").first().click();
       await p.getByRole("button", { name: /^Seal against/ }).click();
       // The other seats propose in turn, each after its turn notice, and hold their peace.
