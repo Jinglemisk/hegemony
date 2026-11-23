@@ -80,4 +80,21 @@ describe("Tab traps", () => {
     expect(document.activeElement).toBe(button("Pay"));
     untrap();
   });
+
+  it("rounds a lent popover whose lender cannot take the focus back", () => {
+    const dialog = surface("Offer");
+    const box = document.createElement("div"); // the Assembly's trade box: no tabindex
+    dialog.append(box);
+    const popover = surface("Damon", "Send");
+    const untrap = trapTab(dialog);
+    const unlend = lendFocus(popover, box);
+
+    button("Send").focus();
+    expect(tab()).toBe(true);
+    expect(document.activeElement).toBe(button("Damon"));
+    expect(tab(true)).toBe(true);
+    expect(document.activeElement).toBe(button("Send"));
+    unlend();
+    untrap();
+  });
 });

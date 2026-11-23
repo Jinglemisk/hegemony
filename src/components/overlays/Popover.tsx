@@ -10,7 +10,7 @@ import { createPortal } from "react-dom";
 import type { AnchoringOptions, VerticalPlacement } from "../../ui/anchoring";
 import { overlayRoot, overlayScale } from "../chrome/canvas";
 import { ESCAPE, useEscapeLayer } from "./escapeStack";
-import { FOCUSABLE, lendFocus } from "./focus";
+import { FOCUSABLE, lendFocus, trapTab } from "./focus";
 import { isElementRef, useAnchoredOverlay } from "./useAnchoredOverlay";
 
 export function Popover({
@@ -75,11 +75,17 @@ export function Popover({
       (first ?? element).focus({ preventScroll: true });
     }
 
-    // Opened from inside a trapped dialog (the Assembly), it counts as part of it.
-    const from = (isElementRef(anchor) ? anchor.current : null) ?? returnTarget;
+    // Opened from inside a trapped dialog (the Assembly), it counts as part of it, lent
+    // by its anchor when the anchor can take the focus back, else by what opened it.
+    const anchored = isElementRef(anchor) ? anchor.current : null;
+    const from = anchored?.matches(FOCUSABLE) ? anchored : (returnTarget ?? anchored);
     const unlend = from instanceof HTMLElement ? lendFocus(element, from) : null;
+    // A card standing in the middle or in its slot holds Tab until it closes: off its
+    // edge the focus comes round, never out to the table behind it.
+    const untrap = placed ? trapTab(element) : null;
 
     return () => {
+      untrap?.();
       unlend?.();
       if (returnTarget?.isConnected) {
         returnTarget.focus({ preventScroll: true });

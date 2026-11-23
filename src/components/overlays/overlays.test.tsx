@@ -7,6 +7,7 @@ import { scenario } from "../../game/testing/scenario";
 import { turnEndUnrest } from "../../game/unrest";
 import { EndTurn } from "../frame/EndTurn";
 import { MechanicsDetails } from "../MechanicsDetails";
+import { ModalShell } from "../board/modals/ModalShell";
 import { Popover } from "./Popover";
 import { Tooltip } from "./Tooltip";
 
@@ -87,6 +88,38 @@ describe("Tooltip", () => {
       document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })),
     );
     expect(document.body.querySelector("[role=tooltip]")).toBeNull();
+  });
+
+  it("takes one Escape for itself, leaving the layer under it open", () => {
+    const onDismiss = vi.fn();
+    act(() => {
+      root.render(
+        <Popover anchor={domRect(280, 205, 20, 20)} ariaLabel="Card" onDismiss={onDismiss}>
+          <Tooltip content="Gold you hold">
+            <button type="button">Gold</button>
+          </Tooltip>
+        </Popover>,
+      );
+    });
+    const gold = document.body.querySelector<HTMLButtonElement>("[role=dialog] button")!;
+    act(() => gold.focus());
+    expect(document.body.querySelector("[role=tooltip]")).not.toBeNull();
+
+    // Dispatched where the key lands: the focused control, bubbling to the window.
+    act(() =>
+      gold.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }),
+      ),
+    );
+    expect(document.body.querySelector("[role=tooltip]")).toBeNull();
+    expect(onDismiss).not.toHaveBeenCalled();
+
+    act(() =>
+      gold.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }),
+      ),
+    );
+    expect(onDismiss).toHaveBeenCalledOnce();
   });
 
   it("closes on a press and stays shut until the pointer leaves and comes back", () => {
@@ -260,6 +293,64 @@ describe("Popover", () => {
     expect(onDismiss).toHaveBeenCalledOnce();
     expect(document.body.querySelector("[role=dialog]")).toBeNull();
     expect(document.activeElement).toBe(opener);
+  });
+});
+
+describe("A placed popover", () => {
+  it("holds Tab: off its last control the focus comes round to its first", () => {
+    vi.spyOn(HTMLElement.prototype, "offsetParent", "get").mockReturnValue(document.body);
+    act(() => {
+      root.render(
+        <>
+          <button type="button">Table</button>
+          <Popover anchor={domRect(0, 0, 1, 1)} ariaLabel="Offer" centre onDismiss={() => {}}>
+            <button type="button">Damon</button>
+            <button type="button">Send</button>
+          </Popover>
+        </>,
+      );
+    });
+    const [damon, send] = document.body.querySelectorAll<HTMLButtonElement>("[role=dialog] button");
+    const tab = (shiftKey = false) => {
+      const event = new KeyboardEvent("keydown", {
+        key: "Tab",
+        shiftKey,
+        bubbles: true,
+        cancelable: true,
+      });
+      document.activeElement!.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    act(() => send!.focus());
+    expect(tab()).toBe(true);
+    expect(document.activeElement).toBe(damon);
+    expect(tab(true)).toBe(true);
+    expect(document.activeElement).toBe(send);
+  });
+});
+
+describe("ModalShell", () => {
+  it("makes the frame behind it inert, all but the overlay layer, until it closes", () => {
+    function Harness({ open }: { open: boolean }) {
+      return (
+        <main className="frame">
+          <button type="button">Table</button>
+          {open ? (
+            <ModalShell label="Ideas" onDismiss={() => {}}>
+              <button type="button">Buy</button>
+            </ModalShell>
+          ) : null}
+          <div id="hud-overlays" />
+        </main>
+      );
+    }
+    act(() => root.render(<Harness open />));
+    const table = container.querySelector<HTMLButtonElement>("button")!;
+    expect(table.inert).toBe(true);
+    expect(container.querySelector<HTMLElement>("#hud-overlays")!.inert).toBeFalsy();
+
+    act(() => root.render(<Harness open={false} />));
+    expect(table.inert).toBe(false);
   });
 });
 

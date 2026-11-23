@@ -85,6 +85,7 @@ export function AssemblySitting({ sitting }: { sitting: Sitting }) {
       className="modal-card sitting"
       labelledBy="sitting-title"
       dismissOnBackdrop={false}
+      inertBehind={false}
       onDismiss={stage === "rises" ? undefined : () => sitting.setMinimised(true)}
     >
       <SittingHead G={G} sitting={sitting} />

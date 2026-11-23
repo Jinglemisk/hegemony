@@ -87,8 +87,11 @@ export function Tooltip({
       lockedRef.current = false;
       setOpenState(false);
     };
+    // Escape closes the tip and only the tip: the layer under it (escapeStack) waits
+    // for the next press.
     const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && !event.defaultPrevented) {
+        event.preventDefault();
         lockedRef.current = false;
         setOpenState(false);
       }
