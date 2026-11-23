@@ -13,7 +13,7 @@ export function useAnchoredOverlay(
   measureKey?: unknown,
 ) {
   const [position, setPosition] = useState<FloatingPosition | null>(null);
-  const { align, arrowInset, gap, margin, preferredPlacement } = options;
+  const { align, arrowInset, gap, margin, preferredPlacement, side } = options;
 
   const updatePosition = useCallback(() => {
     const overlay = overlayRef.current;
@@ -36,10 +36,10 @@ export function useAnchoredOverlay(
         },
         { width: width / k, height: height / k },
         { width: window.innerWidth / k, height: window.innerHeight / k },
-        { align, arrowInset, gap, margin, preferredPlacement },
+        { align, arrowInset, gap, margin, preferredPlacement, side },
       ),
     );
-  }, [align, anchor, arrowInset, gap, margin, overlayRef, preferredPlacement]);
+  }, [align, anchor, arrowInset, gap, margin, overlayRef, preferredPlacement, side]);
 
   useLayoutEffect(() => {
     const anchorElement = isElementRef(anchor) ? anchor.current : anchor;

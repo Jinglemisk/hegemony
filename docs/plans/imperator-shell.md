@@ -134,6 +134,10 @@ One branch, `feat/imperator-shell`, built in these slices. Each slice leaves the
    warning, re-anchored and re-skinned. Every legacy modal is re-skinned to the frame.
 6. **Quality passes** against the standards above until reviewers find nothing.
 
+Slices 0 to 5 are built and joined on the branch (2026-11-23), and the old chrome they
+replaced is gone. Next: the quality passes, starting from the `ui:audit` and `ui:conduct`
+findings.
+
 ## Acceptance and validation
 
 - `npm run check`, `lint`, `test:run`, `test:parity`, `ui:check`, `docs:check`, `knip` and

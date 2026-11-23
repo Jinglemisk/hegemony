@@ -78,7 +78,8 @@ export function Drawer({
     <Panel
       aria-label={title}
       className="lw-drawer ch-unroll-y"
-      corners={["tr", "br"]}
+      // Its foot meets the screen's edge: only the top corner is free.
+      corners={["tr"]}
       data-c="drawer"
       data-drawer={id}
       data-exclude

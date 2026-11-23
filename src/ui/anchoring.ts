@@ -21,6 +21,9 @@ export type AnchoringOptions = {
   /** `start` hangs the overlay from the anchor's left edge instead of centring it;
    *  `end` from its right edge. */
   align?: "center" | "start" | "end";
+  /** `right` stands the overlay beside the anchor, centred on it: for a column of
+   *  controls, where a card below one would cover the next. */
+  side?: "right";
   margin?: number;
   gap?: number;
   arrowInset?: number;
@@ -54,6 +57,15 @@ export function positionAnchoredOverlay(
   const gap = options.gap ?? ANCHOR_GAP;
   const arrowInset = options.arrowInset ?? ANCHOR_ARROW_INSET;
   const preferred = options.preferredPlacement ?? "below";
+  if (options.side === "right") {
+    const middle = anchor.top + anchor.height / 2 - floating.height / 2;
+    return {
+      top: clampToViewport(middle, floating.height, viewport.height, margin),
+      left: clampToViewport(anchor.right + gap, floating.width, viewport.width, margin),
+      arrowLeft: arrowInset,
+      placement: preferred,
+    };
+  }
   const centerX = anchor.left + anchor.width / 2;
   const spaceBelow = viewport.height - anchor.bottom - margin - gap;
   const spaceAbove = anchor.top - margin - gap;

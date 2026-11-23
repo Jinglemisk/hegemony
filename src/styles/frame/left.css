@@ -16,6 +16,11 @@
   top: calc((var(--sh-top-h) + var(--s-3)) * var(--k));
   left: calc((var(--sh-side-w) + var(--s-3)) * var(--k));
 }
+/* An open drawer covers the alarms' corner: the row stands beside it instead, so an
+   offer or a deal waiting on an answer stays in reach. */
+.frame:has(.lw-drawer) .alarms {
+  left: calc(var(--sh-side-w) + var(--sh-drawer-w) + var(--s-3));
+}
 
 /* ---- the sidebar: a Greek column under the top bar --------------------------- */
 .lw-side {

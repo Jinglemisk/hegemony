@@ -46,7 +46,7 @@ export function Sidebar({
                   <TipBody>{says}</TipBody>
                 </Tip>
               }
-              preferredPlacement="below"
+              side="right"
               triggerClassName="lw-side-tip"
             >
               <button

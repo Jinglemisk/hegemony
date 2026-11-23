@@ -84,27 +84,6 @@ const openDrawer = async (p, name, tab) => {
   }
   await p.waitForTimeout(400);
 };
-const verb = (p, name) => p.locator(`.verb-btn[aria-label^="${name}"]`).first();
-
-/** Open a verb's fan from the keyboard (Enter never runs the disc's own
- *  option), then take each named option in turn: a second fan, or the act. */
-const pressVerb = async (p, group, options = []) => {
-  const disc = verb(p, group);
-  if (!(await disc.count())) return;
-  await disc.focus().catch(() => {});
-  await p.keyboard.press("Enter");
-  await p.waitForTimeout(400);
-  for (const option of options) {
-    const item = p
-      .locator(`.is-open > .fan > .fan-item > .fan-btn[aria-label^="${option}."]`)
-      .first();
-    if (!(await item.count()) || (await item.getAttribute("aria-disabled")) === "true") break;
-    await item.click().catch(() => {});
-    await p.waitForTimeout(400);
-  }
-  await p.waitForTimeout(400);
-};
-
 /** Pick the first tile whose name plate and label pass `test`, and wait for its page.
  *  The plates float apart from the tile buttons; a tile's label names its lead
  *  settlement after the semicolon. */
@@ -144,6 +123,33 @@ const closeWindow = async (p, name) => {
   }
 };
 
+/** Press a control and let its window settle. */
+const press = async (p, locator, wait = 400) => {
+  if (await locator.count())
+    await locator
+      .first()
+      .click()
+      .catch(() => {});
+  await p.waitForTimeout(wait);
+};
+const outliner = (p) => p.getByRole("complementary", { name: "Outliner" });
+/** Close whatever the left window holds (a popover, a drawer, the place panel). */
+const clearLeft = async (p) => {
+  for (let i = 0; i < 3; i += 1) {
+    if (!(await p.locator('[data-c="drawer"], [data-c="place"]').count())) return;
+    await p.keyboard.press("Escape");
+    await p.waitForTimeout(250);
+  }
+};
+/** The board's own settlement: the outliner's first place row picks it as the map does. */
+const pickOwn = async (p) => {
+  await clearLeft(p);
+  await press(
+    p,
+    outliner(p).getByRole("region", { name: "Your settlements" }).getByRole("button").nth(1),
+  );
+};
+
 /** Each surface: a name and a function that drives the page into that state. */
 export const SURFACES = [
   {
@@ -153,22 +159,99 @@ export const SURFACES = [
     },
   },
   { name: "table", go: async (p) => dismissDialogs(p) },
+  // ── the sidebar's drawers, Realm's tabs among them; the seal opens Realm too ──
   ...LEFT.map(([drawer, tab]) => ({
     name: `drawer-${(tab ?? drawer).toLowerCase()}`,
     go: (p) => openDrawer(p, drawer, tab),
   })),
   {
-    name: "tab-chronicle",
+    name: "seal-realm",
     go: async (p) => {
+      await clearLeft(p);
+      await press(p, p.locator('[data-c="top-seal"]'));
+    },
+    after: clearLeft,
+  },
+  // ── the place panel, each variant; a rival's coin opens their card ──
+  { name: "place-own", go: pickOwn },
+  {
+    name: "place-grow",
+    go: (p) => press(p, p.locator('[data-c="place"]').getByRole("button", { name: /^Grow here/ })),
+    after: async (p) => {
       await p.keyboard.press("Escape");
-      await setChronicle(p, true);
+      await p.waitForTimeout(250);
+    },
+  },
+  {
+    name: "place-build",
+    go: (p) =>
+      press(p, p.locator('[data-c="place"]').getByRole("button", { name: /^Raise a building/ })),
+    after: async (p) => {
+      await p.keyboard.press("Escape");
+      await p.waitForTimeout(250);
+    },
+  },
+  {
+    name: "place-rival",
+    go: async (p) => {
+      await clearLeft(p);
+      await pickTile(p, (plate) => plate && !["PHLIOUS", "NEMEA"].includes(plate));
+    },
+  },
+  {
+    name: "seat-card",
+    go: (p) => press(p, p.locator('[data-c="place"] .ch-head-coinbtn')),
+    after: async (p) => {
+      await p.keyboard.press("Escape");
+      await p.waitForTimeout(300);
+    },
+  },
+  {
+    name: "composer-partner",
+    go: (p) =>
+      press(p, p.locator('[data-c="place"]').getByRole("button", { name: /^Offer .+ a trade/ })),
+    after: async (p) => {
+      await p.keyboard.press("Escape");
+      await p.waitForTimeout(300);
+    },
+  },
+  {
+    name: "place-land",
+    go: (p) => pickTile(p, (plate, label) => !plate && !/oracle/i.test(label)),
+  },
+  { name: "place-oracle", go: (p) => pickTile(p, (_plate, label) => /oracle/i.test(label)) },
+  {
+    name: "place-luxury-free",
+    go: async (p) => {
+      await p
+        .locator(".lm-moor:not(.is-faded)")
+        .first()
+        .click({ force: true })
+        .catch(() => {});
+      await p.waitForTimeout(400);
+    },
+    after: clearLeft,
+  },
+  // ── the top: the happiness card, the menu and its windows ──
+  {
+    name: "happiness-card",
+    go: (p) => press(p, p.locator('[data-c="mood"]')),
+    after: async (p) => {
+      await p.keyboard.press("Escape");
+      await p.waitForTimeout(250);
+    },
+  },
+  {
+    name: "menu",
+    go: (p) => press(p, p.locator('[data-c="menu-btn"]')),
+    after: async (p) => {
+      await p.keyboard.press("Escape");
       await p.waitForTimeout(250);
     },
   },
   ...RIGHT.map((tab) => ({
-    name: `tab-${tab.toLowerCase()}`,
+    name: `window-${tab.toLowerCase()}`,
     go: async (p) => {
-      await setChronicle(p, false);
       await openWindow(p, tab);
       await p.waitForTimeout(500);
     },
@@ -184,51 +267,66 @@ export const SURFACES = [
         await p.waitForTimeout(400);
       }
     },
-  },
-  {
-    name: "board-clear",
-    go: async (p) => {
+    after: async (p) => {
       for (const tab of RIGHT) await closeWindow(p, tab);
       await p.waitForTimeout(300);
     },
   },
+  // ── the right: the dock's log and legend, the outliner's settings, folds and tuck ──
   {
-    name: "targeting-grow",
-    go: async (p) => {
-      await pressVerb(p, "Grow", ["Slave"]);
+    name: "dock-log",
+    go: (p) => setChronicle(p, true),
+    after: (p) => setChronicle(p, false),
+  },
+  {
+    name: "legend",
+    go: (p) =>
+      press(
+        p,
+        p.getByRole("group", { name: "Map mode" }).getByRole("button", { name: "Political" }),
+      ),
+    after: (p) =>
+      press(p, p.getByRole("group", { name: "Map mode" }).getByRole("button", { name: "Terrain" })),
+  },
+  {
+    name: "outliner-settings",
+    go: (p) => press(p, outliner(p).getByRole("button", { name: "Outliner settings" })),
+    after: async (p) => {
+      await p.keyboard.press("Escape");
+      await p.waitForTimeout(250);
     },
+  },
+  {
+    name: "outliner-folded",
+    go: async (p) => {
+      for (const head of await outliner(p).locator(".rd-sec-head").all())
+        await head.click().catch(() => {});
+      await p.waitForTimeout(300);
+    },
+    after: async (p) => {
+      for (const head of await outliner(p).locator(".rd-sec-head").all())
+        await head.click().catch(() => {});
+      await p.waitForTimeout(300);
+    },
+  },
+  {
+    name: "outliner-tucked",
+    go: (p) => press(p, outliner(p).getByRole("button", { name: "Tuck the outliner away" })),
+    after: (p) => press(p, p.getByRole("button", { name: "Show the outliner" })),
+  },
+  // ── the dock's acts: the composer, and the confirm bar before a spend ──
+  {
+    name: "composer",
+    go: (p) => press(p, p.locator(".rd-acts").getByRole("button", { name: /^Trade/ })),
     after: async (p) => {
       await p.keyboard.press("Escape");
       await p.waitForTimeout(300);
     },
   },
   {
-    name: "targeting-build",
-    go: async (p) => {
-      await pressVerb(p, "Build", ["Freemen"]);
-    },
+    name: "confirm-bar",
+    go: (p) => press(p, p.locator(".rd-acts").getByRole("button", { name: /^Buy a card/ })),
     after: async (p) => {
-      await p.keyboard.press("Escape");
-      await p.waitForTimeout(300);
-    },
-  },
-  {
-    name: "fan-civic",
-    go: async (p) => {
-      await pressVerb(p, "Civic");
-    },
-    after: async (p) => {
-      await p.keyboard.press("Escape");
-      await p.waitForTimeout(300);
-    },
-  },
-  {
-    name: "fan-build-slaves",
-    go: async (p) => {
-      await pressVerb(p, "Build", ["Slaves"]);
-    },
-    after: async (p) => {
-      await p.keyboard.press("Escape");
       await p.keyboard.press("Escape");
       await p.waitForTimeout(300);
     },
@@ -258,6 +356,56 @@ export const SURFACES = [
       if (await done.count()) await done.click().catch(() => {});
       await p.keyboard.press("Escape");
       await p.waitForTimeout(400);
+      await clearLeft(p);
+    },
+  },
+  // ── the hand: its tray holding cards, and the hand's view ──
+  {
+    name: "hand-tray",
+    go: async (p) => {
+      await visit(p, "dev=cards&seed=42", 1300);
+      await dismissDialogs(p);
+    },
+  },
+  {
+    name: "hand-view",
+    go: (p) =>
+      press(p, p.locator('[data-c="hand-tray"]').getByRole("button", { name: "View the hand" })),
+    after: async (p) => {
+      await p.keyboard.press("Escape");
+      await p.waitForTimeout(300);
+    },
+  },
+  // ── late in the game: a luxury good someone holds ──
+  {
+    name: "place-luxury-held",
+    go: async (p) => {
+      await visit(p, "dev=late-game&seed=42", 1300);
+      await dismissDialogs(p);
+      await press(p, outliner(p).getByRole("button", { name: /, held by / }));
+    },
+  },
+  // ── trade on the alarms row: a deal's card ──
+  {
+    name: "deal-card",
+    go: async (p) => {
+      await visit(p, "dev=deal-short&seed=42", 1300);
+      await dismissDialogs(p);
+      await press(p, p.locator('[data-c="deal-disc"]'));
+    },
+  },
+  // ── moments: the year card, the riot warning, the Assembly and its pill ──
+  {
+    name: "year-card",
+    go: async (p) => {
+      await visit(p, "dev=year&seed=42", 1300);
+    },
+  },
+  {
+    name: "riot-warning",
+    go: async (p) => {
+      await visit(p, "dev=riot-confirm&seed=42", 1300);
+      await dismissDialogs(p);
     },
   },
   {
@@ -265,6 +413,10 @@ export const SURFACES = [
     go: async (p) => {
       await visit(p, "dev=assembly&seed=42", 1400);
     },
+  },
+  {
+    name: "assembly-pill",
+    go: (p) => press(p, p.getByRole("button", { name: /Minimise/ })),
   },
   {
     // Year 8 exposes standing Laws and eligible Year 4 repeals.
@@ -295,51 +447,6 @@ export const SURFACES = [
         .getByRole("button", { name: /^Open the vote/ })
         .click()
         .catch(() => {});
-      await p.waitForTimeout(400);
-    },
-  },
-  {
-    // The place panel shows whatever the map last picked. These start from
-    // their own `goto` because they run after the Assembly surfaces and would
-    // inherit their scene otherwise.
-    name: "pick-rival",
-    go: async (p) => {
-      await visit(p, "dev=preload&seed=42", 1300);
-      await dismissDialogs(p);
-      await pickTile(p, (plate) => plate && !["PHLIOUS", "NEMEA"].includes(plate));
-    },
-  },
-  { name: "pick-land", go: (p) => pickTile(p, (plate, label) => !plate && !/oracle/i.test(label)) },
-  { name: "pick-oracle", go: (p) => pickTile(p, (_plate, label) => /oracle/i.test(label)) },
-  {
-    name: "pick-mooring",
-    go: async (p) => {
-      await p
-        .locator(".lm-moor:not(.is-faded)")
-        .first()
-        .click({ force: true })
-        .catch(() => {});
-      await p.waitForTimeout(400);
-    },
-  },
-  {
-    name: "pick-seat-card",
-    go: async (p) => {
-      await pickTile(p, (plate) => plate && !["PHLIOUS", "NEMEA"].includes(plate));
-      const coin = p.locator(".pp .ch-head-coinbtn");
-      if (await coin.count()) await coin.click().catch(() => {});
-      await p.waitForTimeout(400);
-    },
-    after: async (p) => {
-      await p.keyboard.press("Escape");
-      await p.waitForTimeout(300);
-    },
-  },
-  {
-    // The place panel closes, as a click on the sea closes it.
-    name: "pick-sea",
-    go: async (p) => {
-      await p.keyboard.press("Escape");
       await p.waitForTimeout(400);
     },
   },

@@ -29,6 +29,7 @@ export function Tooltip({
   triggerAs = "span",
   tooltipClassName,
   preferredPlacement = "below",
+  side,
 }: {
   children: ReactNode;
   content: ReactNode;
@@ -39,6 +40,8 @@ export function Tooltip({
   triggerAs?: "span" | "div";
   tooltipClassName?: string;
   preferredPlacement?: VerticalPlacement;
+  /** Beside the trigger instead of above or below it (a column of controls). */
+  side?: "right";
 }) {
   const tooltipId = useId();
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -66,7 +69,7 @@ export function Tooltip({
   const position = useAnchoredOverlay(
     open ? triggerRef : null,
     tooltipRef,
-    { preferredPlacement, gap: 8, margin: 10 },
+    { preferredPlacement, side, gap: 8, margin: 10 },
     open,
   );
 
