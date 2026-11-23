@@ -1,7 +1,16 @@
-import { useEffect, useEffectEvent, useRef, type ReactNode, type RefObject } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useRef,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { createPortal } from "react-dom";
 import type { AnchoringOptions, VerticalPlacement } from "../../ui/anchoring";
 import { overlayRoot, overlayScale } from "../chrome/canvas";
+import { ESCAPE, useEscapeLayer } from "./escapeStack";
+import { FOCUSABLE } from "./focus";
 import { isElementRef, useAnchoredOverlay } from "./useAnchoredOverlay";
 
 export function Popover({
@@ -15,6 +24,8 @@ export function Popover({
   measureKey,
   onDismiss,
   preferredPlacement = "below",
+  escapeRank = ESCAPE.card,
+  focusFirst = false,
 }: {
   align?: AnchoringOptions["align"];
   /** A spot on the map, or the control that opens the popover. */
@@ -30,6 +41,11 @@ export function Popover({
   measureKey?: unknown;
   onDismiss: () => void;
   preferredPlacement?: VerticalPlacement;
+  /** Its place in the Escape order (escapeStack): a card unless said otherwise. */
+  escapeRank?: number;
+  /** Take the focus to its first control outside its header (a list of options),
+   *  instead of to the card itself. */
+  focusFirst?: boolean;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const position = useAnchoredOverlay(
@@ -40,21 +56,30 @@ export function Popover({
   );
   const returnFocusRef = useRef<FocusableElement | null>(activeFocusableElement());
 
-  useEffect(() => {
+  // Layout effects, so a confirm bar asked as this closes takes the focus after it.
+  useLayoutEffect(() => {
     const element = ref.current;
     const returnTarget = returnFocusRef.current;
     if (!element) return;
 
     // A child that took focus on mount (`autoFocus`) keeps it.
-    if (!element.contains(document.activeElement)) element.focus({ preventScroll: true });
+    if (!element.contains(document.activeElement)) {
+      const first = focusFirst
+        ? [...element.querySelectorAll<HTMLElement>(FOCUSABLE)].find((e) => !e.closest("header"))
+        : null;
+      (first ?? element).focus({ preventScroll: true });
+    }
 
     return () => {
       if (returnTarget?.isConnected) {
         returnTarget.focus({ preventScroll: true });
       }
     };
+    // Once, on opening.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEscapeLayer(escapeRank, onDismiss);
   const dismiss = useEffectEvent(onDismiss);
   useEffect(() => {
     if (!dismissOnOutside) return;
@@ -82,12 +107,6 @@ export function Popover({
       ]
         .filter(Boolean)
         .join(" ")}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") {
-          event.stopPropagation();
-          onDismiss();
-        }
-      }}
       ref={ref}
       role="dialog"
       style={

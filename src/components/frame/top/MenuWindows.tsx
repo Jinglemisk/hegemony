@@ -5,6 +5,7 @@ import { Plaque } from "../../chrome/controls";
 import { CodexTab } from "../../board/ledger/CodexTab";
 import { CostsTab } from "../../board/ledger/CostsTab";
 import { useGameUi } from "../../board/GameUiContext";
+import { useReturnFocus } from "../../overlays/focus";
 import { PLATE_CHOICES } from "../map3d/plates";
 import type { Plates } from "../map3d/plates";
 import { MENU_WINDOWS, WINDOW_FACE } from "./windowState";
@@ -90,6 +91,9 @@ function MovableWindow({
   const cascade = MENU_WINDOWS.indexOf(id);
   const self = useRef<HTMLDivElement>(null);
   const drag = useRef<{ sx: number; sy: number; x: number; y: number; k: number } | null>(null);
+  // Opened, it takes the focus to its first control (the Codex's search), and gives
+  // it back to what opened it when it closes.
+  useReturnFocus(self, ".menu-window-body input, .menu-window-body button");
 
   // Held inside the screen by the stylesheet's clamp, whatever the screen's size.
   const place: CSSProperties = spot

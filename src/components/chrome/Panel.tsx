@@ -1,4 +1,4 @@
-import type { HTMLAttributes, ReactNode } from "react";
+import type { HTMLAttributes, ReactNode, Ref } from "react";
 import type { PlayerId } from "../../game/types";
 import { Ico } from "../frame/parts";
 import { CloseDisc } from "./controls";
@@ -19,7 +19,11 @@ export function Panel({
   className,
   children,
   ...rest
-}: HTMLAttributes<HTMLDivElement> & { tone?: "light" | "glaze"; corners?: readonly Corner[] }) {
+}: HTMLAttributes<HTMLDivElement> & {
+  tone?: "light" | "glaze";
+  corners?: readonly Corner[];
+  ref?: Ref<HTMLDivElement>;
+}) {
   return (
     <div {...rest} className={`ch-panel${className ? ` ${className}` : ""}`} data-tone={tone}>
       {children}

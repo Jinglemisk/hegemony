@@ -466,7 +466,7 @@
 /* A ruled line to write on, not a boxed field. */
 .codexSearchInput {
   width: 100%;
-  min-height: var(--ic-24);
+  min-height: calc(var(--u) * 9); /* 36: 32 at the smallest scale */
   padding: 0;
   border: 0;
   border-radius: 0;

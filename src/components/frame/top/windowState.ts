@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+import { ESCAPE, useEscapeLayer } from "../../overlays/escapeStack";
 
 /**
  * The menu's windows: Codex, Costs and Plates, each a panel the player can move and
@@ -98,17 +99,8 @@ export function useMenuWindows(): MenuWindows {
     });
   }, []);
 
-  // Escape closes the top window, unless something above it took the key first.
-  useEffect(() => {
-    if (open.length === 0) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || event.defaultPrevented) return;
-      if (document.querySelector('[aria-modal="true"], .sharedPopover')) return;
-      close(open[open.length - 1]!);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, close]);
+  // Escape closes the top window when nothing above it is open (escapeStack).
+  useEscapeLayer(ESCAPE.window, () => close(open[open.length - 1]!), open.length > 0);
 
   return { open, spots, show, close, toggle, move };
 }

@@ -25,7 +25,9 @@
 .sharedTooltip.map-tip {
   z-index: var(--z-map-tip);
 }
-.sharedTooltip.is-locked {
+/* Locked, only its underlined terms take the pointer: the card never swallows a
+   press meant for the control under it. */
+.sharedTooltip.is-locked [data-term]:not([data-term-open]) {
   pointer-events: auto;
 }
 @keyframes sharedOverlayIn {

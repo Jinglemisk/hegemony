@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ESCAPE } from "../../overlays/escapeStack";
 import { Popover } from "../../overlays/Popover";
 
 /**
@@ -40,6 +41,8 @@ export function TilePopover({
       anchor={anchor}
       ariaLabel={label}
       className={["foundColonyPopover", className].filter(Boolean).join(" ")}
+      escapeRank={ESCAPE.pop}
+      focusFirst
       measureKey={measureKey}
       onDismiss={onCancel}
     >

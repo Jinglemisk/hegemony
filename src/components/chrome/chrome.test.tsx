@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 
-import { act, useEffect } from "react";
+import { act, useEffect, useRef, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { useReturnFocus } from "../overlays/focus";
 import { fitScale } from "./canvas";
 import { ConfirmHost, ConfirmProvider } from "./Confirm";
 import { useConfirm, type ConfirmAsk } from "./confirmContext";
@@ -200,6 +201,97 @@ describe("the confirm bar", () => {
     });
     expect(container.querySelector('[role="alertdialog"]')).toBeNull();
     expect(onYes).not.toHaveBeenCalled();
+  });
+
+  it("makes the rest inert, and gives the focus back to the control that asked", () => {
+    function Buy() {
+      const ask = useConfirm();
+      return (
+        <button onClick={() => ask(question(() => {}))} type="button">
+          Buy
+        </button>
+      );
+    }
+    render(
+      <ConfirmProvider>
+        <div className="frame">
+          <Buy />
+          <div className="host">
+            <ConfirmHost />
+          </div>
+        </div>
+      </ConfirmProvider>,
+    );
+    const buy = container.querySelector<HTMLButtonElement>("button")!;
+    act(() => {
+      buy.focus();
+      buy.click();
+    });
+    const verb = [...container.querySelectorAll<HTMLButtonElement>(".ch-confirm button")].at(-1);
+    expect(document.activeElement).toBe(verb);
+    expect(buy.inert).toBe(true);
+
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    });
+    expect(container.querySelector('[role="alertdialog"]')).toBeNull();
+    expect(buy.inert).toBe(false);
+    expect(document.activeElement).toBe(buy);
+  });
+
+  it("asked from a pop's option as the pop closes, gives the focus back to what opened the pop", () => {
+    function Pop({ onPick }: { onPick: () => void }) {
+      const ref = useRef<HTMLDivElement>(null);
+      useReturnFocus(ref);
+      return (
+        <div ref={ref}>
+          <button onClick={onPick} type="button">
+            Estate
+          </button>
+        </div>
+      );
+    }
+    function Place() {
+      const ask = useConfirm();
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <button onClick={() => setOpen(true)} type="button">
+            Raise a building
+          </button>
+          {open ? (
+            <Pop
+              onPick={() => {
+                setOpen(false);
+                ask(question(() => {}));
+              }}
+            />
+          ) : null}
+        </>
+      );
+    }
+    render(
+      <ConfirmProvider>
+        <Place />
+        <ConfirmHost />
+      </ConfirmProvider>,
+    );
+    const raise = container.querySelector<HTMLButtonElement>("button")!;
+    act(() => {
+      raise.focus();
+      raise.click();
+    });
+    const estate = [...container.querySelectorAll("button")].find(
+      (b) => b.textContent === "Estate",
+    )!;
+    expect(document.activeElement).toBe(estate);
+    act(() => estate.click());
+    expect(document.activeElement?.textContent).toBe("Buy a card");
+
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    });
+    expect(document.activeElement).toBe(raise);
   });
 
   it("answers yes to Enter", () => {

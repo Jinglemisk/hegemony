@@ -81,6 +81,10 @@
 
   /* ---- controls and regions (grid multiples) ----------------------------- */
   --hit: calc(var(--u) * 8); /* 32: every control's short edge */
+  /* Floors that hold at the smallest scale (k 0.889 at 1280×800): a knob or close
+     disc 32 screen px, a control pressed every turn 44. */
+  --knob-d: calc(var(--u) * 9); /* 36 */
+  --hit-often: calc(var(--u) * 12.5); /* 50: map modes, alarm discs, sidebar buttons */
   --bar-h: calc(var(--u) * 12); /* 48: a control and a half, so the bar's icons read at 32 */
   --row-h: calc(var(--u) * 10); /* 40: realm tabs */
   --chip-h: calc(var(--u) * 5); /* 20: the end-turn label */
@@ -299,6 +303,12 @@
   /* ---- rules, radii, shadows, states -------------------------------------- */
   --rule: 1px;
   --rule-2: 2px;
+  /* The keyboard's focus ring: two tones, so one of them clears 3:1 on every ground.
+     Ink on parchment and ivory (13:1); the pale gilt halo on glaze and the sea
+     (4.8:1 on --sea, 3.3:1 on --sea-lit). Drawn by one rule (chrome.css). */
+  --focus-w: var(--rule-2);
+  --focus-ink: var(--ink);
+  --focus-halo: var(--glaze-ink);
   --r-4: 4px; /* buttons, rows, tags */
   --r-8: 8px; /* cards, panels, toasts */
   --r-16: 16px; /* a pill one line tall */

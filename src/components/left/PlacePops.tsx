@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import {
   GROWABLE_POPS,
   claimableLuxuriesAt,
@@ -34,6 +34,7 @@ import { Panel, PanelHead } from "../chrome/Panel";
 import { Lacquer } from "../chrome/controls";
 import { useConfirm } from "../chrome/confirmContext";
 import { Chips, Ico, Tip, TipBody } from "../frame/parts";
+import { useReturnFocus } from "../overlays/focus";
 import { Tooltip } from "../overlays/Tooltip";
 import { CostDetail } from "./atoms";
 import { refusal } from "./words";
@@ -43,6 +44,9 @@ import { refusal } from "./words";
  * options, and a rival's card. Each is one fixed box; a choice closes it and asks
  * through the confirm bar.
  */
+
+/** A pop takes the focus to its first open option, and hands it back to its opener. */
+const FIRST_OPTION = [".pp-opt:not([aria-disabled='true'])", ".pp-opt"];
 
 /** One option: its icon, name and price, and a line saying what it does or why not. */
 function Option({
@@ -103,6 +107,8 @@ export function GrowOptions({
   const left = growUsesLeft(G, viewerId, tile.id);
   const more =
     left === null ? undefined : `${left} ${left === 1 ? "grow" : "grows"} left here this turn.`;
+  const ref = useRef<HTMLDivElement>(null);
+  useReturnFocus(ref, FIRST_OPTION);
 
   return (
     <Panel
@@ -110,6 +116,7 @@ export function GrowOptions({
       className="pp-pop is-grow ch-settle"
       corners={["tr", "br"]}
       data-exclude
+      ref={ref}
       role="dialog"
     >
       <PanelHead
@@ -172,12 +179,16 @@ export function BuildOptions({
         : [option],
   );
 
+  const ref = useRef<HTMLDivElement>(null);
+  useReturnFocus(ref, FIRST_OPTION);
+
   return (
     <Panel
       aria-label={`Build in ${name}`}
       className="pp-pop is-build ch-settle"
       corners={["tr", "br"]}
       data-exclude
+      ref={ref}
       role="dialog"
     >
       <PanelHead

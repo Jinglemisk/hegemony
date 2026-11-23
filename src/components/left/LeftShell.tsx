@@ -1,6 +1,6 @@
-import { useEffect, useEffectEvent, useState } from "react";
+import { useState } from "react";
 import type { BuildingId, PlayerId, Resources } from "../../game/types";
-import { isTyping } from "../../ui/keys";
+import { ESCAPE, useEscapeLayer } from "../overlays/escapeStack";
 import { Drawer, type DrawerId } from "./Drawer";
 import type { LeftDrawer } from "./drawerState";
 import { PlacePanel, type PlacePop, type PlaceSubject } from "./PlacePanel";
@@ -36,7 +36,6 @@ export function LeftShell({
   onPick,
   drawer,
   income,
-  mapArmed,
   placeable,
   actions,
 }: {
@@ -48,8 +47,6 @@ export function LeftShell({
   drawer: LeftDrawer;
   /** The viewer's projected net income per turn. */
   income: Resources;
-  /** A map mode is armed: Escape is the map's. */
-  mapArmed: boolean;
   /** The place panel may open (not while the starting places are set). */
   placeable: boolean;
   actions: LeftActions;
@@ -68,18 +65,14 @@ export function LeftShell({
   };
   const closePlace = () => onPick({ kind: "realm" });
 
-  // Escape closes the top-most thing on the left: a popover, the drawer, the place.
-  const escape = useEffectEvent((event: KeyboardEvent) => {
-    if (event.key !== "Escape" || isTyping(event.target) || mapArmed) return;
-    if (document.querySelector('[aria-modal="true"]')) return;
-    if (openPop) setPop(null);
-    else if (openDrawer) drawer.show(null);
-    else if (placeOpen) closePlace();
-  });
-  useEffect(() => {
-    window.addEventListener("keydown", escape);
-    return () => window.removeEventListener("keydown", escape);
-  }, []);
+  // Escape closes a pop first, then the drawer or the place (escapeStack: anything
+  // open above them, a card or a menu window, closes before them).
+  useEscapeLayer(ESCAPE.pop, () => setPop(null), Boolean(openPop) && placeOpen);
+  useEscapeLayer(
+    ESCAPE.left,
+    () => (openDrawer ? drawer.show(null) : closePlace()),
+    Boolean(openDrawer) || placeOpen,
+  );
 
   return (
     <>

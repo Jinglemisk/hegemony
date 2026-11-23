@@ -23,8 +23,8 @@
   position: relative;
   display: grid;
   place-items: center;
-  width: calc(var(--u) * 11.5); /* 46 */
-  height: calc(var(--u) * 11.5);
+  width: var(--hit-often);
+  height: var(--hit-often);
   padding: 0;
   border: 0;
   border-radius: var(--r-round);

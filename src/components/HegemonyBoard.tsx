@@ -68,6 +68,7 @@ import { ComposeCard } from "./frame/trade/OfferCard";
 import { TradePickContext, nextTradePick, usedPlaces } from "./frame/trade/tradePick";
 import type { PickTradePlaces, TradePickRequest } from "./frame/trade/tradePick";
 import { TradePopsPopover } from "./board/map/TradePopsPopover";
+import { ESCAPE, useEscapeLayer } from "./overlays/escapeStack";
 import { Popover } from "./overlays/Popover";
 import { Dock } from "./frame/dock/Dock";
 import { Outliner } from "./frame/outliner/Outliner";
@@ -442,16 +443,17 @@ export function HegemonyBoard({
   }, [G.pendingPlayerEvent, clearMapSelection]);
 
   // Escape is ModalShell's job — every dialog gets it from the one place. With no
-  // dialog up, it returns a folded sitting.
-  const restoreSitting = useEffectEvent(() => {
-    if (sitting?.minimised && !moment && !activeModal) sitting.setMinimised(false);
-  });
+  // dialog up, and nothing else open above it, it returns a folded sitting.
+  useEscapeLayer(
+    ESCAPE.sitting,
+    () => sitting?.setMinimised(false),
+    Boolean(sitting?.minimised && !moment && !activeModal),
+  );
 
   // `?` toggles the codex from anywhere: the same act as pressing its consult icon. 1 to
   // 4 switch the map's mode.
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") restoreSitting();
       if (isTyping(event.target)) return;
 
       if (event.key === "?") {
@@ -556,31 +558,11 @@ export function HegemonyBoard({
               className={`frame${moment?.kind === "assembly" ? " is-sitting" : ""}`}
               style={{ "--k": fitScale } as CSSProperties}
             >
-              {/* The map draws at the screen's own resolution; the HUD over it on the
-                scaled design canvas. */}
-              {!drafting ? (
-                <Suspense fallback={null}>
-                  <LivingMap
-                    G={G}
-                    highlightTileIds={
-                      mapSelection.selection
-                        ? mapSelection.candidateTileIds
-                        : setupColonyValidTileIds
-                    }
-                    mode={mapMode}
-                    onBackgroundAction={() => pick({ kind: "realm" })}
-                    onMooringAction={pickMooring}
-                    onTileAction={handleTileAction}
-                    plates={plates}
-                    // A popover pinned to a tile's old spot closes when the map moves;
-                    // the mode stays armed, so the next click re-opens it in place.
-                    onViewChange={() => setMapSelectionTarget(null)}
-                    placementActive={Boolean(mapSelection.selection) || ctx.phase === "setupColony"}
-                    selectedTileId={selectedTileId}
-                  />
-                </Suspense>
-              ) : null}
-              <HudCanvas>
+              {/* Two HUD canvases with the map between, so the DOM (and Tab) reads as the
+                screen does: top bar, seal, alarms, sidebar, drawer or place panel, then
+                the map, the hand, the outliner, the dock. The map draws at the screen's
+                own resolution under both; the second canvas paints over the first. */}
+              <HudCanvas overlays={false}>
                 {!drafting ? (
                   <>
                     <div className="hud hud-top">
@@ -623,10 +605,6 @@ export function HegemonyBoard({
                       </div>
                     ) : null}
 
-                    {G.phase === "gameplay" ? (
-                      <HandTray onOpen={() => setActiveModal({ kind: "hand" })} />
-                    ) : null}
-
                     {/* The left window: the sidebar's drawers and the place panel. */}
                     <LeftShell
                       actions={{
@@ -645,11 +623,41 @@ export function HegemonyBoard({
                       }}
                       income={projectedIncome}
                       drawer={drawer}
-                      mapArmed={Boolean(mapSelection.selection)}
                       onPick={pick}
                       placeable={!isSetup}
                       subject={subject}
                     />
+                  </>
+                ) : null}
+              </HudCanvas>
+              {!drafting ? (
+                <Suspense fallback={null}>
+                  <LivingMap
+                    G={G}
+                    highlightTileIds={
+                      mapSelection.selection
+                        ? mapSelection.candidateTileIds
+                        : setupColonyValidTileIds
+                    }
+                    mode={mapMode}
+                    onBackgroundAction={() => pick({ kind: "realm" })}
+                    onMooringAction={pickMooring}
+                    onTileAction={handleTileAction}
+                    plates={plates}
+                    // A popover pinned to a tile's old spot closes when the map moves;
+                    // the mode stays armed, so the next click re-opens it in place.
+                    onViewChange={() => setMapSelectionTarget(null)}
+                    placementActive={Boolean(mapSelection.selection) || ctx.phase === "setupColony"}
+                    selectedTileId={selectedTileId}
+                  />
+                </Suspense>
+              ) : null}
+              <HudCanvas>
+                {!drafting ? (
+                  <>
+                    {G.phase === "gameplay" ? (
+                      <HandTray onOpen={() => setActiveModal({ kind: "hand" })} />
+                    ) : null}
 
                     {/* The right side: the outliner down the edge, the dock in the corner. */}
                     <Outliner

@@ -246,7 +246,7 @@ function OutlinerRow({ row }: { row: Row }) {
             <TipBody>{row.detail}</TipBody>
           </Tip>
         }
-        preferredPlacement="below"
+        side="left"
         triggerAs="div"
         triggerClassName="rd-row-tip"
       >
