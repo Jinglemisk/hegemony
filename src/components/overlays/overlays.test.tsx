@@ -230,35 +230,42 @@ describe("Popover", () => {
 
 describe("End turn's confirm", () => {
   it.each([
-    [-3, "Ending your turn starts a riot", "Face the riot"],
-    [-6, "Ending your turn now means revolt", "Revolt"],
-  ] as const)("opens at %s as a popover a press outside closes", (level, consequence, face) => {
-    const G = scenario().opening().withHappiness("0", level).build();
+    [-3, "Ending your turn starts a riot", "Riot at turn end", "Face the riot"],
+    [-6, "Ending your turn now means revolt", "Revolt at turn end", "Revolt"],
+  ] as const)(
+    "opens at %s as a popover a press outside closes",
+    (level, consequence, head, face) => {
+      const G = scenario().opening().withHappiness("0", level).build();
 
-    act(() => {
-      root.render(
-        <EndTurn
-          actingId="0"
-          canEndTurn
-          confirmOpen
-          onCalm={() => {}}
-          onEndTurn={() => {}}
-          ruleset={G.ruleset}
-          title="Press and hold to end your turn."
-          unrest={turnEndUnrest(G, "0")}
-          warning={null}
-        />,
-      );
-    });
+      act(() => {
+        root.render(
+          <EndTurn
+            actingId="0"
+            canEndTurn
+            confirmOpen
+            onCalm={() => {}}
+            onEndTurn={() => {}}
+            ruleset={G.ruleset}
+            title="Press and hold to end your turn."
+            unrest={turnEndUnrest(G, "0")}
+            warning={null}
+          />,
+        );
+      });
 
-    // The hold opens the confirm at the line, focused on the plain choice to face it.
-    const dialog = document.body.querySelector<HTMLElement>("[role=dialog]")!;
-    expect(dialog.textContent).toContain(consequence);
-    expect(document.activeElement?.textContent).toBe(face);
+      // The hold opens the confirm at the line, focused on the plain choice to face it.
+      const dialog = document.body.querySelector<HTMLElement>("[role=dialog]")!;
+      // Docked above the dock in its slot, its one-line head beside a close disc.
+      expect(dialog.getAttribute("aria-label")).toBe(consequence);
+      expect(dialog.classList).toContain("is-slot");
+      expect(dialog.querySelector("h2")?.textContent).toBe(head);
+      expect(dialog.querySelector('[aria-label="Close the warning"]')).not.toBeNull();
+      expect(document.activeElement?.textContent).toBe(face);
 
-    act(() => document.body.dispatchEvent(new Event("pointerdown", { bubbles: true })));
-    expect(document.body.querySelector("[role=dialog]")).toBeNull();
-  });
+      act(() => document.body.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+      expect(document.body.querySelector("[role=dialog]")).toBeNull();
+    },
+  );
 });
 
 function PopoverHarness({ anchor, onDismiss }: { anchor: DOMRect; onDismiss: () => void }) {

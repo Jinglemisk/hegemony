@@ -54,6 +54,14 @@
   --lh-24: calc(24px * var(--text-scale));
   --lh-28: calc(28px * var(--text-scale));
   --lh-32: calc(32px * var(--text-scale));
+  /* The top bar's figures and labels hold these sizes at every Text size: its cells
+     are 44 high in a 50 bar, a 20 figure over a 13 label already fills them, and
+     every cell's tooltip (which does scale) carries its words whole. */
+  --t-bar-13: 13px;
+  --t-bar-20: 20px;
+  --lh-bar-16: 16px;
+  --lh-bar-20: 20px;
+  --lh-bar-24: 24px;
   --track-caps: 0.08em;
   --track-name: 0.04em;
   /* roles */
@@ -218,6 +226,7 @@
   --sea-lit: #2e8a9a;
   --sea-deep: #17505c;
   --sea-shade: rgb(10 34 41 / 35%);
+  --sea-vignette: rgb(6 20 26 / 55%); /* the sea darkening toward the screen's edges */
   /* The living map's labels over the water: a plate's drop, a yield chip's paper,
      a building badge's paper, a ship's dark chip and its rule, and the compass's
      glass. */
@@ -350,9 +359,13 @@
   --sh-log-h: 36px; /* … its log line */
   --sh-modes-h: 60px; /* … its map modes */
   --sh-acts-h: 66px; /* … its Trade / Buy a card / the Dole */
+  --sh-chron-h: 320px; /* … and the Chronicle, risen out of its line */
   --sh-end-w: 88px; /* … End turn, beside the modes and buttons */
   --sh-outliner-w: 320px; /* the outliner, from under the top bar to the dock */
   --sh-outliner-top: 60px;
+  --sh-card-x: 100px; /* an alarm's card: one slot under the alarms row, … */
+  --sh-card-y: 114px;
+  --sh-card-w: 480px; /* … at most this wide */
   --sh-hand-x: 624px; /* the hand's tray */
   --sh-hand-w: 480px;
   --sh-hand-h: 72px;
@@ -472,6 +485,7 @@
   --dur-settle: 220ms; /* a card or dialog settling into place */
   --dur-unroll: 300ms; /* a panel unrolling from an edge */
   --dur-drop: 320ms; /* an alarm dropping in, a banner unfurling */
+  --dur-fold: 240ms; /* the Chronicle rising and the outliner giving way to it */
   --ease-drop: cubic-bezier(0.2, 1.4, 0.4, 1); /* lands with a small bounce */
 
   color-scheme: light;
@@ -513,6 +527,7 @@
     --dur-settle: 0ms;
     --dur-unroll: 0ms;
     --dur-drop: 0ms;
+    --dur-fold: 0ms;
   }
 }
 

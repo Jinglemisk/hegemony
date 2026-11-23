@@ -1,7 +1,7 @@
 import { getLuxuryGood } from "../../../game/content";
 import { POP_TYPES } from "../../../game/core/pops";
 import { getOwnedSettlement } from "../../../game/core/query";
-import { DEAL_RESOURCES, describeAmounts, loanOf, partnerIn } from "../../../game/deals";
+import { DEAL_RESOURCES, dealsOf, describeAmounts, loanOf, partnerIn } from "../../../game/deals";
 import { standingHappiness } from "../../../game/happiness";
 import { partnerCanPay, tradePreview } from "../../../game/trade";
 import type {
@@ -247,8 +247,31 @@ export function bundleWords(G: HegemonyState, bundle: TradeBundle): string {
   return parts.length > 1 ? `${parts.slice(0, -1).join(", ")} and ${parts.at(-1)}` : parts[0];
 }
 
+/** "Deal with Kyros"; beside another deal with the same seat, its terms name it:
+ *  "Deal with Kyros: 3 stone for 2 food". */
 export function dealTitle(G: HegemonyState, deal: Deal, seat: PlayerId): string {
-  return `Deal with ${G.players[partnerIn(deal, seat)].name}`;
+  const partner = partnerIn(deal, seat);
+  const title = `Deal with ${G.players[partner].name}`;
+  const twins = dealsOf(G, seat).filter((other) => partnerIn(other, seat) === partner);
+  return twins.length > 1 ? `${title}: ${dealTerms(G, deal, seat)}` : title;
+}
+
+/** A deal's terms in a few words, the seat's side first: "3 stone for Pearls". */
+function dealTerms(G: HegemonyState, deal: Deal, seat: PlayerId): string {
+  const partner = partnerIn(deal, seat);
+  const side = (from: PlayerId) => {
+    const yearly = deal.yearly[from];
+    const goods = deal.loans
+      .filter((loan) => loan.borrower !== from)
+      .map((loan) => {
+        const asset = G.board.luxuries.find((candidate) => candidate.id === loan.assetId);
+        return (asset && getLuxuryGood(G.definition.content, asset.goodId)?.name) ?? "a good";
+      });
+    return [...(yearly ? [describeAmounts(yearly)] : []), ...goods].join(" and ");
+  };
+  const give = side(seat);
+  const get = side(partner);
+  return give && get ? `${give} for ${get}` : give ? `you give ${give}` : `you get ${get}`;
 }
 
 export function loanWords(G: HegemonyState, loan: DealLoan, seat: PlayerId): string {

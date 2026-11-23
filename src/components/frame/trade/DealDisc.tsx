@@ -65,13 +65,12 @@ export function DealDisc({ deal, asking, ask }: { deal: Deal; asking: boolean; a
       </Tooltip>
       {open ? (
         <Popover
-          align="start"
           anchor={disc}
           ariaLabel={title}
-          className="trade-pop"
+          className="trade-pop alarm-card"
           dismissOnOutside
-          measureKey={deal}
           onDismiss={() => setOpen(false)}
+          slot
         >
           <DealCard deal={deal} onClose={() => setOpen(false)} />
         </Popover>

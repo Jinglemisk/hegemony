@@ -687,7 +687,7 @@ export function HegemonyBoard({
                         }
                         ruleset={G.ruleset}
                         title={turnCommitTitle(turnGate)}
-                        waitingLabel={inAssembly ? "In Assembly" : undefined}
+                        waitingLabel={inAssembly ? "Sitting" : undefined}
                         unrest={turnOpen ? turnEndUnrest(G, currentPlayerId) : null}
                         warning={endTurnWarning(G, currentPlayerId)}
                       />

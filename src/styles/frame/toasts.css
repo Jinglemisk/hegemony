@@ -1,13 +1,15 @@
 /* ============================================================================
    Toasts: one moment another seat had, as a banner that drops in under the top
-   bar, centred, then goes. Fixed width; its words wrap to two lines at most.
+   bar, right of the alarms, then goes. Fixed width; its words wrap to two lines at most.
    ========================================================================== */
+/* The lane starts right of the alarm card's slot, which is wider than the longest
+   alarms row (eight discs end at x 552): a banner never lands on a disc or on an
+   open alarm card, and it ends short of the outliner. */
 .toast-lane {
   position: fixed;
   top: calc(var(--sh-top-h) + var(--s-3));
-  left: 50%;
+  left: calc(var(--sh-card-x) + var(--sh-card-w) + var(--s-4));
   width: calc(var(--u) * 120); /* 480 */
-  translate: -50% 0;
 }
 .toast {
   display: grid;

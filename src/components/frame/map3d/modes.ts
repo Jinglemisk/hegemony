@@ -20,8 +20,15 @@ import type { Census } from "../../../ui/frameSelectors";
 
 export type MapMode = "terrain" | "political" | "economy" | "trade";
 
-/** Each mode: its name, its icon, and what it shows, said. */
-export const MAP_MODES: readonly { id: MapMode; label: string; icon: string; note: string }[] = [
+/** Each mode: its name, its icon, what it shows, said, and the dock's legend for it
+ *  (one or two short lines; Terrain has none). */
+export const MAP_MODES: readonly {
+  id: MapMode;
+  label: string;
+  icon: string;
+  note: string;
+  legend?: string;
+}[] = [
   {
     id: "terrain",
     label: "Terrain",
@@ -32,19 +39,23 @@ export const MAP_MODES: readonly { id: MapMode; label: string; icon: string; not
     id: "political",
     label: "Political",
     icon: "settlements/city",
-    note: "Each owned tile and its town tinted in its owner's colour, the realms' borders, and each realm's name and Unrest tokens under its capital.",
+    note: "Each owned tile painted in its owner's colour, its town tinted toward it, the realms' borders, and each realm's name and Unrest tokens large across its land.",
+    legend: "Owned land in its realm's colour, the realm's name across it. Badges hidden.",
   },
   {
     id: "economy",
     label: "Economy",
     icon: "market/income",
     note: "Under each tile, what its worked slots make and how many slots are free; close in, what each settlement makes and eats a turn, and its buildings; the land's trees, rocks and fields faded.",
+    legend: "Under each tile, what its worked slots make and how many are free.",
   },
   {
     id: "trade",
     label: "Trade",
     icon: "market/handshake",
     note: "Each luxury good's name and holder, each Port's good, ship routes and pops on the move, and under each capital what its realm has to export and needs to import.",
+    legend:
+      "Goods and their holders, ship routes, and by each capital what it exports and imports.",
   },
 ];
 

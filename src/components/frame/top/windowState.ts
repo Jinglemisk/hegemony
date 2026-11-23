@@ -61,6 +61,9 @@ export type MenuWindows = {
   /** Open windows, bottom to top. */
   open: readonly MenuWindow[];
   spots: Partial<Record<MenuWindow, WindowSpot>>;
+  /** Each open window's step down the cascade, taken when it opened: the first free
+   *  one, so the first window always opens at the top spot and none shares a step. */
+  steps: Partial<Record<MenuWindow, number>>;
   /** Opens a window, or brings an open one to the top. */
   show: (id: MenuWindow) => void;
   close: (id: MenuWindow) => void;
@@ -73,18 +76,20 @@ export function useMenuWindows(): MenuWindows {
   const [open, setOpen] = useState<readonly MenuWindow[]>([]);
   const [spots, setSpots] = useState(storedSpots);
 
-  const show = useCallback(
-    (id: MenuWindow) => setOpen((now) => [...now.filter((other) => other !== id), id]),
-    [],
-  );
-  const close = useCallback(
-    (id: MenuWindow) => setOpen((now) => now.filter((other) => other !== id)),
-    [],
-  );
+  const [steps, setSteps] = useState<Partial<Record<MenuWindow, number>>>({});
+  // `steps` holds exactly the open windows: every path that opens or closes one
+  // updates both.
+  const show = useCallback((id: MenuWindow) => {
+    setOpen((now) => [...now.filter((other) => other !== id), id]);
+    setSteps((now) => (now[id] === undefined ? { ...now, [id]: firstFree(now) } : now));
+  }, []);
+  const close = useCallback((id: MenuWindow) => {
+    setOpen((now) => now.filter((other) => other !== id));
+    setSteps((now) => Object.fromEntries(Object.entries(now).filter(([other]) => other !== id)));
+  }, []);
   const toggle = useCallback(
-    (id: MenuWindow) =>
-      setOpen((now) => (now.includes(id) ? now.filter((other) => other !== id) : [...now, id])),
-    [],
+    (id: MenuWindow) => (open.includes(id) ? close(id) : show(id)),
+    [open, close, show],
   );
   const move = useCallback((id: MenuWindow, spot: WindowSpot) => {
     setSpots((now) => {
@@ -110,5 +115,13 @@ export function useMenuWindows(): MenuWindows {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, close]);
 
-  return { open, spots, show, close, toggle, move };
+  return { open, spots, steps, show, close, toggle, move };
+}
+
+/** The lowest cascade step no open window holds. */
+function firstFree(steps: Partial<Record<MenuWindow, number>>): number {
+  const taken = new Set(Object.values(steps));
+  let step = 0;
+  while (taken.has(step)) step += 1;
+  return step;
 }

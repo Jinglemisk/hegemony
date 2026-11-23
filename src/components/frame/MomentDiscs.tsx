@@ -8,6 +8,7 @@ import { titleValue } from "../../ui/frameFormat";
 import { turnsLeftInYear } from "../../ui/frameSelectors";
 import { yearCardIcon } from "../../ui/iconRegistry";
 import { Prose } from "../AnnotatedText";
+import { CloseDisc } from "../chrome/controls";
 import { SeatCoin } from "../chrome/SeatCoin";
 import { Popover } from "../overlays/Popover";
 import { Tooltip } from "../overlays/Tooltip";
@@ -101,13 +102,18 @@ export function ThreatAlarm({
       </button>
       {open ? (
         <Popover
-          align="start"
           anchor={disc}
           ariaLabel={`${capitalize(toWin)} titles`}
-          className="threat-panel"
+          className="threat-panel alarm-card"
           dismissOnOutside
           onDismiss={() => setOpen(false)}
+          slot
         >
+          <CloseDisc
+            className="alarm-card-x"
+            label={`Close ${toWin} titles`}
+            onClick={() => setOpen(false)}
+          />
           {threats.map((threat) => {
             const before = seatsBefore(G, threat.seat).map((seat) => seatName(G, seat, viewerId));
             return (

@@ -52,8 +52,9 @@ type Point2 = { x: number; y: number };
  *  tile's centre to its neighbour's. */
 const HEX_W = Math.sqrt(3) * R_TOP;
 const SQ3 = Math.sqrt(3);
-/** How far Political tints an owned tile and its town toward the owner's glaze: enough
- *  to read the realm, not so much that the terrain goes. */
+/** How far Political tints an owned tile's town toward the owner's glaze (the tile
+ *  itself is painted flat in it): enough to read the realm, not so much that the
+ *  buildings go. */
 const TINT = 0.5;
 
 export type Marks = {
@@ -197,13 +198,12 @@ export function createRuntime({
    *  way to the mode's own look as the map comes close (1 − the close band). */
   let overview = 1;
   /** A tile's colour: its terrain's; settled, its owner's glaze in the overview, and
-   *  close in Political's tint toward it. */
+   *  in Political flat in that glaze at every zoom. */
   function wash(tile: MapModel["tiles"][number]) {
     const [lead] = tile.settlements;
     const land = mix(GLAZE[tile.terrain], BONE, 0.5);
     if (!lead) return land;
-    const tint = mode === "political" ? TINT : 0;
-    return mix(land, glazeOf(lead.owner), overview + (1 - overview) * tint);
+    return mix(land, glazeOf(lead.owner), mode === "political" ? 1 : overview);
   }
 
   /** Political's borders: each owned tile's sides that face another realm, open land

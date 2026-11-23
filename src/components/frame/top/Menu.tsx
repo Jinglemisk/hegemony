@@ -43,6 +43,7 @@ export function Menu({
             <TipBody>Codex, Costs and Plates as windows you can move, View as, Text size.</TipBody>
           </Tip>
         }
+        triggerClassName="menu-tip"
       >
         <button
           aria-expanded={open}
@@ -59,12 +60,12 @@ export function Menu({
       </Tooltip>
       {open ? (
         <Popover
-          align="end"
           anchor={button}
           ariaLabel="Menu"
           className="top-pop menu-pop"
           dismissOnOutside
           onDismiss={() => setOpen(false)}
+          slot
         >
           <MenuCard
             onViewAs={(seat) => {
@@ -96,72 +97,74 @@ function MenuCard({
   const [scale, setScale] = useTextScale();
 
   return (
-    <Panel className="menu-card" corners={["bl", "br"]}>
-      <ul className="menu-rows">
-        {MENU_WINDOWS.map((id) => {
-          const face = WINDOW_FACE[id];
-          const isOpen = openWindows.includes(id);
-          return (
-            <li key={id}>
-              <button
-                aria-label={`${face.title}: ${face.sub}${isOpen ? ", open" : ""}`}
-                className="menu-row"
-                data-c="menu-row"
-                data-window={id}
-                onClick={() => onWindow(id)}
-                type="button"
-              >
-                <Ico path={face.icon} size="tile" />
-                <span className="menu-row-words">
-                  <b className="menu-row-name">{face.title}</b>
-                  <span className="menu-row-sub">{face.sub}</span>
-                </span>
-                {isOpen ? <em className="menu-row-open">Open</em> : null}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-      <section aria-label="View as" className="menu-sec">
-        <h3 className="menu-sec-label">View as</h3>
-        <div className="menu-seats">
-          {PLAYER_IDS.map((seat) => {
-            const glaze = PLAYER_GLAZES[seat];
-            const acting = seat === currentPlayerId;
-            const viewing = seat === viewerId;
-            const cards = G.devHands[seat].length;
+    <Panel className="menu-card" corners={["bl"]}>
+      <div className="menu-body">
+        <ul className="menu-rows">
+          {MENU_WINDOWS.map((id) => {
+            const face = WINDOW_FACE[id];
+            const isOpen = openWindows.includes(id);
             return (
-              <button
-                aria-label={`${glaze.name}${acting ? ", acting" : ""}${cards ? `, ${cards} ${cards === 1 ? "card" : "cards"}` : ""}${viewing ? ", your seat" : ", view as this seat"}`}
-                aria-pressed={viewing}
-                className="menu-seat"
-                data-c="view-as"
-                key={seat}
-                onClick={() => onViewAs(seat)}
-                type="button"
-              >
-                <SeatCoin seat={seat} size={28} />
-                <span className="menu-seat-name">{glaze.name}</span>
-                {acting ? (
-                  <span aria-hidden="true" className="menu-seat-tag">
-                    <Ico path="events/end-turn" size="chip" />
+              <li key={id}>
+                <button
+                  aria-label={`${face.title}: ${face.sub}${isOpen ? ", open" : ""}`}
+                  className="menu-row"
+                  data-c="menu-row"
+                  data-window={id}
+                  onClick={() => onWindow(id)}
+                  type="button"
+                >
+                  <Ico path={face.icon} size="tile" />
+                  <span className="menu-row-words">
+                    <b className="menu-row-name">{face.title}</b>
+                    <span className="menu-row-sub">{face.sub}</span>
                   </span>
-                ) : null}
-              </button>
+                  {isOpen ? <em className="menu-row-open">Open</em> : null}
+                </button>
+              </li>
             );
           })}
-        </div>
-      </section>
-      <section aria-label="Text size" className="menu-sec">
-        <h3 className="menu-sec-label">Text size</h3>
-        <div className="menu-sizes" role="group" aria-label="Text size">
-          {TEXT_SIZES.map(({ scale: option, label }) => (
-            <Plaque aria-pressed={scale === option} key={option} onClick={() => setScale(option)}>
-              {label}
-            </Plaque>
-          ))}
-        </div>
-      </section>
+        </ul>
+        <section aria-label="View as" className="menu-sec">
+          <h3 className="menu-sec-label">View as</h3>
+          <div className="menu-seats">
+            {PLAYER_IDS.map((seat) => {
+              const glaze = PLAYER_GLAZES[seat];
+              const acting = seat === currentPlayerId;
+              const viewing = seat === viewerId;
+              const cards = G.devHands[seat].length;
+              return (
+                <button
+                  aria-label={`${glaze.name}${acting ? ", acting" : ""}${cards ? `, ${cards} ${cards === 1 ? "card" : "cards"}` : ""}${viewing ? ", your seat" : ", view as this seat"}`}
+                  aria-pressed={viewing}
+                  className="menu-seat"
+                  data-c="view-as"
+                  key={seat}
+                  onClick={() => onViewAs(seat)}
+                  type="button"
+                >
+                  <SeatCoin seat={seat} size={28} />
+                  <span className="menu-seat-name">{glaze.name}</span>
+                  {acting ? (
+                    <span aria-hidden="true" className="menu-seat-tag">
+                      <Ico path="events/end-turn" size="chip" />
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+        <section aria-label="Text size" className="menu-sec">
+          <h3 className="menu-sec-label">Text size</h3>
+          <div className="menu-sizes" role="group" aria-label="Text size">
+            {TEXT_SIZES.map(({ scale: option, label }) => (
+              <Plaque aria-pressed={scale === option} key={option} onClick={() => setScale(option)}>
+                {label}
+              </Plaque>
+            ))}
+          </div>
+        </section>
+      </div>
     </Panel>
   );
 }

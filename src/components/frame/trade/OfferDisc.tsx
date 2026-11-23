@@ -76,13 +76,12 @@ export function OfferDisc({ offer }: { offer: TradeOffer }) {
       </Tooltip>
       {open ? (
         <Popover
-          align="start"
           anchor={disc}
           ariaLabel={title}
-          className="trade-pop"
+          className="trade-pop alarm-card"
           dismissOnOutside
-          measureKey={offer}
           onDismiss={() => setOpen(false)}
+          slot
         >
           <OfferCard offer={offer} onClose={() => setOpen(false)} />
         </Popover>

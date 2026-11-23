@@ -380,17 +380,22 @@
     inset var(--s-1) 0 0 var(--clay),
     inset 0 calc(-1 * var(--rule)) 0 var(--bz-dk-30);
 }
-/* The riot warning: its title is the glaze band across its top. */
+/* The riot warning: its title and close are the glaze band across its top. */
 .endturn-confirm {
   padding-top: 0;
 }
-.endturn-confirm .confirm-title {
+.endturn-confirm .confirm-head {
   margin: 0 calc(-1 * var(--s-4)) var(--s-2);
-  padding: var(--s-3) var(--s-4);
-  border-radius: var(--r-panel) var(--r-panel) 0 0;
+  padding: var(--s-2) var(--s-3) var(--s-2) var(--s-4);
+  border-radius: var(--r-panel) 0 0 0;
   color: var(--glaze-ink);
   background: var(--glaze);
   box-shadow: var(--head-edge);
+}
+.endturn-confirm .confirm-title {
+  --name-size: var(--t-16);
+  --name-lh: var(--lh-24);
+  color: var(--glaze-ink);
 }
 .endturn-confirm .confirm-calm {
   border-radius: var(--r-panel);
@@ -536,8 +541,9 @@
   box-shadow: var(--head-edge), var(--shadow-panel);
   animation: ch-drop var(--dur-drop) var(--ease-drop) both;
 }
+/* Ivory on the clay plaque: 5.7:1 at rest, 4.8:1 on the hover's lighter clay. */
 .sit-dock .sit-dock-back {
-  color: var(--bz-hi);
+  color: var(--ivory);
 }
 .sit-dock .ico {
   border-radius: var(--r-round);

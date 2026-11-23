@@ -19,6 +19,21 @@
 .living-map.is-panning :is(.lm-tile, .lm-moor) {
   cursor: grabbing;
 }
+/* The vignette: the sea darkens toward the screen's edges, as under a lamp. Over the
+   board, under its labels (each placed with its own z-index), and never over the
+   chrome, which is drawn on the HUD canvas above the map. */
+.living-map::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-lift);
+  background: radial-gradient(
+    ellipse 75% 70% at 52% 48%,
+    transparent 55%,
+    var(--sea-vignette) 100%
+  );
+  pointer-events: none;
+}
 /* Nothing shows until the first frame is drawn: no labels over an empty sea. The
    canvas is out of the page meanwhile, so its warm-up draw is never composited. */
 .living-map:not([data-ready]) > .lm-canvas {
@@ -199,13 +214,9 @@
 .lm-plate.capital {
   --show: var(--a-capital, 1);
 }
-/* A pick's candidate shows its plate at any zoom; under a capital, in place of the
-   realm's name while the pick lasts. */
+/* A pick's candidate shows its plate at any zoom. */
 .lm-plate.is-asked {
   --show: var(--a-asked, 1);
-}
-.lm-under:has(.is-asked) .lm-realm {
-  opacity: 0;
 }
 .lm-plate .pl-name {
   font-family: var(--f-name);
@@ -496,13 +507,17 @@
 
 /* ---- the map modes' labels: each fades with its mode through --a-<key> ---------- */
 
-/* Political: a realm's name under its capital's badge, with its Unrest tokens; its
-   glaze and counts close in, where there is room. */
+/* Political: a realm's name large across the middle of its land, with its Unrest
+   tokens; its glaze and counts close in, where there is room. It never takes a click
+   from the tiles under it. */
+.lm-banner {
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
 .lm-realm {
   display: grid;
   justify-items: center;
   gap: 2px;
-  margin-top: 4px;
   text-align: center;
   opacity: var(--a-realm, 0);
 }
@@ -518,7 +533,7 @@
   font-family: var(--f-name);
   font-weight: 700;
   line-height: 1;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.18em;
   color: var(--ivory);
   text-shadow:
     0 0 3px var(--ink),
