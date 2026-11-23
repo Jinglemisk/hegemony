@@ -305,7 +305,10 @@ export function RealmCities({ onPick }: DrawerProps) {
           >
             <Ico path={placeIcon(holding)} size="tile" />
             <span className="lw-row-a">
-              <b className="lw-row-name">{name}</b>
+              {/* Cut beside a long yield; pointing at the row writes it whole below. */}
+              <b className="lw-row-name" data-truncates="summary">
+                {name}
+              </b>
               <Chips
                 amounts={settlementNextYield(G, tile, settlement)}
                 empty={<span className="lw-quiet">makes nothing</span>}

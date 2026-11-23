@@ -88,6 +88,10 @@
 }
 /* Its one free corner is the top-left: the right edge is the screen's. */
 .sharedPopover.is-slot.endturn-confirm::before {
+  /* Drawn from the top-left only, so the layer stops at the screen's edge rather than
+     reaching past it (which would scroll the frame sideways). */
+  right: 0;
+  bottom: 0;
   background: url("../../../assets/chrome/corner-tl.webp") left top / var(--sh-corner) no-repeat;
 }
 .endturn-confirm .confirm-head {

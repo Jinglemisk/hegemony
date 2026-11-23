@@ -193,7 +193,9 @@ export function PlacePanel({
         onClick={() => actions.onCompose(settlement.owner, composeAnchor())}
       >
         <span className="pp-act-n">Offer {owner} a trade</span>
-        <span className="pp-act-why">opens the composer, {owner} chosen</span>
+        <span className="pp-act-d">
+          <span className="pp-act-why">opens the composer, {owner} chosen</span>
+        </span>
       </Lacquer>
     );
   } else if (view.kind === "oracle") {
@@ -652,7 +654,9 @@ function Act({
       content={
         <Tip title={label}>
           <TipBody>
-            {why ?? (cost && costWords(cost) ? `Costs ${costWords(cost)}.` : "Ready.")}
+            {[cost && costWords(cost) ? `Costs ${costWords(cost)}.` : null, why]
+              .filter(Boolean)
+              .join(" ") || "Ready."}
           </TipBody>
         </Tip>
       }
@@ -664,11 +668,17 @@ function Act({
         disabled={why !== null}
         onClick={onClick}
       >
-        <span className="pp-act-n">
-          {label}
+        {/* Two fixed lines at every Text size: the verb, then its price and the reason
+            (cut to fit; the tooltip says both whole). */}
+        <span className="pp-act-n">{label}</span>
+        <span className="pp-act-d" data-truncates="summary">
           {cost ? <Chips amounts={cost} short={why !== null} /> : null}
+          {why ? (
+            <span className="pp-act-why" data-truncates="summary">
+              {why}
+            </span>
+          ) : null}
         </span>
-        {why ? <span className="pp-act-why">{why}</span> : null}
       </Control>
     </Tooltip>
   );

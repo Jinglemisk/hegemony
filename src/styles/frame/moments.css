@@ -469,8 +469,15 @@
 /* One height at every text size: the line under the name ellipsizes; the pill's
    tooltip carries it whole. */
 .sit-dock {
+  align-content: center;
+  row-gap: var(--s-1);
   height: var(--sh-pill-h);
+  padding-block: var(--s-2);
   overflow: hidden;
+}
+/* Return's plaque keeps a thin pad, so the two rows fit the 92 at Largest. */
+.sit-dock .sit-dock-back {
+  padding-block: 2px;
 }
 .sit-dock .sit-dock-words > * {
   overflow: hidden;

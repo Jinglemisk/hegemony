@@ -223,8 +223,8 @@ function EndTurnConfirm({
   // Calm bought more than once says how many times.
   const times = calm && calm.payments.length > 1 ? ` ×${calm.payments.length}` : "";
   const { share } = presentUnrestOutcome(ruleset, unrest.tier);
-  // One line in the dock's width; the dialog's name says it whole.
-  const title = revolt ? "Revolt at turn end" : "Riot at turn end";
+  // One line in the dock's width at every Text size; the dialog's name says it whole.
+  const title = revolt ? "Revolt ahead" : "Riot ahead";
 
   return (
     <Popover

@@ -178,10 +178,8 @@
      keyline and rule reads heavier here than in DECIDED-UI-LAYOUT.html. */
   --line: rgb(36 25 16 / 13%);
   --line-strong: rgb(192 70 28 / 48%);
-  --button-bg: rgb(255 248 231 / 86%);
   --button-line: rgb(36 25 16 / 24%);
   --shadow: 0 20px 46px rgb(72 42 21 / 20%);
-  --lift-shadow: 0 12px 24px rgb(72 42 21 / 18%);
   --float: 0 10px 30px rgb(24 18 16 / 26%);
 
   /* ---- the ink ramp ------------------------------------------------------------

@@ -126,7 +126,11 @@
   height: var(--s-16);
   padding-block: var(--s-1);
 }
+/* Its two lines are set tight; the clip box reaches a step above and below them (the
+   margins give it back), so Cinzel's tall capitals are never shaved. */
 .lw-drawer > .ch-head .ch-head-title {
+  margin-block: calc(-1 * var(--s-1));
+  padding-block: var(--s-1);
   display: -webkit-box;
   white-space: normal;
   -webkit-box-orient: vertical;
@@ -192,12 +196,13 @@
   height: var(--lw-foot-h);
   overflow: hidden;
   box-sizing: border-box;
-  padding: var(--s-2) 14px;
+  padding: var(--s-1) 14px;
   border-radius: 0 0 var(--r-panel) 0;
   color: var(--glaze-ink);
   background: var(--glaze);
   box-shadow: var(--head-edge);
   -webkit-box-orient: vertical;
+  -webkit-box-pack: center;
   -webkit-line-clamp: 2;
 }
 .lw-foot b {
@@ -633,7 +638,7 @@
   gap: var(--s-3);
   box-sizing: border-box;
   height: 80px;
-  padding: 10px var(--s-4) var(--s-3);
+  padding: var(--s-2) var(--s-4);
   border-top: var(--rule) solid var(--line);
   background: var(--pp-foot-wash);
 }
@@ -824,12 +829,12 @@
 }
 .pp-act.ch-ctl {
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: center;
-  gap: 2px;
+  gap: 0;
   width: 100%;
   height: 100%;
-  padding: 6px 10px;
+  padding: var(--s-1) 10px;
   letter-spacing: 0;
   text-align: left;
   text-transform: none;
@@ -838,14 +843,28 @@
 .pp-foot > .pp-act.ch-ctl {
   flex: 1;
 }
-.pp-act-n {
+/* Two lines, each one line high at every Text size: the verb; then its price and,
+   when it can't be taken, the reason, cut with an ellipsis (the tooltip has it). */
+.pp-act-n,
+.pp-act-d {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pp-act-d {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: var(--s-2);
 }
+.pp-act-d > .price {
+  flex: none;
+}
 .pp-act-why {
+  overflow: hidden;
+  min-width: 0;
   font-weight: 600;
+  text-overflow: ellipsis;
 }
 .pp-act[aria-disabled="true"] .pp-act-why {
   color: var(--neg-ink);

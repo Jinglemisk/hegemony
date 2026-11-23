@@ -456,6 +456,15 @@ button.alarm-disc {
   display: flex;
   gap: var(--s-1);
 }
+.mood-calm-n {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mood-calm .price {
+  flex: none;
+}
 
 /* ---- the minimised Assembly waits under the alarms ----------------------------- */
 .sit-dock {

@@ -402,8 +402,8 @@ describe("End turn's confirm", () => {
     });
 
   it.each([
-    [-3, "Ending your turn starts a riot", "Riot at turn end", "Face the riot"],
-    [-6, "Ending your turn now means revolt", "Revolt at turn end", "Revolt"],
+    [-3, "Ending your turn starts a riot", "Riot ahead", "Face the riot"],
+    [-6, "Ending your turn now means revolt", "Revolt ahead", "Revolt"],
   ] as const)(
     "opens at %s as a popover a press outside closes",
     (level, consequence, head, face) => {

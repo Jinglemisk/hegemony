@@ -80,8 +80,23 @@ export function PanelHead({
         </span>
       ) : null}
       <div className="ch-head-words">
-        <h2 className="ch-head-title">{title}</h2>
-        {sub ? <p className="ch-head-sub">{sub}</p> : null}
+        <h2
+          className="ch-head-title"
+          data-truncates="summary"
+          title={typeof title === "string" ? title : undefined}
+        >
+          {title}
+        </h2>
+        {/* One line, cut to fit: pointing at it reads it whole. */}
+        {sub ? (
+          <p
+            className="ch-head-sub"
+            data-truncates="summary"
+            title={typeof sub === "string" ? sub : undefined}
+          >
+            {sub}
+          </p>
+        ) : null}
       </div>
       {back && onBack ? (
         <button

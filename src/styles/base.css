@@ -108,35 +108,3 @@ button[aria-disabled="true"] {
   outline: var(--focus-w) solid var(--focus-ink);
   outline-offset: var(--focus-w);
 }
-
-/* The v1 chip: the setup pop picker's Close. Layout (grid, min-height, padding)
-   stays on each specific class and wins by order. */
-.iconButton {
-  min-height: 40px;
-  border: 1px solid var(--button-line);
-  border-radius: 6px;
-  color: var(--fg);
-  background: var(--button-bg);
-  font-family: var(--f-name);
-  font-weight: 700;
-  overflow: hidden;
-  padding: 0 12px;
-}
-
-.iconButton:disabled,
-.iconButton[aria-disabled="true"] {
-  opacity: 0.45;
-}
-
-.iconButton:not(:disabled):not([aria-disabled="true"]):hover {
-  border-color: var(--accent);
-  box-shadow: var(--lift-shadow);
-}
-
-.iconButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  min-height: 44px;
-}

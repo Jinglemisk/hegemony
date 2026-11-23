@@ -164,7 +164,10 @@ function CalmButton({
         disabled={reason !== null}
         onClick={confirm}
       >
-        <span>{label}</span>
+        {/* Under the Calm head, the verb is the payment; the tooltip and name say it whole. */}
+        <span className="mood-calm-n" data-truncates="summary">
+          {payment === "gold" ? "Pay gold" : "Pay influence"}
+        </span>
         <Chips amounts={cost} />
       </Lacquer>
     </Tooltip>

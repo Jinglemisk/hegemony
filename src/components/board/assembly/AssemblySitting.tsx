@@ -503,6 +503,10 @@ function Trade({ G, session }: { G: HegemonyState; session: AssemblySession }) {
           )}
         </span>
       </div>
+      <p className="sit-note">
+        Trade, then press Ready. Open offers wait on the alarms row; when every seat is Ready they
+        close and the ballots open.
+      </p>
       {seat ? (
         <Popover
           anchor={anchor}
@@ -1318,17 +1322,10 @@ function SeatStrip({
           );
         })}
       </ol>
-      {votes ? null : (
-        <span className="sit-note">
-          <AnnotatedText
-            links={false}
-            text={
-              shared
-                ? "Trade, then press Ready. Open offers wait on the alarms row; when every seat is Ready they close and the ballots open."
-                : "Each seat decides in secret, in turn order."
-            }
-          />
-        </span>
+      {/* Once the sheet is shared the seats carry Ready and take the foot's width; the
+          trade section above says how the round closes. */}
+      {votes || shared ? null : (
+        <span className="sit-note">Each seat decides in secret, in turn order.</span>
       )}
     </footer>
   );
