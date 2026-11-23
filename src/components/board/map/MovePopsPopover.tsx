@@ -1,128 +1,151 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   EMPTY_POPS,
+  POP_TYPES,
   clonePops,
   formatPops,
   getMovePopsStatus,
   totalPops,
 } from "../../../game/rules";
 import type { Pops } from "../../../game/types";
+import { formatPopLabel } from "../../../ui/formatters";
+import { POP_RASTERS } from "../../../ui/iconRegistry";
 import { settlementNameOf } from "../../../ui/settlementNames";
-import { Prose } from "../../AnnotatedText";
+import { Panel, PanelHead } from "../../chrome/Panel";
+import { Knob, Lacquer } from "../../chrome/controls";
+import { useConfirm } from "../../chrome/confirmContext";
+import { SpendDetail } from "../../chrome/confirmDetail";
+import { Chips, Ico } from "../../frame/parts";
+import { useReturnFocus } from "../../overlays/focus";
+import { refusal, titleCase } from "../../left/words";
 import { useGameUi } from "../GameUiContext";
-import { Chips, Turns } from "../../frame/parts";
-import { actionRequirementText, gameplayActionDisabled } from "../helpers";
-import { TileSubject } from "../TileSubject";
-import { PopoverActions } from "../PopoverActions";
-import { PopulationStepper } from "../modals/PopulationStepper";
-import { TilePopover } from "./TilePopover";
+import { capitalize } from "../helpers";
 
 /**
- * Move Pops, map-first and two-step (refit scope 3): click the settlement they
- * leave from, then the one they travel to.
- *
- * The old modal asked for source, target AND travellers at once, behind two
- * dropdowns, on top of the board holding the answer. Splitting it in two matches
- * how the decision is actually made — you look at where they are, then at where
- * they're needed — and each step is a click on the thing itself.
- *
- * SOURCE step: name the settlement and confirm it's the one. The travellers are
- * chosen on the TARGET step, once both ends are known — a pop count only means
- * something when you can see what it leaves behind and what it joins.
+ * Move Pops, map-first: the place panel names the settlement they leave from, the map
+ * picks the one they travel to, and this pop beside the place panel, above the hand's
+ * row, chooses exactly who travels. Send asks through the confirm bar.
  */
-export function MovePopsSourcePopover({
-  tileId,
-  anchor,
-  onCancel,
-  onConfirm,
-}: {
-  tileId: string;
-  anchor: DOMRect;
-  onCancel: () => void;
-  onConfirm: (sourceTileId: string) => void;
-}) {
-  const { G, viewerId: playerID } = useGameUi();
-  const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
-  const settlement = tile?.settlements.find((candidate) => candidate.owner === playerID);
-
-  if (!tile || !settlement) {
-    return null;
-  }
-
-  return (
-    <TilePopover anchor={anchor} label="Move pops from" onCancel={onCancel} title="Move From">
-      <TileSubject G={G} playerID={playerID} tile={tile} />
-      <p className="placementCostNote">
-        <Prose>{`Holds ${formatPops(settlement.pops)}.`}</Prose>
-      </p>
-
-      <PopoverActions
-        confirmLabel="Move From Here"
-        disabled={totalPops(settlement.pops) === 0}
-        onCancel={onCancel}
-        onConfirm={() => onConfirm(tileId)}
-      />
-    </TilePopover>
-  );
-}
-
-/** TARGET step: both ends are known, so now choose exactly who travels. */
 export function MovePopsTargetPopover({
   sourceTileId,
   tileId,
-  anchor,
   onCancel,
   onConfirm,
 }: {
   sourceTileId: string;
   tileId: string;
-  anchor: DOMRect;
   onCancel: () => void;
   onConfirm: (sourceTileId: string, targetTileId: string, pops: Pops) => void;
 }) {
-  const { G, viewerId: playerID, turnBlocked } = useGameUi();
+  const { G, viewerId, turnBlocked } = useGameUi();
+  const ask = useConfirm();
   const [pops, setPops] = useState<Pops>(() => clonePops(EMPTY_POPS));
+
+  // Opening moves focus in, to the first control that can be pressed, and closing
+  // hands it back (the pop is keyed by its destination, so each one is an opening).
+  const ref = useRef<HTMLDivElement>(null);
+  useReturnFocus(ref, '.pp-step .ch-knob:not([aria-disabled="true"])');
 
   const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
   const sourceTile = G.board.tiles.find((candidate) => candidate.id === sourceTileId);
-  const source = sourceTile?.settlements.find((candidate) => candidate.owner === playerID);
-  const status = getMovePopsStatus(G, playerID, sourceTileId, tileId, pops);
+  const source = sourceTile?.settlements.find((candidate) => candidate.owner === viewerId);
+  const target = tile?.settlements.find((candidate) => candidate.owner === viewerId);
+  if (!tile || !sourceTile || !source || !target) return null;
 
-  if (!tile || !sourceTile || !source) {
-    return null;
-  }
+  const from = titleCase(settlementNameOf(G.board.tiles, source.id));
+  const to = titleCase(settlementNameOf(G.board.tiles, target.id));
+  const store = G.players[viewerId].resources;
+  const status = getMovePopsStatus(G, viewerId, sourceTileId, tileId, pops);
+  const cost = status.cost ?? {};
+  const travellers = totalPops(pops);
+  const why = refusal(status, turnBlocked, store) ?? (travellers ? null : "Choose who travels.");
+  const step = (pop: keyof Pops, by: number) =>
+    setPops((current) => ({
+      ...current,
+      [pop]: Math.max(0, Math.min(source.pops[pop], current[pop] + by)),
+    }));
 
   return (
-    <TilePopover
-      anchor={anchor}
-      // The pop stepper (label · available · − · n · +) does not fit the default
-      // 312px and was clipping its own + buttons.
-      className="widePopover"
-      label="Move pops to"
-      measureKey={totalPops(pops)}
-      onCancel={onCancel}
-      title="Move To"
+    <Panel
+      aria-label={`Move pops from ${from} to ${to}`}
+      className="pp-pop is-move ch-settle"
+      corners={["tr", "br"]}
+      data-exclude
+      ref={ref}
+      role="dialog"
     >
-      <TileSubject G={G} playerID={playerID} tile={tile} />
-      <p className="placementCostNote">
-        <Prose>
-          From <b>{settlementNameOf(G.board.tiles, source.id)}</b>. They arrive in <Turns n={1} />.
-          Costs <Chips amounts={status.cost ?? {}} empty="nothing" />, one move a turn.
-        </Prose>
-      </p>
-
-      <section className="placementSection">
-        <span className="placementSectionLabel">Travellers</span>
-        <PopulationStepper maxByPop={source.pops} onChange={setPops} pops={pops} />
-      </section>
-
-      <PopoverActions
-        confirmLabel={`Send ${totalPops(pops) > 0 ? formatPops(pops) : "Pops"}`}
-        disabled={gameplayActionDisabled(status, turnBlocked) || totalPops(pops) === 0}
-        title={actionRequirementText(status, turnBlocked)}
-        onCancel={onCancel}
-        onConfirm={() => onConfirm(sourceTileId, tileId, clonePops(pops))}
+      <PanelHead
+        closeLabel="Close Move pops"
+        icon="pops/move"
+        onClose={onCancel}
+        sub={`From ${from} · they arrive next turn`}
+        title={`Move to ${to}`}
       />
-    </TilePopover>
+      <div className="pp-pop-body">
+        <h3 className="pp-k pp-pop-k">Who travels</h3>
+        {POP_TYPES.map((pop) => {
+          const one = formatPopLabel(pop, 1);
+          return (
+            <div className="pp-step" key={pop}>
+              <Ico path={POP_RASTERS[pop]} size="tile" />
+              <span className="pp-opt-n">{capitalize(formatPopLabel(pop, 2))}</span>
+              <span className="pp-opt-line">
+                {source.pops[pop]} in {from}
+              </span>
+              <span className="pp-step-ctl">
+                <Knob
+                  disabled={pops[pop] <= 0}
+                  label={`Remove a ${one}`}
+                  onClick={() => step(pop, -1)}
+                >
+                  −
+                </Knob>
+                <b aria-live="polite" className="pp-step-n">
+                  {pops[pop]}
+                </b>
+                <Knob
+                  disabled={pops[pop] >= source.pops[pop]}
+                  label={`Add a ${one}`}
+                  onClick={() => step(pop, 1)}
+                >
+                  +
+                </Knob>
+              </span>
+            </div>
+          );
+        })}
+        <p className="pp-pop-line">One move a turn.</p>
+      </div>
+      <footer className="pp-pop-foot">
+        <Lacquer
+          aria-label={why ? `Send: ${why}` : `Send ${formatPops(pops)}`}
+          disabled={why !== null}
+          onClick={() =>
+            ask({
+              icon: "pops/move",
+              question: `Are you sure you want to send ${formatPops(pops)} from ${from} to ${to}?`,
+              detail: (
+                <SpendDetail
+                  command={{
+                    type: "movePops",
+                    sourceTileId,
+                    targetTileId: tileId,
+                    pops: clonePops(pops),
+                  }}
+                  cost={cost}
+                  G={G}
+                  note="They arrive next turn."
+                  viewerId={viewerId}
+                />
+              ),
+              verb: "Send",
+              onYes: () => onConfirm(sourceTileId, tileId, clonePops(pops)),
+            })
+          }
+        >
+          Send <Chips amounts={cost} short={why !== null} />
+        </Lacquer>
+      </footer>
+    </Panel>
   );
 }

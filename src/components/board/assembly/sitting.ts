@@ -18,8 +18,7 @@ import { capitalize } from "../../../game/core/format";
 import { voiceHolder } from "../../../game/victory";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { tieRule } from "../../../ui/effects";
-import { listed, numberWord, seatName, toRoman } from "../../../ui/formatters";
-import { sign } from "../../../ui/frameFormat";
+import { listed, numberWord, seatName, toRoman, formatSignedNumber } from "../../../ui/formatters";
 
 /**
  * The Assembly sitting as the shell walks it. The engine has three phases; the modal
@@ -249,7 +248,7 @@ export function weightParts(G: HegemonyState, id: PlayerId) {
   const { citizens, rural, isonomia } = voteWeightParts(G, id);
   if (isonomia) return "1 under Isonomia";
   const base = `1 + ${citizens} citizen${citizens === 1 ? "" : "s"}`;
-  return rural ? `${base} ${sign(rural)} Rural Bloc` : base;
+  return rural ? `${base} ${formatSignedNumber(rural)} Rural Bloc` : base;
 }
 
 export function lawSlotWords(G: HegemonyState, card: ResolutionCard) {

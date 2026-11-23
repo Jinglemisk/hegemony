@@ -1,13 +1,12 @@
 import { PLAYER_IDS } from "../../../game/data";
 import { ageEndRanking, victoryCardsHeld, victoryStandings } from "../../../game/victory";
 import type { HegemonyState, PlayerId } from "../../../game/types";
-import { numberWord } from "../../../ui/formatters";
-import { sign } from "../../../ui/frameFormat";
+import { numberWord, formatSignedNumber } from "../../../ui/formatters";
 import { TIEBREAK_RASTERS } from "../../../ui/iconRegistry";
-import { PLAYER_GLAZES, glazeOf } from "../../../ui/playerGlazes";
 import { Prose } from "../../AnnotatedText";
 import { Ico } from "../../frame/parts";
 import { ModalShell } from "./ModalShell";
+import { SeatCoin } from "../../chrome/SeatCoin";
 
 /**
  * The end of the game: someone opened their turn holding enough titles (the race),
@@ -76,9 +75,7 @@ export function GameOverModal({
           return (
             <li className={id === winner ? "ageSeat ageSeatCrowned" : "ageSeat"} key={id}>
               <span className="ageRank num stat">{index + 1}</span>
-              <span className="seatGlaze label" style={{ background: glazeOf(id) }}>
-                {PLAYER_GLAZES[id].blazon}
-              </span>
+              <SeatCoin seat={id} size={32} />
               <span className="ageWho">
                 <b className="title">
                   {name(id)}
@@ -140,7 +137,7 @@ function tiebreakLine(
     : "Tied with no titles";
   switch (tally.decidedBy) {
     case "happiness":
-      return `${tied}. ${winner} on happiness: ${sign(first.happiness)} to ${rival} ${sign(second.happiness)}.`;
+      return `${tied}. ${winner} on happiness: ${formatSignedNumber(first.happiness)} to ${rival} ${formatSignedNumber(second.happiness)}.`;
     case "pops":
       return `${tied}, and on happiness. ${winner} on pops: ${first.pops} to ${rival} ${second.pops}.`;
     default:

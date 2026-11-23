@@ -1,4 +1,4 @@
-import { formatPopName } from "./core/format";
+import { formatPopName, formatTileLabel } from "./core/format";
 import { addLog, getOwnedSettlement, getPlayerName, getTile, usesLeft } from "./core/query";
 import { canAfford, payCost } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
@@ -182,7 +182,7 @@ export function promotePop(
   G.players[playerID].ladderUsesThisTurn += 1;
   addLog(
     G,
-    `${getPlayerName(G, playerID)} promoted a ${formatPopName(from, 1)} to ${formatPopName(to, 1)} on ${tile.terrain}.`,
+    `${getPlayerName(G, playerID)} promoted a ${formatPopName(from, 1)} to ${formatPopName(to, 1)} in ${formatTileLabel(G, tileId)}.`,
     playerID,
   );
   return MOVE_OK;
@@ -216,7 +216,7 @@ export function demotePop(
   settlement.pops[to] += 1;
   addLog(
     G,
-    `${getPlayerName(G, playerID)} demoted a ${formatPopName(from, 1)} to ${formatPopName(to, 1)} on ${tile.terrain}${duringOwnRiot ? " — the mob demanded it" : ""}.`,
+    `${getPlayerName(G, playerID)} demoted a ${formatPopName(from, 1)} to ${formatPopName(to, 1)} in ${formatTileLabel(G, tileId)}${duringOwnRiot ? " — the mob demanded it" : ""}.`,
     playerID,
   );
   return MOVE_OK;

@@ -357,11 +357,13 @@
   line-height: 1;
   opacity: 0.8;
 }
+/* A condition keeps its words together: it takes its own line when it doesn't fit
+   beside the icons, and breaks only between words when it doesn't fit the panel. */
 .gc-cond {
-  max-width: calc(var(--gc-e) * 4.6);
   color: var(--ivory-70);
-  letter-spacing: 0.1em;
-  text-align: left;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-wrap: balance;
 }
 .gc-but {
   display: flex;
@@ -405,8 +407,9 @@
 }
 
 /* ── Hand size: the sentence moves to the tooltip, the voice is dropped ────── */
+/* 0.06em: the longest politician's name (Demosthenes) fits the hand-size band whole. */
 .gc-hand .gc-word {
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
 }
 .gc-hand .gc-panel {
   gap: var(--s-1);
@@ -450,6 +453,11 @@
 .gc.is-dim .gc-face {
   filter: saturate(0.5);
   opacity: var(--dim);
+}
+/* Taken by another seat (an Idea): its picture goes grey, its words keep their full
+   ink, and the holder's coin beside it says whose it is. */
+.gc.is-taken .gc-window > img {
+  filter: grayscale(1);
 }
 
 /* ── The back: lacquer, a key border top and bottom, a ring for the mark ───── */
@@ -521,10 +529,6 @@
   background: none;
   cursor: pointer;
 }
-.gc-turn:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--s-1);
-}
 
 /* ── Arrivals ──────────────────────────────────────────────────────────────── */
 /* A card lands at its place and stays there: nothing translates or scales it, so the
@@ -580,21 +584,26 @@
   display: grid;
   justify-items: center;
   gap: var(--s-3);
-  width: min(calc(var(--u) * 100), calc(100vw - var(--s-8))); /* 400 */
+  width: min(calc(var(--u) * 100), calc(var(--vw) - var(--s-8))); /* 400 */
   margin: auto;
 }
 .drawnReveal:focus {
   outline: none;
 }
 .drawnReveal .gc-ceremony {
-  --gc-w: min(var(--card-ceremony), 40vh);
+  --gc-w: min(var(--card-ceremony), calc(var(--vh) * 0.4));
 }
 /* The hand: the seat's development cards in a row over the same deck line and tray. */
 .drawnReveal.handReveal {
-  width: min(calc(var(--u) * 190), calc(100vw - var(--s-8))); /* 760 */
+  width: min(calc(var(--u) * 190), calc(var(--vw) - var(--s-8))); /* 760 */
 }
 .handReveal .drawn-tray {
+  grid-template-columns: auto minmax(0, 1fr);
   width: min(100%, calc(var(--u) * 100));
+}
+/* A card pick's words over its two answers: Back, then Give. */
+.handReveal .drawn-slip {
+  grid-column: 1 / -1;
 }
 .hand-row {
   display: flex;
@@ -608,10 +617,6 @@
   border-radius: var(--gc-r, var(--s-2));
   background: none;
   cursor: pointer;
-}
-.hand-card:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--s-1);
 }
 .drawnReveal .gc-ceremony .gc-face {
   box-shadow:
@@ -640,6 +645,14 @@
 }
 .deck-line b {
   color: var(--ivory);
+}
+/* The count opens the kinds left: a control, so 32 tall, standing into the line's
+   own padding so the line keeps its height. */
+.deck-line .deck-hover {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit);
+  margin-block: calc(-1 * var(--s-1));
 }
 .deck-stack {
   position: relative;

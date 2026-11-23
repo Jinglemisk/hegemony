@@ -1,4 +1,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
+import { ESCAPE, useEscapeLayer } from "../../overlays/escapeStack";
+import { overlayRoot } from "../../chrome/canvas";
+import { inertAround, trapTab } from "../../overlays/focus";
 
 type ModalShellProps = {
   children: ReactNode;
@@ -28,11 +31,21 @@ type ModalShellProps = {
    * payment — stay plain, because if every dialog is a rite then none of them is.
    */
   ceremony?: "gift" | "wound" | "rite";
+  /**
+   * The Imperator frame: parchment in the cast bronze rule, a bronze corner on each
+   * corner, settling into place (moments.css). Off for a surface that is not a box —
+   * a drawn card standing on the table, a takeover that fills the screen.
+   */
+  framed?: boolean;
+  /**
+   * The rest of the frame goes inert behind it (Tab, the screen reader and the
+   * pointer can't reach it), the overlay layer its own tooltips open in excepted.
+   * Off for the Assembly, whose top bar and alarm discs stay in reach above its scrim.
+   */
+  inertBehind?: boolean;
 };
 
-/** Everything the browser will let a player reach with Tab. */
-const FOCUSABLE =
-  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+const CORNERS = ["tl", "tr", "bl", "br"] as const;
 
 /**
  * The one modal grammar. Every dialog renders through this: backdrop, dialog
@@ -51,6 +64,8 @@ export function ModalShell({
   onDismiss,
   dismissOnBackdrop = true,
   ceremony,
+  framed = true,
+  inertBehind = true,
 }: ModalShellProps) {
   const surfaceRef = useRef<HTMLElement>(null);
 
@@ -69,66 +84,29 @@ export function ModalShell({
     }
 
     const opener = surface.ownerDocument.activeElement;
-    const reachable = () =>
-      [...surface.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
-        (element) => element.offsetParent !== null || element === surface,
-      );
 
     // The dialog itself, not its first button. A screen reader then announces
     // the whole dialog on entry, and the commit does not arrive already wearing
     // a focus ring the player did not ask for.
     surface.focus();
-
-    const trap = (event: KeyboardEvent) => {
-      if (event.key !== "Tab") {
-        return;
-      }
-
-      const items = reachable();
-      const active = surface.ownerDocument.activeElement;
-      const inside = active instanceof Node && surface.contains(active);
-
-      if (items.length === 0) {
-        event.preventDefault();
-        surface.focus();
-        return;
-      }
-
-      const edge = event.shiftKey ? items[0] : items[items.length - 1];
-
-      if (!inside || active === edge) {
-        event.preventDefault();
-        (event.shiftKey ? items[items.length - 1] : items[0]).focus();
-      }
-    };
-
-    const document_ = surface.ownerDocument;
-    document_.addEventListener("keydown", trap, true);
+    const untrap = trapTab(surface);
+    const unInert = inertBehind ? inertAround(surface, [overlayRoot()]) : null;
 
     return () => {
-      document_.removeEventListener("keydown", trap, true);
+      untrap();
+      unInert?.();
 
-      if (opener instanceof HTMLElement && document_.contains(opener)) {
+      if (opener instanceof HTMLElement && surface.ownerDocument.contains(opener)) {
         opener.focus();
       }
     };
+    // Once per opening.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    if (!onDismiss) {
-      return;
-    }
-
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.stopPropagation();
-        onDismiss();
-      }
-    };
-
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [onDismiss]);
+  // Escape closes it (escapeStack); a blocking dialog takes the key and does nothing,
+  // so nothing under it closes either.
+  useEscapeLayer(ESCAPE.dialog, () => onDismiss?.());
 
   return (
     <div
@@ -154,7 +132,11 @@ export function ModalShell({
         aria-modal="true"
         // No shared plate under the card: the old `logModal` one was undone by
         // every ceremony, the sitting, the Idea draft and the turn notice.
-        className={[ceremony && `ceremony ceremony-${ceremony}`, className]
+        className={[
+          ceremony && `ceremony ceremony-${ceremony}`,
+          framed && "ch-moment ch-settle",
+          className,
+        ]
           .filter(Boolean)
           .join(" ")}
         ref={surfaceRef}
@@ -162,6 +144,11 @@ export function ModalShell({
         tabIndex={-1}
       >
         {children}
+        {framed
+          ? CORNERS.map((at) => (
+              <span aria-hidden="true" className="ch-corner" data-at={at} key={at} />
+            ))
+          : null}
       </section>
     </div>
   );

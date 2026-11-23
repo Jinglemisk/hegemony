@@ -1,11 +1,16 @@
 /* ============================================================================
-   Toasts: one moment another seat had, under the compass, then gone
+   Toasts: one moment another seat had, as a banner that drops in under the top
+   bar, right of the alarms, then goes. One size at every Text size: its words wrap to
+   two lines at most, one at Largest, and the Chronicle keeps them whole.
    ========================================================================== */
+/* The lane starts right of the alarm card's slot, which is wider than the longest
+   alarms row (eight discs end at x 552): a banner never lands on a disc or on an
+   open alarm card, and it ends short of the outliner. */
 .toast-lane {
-  position: absolute;
-  top: calc(var(--bar-h) + var(--s-16));
-  left: var(--s-4);
-  width: var(--strip-w);
+  position: fixed;
+  top: calc(var(--sh-top-h) + var(--s-3));
+  left: calc(var(--sh-card-x) + var(--sh-card-w) + var(--s-4));
+  width: var(--sh-toast-w);
 }
 .toast {
   display: grid;
@@ -13,39 +18,46 @@
   align-items: center;
   gap: var(--s-3);
   width: 100%;
-  padding: var(--s-3) var(--s-4);
+  height: var(--sh-toast-h);
+  overflow: hidden;
   border: 0;
-  border-radius: var(--r-8);
-  color: var(--ink);
-  background: var(--ivory);
   text-align: left;
-  animation: toastIn 240ms var(--ease-out) both;
+  cursor: pointer;
 }
-.toast .idea-seat {
-  width: var(--ic-tile);
-  height: var(--ic-tile);
+/* Room for a kicker over two lines at Large (one at Largest) inside the fixed height. */
+.toast.ch-banner {
+  padding-block: var(--s-1);
+}
+.toast-coin {
+  --coin-d: var(--ic-32);
 }
 .toast-words {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  font-size: var(--t-14);
-  line-height: var(--lh-20);
-}
-.toast-words b {
-  font-family: var(--f-name);
 }
 .toast-kicker {
-  color: var(--ink-63);
+  color: var(--bz-lo);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
 }
-@keyframes toastIn {
-  from {
-    opacity: 0;
-    transform: translateY(calc(-1 * var(--s-2)));
-  }
+.toast-body {
+  display: -webkit-box;
+  font-family: var(--f-sans);
+  font-weight: 600;
+  letter-spacing: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
-@media (prefers-reduced-motion: reduce) {
-  .toast {
-    animation: none;
-  }
+:root[data-text-scale="largest"] .toast-body {
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
+.toast-body .richIcon {
+  width: var(--ic-chip);
+  height: var(--ic-chip);
 }

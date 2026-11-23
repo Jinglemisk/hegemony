@@ -267,7 +267,10 @@ export function CodexTab({
                 // Enter would press it and turn straight back to the contents.
                 event.preventDefault();
                 goTo(results[0]);
-              } else if (event.key === "Escape") {
+              } else if (event.key === "Escape" && query) {
+                // With words in it, Escape clears them and nothing else; empty, it
+                // closes the window (escapeStack skips a prevented key).
+                event.preventDefault();
                 setQuery("");
                 setSearchOpen(false);
               }

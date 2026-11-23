@@ -70,11 +70,7 @@ export function YearCardModal({
       onDismiss={face ? onClose : undefined}
       waiting={!face}
     >
-      <button
-        className={`ceremonyCommit verb verb-lg${convene ? " is-dark" : ""}`}
-        onClick={onClose}
-        type="button"
-      >
+      <button className="ceremonyCommit verb verb-lg" onClick={onClose} type="button">
         {convene ? <Ico path="assembly/agora" size="ui" /> : null}
         {!reveal ? "Close" : sits ? "Convene the Assembly" : `Begin Year ${toRoman(G.year)}`}
       </button>

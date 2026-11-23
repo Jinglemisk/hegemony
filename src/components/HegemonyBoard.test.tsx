@@ -149,15 +149,23 @@ it("seats the Assembly in a modal that folds to a read-only dock and keeps a dra
 
   expect(container.querySelector('[role="dialog"] h2')?.textContent).toBe("The Assembly");
   // Behind the sitting the shell reads, and end turn says why it is locked.
-  expect(container.querySelector(".endturn-label")?.textContent).toBe("In Assembly");
+  expect(container.querySelector(".endturn-label")?.textContent).toBe("Sitting");
 
   act(() => button(/Minimise/).click());
   expect(container.querySelector('[role="dialog"]')).toBeNull();
   expect(container.querySelector(".sit-dock")).not.toBeNull();
+  // Folded, the focus is on the way back, not lost to the page.
+  expect(document.activeElement).toBe(container.querySelector(".sit-dock"));
   act(() => container.querySelector<HTMLButtonElement>(".sit-dock")!.click());
   expect(container.querySelector('[role="dialog"] h2')?.textContent).toBe("The Assembly");
 
+  // A draw spends influence, so it asks first; nothing is drawn until yes.
   act(() => button("Draw from Perdiccas").click());
+  expect(G.assembly!.held[seat]).toBeFalsy();
+  const confirm = container.querySelector('[role="alertdialog"]')!;
+  expect(confirm.textContent).toContain("Are you sure you want to draw from Perdiccas?");
+  expect(confirm.textContent).toMatch(/This will cost \d+ influence: Influence 5→\d/);
+  act(() => button("Draw").click());
   const drawn = G.assembly!.held[seat]!.card.name;
   expect(container.textContent).toContain(drawn);
   expect(container.textContent).toContain("Only you can see this card");

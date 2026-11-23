@@ -1,9 +1,17 @@
-import { Fragment, memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  Fragment,
+  memo,
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { CSSProperties, ReactNode } from "react";
-import { sign } from "../../../ui/frameFormat";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import type { LeanSide } from "../../../game/trade";
-import { RESOURCE_LABELS } from "../../../ui/formatters";
+import { RESOURCE_LABELS, formatSignedNumber } from "../../../ui/formatters";
 import { BUILDING_RASTERS, LUXURY_GOOD_RASTERS, RESOURCE_RASTERS } from "../../../ui/iconRegistry";
 import { rasterIcon } from "../../../ui/icons/placeholders";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
@@ -23,6 +31,7 @@ import type { Plates } from "./plates";
 import { createRuntime } from "./runtime";
 import type { Runtime } from "./runtime";
 import { ARROWS, tileTip } from "./tileTip";
+import { SeatCoin } from "../../chrome/SeatCoin";
 import "../../../styles/frame/map3d.css";
 
 /**
@@ -172,7 +181,7 @@ const worksOther = (tile: MapTile) => tile.resource !== null && tile.resource !=
 function Readout({ output, free }: { output: number; free: number }) {
   return (
     <span className="rd">
-      {sign(output)} / {free}
+      {formatSignedNumber(output)} / {free}
     </span>
   );
 }
@@ -211,7 +220,7 @@ function EcoCards({ tile }: { tile: MapTile }) {
                   {net.map((k) => (
                     <Fragment key={k}>
                       {icon(RESOURCE_RASTERS[k])}
-                      {sign(s.net[k])}
+                      {formatSignedNumber(s.net[k])}
                     </Fragment>
                   ))}
                 </span>
@@ -242,8 +251,8 @@ function EcoEmpty({ tile }: { tile: MapTile }) {
   );
 }
 
-/** Political's realm name, under its capital in place of the capital's plate, with its
- *  Unrest tokens when it holds any; close in, its glaze and counts. */
+/** Political's realm name, large across its land (RealmBanners), with its Unrest
+ *  tokens when it holds any; close in, its glaze and counts. */
 function RealmName({ realm }: { realm: MapRealm }) {
   const seat = PLAYER_GLAZES[realm.owner];
   const { cities, colonies } = realm.census;
@@ -259,7 +268,8 @@ function RealmName({ realm }: { realm: MapRealm }) {
         ) : null}
       </span>
       <small>
-        {seat.glaze} {seat.blazon} · {cities} {cities === 1 ? "city" : "cities"}, {colonies}{" "}
+        <SeatCoin aria-hidden="true" className="lm-realm-coin" seat={realm.owner} />
+        {seat.glaze} · {cities} {cities === 1 ? "city" : "cities"}, {colonies}{" "}
         {colonies === 1 ? "colony" : "colonies"}
       </small>
     </div>
@@ -301,7 +311,7 @@ function hintRows({ lean }: MapRealm) {
             key,
             icon: RESOURCE_RASTERS[s.resource],
             label: `${verb} ${RESOURCE_LABELS[s.resource].toLowerCase()}`,
-            value: `${sign(s.income)} a turn, holds ${s.stock}`,
+            value: `${formatSignedNumber(s.income)} a turn, holds ${s.stock}`,
           },
         ]
       : [];
@@ -352,7 +362,6 @@ function TileTag({
               tile={tile}
             />
             <EcoCards tile={tile} />
-            {realm ? <RealmName realm={realm} /> : null}
           </>
         ) : (
           <EcoEmpty tile={tile} />
@@ -393,6 +402,56 @@ function Badges({
   });
 }
 
+/** Neighbouring tiles' centres stand √3 apart: anything under 2 touches. */
+const TOUCH = 2;
+
+/** A realm's largest stretch of touching land (its capital's on a tie). */
+function heartland(tiles: readonly MapTile[], home: string | null): MapTile[] {
+  const left = new Set(tiles);
+  let best: MapTile[] = [];
+  while (left.size > 0) {
+    const [first] = left;
+    const group = [first];
+    left.delete(first);
+    for (let i = 0; i < group.length; i++) {
+      for (const t of [...left]) {
+        if (Math.hypot(t.x - group[i].x, t.y - group[i].y) < TOUCH) {
+          group.push(t);
+          left.delete(t);
+        }
+      }
+    }
+    const homeHere = group.some((t) => t.id === home);
+    if (group.length > best.length || (group.length === best.length && homeHere)) best = group;
+  }
+  return best;
+}
+
+/** Political's realm names, large across each realm's land: at the middle of its
+ *  largest stretch of touching tiles, at every zoom. */
+function RealmBanners({ model }: { model: MapModel }) {
+  return model.realms.flatMap((realm) => {
+    const land = heartland(
+      model.tiles.filter((t) => t.settlements[0]?.owner === realm.owner),
+      realm.home,
+    );
+    if (land.length === 0) return [];
+    const mid = (pick: (t: MapTile) => number) =>
+      land.reduce((sum, t) => sum + pick(t), 0) / land.length;
+    return [
+      <div
+        className="lm-banner"
+        data-alpha="realm"
+        data-wx={mid((t) => t.x)}
+        data-wy={mid((t) => t.y)}
+        key={`realm-${realm.owner}`}
+      >
+        <RealmName realm={realm} />
+      </div>,
+    ];
+  });
+}
+
 /** The events over a realm's towns: its riot over each burning city and its titles
  *  over its capital. */
 function RealmEvents({ model, layout }: { model: MapModel; layout: Layout }) {
@@ -427,7 +486,7 @@ function RealmEvents({ model, layout }: { model: MapModel; layout: Layout }) {
             key={`riot-${riot.x},${riot.z}`}
           >
             {icon("unrest/riot")}
-            {realm.riot === "revolt" ? "Revolt" : "Riot"} {sign(realm.happiness)}
+            {realm.riot === "revolt" ? "Revolt" : "Riot"} {formatSignedNumber(realm.happiness)}
           </div>
         )),
     ];
@@ -560,6 +619,17 @@ function LivingMap({
     runtime.current?.setMarks({ selected: selectedTileId, focus: focusRing, candidates });
   }, [shape, selectedTileId, focusRing, candidates]);
 
+  // A pick (from the map, a drawer or the outliner) eases the camera until the place is
+  // clear of the chrome that opens for it (the place panel, the sidebar: anything marked
+  // `data-exclude`). Not while placing: its popover is pinned where the tile stands, and
+  // disarming must not jump the camera after the fact.
+  const revealPick = useEffectEvent((id: string) => {
+    if (!placementActive) runtime.current?.reveal(id);
+  });
+  useEffect(() => {
+    if (selectedTileId) revealPick(selectedTileId);
+  }, [selectedTileId]);
+
   const tabStop =
     (roving && model.tiles.some((tile) => tile.id === roving) ? roving : null) ??
     selectedTileId ??
@@ -655,6 +725,7 @@ function LivingMap({
             tile={tile}
           />
         ))}
+        <RealmBanners model={model} />
         <RealmEvents layout={layout} model={model} />
         <PortChips model={model} towns={layout.towns} />
         <Badges model={model} selected={selectedTileId} towns={layout.towns} />
@@ -690,7 +761,7 @@ function LivingMap({
             {/* The good's icon on its raft, ringed in its holder's colour once claimed,
                 the holder's seat mark under it; its name under that. */}
             <b style={own(m.owner)}>{icon(LUXURY_GOOD_RASTERS[m.goodId])}</b>
-            {m.owner ? <i style={own(m.owner)}>{PLAYER_GLAZES[m.owner].blazon}</i> : null}
+            {m.owner ? <SeatCoin className="lm-moor-coin" seat={m.owner} /> : null}
             <span className="m-name">{m.name}</span>
           </button>
         ))}

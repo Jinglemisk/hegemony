@@ -22,6 +22,8 @@ import { ActionButton } from "../../ActionButton";
 import { Prose } from "../../AnnotatedText";
 import { EffectLine } from "../../EffectLine";
 import { GameCard } from "../../cards/GameCard";
+import { useConfirm } from "../../chrome/confirmContext";
+import { SpendDetail } from "../../chrome/confirmDetail";
 import { useGameUi } from "../GameUiContext";
 import { Chips, Ico, SeatMark } from "../../frame/parts";
 import { ModalShell } from "./ModalShell";
@@ -36,13 +38,17 @@ import { ModalShell } from "./ModalShell";
 export function IdeasModal({
   onClose,
   draftDone = false,
+  initial = null,
 }: {
   onClose?: () => void;
   /** The draft has just ended: show it with no controls, and the commit into Year I. */
   draftDone?: boolean;
+  /** The Idea picked where the sheet was opened from (a drawer's tile), selected. */
+  initial?: NationalIdeaId | null;
 }) {
   const { G, viewerId, currentPlayerId, moves } = useGameUi();
-  const [selected, setSelected] = useState<NationalIdeaId | null>(null);
+  const ask = useConfirm();
+  const [selected, setSelected] = useState<NationalIdeaId | null>(initial);
   const [target, setTarget] = useState<IdeaPopChoice | undefined>();
   const setup = G.phase === "setupIdeas" || draftDone;
   const buying = !setup;
@@ -107,8 +113,25 @@ export function IdeasModal({
       setSelected(null);
       setTarget(undefined);
     } else {
-      moves.buyIdea(choice.command.ideaId, choice.command.target);
-      onClose?.();
+      const { command } = choice;
+      ask({
+        icon: "assembly/national-idea",
+        question: `Are you sure you want to buy ${selectedIdea?.name ?? "this Idea"}?`,
+        detail: (
+          <SpendDetail
+            command={command}
+            cost={choice.cost ?? {}}
+            G={G}
+            note={selectedIdea?.text}
+            viewerId={viewerId}
+          />
+        ),
+        verb: "Buy the Idea",
+        onYes: () => {
+          moves.buyIdea(command.ideaId, command.target);
+          onClose?.();
+        },
+      });
     }
   };
 
@@ -134,7 +157,10 @@ export function IdeasModal({
         // A hand-size card: its sentence is the tooltip's, and the button reads by name.
         return (
           <ActionButton
-            aria-label={mark ? `${idea.name}, ${mark.toLowerCase()}` : idea.name}
+            // "Selected" is aria-pressed's to say; the name carries only the other marks.
+            aria-label={
+              mark && idea.id !== selected ? `${idea.name}, ${mark.toLowerCase()}` : idea.name
+            }
             aria-pressed={selected === idea.id}
             blockedReason={legal(idea.id) || draftDone ? undefined : rowReason(idea)}
             className={`idea-choice${taken ? " is-taken" : ""}${own ? " is-own" : ""}${idea.id === fresh ? " is-fresh" : ""}`}
@@ -158,7 +184,7 @@ export function IdeasModal({
                 selected === idea.id || idea.id === fresh
                   ? "is-picked"
                   : taken
-                    ? "is-dim"
+                    ? "is-taken"
                     : undefined
               }
               face={ideaCardFace(idea, G.ruleset, G.definition.content)}
@@ -263,6 +289,7 @@ export function IdeasModal({
     <ModalShell
       backdropClassName="ideas-backdrop ideas-setup"
       className="ideas-modal"
+      framed={false}
       labelledBy="ideas-heading"
       onDismiss={draftDone ? onClose : undefined}
     >

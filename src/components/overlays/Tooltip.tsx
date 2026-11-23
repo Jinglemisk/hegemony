@@ -14,6 +14,9 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import type { VerticalPlacement } from "../../ui/anchoring";
+import { overlayRoot } from "../chrome/canvas";
+import { TipCard } from "./TipCard";
+import { TIP_GRACE_MS } from "./tipTiming";
 import { useAnchoredOverlay } from "./useAnchoredOverlay";
 
 export function Tooltip({
@@ -26,6 +29,9 @@ export function Tooltip({
   triggerAs = "span",
   tooltipClassName,
   preferredPlacement = "below",
+  side,
+  sideOf,
+  triggerRole,
 }: {
   children: ReactNode;
   content: ReactNode;
@@ -36,16 +42,46 @@ export function Tooltip({
   triggerAs?: "span" | "div";
   tooltipClassName?: string;
   preferredPlacement?: VerticalPlacement;
+  /** Beside the trigger instead of above or below it (a column of controls, or a
+   *  list whose tips open clear of it). */
+  side?: "right" | "left";
+  /** With `side`: beside this ancestor (a selector) rather than the trigger, so the
+   *  tip never lies over the rest of that surface (the dock's other controls). */
+  sideOf?: string;
+  /** With `focusable`: the trigger's role, so its name is read (a span takes no name).
+   *  "img" for a figure the tip explains: a stock on the bar, an alarm's disc. */
+  triggerRole?: "img";
 }) {
   const tooltipId = useId();
   const triggerRef = useRef<HTMLElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
-  const [open, setOpen] = useState(false);
+  const [open, setOpenState] = useState(false);
   const suppressedTouchPointerRef = useRef<number | null>(null);
+  // Pressed: the tip closes and stays shut until the pointer leaves and comes back,
+  // so it never stands over what the press opened.
+  const pressedRef = useRef(false);
+  // A tooltip with underlined terms locks after resting (TipCard): then the pointer
+  // may leave the trigger for the card, and the stack closes only after a grace.
+  const lockedRef = useRef(false);
+  const closeTimer = useRef<number | undefined>(undefined);
+  const cancelClose = () => {
+    window.clearTimeout(closeTimer.current);
+    closeTimer.current = undefined;
+  };
+  const setOpen = (next: boolean) => {
+    cancelClose();
+    if (!next) lockedRef.current = false;
+    setOpenState(next);
+  };
+  const closeSoon = () => {
+    cancelClose();
+    closeTimer.current = window.setTimeout(() => setOpen(false), TIP_GRACE_MS);
+  };
+  useEffect(() => () => window.clearTimeout(closeTimer.current), []);
   const position = useAnchoredOverlay(
     open ? triggerRef : null,
     tooltipRef,
-    { preferredPlacement, gap: 8, margin: 10 },
+    { preferredPlacement, side, sideOf, gap: 8, margin: 10 },
     open,
   );
 
@@ -53,10 +89,20 @@ export function Tooltip({
     if (!open) return;
 
     const dismiss = (event: globalThis.PointerEvent) => {
-      if (!triggerRef.current?.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Element;
+      // A press on a locked card (or a term's card it opened) keeps the stack.
+      if (triggerRef.current?.contains(target) || target.closest?.(".sharedTooltip")) return;
+      lockedRef.current = false;
+      setOpenState(false);
     };
+    // Escape closes the tip and only the tip: the layer under it (escapeStack) waits
+    // for the next press.
     const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape" && !event.defaultPrevented) {
+        event.preventDefault();
+        lockedRef.current = false;
+        setOpenState(false);
+      }
     };
 
     document.addEventListener("pointerdown", dismiss);
@@ -76,8 +122,14 @@ export function Tooltip({
     if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
   };
   // A first tap opens the tooltip instead of clicking; with nothing to say, it clicks.
+  // A mouse or pen press closes it.
   const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
-    if (event.pointerType !== "touch" || !content) return;
+    if (event.pointerType !== "touch") {
+      pressedRef.current = true;
+      setOpen(false);
+      return;
+    }
+    if (!content) return;
 
     if (open) {
       suppressedTouchPointerRef.current = null;
@@ -111,12 +163,21 @@ export function Tooltip({
         aria-describedby={wrapperIsTrigger ? tooltipId : undefined}
         aria-label={wrapperIsTrigger ? ariaLabel : undefined}
         className={["tooltipTrigger", triggerClassName].filter(Boolean).join(" ")}
+        role={wrapperIsTrigger ? triggerRole : undefined}
         style={triggerStyle}
         onBlur={handleBlur}
         onClickCapture={handleClickCapture}
-        onFocus={() => setOpen(true)}
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
+        onFocus={(event) => {
+          if (!pressedRef.current && keyboardFocus(event.target)) setOpen(true);
+        }}
+        onMouseEnter={() => {
+          if (!pressedRef.current) setOpen(true);
+        }}
+        onMouseLeave={() => {
+          pressedRef.current = false;
+          if (lockedRef.current) closeSoon();
+          else setOpen(false);
+        }}
         onPointerCancel={handlePointerCancel}
         onPointerDown={handlePointerDown}
         ref={(element) => {
@@ -128,7 +189,8 @@ export function Tooltip({
       </Trigger>
       {open && content && typeof document !== "undefined"
         ? createPortal(
-            <div
+            <TipCard
+              cardRef={tooltipRef}
               className={[
                 "sharedTooltip",
                 position ? `placement-${position.placement}` : "",
@@ -137,8 +199,11 @@ export function Tooltip({
                 .filter(Boolean)
                 .join(" ")}
               id={tooltipId}
-              ref={tooltipRef}
-              role="tooltip"
+              onEnter={cancelClose}
+              onLeave={closeSoon}
+              onLock={() => {
+                lockedRef.current = true;
+              }}
               style={
                 position
                   ? { left: position.left, top: position.top, opacity: 1 }
@@ -146,12 +211,22 @@ export function Tooltip({
               }
             >
               {content}
-            </div>,
-            document.body,
+            </TipCard>,
+            overlayRoot(),
           )
         : null}
     </>
   );
+}
+
+/** Focus the keyboard put there (`:focus-visible`), not a press's or a panel's
+ *  hand-back after a press: only that opens a tip on focus. */
+function keyboardFocus(target: EventTarget) {
+  try {
+    return (target as Element).matches(":focus-visible");
+  } catch {
+    return true;
+  }
 }
 
 function addDescription(children: ReactNode, describedBy?: string) {

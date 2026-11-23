@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import type { CSSProperties } from "react";
 import { seatsBefore } from "../../game/turn";
 import type { VictoryThreat } from "../../game/victory";
 import type { HegemonyState, PlayerId, VictoryMetric } from "../../game/types";
@@ -8,8 +7,9 @@ import { listed, numberWord, seatName } from "../../ui/formatters";
 import { titleValue } from "../../ui/frameFormat";
 import { turnsLeftInYear } from "../../ui/frameSelectors";
 import { yearCardIcon } from "../../ui/iconRegistry";
-import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { Prose } from "../AnnotatedText";
+import { CloseDisc } from "../chrome/controls";
+import { SeatCoin } from "../chrome/SeatCoin";
 import { Popover } from "../overlays/Popover";
 import { Tooltip } from "../overlays/Tooltip";
 import { Ico, Tip, TipBody } from "./parts";
@@ -102,67 +102,68 @@ export function ThreatAlarm({
       </button>
       {open ? (
         <Popover
-          align="start"
           anchor={disc}
           ariaLabel={`${capitalize(toWin)} titles`}
-          className="threat-panel"
+          className="threat-panel alarm-card"
           dismissOnOutside
           onDismiss={() => setOpen(false)}
+          slot
         >
-          {threats.map((threat) => {
-            const before = seatsBefore(G, threat.seat).map((seat) => seatName(G, seat, viewerId));
-            const glaze = PLAYER_GLAZES[threat.seat];
-            return (
-              <section className="threat-seat" key={threat.seat}>
-                <header className="threat-head">
-                  <span
-                    className="idea-seat threat-glaze"
-                    style={{ "--owner": glaze.color } as CSSProperties}
-                  >
-                    {glaze.blazon}
-                  </span>
-                  <span className="threat-words">
-                    <span className="kicker toast-kicker">{capitalize(toWin)} titles</span>
-                    <b className="name threat-title">{headline(threat.seat)}</b>
-                    <span className="caption">
-                      {threat.seat === viewerId
-                        ? `if you still hold them · after ${listed(before)}`
-                        : `after ${listed(before)} · break one title before then`}
+          <CloseDisc
+            className="alarm-card-x"
+            label={`Close ${toWin} titles`}
+            onClick={() => setOpen(false)}
+          />
+          <div className="threat-body">
+            {threats.map((threat) => {
+              const before = seatsBefore(G, threat.seat).map((seat) => seatName(G, seat, viewerId));
+              return (
+                <section className="threat-seat" key={threat.seat}>
+                  <header className="threat-head">
+                    <SeatCoin className="threat-coin" seat={threat.seat} />
+                    <span className="threat-words">
+                      <span className="kicker toast-kicker">{capitalize(toWin)} titles</span>
+                      <b className="name threat-title">{headline(threat.seat)}</b>
+                      <span className="caption">
+                        {threat.seat === viewerId
+                          ? `if you still hold them · after ${listed(before)}`
+                          : `after ${listed(before)} · break one title before then`}
+                      </span>
                     </span>
-                  </span>
-                </header>
-                <ul className="threat-rows">
-                  {threat.titles.map(({ card, value, runnerUp }) => {
-                    const gap = runnerUp ? value - runnerUp.value : null;
-                    const yours = runnerUp?.seat === viewerId;
-                    return (
-                      <li className={yours ? "is-yours" : undefined} key={card.id}>
-                        <Ico path={`victory/${card.id}`} size="tile" />
-                        <span className="threat-row-words">
-                          <b className="name">{card.name}</b>
-                          <span className="caption">
+                  </header>
+                  <ul className="threat-rows">
+                    {threat.titles.map(({ card, value, runnerUp }) => {
+                      const gap = runnerUp ? value - runnerUp.value : null;
+                      const yours = runnerUp?.seat === viewerId;
+                      return (
+                        <li className={yours ? "is-yours" : undefined} key={card.id}>
+                          <Ico path={`victory/${card.id}`} size="tile" />
+                          <span className="threat-row-words">
+                            <b className="name">{card.name}</b>
+                            <span className="caption">
+                              <Prose links={false}>
+                                {`${G.players[threat.seat].name} ${titleValue(card.metric, value)}`}
+                                {runnerUp
+                                  ? ` · next best ${seatName(G, runnerUp.seat, viewerId)} ${runnerUp.value}`
+                                  : ""}
+                              </Prose>
+                            </span>
+                          </span>
+                          <span className="threat-gap caption">
                             <Prose links={false}>
-                              {`${G.players[threat.seat].name} ${titleValue(card.metric, value)}`}
-                              {runnerUp
-                                ? ` · next best ${seatName(G, runnerUp.seat, viewerId)} ${runnerUp.value}`
-                                : ""}
+                              {gap === null
+                                ? "no challenger"
+                                : `${capitalize(yours ? "you are" : `${seatName(G, runnerUp!.seat, viewerId)} is`)} ${shortBy(card.metric, gap)} short of a tie`}
                             </Prose>
                           </span>
-                        </span>
-                        <span className="threat-gap caption">
-                          <Prose links={false}>
-                            {gap === null
-                              ? "no challenger"
-                              : `${capitalize(yours ? "you are" : `${seatName(G, runnerUp!.seat, viewerId)} is`)} ${shortBy(card.metric, gap)} short of a tie`}
-                          </Prose>
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </section>
-            );
-          })}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              );
+            })}
+          </div>
         </Popover>
       ) : null}
     </li>

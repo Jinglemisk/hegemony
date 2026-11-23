@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import {
   assemblySittings,
@@ -31,10 +31,9 @@ import { victoryMetricValue, voiceHolder } from "../../../game/victory";
 import type { HegemonyState, PlayerId, Resources } from "../../../game/types";
 import { deckLine, resolutionCardFace } from "../../../ui/cardFace";
 import { tieRule } from "../../../ui/effects";
-import { sign } from "../../../ui/frameFormat";
 import { turnsUntilYear } from "../../../ui/frameSelectors";
 import { RESOURCE_RASTERS } from "../../../ui/iconRegistry";
-import { numberWord, ordinal, seatName, toRoman } from "../../../ui/formatters";
+import { numberWord, ordinal, seatName, toRoman, formatSignedNumber } from "../../../ui/formatters";
 import { glazeOf, PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { offerWindowReason } from "../../../game/trade";
 import { Popover } from "../../overlays/Popover";
@@ -46,6 +45,8 @@ import { DeckLine } from "../../cards/DeckLine";
 import { GameCard } from "../../cards/GameCard";
 import { Chips, Delta, Ico, SeatMark, Turns } from "../../frame/parts";
 import { Tooltip } from "../../overlays/Tooltip";
+import { useConfirm } from "../../chrome/confirmContext";
+import { SpendDetail } from "../../chrome/confirmDetail";
 import { useGameUi } from "../GameUiContext";
 import { ModalShell } from "../modals/ModalShell";
 import { ResolutionDetails, StandingLawDetails } from "./AssemblyPresentation";
@@ -83,6 +84,7 @@ export function AssemblySitting({ sitting }: { sitting: Sitting }) {
       className="modal-card sitting"
       labelledBy="sitting-title"
       dismissOnBackdrop={false}
+      inertBehind={false}
       onDismiss={stage === "rises" ? undefined : () => sitting.setMinimised(true)}
     >
       <SittingHead G={G} sitting={sitting} />
@@ -186,9 +188,13 @@ function SittingHead({ G, sitting }: { G: HegemonyState; sitting: Sitting }) {
 }
 
 /** Folded to a bar under the compass: where the sitting stands, and the way back. Escape
- *  also restores it, through the shell's keys. */
+ *  also restores it, through the shell's keys. It takes the focus as it folds (Minimise,
+ *  or Escape): the sitting's controls are gone, and Return is the way back. */
 export function AssemblyDock({ sitting }: { sitting: Sitting }) {
   const { G, viewerId } = useGameUi();
+  const pill = useRef<HTMLButtonElement>(null);
+  // After the sitting's own hand-back (a passive cleanup, which runs first).
+  useEffect(() => pill.current?.focus({ preventScroll: true }), []);
   const { session, stage } = sitting;
   const held = session.held[viewerId];
   const item = session.ballot[stage === "result" ? sitting.resultIndex : session.ballotIndex];
@@ -205,10 +211,12 @@ export function AssemblyDock({ sitting }: { sitting: Sitting }) {
 
   return (
     <button
-      aria-label={`Assembly, Year ${toRoman(session.year)}: ${where}. Return to the sitting.`}
+      aria-label={`Assembly, Year ${session.year}: ${where}. Return to the sitting.`}
       className="sit-dock"
       data-c="sit-dock"
       onClick={() => sitting.setMinimised(false)}
+      ref={pill}
+      title={`Assembly: ${where}`}
       type="button"
     >
       <Ico path="assembly/agora" size="ui" />
@@ -233,6 +241,7 @@ export function AssemblyDock({ sitting }: { sitting: Sitting }) {
 
 function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }) {
   const { moves, viewerId } = useGameUi();
+  const ask = useConfirm();
   const [repealing, setRepealing] = useState(false);
   const [drawing, setDrawing] = useState(false);
   const influence = G.players[viewerId].resources.influence;
@@ -275,7 +284,22 @@ function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }
                       effectiveCost={draw.cost}
                       enabled={draw.can}
                       heading={`Draw from ${politician.name}`}
-                      onClick={() => moves.assemblyDraw(viewerId, politician.id)}
+                      onClick={() =>
+                        ask({
+                          icon: "assembly/politician",
+                          question: `Are you sure you want to draw from ${politician.name}?`,
+                          detail: (
+                            <SpendDetail
+                              cost={draw.cost}
+                              G={G}
+                              note={`A ${politician.kind === "law" ? "Law" : "Directive"} from the top of the deck.`}
+                              viewerId={viewerId}
+                            />
+                          ),
+                          verb: "Draw",
+                          onYes: () => moves.assemblyDraw(viewerId, politician.id),
+                        })
+                      }
                       triggerClassName="sit-tip"
                     >
                       Draw <Chips amounts={draw.cost} short={influence < draw.price} />
@@ -291,8 +315,25 @@ function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }
           onRepeal={
             repealing
               ? (cardId) => {
-                  setRepealing(false);
-                  moves.assemblyProposeRepeal(viewerId, cardId);
+                  const name = getResolutionCard(G.definition.content, cardId)?.name ?? "this Law";
+                  ask({
+                    icon: "assembly/repeal",
+                    question: `Are you sure you want to propose repealing ${name}?`,
+                    detail: (
+                      <SpendDetail
+                        command={{ type: "assemblyProposeRepeal", cardId }}
+                        cost={repeal.cost}
+                        G={G}
+                        note="The house votes on it at the ballot."
+                        viewerId={viewerId}
+                      />
+                    ),
+                    verb: "Propose the repeal",
+                    onYes: () => {
+                      setRepealing(false);
+                      moves.assemblyProposeRepeal(viewerId, cardId);
+                    },
+                  });
                 }
               : undefined
           }
@@ -462,10 +503,15 @@ function Trade({ G, session }: { G: HegemonyState; session: AssemblySession }) {
           )}
         </span>
       </div>
+      <p className="sit-note">
+        Trade, then press Ready. Open offers wait on the alarms row; when every seat is Ready they
+        close and the ballots open.
+      </p>
       {seat ? (
         <Popover
           anchor={anchor}
           ariaLabel="Offer a trade"
+          centre
           className="trade-pop"
           dismissOnOutside
           onDismiss={() => setSeat(null)}
@@ -702,7 +748,7 @@ function directiveFx(G: HegemonyState, card: DirectiveCard, target: PlayerId): R
     fx.push(
       <span key="level">
         <Ico path={RESOURCE_RASTERS.happiness} size="chip" />
-        <Delta format={sign} from={level[0]} to={level[1]} />
+        <Delta format={formatSignedNumber} from={level[0]} to={level[1]} />
       </span>,
     );
   const pops = [victoryMetricValue(G, target, "pops"), victoryMetricValue(after, target, "pops")];
@@ -897,6 +943,7 @@ function itemSide(G: HegemonyState, item: BallotItem, viewer: PlayerId) {
 
 function Vote({ G, session }: { G: HegemonyState; session: AssemblySession }) {
   const { moves, viewerId } = useGameUi();
+  const ask = useConfirm();
   const outlook = voteOutlook(G)!;
   const line = voteLine(G, viewerId)!;
   const caster = outlook.caster.playerID;
@@ -968,7 +1015,23 @@ function Vote({ G, session }: { G: HegemonyState; session: AssemblySession }) {
                       enabled={status.can}
                       heading={`Buy a vote with ${payment}`}
                       key={payment}
-                      onClick={() => moves.assemblyBribe(viewerId, payment)}
+                      onClick={() =>
+                        ask({
+                          icon: "assembly/bribe",
+                          question: `Are you sure you want to buy a vote with ${status.price} ${payment}?`,
+                          detail: (
+                            <SpendDetail
+                              command={{ type: "assemblyBribe", payment }}
+                              cost={status.cost as Partial<Resources>}
+                              G={G}
+                              note="It counts for this sitting only."
+                              viewerId={viewerId}
+                            />
+                          ),
+                          verb: "Buy the vote",
+                          onYes: () => moves.assemblyBribe(viewerId, payment),
+                        })
+                      }
                       triggerClassName="sit-tip"
                     >
                       <Ico path="assembly/bribe" size="ui" />
@@ -1259,17 +1322,10 @@ function SeatStrip({
           );
         })}
       </ol>
-      {votes ? null : (
-        <span className="sit-note">
-          <AnnotatedText
-            links={false}
-            text={
-              shared
-                ? "Trade, then press Ready. Open offers wait on the alarms row; when every seat is Ready they close and the ballots open."
-                : "Each seat decides in secret, in turn order."
-            }
-          />
-        </span>
+      {/* Once the sheet is shared the seats carry Ready and take the foot's width; the
+          trade section above says how the round closes. */}
+      {votes || shared ? null : (
+        <span className="sit-note">Each seat decides in secret, in turn order.</span>
       )}
     </footer>
   );

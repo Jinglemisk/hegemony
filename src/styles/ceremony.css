@@ -97,7 +97,7 @@
 .fateCard {
   position: relative;
   overflow: hidden;
-  width: min(470px, calc(100vw - 34px));
+  width: min(470px, calc(var(--vw) - 34px));
   border-radius: 6px;
   text-align: center;
   background: linear-gradient(180deg, var(--ivory-lit), var(--ivory) 50%, var(--ivory-settled));
@@ -185,7 +185,7 @@
    round toggle; the marked ones take the wound's band and ring. */
 .hungerCard,
 .lossCard {
-  width: min(560px, calc(100vw - var(--s-8)));
+  width: min(560px, calc(var(--vw) - var(--s-8)));
   padding: var(--s-6) var(--s-8);
 }
 
@@ -265,7 +265,7 @@
 }
 
 .hungerCount b.is-met {
-  color: var(--pos);
+  color: var(--pos-ink);
 }
 
 .hungerFoot {
@@ -308,21 +308,13 @@
   color: var(--ink-63);
 }
 
-.ceremonyCommit.is-dark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--s-2);
-  background: linear-gradient(180deg, var(--lacquer-lit), var(--vase-black));
-}
-
 /* ── The riot sheet ──────────────────────────────────────────────────────────
    Insurance on the left, the table on the right: each declaration strikes the
    rows it puts out of reach, so the trade reads as rows, not arithmetic. */
 .riotSheet {
   display: grid;
-  width: min(960px, calc(100vw - var(--s-8)));
-  max-height: calc(100vh - var(--s-8));
+  width: min(960px, calc(var(--vw) - var(--s-8)));
+  max-height: calc(var(--vh) - var(--s-8));
   overflow-y: auto;
   border-radius: var(--r-8);
   background: var(--ivory);
@@ -391,8 +383,10 @@
   height: var(--ic-16);
 }
 
+/* Out of reach: struck through and quieter, still read at 4.5:1 (no whole-row dim,
+   which took the row's words to 2:1). */
 .oddsRowOut {
-  opacity: 0.42;
+  color: var(--ink-72);
 }
 
 .oddsRowOut .oddsLabel {
@@ -488,7 +482,6 @@
 }
 
 .riotSum {
-  font-size: 44px;
   line-height: 1;
 }
 
@@ -559,7 +552,12 @@
    Lit at the top, the mood's own ink through the middle, shaded at the foot:
    three stops, so the button reads as a raised object. It emitted the same value
    twice for a while, which is a flat fill with extra steps. */
+/* Its icon, when it has one, stands inline before its words, the two centred. */
 .ceremonyCommit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
   width: 100%;
   padding: 15px 0;
   border: 0;
@@ -600,8 +598,8 @@
    is an inset and the lift is a filter — which follows the chamfered silhouette
    instead of the bounding box. */
 .ceremonyTablet {
-  width: min(560px, calc(100vw - 34px));
-  max-height: min(92vh, 880px);
+  width: min(560px, calc(var(--vw) - 34px));
+  max-height: min(calc(var(--vh) * 0.92), 880px);
   overflow-y: auto;
   padding: 26px 34px;
   text-align: center;
@@ -707,20 +705,20 @@
 }
 
 .oddsEffect.positive {
-  color: var(--pos);
+  color: var(--pos-ink);
 }
 
 .oddsEffect.negative {
-  color: var(--neg);
+  color: var(--neg-ink);
 }
 
-/* A row with no outcome says so with the faintest mark on the tablet. */
+/* A row with no outcome says so in the quiet ink. */
 .oddsEffect.muted {
-  color: var(--ink-30);
+  color: var(--ink-72);
 }
 
 .oddsRowPast {
-  opacity: 0.42;
+  color: var(--ink-72);
 }
 
 .oddsRowHit {
@@ -746,7 +744,7 @@
    ceremony uses. Each seat carries its glaze AND its blazon: a glaze never
    travels alone, least of all on the screen where the four are compared. */
 .ageEnd {
-  width: min(600px, calc(100vw - 34px));
+  width: min(600px, calc(var(--vw) - 34px));
 }
 
 .ageEnd .tabletVoice {
@@ -771,7 +769,7 @@
 }
 
 .ageRank {
-  color: var(--ink-30);
+  color: var(--ink-72);
   text-align: center;
 }
 
@@ -830,17 +828,11 @@
 
 .ageSeatCrowned .ageRank,
 .ageSeatCrowned .ageCards {
-  color: var(--clay-ink);
+  color: var(--clay-deep);
 }
 
 .tabletFoot {
   display: grid;
-}
-
-.tabletFootRow {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
 }
 
 /* A fate is DEALT: it comes in off the deck, off-axis, and squares up. */

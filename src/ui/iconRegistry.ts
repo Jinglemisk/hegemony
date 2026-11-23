@@ -17,7 +17,6 @@ import type {
 } from "../game/types";
 import type { UnrestStatus } from "../game/unrest";
 import type { ageEndRanking } from "../game/victory";
-import type { VerbId } from "../components/board/command/verbs";
 import type { GlyphId } from "./icons/glyphs";
 
 /**
@@ -80,7 +79,7 @@ export const VERB_GLYPHS = {
   upgrade: "upgrade",
   build: "build",
   calm: "calm",
-} as const satisfies Record<VerbId, GlyphId>;
+} as const satisfies Record<string, GlyphId>;
 
 /** Six buildings, six drawings: no two share a picture. */
 export const BUILDING_GLYPHS = {

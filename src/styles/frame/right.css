@@ -1,0 +1,596 @@
+/* ============================================================================
+   The right side of the Imperator shell: the dock flush in the bottom-right
+   corner (the Chronicle's line, the map modes, Trade / Buy a card / the Dole,
+   End turn), the map legend left of it, and the outliner, a fixed glaze column
+   from under the top bar to the dock. Neither changes size: the log opens over
+   the outliner, a folded section leaves the column as tall as it was, and a
+   header keeps its words whatever is open.
+   ========================================================================== */
+
+/* ---- the dock ---------------------------------------------------------------- */
+.rd-dock {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-bar);
+  width: var(--sh-dock-w);
+  height: calc(var(--sh-log-h) + var(--sh-modes-h) + var(--sh-acts-h));
+}
+.rd-dk {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--sh-end-w);
+  grid-template-rows: var(--sh-log-h) var(--sh-modes-h) var(--sh-acts-h);
+  grid-template-areas:
+    "line line"
+    "modes end"
+    "acts end";
+  border-radius: var(--r-panel) 0 0 0;
+}
+/* The log line and every row below keep their place; only the log's foot is the
+   dock's top edge, so the dock carries no corner of its own. */
+
+/* ---- row a: the Chronicle's newest line, and the Plates menu at its end ------ */
+.rd-line-row {
+  grid-area: line;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--bz-dk-30);
+}
+.rd-line-tip {
+  display: flex;
+  flex: 1;
+  align-self: stretch;
+  min-width: 0;
+}
+.rd-line {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+  padding: 0 var(--s-2) 0 var(--s-3);
+  border: 0;
+  border-radius: var(--r-panel) 0 0 0;
+  color: var(--ink);
+  background: transparent;
+  font-family: var(--f-sans);
+  text-align: left;
+  cursor: pointer;
+}
+.rd-line:hover,
+.rd-line[aria-expanded="true"] {
+  background: var(--ink-07);
+}
+.rd-line-coin {
+  --coin-d: var(--s-6);
+}
+.rd-line-coin.is-empty {
+  width: var(--s-6);
+  height: var(--s-6);
+  border-radius: var(--r-round);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-45);
+}
+.rd-caret {
+  flex: none;
+  width: var(--caret);
+  height: var(--caret);
+  background: var(--ink-66);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  transition: rotate var(--dur-settle) var(--ease-out);
+}
+.rd-line[aria-expanded="true"] .rd-caret {
+  rotate: 180deg;
+}
+
+/* ---- row b: the four map modes, square framed buttons with no names ---------- */
+.rd-modes {
+  grid-area: modes;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--s-2);
+  box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--bz-dk-30);
+}
+.rd-mode {
+  display: grid;
+  place-items: center;
+  width: var(--hit-often);
+  height: var(--hit-often);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-panel);
+  background: var(--plaque);
+  box-shadow: var(--plaque-rim);
+  cursor: pointer;
+  transition: filter var(--dur-hover) var(--ease-out);
+}
+.rd-mode:hover {
+  filter: var(--hover-glow);
+}
+.rd-mode[aria-pressed="true"] {
+  background: var(--glaze);
+  box-shadow: var(--pressed-rim);
+}
+
+/* ---- row c: Trade, Buy a card, the Dole, each its name over its cost ---------- */
+.rd-acts {
+  grid-area: acts;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.rd-act-tip {
+  display: block;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+.rd-act-tip + .rd-act-tip {
+  box-shadow: inset var(--rule) 0 0 var(--bz-dk-30);
+}
+.rd-act {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+  height: 100%;
+  padding: var(--rule-2);
+  border: 0;
+  color: var(--ink);
+  background: transparent;
+  font-family: var(--f-sans);
+  cursor: pointer;
+}
+.rd-act:hover:not([aria-disabled="true"]) {
+  background: var(--ink-07);
+}
+.rd-act[aria-disabled="true"] {
+  color: var(--ink-66);
+  background: var(--hatch);
+  cursor: default;
+}
+.rd-act > .ico {
+  /* At Large and Largest text the icon gives way, so the name and cost stay whole
+     inside the row's fixed height. */
+  flex: 0 1 var(--ic-ui);
+  min-height: 0;
+}
+.rd-act[aria-disabled="true"] .ico {
+  opacity: var(--dim);
+}
+.rd-act-name {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.rd-act-sub {
+  color: var(--ink-66);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.rd-act .price {
+  justify-content: center;
+  line-height: var(--lh-16);
+}
+.rd-exchange {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rule-2);
+  color: var(--ink-66);
+  white-space: nowrap;
+}
+
+/* ---- End turn, right of rows b and c ----------------------------------------- */
+.rd-end {
+  grid-area: end;
+  position: relative;
+  box-shadow: inset var(--rule) 0 0 var(--bz-dk-30);
+}
+.rd-end .endturn-anchor,
+.rd-end > .endturn {
+  position: absolute;
+  inset: 0;
+}
+.rd-end .endturn {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  justify-content: center;
+  gap: var(--s-2);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.rd-end .endturn-disc {
+  width: 56px;
+  height: 56px;
+  color: var(--lacquer-ink);
+  background: var(--lacquer);
+  box-shadow: var(--lacquer-rim);
+}
+.rd-end .endturn:hover .endturn-disc {
+  background: var(--lacquer);
+  filter: var(--hover-glow);
+}
+.rd-end .endturn-disc .ico {
+  filter: brightness(1.6) saturate(0.4);
+}
+.rd-end .endturn-label {
+  position: static;
+  width: auto;
+  display: block;
+  max-width: 100%;
+  height: auto;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  color: var(--ink);
+  background: none;
+  box-shadow: none;
+  letter-spacing: var(--track-caps);
+}
+.rd-end .endturn.is-danger .endturn-label {
+  color: var(--clay-ink);
+}
+.rd-end .endturn-warning {
+  position: static;
+  width: auto;
+  padding: 0 var(--s-1);
+  color: var(--clay-ink);
+  white-space: normal;
+  text-align: center;
+}
+.rd-end .endturn.is-danger {
+  gap: var(--s-1);
+}
+/* While a rival acts: their coin in the disc's place, their name under it. */
+.rd-end .endturn.is-waiting {
+  cursor: default;
+}
+.rd-end .endturn.is-waiting .endturn-disc {
+  background: none;
+  box-shadow: none;
+}
+.rd-end .endturn-coin {
+  --coin-d: 56px;
+}
+.rd-end .endturn.is-waiting .endturn-label {
+  color: var(--ink-66);
+  box-shadow: none;
+}
+
+/* ---- the Chronicle, opened upward out of its line at the dock's width -------- */
+.rd-log {
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: var(--sh-chron-h);
+  overflow: visible; /* its corner stands proud; the body scrolls */
+  border-radius: var(--r-panel) 0 0 0;
+  animation: rd-log-rise var(--dur-fold) var(--ease-out);
+}
+/* It rises out of its line: revealed from the bottom up, as the outliner above
+   shortens by the same height over the same time. */
+@keyframes rd-log-rise {
+  from {
+    clip-path: inset(100% -24px 0 -24px);
+  }
+  to {
+    clip-path: inset(-24px);
+  }
+}
+.rd-log-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding-top: var(--sh-meander-h);
+}
+.rd-log-body .chronFilter {
+  width: var(--knob-d);
+  height: var(--knob-d);
+}
+/* "All" holds its word at every Text size: as wide as it needs, never under a knob. */
+.rd-log-body .chronFilterAll {
+  width: auto;
+  min-width: var(--knob-d);
+  padding-inline: var(--s-2);
+}
+.rd-log-body .chronicleFilters {
+  justify-content: flex-end;
+  padding: var(--s-2) var(--s-3) var(--s-1) var(--s-4);
+  box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--bz-dk-30);
+}
+.rd-log-body .chronicleList {
+  flex: 1;
+  padding: 0 var(--s-4) var(--s-2);
+  overscroll-behavior: contain;
+}
+.rd-log-body .chron-year {
+  padding-block: var(--s-2) 0;
+  box-shadow: none;
+}
+.rd-log-body .chron-row {
+  padding-block: var(--rule-2);
+  font-family: var(--f-body);
+  font-weight: 400;
+  line-height: var(--lh-20);
+}
+.rd-log-body .chron-row + .chron-row {
+  box-shadow: none;
+}
+
+/* ---- the legend: what the map mode shows, left of the dock above the hand ---- */
+.rd-legend {
+  position: absolute;
+  right: calc(100% + var(--s-2));
+  bottom: calc(var(--sh-hand-h) + var(--s-2));
+  width: calc(var(--u) * 65); /* 260 */
+  height: calc(var(--u) * 24); /* 96: a title and three lines */
+  padding: var(--s-2) var(--s-4);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.rd-legend-title {
+  margin: 0 0 var(--s-1);
+  color: var(--bz-hi);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+.rd-legend-text {
+  margin: 0;
+  color: var(--glaze-ink);
+  font-family: var(--f-sans);
+}
+
+/* ---- the outliner -------------------------------------------------------------- */
+.rd-outl {
+  position: fixed;
+  top: var(--sh-outliner-top);
+  right: 0;
+  z-index: var(--z-bar);
+  display: flex;
+  flex-direction: column;
+  width: var(--sh-outliner-w);
+  height: calc(
+    var(--vh) - var(--sh-outliner-top) - var(--sh-log-h) - var(--sh-modes-h) - var(--sh-acts-h) -
+      var(--s-2) - var(--chron-open, 0px)
+  );
+  border-radius: var(--r-panel) 0 0 var(--r-panel);
+  transition: height var(--dur-fold) var(--ease-out);
+}
+/* The Chronicle open: the outliner ends a gap above the log's corner, which stands
+   proud of the log's top edge, so the corner never lies on the outliner's rim. */
+.hud-canvas:has(.rd-log) .rd-outl {
+  --chron-open: calc(var(--sh-chron-h) + var(--sh-corner-out));
+}
+/* Tucked: the column folds up to its head, which keeps its place, width and knobs. */
+.rd-outl.is-tucked {
+  height: var(--s-12);
+}
+.rd-outl-head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--s-2);
+  height: var(--s-12);
+  padding: 0 var(--s-2) 0 var(--s-4);
+  box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--bz-hi-25);
+}
+.rd-outl-title {
+  flex: 1;
+  margin: 0;
+  color: var(--bz-hi);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.rd-knob-tip {
+  display: inline-flex;
+}
+.rd-outl-head .ch-knob .ico {
+  filter: brightness(0.5);
+}
+.rd-outl-body {
+  flex: 1;
+  min-height: 0;
+  padding-bottom: var(--s-2);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: var(--bz) transparent;
+  scrollbar-width: thin;
+}
+.rd-sec + .rd-sec {
+  margin-top: var(--s-1);
+}
+.rd-sec-h {
+  margin: 0;
+}
+/* A section's head: its caret, its name, and the words at its end, the same height
+   and words whether the section is open or folded. */
+.rd-sec-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  width: 100%;
+  height: var(--s-8);
+  padding: 0 var(--s-3);
+  border: 0;
+  color: var(--band-ink);
+  background: var(--band-wash);
+  box-shadow: inset 0 var(--rule) 0 var(--bz-hi-25);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.rd-sec-caret {
+  flex: none;
+  width: var(--caret);
+  height: var(--caret);
+  background: var(--bz-hi);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transition: rotate var(--dur-settle) var(--ease-out);
+}
+.rd-sec-head[aria-expanded="false"] .rd-sec-caret {
+  rotate: -90deg;
+}
+.rd-sec-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rd-sec-end {
+  margin-left: auto;
+  letter-spacing: 0;
+}
+.rd-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rd-row-tip {
+  display: block;
+}
+/* One line a row: its icon or coin, its name, a mark if it needs you, its figure. */
+.rd-row {
+  display: grid;
+  grid-template-columns: var(--ic-ui) minmax(0, max-content) auto 1fr auto;
+  align-items: center;
+  gap: 0 var(--s-2);
+  width: 100%;
+  height: calc(var(--u) * 9); /* 36 */
+  padding: 0 var(--s-3);
+  border: 0;
+  color: var(--glaze-ink);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.rd-row:hover {
+  background: var(--glaze-hover);
+}
+.rd-row.is-on {
+  background: var(--glaze-on);
+  box-shadow: inset 3px 0 0 var(--bz-hi);
+}
+.rd-row-ic {
+  display: grid;
+  place-items: center;
+  width: var(--ic-ui);
+  height: var(--ic-ui);
+  border-radius: var(--r-round);
+  background: var(--medallion);
+  box-shadow: var(--medallion-rim);
+}
+.rd-row-coin {
+  --coin-d: 22px;
+  justify-self: center;
+}
+.rd-row-name {
+  overflow: hidden;
+  font-family: var(--f-name);
+  font-weight: 700;
+  letter-spacing: var(--track-name);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* A settlement's name in capitals, as on the map's plates; the DOM keeps "Sikyon". */
+.rd-row-name.is-place {
+  text-transform: uppercase;
+}
+.rd-row-mark {
+  width: var(--s-2);
+  height: var(--s-2);
+  border-radius: var(--r-round);
+  background: var(--ember);
+  box-shadow: 0 0 6px var(--ember);
+}
+.rd-row-fig {
+  grid-column: 5;
+  display: inline-flex;
+  align-items: center;
+  color: var(--glaze-ink);
+  white-space: nowrap;
+}
+.rd-row-fig small {
+  color: var(--glaze-ink-66);
+}
+/* Pops on the way in, and a good lent out: quiet words beside the figure. */
+.rd-row-fig .rd-row-coming {
+  color: var(--glaze-pos);
+}
+.rd-row-lent {
+  margin-right: var(--s-1);
+}
+.rd-row-go {
+  color: var(--bz-hi);
+  font-family: var(--f-sans);
+  font-weight: 700;
+}
+.rd-row-go.is-good {
+  color: var(--leaf);
+}
+.rd-outl-empty {
+  margin: 0;
+  padding: var(--s-2) var(--s-4);
+  color: var(--glaze-ink-66);
+  font-family: var(--f-sans);
+}
+
+/* ---- the outliner's settings, dropped from its gear ------------------------- */
+.rd-ocfg {
+  display: grid;
+  align-content: start;
+  gap: var(--s-2);
+  width: calc(var(--u) * 78); /* 312 */
+  /* One height at every Text size: what Largest needs; its rows scroll past that. */
+  height: calc(var(--u) * 74); /* 296 */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--s-3) var(--s-4) var(--s-4);
+  border-radius: var(--r-panel);
+  color: var(--glaze-ink);
+  background: var(--glaze);
+  box-shadow: var(--rule-frame), var(--shadow-panel);
+}
+.rd-ocfg .sharedPopoverArrow {
+  display: none;
+}
+.rd-ocfg-h {
+  margin: var(--s-1) 0 0;
+  color: var(--band-ink);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+.rd-ocfg-show {
+  display: grid;
+  gap: var(--s-2);
+}
+.rd-ocfg-show .ch-plaque {
+  justify-content: flex-start;
+}
+.rd-ocfg-sort {
+  display: flex;
+  gap: var(--s-2);
+}
+.rd-ocfg-sort .ch-plaque {
+  flex: 1;
+  padding: var(--s-1);
+  letter-spacing: 0;
+}

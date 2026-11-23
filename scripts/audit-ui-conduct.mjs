@@ -12,8 +12,9 @@
  *   TINY       a target under 24x24 CSS px (WCAG 2.2 AA, 2.5.8). A 15px badge or
  *              an 8px dot is not something a hand can reliably hit.
  *   CONTRAST   text under 4.5:1 against what is actually painted behind it
- *              (3:1 for large text). Ivory-on-bone is exactly the palette where
- *              this goes wrong quietly.
+ *              (3:1 for large text and unavailable controls). Ivory-on-bone is
+ *              exactly the palette where this goes wrong quietly, and parchment
+ *              and glaze are textures, so their pixels are photographed.
  *   NOFOCUS    a control whose focused state is visually identical to its
  *              resting state — keyboard users cannot see where they are.
  *   DUPNAME    two controls in one group announcing the same thing, so the
@@ -241,37 +242,225 @@ const PROBE = () => {
   }
 
   // ── CONTRAST ───────────────────────────────────────────────────────────────
+  // Every text run a sighted player sees, measured against what is painted behind
+  // it. A flat backdrop is composed here from the computed colours; a textured
+  // one (parchment, glaze, a lacquer gradient) cannot be, so the run is DEFERRED:
+  // the runner photographs the page with all text made transparent and samples
+  // the real pixels behind each run (SAMPLE below). Text covered by something
+  // drawn over it (a scrim, a popover) is not what the player reads, so it is
+  // skipped: the topmost element at the run's centre must be the run's own.
+  const deferred = [];
+  const effOpacity = (el) => {
+    let o = 1;
+    for (let n = el; n && n !== document.documentElement; n = n.parentElement)
+      o *= Number(getComputedStyle(n).opacity);
+    return o;
+  };
+  // Hit-testing sees through `pointer-events: none`, which every scrim and the HUD's
+  // own canvases wear, so for this pass everything takes the pointer; then the
+  // first painted box above the run (a background of its own) covers it, and a
+  // bare container (a full-screen canvas) does not.
+  const hits = document.createElement("style");
+  hits.textContent = "* { pointer-events: auto !important; }";
+  document.head.append(hits);
+  // A scrim drawn as a page-sized shadow (the trade composer's) has no box to hit:
+  // text outside its caster is under it, unless it stands in a layer above it.
+  const reach = Math.max(window.innerWidth, window.innerHeight) / 2;
+  const shadowScrims = [...document.querySelectorAll("body *")].filter((n) =>
+    [
+      ...getComputedStyle(n).boxShadow.matchAll(
+        /(-?[\d.]+)px (-?[\d.]+)px (-?[\d.]+)px (-?[\d.]+)px/g,
+      ),
+    ].some((m) => Number(m[4]) >= reach),
+  );
+  const covered = (el, rect) => {
+    if (
+      shadowScrims.some((scrim) => !scrim.contains(el)) &&
+      !el.closest(".sharedTooltip, .ch-confirm-scrim")
+    )
+      return true;
+    // A run a card lies across is under that card: its ends are tested as well as
+    // its middle, so the card's own paint is never sampled as the run's ground.
+    const y = rect.top + rect.height / 2;
+    return [rect.left + 2, rect.left + rect.width / 2, rect.right - 2].some((x) =>
+      coveredAt(el, x, y),
+    );
+  };
+  const coveredAt = (el, x, y) => {
+    if (x < 0 || y < 0 || x >= window.innerWidth || y >= window.innerHeight) return true;
+    for (const hit of document.elementsFromPoint(x, y)) {
+      if (hit === el || el.contains(hit)) return false;
+      // An ancestor hit first: the run is not painted there (scrolled out of its
+      // scroller, or clipped by a box that hides it).
+      if (hit.contains(el)) return true;
+      const s = getComputedStyle(hit);
+      if (s.backgroundImage !== "none" || (parse(s.backgroundColor)?.a ?? 0) > 0.05) return true;
+    }
+    return true;
+  };
+  /** A text rect cut down to every ancestor box that clips it. */
+  const clipToAncestors = (el, rect) => {
+    let [left, top, right, bottom] = [rect.left, rect.top, rect.right, rect.bottom];
+    for (let node = el; node && node !== document.body; node = node.parentElement) {
+      const s = getComputedStyle(node);
+      if (s.overflowX === "visible" && s.overflowY === "visible") continue;
+      const box = node.getBoundingClientRect();
+      left = Math.max(left, box.left);
+      top = Math.max(top, box.top);
+      right = Math.min(right, box.right);
+      bottom = Math.min(bottom, box.bottom);
+    }
+    return new window.DOMRect(left, top, Math.max(0, right - left), Math.max(0, bottom - top));
+  };
   const walker = document.createTreeWalker(document.body, window.NodeFilter.SHOW_TEXT);
   const seen = new Set();
-  let textNode = walker.nextNode();
-  while (textNode) {
+  for (let textNode = walker.nextNode(); textNode; textNode = walker.nextNode()) {
     const value = (textNode.nodeValue || "").trim();
     const el = textNode.parentElement;
-    if (value.length > 1 && el && visible(el) && !seen.has(el)) {
-      seen.add(el);
-      const style = getComputedStyle(el);
-      const fg = parse(style.color);
-      const bg = backdrop(el);
-      if (fg && bg) {
-        const size = parseFloat(style.fontSize);
-        const bold = Number(style.fontWeight) >= 700;
-        const large = size >= 24 || (size >= 18.66 && bold);
-        const need = large ? AA_LARGE : AA_NORMAL;
-        const got = ratio(over(fg, bg), bg);
-        if (got < need) {
-          out.push({
-            kind: "CONTRAST",
-            el: describe(el),
-            detail: `${got.toFixed(2)}:1 needs ${need}:1 (${Math.round(size)}px${bold ? " bold" : ""})`,
-          });
-        }
+    if (!/[\p{L}\p{N}]/u.test(value) || !el || seen.has(el)) continue;
+    if (el.closest(".visuallyHidden, script, style, title")) continue;
+    seen.add(el);
+    const style = getComputedStyle(el);
+    if (style.visibility === "hidden" || style.display === "none") continue;
+    const range = document.createRange();
+    range.selectNodeContents(textNode);
+    // A line cut with an ellipsis runs on past its box: only what its clipping
+    // ancestors let through is drawn, so only that is sampled.
+    const rects = [...range.getClientRects()]
+      .map((r) => clipToAncestors(el, r))
+      .filter((r) => r.width > 1 && r.height > 1);
+    if (!rects.length || covered(el, rects[0])) continue;
+    const op = effOpacity(el);
+    if (op < 0.05) continue;
+    const svg = el instanceof window.SVGElement;
+    const fill = style.webkitTextFillColor;
+    const ink = parse(svg ? style.fill : fill && !/, 0\)$/.test(fill) ? fill : style.color);
+    if (!ink || ink.a === 0) continue;
+    const fg = { ...ink, a: ink.a * op };
+    const size = parseFloat(style.fontSize);
+    const bold = Number(style.fontWeight) >= 700;
+    const large = size >= 24 || (size >= 18.66 && bold);
+    // An unavailable control asks 3:1, like large text (the plan's Standards).
+    const inactive = Boolean(el.closest("[disabled], [aria-disabled='true']"));
+    const need = large || inactive ? AA_LARGE : AA_NORMAL;
+    const label = `${Math.round(size)}px${bold ? " bold" : ""}${inactive ? " disabled" : ""}`;
+    const bg = backdrop(el);
+    if (bg) {
+      const got = ratio(over(fg, bg), bg);
+      if (got < need) {
+        out.push({
+          kind: "CONTRAST",
+          el: describe(el),
+          detail: `${got.toFixed(2)}:1 needs ${need}:1 (${label})`,
+        });
+      }
+    } else {
+      deferred.push({
+        el: describe(el),
+        fg,
+        need,
+        label,
+        rects: rects.map((r) => [r.left, r.top, r.width, r.height]),
+      });
+    }
+  }
+  hits.remove();
+
+  return { defects: out, deferred, controlCount: controls.length };
+};
+
+/** Every glyph made transparent, and nothing moving, for the backdrop's photograph. */
+const HIDE_TEXT = `*, *::before, *::after { color: transparent !important; -webkit-text-fill-color: transparent !important; text-shadow: none !important; caret-color: transparent !important; transition: none !important; }
+svg text, svg tspan { fill: transparent !important; stroke: transparent !important; }`;
+
+/**
+ * In the page: the contrast of each deferred run against the photographed
+ * backdrop under its line boxes. Reported at the 2nd percentile of its pixels, so
+ * the darkest grains of a texture count and a stray pixel of a neighbouring icon
+ * does not.
+ */
+const SAMPLE = async ({ dataUrl, items }) => {
+  const img = new window.Image();
+  img.src = dataUrl;
+  await img.decode();
+  const canvas = document.createElement("canvas");
+  canvas.width = img.width;
+  canvas.height = img.height;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0);
+  const dpr = img.width / window.innerWidth;
+  const lin = (c) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+  const lum = (r, g, b) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+  return items.map(({ fg, rects }) => {
+    const ratios = [];
+    for (const [x, y, w, h] of rects) {
+      // A line box runs from ascent to descent, over a chip's own keyline or rim at
+      // its top and foot: sample its middle band, where the glyphs stand.
+      const dy = Math.max(1, h * 0.15);
+      const x0 = Math.max(0, Math.floor((x + 1) * dpr));
+      const y0 = Math.max(0, Math.floor((y + dy) * dpr));
+      const x1 = Math.min(canvas.width, Math.ceil((x + w - 1) * dpr));
+      const y1 = Math.min(canvas.height, Math.ceil((y + h - dy) * dpr));
+      if (x1 <= x0 || y1 <= y0) continue;
+      const d = ctx.getImageData(x0, y0, x1 - x0, y1 - y0).data;
+      for (let i = 0; i < d.length; i += 4) {
+        const [r, g, b] = [d[i], d[i + 1], d[i + 2]];
+        const l1 = lum(
+          fg.r * fg.a + r * (1 - fg.a),
+          fg.g * fg.a + g * (1 - fg.a),
+          fg.b * fg.a + b * (1 - fg.a),
+        );
+        const l2 = lum(r, g, b);
+        ratios.push((Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05));
       }
     }
-    textNode = walker.nextNode();
-  }
-
-  return { defects: out, controlCount: controls.length };
+    if (!ratios.length) return null;
+    ratios.sort((a, b) => a - b);
+    return ratios[Math.floor(ratios.length * 0.02)];
+  });
 };
+
+/** The deferred runs' contrast, measured on a photograph of the page with no text. */
+const sampleDeferred = async (page, deferred) => {
+  if (!deferred.length) return [];
+  const style = await page.addStyleTag({ content: HIDE_TEXT });
+  const shot = await page.screenshot();
+  await style.evaluate((el) => el.remove());
+  const got = await page.evaluate(SAMPLE, {
+    dataUrl: `data:image/png;base64,${shot.toString("base64")}`,
+    items: deferred,
+  });
+  return deferred.flatMap((item, i) =>
+    got[i] !== null && got[i] < item.need
+      ? [
+          {
+            kind: "CONTRAST",
+            el: item.el,
+            detail: `${got[i].toFixed(2)}:1 needs ${item.need}:1 (${item.label}, on texture)`,
+          },
+        ]
+      : [],
+  );
+};
+
+/** Wait out every finite animation: a card mid-settle is still fading in. */
+const settle = (page) =>
+  page
+    .waitForFunction(
+      () =>
+        document
+          .getAnimations()
+          .every(
+            (a) =>
+              a.playState !== "running" || a.effect?.getComputedTiming().iterations === Infinity,
+          ),
+      null,
+      { timeout: 3000 },
+    )
+    .catch(() => {});
 
 /**
  * Focus visibility, tested the only way that is honest: with the Tab key.
@@ -428,7 +617,9 @@ for (const [w, h] of SIZES) {
     const started = Date.now();
     await surface.go(page).catch((e) => consoleErrors.push(`drive ${surface.name}: ${e.message}`));
     if (!ONLY || surface.name === ONLY) {
-      const { defects, controlCount } = await page.evaluate(PROBE);
+      await settle(page);
+      const { defects, deferred, controlCount } = await page.evaluate(PROBE);
+      defects.push(...(await sampleDeferred(page, deferred)));
       const focus = await tabThrough(page);
       controlsSeen = Math.max(controlsSeen, controlCount);
       for (const d of [...defects, ...focus])

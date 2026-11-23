@@ -8,8 +8,7 @@ import type { VictoryThreat } from "../../game/victory";
 import { presentActiveEffect, presentUnrestOutcome } from "../../ui/effects";
 import type { EffectTone } from "../../ui/effects";
 import { ACTIVE_EFFECT_MECHANIC_RASTERS, UNREST_TIER_RASTERS } from "../../ui/iconRegistry";
-import { formatNumber, formatResourceCost, listed, toRoman } from "../../ui/formatters";
-import { sign } from "../../ui/frameFormat";
+import { formatNumber, formatResourceCost, listed, formatSignedNumber } from "../../ui/formatters";
 import { settlementNames } from "../../ui/settlementNames";
 import { Prose } from "../AnnotatedText";
 import { EffectLine } from "../EffectLine";
@@ -122,7 +121,7 @@ function UnrestDisc({
   return (
     <li>
       <Tooltip
-        ariaLabel={`${UNREST_WORD[tier]}, happiness ${sign(unrest.happiness)}. ${warning}`}
+        ariaLabel={`${UNREST_WORD[tier]}, happiness ${formatSignedNumber(unrest.happiness)}. ${warning}`}
         content={
           <Tip title={UNREST_WORD[tier]}>
             <TipBody>{warning}</TipBody>
@@ -131,12 +130,14 @@ function UnrestDisc({
             ) : null}
             {unrest.calmBonus !== 0 ? (
               <TipBody>
-                {`${sign(unrest.calmBonus)} from calm`} <Turns n={turnsLeftInYear(G, viewerId)} />
+                {`${formatSignedNumber(unrest.calmBonus)} from calm`}{" "}
+                <Turns n={turnsLeftInYear(G, viewerId)} />
               </TipBody>
             ) : null}
           </Tip>
         }
         focusable
+        triggerRole="img"
         triggerClassName="alarm-disc is-down is-loud"
       >
         <Ico path={UNREST_TIER_RASTERS[tier]} size="ui" />
@@ -175,6 +176,7 @@ function EffectDisc({
             </Tip>
           }
           focusable
+          triggerRole="img"
           triggerClassName="alarm-disc is-down is-loud"
         >
           <Ico path="unrest/starvation" size="ui" />
@@ -195,6 +197,7 @@ function EffectDisc({
           </Tip>
         }
         focusable
+        triggerRole="img"
         triggerClassName={`alarm-disc ${TONE[effect.tone]}`}
       >
         <Ico
@@ -226,6 +229,7 @@ function OneTitleShortDisc({ G, seats }: { G: HegemonyState; seats: VictoryThrea
           </Tip>
         }
         focusable
+        triggerRole="img"
         triggerClassName="alarm-disc is-down"
       >
         <Ico path="victory/laurel" size="ui" />
@@ -248,13 +252,14 @@ function AssemblyDisc({
   return (
     <li>
       <Tooltip
-        ariaLabel={`The Assembly sits next year, in Year ${toRoman(year)}. ${save}`}
+        ariaLabel={`The Assembly sits next year, in Year ${year}. ${save}`}
         content={
           <Tip title="The Assembly" turns={turnsUntilYear(G, viewerId, year)}>
             <TipBody>{save}</TipBody>
           </Tip>
         }
         focusable
+        triggerRole="img"
         triggerClassName="alarm-disc"
       >
         <Ico path="assembly/agora" size="ui" />
@@ -295,6 +300,7 @@ function PortDisc({
           </Tip>
         }
         focusable
+        triggerRole="img"
         triggerClassName={`alarm-disc is-up${ready ? " is-loud" : ""}`}
       >
         <Ico path="resources/luxury" size="ui" />

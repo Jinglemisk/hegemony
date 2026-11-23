@@ -6,22 +6,30 @@
 /* The sitting starts under the alarms row, and the top HUD (the bar and every alarm
    disc, an offer's among them) stands above its scrim, in full colour and in reach. */
 .modalBackdrop.sitting-scrim {
+  --sit-top: calc(var(--bar-h) + var(--hit) * 2 + var(--s-4)); /* 128: under the alarms */
   z-index: var(--z-takeover);
   align-items: flex-start;
-  padding: calc(var(--bar-h) + var(--hit) * 2 + var(--s-4)) var(--s-16) var(--s-4);
+  overflow: hidden;
+  /* Centred on the board: clear of the sidebar on the left, the outliner on the right. */
+  padding: var(--sit-top) calc(var(--sh-outliner-w) + var(--s-4)) var(--s-4)
+    calc(var(--sh-side-w) + var(--s-4));
 }
 .frame.is-sitting .hud-top {
   z-index: var(--z-modal);
 }
 
+/* One height at every stage and text size: the head, the seats and the foot stay, the
+   body between them scrolls. */
 .sitting {
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: calc(var(--u) * 290);
-  max-height: 100%;
-  overflow-y: auto;
+  height: calc(var(--vh) - var(--sit-top) - var(--s-4));
   text-align: left;
+}
+.sitting > :not(.sit-body) {
+  flex: none;
 }
 
 /* ── Head and foot ─────────────────────────────────────────────────────────── */
@@ -34,13 +42,33 @@
   padding: var(--s-3) var(--s-6);
   background: var(--bone);
 }
+/* One height at every stage and text size: the kicker, the name and the sub line
+   fit at Largest (21 + 42 + 26 in 92); each line ellipsizes rather than grow it. */
 .sit-head {
+  height: var(--sh-sit-head);
+  padding-block: var(--s-1);
   border-bottom: var(--rule) solid var(--line);
 }
+.sit-title > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* One height at every stage and text size: the seat chips stand in one row that
+   scrolls sideways, each chip the row's height, and the note beside them scrolls. */
 .sit-foot {
   justify-content: space-between;
+  height: var(--sh-sit-foot);
   margin-top: auto;
+  padding-block: var(--s-2);
   border-top: var(--rule) solid var(--line);
+}
+.sit-foot > .sit-note {
+  flex: 1 0 calc(var(--u) * 44); /* 176: the seats give way first */
+  min-width: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 .sit-title {
   display: flex;
@@ -49,12 +77,13 @@
   min-width: 0;
 }
 .sit-title h2 {
-  --name-size: var(--t-24);
-  --name-lh: var(--lh-32);
+  --name-size: var(--t-sheet);
+  --name-lh: var(--l-sheet);
   margin: 0;
   letter-spacing: var(--track-name);
 }
 .sit-sub {
+  max-height: var(--lh-20);
   color: var(--ink-66);
   font: italic var(--t-14) / var(--lh-20) var(--f-body);
 }
@@ -71,7 +100,7 @@
   color: var(--ink-63);
 }
 .sit-rail li.is-done {
-  color: var(--olive);
+  color: var(--pos-ink);
 }
 .sit-rail li.is-now {
   color: var(--ivory);
@@ -119,7 +148,7 @@
 }
 .sit-btn.is-yea {
   border-color: var(--olive);
-  color: var(--olive);
+  color: var(--pos-ink);
 }
 .sit-btn .price {
   text-transform: none;
@@ -133,17 +162,21 @@
 .sit-acts.is-end {
   justify-content: flex-end;
 }
-.sit-acts.is-split {
-  justify-content: space-between;
-}
 
 /* ── Body ──────────────────────────────────────────────────────────────────── */
 
 .sit-body {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: var(--s-3);
+  min-height: 0;
   padding: var(--s-4) var(--s-6);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.sit-body > * {
+  flex: none;
 }
 .sit-sec {
   display: flex;
@@ -167,7 +200,7 @@
   gap: var(--s-1);
   margin: 0;
   color: var(--ink-66);
-  font: var(--t-12) / var(--lh-16) var(--f-sans);
+  font: var(--t-14) / var(--lh-20) var(--f-sans);
 }
 .sit-warn {
   margin: 0;
@@ -252,9 +285,10 @@
   justify-content: center;
   min-height: calc(var(--card-hand) * 88 / 63);
   padding: var(--s-3);
-  border-radius: var(--s-2);
+  border-radius: var(--r-panel);
   color: var(--ink-63);
-  box-shadow: inset 0 0 0 var(--rule) var(--ink-45);
+  background: var(--socket);
+  box-shadow: var(--socket-open-rim);
   font: italic var(--t-14) / var(--lh-20) var(--f-body);
   text-align: center;
 }
@@ -283,10 +317,10 @@
   flex-direction: column;
   align-items: center;
   gap: var(--s-2);
-  width: min(var(--card-ceremony), 34vh);
+  width: min(var(--card-ceremony), calc(var(--vh) * 0.34));
 }
 .sit-card .gc-ceremony {
-  --gc-w: min(var(--card-ceremony), 34vh);
+  --gc-w: min(var(--card-ceremony), calc(var(--vh) * 0.34));
 }
 /* On the sitting's paper the deck line is printed in ink, at the head of the column
    beside the card. */
@@ -295,9 +329,10 @@
   align-self: flex-start;
 }
 .sitting .deck-line {
+  border-radius: var(--r-panel);
   color: var(--ink-66);
-  background: var(--bone);
-  box-shadow: inset 0 0 0 var(--rule) var(--line);
+  background: var(--socket);
+  box-shadow: var(--socket-rim);
 }
 .sitting .deck-line b {
   color: var(--ink);
@@ -311,7 +346,7 @@
   border-radius: var(--r-16);
   color: var(--ink);
   background: var(--bone);
-  font: var(--t-12) / var(--lh-16) var(--f-sans);
+  font: var(--t-13) / var(--lh-16) var(--f-sans);
 }
 .sit-pick {
   display: grid;
@@ -398,7 +433,7 @@
   align-items: flex-end;
   gap: var(--s-1);
   color: var(--ink-66);
-  font: var(--t-12) / var(--lh-16) var(--f-sans);
+  font: var(--t-13) / var(--lh-16) var(--f-sans);
   text-align: right;
 }
 
@@ -419,7 +454,7 @@
 }
 .sit-side.is-yea,
 .sit-side.is-yea .sit-sec {
-  color: var(--olive);
+  color: var(--pos-ink);
 }
 .sit-side.is-nay,
 .sit-side.is-nay .sit-sec {
@@ -475,10 +510,10 @@
 }
 .sit-order-v {
   color: var(--ink-66);
-  font: var(--t-12) / var(--lh-16) var(--f-sans);
+  font: var(--t-13) / var(--lh-16) var(--f-sans);
 }
 .sit-order-v.is-yea {
-  color: var(--olive);
+  color: var(--pos-ink);
 }
 .sit-order-v.is-nay {
   color: var(--clay-ink);
@@ -546,36 +581,44 @@
 
 .sit-seats {
   display: flex;
-  flex-wrap: wrap;
+  flex: 0 1 auto;
+  align-items: stretch;
   gap: var(--s-2);
+  min-width: 0;
+  max-height: 100%;
   margin: 0;
-  padding: 0;
+  padding: var(--s-1);
+  overflow-x: auto;
   list-style: none;
+  scrollbar-width: thin;
 }
 .sit-seats li {
   display: flex;
+  flex: none;
   align-items: center;
   gap: var(--s-2);
   padding: var(--s-1) var(--s-3) var(--s-1) var(--s-1);
-  border-radius: var(--r-24);
-  background: var(--ivory);
-  box-shadow: inset 0 0 0 var(--rule) var(--line);
+  border-radius: var(--r-panel);
+  background: var(--plaque);
+  box-shadow: var(--plaque-rim);
 }
 /* Your seat, ringed in your own glaze (the row sets --owner to it). */
 .sit-seats li.is-you {
-  box-shadow: inset 0 0 0 var(--rule-2) var(--owner);
+  box-shadow:
+    inset 0 0 0 var(--rule-2) var(--owner),
+    var(--plaque-rim);
 }
 .sit-seats li > span {
   display: flex;
   flex-direction: column;
 }
 .sit-seats b {
-  --name-size: var(--t-12);
+  --name-size: var(--t-13);
   --name-lh: var(--lh-16);
 }
 .sit-seats li > span > span {
   color: var(--ink-66);
-  font: var(--t-12) / var(--lh-16) var(--f-sans);
+  font: var(--t-13) / var(--lh-16) var(--f-sans);
 }
 
 /* ── The dock ──────────────────────────────────────────────────────────────── */
@@ -609,7 +652,7 @@
 }
 .sit-dock-words span {
   color: var(--ivory-70);
-  font: var(--t-12) / var(--lh-16) var(--f-sans);
+  font: var(--t-13) / var(--lh-16) var(--f-sans);
 }
 .sit-dock-seats {
   display: flex;
@@ -620,7 +663,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--s-1);
-  font: 700 var(--t-12) / var(--lh-16) var(--f-sans);
+  font: 700 var(--t-13) / var(--lh-16) var(--f-sans);
 }
 .sit-dock-back {
   grid-area: back;
@@ -631,11 +674,4 @@
 }
 .sit-dock:hover .sit-dock-back {
   background: var(--clay);
-}
-
-/* Minimised, every verb disc wears a lock: the sitting owns the actions. */
-.verb-lock {
-  position: absolute;
-  top: 0;
-  left: 0;
 }

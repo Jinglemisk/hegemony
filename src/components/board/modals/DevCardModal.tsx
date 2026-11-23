@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { standingHappiness } from "../../../game/happiness";
 import { capitalize } from "../../../game/core/format";
 import { getOwnedSettlement } from "../../../game/core/query";
 import {
@@ -6,25 +7,30 @@ import {
   devCardGain,
   devCardOf,
   devCardPlays,
+  getBuyDevCardStatus,
   raidAmount,
 } from "../../../game/devCards";
 import type { DevCardPlay } from "../../../game/devCards";
 import { settlementRoom } from "../../../game/settlement";
 import type { DevCard, HegemonyState, LogMoment, PlayerId, Resource } from "../../../game/types";
 import { deckLine, devCardFace } from "../../../ui/cardFace";
-import { RESOURCE_LABELS } from "../../../ui/formatters";
+import { RESOURCE_LABELS, formatSignedNumber } from "../../../ui/formatters";
 import { SETTLEMENT_GLYPHS } from "../../../ui/iconRegistry";
-import { settlementNameOf } from "../../../ui/settlementNames";
+import { namePlaces, settlementNameOf } from "../../../ui/settlementNames";
 import { AnnotatedText } from "../../AnnotatedText";
 import { DeckLine } from "../../cards/DeckLine";
 import { GameCard } from "../../cards/GameCard";
-import { SeatMark } from "../../frame/parts";
+import { useConfirm } from "../../chrome/confirmContext";
+import { SpendDetail } from "../../chrome/confirmDetail";
+import { Lacquer, Plaque } from "../../chrome/controls";
+import { PanelHead } from "../../chrome/Panel";
+import { Chips, SeatMark, Tip, TipBody } from "../../frame/parts";
+import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { deckMark } from "../helpers";
 import type { DeckMark } from "../helpers";
 import { TileListbox } from "../TileListbox";
 import type { TileListboxOption } from "../TileListbox";
-import { commitVerb } from "./ceremonyMood";
 import { DrawnReveal } from "./DrawnReveal";
 import { ModalShell } from "./ModalShell";
 
@@ -72,7 +78,6 @@ export function DrawnCardModal({ mark, onClose }: { mark: DeckMark; onClose: () 
   }, [card, onClose]);
   if (!card) return null;
 
-  const gained = card.effect.type === "gain" ? card.effect.resources[0] : undefined;
   return (
     <DrawnReveal
       card={<GameCard arrive="turn" face={devCardFace(card)} titleId="drawn-card-title" />}
@@ -85,13 +90,17 @@ export function DrawnCardModal({ mark, onClose }: { mark: DeckMark; onClose: () 
           {kept ? (
             "Kept in your hand. You can play it from your next turn."
           ) : (
-            <AnnotatedText links={false} text={`${capitalize(moment!.outcome)}.`} />
+            <AnnotatedText
+              links={false}
+              text={`${capitalize(namePlaces(G.board.tiles, moment!.outcome, viewerId))}.`}
+            />
           )}
         </p>
       }
     >
       <button className="ceremonyCommit verb verb-lg" onClick={onClose} type="button">
-        {kept ? "Keep It" : commitVerb("gift", gained && RESOURCE_LABELS[gained])}
+        {/* A yield is paid on the draw: the slip says what it gave, the button only closes. */}
+        {kept ? "Keep It" : "Done"}
       </button>
     </DrawnReveal>
   );
@@ -104,13 +113,16 @@ function valuesOf<K extends "target" | "resource" | "tileId">(plays: DevCardPlay
   ] as Array<NonNullable<DevCardPlay[K]>>;
 }
 
-/** The hand, on the seat's own turn: pick a card, make its choice, play it. */
-export function HandModal({ onClose }: { onClose: () => void }) {
+/**
+ * The hand view, on the seat's own turn: every held card at full size, each with Play
+ * or the engine's reason it can't be played. A card with a choice asks for it here, in
+ * place; under the cards, what buying costs, the free card and what can take a card.
+ */
+export function HandModal({ onClose, onBuy }: { onClose: () => void; onBuy: () => void }) {
   const { G, viewerId, isActive, moves } = useGameUi();
+  const ask = useConfirm();
   const hand = G.devHands[viewerId];
-  const [picked, setPicked] = useState<string | null>(
-    () => hand.find((held) => devCardPlays(G, viewerId, held.id).length)?.id ?? hand[0]?.id ?? null,
-  );
+  const [picked, setPicked] = useState<string | null>(null);
   const [choice, setChoice] = useState<Omit<DevCardPlay, "card">>({});
   const [played, setPlayed] = useState<DeckMark | null>(null);
 
@@ -126,7 +138,10 @@ export function HandModal({ onClose }: { onClose: () => void }) {
         onDismiss={onClose}
         slip={
           <p className="body" role="status">
-            <AnnotatedText links={false} text={`${capitalize(result.outcome)}.`} />
+            <AnnotatedText
+              links={false}
+              text={`${capitalize(namePlaces(G.board.tiles, result.outcome, viewerId))}.`}
+            />
           </p>
         }
       >
@@ -137,11 +152,155 @@ export function HandModal({ onClose }: { onClose: () => void }) {
     );
   }
 
+  const play = (instanceId: string, chosen: Omit<DevCardPlay, "card">) => {
+    const plays = devCardPlays(G, viewerId, instanceId);
+    const resolved = resolvePlay(plays, chosen);
+    if (!resolved.play) return;
+    setPlayed(deckMark(G, viewerId));
+    moves.playDevCard(resolved.play);
+  };
+
   const held = hand.find((entry) => entry.id === picked);
   const card = held ? devCardOf(G, held.id) : undefined;
-  const plays = held && isActive ? devCardPlays(G, viewerId, held.id) : [];
-  const blocked = held ? devCardBlocked(G, viewerId, held.id) : null;
-  // Each choice narrows the next: the rival first, then what is taken from them.
+  const pile = G.devDrawPile.length;
+  const sub = `${hand.length} held · ${pile} in the deck · one played a turn`;
+  const buy = getBuyDevCardStatus(G, viewerId);
+  const cost = buy.cost ?? {};
+  const rules = G.ruleset.devCards;
+  const standing = standingHappiness(G, viewerId);
+
+  return (
+    <ModalShell
+      backdropClassName="hand-scrim"
+      className="hand-view"
+      label="Your hand"
+      onDismiss={onClose}
+    >
+      <PanelHead
+        closeLabel="Close the hand"
+        icon="events/venture"
+        onClose={onClose}
+        sub={sub}
+        title={card ? `Play ${card.name}` : "Your hand"}
+      />
+      {held && card ? (
+        <HandChoice
+          card={card}
+          choice={choice}
+          instanceId={held.id}
+          onBack={() => {
+            setPicked(null);
+            setChoice({});
+          }}
+          onChoice={setChoice}
+          onPlay={() => play(held.id, choice)}
+          plays={isActive ? devCardPlays(G, viewerId, held.id) : []}
+        />
+      ) : (
+        <>
+          <div className="hand-view-body ch-scroll-fade">
+            {hand.length ? (
+              <ul aria-label="Your cards" className="hand-view-row">
+                {hand.map((entry) => {
+                  const face = devCardOf(G, entry.id);
+                  if (!face) return null;
+                  const blocked = devCardBlocked(G, viewerId, entry.id);
+                  const plays = isActive ? devCardPlays(G, viewerId, entry.id) : [];
+                  const direct = resolvePlay(plays, {});
+                  return (
+                    <li className="hand-view-slot" key={entry.id}>
+                      {/* At hand size the sentence is read from the card's tooltip. */}
+                      <Tooltip
+                        ariaLabel={face.name}
+                        content={
+                          <Tip title={face.name}>
+                            <TipBody>{face.text}</TipBody>
+                          </Tip>
+                        }
+                        focusable
+                        preferredPlacement="above"
+                        triggerAs="div"
+                      >
+                        <GameCard face={devCardFace(face)} size="hand" />
+                      </Tooltip>
+                      {blocked || plays.length === 0 ? (
+                        <p className="hand-view-why">{blocked ?? "It can't be played now."}</p>
+                      ) : (
+                        <Lacquer
+                          aria-label={`Play ${face.name}`}
+                          onClick={() => {
+                            // A card with nothing to choose plays at once; any other asks here.
+                            if (direct.play && direct.settled) play(entry.id, {});
+                            else {
+                              setPicked(entry.id);
+                              setChoice({});
+                            }
+                          }}
+                        >
+                          Play
+                        </Lacquer>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="hand-view-empty body">
+                No cards held. Buy one here or in the dock for <Chips amounts={cost} />, once a
+                turn: a yield pays at once, any other card comes here.
+              </p>
+            )}
+          </div>
+          <div className="hand-view-facts">
+            <div>
+              <h3 className="hand-view-fact">Buy a card</h3>
+              <p>
+                <Chips amounts={cost} /> once a turn. A yield pays on the draw; any other card comes
+                to the hand.
+              </p>
+              <Plaque
+                aria-label={buy.can ? "Buy a card" : `Buy a card: ${buy.reasons[0] ?? ""}`}
+                disabled={!buy.can}
+                onClick={() =>
+                  ask({
+                    icon: "events/convoy",
+                    question: "Are you sure you want to buy a card?",
+                    detail: <SpendDetail cost={cost} G={G} viewerId={viewerId} />,
+                    verb: "Buy a card",
+                    onYes: onBuy,
+                  })
+                }
+              >
+                Buy a card
+              </Plaque>
+              {buy.can ? null : <p className="hand-view-why">{buy.reasons[0]}</p>}
+            </div>
+            {rules.freeCard ? (
+              <div>
+                <h3 className="hand-view-fact">A free card</h3>
+                <p>
+                  When your turn ends at {formatSignedNumber(rules.freeCardLevel)} happiness or
+                  higher. You stand at {formatSignedNumber(standing)}.
+                </p>
+              </div>
+            ) : null}
+            <div>
+              <h3 className="hand-view-fact">At risk</h3>
+              <p>
+                {rules.riotCard ? "A Riot may take a held card in place of a pop. " : null}A
+                rival&rsquo;s Informer discards one at random.
+              </p>
+            </div>
+          </div>
+        </>
+      )}
+    </ModalShell>
+  );
+}
+
+/** What a play resolves to from the choices made so far: the rival first, then what is
+ *  taken or where. `settled`: nothing was left to choose. */
+function resolvePlay(plays: DevCardPlay[], choice: Omit<DevCardPlay, "card">) {
   const targets = valuesOf(plays, "target");
   const target = choice.target ?? (targets.length === 1 ? targets[0] : undefined);
   const forTarget = plays.filter((play) => play.target === target);
@@ -150,105 +309,81 @@ export function HandModal({ onClose }: { onClose: () => void }) {
   const resource = choice.resource ?? (resources.length === 1 ? resources[0] : undefined);
   const tileId = choice.tileId ?? (tiles.length === 1 ? tiles[0] : undefined);
   const play = forTarget.find((option) => option.resource === resource && option.tileId === tileId);
+  const settled = targets.length <= 1 && resources.length <= 1 && tiles.length <= 1;
+  return { targets, target, resources, resource, tiles, tileId, play, settled };
+}
 
+/** A card's choice, asked in place of the row: the card, its sentence, the choices, Play. */
+function HandChoice({
+  card,
+  instanceId,
+  plays,
+  choice,
+  onChoice,
+  onPlay,
+  onBack,
+}: {
+  card: DevCard;
+  instanceId: string;
+  plays: DevCardPlay[];
+  choice: Omit<DevCardPlay, "card">;
+  onChoice: (choice: Omit<DevCardPlay, "card">) => void;
+  onPlay: () => void;
+  onBack: () => void;
+}) {
+  const { G, viewerId } = useGameUi();
+  const { targets, target, resources, resource, tiles, tileId, play } = resolvePlay(plays, choice);
+  const blocked = devCardBlocked(G, viewerId, instanceId);
   return (
-    <ModalShell
-      backdropClassName="eventModalBackdrop drawnScrim"
-      ceremony="rite"
-      className="drawnReveal handReveal"
-      label="Your hand"
-      onDismiss={onClose}
-    >
-      <div className="hand-row" role="group" aria-label="Your cards">
-        {hand.map((entry) => {
-          const face = devCardOf(G, entry.id);
-          if (!face) return null;
-          const isPicked = entry.id === picked;
-          return (
-            <button
-              aria-pressed={isPicked}
-              className="hand-card"
-              key={entry.id}
-              onClick={() => {
-                setPicked(entry.id);
-                setChoice({});
-              }}
-              title={face.text}
-              type="button"
-            >
-              <GameCard
-                className={
-                  isPicked
-                    ? "is-picked"
-                    : devCardBlocked(G, viewerId, entry.id)
-                      ? "is-dim"
-                      : undefined
-                }
-                face={devCardFace(face)}
-                size="hand"
-              />
-            </button>
-          );
-        })}
-      </div>
-      <SeatAtDeck playerID={viewerId} verb={`holds ${hand.length}`} />
-      {card ? (
-        <div className="drawn-tray">
-          <div className="drawn-slip">
-            <p className="body">
-              <strong>{card.name}.</strong> <AnnotatedText links={false} text={card.text} />
-            </p>
-            {blocked && plays.length === 0 ? <p className="caption">{blocked}</p> : null}
-            {targets.length > 1 ? (
-              <ChoiceList
-                label="Rival"
-                onChange={(value) => setChoice({ target: value })}
-                options={targets.map((seat) => ({
-                  value: seat,
-                  icon: "crowd",
-                  title: G.players[seat].name,
-                  detail: rivalDetail(G, card, seat),
-                }))}
-                value={target}
-              />
-            ) : null}
-            {resources.length > 1 ? (
-              <ChoiceList
-                label={card.kind === "rival" ? "Take" : "Kind"}
-                onChange={(value) => setChoice({ target, resource: value })}
-                options={resources.map((option) => ({
-                  value: option,
-                  icon: option,
-                  title: RESOURCE_LABELS[option],
-                  detail: resourceDetail(G, viewerId, card, option, target),
-                }))}
-                value={resource}
-              />
-            ) : null}
-            {tiles.length > 1 ? (
-              <ChoiceList
-                label="Settlement"
-                onChange={(value) => setChoice({ tileId: value })}
-                options={tiles.map((option) => settlementOption(G, viewerId, option))}
-                value={tileId}
-              />
-            ) : null}
-          </div>
-          <button
-            className="ceremonyCommit verb verb-lg"
-            disabled={!play}
-            onClick={() => {
-              if (!play) return;
-              setPlayed(deckMark(G, viewerId));
-              moves.playDevCard(play);
-            }}
-            type="button"
-          >
+    <div className="hand-view-choose">
+      <GameCard face={devCardFace(card)} size="hand" />
+      <div className="hand-view-ask">
+        <p className="body">
+          <AnnotatedText links={false} text={card.text} />
+        </p>
+        {blocked && plays.length === 0 ? <p className="hand-view-why">{blocked}</p> : null}
+        {targets.length > 1 ? (
+          <ChoiceList
+            label="Rival"
+            onChange={(value) => onChoice({ target: value })}
+            options={targets.map((seat) => ({
+              value: seat,
+              icon: "crowd",
+              title: G.players[seat].name,
+              detail: rivalDetail(G, card, seat),
+            }))}
+            value={target}
+          />
+        ) : null}
+        {resources.length > 1 ? (
+          <ChoiceList
+            label={card.kind === "rival" ? "Take" : "Kind"}
+            onChange={(value) => onChoice({ target, resource: value })}
+            options={resources.map((option) => ({
+              value: option,
+              icon: option,
+              title: RESOURCE_LABELS[option],
+              detail: resourceDetail(G, viewerId, card, option, target),
+            }))}
+            value={resource}
+          />
+        ) : null}
+        {tiles.length > 1 ? (
+          <ChoiceList
+            label="Settlement"
+            onChange={(value) => onChoice({ tileId: value })}
+            options={tiles.map((option) => settlementOption(G, viewerId, option))}
+            value={tileId}
+          />
+        ) : null}
+        <footer className="hand-view-acts">
+          <Plaque onClick={onBack}>Back to the hand</Plaque>
+          <Lacquer disabled={!play} onClick={onPlay}>
             Play {card.name}
-          </button>
-        </div>
-      ) : null}
-    </ModalShell>
+          </Lacquer>
+        </footer>
+      </div>
+    </div>
   );
 }
 

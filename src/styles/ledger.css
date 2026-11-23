@@ -26,7 +26,6 @@
   max-width: 48ch;
   margin: 4px 0 0;
   color: var(--muted);
-  font-size: 0.84rem;
   line-height: 1.3;
 }
 
@@ -34,7 +33,7 @@
   display: grid;
   gap: 12px;
   width: min(100%, 620px);
-  max-height: calc(100vh - 48px);
+  max-height: calc(var(--vh) - 48px);
   overflow: auto;
   padding: 16px;
   border: 1px solid var(--line);
@@ -71,14 +70,12 @@
 .popStepperLabel strong {
   color: var(--fg);
   font-family: var(--f-name);
-  font-size: 0.86rem;
   text-transform: uppercase;
 }
 
 .popStepperLabel em,
 .selectionSummary {
   color: var(--muted);
-  font-size: 0.8rem;
   font-style: normal;
 }
 
@@ -93,7 +90,6 @@
   min-width: 38px;
   min-height: 38px;
   padding: 0;
-  font-size: 1rem;
 }
 
 .stepperControls input,
@@ -119,40 +115,12 @@
   gap: 5px;
   min-width: 0;
   color: var(--muted);
-  font-size: 0.78rem;
   text-transform: uppercase;
 }
 
 .fieldGroup select {
   padding: 0 10px;
   text-transform: none;
-}
-
-.popChoiceGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.popChoiceGrid button {
-  display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 7px;
-  min-height: 48px;
-  text-align: left;
-  text-transform: capitalize;
-}
-
-.popChoiceGrid button span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.popChoiceGrid .selectedChoice {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgb(192 70 28 / 20%);
 }
 
 .modalActions {

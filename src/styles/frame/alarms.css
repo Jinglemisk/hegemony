@@ -77,10 +77,21 @@
   width: var(--ic-48);
   height: var(--ic-48);
 }
+/* One size at every text size and count of threats: the seats scroll inside. */
 .threat-panel {
+  display: flex;
+  flex-direction: column;
   width: calc(var(--u) * 150); /* 600 */
+  height: var(--sh-threat-h);
   border-radius: var(--r-8);
   box-shadow: var(--paper-edge), var(--shadow-float);
+}
+.threat-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  border-radius: inherit;
+  scrollbar-width: thin;
 }
 .threat-seat + .threat-seat {
   border-top: var(--rule) solid var(--ink-30);
@@ -93,11 +104,7 @@
   background: var(--bone);
   border-radius: var(--r-8) var(--r-8) 0 0;
 }
-.threat-glaze.idea-seat {
-  width: var(--s-12);
-  height: var(--s-12);
-  font: 700 var(--t-20) / var(--lh-24) var(--f-name);
-}
+
 .threat-words,
 .threat-row-words {
   display: flex;
@@ -105,8 +112,8 @@
   min-width: 0;
 }
 .threat-title {
-  --name-size: var(--t-20);
-  --name-lh: var(--lh-24);
+  --name-size: var(--t-head);
+  --name-lh: var(--l-head);
   letter-spacing: var(--track-name);
 }
 .threat-words .caption,
@@ -132,8 +139,9 @@
 .threat-row-words b {
   --name-size: var(--t-16);
 }
+/* Two lines at most, so the holder's figures keep one line beside it. */
 .threat-gap {
-  max-width: calc(var(--u) * 64);
+  max-width: calc(var(--u) * 40); /* 160 */
   text-align: right;
 }
 .threat-rows li.is-yours {

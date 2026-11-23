@@ -1,40 +1,6 @@
 /* pops — Pops tab: pop column header, city meters, building chips, detail tooltips, net-economy panel, build-candidate grid
    Split from styles.css (Phase 2e); original source order preserved. */
 
-/* Cities tab — icons + numbers only (labels on hover) */
-.cityIdentity {
-  gap: 5px;
-}
-
-.cityMeter {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0;
-}
-
-.cityMeter .miniIcon {
-  width: 20px;
-  height: 20px;
-}
-
-.cityMeterText {
-  display: inline-flex;
-  align-items: baseline;
-}
-
-/* Pop / building-slot numbers share the same size as the resource numbers below */
-.cityMeterText strong {
-  color: var(--fg);
-  font-size: 0.8rem;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-.meterSlash {
-  color: var(--subtle);
-}
-
 .miniResourceIcon {
   width: 18px;
   height: 18px;

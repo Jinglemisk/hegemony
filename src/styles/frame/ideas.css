@@ -52,7 +52,6 @@
 .ideas-title p {
   margin: 0;
   color: var(--ink-66);
-  font-size: var(--t-16);
   line-height: var(--lh-24);
 }
 .ideas-head {
@@ -68,7 +67,6 @@
 .ideas-close {
   min-height: var(--hit);
   padding: 0 var(--s-4);
-  font-size: var(--t-16);
 }
 /* The Ideas as hand-size cards, six to a row, each with its holder's mark under it. */
 .ideas-list {
@@ -108,18 +106,24 @@
   gap: var(--s-2);
   min-height: var(--ic-ui);
 }
+/* A bought Idea's year tag stands out past its coin's edge: the word steps clear of it. */
+.idea-hold:has(.idea-seat[data-year]) {
+  gap: var(--s-4);
+}
 .idea-mark {
   white-space: nowrap;
 }
+/* Taken: the words in full ink beside the holder's coin. */
 .idea-mark.is-taken {
-  color: var(--ink-63);
+  color: var(--ink);
 }
 /* Yours: the words in ink; your glaze is on the seat disc above them. */
 .idea-mark.is-own {
   color: var(--ink);
 }
-/* A taken Idea keeps its holder's mark at full strength; its card fades (`is-dim`). The
-   one chosen, or just taken, is ringed (`is-picked`). */
+/* A taken Idea keeps its holder's mark and its words at full strength; its card's
+   picture goes grey (`is-taken`). The one chosen, or just taken, is ringed
+   (`is-picked`). */
 .idea-choice.is-taken[aria-disabled="true"] {
   opacity: 1;
 }
@@ -140,10 +144,6 @@
 .idea-choice.is-own[aria-disabled="true"],
 .ideas-list.is-view .idea-choice[aria-disabled="true"] {
   opacity: 1;
-}
-.idea-choice:focus-visible {
-  outline: var(--rule-2) solid var(--clay);
-  outline-offset: var(--s-1);
 }
 /* A seat's mark: its glaze and blazon. A bought Idea's mark carries the year. */
 .idea-seat {
@@ -178,7 +178,6 @@
   flex: 1;
   min-width: 0;
   gap: var(--s-4);
-  font-size: var(--t-16);
 }
 .idea-target select {
   min-width: 0;
@@ -197,7 +196,6 @@
   flex: 1;
   min-width: 0;
   color: var(--ink-66);
-  font-size: var(--t-14);
   line-height: var(--lh-20);
 }
 /* The footer's confirm: the primary in the name face, a row tall. It takes no
@@ -253,7 +251,7 @@
   font: 700 var(--t-14) / var(--lh-20) var(--f-sans);
 }
 .draft-what.is-picked {
-  color: var(--pos);
+  color: var(--pos-ink);
 }
 .draft-what.is-choosing {
   color: var(--clay-ink);

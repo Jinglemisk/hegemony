@@ -1,0 +1,323 @@
+/* ============================================================================
+   The hand: its tray at the bottom edge and the hand view (HandTray, HandModal).
+   The tray is one fixed box, x 624, 480 × 72 at design size: it never moves or
+   resizes, whatever opens beside it. Each card shows as a plate; under the pointer or
+   focus the whole card stands above its plate, fading in where it lies — the face
+   never slides or scales.
+   ========================================================================== */
+
+.hand-tray {
+  --tab-w: 80px;
+  --room: calc(var(--sh-hand-w) - var(--tab-w) - var(--s-2));
+  /* Side by side, never overlapping: each plate takes its share of the room, at most
+     120 (about 75 with five held). */
+  --plate-gap: var(--s-1);
+  --plate-w: min(120px, calc((var(--room) - (var(--n, 1) - 1) * var(--plate-gap)) / var(--n, 1)));
+  --step: calc(var(--plate-w) + var(--plate-gap));
+  position: fixed;
+  bottom: 0;
+  left: var(--sh-hand-x);
+  display: flex;
+  gap: var(--s-2);
+  width: var(--sh-hand-w);
+  height: var(--sh-hand-h);
+}
+
+/* The tab, inside the tray at its left: how many, and the way into the hand view. */
+.hand-tab {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--s-1);
+  box-sizing: border-box;
+  width: var(--tab-w);
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-panel) var(--r-panel) 0 0;
+  color: var(--glaze-ink);
+  background: var(--glaze);
+  box-shadow: var(--back-rim);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.hand-view-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-1);
+  min-height: var(--hit);
+  padding: 0 var(--s-1);
+  border: 0;
+  border-radius: var(--r-panel);
+  color: var(--glaze-ink);
+  background: var(--back);
+  box-shadow: var(--back-rim);
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+.hand-view-btn:hover {
+  background: var(--back-hover);
+}
+.hand-view-btn kbd {
+  padding: 0 var(--s-1);
+  border-radius: var(--r-panel);
+  color: var(--bz-hi);
+  box-shadow: inset 0 0 0 var(--rule) var(--bz);
+  font: inherit;
+}
+
+/* The plates' row: each card's plate, its kind over its name, the tray's height. */
+.hand-slots {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.hand-slot {
+  --at: calc(var(--i) * var(--step));
+  position: absolute;
+  bottom: 0;
+  left: var(--at);
+  display: block;
+  width: var(--plate-w);
+  /* Only the plate takes the pointer: the risen card above it never covers another
+     plate's strip, so a sweep along the row raises each card in turn. */
+  pointer-events: none;
+}
+/* Risen: the whole card stands above its own plate, kept inside the tray's span. The
+   slot keeps its plate's width (its tooltip centres there, above the card); the card
+   is in its flow, so the tooltip clears it. */
+.hand-slot:hover,
+.hand-slot:focus-within {
+  --lift-at: min(var(--at), calc(var(--room) - var(--card-hand)));
+  z-index: var(--z-lift);
+}
+.hand-card-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.hand-card-btn:focus-visible {
+  outline: none;
+}
+.hand-face {
+  display: none;
+  flex: none;
+  width: var(--card-hand);
+  margin: 0 0 var(--s-2) calc(var(--lift-at, 0px) - var(--at));
+}
+.hand-slot:hover .hand-face,
+.hand-slot:focus-within .hand-face {
+  display: block;
+  animation: hand-rise var(--dur-settle) var(--ease-out);
+}
+.hand-face .gc {
+  filter: drop-shadow(0 var(--s-1) var(--s-2) var(--sea-shade));
+}
+@keyframes hand-rise {
+  from {
+    opacity: 0;
+  }
+}
+.hand-plate {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: var(--plate-w);
+  height: var(--sh-hand-h);
+  overflow: hidden;
+  border-radius: var(--s-2) var(--s-2) 0 0;
+  color: var(--ink);
+  background: var(--ivory);
+  box-shadow: var(--tile-rim);
+  text-align: left;
+  pointer-events: auto;
+}
+.hand-card-btn:focus-visible .hand-plate {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: calc(-1 * var(--rule-2));
+}
+.hand-plate-k {
+  overflow: hidden;
+  padding: var(--rule-2) var(--s-1);
+  color: var(--deck-dev-ink);
+  background: var(--deck-dev);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+/* The name, on up to two lines in the plain face, which fits a five-card plate; a
+   word too long for it at a larger Text size ellipsizes (the tooltip holds it whole). */
+.hand-plate-n {
+  display: -webkit-box;
+  box-sizing: border-box;
+  padding: var(--s-1) var(--s-1) 0;
+  overflow: hidden;
+  font-family: var(--f-sans);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* Empty: the same box, a dashed glaze plate that opens the hand view. */
+.hand-empty {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  height: 100%;
+  padding: 0 var(--s-4);
+  border: var(--rule-2) dashed var(--bz);
+  border-bottom: 0;
+  border-radius: var(--r-panel) var(--r-panel) 0 0;
+  color: var(--glaze-ink-66);
+  background: var(--glaze);
+  font-family: var(--f-sans);
+  text-align: left;
+  cursor: pointer;
+}
+.hand-empty b {
+  color: var(--glaze-ink);
+}
+.hand-empty .ico {
+  border-radius: var(--r-round);
+  background: var(--medallion);
+  box-shadow: var(--medallion-rim);
+}
+.hand-empty:hover {
+  border-color: var(--bz-hi);
+}
+
+/* ---- the hand view: one fixed box whatever the hand holds ------------------- */
+/* It opens over the board, between the sidebar and the outliner, above the hand's
+   row, so the alarms, the outliner and the dock stay where they were. */
+.modalBackdrop.hand-scrim {
+  padding: var(--sh-side-top) var(--sh-outliner-w) calc(var(--sh-hand-h) + var(--s-2))
+    var(--sh-side-w);
+}
+.hand-view {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) var(--hand-facts-h);
+  grid-template-columns: minmax(0, 1fr);
+  flex: none;
+  /* One row of up to five cards (5 × 176 + 4 × 12) with the deck's facts as a strip
+     under it, inside the board between the sidebar and the outliner. */
+  --hand-facts-h: 144px;
+  width: 1016px;
+  height: 560px;
+  text-align: left;
+}
+.hand-view > .ch-head {
+  border-radius: var(--r-panel) var(--r-panel) 0 0;
+}
+.hand-view-body {
+  min-height: 0;
+  margin-top: var(--sh-meander-h);
+  overflow: auto;
+  padding: var(--s-3) var(--s-4);
+}
+.hand-view-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: safe center;
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hand-view-slot {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  width: var(--card-hand);
+}
+.hand-view-why {
+  margin: 0;
+  color: var(--clay-ink);
+  font-family: var(--f-sans);
+  font-weight: 600;
+  text-align: center;
+}
+.hand-view-empty {
+  margin: var(--s-8) auto;
+  max-width: 560px;
+  text-align: center;
+}
+
+/* Under the cards, the deck's three facts side by side; each scrolls inside its cell. */
+.hand-view-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-height: 0;
+  border-top: var(--rule) solid var(--bz-dk-30);
+  border-radius: 0 0 var(--r-panel) var(--r-panel);
+  background: var(--bz-dk-12);
+}
+.hand-view-facts > div {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: var(--s-1);
+  min-height: 0;
+  overflow: auto;
+  padding: var(--s-2) var(--s-4) var(--s-3);
+}
+.hand-view-facts > div + div {
+  border-left: var(--rule) solid var(--bz-dk-30);
+}
+.hand-view-facts p {
+  margin: 0;
+  font-family: var(--f-body);
+}
+.hand-view-fact {
+  margin: 0;
+  color: var(--ink-66);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+.hand-view-facts .hand-view-why {
+  text-align: left;
+}
+
+/* A card's choice, asked in place of the row: the card, then what it asks. */
+.hand-view-choose {
+  display: grid;
+  grid-row: 2 / 4;
+  grid-template-columns: var(--card-hand) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--s-6);
+  min-height: 0;
+  margin-top: var(--sh-meander-h);
+  overflow: auto;
+  padding: var(--s-4) var(--s-6);
+}
+.hand-view-ask {
+  display: grid;
+  gap: var(--s-4);
+}
+.hand-view-ask .body {
+  margin: 0;
+}
+.hand-view-acts {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s-3);
+}

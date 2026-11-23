@@ -3,10 +3,17 @@
 import { act, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createCommandEvents } from "../../client/commandAdapter";
+import type { GameMoves } from "../../client/controller";
 import { scenario } from "../../game/testing/scenario";
+import type { HegemonyState } from "../../game/types";
 import { turnEndUnrest } from "../../game/unrest";
+import { GameUiContext } from "../board/GameUiContext";
+import { ConfirmHost, ConfirmProvider } from "../chrome/Confirm";
+import { HudCanvas } from "../chrome/HudCanvas";
 import { EndTurn } from "../frame/EndTurn";
 import { MechanicsDetails } from "../MechanicsDetails";
+import { ModalShell } from "../board/modals/ModalShell";
 import { Popover } from "./Popover";
 import { Tooltip } from "./Tooltip";
 
@@ -87,6 +94,73 @@ describe("Tooltip", () => {
       document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })),
     );
     expect(document.body.querySelector("[role=tooltip]")).toBeNull();
+  });
+
+  it("takes one Escape for itself, leaving the layer under it open", () => {
+    const onDismiss = vi.fn();
+    act(() => {
+      root.render(
+        <Popover anchor={domRect(280, 205, 20, 20)} ariaLabel="Card" onDismiss={onDismiss}>
+          <Tooltip content="Gold you hold">
+            <button type="button">Gold</button>
+          </Tooltip>
+        </Popover>,
+      );
+    });
+    const gold = document.body.querySelector<HTMLButtonElement>("[role=dialog] button")!;
+    act(() => gold.focus());
+    expect(document.body.querySelector("[role=tooltip]")).not.toBeNull();
+
+    // Dispatched where the key lands: the focused control, bubbling to the window.
+    act(() =>
+      gold.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }),
+      ),
+    );
+    expect(document.body.querySelector("[role=tooltip]")).toBeNull();
+    expect(onDismiss).not.toHaveBeenCalled();
+
+    act(() =>
+      gold.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }),
+      ),
+    );
+    expect(onDismiss).toHaveBeenCalledOnce();
+  });
+
+  it("closes on a press and stays shut until the pointer leaves and comes back", () => {
+    act(() => {
+      root.render(
+        <Tooltip content="Ideas">
+          <button type="button">Ideas</button>
+        </Tooltip>,
+      );
+    });
+    const button = container.querySelector("button")!;
+    const tip = () => document.body.querySelector("[role=tooltip]");
+    const pointer = (type: string, relatedTarget: Element | null = null) =>
+      act(() => {
+        const event = new MouseEvent(type, { bubbles: true, relatedTarget });
+        if (type === "pointerdown") Object.defineProperty(event, "pointerType", { value: "mouse" });
+        button.dispatchEvent(event);
+      });
+
+    pointer("mouseover", document.body);
+    expect(tip()).not.toBeNull();
+    pointer("pointerdown");
+    expect(tip()).toBeNull();
+    // The drawer it opened hands the focus back by script: no tip over it.
+    act(() => button.focus());
+    expect(tip()).toBeNull();
+    act(() => button.blur());
+
+    act(() => {
+      button.dispatchEvent(
+        new MouseEvent("mouseout", { bubbles: true, relatedTarget: document.body }),
+      );
+    });
+    pointer("mouseover", document.body);
+    expect(tip()).not.toBeNull();
   });
 
   it("supports a block trigger without nesting block content inside a span", () => {
@@ -228,36 +302,191 @@ describe("Popover", () => {
   });
 });
 
-describe("End turn's confirm", () => {
-  it.each([
-    [-3, "Ending your turn starts a riot", "Face the riot"],
-    [-6, "Ending your turn now means revolt", "Revolt"],
-  ] as const)("opens at %s as a popover a press outside closes", (level, consequence, face) => {
-    const G = scenario().opening().withHappiness("0", level).build();
-
+describe("A placed popover", () => {
+  it("holds Tab: off its last control the focus comes round to its first", () => {
+    vi.spyOn(HTMLElement.prototype, "offsetParent", "get").mockReturnValue(document.body);
     act(() => {
       root.render(
-        <EndTurn
-          actingId="0"
-          canEndTurn
-          confirmOpen
-          onCalm={() => {}}
-          onEndTurn={() => {}}
-          ruleset={G.ruleset}
-          title="Press and hold to end your turn."
-          unrest={turnEndUnrest(G, "0")}
-          warning={null}
-        />,
+        <>
+          <button type="button">Table</button>
+          <Popover anchor={domRect(0, 0, 1, 1)} ariaLabel="Offer" centre onDismiss={() => {}}>
+            <button type="button">Damon</button>
+            <button type="button">Send</button>
+          </Popover>
+        </>,
+      );
+    });
+    const [damon, send] = document.body.querySelectorAll<HTMLButtonElement>("[role=dialog] button");
+    const tab = (shiftKey = false) => {
+      const event = new KeyboardEvent("keydown", {
+        key: "Tab",
+        shiftKey,
+        bubbles: true,
+        cancelable: true,
+      });
+      document.activeElement!.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    act(() => send!.focus());
+    expect(tab()).toBe(true);
+    expect(document.activeElement).toBe(damon);
+    expect(tab(true)).toBe(true);
+    expect(document.activeElement).toBe(send);
+  });
+});
+
+describe("ModalShell", () => {
+  it("makes the frame behind it inert, all but the overlay layer, until it closes", () => {
+    function Harness({ open }: { open: boolean }) {
+      return (
+        <main className="frame">
+          <button type="button">Table</button>
+          {open ? (
+            <ModalShell label="Ideas" onDismiss={() => {}}>
+              <button type="button">Buy</button>
+            </ModalShell>
+          ) : null}
+          <div id="hud-overlays" />
+        </main>
+      );
+    }
+    act(() => root.render(<Harness open />));
+    const table = container.querySelector<HTMLButtonElement>("button")!;
+    expect(table.inert).toBe(true);
+    expect(container.querySelector<HTMLElement>("#hud-overlays")!.inert).toBeFalsy();
+
+    act(() => root.render(<Harness open={false} />));
+    expect(table.inert).toBe(false);
+  });
+});
+
+describe("End turn's confirm", () => {
+  const renderConfirm = (
+    G: HegemonyState,
+    onCalm: (payment: "gold" | "influence") => void = () => {},
+    onEndTurn: () => void = () => {},
+  ) =>
+    act(() => {
+      root.render(
+        <GameUiContext.Provider
+          value={{
+            G,
+            viewerId: "0",
+            viewer: G.players["0"],
+            activeEffects: [],
+            currentPlayerId: "0",
+            phase: "gameplay",
+            isActive: true,
+            turnBlocked: null,
+            humans: ["0"],
+            moves: {} as GameMoves,
+            events: createCommandEvents(() => {}),
+          }}
+        >
+          <ConfirmProvider>
+            <EndTurn
+              actingId="0"
+              canEndTurn
+              confirmOpen
+              onCalm={onCalm}
+              onEndTurn={onEndTurn}
+              ruleset={G.ruleset}
+              title="Press and hold to end your turn."
+              unrest={turnEndUnrest(G, "0")}
+              warning={null}
+            />
+            <ConfirmHost />
+          </ConfirmProvider>
+        </GameUiContext.Provider>,
       );
     });
 
-    // The hold opens the confirm at the line, focused on the plain choice to face it.
-    const dialog = document.body.querySelector<HTMLElement>("[role=dialog]")!;
-    expect(dialog.textContent).toContain(consequence);
-    expect(document.activeElement?.textContent).toBe(face);
+  it.each([
+    [-3, "Ending your turn starts a riot", "Riot ahead", "Face the riot"],
+    [-6, "Ending your turn now means revolt", "Revolt ahead", "Revolt"],
+  ] as const)(
+    "opens at %s as a popover a press outside closes",
+    (level, consequence, head, face) => {
+      const G = scenario().opening().withHappiness("0", level).build();
+      renderConfirm(G);
 
-    act(() => document.body.dispatchEvent(new Event("pointerdown", { bubbles: true })));
-    expect(document.body.querySelector("[role=dialog]")).toBeNull();
+      // The hold opens the confirm at the line, focused on the plain choice to face it.
+      const dialog = document.body.querySelector<HTMLElement>("[role=dialog]")!;
+      // Docked above the dock in its slot, its one-line head beside a close disc.
+      expect(dialog.getAttribute("aria-label")).toBe(consequence);
+      expect(dialog.classList).toContain("is-slot");
+      expect(dialog.querySelector("h2")?.textContent).toBe(head);
+      expect(dialog.querySelector('[aria-label="Close the warning"]')).not.toBeNull();
+      expect(document.activeElement?.textContent).toBe(face);
+      // The focused choice comes first in the card's order.
+      expect(dialog.querySelector(".confirm-acts button")?.textContent).toBe(face);
+
+      act(() => document.body.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+      expect(document.body.querySelector("[role=dialog]")).toBeNull();
+    },
+  );
+
+  it("asks before Calm spends, and ends the turn only on yes", () => {
+    const G = structuredClone(
+      scenario().opening().withHappiness("0", -3).withResources("0", "wealthy").build(),
+    );
+    G.pendingPlayerEvent = null;
+    const unrest = turnEndUnrest(G, "0");
+    expect(unrest?.calm).not.toBeNull();
+    const onCalm = vi.fn();
+    const onEndTurn = vi.fn();
+    renderConfirm(G, onCalm, onEndTurn);
+
+    const calm = () =>
+      [...document.querySelectorAll<HTMLButtonElement>(".endturn-confirm button")].find((b) =>
+        b.textContent?.startsWith("Calm"),
+      )!;
+    act(() => calm().click());
+    const bar = document.body.querySelector<HTMLElement>("[role=alertdialog]")!;
+    expect(bar.textContent).toContain("Gold");
+    expect(onCalm).not.toHaveBeenCalled();
+
+    // No: nothing spent, the warning stays.
+    const answer = (name: string) =>
+      [...bar.querySelectorAll<HTMLButtonElement>("button")].find((b) => b.textContent === name)!;
+    act(() => answer("Cancel").click());
+    expect(onCalm).not.toHaveBeenCalled();
+    expect(onEndTurn).not.toHaveBeenCalled();
+    expect(document.body.querySelector(".endturn-confirm")).not.toBeNull();
+
+    act(() => calm().click());
+    act(() =>
+      [...document.body.querySelectorAll<HTMLButtonElement>("[role=alertdialog] button")]
+        .find((b) => b.textContent === "Calm and end")!
+        .click(),
+    );
+    expect(onCalm).toHaveBeenCalledTimes(unrest!.calm!.payments.length);
+    expect(onEndTurn).toHaveBeenCalledOnce();
+    expect(document.body.querySelector(".endturn-confirm")).toBeNull();
+  });
+});
+
+describe("Popover opened on load", () => {
+  it("mounts once, inside the canvas it renders with, and keeps its autofocus", () => {
+    act(() =>
+      root.render(
+        <HudCanvas>
+          <Popover
+            anchor={domRect(0, 0, 10, 10)}
+            ariaLabel="Riot warning"
+            onDismiss={() => {}}
+            slot
+          >
+            <button autoFocus type="button">
+              Face the riot
+            </button>
+          </Popover>
+        </HudCanvas>,
+      ),
+    );
+    const card = document.querySelector("[role=dialog]")!;
+    expect(card.parentElement?.id).toBe("hud-overlays");
+    expect(document.activeElement?.textContent).toBe("Face the riot");
   });
 });
 

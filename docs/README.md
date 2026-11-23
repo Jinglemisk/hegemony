@@ -51,6 +51,7 @@ precedes full multiplayer. The mechanics are frozen (owner, 2026-10-27) but for 
 | [Agency package](plans/agency-package.md)           | post-v2  | `active`   | Manumission, Capital Works, Messengers, optional pops, kept Laws, Port rule, caps built |
 | [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked`  | Final typed Resolution/Idea effects and evidence before multiplayer                     |
 | [Trade deals](plans/trade-deals.md)                 | post-v2  | `active`   | Yearly deals and lent goods: built; bots still decline them                             |
+| [Imperator shell](plans/imperator-shell.md)         | UI       | `active`   | The Improved proposal, built end to end on `feat/imperator-shell` (owner, 2026-11-23)   |
 
 Every file in `docs/plans/` must appear in this table. Start a substantial feature
 from [the plan template](plans/_template.md).

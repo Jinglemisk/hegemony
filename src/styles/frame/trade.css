@@ -76,11 +76,12 @@
     inset 0 0 0 var(--rule) var(--ivory-70),
     0 0 0 var(--rule-2) var(--ivory);
 }
+/* Inside the ring's square, clear of the bar's meander and the seal. */
 .offer-mark {
-  left: calc(-1 * var(--s-2));
-  top: calc(-1 * var(--s-2));
-  width: var(--s-6);
-  height: var(--s-6);
+  left: calc(-1 * var(--s-1));
+  top: calc(-1 * var(--s-1));
+  width: calc(var(--u) * 5); /* 20 */
+  height: calc(var(--u) * 5);
   color: var(--ivory);
   background: var(--ink);
   box-shadow: 0 0 0 var(--rule-2) var(--ivory);
@@ -88,12 +89,34 @@
 
 /* ---- the card: paper over the table, never a dialog ------------------------- */
 .trade-pop .trade-card {
+  display: flex;
+  flex-direction: column;
   width: calc(var(--u) * 112); /* 448 */
-  max-width: calc(100vw - 2 * var(--s-4));
+  max-width: calc(var(--vw) - 2 * var(--s-4));
+  height: var(--sh-deal-h);
   border-radius: var(--r-8);
   color: var(--ink);
   background: var(--ivory);
   box-shadow: var(--paper-edge), var(--shadow-float);
+}
+/* One height whatever the card holds: the composer shorter, an offer and a deal the
+   same; the head and the foot stay, the body between them scrolls. */
+.trade-pop .trade-card.is-compose {
+  height: var(--sh-compose-h);
+}
+.trade-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.trade-head,
+.trade-foot {
+  flex: none;
+}
+/* The composer dims the board behind it, and only that: presses still go through. */
+.sharedPopover.is-centre.trade-pop {
+  box-shadow: 0 0 0 100vmax var(--scrim-compose);
 }
 .trade-head {
   display: flex;
@@ -103,28 +126,8 @@
   border-radius: var(--r-8) var(--r-8) 0 0;
   background: var(--bone);
 }
-.trade-glaze,
-.trade-seat {
-  display: grid;
-  flex: none;
-  place-items: center;
-  border-radius: var(--r-round);
-  color: var(--ivory);
-  background: var(--owner);
-  box-shadow:
-    inset 0 0 0 var(--rule) var(--ivory-70),
-    0 0 0 var(--rule) var(--ink-66);
-  --name-size: var(--t-14);
-  --name-lh: var(--lh-16);
-}
-.trade-glaze.is-lg {
-  width: var(--s-8);
-  height: var(--s-8);
+.trade-coin {
   margin-top: 2px;
-}
-.trade-glaze.is-sm {
-  width: var(--s-6);
-  height: var(--s-6);
 }
 .trade-words {
   display: flex;
@@ -133,8 +136,8 @@
   min-width: 0;
 }
 .trade-title {
-  --name-size: var(--t-16);
-  --name-lh: var(--lh-24);
+  --name-size: var(--t-head);
+  --name-lh: var(--l-head);
   letter-spacing: var(--track-name);
 }
 .trade-caption {
@@ -164,24 +167,31 @@
   margin-top: var(--s-2);
 }
 .trade-seat {
-  width: 28px;
-  height: 28px;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: calc(var(--u) * 9);
+  height: calc(var(--u) * 9);
   padding: 0;
   border: 0;
+  border-radius: var(--r-round);
+  background: transparent;
   cursor: pointer;
   transition: opacity 150ms;
 }
 .trade-seat.is-on {
   box-shadow:
-    inset 0 0 0 var(--rule) var(--ivory-70),
     0 0 0 var(--rule-2) var(--bone),
     0 0 0 4px var(--ink);
 }
+/* A seat left off: its coin in grey, still clear on the glaze (no fade to 0.3). */
 .trade-seat.is-off {
-  opacity: 0.3;
+  filter: grayscale(1);
+  opacity: 0.8;
 }
 .trade-seat.is-off:hover {
-  opacity: 0.7;
+  filter: none;
+  opacity: 1;
 }
 
 /* The two columns and the arrows between: red out, green in. */
@@ -245,14 +255,13 @@
   transform: rotate(45deg);
 }
 .trade-arrow.is-in {
-  color: var(--olive);
+  color: var(--pos-ink);
 }
 .trade-arrow.is-in::after {
   left: 3px;
   transform: rotate(-135deg);
 }
 .trade-chips {
-  position: relative;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -262,7 +271,8 @@
 .trade-chip {
   display: inline-flex;
   align-items: center;
-  height: var(--s-8);
+  gap: 2px;
+  height: calc(var(--s-8) + var(--s-1)); /* a knob and its rim */
   padding: 0 2px 0 var(--s-1);
   border-radius: var(--s-4);
   background: var(--ivory);
@@ -286,24 +296,13 @@
 .trade-was s {
   color: var(--ink-63);
 }
-.trade-step {
-  width: 18px;
-  height: 28px;
-  padding: 0;
-  border: 0;
-  border-radius: var(--r-4);
-  color: var(--ink);
-  background: transparent;
-  --name-size: var(--t-16);
-  --name-lh: var(--lh-20);
-  cursor: pointer;
-}
-.trade-step:hover:not([aria-disabled="true"]) {
-  background: var(--ink-07);
-}
-.trade-step[aria-disabled="true"] {
-  opacity: 0.3;
-  cursor: default;
+/* The steppers are the house knob at 32: a chip is a knob's height and a little. */
+.trade-chip .trade-step {
+  width: var(--s-8);
+  min-width: var(--s-8);
+  height: var(--s-8);
+  min-height: var(--s-8);
+  letter-spacing: 0;
 }
 .trade-add {
   width: var(--s-8);
@@ -321,19 +320,17 @@
   border: var(--rule-2) solid var(--clay);
   color: var(--clay);
 }
-/* It opens upward, centred on its column: three short rows (now, every year, on loan)
-   stay on screen whether the card hangs from the alarms row or rises from the verbs. */
+/* It hangs below its "+", placed against the card (OfferCard sets top and left), over
+   the card's rule and corners, so neither the scrolling body nor the frame hides it. */
 .trade-picker {
   position: absolute;
-  z-index: var(--z-lift);
-  bottom: 42px;
-  left: 50%;
+  z-index: var(--z-pick);
   display: flex;
   flex-wrap: wrap;
   gap: 2px;
   width: max-content;
   max-width: calc(var(--u) * 88);
-  transform: translateX(-50%);
+  translate: -50% 0;
   padding: 6px;
   border-radius: var(--r-8);
   background: var(--ivory);
@@ -392,12 +389,25 @@
   flex: 1;
 }
 .trade-reason {
-  color: var(--clay-ink);
+  color: var(--clay-deep);
 }
 .trade-after {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--s-1) var(--s-3);
+}
+.trade-lead {
+  color: var(--ink-66);
+}
+/* The Riot or Revolt line a trade crosses: its own line under the values. */
+.trade-warn {
+  width: 100%;
+  color: var(--neg);
+  font-weight: 700;
+}
+.trade-owner-after {
+  padding: var(--s-2) var(--s-4) 0;
 }
 .trade-delta {
   display: flex;
@@ -579,10 +589,10 @@
   gap: var(--s-1) var(--s-3);
 }
 .deal-income .is-up {
-  color: var(--olive);
+  color: var(--pos-ink);
 }
 .deal-income .is-down {
-  color: var(--clay-ink);
+  color: var(--neg-ink);
 }
 .deal-ask {
   display: flex;
@@ -595,14 +605,9 @@
 .deal-ask p {
   margin: 0;
 }
-.deal-ask-acts {
-  display: flex;
+/* A short payment's answer: the card's foot, one row on the ask's band. */
+.trade-foot.deal-ask-acts {
+  flex-wrap: nowrap;
   justify-content: flex-end;
-  gap: var(--s-2);
-}
-.deal-ask-acts .btn {
-  height: 36px;
-  border: 0;
-  border-radius: var(--r-4);
-  cursor: pointer;
+  background: var(--bone);
 }

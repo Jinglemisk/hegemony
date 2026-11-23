@@ -2,7 +2,7 @@
    buttons. Every token lives in frame/tokens.css. */
 
 :root {
-  font-size: calc(16px * var(--ui-scale));
+  font-size: 16px;
   color: var(--ink);
   background: var(--bone);
   font-family: var(--f-body);
@@ -10,9 +10,17 @@
   text-rendering: optimizeLegibility;
 }
 
+/* No letter-spacing here: a role sets its own tracking (type.css, --track-*), and a
+   reset on every element would cut a caps label's tracking off its inner words.
+   Every figure is lining and tabular: Alegreya's default old-style 0 reads as an
+   o. Important, because the `font` shorthand a rule sets would reset it. */
 * {
   box-sizing: border-box;
-  letter-spacing: 0;
+}
+*,
+*::before,
+*::after {
+  font-variant-numeric: lining-nums tabular-nums !important;
 }
 
 .visuallyHidden {
@@ -94,69 +102,9 @@ button[aria-disabled="true"] {
   cursor: not-allowed;
 }
 
-button:focus-visible {
-  outline: 2px solid var(--accent-2);
-  outline-offset: 2px;
-}
-
-/* The v1 chip: the setup pop picker's two buttons, and under the placement
-   cards' clay confirm (.eventResolveButton). Layout (grid, min-height, padding)
-   stays on each specific class and wins by order. */
-.primaryButton,
-.iconButton {
-  min-height: 40px;
-  border: 1px solid var(--button-line);
-  border-radius: 6px;
-  color: var(--fg);
-  background: var(--button-bg);
-  font-family: var(--f-name);
-  font-weight: 700;
-  overflow: hidden;
-  padding: 0 12px;
-}
-
-.primaryButton {
-  color: var(--ivory);
-  border-color: rgb(192 70 28 / 76%);
-}
-
-.primaryButton:disabled,
-.primaryButton[aria-disabled="true"],
-.iconButton:disabled,
-.iconButton[aria-disabled="true"] {
-  opacity: 0.45;
-}
-
-.primaryButton:not(:disabled):not([aria-disabled="true"]):hover,
-.iconButton:not(:disabled):not([aria-disabled="true"]):hover {
-  border-color: var(--accent);
-  box-shadow: var(--lift-shadow);
-  transform: translateY(-1px);
-}
-
-/* eventResolveButton brings its own clay fill but only a border-COLOUR, so it
-   needs the width/style back — plus the disabled/hover feedback the global used
-   to give it. */
-.eventResolveButton {
-  border: 1px solid;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.eventResolveButton:disabled,
-.eventResolveButton[aria-disabled="true"] {
-  opacity: 0.45;
-}
-
-.eventResolveButton:not(:disabled):not([aria-disabled="true"]):hover {
-  box-shadow: var(--lift-shadow);
-  transform: translateY(-1px);
-}
-
-.iconButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  min-height: 44px;
+/* Outside the frame (the setup screens, the dev tune button) a control takes the
+   ink of the frame's ring (frame/chrome.css), which wins inside it. */
+:where(button, a[href], input, select, textarea, [tabindex]):focus-visible {
+  outline: var(--focus-w) solid var(--focus-ink);
+  outline-offset: var(--focus-w);
 }

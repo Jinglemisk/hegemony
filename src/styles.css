@@ -37,8 +37,6 @@
 @import "./styles/frame/tokens.css";
 @import "./styles/frame/base.css";
 @import "./styles/frame/bar.css";
-@import "./styles/frame/realm.css";
-@import "./styles/frame/verbs.css";
 @import "./styles/frame/cards.css";
 @import "./styles/frame/endturn.css";
 @import "./styles/frame/tooltip.css";
@@ -48,5 +46,17 @@
 @import "./styles/frame/toasts.css";
 @import "./styles/frame/trade.css";
 @import "./styles/frame/dock.css";
+/* The Imperator shell's material and primitives: after every frame surface, so a
+   seat's coin restyles the older marks it now draws. */
+@import "./styles/frame/chrome.css";
+/* The shell's right side: the dock, the legend and the outliner. */
+@import "./styles/frame/right.css";
+/* The left window: the sidebar, its drawers and the place panel. */
+@import "./styles/frame/left.css";
 @import "./styles/sitting.css";
+/* The top's floating parts, after the sitting: they place its minimised pill. */
+@import "./styles/frame/top.css";
+/* The hand and the moments in the Imperator frame: after the sheets they re-skin. */
+@import "./styles/frame/hand.css";
+@import "./styles/frame/moments.css";
 @import "./styles/responsive.css";

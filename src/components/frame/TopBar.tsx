@@ -1,37 +1,39 @@
+import { useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { unrestOutcome } from "../../game/unrest";
 import type { UnrestOutcome } from "../../game/unrest";
 import { forecastYearCard, lastYear } from "../../game/year";
 import type { IncomeContribution } from "../../game/economy/income";
 import type { Ruleset } from "../../game/ruleset";
-import { getOwnedSettlement, popsInTransit } from "../../game/rules";
+import { getOwnedSettlement, popsInTransit, settlementCapacity, totalPops } from "../../game/rules";
 import type { HegemonyState, PlayerId, PopType, Resource, Resources } from "../../game/types";
 import { yearCardFace } from "../../ui/cardFace";
 import { presentUnrestOutcome } from "../../ui/effects";
-import { RESOURCE_LABELS, toRoman } from "../../ui/formatters";
+import { RESOURCE_LABELS, toRoman, formatSignedNumber } from "../../ui/formatters";
 import { gaugeStops } from "../../ui/frameSelectors";
 import type { HappinessDisplay } from "../../ui/frameSelectors";
-import { sign, tone } from "../../ui/frameFormat";
+import { tone } from "../../ui/frameFormat";
 import { POP_RASTERS, RESOURCE_RASTERS } from "../../ui/iconRegistry";
 import { settlementNames } from "../../ui/settlementNames";
 import { yearCardArtUrl } from "../board/events";
 import { GameCard } from "../cards/GameCard";
 import { Tooltip } from "../overlays/Tooltip";
 import { Ico, Tip, TipBody, TipLedger, TipWarn, Turns } from "./parts";
+import { HappinessCard } from "./top/HappinessCard";
 
-const PURSE: Resource[] = ["wood", "stone", "food", "gold", "influence"];
+const GOODS: Resource[] = ["wood", "stone", "food", "gold"];
 const PEOPLE: Array<{ pop: PopType; label: string }> = [
   { pop: "citizens", label: "Citizens" },
   { pop: "freemen", label: "Freemen" },
   { pop: "slaves", label: "Slaves" },
 ];
 
-/** Pips the gauge has room for; the tooltip prints the true count. */
+/** Pips the meter has room for; the tooltip prints the true count. */
 const MAX_TOKEN_PIPS = 6;
 
-/** The year and the years left: the clock at the bar's left end. The year's card
- *  itself leads the alarms row; next year's card shows on the clock's hover, and the
- *  final year has none. */
+/** The year and the years left: the clock at the bar's left end, past the seal. The
+ *  year's card itself leads the alarms row; next year's card shows on the clock's
+ *  hover, and the final year has none. */
 function Clock({ G }: { G: HegemonyState }) {
   const year = G.year;
   const totalYears = lastYear(G);
@@ -51,13 +53,12 @@ function Clock({ G }: { G: HegemonyState }) {
           ) : null
         }
         focusable
+        triggerRole="img"
         triggerClassName="year"
       >
-        <span className="year-n">Year {toRoman(year)}</span>
-        <span className="caps">of {toRoman(totalYears)}</span>
+        <b className="year-n">Year {toRoman(year)}</b>
         <span className="year-left">
-          <Ico path="events/year" size="chip" />
-          {left} left
+          of {toRoman(totalYears)} · {left} left
         </span>
       </Tooltip>
     </div>
@@ -83,7 +84,7 @@ function ResourceCell({
 
   return (
     <Tooltip
-      ariaLabel={`${label} ${owed ? store : value}, ${sign(delta)} next turn${short && !owed ? ", short" : ""}`}
+      ariaLabel={`${label} ${owed ? store : value}, ${formatSignedNumber(delta)} next turn${short && !owed ? ", short" : ""}`}
       content={
         <Tip title={label}>
           {lines.length > 0 ? (
@@ -91,7 +92,7 @@ function ResourceCell({
               rows={lines.map((line) => ({
                 key: line.key,
                 label: line.label,
-                value: sign(line.amount),
+                value: formatSignedNumber(line.amount),
               }))}
             />
           ) : (
@@ -107,11 +108,16 @@ function ResourceCell({
         </Tip>
       }
       focusable
-      triggerClassName={`res${short ? " is-short" : ""}`}
+      triggerRole="img"
+      triggerClassName={`bar-cell res${short ? " is-short" : ""}`}
     >
-      <Ico path={RESOURCE_RASTERS[resource]} size="ui" />
-      <span className="res-val num">{owed ? sign(value) : value}</span>
-      <span className={`res-delta ${tone(delta)}`}>{sign(delta)}</span>
+      <Ico path={RESOURCE_RASTERS[resource]} size="tile" />
+      <span className="bar-cell-v">
+        <b className="bar-cell-n">{owed ? formatSignedNumber(value) : value}</b>
+        <i className={`bar-cell-d ${tone(delta)}`}>
+          {delta === 0 ? "±0" : formatSignedNumber(delta)}
+        </i>
+      </span>
     </Tooltip>
   );
 }
@@ -153,19 +159,96 @@ function PopCell({
         </Tip>
       }
       focusable
-      triggerClassName="res pop"
+      triggerRole="img"
+      triggerClassName="bar-cell res pop"
     >
-      <Ico path={POP_RASTERS[pop]} size="ui" />
-      <span className="res-val num">{total}</span>
+      <Ico path={POP_RASTERS[pop]} size="tile" />
+      <span className="bar-cell-v">
+        <b className="bar-cell-n">{total}</b>
+        <i className="bar-cell-d">{label.toLowerCase()}</i>
+      </span>
     </Tooltip>
   );
 }
 
+/** Room: the realm's pops in its settlements against what they hold, place by place,
+ *  and "(+1)" for those at sea, as the outliner's rows count them: the classes' counts
+ *  include pops at sea, so the two add up. */
+function RoomCell({ G, viewerId }: { G: HegemonyState; viewerId: PlayerId }) {
+  const names = settlementNames(G.board.tiles);
+  const rows = G.players[viewerId].settlements.flatMap((tileId) => {
+    const settlement = getOwnedSettlement(G, tileId, viewerId);
+    if (!settlement) return [];
+    const pops = settlement.pops.citizens + settlement.pops.freemen + settlement.pops.slaves;
+    return [
+      {
+        key: settlement.id,
+        label: names.get(settlement.id) ?? "Polis",
+        pops,
+        room: settlementCapacity(settlement, G),
+      },
+    ];
+  });
+  const pops = rows.reduce((sum, row) => sum + row.pops, 0);
+  const room = rows.reduce((sum, row) => sum + row.room, 0);
+  const atSea = totalPops(popsInTransit(G, viewerId));
+
+  return (
+    <Tooltip
+      ariaLabel={`Room: ${pops} pops of ${room}${atSea ? `, ${atSea} more at sea` : ""}`}
+      content={
+        <Tip title="Room">
+          {rows.length > 0 ? (
+            <TipLedger
+              rows={[
+                ...rows.map((row) => ({
+                  key: row.key,
+                  label: row.label,
+                  value: `${row.pops} of ${row.room}`,
+                })),
+                ...(atSea
+                  ? [{ key: "sea", label: "At sea, here next turn", value: `+${atSea}` }]
+                  : []),
+              ]}
+            />
+          ) : (
+            <TipBody>No settlements yet.</TipBody>
+          )}
+        </Tip>
+      }
+      focusable
+      triggerRole="img"
+      triggerClassName="bar-cell res pop room"
+    >
+      <Ico path="pops/capacity" size="tile" />
+      <span className="bar-cell-v">
+        <b className="bar-cell-n">
+          {pops}
+          <small className="bar-cell-of">/{room}</small>
+        </b>
+        <i className="bar-cell-d">room{atSea ? <span className="pos"> (+{atSea})</span> : null}</i>
+      </span>
+    </Tooltip>
+  );
+}
+
+/** The level's one word: content, discontent, or what ending the turn at it sets off. */
+function moodWord(display: HappinessDisplay): string {
+  return display.value <= display.revoltAt
+    ? "revolt"
+    : display.value <= display.riotAt
+      ? "riot"
+      : display.value < 0
+        ? "discontent"
+        : "content";
+}
+
 /**
- * Happiness: the level, a gauge whose bands mark where riot and revolt start, and
- * one pip above the gauge for each Unrest token on the realm.
+ * Happiness: the level and its word, a meter whose bands mark where riot and revolt
+ * start, and one pip on it for each Unrest token. A click drops the happiness card,
+ * which holds Calm.
  */
-export function HappinessGauge({
+function MoodCell({
   display,
   outcome,
   ruleset,
@@ -175,75 +258,115 @@ export function HappinessGauge({
   outcome: UnrestOutcome;
   ruleset: Ruleset;
 }) {
+  const [open, setOpen] = useState(false);
+  const button = useRef<HTMLButtonElement>(null);
   const stops = gaugeStops(display);
   const atRiot = outcome.tier !== "none";
   const noun = "Happiness";
+  const word = moodWord(display);
   const tokens = `${display.tokens} Unrest ${display.tokens === 1 ? "token" : "tokens"}`;
 
   return (
-    <Tooltip
-      ariaLabel={`${noun} ${sign(display.value)}, ${tokens}; riot at ${sign(display.riotAt)}, revolt at ${sign(display.revoltAt)}`}
-      content={
-        <Tip title={noun}>
-          <TipLedger
-            rows={[
-              ...display.lines.map((line) => ({
-                key: line.label,
-                label:
-                  line.turns === undefined ? (
-                    line.label
-                  ) : (
-                    <>
-                      {line.label} <Turns n={line.turns} />
-                    </>
-                  ),
-                value: sign(line.amount),
-              })),
-              { key: "total", label: noun, value: sign(display.value), total: true },
-            ]}
-          />
-          <TipLedger
-            rows={[
-              { key: "riot", label: "Riot at", value: sign(display.riotAt), icon: "unrest/riot" },
-              {
-                key: "revolt",
-                label: "Revolt at",
-                value: sign(display.revoltAt),
-                icon: "unrest/revolt",
-              },
-            ]}
-          />
-          <TipBody>
-            Read off the board each turn; nothing is saved up. Unrest tokens stay until a riot, a
-            revolt or a card clears them.
-          </TipBody>
-          {atRiot ? <TipWarn>{presentUnrestOutcome(ruleset, outcome.tier).warning}</TipWarn> : null}
-        </Tip>
-      }
-      focusable
-      triggerClassName={`level${atRiot ? " is-riot" : ""}`}
-    >
-      <Ico path={RESOURCE_RASTERS.happiness} size="ui" />
-      <span className={`res-val num ${tone(display.value)}`}>{sign(display.value)}</span>
-      <span
-        className="gauge"
-        style={
-          {
-            "--g-value": stops.value,
-            "--g-riot": stops.riot,
-            "--g-revolt": stops.revolt,
-          } as CSSProperties
+    <>
+      <Tooltip
+        content={
+          <Tip title={noun}>
+            <TipLedger
+              rows={[
+                ...display.lines.map((line) => ({
+                  key: line.label,
+                  label:
+                    line.turns === undefined ? (
+                      line.label
+                    ) : (
+                      <>
+                        {line.label} <Turns n={line.turns} />
+                      </>
+                    ),
+                  value: formatSignedNumber(line.amount),
+                })),
+                {
+                  key: "total",
+                  label: noun,
+                  value: formatSignedNumber(display.value),
+                  total: true,
+                },
+              ]}
+            />
+            <TipLedger
+              rows={[
+                {
+                  key: "riot",
+                  label: "Riot at",
+                  value: formatSignedNumber(display.riotAt),
+                  icon: "unrest/riot",
+                },
+                {
+                  key: "revolt",
+                  label: "Revolt at",
+                  value: formatSignedNumber(display.revoltAt),
+                  icon: "unrest/revolt",
+                },
+              ]}
+            />
+            <TipBody>
+              Read off the board each turn; nothing is saved up. Unrest tokens stay until a riot, a
+              revolt or a card clears them.
+            </TipBody>
+            {atRiot ? (
+              <TipWarn>{presentUnrestOutcome(ruleset, outcome.tier).warning}</TipWarn>
+            ) : null}
+            <p className="tip-act">Click for Calm</p>
+          </Tip>
         }
       >
-        {display.tokens > 0 ? (
-          <span className="gauge-tokens" data-tokens={display.tokens}>
-            {Array.from({ length: Math.min(display.tokens, MAX_TOKEN_PIPS) }, (_, pip) => (
-              <i className="gauge-token" key={pip} />
-            ))}
+        <button
+          aria-expanded={open}
+          aria-haspopup="dialog"
+          aria-label={`${noun} ${formatSignedNumber(display.value)}, ${word}, ${tokens}; riot at ${formatSignedNumber(display.riotAt)}, revolt at ${formatSignedNumber(display.revoltAt)}. Open for Calm`}
+          className={`bar-cell mood${atRiot ? " is-riot" : ""}`}
+          data-c="mood"
+          onClick={() => setOpen((value) => !value)}
+          ref={button}
+          type="button"
+        >
+          <Ico path={display.value < 0 ? "unrest/discontent" : "unrest/calm"} size="tile" />
+          <span className="bar-cell-v">
+            <b className={`bar-cell-n ${tone(display.value)}`}>
+              {formatSignedNumber(display.value)}
+            </b>
+            <i className="bar-cell-d">{word}</i>
           </span>
-        ) : null}
-      </span>
-    </Tooltip>
+          <span
+            aria-hidden="true"
+            className="mood-meter"
+            style={
+              {
+                "--g-value": stops.value,
+                "--g-riot": stops.riot,
+                "--g-revolt": stops.revolt,
+              } as CSSProperties
+            }
+          >
+            {display.tokens > 0 ? (
+              <span className="gauge-tokens" data-tokens={display.tokens}>
+                {Array.from({ length: Math.min(display.tokens, MAX_TOKEN_PIPS) }, (_, pip) => (
+                  <i className="gauge-token" key={pip} />
+                ))}
+              </span>
+            ) : null}
+          </span>
+        </button>
+      </Tooltip>
+      {open ? (
+        <HappinessCard
+          anchor={button}
+          display={display}
+          onClose={() => setOpen(false)}
+          word={word}
+        />
+      ) : null}
+    </>
   );
 }
 
@@ -264,6 +387,11 @@ function linesFor(
   return [...merged].map(([label, amount]) => ({ key: label, label, amount }));
 }
 
+/**
+ * The top bar, 50 high across the screen: the year, the five resources and the three
+ * classes of people with the room they live in, each stock over its change, and the
+ * mood, which opens the happiness card. The menu sits at its right end.
+ */
 export function TopBar({
   G,
   viewerId,
@@ -277,43 +405,42 @@ export function TopBar({
   income: Resources;
   breakdown: readonly IncomeContribution[];
   happiness: HappinessDisplay;
-  /** The bar's right end: the consult pages' names. */
+  /** The bar's right end: the menu. */
   children: ReactNode;
 }) {
   const store = G.players[viewerId].resources;
   const names = settlementNames(G.board.tiles);
+  const cell = (resource: Resource) => (
+    <ResourceCell
+      delta={income[resource]}
+      key={resource}
+      lines={linesFor(resource, breakdown, names)}
+      resource={resource}
+      value={store[resource]}
+    />
+  );
 
   return (
     <header className="topbar" data-c="topbar" data-exclude data-gate-flex>
       <Clock G={G} />
       <div className="purse" data-c="purse">
-        <div aria-label="Goods" className="purse-seg" role="group">
-          {PURSE.map((resource) => (
-            <ResourceCell
-              delta={income[resource]}
-              key={resource}
-              lines={linesFor(resource, breakdown, names)}
-              resource={resource}
-              value={store[resource]}
-            />
-          ))}
+        <div aria-label="Goods" className="bar-grp" role="group">
+          {GOODS.map(cell)}
         </div>
-        <div aria-label="People" className="purse-seg" role="group">
+        <div aria-label="Influence" className="bar-grp" role="group">
+          {cell("influence")}
+        </div>
+        <div aria-label="People" className="bar-grp" role="group">
           {PEOPLE.map(({ pop, label }) => (
             <PopCell G={G} key={pop} label={label} pop={pop} viewerId={viewerId} />
           ))}
+          <RoomCell G={G} viewerId={viewerId} />
         </div>
-        <div className="purse-seg">
-          <HappinessGauge
-            display={happiness}
-            outcome={unrestOutcome(G, viewerId)}
-            ruleset={G.ruleset}
-          />
+        <div className="bar-grp">
+          <MoodCell display={happiness} outcome={unrestOutcome(G, viewerId)} ruleset={G.ruleset} />
         </div>
       </div>
-      <div className="court" data-c="court">
-        {children}
-      </div>
+      {children}
     </header>
   );
 }

@@ -18,8 +18,12 @@ export type ViewportSize = { width: number; height: number };
 
 export type AnchoringOptions = {
   preferredPlacement?: VerticalPlacement;
-  /** `start` hangs the overlay from the anchor's left edge instead of centring it. */
-  align?: "center" | "start";
+  /** `start` hangs the overlay from the anchor's left edge instead of centring it;
+   *  `end` from its right edge. */
+  align?: "center" | "start" | "end";
+  /** `right` (or `left`) stands the overlay beside the anchor, centred on it: for a
+   *  column of controls, where a card below one would cover the next. */
+  side?: "right" | "left";
   margin?: number;
   gap?: number;
   arrowInset?: number;
@@ -53,6 +57,17 @@ export function positionAnchoredOverlay(
   const gap = options.gap ?? ANCHOR_GAP;
   const arrowInset = options.arrowInset ?? ANCHOR_ARROW_INSET;
   const preferred = options.preferredPlacement ?? "below";
+  if (options.side) {
+    const middle = anchor.top + anchor.height / 2 - floating.height / 2;
+    const beside =
+      options.side === "right" ? anchor.right + gap : anchor.left - gap - floating.width;
+    return {
+      top: clampToViewport(middle, floating.height, viewport.height, margin),
+      left: clampToViewport(beside, floating.width, viewport.width, margin),
+      arrowLeft: arrowInset,
+      placement: preferred,
+    };
+  }
   const centerX = anchor.left + anchor.width / 2;
   const spaceBelow = viewport.height - anchor.bottom - margin - gap;
   const spaceAbove = anchor.top - margin - gap;
@@ -66,7 +81,11 @@ export function positionAnchoredOverlay(
         : "below";
   const rawTop = placement === "below" ? anchor.bottom + gap : anchor.top - floating.height - gap;
   const left = clampToViewport(
-    options.align === "start" ? anchor.left : centerX - floating.width / 2,
+    options.align === "start"
+      ? anchor.left
+      : options.align === "end"
+        ? anchor.right - floating.width
+        : centerX - floating.width / 2,
     floating.width,
     viewport.width,
     margin,

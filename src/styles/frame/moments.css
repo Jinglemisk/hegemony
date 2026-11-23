@@ -1,0 +1,495 @@
+/* ============================================================================
+   Moments in the Imperator frame (docs/plans/imperator-shell.md, slice 5): every
+   dialog ModalShell draws — the fate, year and drawn cards, the riot, revolt and
+   hunger cards, the game's end, the turn notice, the Idea draft and purchase, the
+   Assembly sitting — and the trade cards, the map's popovers and the Assembly's
+   pill, re-skinned in parchment, black glaze and bronze. Content and copy are
+   theirs; this sheet only changes the material, the controls and the motion.
+   ========================================================================== */
+
+/* ---- the table under a moment ----------------------------------------------
+   A moment taller than the screen scrolls on its scrim, centred while it fits. */
+.modalBackdrop {
+  overflow-y: auto;
+  align-items: safe center;
+}
+
+/* ---- the frame: parchment in the cast bronze rule, a corner on each corner -- */
+.ch-moment {
+  position: relative;
+  overflow: visible;
+  border-radius: var(--r-panel);
+  color: var(--ink);
+  background: var(--parch);
+  box-shadow: var(--shadow-panel);
+  filter: none;
+  clip-path: none;
+}
+/* The rule over the content's edge, as a Panel draws it. */
+.ch-moment::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-lift);
+  border-radius: inherit;
+  box-shadow: var(--rule-frame);
+  pointer-events: none;
+}
+.ch-moment > .ch-head {
+  margin: 0;
+}
+
+/* ---- heads: the black glaze band with its gilt edge and the meander under it */
+.ch-moment :is(.sheetHead, .sit-head, .tabletHead),
+.trade-head {
+  position: relative;
+  color: var(--glaze-ink);
+  background: var(--glaze);
+  box-shadow: var(--head-edge);
+}
+.ch-moment :is(.sheetHead, .sit-head, .tabletHead)::after,
+.trade-head::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: calc(-1 * var(--sh-meander-h));
+  left: 0;
+  z-index: var(--z-lift);
+  height: var(--sh-meander-h);
+  background: var(--meander);
+  filter: var(--shadow-meander);
+  pointer-events: none;
+}
+.ch-moment :is(.sheetHead, .sit-head, .tabletHead) :is(h2, .display, .sit-sub, .caption),
+.trade-head :is(.trade-title, .trade-caption) {
+  color: var(--glaze-ink);
+}
+.ch-moment :is(.sheetHead, .sit-head, .tabletHead) :is(.sit-sub, .caption, .body-em),
+.trade-head .trade-caption {
+  color: var(--glaze-ink-66);
+}
+.ch-moment :is(.sheetHead, .tabletHead) .label,
+.trade-head .kicker,
+.ch-moment .sit-head .kicker {
+  color: var(--bz-hi);
+}
+.ch-moment :is(.sheetHead, .sit-head, .tabletHead) + *,
+.trade-head + * {
+  margin-top: var(--sh-meander-h);
+}
+
+/* A centred card's kicker — the fate's, hunger's, a loss's — becomes the glaze band
+   across the card's top, as the prototype's card heads it. */
+.ch-moment.fateCard .fateKicker,
+.ch-moment.ceremonyTablet .tabletKicker {
+  position: relative;
+  margin: calc(-1 * var(--s-6)) calc(-1 * var(--s-8)) var(--s-4);
+  padding: var(--s-3);
+  border-radius: var(--r-panel) var(--r-panel) 0 0;
+  color: var(--bz-hi);
+  background: var(--glaze);
+  box-shadow: var(--head-edge);
+}
+.ch-moment.fateCard .fateKicker::after,
+.ch-moment.ceremonyTablet .tabletKicker::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: calc(-1 * var(--sh-meander-h));
+  left: 0;
+  height: var(--sh-meander-h);
+  background: var(--meander);
+  filter: var(--shadow-meander);
+}
+.ch-moment.ceremonyTablet .tabletKicker {
+  margin-inline: -34px;
+  margin-top: -26px;
+}
+
+/* ---- the surfaces, one by one: their size and place are their own ------------ */
+/* The riot sheet: its body scrolls inside; the head and foot stay. */
+.ch-moment.riotSheet {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: visible;
+}
+.ch-moment.riotSheet .sheetHead {
+  border-bottom: 0;
+  border-radius: var(--r-panel) var(--r-panel) 0 0;
+}
+.ch-moment.riotSheet .sheetHead .icon {
+  border-radius: var(--r-round);
+  background: var(--medallion);
+  box-shadow: var(--medallion-rim);
+}
+.ch-moment.riotSheet .sheetBody {
+  min-height: 0;
+  overflow-y: auto;
+}
+.ch-moment.riotSheet .sheetFoot {
+  border-top-color: var(--bz-dk-30);
+}
+.ch-moment :is(.insRow, .oddsRow) {
+  border-color: var(--bz-dk-30);
+}
+.ch-moment .insRow {
+  background: var(--socket);
+  box-shadow: var(--socket-rim);
+}
+.ch-moment .insRow.is-on {
+  background: var(--socket-worked);
+}
+
+/* The hunger card and a loss card: the head's band across the top, the rows flat. */
+.ch-moment.fateCard {
+  padding-top: var(--s-6);
+}
+.ch-moment :is(.hungerRow) {
+  border-bottom-color: var(--bz-dk-30);
+}
+.ch-moment .blowBand {
+  background: var(--bz-dk-12);
+  box-shadow: none;
+}
+
+/* A drawn card on the table: the card, its deck line, the slip and the commit in one
+   parchment panel, as wide as an alarm's card (the year's card opens from its alarm). */
+.ch-moment.drawnReveal {
+  width: min(var(--sh-card-w), calc(var(--vw) - var(--s-8))); /* 480 */
+  padding: var(--s-6);
+}
+.ch-moment.drawnReveal.handReveal {
+  padding: var(--s-6) var(--s-8);
+}
+.ch-moment .drawn-slip {
+  background: none;
+  box-shadow: none;
+}
+.ch-moment .drawn-caption {
+  color: var(--ink-66);
+}
+.ch-moment .drawn-wait {
+  color: var(--clay-ink);
+}
+.ch-moment .drawn-tray .ghostVerb {
+  color: var(--ink);
+}
+
+/* The game's end: no longer a chamfered tablet; the frame holds it. */
+.ch-moment.ceremonyTablet {
+  overflow: visible;
+  max-height: none;
+}
+
+/* The turn notice and a card pick's handover. */
+.ch-moment.turn-notice {
+  background: var(--parch);
+}
+
+/* The Assembly sitting: the glaze head with the stage rail; the body under it. */
+.ch-moment.sitting {
+  overflow: visible;
+  max-height: none;
+}
+.ch-moment .sit-head {
+  border-bottom: 0;
+  border-radius: var(--r-panel) var(--r-panel) 0 0;
+}
+.ch-moment .sit-head .sit-rail li {
+  color: var(--glaze-ink-66);
+}
+.ch-moment .sit-head .sit-rail li.is-done {
+  color: var(--bz-hi);
+}
+.ch-moment .sit-head .sit-rail li.is-now {
+  color: var(--glaze-ink);
+  background: none;
+  box-shadow: inset 0 -3px 0 var(--clay);
+  border-radius: 0;
+}
+.ch-moment .sit-foot {
+  border-top-color: var(--bz-dk-30);
+  background: var(--bz-dk-12);
+}
+
+/* The Idea purchase over the table, and the draft that takes the whole screen. */
+.ch-moment.ideas-modal {
+  overflow: visible;
+  max-height: none;
+  background: var(--parch);
+}
+.modalBackdrop.ideas-setup {
+  background: var(--parch);
+}
+
+/* ---- the controls: lacquer for the verb, plaques for the rest ---------------- */
+:is(.ch-moment, .trade-card, .sharedPopover)
+  :is(.ceremonyCommit, .eventResolveButton, .btn.is-primary, .sit-btn.is-primary, .confirm-btn) {
+  border: 0;
+  border-radius: var(--r-panel);
+  color: var(--lacquer-ink);
+  background: var(--lacquer);
+  box-shadow: var(--lacquer-rim);
+  text-shadow: var(--ink-shadow);
+  opacity: 1;
+  transition:
+    transform var(--dur-press) var(--ease-out),
+    filter var(--dur-hover) var(--ease-out);
+}
+:is(.ch-moment, .trade-card, .sharedPopover)
+  :is(
+    .ghostVerb,
+    .placementCancelButton,
+    .btn:not(.is-primary),
+    .sit-btn:not(.is-primary, .is-nay, .is-yea)
+  ) {
+  border: 0;
+  border-radius: var(--r-panel);
+  color: var(--ink);
+  background: var(--plaque);
+  box-shadow: var(--plaque-rim);
+  transition:
+    transform var(--dur-press) var(--ease-out),
+    filter var(--dur-hover) var(--ease-out);
+}
+.ch-moment .sit-btn.is-nay {
+  border: 0;
+  color: var(--lacquer-ink);
+  background: var(--lacquer);
+  box-shadow: var(--lacquer-rim);
+}
+.ch-moment .sit-btn.is-yea {
+  border: 0;
+  color: var(--glaze-ink);
+  background: var(--back);
+  box-shadow: var(--back-rim);
+}
+:is(.ch-moment, .trade-card, .sharedPopover)
+  :is(
+    .ceremonyCommit,
+    .eventResolveButton,
+    .ghostVerb,
+    .placementCancelButton,
+    .btn,
+    .sit-btn,
+    .confirm-btn
+  ):is(:hover:not(:disabled, [aria-disabled="true"])) {
+  filter: var(--hover-glow) var(--hover-lift);
+}
+:is(.ch-moment, .trade-card, .sharedPopover)
+  :is(
+    .ceremonyCommit,
+    .eventResolveButton,
+    .ghostVerb,
+    .placementCancelButton,
+    .btn,
+    .sit-btn,
+    .confirm-btn
+  ):is(:disabled, [aria-disabled="true"]) {
+  color: var(--ink-66);
+  background: var(--hatch);
+  box-shadow: var(--hatch-rim);
+  text-shadow: none;
+  opacity: 1;
+  filter: none;
+  transform: none;
+}
+/* A toggle that is on is pressed glaze. */
+:is(.ch-moment, .trade-card) :is(.btn.is-on, .sit-btn[aria-pressed="true"]) {
+  color: var(--glaze-ink);
+  background: var(--glaze);
+  box-shadow: var(--pressed-rim);
+}
+
+/* ---- the floating cards: the trade composer, an offer, a standing deal, three
+   titles, End turn's riot warning. Parchment in the frame with a bronze corner on
+   each corner, settling into place; their heads are glaze, their chips plaques. */
+:is(.trade-pop .trade-card, .threat-panel, .endturn-confirm) {
+  border-radius: var(--r-panel);
+  color: var(--ink);
+  background: var(--parch);
+  box-shadow: var(--shadow-panel);
+  animation: ch-settle var(--dur-settle) var(--ease-out) both;
+}
+.trade-pop .trade-card {
+  position: relative;
+}
+:is(.trade-pop .trade-card, .threat-panel, .endturn-confirm)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-lift);
+  border-radius: inherit;
+  box-shadow: var(--rule-frame);
+  pointer-events: none;
+}
+:is(.trade-pop .trade-card, .threat-panel, .endturn-confirm)::before {
+  content: "";
+  position: absolute;
+  inset: calc(-1 * var(--sh-corner-out));
+  z-index: var(--z-trim);
+  background:
+    url("../../../assets/chrome/corner-tl.webp") left top / var(--sh-corner) no-repeat,
+    url("../../../assets/chrome/corner-tr.webp") right top / var(--sh-corner) no-repeat,
+    url("../../../assets/chrome/corner-bl.webp") left bottom / var(--sh-corner) no-repeat,
+    url("../../../assets/chrome/corner-br.webp") right bottom / var(--sh-corner) no-repeat;
+  filter: var(--shadow-corner);
+  pointer-events: none;
+}
+.threat-panel .threat-head {
+  position: relative;
+  border-radius: var(--r-panel) var(--r-panel) 0 0;
+  color: var(--glaze-ink);
+  background: var(--glaze);
+  box-shadow: var(--head-edge);
+}
+.threat-panel .threat-head :is(.threat-title, .caption) {
+  color: var(--glaze-ink);
+}
+.threat-panel .threat-head .caption {
+  color: var(--glaze-ink-66);
+}
+.threat-panel .threat-seat + .threat-seat {
+  border-top-color: var(--bz-dk-30);
+}
+.threat-panel .threat-rows li {
+  border-radius: 0;
+  box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--bz-dk-30);
+}
+.threat-panel .threat-rows li.is-yours {
+  box-shadow:
+    inset var(--s-1) 0 0 var(--clay),
+    inset 0 calc(-1 * var(--rule)) 0 var(--bz-dk-30);
+}
+/* The riot warning: its title and close are the glaze band across its top. */
+.endturn-confirm {
+  padding-top: 0;
+}
+.endturn-confirm .confirm-head {
+  margin: 0 calc(-1 * var(--s-4)) var(--s-2);
+  padding: var(--s-2) var(--s-3) var(--s-2) var(--s-4);
+  border-radius: var(--r-panel) 0 0 0;
+  color: var(--glaze-ink);
+  background: var(--glaze);
+  box-shadow: var(--head-edge);
+}
+.endturn-confirm .confirm-title {
+  --name-size: var(--t-head);
+  --name-lh: var(--l-head);
+  color: var(--glaze-ink);
+}
+.endturn-confirm .confirm-calm {
+  border-radius: var(--r-panel);
+  background: var(--bz-dk-12);
+}
+.trade-head {
+  border-radius: var(--r-panel) var(--r-panel) 0 0;
+}
+.trade-x {
+  border-radius: var(--r-round);
+  color: var(--bz-dk);
+  background: var(--knob);
+  box-shadow: var(--knob-rim);
+}
+.trade-x:hover {
+  box-shadow: var(--knob-rim);
+  filter: var(--hover-glow);
+}
+.trade-card :is(.trade-chip, .trade-pick, .trade-add, .trade-lease-pick .btn) {
+  border-radius: var(--r-panel);
+  background: var(--plaque);
+  box-shadow: var(--plaque-rim);
+}
+.trade-card .trade-chip.is-changed {
+  box-shadow:
+    inset 0 0 0 var(--rule-2) var(--clay),
+    var(--plaque-rim);
+}
+.trade-card :is(.trade-pick, .trade-add):hover:not([aria-disabled="true"]) {
+  box-shadow: var(--plaque-rim);
+  filter: var(--hover-glow);
+}
+.trade-card .trade-add.is-open,
+.trade-card .trade-lease-pick .btn.is-on {
+  color: var(--glaze-ink);
+  background: var(--glaze);
+  box-shadow: var(--pressed-rim);
+}
+.trade-card .trade-picker {
+  border-radius: var(--r-panel);
+  background: var(--parch);
+  box-shadow: var(--rule-frame), var(--shadow-panel);
+}
+.trade-card :is(.trade-foot, .trade-answer, .trade-answers) {
+  border-top-color: var(--bz-dk-30);
+}
+.trade-card .trade-foot {
+  background: var(--bz-dk-12);
+}
+.trade-card .trade-row {
+  border-radius: var(--r-panel);
+  background: var(--socket);
+  box-shadow: var(--socket-rim);
+}
+.trade-card .deal-ask {
+  background: var(--socket-open-hover);
+}
+/* The composer centres on the board; it holds up no one, so it is no dialog. */
+.sharedPopover.is-centre {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+}
+
+/* ---- the map's popovers: parchment in the rule, a glaze head ---------------- */
+.sharedPopover .placementPickerChip {
+  border: 0;
+  border-radius: var(--r-panel);
+  background: var(--plaque);
+  box-shadow: var(--plaque-rim);
+}
+.sharedPopover .placementPickerChip.selectedChoice {
+  box-shadow:
+    inset 0 0 0 var(--rule-2) var(--clay),
+    var(--plaque-rim);
+}
+
+/* ---- the Assembly's pill: a sitting minimised waits under the alarms -------- */
+.sit-dock {
+  position: fixed;
+  top: 110px;
+  left: 100px;
+  border: 0;
+  border-radius: var(--r-24);
+  color: var(--glaze-ink);
+  background: var(--glaze);
+  box-shadow: var(--head-edge), var(--shadow-panel);
+  animation: ch-drop var(--dur-drop) var(--ease-drop) both;
+}
+/* One height at every text size: the line under the name ellipsizes; the pill's
+   tooltip carries it whole. */
+.sit-dock {
+  align-content: center;
+  row-gap: var(--s-1);
+  height: var(--sh-pill-h);
+  padding-block: var(--s-2);
+  overflow: hidden;
+}
+/* Return's plaque keeps a thin pad, so the two rows fit the 92 at Largest. */
+.sit-dock .sit-dock-back {
+  padding-block: 2px;
+}
+.sit-dock .sit-dock-words > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Ivory on the clay plaque: 5.7:1 at rest, 4.8:1 on the hover's lighter clay. */
+.sit-dock .sit-dock-back {
+  color: var(--ivory);
+}
+.sit-dock .ico {
+  border-radius: var(--r-round);
+  background: var(--medallion);
+  box-shadow: var(--medallion-rim);
+}

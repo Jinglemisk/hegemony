@@ -32,6 +32,8 @@ test("seals a Law blocked when drawn, and keeps it when it is still blocked", as
   await visit(page, "/?dev=assembly-blocked&seed=42");
   const sheet = page.getByRole("dialog", { name: "The Assembly" });
   await sheet.getByRole("button", { name: "Draw from Demosthenes" }).click();
+  // A draw spends influence, so it asks first.
+  await page.getByRole("alertdialog").getByRole("button", { name: "Draw" }).click();
   await expect(sheet).toContainText("You may still seal it.");
   await sheet.getByRole("button", { name: "Seal this Law" }).click();
 

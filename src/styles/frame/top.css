@@ -1,0 +1,470 @@
+/* ============================================================================
+   The top's floating parts (frame/top/): the alarms under the bar, the menu and
+   its movable windows, the happiness card, the minimised Assembly's place.
+   After chrome.css and the sitting, so the restyles here win.
+   ========================================================================== */
+/* The bar draws its own foot and shadow. */
+.hud-top {
+  filter: none;
+}
+
+/* ---- the alarms: bronze-rimmed parchment discs beside the seal, dropping in --- */
+.alarms {
+  position: fixed;
+  top: calc(var(--u) * 14); /* 56 */
+  left: calc(var(--u) * 25); /* 100 */
+  display: flex;
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.alarm-disc {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--hit-often);
+  height: var(--hit-often);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-round);
+  background: var(--alarm-face);
+  box-shadow: var(--alarm-rim);
+  animation: ch-drop var(--dur-drop) var(--ease-drop) both;
+}
+button.alarm-disc {
+  cursor: pointer;
+}
+.alarm-disc .ico,
+.alarm-disc.is-year > .ico,
+.threat > .alarm-disc .ico {
+  width: calc(var(--u) * 7);
+  height: calc(var(--u) * 7);
+}
+.alarm-disc.is-down {
+  background: var(--alarm-face-hurt);
+  box-shadow:
+    inset 0 0 0 2px var(--clay),
+    var(--alarm-rim);
+}
+.alarm-disc.is-up {
+  box-shadow:
+    inset 0 0 0 2px var(--pos),
+    var(--alarm-rim);
+}
+.alarm-disc.is-loud,
+.alarm-disc.is-up.is-loud {
+  background: var(--alarm-face-hurt);
+  box-shadow:
+    inset 0 0 0 2px var(--clay),
+    var(--alarm-rim),
+    var(--alarm-loud);
+}
+.alarm-disc.is-up.is-loud {
+  background: var(--alarm-face);
+  box-shadow:
+    inset 0 0 0 2px var(--pos),
+    var(--alarm-rim),
+    var(--alarm-loud);
+}
+.alarm-disc:hover,
+.alarm-disc[aria-expanded="true"] {
+  filter: var(--hover-glow);
+}
+.alarm-disc[aria-expanded="true"] {
+  outline: 3px solid var(--ochre);
+  outline-offset: 3px;
+}
+.alarm-badge {
+  right: -6px;
+  bottom: -6px;
+  width: var(--s-6);
+  height: var(--s-6);
+  background: var(--alarm-face);
+  box-shadow: var(--alarm-rim);
+}
+.alarm-badge .ico {
+  width: var(--ic-16);
+  height: var(--ic-16);
+}
+/* The seat on an offer or a deal: its coin on the rim. */
+.alarm-disc .ch-coin.offer-badge {
+  --coin-d: 22px;
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: var(--coin-d);
+  height: var(--coin-d);
+  border-radius: var(--r-round);
+}
+.offer-disc,
+.deal-disc {
+  background: var(--alarm-face);
+  box-shadow: var(--alarm-rim);
+}
+.offer-disc:hover,
+.offer-disc[aria-expanded="true"],
+.deal-disc:hover,
+.deal-disc[aria-expanded="true"] {
+  box-shadow: var(--alarm-rim);
+}
+
+/* ---- an alarm's card: parchment in the bronze rule, a glaze head --------------- */
+/* Every alarm's card (the threat, a deal, an offer) opens in one slot under the
+   alarms row, wherever its disc stands, so it never covers the row or lands
+   where a disc was mid-drop. */
+.sharedPopover.is-slot.alarm-card {
+  top: var(--sh-card-y);
+  left: var(--sh-card-x);
+  max-width: var(--sh-card-w);
+}
+/* One width for every alarm's card, the threat's, an offer's and a deal's. */
+.sharedPopover.is-slot.alarm-card .trade-card {
+  width: var(--sh-card-w);
+}
+.alarm-card-x {
+  position: absolute;
+  top: var(--s-3);
+  right: var(--s-3);
+  z-index: var(--z-trim);
+}
+.threat-panel {
+  width: var(--sh-card-w);
+  border-radius: var(--r-panel);
+  background: var(--parch);
+  box-shadow: var(--rule-frame), var(--shadow-panel);
+}
+.threat-seat:first-of-type .threat-head {
+  padding-right: calc(var(--s-3) + var(--hit) + var(--s-2));
+  border-radius: var(--r-panel) var(--r-panel) 0 0;
+}
+.threat-head {
+  position: relative;
+  border-radius: 0;
+  color: var(--glaze-ink);
+  background: var(--glaze);
+  box-shadow: var(--head-edge);
+}
+.threat-head .threat-title {
+  color: var(--glaze-ink);
+  font-family: var(--f-name);
+}
+.threat-head .caption,
+.threat-head .kicker {
+  color: var(--glaze-ink-66);
+}
+.threat-coin {
+  --coin-d: var(--ic-48);
+}
+.threat-rows {
+  padding-top: var(--s-4);
+}
+.threat-rows li {
+  border-radius: 0;
+  box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--bz-dk-12);
+}
+
+/* ---- popovers from the bar: no arrow, the panel is the card -------------------- */
+.top-pop .sharedPopoverArrow {
+  display: none;
+}
+
+/* ---- the menu ------------------------------------------------------------------ */
+/* Flush right under the bar, the outliner's width, so it covers the outliner's head
+   whole and leaves no sliver of it beside. */
+.sharedPopover.is-slot.menu-pop {
+  top: calc(var(--sh-top-h) + var(--sh-meander-h));
+  right: 0;
+}
+.menu-card {
+  display: flex;
+  flex-direction: column;
+  width: var(--sh-outliner-w);
+  height: calc(var(--u) * 93); /* 372 */
+  overflow: visible;
+  border-radius: var(--r-panel) 0 0 var(--r-panel);
+}
+/* At Large and Largest text its rows scroll inside the card's fixed height. */
+.menu-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: var(--bz) transparent;
+  scrollbar-width: thin;
+}
+.menu-rows {
+  margin: 0;
+  padding: var(--s-1) 0;
+  list-style: none;
+}
+.menu-row {
+  display: grid;
+  grid-template-columns: var(--ic-32) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2px var(--s-3);
+  width: 100%;
+  min-height: calc(var(--u) * 13);
+  padding: var(--s-2) var(--s-4);
+  border: 0;
+  color: var(--ink);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.menu-rows li + li .menu-row {
+  box-shadow: inset 0 var(--rule) 0 var(--bz-dk-12);
+}
+.menu-row:hover {
+  background: var(--bar-hover);
+}
+.menu-row-words {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.menu-row-name {
+  font-family: var(--f-name);
+  font-weight: 700;
+  letter-spacing: var(--track-name);
+}
+.menu-row-sub {
+  color: var(--ink-66);
+  font-family: var(--f-sans);
+}
+.menu-row-open {
+  color: var(--clay-ink);
+  font-family: var(--f-sans);
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+.menu-sec {
+  padding: var(--s-2) var(--s-4) var(--s-3);
+  box-shadow: inset 0 var(--rule) 0 var(--bz-dk-30);
+}
+.menu-sec-label {
+  margin: 0 0 var(--s-2);
+  color: var(--ink-66);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+.menu-seats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-1);
+}
+.menu-seats.is-rows {
+  grid-template-columns: 1fr;
+}
+.menu-seat {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: calc(var(--u) * 9);
+  padding: var(--s-1) var(--s-2);
+  border: 0;
+  border-radius: var(--r-panel);
+  color: var(--ink);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.menu-seat:hover {
+  background: var(--bar-hover);
+}
+.menu-seat[aria-pressed="true"] {
+  color: var(--glaze-ink);
+  background: var(--glaze);
+  box-shadow: var(--pressed-rim);
+}
+.menu-seat-name {
+  overflow: hidden;
+  font-family: var(--f-name);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.menu-seat-tag {
+  margin-left: auto;
+  color: var(--clay-ink);
+  font-family: var(--f-sans);
+  font-weight: 700;
+}
+.menu-seat[aria-pressed="true"] .menu-seat-tag {
+  color: var(--ember);
+}
+.menu-sizes {
+  display: flex;
+  gap: var(--s-3);
+}
+.menu-sizes .ch-plaque {
+  flex: 1;
+  padding-inline: var(--s-1);
+}
+
+/* ---- the menu's windows: movable panels, the head their handle ---------------- */
+.menu-windows {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-bar); /* over the HUD it follows in the DOM */
+  pointer-events: none;
+}
+.menu-window {
+  position: absolute;
+  pointer-events: auto;
+}
+.menu-window-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+.menu-window-grip {
+  position: relative;
+  cursor: grab;
+  touch-action: none;
+}
+/* The grip: a column of bronze dots at the head's left end says it moves. */
+.menu-window-dots {
+  position: absolute;
+  top: 50%;
+  left: var(--s-2);
+  z-index: var(--z-lift);
+  width: var(--s-3);
+  height: calc(var(--u) * 6);
+  translate: 0 -50%;
+  background: radial-gradient(circle, var(--bz-hi) 1.4px, transparent 1.8px) 0 0 / 6px 6px;
+  pointer-events: none;
+}
+.menu-window-grip .ch-head {
+  padding-left: calc(var(--s-4) + var(--s-3));
+}
+.menu-window-grip:active {
+  cursor: grabbing;
+}
+.menu-window-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding: calc(var(--sh-meander-h) + var(--s-3)) var(--s-4) var(--s-4);
+}
+.plates-body {
+  display: grid;
+  gap: var(--s-3);
+}
+.plates-line {
+  display: grid;
+  grid-template-columns: calc(var(--u) * 18) 1fr;
+  align-items: center;
+}
+.plates-opts {
+  display: flex;
+  gap: var(--s-3);
+}
+.plates-hint {
+  margin: 0;
+  color: var(--ink-66);
+  font-family: var(--f-sans);
+}
+
+/* ---- the happiness card -------------------------------------------------------- */
+.mood-card {
+  display: flex;
+  flex-direction: column;
+  width: calc(var(--u) * 110); /* 440 */
+  height: calc(var(--u) * 106); /* 424 */
+}
+.mood-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--sh-meander-h) 0 var(--s-2);
+  scrollbar-color: var(--bz) transparent;
+  scrollbar-width: thin;
+}
+.mood-sec {
+  display: flex;
+  justify-content: space-between;
+  margin: var(--s-2) var(--s-4) 0;
+  padding-bottom: 2px;
+  color: var(--bz-lo);
+  box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--bz);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+.mood-sec span {
+  color: var(--ink-66);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.mood-lines {
+  margin: 0;
+  padding: 0 var(--s-4);
+  list-style: none;
+}
+.mood-line {
+  display: grid;
+  grid-template-columns: var(--s-6) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: calc(var(--u) * 6.5);
+  box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--bz-dk-12);
+}
+.mood-line-n {
+  color: var(--ink-66);
+  font-family: var(--f-sans);
+  text-align: right;
+}
+.mood-line-k {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-family: var(--f-sans);
+}
+.mood-note {
+  margin: 0;
+  padding: var(--s-1) var(--s-4) 0;
+  color: var(--ink-66);
+  font-family: var(--f-sans);
+}
+.mood-acts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4) var(--s-4);
+  box-shadow: inset 0 var(--rule) 0 var(--bz-dk-30);
+}
+.mood-calm {
+  justify-content: space-between;
+  min-height: calc(var(--u) * 11);
+  padding-inline: var(--s-3);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.mood-calm .price {
+  display: flex;
+  gap: var(--s-1);
+}
+.mood-calm-n {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mood-calm .price {
+  flex: none;
+}
+
+/* ---- the minimised Assembly waits under the alarms ----------------------------- */
+.sit-dock {
+  position: fixed;
+  top: calc(var(--u) * 28); /* 112 */
+  left: calc(var(--u) * 25); /* 100 */
+}

@@ -15,16 +15,20 @@ import type {
   LogMoment,
   PlayerId,
   Resource,
+  Resources,
   TableEffect,
   TableInsuranceOption,
 } from "../../../game/types";
 import { presentTableEffect } from "../../../ui/effects";
-import { formatPopLabel } from "../../../ui/formatters";
-import { sign } from "../../../ui/frameFormat";
+import { formatPopLabel, formatSignedNumber } from "../../../ui/formatters";
 import { RESOURCE_RASTERS } from "../../../ui/iconRegistry";
 import { AnnotatedText, Prose } from "../../AnnotatedText";
 import { placeName } from "../../frame/moments";
 import { Ico } from "../../frame/parts";
+import type { GameCommand } from "../../../game/legalMoves";
+import { playOnCopy, previewSpend } from "../../../ui/confirmPreview";
+import { useConfirm } from "../../chrome/confirmContext";
+import { ConfirmDetail } from "../../chrome/confirmDetail";
 import { useGameUi } from "../GameUiContext";
 import { ceremonyMood, commitVerb } from "./ceremonyMood";
 import { EventTableRows } from "./EventTableRows";
@@ -35,6 +39,15 @@ import type { LossLine } from "./lossLines";
 import { ModalShell } from "./ModalShell";
 
 type RiotEntry = LogEntry & { moment: Extract<LogMoment, { kind: "riot" }> };
+
+/** An insurance chosen on the sheet, paid only when the die is rolled. */
+type Declared = { optionId: TableInsuranceOption["id"]; tileId?: string };
+
+const declareCommand = ({ optionId, tileId }: Declared): GameCommand => ({
+  type: "buyRiotInsurance",
+  optionId,
+  ...(tileId ? { demoteTarget: { tileId, from: CONCESSION_FROM } } : {}),
+});
 
 /** How long the landed die holds the sheet before the result card. */
 const ROLL_BEAT_MS = 1600;
@@ -76,7 +89,9 @@ export function RiotModal({
   onDismissResult: () => void;
 }) {
   const { G, currentPlayerId, isActive: viewerCanAct, moves } = useGameUi();
+  const ask = useConfirm();
   const pending = G.pendingRiot;
+  const [declared, setDeclared] = useState<Declared[]>([]);
   // The riot belongs to the seat that ended its turn, not to whoever is viewing.
   const [seat] = useState<PlayerId>(
     () => pending?.playerID ?? latestRiot(G.log)?.about ?? currentPlayerId,
@@ -160,9 +175,15 @@ export function RiotModal({
     );
   }
 
+  // The chosen insurance as the engine would take it, in order: null when one would not go.
+  const commands = declared.map(declareCommand);
+  const declaredState = pending && !paying ? playOnCopy(G, seat, commands) : null;
   const modifier = rolled
     ? rolled.modifier
-    : insuranceRollBonus(pending?.boughtInsurance ?? [], G.definition.content);
+    : insuranceRollBonus(
+        [...(pending?.boughtInsurance ?? []), ...declared.map((choice) => choice.optionId)],
+        G.definition.content,
+      );
   const reach = riotRollReach(G, modifier);
   const die = riotTable.die ?? 6;
   const canAct = viewerCanAct && seat === currentPlayerId && Boolean(pending);
@@ -219,7 +240,19 @@ export function RiotModal({
         ) : paying ? (
           <RiotPops seat={seat} />
         ) : pending ? (
-          <Insurance seat={seat} canAct={canAct} />
+          <Insurance
+            after={declaredState ?? G}
+            canAct={canAct}
+            declared={declared}
+            onToggle={(choice) =>
+              setDeclared((current) =>
+                current.some((one) => one.optionId === choice.optionId)
+                  ? current.filter((one) => one.optionId !== choice.optionId)
+                  : [...current, choice],
+              )
+            }
+            seat={seat}
+          />
         ) : null}
         <section className="sheetCol">
           <h3 className="sheetSec label">The table</h3>
@@ -232,7 +265,7 @@ export function RiotModal({
           />
           <p className="caption sheetNote">
             {modifier
-              ? `You roll a d${die} ${sign(modifier)}: the worst you can roll is a ${reach.lowest}.`
+              ? `You roll a d${die} ${formatSignedNumber(modifier)}: the worst you can roll is a ${reach.lowest}.`
               : `You roll a d${die}. Each insurance puts the lowest row out of reach.`}
           </p>
         </section>
@@ -271,16 +304,43 @@ export function RiotModal({
         ) : pending && !paying ? (
           <button
             className="ceremonyCommit verb verb-lg"
-            disabled={!canAct}
+            disabled={!canAct || (declared.length > 0 && !declaredState)}
             onClick={() => {
-              onRolled();
-              setStage("roll");
-              moves.resolveRiot();
+              const roll = () => {
+                onRolled();
+                setStage("roll");
+                for (const choice of declared)
+                  moves.buyRiotInsurance(
+                    choice.optionId,
+                    choice.tileId ? { tileId: choice.tileId, from: CONCESSION_FROM } : undefined,
+                  );
+                moves.resolveRiot();
+              };
+              if (!declared.length) return roll();
+              const { changes } = previewSpend(G, seat, { command: commands });
+              const concession = declared.find((choice) => choice.tileId)?.tileId;
+              ask({
+                icon: "events/die",
+                question: `Are you sure you want to pay for ${declared.length === 1 ? "this insurance" : `${declared.length} insurances`} and roll the die?`,
+                detail: (
+                  <ConfirmDetail
+                    changes={changes}
+                    cost={declaredCost(G, declared)}
+                    note={
+                      concession
+                        ? `A citizen of ${placeName(G, seat, concession)} becomes a freeman.`
+                        : null
+                    }
+                  />
+                ),
+                verb: "Roll the die",
+                onYes: roll,
+              });
             }}
             type="button"
           >
             <Ico path="events/die" size="ui" />
-            Roll the Die{modifier ? ` · ${sign(modifier)}` : ""}
+            Roll the Die{modifier ? ` · ${formatSignedNumber(modifier)}` : ""}
           </button>
         ) : null}
       </footer>
@@ -344,9 +404,37 @@ function cardLines(G: HegemonyState, cards: readonly string[]): LossLine[] {
   }));
 }
 
-/** The insurance column: each declaration once, paid now, for its bonus to the roll. */
-function Insurance({ seat, canAct }: { seat: PlayerId; canAct: boolean }) {
-  const { G, moves } = useGameUi();
+/** What the chosen insurance costs in stores, summed from the table. */
+function declaredCost(G: HegemonyState, declared: readonly Declared[]): Partial<Resources> {
+  const table = getRiotTable(G.definition.content).insurance ?? [];
+  const cost: Partial<Resources> = {};
+  for (const { optionId } of declared)
+    for (const [resource, n] of Object.entries(
+      table.find((option) => option.id === optionId)?.cost ?? {},
+    ) as Array<[Resource, number]>)
+      cost[resource] = (cost[resource] ?? 0) + n;
+  return cost;
+}
+
+/**
+ * The insurance column: each declaration a choice, once, paid only when the die is
+ * rolled (one confirm for them all). Whether one more can be chosen is the engine's
+ * status on the state after the ones already chosen (`after`).
+ */
+function Insurance({
+  seat,
+  canAct,
+  declared,
+  after,
+  onToggle,
+}: {
+  seat: PlayerId;
+  canAct: boolean;
+  declared: readonly Declared[];
+  after: HegemonyState;
+  onToggle: (choice: Declared) => void;
+}) {
+  const { G } = useGameUi();
   const pending = G.pendingRiot!;
   const riotTable = getRiotTable(G.definition.content);
   // Concession targets: every owned settlement with a citizen to demote.
@@ -369,27 +457,26 @@ function Insurance({ seat, canAct }: { seat: PlayerId; canAct: boolean }) {
       <ul className="insRows">
         {(riotTable.insurance ?? []).map((option) => {
           const bought = pending.boughtInsurance.includes(option.id);
-          const status = getBuyRiotInsuranceStatus(G, seat, option.id);
+          const chosen = declared.find((choice) => choice.optionId === option.id);
+          const status = getBuyRiotInsuranceStatus(after, seat, option.id);
           const usable = option.demotesPop ? targets.length > 0 : status.can;
+          const open = chosen !== undefined || (usable && status.can);
           const [resource, amount] =
             (Object.entries(option.cost) as Array<[Resource, number]>)[0] ?? [];
+          const concessionAt = bought ? pending.concessionTileId : chosen?.tileId;
           return (
             <li
-              className={bought ? "insRow is-on" : usable ? "insRow" : "insRow is-off"}
+              className={bought || chosen ? "insRow is-on" : usable ? "insRow" : "insRow is-off"}
               key={option.id}
             >
               <Ico path={INSURANCE_ICON[option.id]} size="tile" />
               <span className="insWords">
                 <b className="title">{option.label}</b>
                 {option.demotesPop ? (
-                  bought ? (
+                  concessionAt ? (
                     <span className="caption">
                       <Prose links={false}>
-                        A citizen of{" "}
-                        {pending.concessionTileId
-                          ? placeName(G, seat, pending.concessionTileId)
-                          : "?"}{" "}
-                        became a freeman
+                        {`A citizen of ${placeName(G, seat, concessionAt)} ${bought ? "became" : "becomes"} a freeman`}
                       </Prose>
                     </span>
                   ) : targets.length ? (
@@ -416,35 +503,37 @@ function Insurance({ seat, canAct }: { seat: PlayerId; canAct: boolean }) {
                   <AnnotatedText
                     className="caption"
                     links={false}
-                    text={`${amount ?? 0} ${resource ?? ""} · ${sign(option.modifier)}`}
+                    text={`${amount ?? 0} ${resource ?? ""} · ${formatSignedNumber(option.modifier)}`}
                   />
                 )}
-                {/* Why it cannot be declared; the concession says so above. */}
-                {!bought && !status.can && (usable || !option.demotesPop) ? (
+                {/* Why it cannot be chosen; the concession says so above. */}
+                {!bought && !chosen && !status.can && (usable || !option.demotesPop) ? (
                   <span className="caption">{status.reasons[0]}</span>
                 ) : null}
               </span>
               <button
                 aria-label={`Declare ${option.label.toLowerCase()}`}
-                aria-pressed={bought}
+                aria-pressed={bought || chosen !== undefined}
                 className="insCheck"
-                disabled={bought || !canAct || !usable || !status.can}
+                disabled={bought || !canAct || !open}
                 onClick={() =>
-                  option.demotesPop
-                    ? tileId && moves.buyRiotInsurance(option.id, { tileId, from: CONCESSION_FROM })
-                    : moves.buyRiotInsurance(option.id)
+                  onToggle(
+                    option.demotesPop && tileId
+                      ? { optionId: option.id, tileId }
+                      : { optionId: option.id },
+                  )
                 }
                 type="button"
               >
-                {bought ? "✓" : null}
+                {bought || chosen ? "✓" : null}
               </button>
             </li>
           );
         })}
       </ul>
       <p className="caption sheetNote">
-        Each one declared adds {uniform !== null ? `${sign(uniform)}` : "its bonus"} to the roll,
-        paid now.
+        Each one declared adds {uniform !== null ? `${formatSignedNumber(uniform)}` : "its bonus"}{" "}
+        to the roll, paid when you roll the die.
       </p>
       <p className="caption sheetNote insCleared">
         <Ico path="unrest/unrest" size="ui" />

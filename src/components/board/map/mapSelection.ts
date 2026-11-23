@@ -1,4 +1,4 @@
-import type { BuildingId, PlayerId, PopType, Pops } from "../../../game/types";
+import type { PlayerId, Pops } from "../../../game/types";
 
 /**
  * Map-first selection (refit scope 3 / selection rule 1).
@@ -25,15 +25,8 @@ import type { BuildingId, PlayerId, PopType, Pops } from "../../../game/types";
 export type MapSelectionMode =
   /** Send a pop out to a new colony: pick the destination. */
   | { kind: "foundColony" }
-  /** Which of my settlements grows? A fan may have picked the pop already. */
-  | { kind: "growPop"; pop?: PopType }
-  /** Two-step: source settlement, then destination (refit scope 3). */
-  | { kind: "movePops"; sourceTileId?: string }
-  /** Which settlement raises a building? A fan may have picked it already;
-   *  otherwise the popover does. */
-  | { kind: "build"; buildingId?: BuildingId }
-  /** Which settlement pays for the promote/demote. */
-  | { kind: "ladder"; request: { kind: "promote" | "demote"; from: PopType } }
+  /** Move pops out of a settlement (the place panel names it): pick the destination. */
+  | { kind: "movePops"; sourceTileId: string }
   /** Traded pops: the settlement of `seat`'s they leave (`send`) or join (`receive`).
    *  The seat may not be the viewer: an offer is answered out of turn. */
   | {
@@ -64,16 +57,8 @@ function promptCopy(mode: MapSelectionMode): string {
   switch (mode.kind) {
     case "foundColony":
       return "Select a glowing tile to found your colony";
-    case "growPop":
-      return "Select a settlement to grow";
     case "movePops":
-      return mode.sourceTileId
-        ? "Select the settlement the pops travel to"
-        : "Select the settlement the pops leave from";
-    case "build":
-      return "Select a settlement to build in";
-    case "ladder":
-      return `Select the settlement that ${mode.request.kind === "promote" ? "promotes" : "demotes"} a pop`;
+      return "Select the settlement the pops travel to";
     case "tradePops":
       return mode.direction === "send"
         ? "Select the settlement the traded pops leave from"
@@ -85,16 +70,8 @@ function emptyCopy(mode: MapSelectionMode): string {
   switch (mode.kind) {
     case "foundColony":
       return "No open tile can host a colony right now";
-    case "growPop":
-      return "No settlement of yours can grow right now";
     case "movePops":
-      return mode.sourceTileId
-        ? "No other settlement can receive these pops"
-        : "No settlement has a pop to spare";
-    case "build":
-      return "No settlement of yours can build right now";
-    case "ladder":
-      return "No settlement can make that ladder move right now";
+      return "No other settlement can receive these pops";
     case "tradePops":
       return mode.direction === "send"
         ? "No settlement holds those pops together"

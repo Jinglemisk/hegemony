@@ -19,6 +19,21 @@
 .living-map.is-panning :is(.lm-tile, .lm-moor) {
   cursor: grabbing;
 }
+/* The vignette: the sea darkens toward the screen's edges, as under a lamp. Over the
+   board, under its labels (each placed with its own z-index), and never over the
+   chrome, which is drawn on the HUD canvas above the map. */
+.living-map::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-lift);
+  background: radial-gradient(
+    ellipse 75% 70% at 52% 48%,
+    transparent 55%,
+    var(--sea-vignette) 100%
+  );
+  pointer-events: none;
+}
 /* Nothing shows until the first frame is drawn: no labels over an empty sea. The
    canvas is out of the page meanwhile, so its warm-up draw is never composited. */
 .living-map:not([data-ready]) > .lm-canvas {
@@ -31,13 +46,31 @@
 .living-map:focus-visible {
   outline: none;
 }
+/* … around the board the chrome leaves in view (the map is drawn at screen px, so
+   the chrome's design sizes are scaled by --k): under the alarms' row, clear of the
+   sidebar, the outliner and the hand's row; clear of a drawer or the place panel
+   while one is open. The house ring's two tones, ink in a gilt halo. */
 .living-map:focus-visible::after {
+  --ring-at: calc(var(--s-2) * var(--k));
   content: "";
   position: absolute;
-  inset: 0;
+  top: calc(var(--sh-side-top) * var(--k) + var(--ring-at));
+  right: calc(var(--sh-outliner-w) * var(--k) + var(--ring-at));
+  bottom: calc(var(--sh-hand-h) * var(--k) + var(--ring-at));
+  left: calc(var(--sh-side-w) * var(--k) + var(--ring-at));
   z-index: var(--z-lift);
-  box-shadow: inset 0 0 0 var(--rule-2) var(--ochre);
+  border-radius: var(--r-8);
+  outline: var(--focus-w) solid var(--focus-ink);
+  box-shadow:
+    0 0 0 calc(3 * var(--focus-w)) var(--focus-halo),
+    inset 0 0 0 var(--focus-w) var(--focus-halo);
   pointer-events: none;
+}
+.frame:has(.lw-drawer) .living-map:focus-visible::after {
+  left: calc((var(--sh-side-w) + var(--sh-drawer-w)) * var(--k) + var(--ring-at));
+}
+.frame:has(.pp) .living-map:focus-visible::after {
+  left: calc(var(--sh-place-w) * var(--k) + var(--ring-at));
 }
 .lm-canvas {
   position: absolute;
@@ -199,13 +232,9 @@
 .lm-plate.capital {
   --show: var(--a-capital, 1);
 }
-/* A pick's candidate shows its plate at any zoom; under a capital, in place of the
-   realm's name while the pick lasts. */
+/* A pick's candidate shows its plate at any zoom. */
 .lm-plate.is-asked {
   --show: var(--a-asked, 1);
-}
-.lm-under:has(.is-asked) .lm-realm {
-  opacity: 0;
 }
 .lm-plate .pl-name {
   font-family: var(--f-name);
@@ -328,7 +357,7 @@
   color: var(--clay-ink);
 }
 .lm-hint .in b {
-  color: var(--pos);
+  color: var(--pos-ink);
 }
 .lm-hint img {
   width: 1.25em;
@@ -385,6 +414,7 @@
 .lm-moor {
   --good: 2.4em;
   display: grid;
+  opacity: var(--a-good, 1);
   justify-items: center;
   padding: 0;
   border: 0;
@@ -398,8 +428,10 @@
   opacity: 0;
 }
 .lm-moor:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--rule-2);
+  opacity: 1;
+}
+/* Dimmed in Political, a good comes back whole under the pointer. */
+.lm-moor:hover {
   opacity: 1;
 }
 /* The good's icon on an ivory disc, ringed in its holder's colour once claimed. */
@@ -418,29 +450,17 @@
   width: 82%;
   height: 82%;
 }
-/* The holder's seat mark, as the dock draws it, tucked over the icon's foot. */
-.lm-moor > i {
+/* The holder's seat coin, tucked over the icon's foot. */
+.lm-moor > .lm-moor-coin {
+  --coin-d: 1.5em;
   position: relative;
-  display: grid;
-  place-items: center;
-  width: 1.5em;
-  height: 1.5em;
   margin-top: -0.6em;
-  border-radius: var(--r-round);
-  background: var(--own);
-  color: var(--ivory);
-  font-family: var(--f-name);
-  font-style: normal;
-  font-weight: 700;
-  line-height: 1;
-  box-shadow:
-    inset 0 0 0 var(--rule) var(--ivory-45),
-    0 0 0 var(--rule) var(--ink),
-    var(--map-label-shadow);
+  box-shadow: var(--coin-rim), var(--map-label-shadow);
 }
 /* The name on a dark chip: a raft lies off the coast, so the name often falls on a
    tile and its plate. */
 .lm-moor .m-name {
+  opacity: var(--a-goodName, 1);
   margin-top: 2px;
   padding: 2px 6px;
   font-family: var(--f-sans);
@@ -451,6 +471,31 @@
   background: var(--map-ship);
   border: var(--rule) solid var(--map-ship-rule);
   border-radius: 2px;
+}
+/* Where under its icon it would cover a tile's badge, a plate or another good, the
+   runtime hangs the name above the icon or beside it (data-name), or slides it
+   a little (--name-dx, --name-dy). */
+.lm-moor .m-name {
+  translate: var(--name-dx, 0) var(--name-dy, 0);
+}
+.lm-moor[data-name] .m-name {
+  position: absolute;
+  margin: 0;
+}
+.lm-moor[data-name="up"] .m-name {
+  bottom: calc(100% + 2px);
+  left: 50%;
+  translate: calc(-50% + var(--name-dx, 0px)) var(--name-dy, 0);
+}
+.lm-moor:is([data-name="right"], [data-name="left"]) .m-name {
+  top: calc(var(--good) / 2);
+  translate: 0 calc(-50% + var(--name-dy, 0px));
+}
+.lm-moor[data-name="right"] .m-name {
+  left: calc(100% + 4px);
+}
+.lm-moor[data-name="left"] .m-name {
+  right: calc(100% + 4px);
 }
 
 /* The compass: the top left, under the bar. It turns with the map; a click brings
@@ -496,13 +541,17 @@
 
 /* ---- the map modes' labels: each fades with its mode through --a-<key> ---------- */
 
-/* Political: a realm's name under its capital's badge, with its Unrest tokens; its
-   glaze and counts close in, where there is room. */
+/* Political: a realm's name large across the middle of its land, with its Unrest
+   tokens; its glaze and counts close in, where there is room. It never takes a click
+   from the tiles under it. */
+.lm-banner {
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
 .lm-realm {
   display: grid;
   justify-items: center;
   gap: 2px;
-  margin-top: 4px;
   text-align: center;
   opacity: var(--a-realm, 0);
 }
@@ -514,11 +563,16 @@
 .lm-realm small {
   opacity: var(--a-realmline, 0);
 }
+.lm-realm-coin {
+  --coin-d: 1.3em;
+  margin-right: 0.3em;
+  vertical-align: -0.35em;
+}
 .lm-realm b {
   font-family: var(--f-name);
   font-weight: 700;
   line-height: 1;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.18em;
   color: var(--ivory);
   text-shadow:
     0 0 3px var(--ink),

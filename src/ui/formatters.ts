@@ -53,17 +53,23 @@ export function formatResourceDelta(resources: Resources) {
     .join(", ");
 }
 
-/** "+3", "−2": the minus is U+2212. */
+/** "+3", "−2", "0": the one signed-number formatter. The minus is U+2212. */
 export function formatSignedNumber(amount: number) {
-  const value = formatNumber(amount).replace("-", "−");
+  const value = formatNumber(amount);
   return amount > 0 ? `+${value}` : value;
 }
 
 /** UI-facing alias for the engine's numeric formatter — one rounding/trim rule for the
  *  whole app (post-sprint-debt §5.2). Title-Case labels are this module's job; the
- *  arithmetic is not, so it delegates. */
+ *  arithmetic is not, so it delegates. A negative takes the true minus (U+2212). */
 export function formatNumber(amount: number) {
-  return formatRuleNumber(amount);
+  return withTrueMinus(formatRuleNumber(amount));
+}
+
+/** The engine's own sentences (the Chronicle) print "-2" with a hyphen: shown, a
+ *  number's minus is U+2212 like every other number on screen. */
+export function withTrueMinus(text: string) {
+  return text.replace(/(^|[^\w-])-(?=\d)/g, "$1−");
 }
 
 export function formatPopLabel(pop: PopType, amount: number) {
@@ -102,6 +108,9 @@ const NUMBER_WORD = [
 ];
 /** Small counts as words, larger ones as numerals. */
 export const numberWord = (n: number) => NUMBER_WORD[n] ?? formatNumber(n);
+
+/** "a Workshop", "an Estate": the article a word takes, by its first letter. */
+export const withArticle = (word: string) => `${/^[aeiou]/i.test(word) ? "an" : "a"} ${word}`;
 
 /** "Demos, Civic Elite and Voice". */
 export const listed = (names: string[]) =>

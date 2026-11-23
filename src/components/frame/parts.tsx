@@ -1,12 +1,13 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { PlayerId, Resources } from "../../game/types";
-import { sign, tone } from "../../ui/frameFormat";
+import { tone } from "../../ui/frameFormat";
 import { RESOURCE_RASTERS } from "../../ui/iconRegistry";
 import { RESOURCE_LABELS, formatNumber, formatSignedNumber } from "../../ui/formatters";
 import { RESOURCE_ORDER } from "../../ui/resourceVisuals";
 import { rasterIcon } from "../../ui/icons/placeholders";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { Prose } from "../AnnotatedText";
+import { SeatCoin } from "../chrome/SeatCoin";
 
 /**
  * The frame's atoms, after the Hybrid arc mock: a raster icon at one of the four
@@ -34,18 +35,17 @@ export function Ico({
   );
 }
 
-/** A seat's glaze disc with its blazon. A bought Idea's mark carries the year. */
+/** A seat's coin in its glaze, sized by where it sits. A bought Idea's mark carries the year. */
 export function SeatMark({ playerID, year }: { playerID: PlayerId; year?: number }) {
   const glaze = PLAYER_GLAZES[playerID];
   return (
-    <span
+    <SeatCoin
       className="idea-seat"
       data-year={year === undefined ? undefined : `Y${year}`}
+      seat={playerID}
       style={{ "--owner": glaze.color } as CSSProperties}
       title={glaze.name}
-    >
-      {glaze.blazon}
-    </span>
+    />
   );
 }
 
@@ -76,7 +76,7 @@ export function Chips({
         const n = amounts[resource] ?? 0;
         return (
           <span className={signed ? `chip ${tone(n)}` : "price-part"} key={resource}>
-            <span aria-hidden="true">{signed ? sign(n) : n}</span>
+            <span aria-hidden="true">{signed ? formatSignedNumber(n) : n}</span>
             <Ico path={RESOURCE_RASTERS[resource]} size="chip" />
             <span className="visuallyHidden">
               {`${signed ? formatSignedNumber(n) : formatNumber(n)} ${RESOURCE_LABELS[resource]}`}
@@ -149,7 +149,7 @@ export function Delta({
   from,
   to,
   higherIsBetter = true,
-  format = String,
+  format = formatNumber,
 }: {
   from: number;
   to: number;

@@ -8,13 +8,6 @@
   height: 22px;
 }
 
-.terrainChip {
-  width: 24px;
-  height: 24px;
-  border-radius: 5px;
-  clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
-}
-
 /* No frames. These are bare glyphs: the atlas mask draws them and `currentColor`
    inks them, so a plate here would both re-introduce the box and hijack the ink
    (the mask clips the element's own background, painting the glyph in it). */

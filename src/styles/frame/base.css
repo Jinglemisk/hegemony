@@ -5,17 +5,14 @@
 .frame {
   position: fixed;
   inset: 0;
-  overflow: hidden;
+  /* clip, not hidden: focus can never scroll the frame and shift the chrome. */
+  overflow: clip;
   color: var(--ink);
   background: var(--sea)
     radial-gradient(ellipse at 60% 40%, var(--sea-lit) 0%, var(--sea) 50%, var(--sea-deep) 100%);
   font: var(--t-body) / var(--l-body) var(--f-body);
 }
 /* The frame's own controls take their colour from where they sit. */
-.verb-btn,
-.fan-btn,
-.consult-btn,
-.rival,
 .endturn {
   color: inherit;
   transition: none;
@@ -29,11 +26,6 @@
   list-style: none;
   margin: 0;
   padding: 0;
-}
-.frame :focus-visible,
-.endturn-confirm :focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--rule-2);
 }
 
 .ico {
@@ -79,16 +71,12 @@
 .price {
   display: inline-flex;
   align-items: center;
-  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
-  font-variant-numeric: tabular-nums lining-nums;
+  font: 700 var(--t-num) / var(--l-num) var(--f-sans);
   white-space: nowrap;
 }
-.price-or {
-  margin: 0 var(--s-1);
-  color: var(--ink-45);
-}
+
 .price.is-short {
-  color: var(--clay-ink);
+  color: var(--neg-ink);
 }
 .price-part {
   display: inline-flex;
@@ -104,12 +92,9 @@
    --paper-edge. */
 .btn,
 .alarm-badge,
-.sock.is-built,
 .sharedTooltip,
 .map-caption,
-.threat-panel,
-.verb-name,
-.fan-label {
+.threat-panel {
   background: var(--ivory);
   box-shadow: var(--paper-edge);
 }

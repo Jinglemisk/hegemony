@@ -91,36 +91,33 @@ export const COMMAND_PARITY = {
   },
   foundColony: {
     frontend: interactive(
-      "src/components/frame/VerbDiscs.tsx",
       "src/components/board/modals/FoundColonyPopover.tsx",
+      "src/components/left/PlacePanel.tsx",
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   upgradeColonyToCity: {
-    frontend: interactive(
-      "src/components/frame/VerbDiscs.tsx",
-      "src/components/board/modals/UpgradeCityModal.tsx",
-    ),
+    frontend: interactive("src/components/left/PlacePanel.tsx"),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   buildBuilding: {
     frontend: interactive(
-      "src/components/frame/VerbDiscs.tsx",
-      "src/components/board/map/BuildPopover.tsx",
+      "src/components/left/PlacePanel.tsx",
+      "src/components/left/PlacePops.tsx",
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   growPop: {
     frontend: interactive(
-      "src/components/frame/VerbDiscs.tsx",
-      "src/components/board/map/GrowPopPopover.tsx",
+      "src/components/left/PlacePanel.tsx",
+      "src/components/left/PlacePops.tsx",
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   movePops: {
     frontend: interactive(
-      "src/components/frame/VerbDiscs.tsx",
       "src/components/board/map/MovePopsPopover.tsx",
+      "src/components/left/PlacePanel.tsx",
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
@@ -141,7 +138,7 @@ export const COMMAND_PARITY = {
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   dole: {
-    frontend: interactive("src/components/frame/VerbDiscs.tsx", "src/components/frame/discs.ts"),
+    frontend: interactive("src/components/frame/dock/Dock.tsx"),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   pickIdea: {
@@ -151,39 +148,38 @@ export const COMMAND_PARITY = {
   buyIdea: {
     frontend: interactive(
       "src/components/board/modals/IdeasModal.tsx",
-      "src/components/frame/discs.ts",
+      "src/components/left/drawers/TableDrawers.tsx",
     ),
     simulation: simulated("master-search", "beamPlan → scoreMaster"),
   },
   civicCalm: {
-    frontend: interactive("src/components/frame/VerbDiscs.tsx", "src/components/frame/discs.ts"),
+    frontend: interactive(
+      "src/components/frame/top/HappinessCard.tsx",
+      "src/components/frame/EndTurn.tsx",
+    ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   promotePop: {
-    frontend: interactive(
-      "src/components/frame/VerbDiscs.tsx",
-      "src/components/board/map/LadderPopover.tsx",
-    ),
+    frontend: interactive("src/components/left/PlacePanel.tsx"),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   demotePop: {
-    frontend: interactive(
-      "src/components/frame/VerbDiscs.tsx",
-      "src/components/board/map/LadderPopover.tsx",
-    ),
+    frontend: interactive("src/components/left/PlacePanel.tsx"),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   buyDevCard: {
     frontend: interactive(
-      "src/components/frame/discs.ts",
       "src/components/board/modals/DevCardModal.tsx",
+      "src/components/frame/dock/Dock.tsx",
+      "src/components/left/drawers/CardsDrawer.tsx",
     ),
     simulation: simulated("master-rule", "planTurn → buyCard"),
   },
   playDevCard: {
     frontend: interactive(
-      "src/components/frame/discs.ts",
       "src/components/board/modals/DevCardModal.tsx",
+      "src/components/frame/hand/HandTray.tsx",
+      "src/components/left/drawers/CardsDrawer.tsx",
     ),
     simulation: simulated("master-rule", "planTurn → playCard and playBuilder"),
   },
@@ -237,9 +233,11 @@ export const COMMAND_PARITY = {
   },
   tradeOffer: {
     frontend: interactive(
-      "src/components/frame/discs.ts",
       "src/components/frame/trade/OfferCard.tsx",
       "src/components/board/assembly/AssemblySitting.tsx",
+      "src/components/frame/dock/Dock.tsx",
+      "src/components/left/drawers/TradeDrawer.tsx",
+      "src/components/left/PlacePanel.tsx",
     ),
     simulation: simulated("master-rule", "turnOffer, speechOffer and voteOffer"),
   },
@@ -247,6 +245,7 @@ export const COMMAND_PARITY = {
     frontend: interactive(
       "src/components/frame/trade/OfferDisc.tsx",
       "src/components/frame/trade/OfferCard.tsx",
+      "src/components/left/drawers/TradeDrawer.tsx",
     ),
     simulation: simulated("master-rule", "answerOffer"),
   },
@@ -254,21 +253,31 @@ export const COMMAND_PARITY = {
     frontend: interactive(
       "src/components/frame/trade/OfferDisc.tsx",
       "src/components/frame/trade/OfferCard.tsx",
+      "src/components/left/drawers/TradeDrawer.tsx",
     ),
     simulation: simulated("master-rule", "takeCounter"),
   },
   tradeWithdraw: {
-    frontend: interactive("src/components/frame/trade/OfferCard.tsx"),
+    frontend: interactive(
+      "src/components/frame/trade/OfferCard.tsx",
+      "src/components/left/drawers/TradeDrawer.tsx",
+    ),
     simulation: simulated("master-rule", "withdrawAnswered"),
   },
   // Bots make no deals and decline every offer that would leave one (docs/plans/trade-deals.md),
   // so no bot ever holds a deal to end or a short payment to answer.
   dealEnd: {
-    frontend: interactive("src/components/frame/trade/DealCard.tsx"),
+    frontend: interactive(
+      "src/components/frame/trade/DealCard.tsx",
+      "src/components/left/drawers/TradeDrawer.tsx",
+    ),
     simulation: simulated("master-rule", "answerOffer declines deal terms"),
   },
   dealShortfall: {
-    frontend: interactive("src/components/frame/trade/DealCard.tsx"),
+    frontend: interactive(
+      "src/components/frame/trade/DealCard.tsx",
+      "src/components/left/drawers/TradeDrawer.tsx",
+    ),
     simulation: simulated("master-rule", "answerOffer declines deal terms"),
   },
   endTurn: {

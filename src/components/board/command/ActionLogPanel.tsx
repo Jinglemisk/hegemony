@@ -1,9 +1,11 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { HegemonyState, LogEntry, PlayerId } from "../../../game/types";
 import { deedSeat } from "../../../ui/frameSelectors";
-import { yearLabel } from "../../../ui/formatters";
+import { withTrueMinus, yearLabel } from "../../../ui/formatters";
+import { namePlaces } from "../../../ui/settlementNames";
 import { PLAYER_GLAZE_LIST } from "../../../ui/playerGlazes";
 import { AnnotatedText } from "../../AnnotatedText";
+import { SeatCoin } from "../../chrome/SeatCoin";
 import { SeatMark } from "../../frame/parts";
 
 type Filter = PlayerId | "all";
@@ -93,9 +95,6 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
   return (
     <section className="chroniclePage" aria-label="Action log">
       <div className="chronicleFilters" role="group" aria-label="Filter the chronicle by player">
-        {/* The all-filter is a disc like the four beside it, bearing Π for pantes
-            — all of them. A text pill among four glaze discs read as a different
-            kind of control, when it is the same control set to everyone. */}
         <button
           aria-label="Every deed"
           aria-pressed={filter === "all"}
@@ -106,25 +105,24 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
           title="Every deed"
           type="button"
         >
-          <span className="label">Π</span>
+          <span className="label">All</span>
         </button>
-        {PLAYER_GLAZE_LIST.map(({ id, name, color, blazon }) => (
+        {PLAYER_GLAZE_LIST.map(({ id, name }) => (
           <button
             aria-label={`Only ${name}'s deeds`}
             aria-pressed={filter === id}
             className={filter === id ? "chronFilter on" : "chronFilter"}
             key={id}
             onClick={() => setFilter((current) => (current === id ? "all" : id))}
-            style={{ background: color } as CSSProperties}
             title={name}
             type="button"
           >
-            <span className="label">{blazon}</span>
+            <SeatCoin aria-hidden="true" seat={id} size={28} />
           </button>
         ))}
       </div>
 
-      <div className="chronicleList" ref={list} tabIndex={0}>
+      <div aria-label="Chronicle" className="chronicleList" ref={list} role="log" tabIndex={0}>
         {groups.length === 0 ? <p className="page-empty">No deeds recorded here yet.</p> : null}
         {groups.map((group) => (
           <div key={`${group.year}-${group.rows[0].entry.id}`}>
@@ -142,7 +140,10 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
                     link does not. Every one of those terms is still a link on
                     the pages where you act on it. */}
                 <span className="chron-text">
-                  <AnnotatedText links={false} text={entry.message} />
+                  <AnnotatedText
+                    links={false}
+                    text={withTrueMinus(namePlaces(G.board.tiles, entry.message, entry.about))}
+                  />
                 </span>
               </p>
             ))}

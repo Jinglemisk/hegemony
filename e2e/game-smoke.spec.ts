@@ -8,6 +8,16 @@ async function visit(page: Page, path: string) {
   await page.locator(".living-map[data-ready]").waitFor();
 }
 
+/** The viewer's own seat as the menu's View as names it ("Damon, acting, your seat"). */
+async function ownSeat(page: Page) {
+  await page.locator('[data-c="menu-btn"]').click();
+  const name = await page
+    .locator('[data-c="view-as"][aria-pressed="true"]')
+    .getAttribute("aria-label");
+  await page.keyboard.press("Escape");
+  return name ?? "";
+}
+
 test("setup, forced decision, normal command, and deterministic reload", async ({ page }) => {
   await visit(page, "/?setup=manual&seed=42&board=scenario");
 
@@ -111,8 +121,15 @@ test("ending a turn short of food asks who leaves, with a way back", async ({ pa
 test("an offer to the table is countered, then the first accept trades", async ({ page }) => {
   await visit(page, "/?dev=trade&seed=42");
 
-  // The Trade disc opens the offer card: 2 wood for 1 stone, to the table.
-  await page.getByRole("button", { name: /^Trade: Offer/ }).click();
+  // The sidebar's Trade drawer opens the offer card: 2 wood for 1 stone, to the table.
+  await page
+    .getByRole("navigation", { name: "Drawers" })
+    .getByRole("button", { name: "Trade" })
+    .click();
+  await page
+    .getByRole("region", { name: "Trade", exact: true })
+    .getByRole("button", { name: "Offer a trade" })
+    .click();
   const compose = page.getByRole("region", { name: "Offer a trade" });
   await compose.getByRole("button", { name: "Add to I give" }).click();
   await compose.getByRole("button", { name: "wood, you hold 8" }).click();
@@ -158,10 +175,12 @@ test("one person plays three bots: they answer at once, and the screen stays wit
     );
   });
   await visit(page, "/?dev=trade&seed=42");
-  const seat = page.getByRole("button", { name: /, your seat$/ });
-  const person = (await seat.getAttribute("aria-label"))!.split(",")[0];
+  const person = (await ownSeat(page)).split(",")[0];
 
-  await page.getByRole("button", { name: /^Trade: Offer/ }).click();
+  await page
+    .locator(".rd-acts")
+    .getByRole("button", { name: /^Trade/ })
+    .click();
   const compose = page.getByRole("region", { name: "Offer a trade" });
   await compose.getByRole("button", { name: "Add to I give" }).click();
   await compose.getByRole("button", { name: "wood, you hold 8" }).click();
@@ -191,8 +210,9 @@ test("one person plays three bots: they answer at once, and the screen stays wit
   await page.keyboard.down("Enter");
   await page.waitForTimeout(900);
   await page.keyboard.up("Enter");
+  // The screen stays with the person: End turn names the bot that acts.
   await expect(page.getByRole("img", { name: / is acting\.$/ })).not.toHaveAccessibleName(
     `${person} is acting.`,
   );
-  await expect(seat).toHaveAccessibleName(`${person}, your seat`);
+  expect(await ownSeat(page)).toBe(`${person}, your seat`);
 });

@@ -21,7 +21,7 @@ import type {
 } from "../game/types";
 import { presentEventEffect, presentLawEffect, presentYearCard } from "./effects";
 import type { EffectTone } from "./effects";
-import { toRoman } from "./formatters";
+import { formatSignedNumber, toRoman } from "./formatters";
 import {
   BUILDING_RASTERS,
   IDEA_RASTERS,
@@ -129,7 +129,7 @@ export function faceIcons(face: CardFace): string[] {
 const ic = (icon: string): EqToken => ({ icon });
 const struck = (icon: string): EqToken => ({ icon, struck: true });
 const n = (value: number | string): EqToken => ({ n: String(value) });
-const signed = (value: number): EqToken => n(value > 0 ? `+${value}` : `−${Math.abs(value)}`);
+const signed = (value: number): EqToken => n(formatSignedNumber(value));
 const eq: EqToken = { op: "=" };
 const to: EqToken = { op: "→" };
 const or: EqToken = { op: "/" };

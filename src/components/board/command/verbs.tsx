@@ -1,219 +1,13 @@
 import type { Phase } from "../../../client/controller";
-import { getCivicCalmStatus } from "../../../game/civic";
-import { getBuildings } from "../../../game/content";
-import { getAdjustedActionCost, getGrowPopPriceSpans } from "../../../game/economy/cost";
-import {
-  getFoundColonyStatus,
-  getUpgradeColonyToCityStatus,
-  pendingDecisionReasons,
-  usesLeft,
-} from "../../../game/rules";
-import type { HegemonyState, PlayerId, Resource, Resources } from "../../../game/types";
-import type { MapSelectionMode } from "../map/mapSelection";
+import { pendingDecisionReasons } from "../../../game/rules";
+import type { HegemonyState } from "../../../game/types";
 
-/**
- * The action verbs as data: a verb is a row in VERBS with its gate, title and
- * price in one place, and the disc menu (`discs.ts`) maps over the rows.
- */
+/** The turn gate: whether the viewer may take a turn action now, and why not. */
 
-/** Everything a verb needs to decide whether it is available and what it costs. */
-export type VerbContext = {
-  G: HegemonyState;
-  playerID: PlayerId;
-  phase: Phase;
-  isActive: boolean;
-  /** What the table waits on instead of the turn ({@link turnPending}), or null. */
-  pending: string | null;
-  canGrowPops: boolean;
-  canMovePops: boolean;
-  canFoundColony: boolean;
-  canUpgradeCity: boolean;
-  canBuild: boolean;
-  /**
-   * Which verb currently owns the map, if any.
-   *
-   * It used to be two booleans, `isFoundColonyActive` and `isBuildActive` — so
-   * only those two verbs could show they were armed, and Grow and Move dimmed
-   * the map and lit targets while the bar said nothing and told a screen reader
-   * nothing (QA-DOCK-2). One field for one fact: at most one verb holds the map,
-   * and every verb that can hold it reads the same field.
-   */
-  armedVerb: VerbId | null;
-};
-
-export type VerbHandlers = {
-  onGrowPopRequest: () => void;
-  onMovePopsRequest: () => void;
-  onFoundColonyRequest: () => void;
-  onUpgradeCityRequest: () => void;
-  onBuildRequest: () => void;
-  onCalmRequest: () => void;
-};
-
-export type VerbId = "grow" | "move" | "found" | "upgrade" | "build" | "calm";
-
-/**
- * Which verb a given map mode belongs to. The board arms modes; the dock shows
- * verbs; this is the one place the two vocabularies meet, so a mode can never be
- * armed without its verb going pressed.
- */
-const MODE_VERBS: Partial<Record<MapSelectionMode["kind"], VerbId>> = {
-  growPop: "grow",
-  movePops: "move",
-  foundColony: "found",
-  build: "build",
-};
-
-/** The dock verb an armed map mode belongs to — `null` for a mode no verb owns
- *  (the pop ladder arms the map from the Pops page, not from the bar). */
-export function armedVerbOf(mode: MapSelectionMode | undefined): VerbId | null {
-  return (mode && MODE_VERBS[mode.kind]) ?? null;
-}
-
-/**
- * What a verb prints under its name.
- *
- * The showcase's rule, and it holds across the whole app: **the number you need
- * in order to decide is printed; only the arithmetic behind it is hover-only.**
- * So a verb whose price depends on what you point it at prints the RANGE or the
- * FLOOR — `2–6 food`, `from 6 stone` — never the word "varies". A price you have
- * to hover to learn is a price you cannot plan around.
- *
- * A clause is a lead word (`free`, `from`) and/or an amount; a `span` is
- * the min–max of one resource. Two clauses read as alternatives, which is what
- * Calm's influence-or-gold is.
- */
-export type VerbPriceClause = {
-  lead?: string;
-  amounts?: Partial<Resources>;
-  span?: { resource: Resource; min: number; max: number };
-};
-
-/** Every figure below comes back from an engine query or the ruleset field that
- *  query reads, so the dock can never quote a price the press does not charge. */
-export type VerbCost = (context: VerbContext) => VerbPriceClause[];
-
-const totalUnits = (cost: Partial<Resources>) =>
-  Object.values(cost).reduce((sum: number, amount) => sum + (amount ?? 0), 0);
-
-/** Growth prices come from the same Law-aware engine query as the action. */
-function growCostSpan({ G, playerID }: VerbContext): VerbPriceClause[] {
-  const spans = getGrowPopPriceSpans(G, playerID);
-  return spans.length ? spans.map((span) => ({ span })) : [{ lead: "free" }];
-}
-
-/** The cheapest building on the roster, priced the way `getBuildBuildingStatus`
- *  prices it. "From" is exact: nothing on the Build page costs less than this. */
-function buildFloor(context: VerbContext): VerbPriceClause[] {
-  const { G, playerID } = context;
-  const costs = getBuildings(G.definition.content).map((building) =>
-    getAdjustedActionCost(G, playerID, "buildBuilding", building.cost, building.id),
-  );
-  const cheapest = costs.reduce(
-    (best, cost) => (totalUnits(cost) < totalUnits(best) ? cost : best),
-    costs[0] ?? {},
-  );
-
-  return [{ lead: "from", amounts: cheapest }];
-}
-
-export type VerbSpec = {
-  id: VerbId;
-  label: string;
-  /* The verb's glyph is looked up by id in ui/iconRegistry (VERB_GLYPHS) rather
-     than carried here. A verb IS its id; a second field naming its picture is a
-     second thing to keep in sync, and it drifted the moment the atlas retired. */
-  cost?: VerbCost;
-  /** Availability *beyond* the shared gate (active seat, gameplay phase, no pending event). */
-  available: (context: VerbContext) => boolean;
-  /** This verb takes the map when pressed, and pressing it again gives it back.
-   *  Declaring it is what earns the armed styling and `aria-pressed`; the state
-   *  itself is read from `armedVerb`, so no verb can define it differently. */
-  arms?: true;
-  /** Shown when the verb is usable. */
-  hint: string | ((context: VerbContext) => string);
-  /** Shown in the tooltip ladder when `available` is false, and ONLY there — a
-   *  blocked reason is never printed as chrome. Optional: a verb whose blocked
-   *  state needs no explanation beyond its own hint simply omits it. */
-  blockedHint?: string;
-  select: (handlers: VerbHandlers) => void;
-};
-
-export const VERBS: VerbSpec[] = [
-  {
-    id: "grow",
-    label: "Grow",
-    cost: growCostSpan,
-    arms: true,
-    // Stays clickable while armed so the same button cancels the map mode.
-    available: ({ canGrowPops, armedVerb }) => canGrowPops || armedVerb === "grow",
-    // "Settlement", not "holding". The map's own caption says settlement, and one
-    // thing may not have two names thirty pixels apart (QA-DOCK-3).
-    hint: "Choose a settlement and pop type to grow.",
-    blockedHint: "Requires an owned settlement.",
-    select: (handlers) => handlers.onGrowPopRequest(),
-  },
-  {
-    id: "move",
-    label: "Move",
-    // A pop: the popover prices the travellers it is sent.
-    cost: ({ G }) => [{ lead: "a pop", amounts: G.ruleset.movePopCost }],
-    arms: true,
-    available: ({ canMovePops, armedVerb }) => canMovePops || armedVerb === "move",
-    hint: "Move pops between two owned settlements, once a turn.",
-    blockedHint: "One move a turn, into a settlement with room, with food to pay for it.",
-    select: (handlers) => handlers.onMovePopsRequest(),
-  },
-  {
-    id: "found",
-    label: "Found",
-    cost: ({ G, playerID }) => [{ amounts: getFoundColonyStatus(G, playerID, "").cost ?? {} }],
-    arms: true,
-    available: ({ canFoundColony, armedVerb }) => canFoundColony || armedVerb === "found",
-    hint: "Send a pop from an existing settlement to found a new colony.",
-    blockedHint: "Requires a colony piece, an open tile, a spare pop, and enough resources.",
-    select: (handlers) => handlers.onFoundColonyRequest(),
-  },
-  {
-    id: "upgrade",
-    label: "Upgrade",
-    cost: ({ G, playerID }) => [
-      { amounts: getUpgradeColonyToCityStatus(G, playerID, "").cost ?? {} },
-    ],
-    available: ({ canUpgradeCity }) => canUpgradeCity,
-    hint: "Upgrade one of your colonies into a city. The colony piece comes back.",
-    blockedHint: "Requires a city piece, an upgradeable colony and enough resources.",
-    select: (handlers) => handlers.onUpgradeCityRequest(),
-  },
-  {
-    id: "build",
-    label: "Build",
-    // The floor, not a word: the Build page prices each building, and none of
-    // them is cheaper than this.
-    cost: buildFloor,
-    arms: true,
-    available: ({ canBuild, armedVerb }) => canBuild || armedVerb === "build",
-    hint: "Raise a building in one of your settlements.",
-    blockedHint: "Requires a settlement with an open slot and enough resources.",
-    select: (handlers) => handlers.onBuildRequest(),
-  },
-  {
-    id: "calm",
-    label: "Calm",
-    // Two payments, one seam — so the dock prints both and joins them with "or".
-    cost: ({ G, playerID }) => [
-      { amounts: getCivicCalmStatus(G, playerID, "influence").cost ?? {} },
-      { amounts: getCivicCalmStatus(G, playerID, "gold").cost ?? {} },
-    ],
-    available: ({ G, playerID }) => usesLeft(G, playerID, "calm") !== 0,
-    hint: "Buy calm this year: influence or gold, up to the turn's cap.",
-    blockedHint: "Calm is used up this turn.",
-    select: (handlers) => handlers.onCalmRequest(),
-  },
-];
-
-/** The part of a VerbContext the turn gate ({@link turnBlocked}) reads. */
-export type TurnGate = Pick<VerbContext, "isActive" | "phase" | "pending">;
+/** What the turn gate ({@link turnBlocked}) reads: the seat, the phase, what the
+ *  table waits on instead of the turn ({@link turnPending}), or null, and the name of
+ *  the seat whose turn it is. */
+type TurnGate = { isActive: boolean; phase: Phase; pending: string | null; acting: string };
 
 const IN_ASSEMBLY = "The Assembly is sitting: return to it to act.";
 
@@ -228,28 +22,11 @@ export function turnPending(G: HegemonyState): string | null {
  *  table waits on first, then the seat, then the phase. */
 export function turnBlocked(gate: TurnGate): string | null {
   if (gate.pending) return gate.pending;
-  if (!gate.isActive) return "Current player's turn only.";
+  if (!gate.isActive) return `${gate.acting} is acting.`;
   return gate.phase === "gameplay" ? null : "Gameplay only.";
 }
 
-export function isTurnOpen(gate: TurnGate) {
-  return turnBlocked(gate) === null;
-}
-
-/** The shared gate every verb sits behind, in one place. */
-export function isVerbEnabled(verb: VerbSpec, context: VerbContext) {
-  return isTurnOpen(context) && verb.available(context);
-}
-
-export function verbTitle(verb: VerbSpec, context: VerbContext) {
-  if (context.pending) return context.pending;
-
-  const hint = typeof verb.hint === "function" ? verb.hint(context) : verb.hint;
-
-  return verb.available(context) ? hint : (verb.blockedHint ?? hint);
-}
-
-/** The end-turn explanation, blocked or not, without a VerbContext to build. */
+/** The end-turn explanation, blocked or not. */
 export function turnCommitTitle(gate: TurnGate) {
   return turnBlocked(gate) ?? "Press and hold to end the turn.";
 }

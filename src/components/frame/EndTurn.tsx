@@ -5,9 +5,14 @@ import type { PlayerId } from "../../game/types";
 import type { Ruleset } from "../../game/ruleset";
 import type { TurnEndUnrest } from "../../game/unrest";
 import { presentUnrestOutcome } from "../../ui/effects";
-import { sign } from "../../ui/frameFormat";
+import { formatResourceCost, formatSignedNumber } from "../../ui/formatters";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { Prose } from "../AnnotatedText";
+import { useGameUi } from "../board/GameUiContext";
+import { useConfirm } from "../chrome/confirmContext";
+import { SpendDetail } from "../chrome/confirmDetail";
+import { CloseDisc } from "../chrome/controls";
+import { SeatCoin } from "../chrome/SeatCoin";
 import { Popover } from "../overlays/Popover";
 import { Tooltip } from "../overlays/Tooltip";
 import { Chips, Ico, Tip, TipBody, TipWarn } from "./parts";
@@ -114,7 +119,7 @@ export function EndTurn({
         style={{ "--owner": acting.color } as CSSProperties}
       >
         <span className="endturn-disc" data-c="disc">
-          <span className="endturn-blazon">{acting.blazon}</span>
+          <SeatCoin aria-hidden="true" className="endturn-coin" seat={actingId} />
         </span>
         <span className="kicker endturn-label" data-c="chip">
           {waitingLabel ?? acting.name}
@@ -132,7 +137,9 @@ export function EndTurn({
             {warning ? <TipWarn>{warning.message}</TipWarn> : null}
           </Tip>
         }
-        preferredPlacement="above"
+        // Left of the dock: a tip above End turn would lie over the dock's modes.
+        side="left"
+        sideOf=".rd-dock"
         triggerClassName="endturn-anchor"
       >
         <button
@@ -189,7 +196,11 @@ export function EndTurn({
   );
 }
 
-/** The confirm over the hourglass at the riot or revolt line. */
+/**
+ * The warning over the hourglass at the riot or revolt line. Focus lands on the plain
+ * choice to face it, first in the order, and Tab stays in the card. Calm spends, so it
+ * asks first (the confirm bar) and ends the turn only on yes.
+ */
 function EndTurnConfirm({
   anchor,
   unrest,
@@ -205,65 +216,97 @@ function EndTurnConfirm({
   onEnd: () => void;
   onClose: () => void;
 }) {
+  const { G, viewerId } = useGameUi();
+  const ask = useConfirm();
   const revolt = unrest.tier === "revolt";
   const { calm } = unrest;
   // Calm bought more than once says how many times.
   const times = calm && calm.payments.length > 1 ? ` ×${calm.payments.length}` : "";
   const { share } = presentUnrestOutcome(ruleset, unrest.tier);
-  const title = revolt ? "Ending your turn now means revolt" : "Ending your turn starts a riot";
+  // One line in the dock's width at every Text size; the dialog's name says it whole.
+  const title = revolt ? "Revolt ahead" : "Riot ahead";
 
   return (
     <Popover
       anchor={anchor}
-      ariaLabel={title}
+      ariaLabel={revolt ? "Ending your turn now means revolt" : "Ending your turn starts a riot"}
       className={`endturn-confirm${revolt ? " is-revolt" : ""}`}
       dismissOnOutside
       onDismiss={onClose}
-      preferredPlacement="above"
+      slot
     >
-      <h2 className="name confirm-title">{title}</h2>
-      <p className="confirm-body">
-        <Prose links={false}>
-          {revolt ? (
-            unrest.slaves ? (
-              <>
-                {`${share} your slaves walk away: `}
-                <b>
-                  {unrest.leaving} of {unrest.slaves}
-                </b>
-                . No roll and no insurance.
-              </>
+      <div className="confirm-card">
+        <header className="confirm-head">
+          <h2 className="name confirm-title">{title}</h2>
+          <CloseDisc label="Close the warning" onClick={onClose} />
+        </header>
+        <p className="confirm-body">
+          <Prose links={false}>
+            {revolt ? (
+              unrest.slaves ? (
+                <>
+                  {`${share} your slaves walk away: `}
+                  <b>
+                    {unrest.leaving} of {unrest.slaves}
+                  </b>
+                  . No roll and no insurance.
+                </>
+              ) : (
+                "No slaves are left to walk away; only your Unrest tokens clear."
+              )
             ) : (
-              "No slaves are left to walk away; only your Unrest tokens clear."
-            )
-          ) : (
-            `Your ${unrest.tokens} Unrest ${unrest.tokens === 1 ? "token clears" : "tokens clear"}, then you roll on the riot table.`
-          )}
-        </Prose>
-      </p>
-      {calm ? (
-        <p className="confirm-calm">
-          <Ico path="unrest/calm" size="ui" />
-          <span>
-            {calm.tier === "none"
-              ? `Calm${times} gives ${sign(calm.level - unrest.level)} and holds the line.`
-              : `Calm${times} (${sign(calm.level - unrest.level)}) lifts you to ${sign(calm.level)}: a riot instead.`}
-          </span>
+              `Your ${unrest.tokens} Unrest ${unrest.tokens === 1 ? "token clears" : "tokens clear"}, then you roll on the riot table.`
+            )}
+          </Prose>
         </p>
-      ) : null}
-      <div className="confirm-acts">
         {calm ? (
-          <button
-            className="btn kicker confirm-btn is-primary"
-            onClick={() => onCalmThenEnd(calm.payments)}
-            type="button"
-          >
-            Calm{times}, then end <Chips amounts={calm.cost} />
-          </button>
+          <p className="confirm-calm">
+            <Ico path="unrest/calm" size="ui" />
+            <span>
+              {calm.tier === "none"
+                ? `Calm${times} gives ${formatSignedNumber(calm.level - unrest.level)} and holds the line.`
+                : `Calm${times} (${formatSignedNumber(calm.level - unrest.level)}) lifts you to ${formatSignedNumber(calm.level)}: a riot instead.`}
+            </span>
+          </p>
         ) : null}
-        <button autoFocus className="btn kicker confirm-btn" onClick={onEnd} type="button">
-          {revolt ? "Revolt" : "Face the riot"}
-        </button>
+        <div className="confirm-acts">
+          {/* The plain choice first: it has the focus, and Tab goes on to Calm. */}
+          <button autoFocus className="btn kicker confirm-btn" onClick={onEnd} type="button">
+            {revolt ? "Revolt" : "Face the riot"}
+          </button>
+          {calm ? (
+            <button
+              className="btn kicker confirm-btn is-primary"
+              onClick={() =>
+                ask({
+                  icon: "unrest/calm-verb",
+                  question: `Are you sure you want to buy Calm${times} for ${formatResourceCost(calm.cost).toLowerCase()} and end your turn?`,
+                  detail: (
+                    <SpendDetail
+                      command={calm.payments.map((payment) => ({
+                        type: "civicCalm" as const,
+                        payment,
+                      }))}
+                      cost={calm.cost}
+                      G={G}
+                      note={
+                        calm.tier === "none"
+                          ? "Then your turn ends."
+                          : "Then your turn ends in a riot."
+                      }
+                      viewerId={viewerId}
+                    />
+                  ),
+                  verb: "Calm and end",
+                  onYes: () => onCalmThenEnd(calm.payments),
+                })
+              }
+              type="button"
+            >
+              Calm{times}, then end <Chips amounts={calm.cost} />
+            </button>
+          ) : null}
+        </div>
       </div>
     </Popover>
   );

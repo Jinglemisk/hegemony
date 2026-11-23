@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import type { HegemonyState, LogEntry, PlayerId, PopLeave } from "../../../game/types";
-import { formatPopLabel, toRoman } from "../../../ui/formatters";
-import { sign } from "../../../ui/frameFormat";
+import { formatPopLabel, toRoman, formatSignedNumber } from "../../../ui/formatters";
 import { Prose } from "../../AnnotatedText";
 import { leaveParts } from "../../frame/moments";
 import { Delta } from "../../frame/parts";
@@ -36,7 +35,7 @@ export function tokensLine(tokens: number, level: number): LossLine {
     text: (
       <>
         Unrest tokens <Delta from={tokens} higherIsBetter={false} to={0} />.{" "}
-        <Prose links={false}>{`Happiness now ${sign(level)}.`}</Prose>
+        <Prose links={false}>{`Happiness now ${formatSignedNumber(level)}.`}</Prose>
       </>
     ),
   };

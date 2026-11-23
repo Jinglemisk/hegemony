@@ -4,30 +4,20 @@
    (scripts/check-ui-system.mjs counts a colour written anywhere else). On :root,
    so anything portalled out of the frame (overlays, the dev tune panel) keeps it.
 
-   Region sizes are multiples of the 4px grid unit; gaps and insets use the one
-   spacing scale, in one rhythm: 4 inside an item (icon to number), 8 between
-   items of a group, 16 between groups. Components size themselves from role
-   tokens (--t-body, --ic-ui, --ic-disc …), so a tier is a token swap: at 1680
-   and wider the realm, its discs and the end turn step up together; the bar
-   stays one control tall.
+   Lengths are DESIGN px: the HUD is drawn on a 1440×900 canvas and scaled
+   uniformly to the screen (--k, set on .frame by useFitScale; see chrome.css), so
+   no token steps up or down with the viewport. Region sizes are multiples of the
+   4px grid unit; gaps and insets use the one spacing scale, in one rhythm: 4
+   inside an item (icon to number), 8 between items of a group, 16 between groups.
    ========================================================================== */
 
 :root {
-  /* ---- responsive uniform-scale (two-panel.md, piece 3) -------------------
-     One dial: the whole KYKLOS chrome shrinks PROPORTIONALLY as the viewport
-     narrows — identical layout, only smaller — so 600px of left+right chrome stays
-     in proportion and never reflows (the board is covered, never reshaped). Full
-     size at ≥1440px, floored at 0.82 by ≤1024px, linear between. rem text rides
-     this one factor through the scaled root font-size (base.css). The map sizes
-     itself by its camera, so it is untouched. Per-element minimums are a later pass. */
-  --ui-scale: clamp(0.82, calc(0.82 + (100vw - 1024px) * 0.18 / 416px), 1);
-
   /* ---- gate contract ---------------------------------------------------- */
   --gate-space: "0 4 8 12 16 24 32 48 64";
   --gate-grid: 4;
   --gate-icons: "16 24 32 48";
   --gate-hit: 32;
-  --gate-text: 12;
+  --gate-text: 13;
 
   /* ---- grid unit and the one spacing scale ------------------------------ */
   --u: 4px;
@@ -40,35 +30,26 @@
   --s-12: calc(var(--u) * 12); /* 48 */
   --s-16: calc(var(--u) * 16); /* 64 */
 
-  /* ---- type scale --------------------------------------------------------- */
+  /* ---- type scale ---------------------------------------------------------
+     The floor is 13 at design size (15.6 at 1080p); see the plan's Standards.
+     --text-scale is the player's Text size setting (1 / 1.15 / 1.3, written on
+     <html> by useTextScale): every size and leading rides it (the --t-* and --lh-*
+     rule after this one), so text grows inside boxes that keep their size. */
+  --text-scale: 1;
   --f-name: "Cinzel", Copperplate, Georgia, serif; /* proper names, titles only */
   --f-body: "Alegreya", "Iowan Old Style", Palatino, Georgia, serif;
   --f-sans: "Alegreya Sans", "Gill Sans", Helvetica, Arial, sans-serif;
-  --t-12: 12px;
-  --t-14: 14px;
-  --t-16: 16px;
-  --t-20: 20px;
-  --t-24: 24px;
-  --t-28: 28px;
-  --t-72: 72px; /* the year's numeral on its card's back */
-  --lh-16: 16px;
-  --lh-20: 20px;
-  --lh-24: 24px;
-  --lh-28: 28px;
-  --lh-32: 32px;
+  /* The top bar's figures and labels hold these sizes at every Text size: its cells
+     are 44 high in a 50 bar, a 20 figure over a 13 label already fills them, and
+     every cell's tooltip (which does scale) carries its words whole. */
+  --t-bar-13: 13px;
+  --t-bar-14: 14px; /* the Menu plaque's word */
+  --t-bar-20: 20px;
+  --lh-bar-16: 16px;
+  --lh-bar-20: 20px;
+  --lh-bar-24: 24px;
   --track-caps: 0.08em;
   --track-name: 0.04em;
-  /* roles */
-  --t-cap: var(--t-12);
-  --l-cap: var(--lh-16); /* the floor: chips, caps labels, deltas */
-  --t-body: var(--t-14);
-  --l-body: var(--lh-20); /* panel body */
-  --t-num: var(--t-16);
-  --l-num: var(--lh-20); /* bar numbers */
-  --t-lead: var(--t-16);
-  --l-lead: var(--lh-20); /* the ruler's name */
-  --t-count: var(--t-24);
-  --l-count: var(--lh-28); /* pop counts */
 
   /* ---- icons --------------------------------------------------------------- */
   --ic-16: 16px;
@@ -83,6 +64,10 @@
 
   /* ---- controls and regions (grid multiples) ----------------------------- */
   --hit: calc(var(--u) * 8); /* 32: every control's short edge */
+  /* Floors that hold at the smallest scale (k 0.889 at 1280×800): a knob or close
+     disc 32 screen px, a control pressed every turn 44. */
+  --knob-d: calc(var(--u) * 9); /* 36 */
+  --hit-often: calc(var(--u) * 12.5); /* 50: map modes, alarm discs, sidebar buttons */
   --bar-h: calc(var(--u) * 12); /* 48: a control and a half, so the bar's icons read at 32 */
   --row-h: calc(var(--u) * 10); /* 40: realm tabs */
   --chip-h: calc(var(--u) * 5); /* 20: the end-turn label */
@@ -151,8 +136,12 @@
      it reads 4.11:1 on bone, so every glossary term, kicker and epithet drawn in
      it was under AA. --clay-ink is the same hue five points darker, the least
      that clears 4.5:1 (4.92:1 on bone, 5.74:1 on ivory). The ramp is therefore
-     fill → ink → deep, and --clay-deep stays what a clay link does on hover. */
-  --clay-ink: #ad3d18;
+     fill → ink → deep, and --clay-deep stays what a clay link does on hover.
+     Measured again on the textures (2026-11-23): parchment's darkest grains
+     (237,215,170) and the darker footer bands (219,198,154) took #ad3d18 to
+     4.31 and 3.63, so the ink is now the darkest clay that still reads as clay:
+     5.51 on parchment, 4.64 on a footer band, 4.94 on a plaque's foot. */
+  --clay-ink: #933213;
   --clay-deep: #8f2e13;
   --ochre: #d98a35;
   --bone: #f4e6c8;
@@ -171,6 +160,12 @@
      one step lighter (type.css). */
   --pos: #5e6e3a;
   --neg: #8f2e13;
+  /* The two as TEXT ink: --pos is a fill (a gauge, a ring) and reads 3.96:1 on
+     parchment's darkest grain, so a number that helps is drawn in --pos-ink
+     (5.68 on parchment, 4.79 on a footer band); a shortfall, a short price, a
+     number that hurts, in --neg-ink (5.80, 4.89). */
+  --pos-ink: #465628;
+  --neg-ink: var(--clay-deep);
 
   --fg: #241910;
   /* The older names for the two quiet ink steps; aliases now, so the pair cannot
@@ -183,10 +178,8 @@
      keyline and rule reads heavier here than in DECIDED-UI-LAYOUT.html. */
   --line: rgb(36 25 16 / 13%);
   --line-strong: rgb(192 70 28 / 48%);
-  --button-bg: rgb(255 248 231 / 86%);
   --button-line: rgb(36 25 16 / 24%);
   --shadow: 0 20px 46px rgb(72 42 21 / 20%);
-  --lift-shadow: 0 12px 24px rgb(72 42 21 / 18%);
   --float: 0 10px 30px rgb(24 18 16 / 26%);
 
   /* ---- the ink ramp ------------------------------------------------------------
@@ -196,10 +189,15 @@
      subtitle in the app was below AA. 63% is the floor that clears 4.5:1 on the
      darkest ground this ramp lands on (bone, 4.61:1) — not a wholesale contrast
      raise, the minimum that reads. Anything below --ink-63 is a keyline or a
-     wash, never text. */
+     wash, never text.
+     Measured on the textures (2026-11-23), 63% and 66% fell under 4.5:1 on
+     parchment's darkest grains (4.37) and the footer bands (4.06, 4.40). Quiet
+     text is one step now, --ink-72 (5.69 on parchment, 5.17 on a footer band,
+     4.87 on a hatched plaque); --ink-66 and --ink-63 are its older names. */
   --ink: #241910;
-  --ink-66: rgb(36 25 16 / 66%);
-  --ink-63: rgb(36 25 16 / 63%);
+  --ink-72: rgb(36 25 16 / 72%);
+  --ink-66: var(--ink-72);
+  --ink-63: var(--ink-72);
   --ink-45: rgb(36 25 16 / 45%);
   --ink-30: rgb(36 25 16 / 30%);
   --ink-12: rgb(36 25 16 / 12%);
@@ -220,6 +218,7 @@
   --sea-lit: #2e8a9a;
   --sea-deep: #17505c;
   --sea-shade: rgb(10 34 41 / 35%);
+  --sea-vignette: rgb(6 20 26 / 55%); /* the sea darkening toward the screen's edges */
   /* The living map's labels over the water: a plate's drop, a yield chip's paper,
      a building badge's paper, a ship's dark chip and its rule, and the compass's
      glass. */
@@ -289,16 +288,25 @@
   --z-ceremony: 100; /* scrim + modal: a rite covers the whole table */
   --z-map-tip: 140; /* the map's tile tip: under a popover opened from that tile */
   --z-popover: 150; /* anchored popovers, portalled over the table */
+  --z-confirm: 160; /* the confirm bar: over the popover that asked it */
   --z-tooltip: 200; /* over everything, a popover included: its tips open inside it */
   --z-dev: 300; /* the dev tune sheet, outside the frame: over everything */
   /* Inside one component, against its own siblings: a layer set under the
      surface, or lifted over its neighbours. */
   --z-under: -1;
   --z-lift: 1;
+  --z-trim: 2; /* a panel's bronze corners, over its rule and its content */
+  --z-pick: 3; /* a picker opened inside a card: over the card's rule and corners */
 
   /* ---- rules, radii, shadows, states -------------------------------------- */
   --rule: 1px;
   --rule-2: 2px;
+  /* The keyboard's focus ring: two tones, so one of them clears 3:1 on every ground.
+     Ink on parchment and ivory (13:1); the pale gilt halo on glaze and the sea
+     (4.8:1 on --sea, 3.3:1 on --sea-lit). Drawn by one rule (chrome.css). */
+  --focus-w: var(--rule-2);
+  --focus-ink: var(--ink);
+  --focus-halo: var(--glaze-ink);
   --r-4: 4px; /* buttons, rows, tags */
   --r-8: 8px; /* cards, panels, toasts */
   --r-16: 16px; /* a pill one line tall */
@@ -328,56 +336,316 @@
   --fan-from: 0.4; /* a sub-circle grows out of its disc from this scale */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 
+  /* ==== the Imperator shell (docs/plans/imperator-shell.md) =================
+     The material: parchment and black glaze in a cast bronze frame. Spent by
+     src/styles/frame/chrome.css and the primitives in src/components/chrome/. */
+
+  /* ---- the canvas: the HUD's logical box, in design px ----------------------
+     --k is the canvas's scale (useFitScale writes it on .frame); inside
+     .hud-canvas, --vw and --vh are the logical viewport, so chrome sized by the
+     viewport writes var(--vw) where it once wrote 100vw. */
+  --k: 1;
+  --vw: 100vw;
+  --vh: 100vh;
+
+  /* ---- shell geometry at design size (1440×900) ------------------------- */
+  --sh-top-h: 50px; /* the top bar */
+  --sh-side-w: 64px; /* the sidebar's column of buttons */
+  --sh-side-top: 108px; /* the sidebar and its drawers start under the alarms' row */
+  --sh-drawer-w: 320px; /* a drawer, full height beside the sidebar */
+  --sh-place-w: 604px; /* the place panel, from the screen's left edge */
+  --sh-place-h: 404px;
+  --sh-dock-w: 320px; /* the dock, bottom right */
+  --sh-log-h: 36px; /* … its log line */
+  --sh-modes-h: 60px; /* … its map modes */
+  --sh-acts-h: 66px; /* … its Trade / Buy a card / the Dole */
+  --sh-chron-h: 320px; /* … and the Chronicle, risen out of its line */
+  --sh-end-w: 88px; /* … End turn, beside the modes and buttons */
+  --sh-outliner-w: 320px; /* the outliner, from under the top bar to the dock */
+  --sh-outliner-top: 60px;
+  --sh-card-x: 100px; /* an alarm's card: one slot under the alarms row, … */
+  --sh-card-y: 114px;
+  --sh-card-w: 480px; /* … at most this wide */
+  /* The toast lane, right of the alarm card's slot: it ends short of the compass at
+     the board's top-right (1052 against 1068). */
+  --sh-toast-w: 456px;
+  --sh-toast-h: 72px; /* one toast, at every text size */
+  --sh-hand-x: 624px; /* the hand's tray */
+  --sh-hand-w: 480px;
+  --sh-hand-h: 72px;
+  --sh-sit-head: 100px; /* the Assembly sheet's head, at every stage */
+  --sh-sit-foot: 88px; /* … and its foot: one row of seat chips, two lines each at Largest */
+  --sh-confirm-w: 680px; /* the confirm bar over the board's centre … */
+  --sh-confirm-h: 120px; /* … one height at every text size, sized for Largest */
+  --sh-compose-h: 312px; /* the trade composer: one height, its rows scroll */
+  --sh-deal-h: 406px; /* an open offer and a standing deal: one height, their bodies scroll */
+  --sh-threat-h: 320px; /* the three-titles card: its head and three whole rows */
+  --sh-pill-h: 92px; /* the Assembly's pill, minimised under the alarms */
+  --sh-notice-w: 400px; /* the turn notice, the same at every text size */
+  --sh-notice-h: 304px;
+  --sh-corner: 38px; /* a bronze corner piece … */
+  --sh-corner-out: 9px; /* … and how far it stands proud of the panel */
+  --sh-meander-h: 7px; /* the meander strip under a head or the top bar */
+
+  /* ---- bronze: highlight, body, shadow, dark ------------------------------ */
+  --bz-hi: #e9c27a;
+  --bz: #b5874a;
+  --bz-lo: #6b4521;
+  --bz-dk: #3c2612;
+  --bz-hi-45: rgb(233 194 122 / 45%);
+  --bz-hi-25: rgb(233 194 122 / 25%);
+  --bz-dk-30: rgb(60 38 18 / 30%);
+  --bz-dk-12: rgb(60 38 18 / 12%);
+
+  /* ---- the two fills: parchment (light) and black glaze (dark) --------------
+     A texture tile with its fallback colour, each a whole background value. */
+  --parch-fill: #f1e3c4;
+  --glaze-fill: #1f1610;
+  --parch: url("../../../assets/chrome/tex-parchment.webp") 0 0 / 512px var(--parch-fill);
+  --glaze: url("../../../assets/chrome/tex-glaze.webp") 0 0 / 512px var(--glaze-fill);
+  --glaze-ink: #f8e7c4; /* words on the glaze */
+  --glaze-ink-66: rgb(248 231 196 / 66%);
+  --glaze-ink-shadow: 0 1px 0 #000, 0 0 10px var(--bz-hi-25);
+  --glaze-hover: rgb(255 248 231 / 9%); /* a row under the pointer on the glaze */
+  --glaze-on: rgb(255 248 231 / 13%); /* the picked row on the glaze */
+
+  /* ---- the frame -------------------------------------------------------------- */
+  --rule-frame:
+    inset 0 0 0 1px var(--bz-lo), inset 0 0 0 2px var(--bz-hi), inset 0 0 0 3px var(--bz-lo),
+    inset 0 0 26px rgb(110 70 25 / 22%);
+  --shadow-panel: 0 18px 40px rgb(6 18 22 / 55%), 0 3px 8px rgb(0 0 0 / 35%);
+  --shadow-corner: drop-shadow(0 2px 2px rgb(0 0 0 / 45%));
+  --r-panel: 3px; /* a panel's, a control's and a socket's corner */
+  --head-edge:
+    inset 0 1px 0 var(--bz-hi-45), inset 0 -1px 0 var(--bz-lo); /* a glaze band's gilt edge */
+  --medallion: radial-gradient(
+    circle at 35% 30%,
+    #fff3d6,
+    #d8bd8a
+  ); /* an icon's disc on the glaze */
+  --medallion-rim: 0 0 0 1.5px var(--bz), 0 0 0 3px var(--bz-dk);
+  /* The meander strip: a 14×7 key, bronze on bronze-dark, repeated along an edge. */
+  --meander: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='7'%3E%3Crect width='14' height='7' fill='%233c2612'/%3E%3Cpath d='M0 6.5h14M0 .5h14' stroke='%23b5874a'/%3E%3Cpath d='M1 5V2h5v2H4' fill='none' stroke='%23e9c27a' stroke-width='1'/%3E%3Cpath d='M8 2v3h5V3h-2' fill='none' stroke='%23e9c27a' stroke-width='1'/%3E%3C/svg%3E")
+    0 0 / 14px 7px repeat-x;
+  --shadow-meander: drop-shadow(0 2px 2px rgb(0 0 0 / 35%));
+
+  /* ---- controls --------------------------------------------------------------- */
+  /* Primary: red lacquer with a gilt rim. Its lit top is dark enough that the
+     ivory word clears 4.5:1 across the whole face (5.17 at the top). */
+  --lacquer: linear-gradient(#b04423, #8a2c12);
+  --lacquer-ink: #fff3dc;
+  --lacquer-rim:
+    inset 0 1px 0 rgb(255 210 170 / 55%), inset 0 -2px 0 rgb(0 0 0 / 25%), 0 0 0 1.5px var(--bz-hi),
+    0 0 0 3px var(--bz-dk), 0 3px 6px rgb(0 0 0 / 40%);
+  --ink-shadow: 0 1px 0 rgb(0 0 0 / 40%);
+  /* Secondary: a parchment plaque in bronze. */
+  --plaque: linear-gradient(#fbefd4, #e2cc9e);
+  --plaque-rim:
+    inset 0 1px 0 var(--ivory), 0 0 0 1.5px var(--bz), 0 0 0 3px rgb(60 38 18 / 35%),
+    0 2px 4px rgb(0 0 0 / 25%);
+  /* A bronze knob, disc and back plaque. */
+  --knob: radial-gradient(circle at 35% 30%, #f6dca4, var(--bz) 60%, var(--bz-lo));
+  --knob-rim:
+    inset 0 0 0 1px rgb(255 240 200 / 50%), 0 0 0 1.5px var(--bz-dk), 0 2px 3px rgb(0 0 0 / 50%);
+  --knob-press: inset 0 2px 3px rgb(0 0 0 / 40%), 0 0 0 1.5px var(--bz-dk);
+  --back: linear-gradient(#5a3a1c, #2c1c0e);
+  --back-hover: linear-gradient(#6d4724, #382412);
+  --back-rim: inset 0 1px 0 var(--bz-hi-45), 0 0 0 1px var(--bz), 0 2px 3px rgb(0 0 0 / 45%);
+  /* Pressed (a toggle that is on): glaze with a gilt ring. */
+  --pressed-rim: inset 0 0 0 2px var(--bz-hi), 0 0 0 1.5px var(--bz-dk), 0 0 10px var(--bz-hi-45);
+  /* Unavailable: hatched, keeps its place and its focus. Light enough that the quiet
+     ink reads 4.5:1 on it over parchment, a plaque's foot included. */
+  --hatch:
+    repeating-linear-gradient(135deg, rgb(60 38 18 / 4%) 0 6px, transparent 6px 12px),
+    rgb(60 38 18 / 6%);
+  --hatch-rim: inset 0 1px 3px rgb(0 0 0 / 22%), 0 0 0 1px rgb(60 38 18 / 25%);
+  --hover-glow: brightness(1.07);
+  /* A hover lifts by its shadow, never by moving: a control that moved under the
+     pointer lost its hover at its edge and flickered. */
+  --hover-lift: drop-shadow(0 2px 2px rgb(40 22 10 / 34%));
+  --press-dim: brightness(0.95);
+
+  /* ---- sockets and meters ----------------------------------------------------- */
+  --socket: linear-gradient(#f9ecd0, #e6d1a6);
+  --socket-worked: linear-gradient(#f2d9a4, #ddb974);
+  --socket-rim: inset 0 1px 0 var(--ivory), 0 0 0 1px var(--bz), 0 2px 3px rgb(0 0 0 / 20%);
+  --socket-open-rim:
+    inset 0 2px 5px rgb(0 0 0 / 35%), inset 0 0 0 1px rgb(60 38 18 / 30%), 0 1px 0 var(--ivory-70);
+  --socket-open-hover: rgb(192 70 28 / 14%);
+  --meter-well: inset 0 1px 2px rgb(0 0 0 / 30%);
+  --meter-glaze: linear-gradient(#4a3420, #1f1610);
+  --meter-gold: linear-gradient(#f0b25e, #c27a2a);
+
+  /* ---- section bands ---------------------------------------------------------- */
+  --band-wash: linear-gradient(90deg, rgb(181 135 74 / 22%), transparent 80%);
+  --band-ink: #f0d9aa;
+
+  /* ---- lacquer red, the alarm's ember ------------------------------------------ */
+  --lacquer-red: #b23a1a;
+  --ember: #f3a14a;
+
+  /* ---- seats: each glaze, and its coin (the art is in assets/chrome/) -----------
+     The same four values as src/ui/playerGlazes.ts, which the map reads in TS. */
+  --seat-kyanos: #2f5d9e; /* the owl */
+  --seat-melas: #2b2420; /* the winged horse */
+  --seat-porphyra: #7c4d79; /* the turtle */
+  --seat-kinnabari: #a83226; /* the lion */
+  --coin-shine: radial-gradient(circle at 40% 35%, rgb(255 255 255 / 22%), transparent 70%);
+  --coin-rim: inset 0 0 0 1px rgb(0 0 0 / 30%), 0 0 0 1px var(--bz-hi), 0 1px 3px rgb(0 0 0 / 55%);
+
+  /* ---- messages and the confirm ------------------------------------------------ */
+  --shadow-banner: 0 8px 20px rgb(0 0 0 / 45%);
+  --scrim-confirm: rgb(12 26 30 / 16%); /* the board dims only slightly */
+  --scrim-compose: rgb(12 26 30 / 30%); /* the board behind the trade composer */
+
+  /* ---- motion: 200–320ms for anything that moves; all zero under reduced motion */
+  --dur-press: 90ms; /* a control's lift and press */
+  --dur-hover: 120ms; /* a glow coming up */
+  --dur-settle: 220ms; /* a card or dialog settling into place */
+  --dur-unroll: 300ms; /* a panel unrolling from an edge */
+  --dur-drop: 320ms; /* an alarm dropping in, a banner unfurling */
+  --dur-fold: 240ms; /* the Chronicle rising and the outliner giving way to it */
+  --ease-drop: cubic-bezier(0.2, 1.4, 0.4, 1); /* lands with a small bounce */
+
   color-scheme: light;
 }
 
-/* 1920-class viewports: the realm and end turn step up a tier */
-/* Inside the top bar a control is 40 tall and its icons 32, so the bar reads at a
-   glance; the bar's numbers and the seats' discs step up with them. */
-.topbar {
-  --hit: calc(var(--u) * 10); /* 40 */
-  --ic-ui: var(--ic-32);
-  --t-num: var(--t-20);
-  --l-num: var(--lh-24);
-  --t-cap: var(--t-14);
-  --l-cap: var(--lh-20);
+/* The type scale rides the player's Text size (--text-scale, written on <html>).
+   Card faces are fixed-format (the owner's rule: card faces never slide or scale):
+   inside a card the scale is re-derived at 1, so a face prints the same at every Text
+   size and its sentence, in the card's tooltip, carries the player's size. A
+   politician's epithet in the Assembly is a face's kicker and holds the same way. */
+:root,
+.gc,
+.sit-pol > span.kicker {
+  --t-13: calc(13px * var(--text-scale)); /* the floor: small-caps tags, units */
+  --t-14: calc(14px * var(--text-scale)); /* secondary lines, a tooltip's body */
+  --t-15: calc(15px * var(--text-scale)); /* body */
+  --t-16: calc(16px * var(--text-scale)); /* body, numbers in panels */
+  --t-20: calc(20px * var(--text-scale));
+  --t-22: calc(22px * var(--text-scale)); /* a panel's name */
+  --t-24: calc(24px * var(--text-scale));
+  --t-28: calc(28px * var(--text-scale));
+  --t-34: calc(34px * var(--text-scale)); /* a scene's one figure */
+  --t-72: calc(72px * var(--text-scale)); /* the year's numeral on its card's back */
+  --lh-16: calc(16px * var(--text-scale));
+  --lh-20: calc(20px * var(--text-scale));
+  --lh-24: calc(24px * var(--text-scale));
+  --lh-28: calc(28px * var(--text-scale));
+  --lh-32: calc(32px * var(--text-scale));
+  /* roles */
+  --t-cap: var(--t-13);
+  --l-cap: var(--lh-16); /* the floor: chips, caps labels, deltas */
+  --t-body: var(--t-15);
+  --l-body: var(--lh-20); /* panel body */
+  --t-num: var(--t-16);
+  --l-num: var(--lh-20); /* bar numbers */
+  --t-lead: var(--t-16);
+  --l-lead: var(--lh-20); /* the ruler's name */
+  --t-count: var(--t-24);
+  --l-count: var(--lh-28); /* pop counts */
+  /* The hierarchy, one size per tier (the plan's Standards):
+     a head's title — every panel, drawer, window and card, the place panel's
+     included — at 20; a moment's sheet (the Assembly, a ceremony) at 24; a drawn
+     verb (lacquer, plaque) at 15 in sentence case. */
+  --t-head: var(--t-20);
+  --l-head: var(--lh-28); /* Cinzel's capitals stand tall: 28 holds them at every Text size */
+  --t-sheet: var(--t-24);
+  --l-sheet: var(--lh-32);
+  --t-verb: var(--t-15);
+  --l-verb: var(--lh-20);
+}
+.gc,
+.sit-pol > span.kicker {
+  --text-scale: 1;
 }
 
-@media (min-width: 1680px) {
+/* ---- the top: the bar, the seal, the alarms, the menu, tooltips, banners ------- */
+:root {
+  --bar-foot:
+    inset 0 -1px 0 var(--bz-hi), inset 0 -3px 0 var(--bz-lo), 0 6px 18px rgb(10 34 41 / 40%);
+  /* A gilt divider between the bar's groups, bright at its middle. */
+  --bar-divider: linear-gradient(var(--bz-lo), var(--bz-hi), var(--bz-lo)) left center / 1px 70%
+    no-repeat;
+  --bar-num-shadow: 0 1px 0 rgb(255 248 231 / 70%);
+  --bar-hover: rgb(60 38 18 / 10%);
+  --seal-rim:
+    inset 0 0 0 3px rgb(0 0 0 / 25%), 0 0 0 2px var(--bz-hi), 0 0 0 4px var(--bz-lo),
+    0 5px 14px rgb(0 0 0 / 50%);
+  --seal-glow: 0 0 0 6px var(--bz-hi-25), 0 0 16px var(--bz-hi-45);
+  /* An alarm: a parchment disc in a bronze rim. */
+  --alarm-face: radial-gradient(circle at 40% 35%, #fff8e7, #e7d3aa);
+  --alarm-face-hurt: radial-gradient(circle at 40% 35%, #fbe6da, #ecc2ad);
+  --alarm-rim: 0 0 0 2px var(--bz-hi), 0 0 0 3.5px var(--bz-dk), 0 4px 10px rgb(0 0 0 / 45%);
+  --alarm-loud: 0 0 0 7px rgb(192 70 28 / 40%);
+  /* The tooltip: black glaze with a gilt rule; judgement inks that read on the glaze. */
+  --tip-rim:
+    inset 0 0 0 1px var(--bz-lo), inset 0 2px 0 rgb(233 194 122 / 50%), 0 10px 24px rgb(0 0 0 / 50%);
+  --tip-max-w: 320px;
+  --glaze-pos: #b8cc84;
+  --glaze-neg: #f3a37f;
+}
+
+/* Reduced motion: nothing moves. Every duration above is zeroed, so a transition
+   or keyframe spent through them jumps to its end. */
+@media (prefers-reduced-motion: reduce) {
   :root {
-    --area-w: calc(var(--u) * 156); /* 624 */
-    --area-h: calc(var(--u) * 112); /* 448 */
-    --area-curve: calc(var(--u) * 80); /* 320 */
-    --verb-inset: calc(var(--u) * 16); /* 64: the disc edge 32 from the screen edge */
-    --body-right: calc(var(--u) * 20); /* 80 */
-    --verb-d: calc(var(--u) * 16); /* 64 */
-    --name-h: var(--lh-24);
-    --fan-d: calc(var(--u) * 12); /* 48 */
-    --fan-w: calc(var(--u) * 28); /* 112 */
-    --clock-w: calc(var(--u) * 100); /* 400 */
-    --disc-end: calc(var(--u) * 20); /* 80 */
-    --endturn-w: calc(var(--u) * 28); /* 112 */
-    --endturn-h: calc(var(--u) * 30); /* 120 */
-    --dock-line-h: calc(var(--u) * 12); /* 48 */
-    --chip-h: calc(var(--u) * 6); /* 24 */
-    --price-h: var(--ic-24);
-    --ic-disc: var(--ic-48);
+    --t-fan: 0ms;
+    --t-stagger: 0ms;
+    --dur-press: 0ms;
+    --dur-hover: 0ms;
+    --dur-settle: 0ms;
+    --dur-unroll: 0ms;
+    --dur-drop: 0ms;
+    --dur-fold: 0ms;
   }
-  .realm,
-  .endturn {
-    --t-cap: var(--t-14);
-    --l-cap: var(--lh-20);
-    --ic-chip: var(--ic-24);
-  }
-  .realm {
-    --t-body: var(--t-16);
-    --l-body: var(--lh-24);
-    --t-lead: var(--t-20);
-    --l-lead: var(--lh-24);
-    --t-count: var(--t-28);
-    --l-count: var(--lh-28);
-    --ic-ui: var(--ic-32);
-    --hit: calc(var(--u) * 10); /* 40 */
-    --row-h: calc(var(--u) * 12); /* 48 */
-  }
+}
+
+/* ---- the left window (src/components/left/, frame/left.css) -------------------
+   The sidebar drawn as a Greek column: a capital with two volutes under the top
+   bar, a fluted ink shaft edged in the windows' key pattern, an anthemion between
+   its two groups of buttons, and a base at the foot. Inline art, ochre on ink. */
+:root {
+  --col-capital: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='26' viewBox='0 0 64 26'%3E%3Cg fill='none' stroke='%23d98a35' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M1 2.5H63'/%3E%3Cpath d='M3 6.5H61'/%3E%3Cpath d='M12 8.5C20 15 44 15 52 8.5'/%3E%3Cpath d='M22 10.2V13.4M32 11V14.6M42 10.2V13.4' stroke-width='1.2'/%3E%3Ccircle cx='9' cy='14' r='6'/%3E%3Ccircle cx='9' cy='14' r='2.6'/%3E%3Ccircle cx='55' cy='14' r='6'/%3E%3Ccircle cx='55' cy='14' r='2.6'/%3E%3Cpath d='M10 21.5H54' /%3E%3Cpath d='M14 24.5H50' stroke-opacity='.55'/%3E%3C/g%3E%3C/svg%3E")
+    center top / 64px 26px no-repeat;
+  --col-base: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='16' viewBox='0 0 64 16'%3E%3Cg fill='none' stroke='%23d98a35' stroke-width='1.6'%3E%3Cpath d='M10 2.5H54' stroke-opacity='.55'/%3E%3Cpath d='M6 6.5H58'/%3E%3Cpath d='M3 10.5H61'/%3E%3Cpath d='M1 14.5H63'/%3E%3C/g%3E%3C/svg%3E")
+    center bottom / 64px 16px no-repeat;
+  --col-flutes: repeating-linear-gradient(
+    90deg,
+    rgb(255 248 231 / 0%) 0 5px,
+    rgb(255 248 231 / 4.5%) 5px 7px,
+    rgb(0 0 0 / 18%) 7px 8px,
+    rgb(255 248 231 / 0%) 8px 10px
+  );
+  --col-key: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='12' viewBox='0 0 9 12'%3E%3Cg fill='none' stroke='%23d98a35' stroke-width='1.3' stroke-opacity='.8'%3E%3Cpath d='M7.6 0V4.5H2.4V8.2H5.4V6.4'/%3E%3Cpath d='M7.6 4.5V12'/%3E%3Cpath d='M0.7 0V12' stroke-opacity='.35'/%3E%3C/g%3E%3C/svg%3E")
+    right top / 9px 12px repeat-y;
+  --col-anthemion: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='18' viewBox='0 0 50 18'%3E%3Cg fill='%23d98a35'%3E%3Cpath d='M25 15C22.6 11 22.6 6 25 1.5C27.4 6 27.4 11 25 15Z'/%3E%3Cpath d='M25 15C20.5 13 18 9 18.4 4.6C21.6 7 23.6 10.6 25 15Z' fill-opacity='.85'/%3E%3Cpath d='M25 15C29.5 13 32 9 31.6 4.6C28.4 7 26.4 10.6 25 15Z' fill-opacity='.85'/%3E%3Cpath d='M25 15C18.6 15.2 14.4 12.4 13 8.6C17.2 9.4 21.6 11.8 25 15Z' fill-opacity='.7'/%3E%3Cpath d='M25 15C31.4 15.2 35.6 12.4 37 8.6C32.8 9.4 28.4 11.8 25 15Z' fill-opacity='.7'/%3E%3C/g%3E%3Cg fill='none' stroke='%23d98a35' stroke-width='1.3'%3E%3Cpath d='M20.5 16.6C22.4 15.4 23.6 15.4 25 16.6C26.4 15.4 27.6 15.4 29.5 16.6'/%3E%3Cpath d='M2 16.6H12M38 16.6H48' stroke-opacity='.6'/%3E%3Ccircle cx='15' cy='16.6' r='1.3' fill='%23d98a35' stroke='none'/%3E%3Ccircle cx='35' cy='16.6' r='1.3' fill='%23d98a35' stroke='none'/%3E%3C/g%3E%3C/svg%3E")
+    center / 50px 18px no-repeat;
+  --col-shadow: 6px 0 18px rgb(10 34 41 / 32%);
+  --col-top: 30px; /* the capital, above the first button */
+  --col-btn-d: 50px;
+  --col-sep-h: 18px;
+  --col-pointer: 7px; /* the pressed button's arrow into its drawer */
+  /* A sidebar button: a parchment plaque framed in bronze; pressed, ringed in ochre. */
+  --col-btn: linear-gradient(#fbf2df, var(--bone));
+  --col-btn-rim:
+    inset 0 0 0 2px var(--bz), inset 0 0 0 4px var(--ivory-70), 0 2px 4px rgb(0 0 0 / 35%);
+  --col-btn-hover-rim:
+    inset 0 0 0 2px var(--clay), inset 0 0 0 4px var(--ivory-70), 0 2px 6px rgb(0 0 0 / 40%);
+  --col-btn-on-rim:
+    inset 0 0 0 3px var(--ochre), 0 0 0 2px rgb(217 138 53 / 35%), 0 2px 6px rgb(0 0 0 / 40%);
+  /* A drawer's tile: a raised parchment plaque; yours, washed in clay. */
+  --tile-face: linear-gradient(#fbf1da, #ecdcb8);
+  --tile-rim:
+    inset 0 1px 0 var(--ivory-lit), 0 0 0 1px rgb(107 69 33 / 45%), 0 1px 2px rgb(0 0 0 / 18%);
+  --tile-hover-rim:
+    inset 0 1px 0 var(--ivory-lit), 0 0 0 1.5px var(--bz), 0 0 10px rgb(233 194 122 / 55%),
+    0 3px 5px rgb(0 0 0 / 22%);
+  --tile-lit: inset 0 0 0 2px var(--ochre);
+  --tile-yours: linear-gradient(#f6dfc6, #e9c6a2);
+  --tile-warn: rgb(192 70 28 / 14%);
+  --lw-foot-h: 56px; /* a drawer's foot line: two lines of its sentence */
+  --pp-foot-wash: rgb(214 190 145 / 38%); /* the place panel's footer of acts */
+  --pp-pop-w: 340px; /* what opens beside the place panel, above the hand's row … */
+  --pp-pop-lift: 80px; /* … clear of the hand's row (900 − 828 + 8) */
 }

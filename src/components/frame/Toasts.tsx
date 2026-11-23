@@ -1,34 +1,39 @@
-import type { CSSProperties } from "react";
-import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import type { Toast } from "./moments";
 import { Prose } from "../AnnotatedText";
-import { Ico } from "./parts";
+import { SeatCoin } from "../chrome/SeatCoin";
+import { Tooltip } from "../overlays/Tooltip";
+import { Ico, Tip, TipBody } from "./parts";
 
-/** The lane under the compass that shows the head of the moment queue (moments.tsx). */
+/**
+ * The head of the moment queue (moments.tsx) as a banner that drops in under the top
+ * bar, centred: the seat's coin, the kicker and at most two lines of what happened
+ * (one at Largest text); its tooltip says it whole. A press puts it away.
+ */
 export function ToastLane({ toast, onDismiss }: { toast: Toast | null; onDismiss: () => void }) {
   if (!toast) return null;
-  const glaze = PLAYER_GLAZES[toast.about];
   return (
     <div aria-live="polite" className="toast-lane" data-c="toast-lane">
-      <button
-        className="toast"
-        data-c="toast"
+      <Tooltip
+        content={
+          <Tip title={toast.kicker}>
+            <TipBody>{toast.body}</TipBody>
+            <p className="tip-act">Click to put it away</p>
+          </Tip>
+        }
         key={toast.id}
-        onClick={onDismiss}
-        style={{ "--owner": glaze.color } as CSSProperties}
-        type="button"
+        triggerAs="div"
       >
-        <span className="idea-seat" title={glaze.name}>
-          {glaze.blazon}
-        </span>
-        <span className="toast-words">
-          <span className="kicker toast-kicker">{toast.kicker}</span>
-          <span className="toast-body">
-            <Prose links={false}>{toast.body}</Prose>
+        <button className="toast ch-banner" data-c="toast" onClick={onDismiss} type="button">
+          <SeatCoin className="toast-coin" seat={toast.about} />
+          <span className="toast-words">
+            <span className="toast-kicker">{toast.kicker}</span>
+            <span className="toast-body">
+              <Prose links={false}>{toast.body}</Prose>
+            </span>
           </span>
-        </span>
-        <Ico path={toast.icon} size="tile" />
-      </button>
+          <Ico path={toast.icon} size="ui" />
+        </button>
+      </Tooltip>
     </div>
   );
 }

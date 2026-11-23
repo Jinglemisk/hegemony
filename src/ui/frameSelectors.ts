@@ -1,4 +1,8 @@
+import { formatSignedNumber } from "./formatters";
 import {
+  EMPTY_POPS,
+  POP_TYPES,
+  clonePops,
   getActiveEffects,
   happinessContributions,
   happinessLevel,
@@ -7,14 +11,15 @@ import {
 } from "../game/rules";
 import type { ActiveEffectDescriptor } from "../game/activeEffects";
 import { nextAssemblyYear } from "../game/assembly";
+import { getBuilding } from "../game/content";
 import { capitalize } from "../game/core/format";
+import { getOwnedSettlement } from "../game/core/query";
 import { dealEndTurnReason } from "../game/deals";
 import { PLAYER_IDS } from "../game/data";
 import { playerDole } from "../game/ideaRules";
 import { presentUnrestOutcome } from "./effects";
-import { sign } from "./frameFormat";
 import type { HappinessContribution } from "../game/rules";
-import type { HegemonyState, LogEntry, PlayerId } from "../game/types";
+import type { HegemonyState, LogEntry, PlayerId, Pops } from "../game/types";
 
 /** The committed turn's consequences, using the engine's current stock, level and
  *  thresholds. Hunger is settled first, then the riot or revolt: the label names the
@@ -32,7 +37,7 @@ export function endTurnWarning(G: HegemonyState, playerID: PlayerId) {
     : null;
   if (outcome.tier !== "none") {
     const { noun } = presentUnrestOutcome(G.ruleset, outcome.tier);
-    const unrest = `Ending now starts a ${noun} at ${sign(outcome.level)}.`;
+    const unrest = `Ending now starts a ${noun} at ${formatSignedNumber(outcome.level)}.`;
     return {
       label: `Starts ${noun}`,
       message: hungerMessage ? `${hungerMessage} ${unrest}` : unrest,
@@ -90,8 +95,19 @@ export type HappinessDisplay = {
   lines: Array<{ label: string; amount: number; turns?: number }>;
 };
 
-function termLabel(G: HegemonyState, term: HappinessContribution): string {
+function termLabel(G: HegemonyState, playerID: PlayerId, term: HappinessContribution): string {
   switch (term.id) {
+    case "temples": {
+      // Counted like the rest ("3 Slaves"): the buildings that state happiness.
+      const count = G.players[playerID].settlements
+        .flatMap((tileId) => getOwnedSettlement(G, tileId, playerID)?.buildings ?? [])
+        .filter((id) =>
+          getBuilding(G.definition.content, id)?.effects.some(
+            (effect) => effect.type === "happiness",
+          ),
+        ).length;
+      return `${count} ${capitalize(term.detail)}`;
+    }
     case "slaves":
       return `${capitalize(term.detail)}, 1 per ${G.ruleset.economy.slavesPerUnhappiness}`;
     case "calm":
@@ -165,7 +181,7 @@ export function happinessDisplay(G: HegemonyState, playerID: PlayerId): Happines
     lines: terms
       .filter((term) => term.amount !== 0 || always.includes(term.id))
       .map((term) => ({
-        label: termLabel(G, term),
+        label: termLabel(G, playerID, term),
         amount: term.amount,
         ...(term.id === "calm" ? { turns: turnsLeftInYear(G, playerID) } : {}),
       })),
@@ -217,4 +233,14 @@ export function deedSeat(G: HegemonyState, entry: LogEntry): PlayerId | null {
   if (entry.about) return entry.about;
   const players = Object.values(G.players).sort((a, b) => b.name.length - a.name.length);
   return players.find((player) => entry.message.startsWith(player.name))?.id ?? null;
+}
+
+/** The pops on their way to a seat's place on a tile: moved or traded there this turn,
+ *  arriving when the seat's next turn starts. Zero in every class when none sail. */
+export function arrivingPops(G: HegemonyState, tileId: string, owner: PlayerId): Pops {
+  const pops = clonePops(EMPTY_POPS);
+  for (const transfer of G.transfers)
+    if (transfer.toTileId === tileId && transfer.owner === owner)
+      for (const pop of POP_TYPES) pops[pop] += transfer.pops[pop];
+  return pops;
 }
