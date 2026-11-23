@@ -231,24 +231,52 @@
    to a sign — the icon beside it carries what the number is about, so colour
    never has to. Owner glaze and status colour never share a pixel class. */
 .pos {
-  color: var(--pos);
+  color: var(--pos-ink);
 }
 
-/* Text ink, one step lighter than --neg: --neg is the fired value the ceremonies
-   spend, --clay-ink the clay that reads at AA on bone. */
+/* --neg is the fired value the ceremonies spend; --neg-ink the same oxblood as
+   text, at AA on parchment's darkest grain and on the footer bands. */
 .neg {
-  color: var(--clay-ink);
+  color: var(--neg-ink);
 }
 
-/* The Imperator shell's primitives (frame/chrome.css): a panel's name at 22, its
-   sub line and every control at 14, a band's small caps at the 13 floor, the
-   confirm's question at 16. */
+/* Prose breaks its lines evenly: no word left alone on the last one. */
+.body,
+.body-em,
+.caption,
+.lore,
+.lw-body,
+.pp-body,
+.sit-text,
+.chron-text,
+.ch-confirm-d,
+.sharedTooltip p {
+  text-wrap: pretty;
+}
+
+/* Secondary prose at 14, never the 13 floor (the floor is for tags and units): the
+   Chronicle's lines, the Assembly's notes, a deal's caption. */
+.trade-caption {
+  font-size: var(--t-14);
+  line-height: var(--lh-20);
+}
+
+/* The Imperator shell's primitives (frame/chrome.css): a head's title at the head
+   tier (--t-head, 20) in every panel, drawer, window and card; a drawn verb at the
+   verb tier (--t-verb, 15); its sub line at 14, a band's small caps at the 13
+   floor, the confirm's question at 16 and the change it confirms at 16. */
 .ch-head-title {
-  font-size: var(--t-22);
-  line-height: var(--lh-28);
+  font-size: var(--t-head);
+  line-height: var(--l-head);
+}
+.ch-ctl {
+  font-size: var(--t-verb);
+  line-height: var(--l-verb);
+}
+.ch-confirm-d .delta {
+  font-size: var(--t-16);
 }
 .ch-head-sub,
-.ch-ctl,
 .ch-socket,
 .ch-banner,
 .ch-confirm-d {
@@ -434,8 +462,6 @@
 
 /* The left window (frame/left.css): a figure at 20, names and body at 15–16, the
    foot line and secondary lines at 14, small caps at the 13 floor. */
-.lw-drawer .ch-head-title,
-.pp-pop .ch-head-title,
 .lw-tile-v,
 .pp-v,
 .pp-class-n b,
@@ -481,4 +507,25 @@
 .pp-slots .ch-socket {
   font-size: var(--t-13);
   line-height: var(--lh-16);
+}
+
+/* The verb tier in the moments and cards: their lacquer and plaque buttons speak as
+   the frame's drawn controls do (.ch-ctl), Alegreya Sans at --t-verb in sentence
+   case, whatever older role (.kicker, .verb) their markup still carries. */
+:is(.ch-moment, .trade-card, .sharedPopover)
+  :is(
+    .ceremonyCommit,
+    .eventResolveButton,
+    .ghostVerb,
+    .placementCancelButton,
+    .btn,
+    .sit-btn,
+    .confirm-btn
+  ) {
+  font-family: var(--f-sans);
+  font-size: var(--t-verb);
+  font-weight: 700;
+  line-height: var(--l-verb);
+  letter-spacing: 0;
+  text-transform: none;
 }

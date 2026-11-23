@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { ESCAPE, useEscapeLayer } from "../../overlays/escapeStack";
-import { trapTab } from "../../overlays/focus";
+import { overlayRoot } from "../../chrome/canvas";
+import { inertAround, trapTab } from "../../overlays/focus";
 
 type ModalShellProps = {
   children: ReactNode;
@@ -36,6 +37,12 @@ type ModalShellProps = {
    * a drawn card standing on the table, a takeover that fills the screen.
    */
   framed?: boolean;
+  /**
+   * The rest of the frame goes inert behind it (Tab, the screen reader and the
+   * pointer can't reach it), the overlay layer its own tooltips open in excepted.
+   * Off for the Assembly, whose top bar and alarm discs stay in reach above its scrim.
+   */
+  inertBehind?: boolean;
 };
 
 const CORNERS = ["tl", "tr", "bl", "br"] as const;
@@ -58,6 +65,7 @@ export function ModalShell({
   dismissOnBackdrop = true,
   ceremony,
   framed = true,
+  inertBehind = true,
 }: ModalShellProps) {
   const surfaceRef = useRef<HTMLElement>(null);
 
@@ -82,14 +90,18 @@ export function ModalShell({
     // a focus ring the player did not ask for.
     surface.focus();
     const untrap = trapTab(surface);
+    const unInert = inertBehind ? inertAround(surface, [overlayRoot()]) : null;
 
     return () => {
       untrap();
+      unInert?.();
 
       if (opener instanceof HTMLElement && surface.ownerDocument.contains(opener)) {
         opener.focus();
       }
     };
+    // Once per opening.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Escape closes it (escapeStack); a blocking dialog takes the key and does nothing,

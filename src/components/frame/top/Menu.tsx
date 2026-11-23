@@ -66,6 +66,7 @@ export function Menu({
           className="top-pop menu-pop"
           dismissOnOutside
           escapeRank={ESCAPE.menu}
+          focusFirst
           onDismiss={() => setOpen(false)}
           slot
         >

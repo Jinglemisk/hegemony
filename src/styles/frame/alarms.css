@@ -112,8 +112,8 @@
   min-width: 0;
 }
 .threat-title {
-  --name-size: var(--t-20);
-  --name-lh: var(--lh-24);
+  --name-size: var(--t-head);
+  --name-lh: var(--l-head);
   letter-spacing: var(--track-name);
 }
 .threat-words .caption,

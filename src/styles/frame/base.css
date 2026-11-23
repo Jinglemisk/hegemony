@@ -71,13 +71,12 @@
 .price {
   display: inline-flex;
   align-items: center;
-  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
-  font-variant-numeric: tabular-nums lining-nums;
+  font: 700 var(--t-num) / var(--l-num) var(--f-sans);
   white-space: nowrap;
 }
 
 .price.is-short {
-  color: var(--clay-ink);
+  color: var(--neg-ink);
 }
 .price-part {
   display: inline-flex;

@@ -136,8 +136,8 @@
   min-width: 0;
 }
 .trade-title {
-  --name-size: var(--t-16);
-  --name-lh: var(--lh-24);
+  --name-size: var(--t-head);
+  --name-lh: var(--l-head);
   letter-spacing: var(--track-name);
 }
 .trade-caption {
@@ -252,7 +252,7 @@
   transform: rotate(45deg);
 }
 .trade-arrow.is-in {
-  color: var(--olive);
+  color: var(--pos-ink);
 }
 .trade-arrow.is-in::after {
   left: 3px;
@@ -396,7 +396,7 @@
   flex: 1;
 }
 .trade-reason {
-  color: var(--clay-ink);
+  color: var(--clay-deep);
 }
 .trade-after {
   display: flex;
@@ -587,10 +587,10 @@
   gap: var(--s-1) var(--s-3);
 }
 .deal-income .is-up {
-  color: var(--olive);
+  color: var(--pos-ink);
 }
 .deal-income .is-down {
-  color: var(--clay-ink);
+  color: var(--neg-ink);
 }
 .deal-ask {
   display: flex;

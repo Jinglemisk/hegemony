@@ -245,7 +245,7 @@
   font: 700 var(--t-14) / var(--lh-20) var(--f-sans);
 }
 .draft-what.is-picked {
-  color: var(--pos);
+  color: var(--pos-ink);
 }
 .draft-what.is-choosing {
   color: var(--clay-ink);

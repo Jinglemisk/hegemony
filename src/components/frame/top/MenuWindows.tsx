@@ -95,9 +95,10 @@ function MovableWindow({
   const face = WINDOW_FACE[id];
   const self = useRef<HTMLDivElement>(null);
   const drag = useRef<{ sx: number; sy: number; x: number; y: number; k: number } | null>(null);
-  // Opened, it takes the focus to its first control (the Codex's search), and gives
-  // it back to what opened it when it closes.
-  useReturnFocus(self, ".menu-window-body input, .menu-window-body button");
+  // Opened, it takes the focus to its first control (the Codex's search), or to its
+  // body when it holds none (the Costs), never to its Close; and gives it back to
+  // what opened it when it closes.
+  useReturnFocus(self, [".menu-window-body input, .menu-window-body button", ".intelBody"]);
 
   // Held inside the screen by the stylesheet's clamp, whatever the screen's size.
   const place: CSSProperties = spot
@@ -170,7 +171,10 @@ function MovableWindow({
         </div>
         <div className="menu-window-body">
           <div className="empireIntel">
-            <div className="intelBody">{children}</div>
+            {/* A scroller the keyboard reaches, named for the window. */}
+            <div aria-label={face.title} className="intelBody" role="region" tabIndex={0}>
+              {children}
+            </div>
           </div>
         </div>
       </Panel>

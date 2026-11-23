@@ -62,6 +62,30 @@ const PROBE = () => {
   // "N declared summaries" beside the defect total, so the number can never
   // quietly grow. Nothing about it makes the checker blind — an element that
   // clips vertically, or that clips without saying so, is still a defect.
+  //
+  // Two more declared bleeds, by class: a card's painting overscans its frame
+  // (`.gc-painting`, cropped by the card on purpose) and a bronze corner stands
+  // proud of its panel (`.ch-corner`). Neither is content escaping a box.
+  //
+  // And a card face turned away from the viewer (`backface-visibility: hidden`
+  // under a half-turn, the back of a dealt card) paints nothing: its text is not
+  // on screen to collide or truncate.
+  const DECLARED_BLEED = ".gc-painting, .ch-corner";
+  /** Turned more than a quarter-turn about X or Y, counting every transformed ancestor. */
+  const turnedAway = (el) => {
+    let m = new window.DOMMatrix();
+    for (let n = el; n && n !== document.documentElement; n = n.parentElement) {
+      const t = getComputedStyle(n).transform;
+      if (t && t !== "none") m = new window.DOMMatrix(t).multiply(m);
+    }
+    return m.m33 < 0;
+  };
+  const backFacing = (el) => {
+    for (let n = el; n && n !== document.body; n = n.parentElement) {
+      if (getComputedStyle(n).backfaceVisibility === "hidden" && turnedAway(n)) return true;
+    }
+    return false;
+  };
   const HIDDEN_TEXT = /(^|\s)(visuallyHidden|srOnly|sr-only|visually-hidden)(\s|$)/;
   const isHiddenText = (el) => typeof el.className === "string" && HIDDEN_TEXT.test(el.className);
 
@@ -71,12 +95,21 @@ const PROBE = () => {
   const dialog = document.querySelector('[role="dialog"], dialog[open]');
   const beneathModal = (el) => dialog !== null && !dialog.contains(el) && !el.contains(dialog);
 
+  // Faded out by an ancestor (a map mode's labels cross-fading, opacity 0 on their
+  // group) paints nothing either: the opacity that counts is the product up the tree.
+  const opacities = new Map();
+  const shownOpacity = (el) => {
+    if (!el || el === document.documentElement) return 1;
+    if (!opacities.has(el))
+      opacities.set(el, Number(getComputedStyle(el).opacity) * shownOpacity(el.parentElement));
+    return opacities.get(el);
+  };
   const visible = (el, rect, style) =>
     rect.width > 0 &&
     rect.height > 0 &&
     style.visibility !== "hidden" &&
     style.display !== "none" &&
-    Number(style.opacity) > 0.05;
+    shownOpacity(el) > 0.05;
 
   const clips = (style) =>
     style.overflowX !== "visible" || style.overflowY !== "visible" || style.clipPath !== "none";
@@ -113,6 +146,7 @@ const PROBE = () => {
     if (el.tagName === "SCRIPT" || el.tagName === "STYLE") return false;
     if (isHiddenText(el) || el.closest(".visuallyHidden")) return false;
     if (beneathModal(el)) return false;
+    if (backFacing(el)) return false;
     return true;
   });
 
@@ -136,6 +170,7 @@ const PROBE = () => {
     // checks below are meaningless there. COLLISION still applies — it is pure
     // screen geometry — so these stay in `info` for the pass after this one.
     if (el.ownerSVGElement || (onIsland(el) && !el.matches(".living-map"))) continue;
+    if (el.matches(DECLARED_BLEED)) continue;
 
     // ── OFFSCREEN ────────────────────────────────────────────────────────────
     // Only leaves and small boxes: a full-bleed container legitimately bleeds.
@@ -171,7 +206,10 @@ const PROBE = () => {
       style.overflowY === "scroll" ||
       style.overflowX === "auto" ||
       style.overflowX === "scroll";
-    if (!scrollable && clips(style)) {
+    // A box whose only overflow is a declared bleed (a card's window cropping its
+    // painting) is cropping on purpose.
+    const bleeds = [...el.children].some((child) => child.matches(DECLARED_BLEED));
+    if (!scrollable && clips(style) && !bleeds) {
       const dx = el.scrollWidth - el.clientWidth;
       const dy = el.scrollHeight - el.clientHeight;
       if (dx > TOL || dy > TOL) {
@@ -327,6 +365,26 @@ const PROBE = () => {
   return out;
 };
 
+/**
+ * Wait out every finite animation (a panel unrolling, a card settling): measured
+ * mid-flight, a box still sliding in reports a bleed it does not have at rest. A
+ * looping one (a pulse) never ends and is left to run.
+ */
+const settle = (page) =>
+  page
+    .waitForFunction(
+      () =>
+        document
+          .getAnimations()
+          .every(
+            (a) =>
+              a.playState !== "running" || a.effect?.getComputedTiming().iterations === Infinity,
+          ),
+      null,
+      { timeout: 3000 },
+    )
+    .catch(() => {});
+
 // ── run ──────────────────────────────────────────────────────────────────────
 await mkdir(ROOT, { recursive: true });
 const browser = await chromium.launch();
@@ -350,6 +408,7 @@ for (const [w, h] of SIZES) {
     await surface
       .go(page)
       .catch((e) => consoleErrors.push({ w, text: `drive ${surface.name}: ${e.message}` }));
+    await settle(page);
     const defects = await page.evaluate(PROBE);
     if (SHOTS) {
       await page.screenshot({ path: `${ROOT}/${surface.name}-${w}.png` });

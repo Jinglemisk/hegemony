@@ -133,7 +133,7 @@
   white-space: nowrap;
 }
 .bar-cell-d.pos {
-  color: var(--pos);
+  color: var(--pos-ink);
 }
 .bar-cell-d.neg,
 .bar-cell-n.neg {
@@ -269,10 +269,14 @@
   background: none;
   box-shadow: var(--seal-rim);
   cursor: pointer;
-  transition: scale var(--dur-hover) var(--ease-out);
+  transition:
+    box-shadow var(--dur-hover) var(--ease-out),
+    filter var(--dur-hover) var(--ease-out);
 }
+/* Under the pointer it glows; it never grows, so its hit box stays where it is. */
 .top-seal:hover {
-  scale: 1.04;
+  box-shadow: var(--seal-rim), var(--seal-glow);
+  filter: var(--hover-glow);
 }
 .top-seal[aria-pressed="true"] {
   outline: 3px solid var(--ochre);

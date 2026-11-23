@@ -80,7 +80,8 @@ function within(surface: HTMLElement, node: Node): boolean {
  * control Tab goes to its first, and Shift+Tab the other way; focus found outside it
  * comes back in. A surface with no control holds the focus itself. Only the top-most
  * trap acts, and a popover the surface opened counts as inside it: Tab moves through
- * the popover, and off its edge returns to the control that opened it.
+ * the popover, and off its edge returns to the control that opened it (or, when that
+ * control cannot take the focus, comes round to the popover's first control).
  */
 export function trapTab(surface: HTMLElement): () => void {
   const doc = surface.ownerDocument;
@@ -100,6 +101,9 @@ export function trapTab(surface: HTMLElement): () => void {
       if (popover.length === 0 || active === edge) {
         event.preventDefault();
         from.focus();
+        // A lender that cannot hold the focus (a plain box): round the popover instead.
+        if (doc.activeElement !== from)
+          (event.shiftKey ? popover[popover.length - 1] : popover[0])?.focus();
       }
       return;
     }
@@ -126,14 +130,16 @@ export function trapTab(surface: HTMLElement): () => void {
 /**
  * Makes everything in `.frame` but `keep` (and the path to it) inert, until the
  * returned function is called: a modal surface's table can't be reached by Tab, by a
- * screen reader or by the pointer.
+ * screen reader or by the pointer. `spare` stays live (the overlay layer a dialog's
+ * own tooltips and pickers open in).
  */
-export function inertAround(keep: HTMLElement): () => void {
+export function inertAround(keep: HTMLElement, spare: readonly Element[] = []): () => void {
   const frame = keep.closest(".frame");
   const made: HTMLElement[] = [];
   for (let node: HTMLElement | null = keep; node && node !== frame; node = node.parentElement) {
     for (const sibling of node.parentElement?.children ?? []) {
       if (sibling === node || !(sibling instanceof HTMLElement) || sibling.inert) continue;
+      if (spare.includes(sibling)) continue;
       sibling.inert = true;
       made.push(sibling);
     }

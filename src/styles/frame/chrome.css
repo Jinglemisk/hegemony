@@ -34,18 +34,37 @@
 /* ---- the focus ring: one rule for every control in the frame ----------------
    An ink ring in a pale gilt halo, 2px clear of the control: the ink reads on
    parchment, the halo on glaze and the sea. It replaces the control's own shadow
-   while the keyboard is on it. A surface focused by script to announce itself
-   (tabindex -1: a dialog, a popover) and the map's own marks take none.
+   while the keyboard is on it, and it always wins: the overlay layer's id in the
+   selector outranks any class rule that paints a control (a moment's plaque rim, a
+   card's button), so no sheet can take the ring away by coming later. A surface
+   focused by script to announce itself (tabindex -1: a dialog, a popover, a card)
+   takes no ring, the browser's own included; nor do the map's own marks and the
+   hand's cards, whose plate lights instead.
    --focus-gap moves the ring: in, for a row inside a scroller that would clip it
    (with --focus-at: inset, so the halo stays inside too); out, past a ring a
    control draws around itself. */
-.frame :focus-visible:not([tabindex="-1"], .living-map, .lm-tile) {
+:is(.frame, .sharedPopover, #hud-overlays)
+  :focus-visible:not([tabindex="-1"], .living-map, .lm-tile, .hand-card-btn) {
   outline: var(--focus-w) solid var(--focus-ink);
   outline-offset: var(--focus-gap, var(--focus-w));
   box-shadow: var(--focus-at, 0 0 0 calc(var(--focus-gap, var(--focus-w)) + 2 * var(--focus-w)))
     var(--focus-halo);
 }
-:is(.rd-act, .rd-line, .rd-row, .rd-sec-head, .rd-outl-tab, .pp-opt, .lw-table tr) {
+:is(.frame, #hud-overlays) [tabindex="-1"]:focus-visible,
+.sharedPopover:focus-visible {
+  outline: none;
+}
+:is(
+  .rd-act,
+  .rd-line,
+  .rd-row,
+  .rd-sec-head,
+  .rd-outl-tab,
+  .pp-opt,
+  .lw-table tr,
+  .intelBody,
+  .chronicleList
+) {
   --focus-gap: calc(-2 * var(--focus-w));
   --focus-at: inset 0 0 0 calc(3 * var(--focus-w));
 }
@@ -205,8 +224,6 @@
   border-radius: var(--r-panel);
   font-family: var(--f-sans);
   font-weight: 700;
-  letter-spacing: var(--track-caps);
-  text-transform: uppercase;
   white-space: nowrap;
   cursor: pointer;
   transition:
@@ -227,6 +244,7 @@
   text-shadow: var(--ink-shadow);
 }
 .ch-plaque {
+  min-height: var(--knob-d); /* 36: 32 screen px at the smallest scale */
   color: var(--ink);
   background: var(--plaque);
   box-shadow: var(--plaque-rim);

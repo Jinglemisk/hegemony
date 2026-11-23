@@ -265,7 +265,7 @@
   font-family: var(--f-name);
 }
 .lw-tile-k.is-free {
-  color: var(--pos);
+  color: var(--pos-ink);
 }
 .lw-tile-coin {
   margin-top: auto;
@@ -746,7 +746,7 @@
   text-overflow: ellipsis;
 }
 .pp-coming {
-  color: var(--pos);
+  color: var(--pos-ink);
 }
 .pp-slot-tip {
   display: block;
@@ -814,7 +814,7 @@
   font-weight: 600;
 }
 .pp-act[aria-disabled="true"] .pp-act-why {
-  color: var(--clay-ink);
+  color: var(--neg-ink);
 }
 
 /* ---- beside the place panel, above the hand's row ---------------------------- */

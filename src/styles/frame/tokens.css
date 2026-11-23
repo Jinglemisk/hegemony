@@ -75,6 +75,16 @@
   --l-lead: var(--lh-20); /* the ruler's name */
   --t-count: var(--t-24);
   --l-count: var(--lh-28); /* pop counts */
+  /* The hierarchy, one size per tier (the plan's Standards):
+     a head's title — every panel, drawer, window and card, the place panel's
+     included — at 20; a moment's sheet (the Assembly, a ceremony) at 24; a drawn
+     verb (lacquer, plaque) at 15 in sentence case. */
+  --t-head: var(--t-20);
+  --l-head: var(--lh-28); /* Cinzel's capitals stand tall: 28 holds them at every Text size */
+  --t-sheet: var(--t-24);
+  --l-sheet: var(--lh-32);
+  --t-verb: var(--t-15);
+  --l-verb: var(--lh-20);
 
   /* ---- icons --------------------------------------------------------------- */
   --ic-16: 16px;
@@ -161,8 +171,12 @@
      it reads 4.11:1 on bone, so every glossary term, kicker and epithet drawn in
      it was under AA. --clay-ink is the same hue five points darker, the least
      that clears 4.5:1 (4.92:1 on bone, 5.74:1 on ivory). The ramp is therefore
-     fill → ink → deep, and --clay-deep stays what a clay link does on hover. */
-  --clay-ink: #ad3d18;
+     fill → ink → deep, and --clay-deep stays what a clay link does on hover.
+     Measured again on the textures (2026-11-23): parchment's darkest grains
+     (237,215,170) and the darker footer bands (219,198,154) took #ad3d18 to
+     4.31 and 3.63, so the ink is now the darkest clay that still reads as clay:
+     5.51 on parchment, 4.64 on a footer band, 4.94 on a plaque's foot. */
+  --clay-ink: #933213;
   --clay-deep: #8f2e13;
   --ochre: #d98a35;
   --bone: #f4e6c8;
@@ -181,6 +195,12 @@
      one step lighter (type.css). */
   --pos: #5e6e3a;
   --neg: #8f2e13;
+  /* The two as TEXT ink: --pos is a fill (a gauge, a ring) and reads 3.96:1 on
+     parchment's darkest grain, so a number that helps is drawn in --pos-ink
+     (5.68 on parchment, 4.79 on a footer band); a shortfall, a short price, a
+     number that hurts, in --neg-ink (5.80, 4.89). */
+  --pos-ink: #465628;
+  --neg-ink: var(--clay-deep);
 
   --fg: #241910;
   /* The older names for the two quiet ink steps; aliases now, so the pair cannot
@@ -206,10 +226,15 @@
      subtitle in the app was below AA. 63% is the floor that clears 4.5:1 on the
      darkest ground this ramp lands on (bone, 4.61:1) — not a wholesale contrast
      raise, the minimum that reads. Anything below --ink-63 is a keyline or a
-     wash, never text. */
+     wash, never text.
+     Measured on the textures (2026-11-23), 63% and 66% fell under 4.5:1 on
+     parchment's darkest grains (4.37) and the footer bands (4.06, 4.40). Quiet
+     text is one step now, --ink-72 (5.69 on parchment, 5.17 on a footer band,
+     4.87 on a hatched plaque); --ink-66 and --ink-63 are its older names. */
   --ink: #241910;
-  --ink-66: rgb(36 25 16 / 66%);
-  --ink-63: rgb(36 25 16 / 63%);
+  --ink-72: rgb(36 25 16 / 72%);
+  --ink-66: var(--ink-72);
+  --ink-63: var(--ink-72);
   --ink-45: rgb(36 25 16 / 45%);
   --ink-30: rgb(36 25 16 / 30%);
   --ink-12: rgb(36 25 16 / 12%);
@@ -441,8 +466,9 @@
   --shadow-meander: drop-shadow(0 2px 2px rgb(0 0 0 / 35%));
 
   /* ---- controls --------------------------------------------------------------- */
-  /* Primary: red lacquer with a gilt rim. */
-  --lacquer: linear-gradient(#cf5a2e, #9a3216);
+  /* Primary: red lacquer with a gilt rim. Its lit top is dark enough that the
+     ivory word clears 4.5:1 across the whole face (5.17 at the top). */
+  --lacquer: linear-gradient(#b04423, #8a2c12);
   --lacquer-ink: #fff3dc;
   --lacquer-rim:
     inset 0 1px 0 rgb(255 210 170 / 55%), inset 0 -2px 0 rgb(0 0 0 / 25%), 0 0 0 1.5px var(--bz-hi),
@@ -463,10 +489,11 @@
   --back-rim: inset 0 1px 0 var(--bz-hi-45), 0 0 0 1px var(--bz), 0 2px 3px rgb(0 0 0 / 45%);
   /* Pressed (a toggle that is on): glaze with a gilt ring. */
   --pressed-rim: inset 0 0 0 2px var(--bz-hi), 0 0 0 1.5px var(--bz-dk), 0 0 10px var(--bz-hi-45);
-  /* Unavailable: hatched, keeps its place and its focus. */
+  /* Unavailable: hatched, keeps its place and its focus. Light enough that the quiet
+     ink reads 4.5:1 on it over parchment, a plaque's foot included. */
   --hatch:
-    repeating-linear-gradient(135deg, rgb(60 38 18 / 6%) 0 6px, transparent 6px 12px),
-    rgb(60 38 18 / 10%);
+    repeating-linear-gradient(135deg, rgb(60 38 18 / 4%) 0 6px, transparent 6px 12px),
+    rgb(60 38 18 / 6%);
   --hatch-rim: inset 0 1px 3px rgb(0 0 0 / 22%), 0 0 0 1px rgb(60 38 18 / 25%);
   --hover-glow: brightness(1.07);
   /* A hover lifts by its shadow, never by moving: a control that moved under the
@@ -531,6 +558,7 @@
   --seal-rim:
     inset 0 0 0 3px rgb(0 0 0 / 25%), 0 0 0 2px var(--bz-hi), 0 0 0 4px var(--bz-lo),
     0 5px 14px rgb(0 0 0 / 50%);
+  --seal-glow: 0 0 0 6px var(--bz-hi-25), 0 0 16px var(--bz-hi-45);
   /* An alarm: a parchment disc in a bronze rim. */
   --alarm-face: radial-gradient(circle at 40% 35%, #fff8e7, #e7d3aa);
   --alarm-face-hurt: radial-gradient(circle at 40% 35%, #fbe6da, #ecc2ad);

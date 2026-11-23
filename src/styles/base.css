@@ -10,9 +10,17 @@
   text-rendering: optimizeLegibility;
 }
 
+/* No letter-spacing here: a role sets its own tracking (type.css, --track-*), and a
+   reset on every element would cut a caps label's tracking off its inner words.
+   Every figure is lining and tabular: Alegreya's default old-style 0 reads as an
+   o. Important, because the `font` shorthand a rule sets would reset it. */
 * {
   box-sizing: border-box;
-  letter-spacing: 0;
+}
+*,
+*::before,
+*::after {
+  font-variant-numeric: lining-nums tabular-nums !important;
 }
 
 .visuallyHidden {
@@ -94,9 +102,11 @@ button[aria-disabled="true"] {
   cursor: not-allowed;
 }
 
-button:focus-visible {
-  outline: 2px solid var(--accent-2);
-  outline-offset: 2px;
+/* Outside the frame (the setup screens, the dev tune button) a control takes the
+   ink of the frame's ring (frame/chrome.css), which wins inside it. */
+:where(button, a[href], input, select, textarea, [tabindex]):focus-visible {
+  outline: var(--focus-w) solid var(--focus-ink);
+  outline-offset: var(--focus-w);
 }
 
 /* The v1 chip: the setup pop picker's two buttons, and under the placement
