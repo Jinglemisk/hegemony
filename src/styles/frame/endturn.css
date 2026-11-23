@@ -141,7 +141,7 @@
   justify-items: center;
   align-items: start;
   gap: var(--s-2);
-  /* One size at every text size: the title ellipsizes, its full name in the tooltip. */
+  /* One size at every text size: the title takes two lines at most, whole in its tooltip. */
   width: var(--sh-notice-w);
   height: var(--sh-notice-h);
   padding: var(--s-8) var(--s-6) var(--s-6);
@@ -153,12 +153,13 @@
 .turn-title {
   --name-size: var(--t-28);
   --name-lh: var(--lh-32);
+  display: -webkit-box;
   max-width: 100%;
   margin: 0 0 var(--s-4);
   overflow: hidden;
   letter-spacing: var(--track-name);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 .turn-notice .confirm-btn {
   align-self: end;

@@ -370,6 +370,7 @@ button.ch-socket:focus-visible {
 .ch-confirm {
   display: grid;
   grid-template-columns: var(--ic-32) 1fr auto;
+  grid-template-rows: minmax(0, 1fr);
   align-items: center;
   gap: var(--s-4);
   width: var(--sh-confirm-w);
@@ -380,6 +381,7 @@ button.ch-socket:focus-visible {
   min-width: 0;
   max-height: 100%;
   overflow-y: auto;
+  scrollbar-gutter: stable;
   scrollbar-width: thin;
 }
 .ch-confirm-q {
@@ -410,6 +412,9 @@ button.ch-socket:focus-visible {
 .ch-unroll-y {
   animation: ch-unroll-y var(--dur-unroll) var(--ease-out);
 }
+.ch-unroll-up {
+  animation: ch-unroll-up var(--dur-unroll) var(--ease-out);
+}
 .ch-drop {
   animation: ch-drop var(--dur-drop) var(--ease-drop) both;
 }
@@ -429,6 +434,15 @@ button.ch-socket:focus-visible {
 @keyframes ch-unroll-y {
   from {
     clip-path: inset(-24px -24px 100% -24px);
+  }
+  to {
+    clip-path: inset(-24px);
+  }
+}
+/* … the Chronicle rises out of its line … */
+@keyframes ch-unroll-up {
+  from {
+    clip-path: inset(100% -24px -24px -24px);
   }
   to {
     clip-path: inset(-24px);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { PLAYER_IDS } from "../../../game/data";
 import { totalPops } from "../../../game/core/pops";
@@ -101,6 +101,23 @@ function Column({
   };
 }) {
   const [picking, setPicking] = useState(false);
+  const add = useRef<HTMLButtonElement>(null);
+  const picker = useRef<HTMLSpanElement>(null);
+  // The picker hangs below its "+", placed against the card rather than the rows,
+  // so the card's scrolling body never clips it and it opens over the card's frame.
+  useLayoutEffect(() => {
+    const button = add.current;
+    const box = picker.current;
+    const card = button?.closest<HTMLElement>(".trade-card");
+    if (!picking || !button || !box || !card) return;
+    const outer = card.getBoundingClientRect();
+    const k = outer.width / card.offsetWidth || 1;
+    const at = button.getBoundingClientRect();
+    const half = box.offsetWidth / 2;
+    const centre = (at.left + at.width / 2 - outer.left) / k;
+    box.style.top = `${(at.bottom - outer.top) / k + 6}px`;
+    box.style.left = `${Math.min(Math.max(centre, half), card.offsetWidth - half)}px`;
+  }, [picking]);
   // A counter keeps the lines it started with, at zero too, so each shows what it was.
   const items = [
     ...itemsOf(bundle),
@@ -184,6 +201,7 @@ function Column({
           <button
             aria-expanded={picking}
             aria-label={`Add to ${label}`}
+            ref={add}
             className={`name trade-add${picking ? " is-open" : ""}`}
             onClick={() => setPicking((open) => !open)}
             type="button"
@@ -192,7 +210,7 @@ function Column({
           </button>
         ) : null}
         {edit && picking ? (
-          <span className="trade-picker">
+          <span className="trade-picker" ref={picker}>
             {TRADE_ROWS.map((row) => {
               const picks = edit.picks.filter((item) => rowOf(item) === row);
               if (picks.length === 0) return null;
@@ -203,10 +221,17 @@ function Column({
                     const held = edit.held?.(item);
                     const off = held === 0;
                     const words = `${itemName(G, item, 1)}${row === "now" ? "" : `, ${ROW_LABEL[row].toLowerCase()}`}`;
+                    // A pop leaves from one place, so its count is the most one place holds.
+                    const holds =
+                      held === undefined
+                        ? ""
+                        : item.kind === "pop"
+                          ? `, up to ${held} from one place`
+                          : `, you hold ${held}`;
                     return (
                       <button
                         aria-disabled={off ? true : undefined}
-                        aria-label={`${words}${held === undefined ? "" : `, you hold ${held}`}`}
+                        aria-label={`${words}${holds}`}
                         className="trade-pick"
                         key={itemKey(item)}
                         onClick={() => {
@@ -214,7 +239,7 @@ function Column({
                           setPicking(false);
                           edit.onChange(withCount(bundle, item, 1));
                         }}
-                        title={words}
+                        title={`${words}${holds}`}
                         type="button"
                       >
                         <Ico path={itemIcon(item)} size="ui" />
@@ -332,12 +357,24 @@ function Lease({ lease, onLease }: { lease: LeaseLength; onLease?: (lease: Lease
   );
 }
 
-/** The acting seat's stocks after, each new value toned by whether it helps. */
-function After({ G, seat, sides }: { G: HegemonyState; seat: PlayerId; sides: Sides }) {
+/** The acting seat's stocks after, each new value toned by whether it helps; `lead`
+ *  names whose they are ("Nikos would hold"). */
+function After({
+  G,
+  seat,
+  sides,
+  lead,
+}: {
+  G: HegemonyState;
+  seat: PlayerId;
+  sides: Sides;
+  lead?: string;
+}) {
   const changes = stocksAfter(G, seat, sides);
   if (changes.length === 0) return null;
   return (
-    <span aria-label="Stocks after the trade" className="trade-after">
+    <span aria-label={lead ?? "Stocks after the trade"} className="trade-after">
+      {lead ? <span className="caption trade-lead">{lead}</span> : null}
       {changes.map((change) => (
         <span className="body body-sm trade-delta" key={change.key}>
           <Ico path={change.icon} size="chip" />
@@ -433,7 +470,7 @@ export function ComposeCard({
   const filled = itemsOf(sides.gives).length > 0 && itemsOf(sides.gets).length > 0;
 
   return (
-    <section aria-label="Offer a trade" className="trade-card">
+    <section aria-label="Offer a trade" className="trade-card is-compose">
       <CardHead onClose={onClose} seat={seat} title="Offer a trade">
         <span className="trade-to">
           {rivals.map((id) => {
@@ -458,15 +495,17 @@ export function ComposeCard({
           </span>
         </span>
       </CardHead>
-      <Exchange
-        G={G}
-        actor={seat}
-        lease={lease}
-        onChange={setSides}
-        onLease={setLease}
-        others={to.length ? to : rivals}
-        sides={sides}
-      />
+      <div className="trade-body">
+        <Exchange
+          G={G}
+          actor={seat}
+          lease={lease}
+          onChange={setSides}
+          onLease={setLease}
+          others={to.length ? to : rivals}
+          sides={sides}
+        />
+      </div>
       <footer className="trade-foot">
         {filled ? (
           <After G={G} seat={seat} sides={sides} />
@@ -655,6 +694,23 @@ function Answers({
                   <Prose links={false}>{status}</Prose>
                 </span>
               ) : null}
+              {/* Accepting trades at once, so the row says first what it leaves. */}
+              {accept?.can ? (
+                <After
+                  G={G}
+                  lead={`${seatName(G, seat, viewerId, true)} would hold`}
+                  seat={seat}
+                  sides={theirs}
+                />
+              ) : null}
+              {take?.can && ownSides ? (
+                <After
+                  G={G}
+                  lead={`${seatName(G, owner, viewerId, true)} would hold`}
+                  seat={owner}
+                  sides={ownSides}
+                />
+              ) : null}
             </span>
             {accept ? (
               <span className="trade-row-acts">
@@ -750,7 +806,7 @@ export function OfferCard({ offer, onClose }: { offer: TradeOffer; onClose: () =
     countering && offer.to.includes(countering) && !offer.answers[countering] ? countering : null;
 
   return (
-    <section aria-label={offerTitle(G, offer)} className="trade-card">
+    <section aria-label={offerTitle(G, offer)} className="trade-card is-offer">
       <CardHead
         caption="Every seat sees it"
         kicker={offer.toTable ? "On the table" : "To chosen seats"}
@@ -758,26 +814,28 @@ export function OfferCard({ offer, onClose }: { offer: TradeOffer; onClose: () =
         seat={offer.from}
         title={offerTitle(G, offer)}
       />
-      {counterSeat ? (
-        <Counter
-          key={counterSeat}
-          offer={offer}
-          onBack={() => setCountering(null)}
-          seat={counterSeat}
-        />
-      ) : (
-        <>
-          <Exchange
-            G={G}
-            actor={offer.from}
-            lease={offer.terms.lease}
-            named
-            others={offer.to}
-            sides={{ gives: offer.terms.give, gets: offer.terms.get }}
+      <div className="trade-body">
+        {counterSeat ? (
+          <Counter
+            key={counterSeat}
+            offer={offer}
+            onBack={() => setCountering(null)}
+            seat={counterSeat}
           />
-          <Answers offer={offer} onClose={onClose} onCounter={setCountering} />
-        </>
-      )}
+        ) : (
+          <>
+            <Exchange
+              G={G}
+              actor={offer.from}
+              lease={offer.terms.lease}
+              named
+              others={offer.to}
+              sides={{ gives: offer.terms.give, gets: offer.terms.get }}
+            />
+            <Answers offer={offer} onClose={onClose} onCounter={setCountering} />
+          </>
+        )}
+      </div>
     </section>
   );
 }

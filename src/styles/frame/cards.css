@@ -405,8 +405,9 @@
 }
 
 /* ── Hand size: the sentence moves to the tooltip, the voice is dropped ────── */
+/* 0.06em: the longest politician's name (Demosthenes) fits the hand-size band whole. */
 .gc-hand .gc-word {
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
 }
 .gc-hand .gc-panel {
   gap: var(--s-1);

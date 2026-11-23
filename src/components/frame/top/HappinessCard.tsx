@@ -51,7 +51,7 @@ export function HappinessCard({
       dismissOnOutside
       onDismiss={onClose}
     >
-      <Panel className="mood-card" corners={["bl", "br"]} data-c="mood-card">
+      <Panel className="mood-card ch-settle" corners={["bl", "br"]} data-c="mood-card">
         <PanelHead
           closeLabel="Close happiness"
           icon={display.value < 0 ? "unrest/discontent" : "unrest/calm"}
@@ -64,15 +64,24 @@ export function HappinessCard({
             What moves it<span>{sign(display.value)}</span>
           </h3>
           <ul className="mood-lines">
-            {display.lines.map((line) => (
-              <li className="mood-line" key={line.label}>
-                <span className="mood-line-k">
-                  <Prose links={false}>{line.label}</Prose>
-                  {line.turns === undefined ? null : <Turns n={line.turns} />}
-                </span>
-                <b className={`num ${tone(line.amount)}`}>{sign(line.amount)}</b>
-              </li>
-            ))}
+            {display.lines.map((line) => {
+              // "3 Slaves, 1 per 2": the count in its own column, so the terms line up.
+              const split = /^(\d+) (.*)$/.exec(line.label);
+              const count = split?.[1] ?? "";
+              const words = split?.[2] ?? line.label;
+              return (
+                <li className="mood-line" key={line.label}>
+                  <span className="num mood-line-n">{count}</span>
+                  <span className="mood-line-k">
+                    <span>
+                      <Prose links={false}>{words}</Prose>
+                    </span>
+                    {line.turns === undefined ? null : <Turns n={line.turns} />}
+                  </span>
+                  <b className={`num ${tone(line.amount)}`}>{sign(line.amount)}</b>
+                </li>
+              );
+            })}
           </ul>
           <h3 className="mood-sec">At turn end</h3>
           <p className="mood-note">

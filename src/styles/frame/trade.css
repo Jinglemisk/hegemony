@@ -88,12 +88,34 @@
 
 /* ---- the card: paper over the table, never a dialog ------------------------- */
 .trade-pop .trade-card {
+  display: flex;
+  flex-direction: column;
   width: calc(var(--u) * 112); /* 448 */
   max-width: calc(var(--vw) - 2 * var(--s-4));
+  height: var(--sh-deal-h);
   border-radius: var(--r-8);
   color: var(--ink);
   background: var(--ivory);
   box-shadow: var(--paper-edge), var(--shadow-float);
+}
+/* One height whatever the card holds: the composer shorter, an offer and a deal the
+   same; the head and the foot stay, the body between them scrolls. */
+.trade-pop .trade-card.is-compose {
+  height: var(--sh-compose-h);
+}
+.trade-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.trade-head,
+.trade-foot {
+  flex: none;
+}
+/* The composer dims the board behind it, and only that: presses still go through. */
+.sharedPopover.is-centre.trade-pop {
+  box-shadow: 0 0 0 100vmax var(--scrim-compose);
 }
 .trade-head {
   display: flex;
@@ -236,7 +258,6 @@
   transform: rotate(-135deg);
 }
 .trade-chips {
-  position: relative;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -305,19 +326,17 @@
   border: var(--rule-2) solid var(--clay);
   color: var(--clay);
 }
-/* It opens upward, centred on its column: three short rows (now, every year, on loan)
-   stay on screen whether the card hangs from the alarms row or rises from the verbs. */
+/* It hangs below its "+", placed against the card (OfferCard sets top and left), over
+   the card's rule and corners, so neither the scrolling body nor the frame hides it. */
 .trade-picker {
   position: absolute;
-  z-index: var(--z-lift);
-  bottom: 42px;
-  left: 50%;
+  z-index: var(--z-pick);
   display: flex;
   flex-wrap: wrap;
   gap: 2px;
   width: max-content;
   max-width: calc(var(--u) * 88);
-  transform: translateX(-50%);
+  translate: -50% 0;
   padding: 6px;
   border-radius: var(--r-8);
   background: var(--ivory);
@@ -381,7 +400,11 @@
 .trade-after {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--s-1) var(--s-3);
+}
+.trade-lead {
+  color: var(--ink-66);
 }
 .trade-delta {
   display: flex;

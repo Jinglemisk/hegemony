@@ -57,7 +57,7 @@ export function Dock({
   return (
     <div className="rd-dock" data-c="dock" data-exclude onKeyDown={closeOnEscape}>
       {open ? (
-        <Panel className="rd-log ch-unroll-y" corners={["tl"]} id={logId}>
+        <Panel className="rd-log ch-unroll-up" corners={["tl"]} id={logId}>
           <PanelHead closeLabel="Close the Chronicle" onClose={close} title="Chronicle" />
           <div className="rd-log-body" data-gate-skip>
             <LogBody />

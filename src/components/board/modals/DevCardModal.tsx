@@ -30,7 +30,6 @@ import { deckMark } from "../helpers";
 import type { DeckMark } from "../helpers";
 import { TileListbox } from "../TileListbox";
 import type { TileListboxOption } from "../TileListbox";
-import { commitVerb } from "./ceremonyMood";
 import { DrawnReveal } from "./DrawnReveal";
 import { ModalShell } from "./ModalShell";
 
@@ -78,7 +77,6 @@ export function DrawnCardModal({ mark, onClose }: { mark: DeckMark; onClose: () 
   }, [card, onClose]);
   if (!card) return null;
 
-  const gained = card.effect.type === "gain" ? card.effect.resources[0] : undefined;
   return (
     <DrawnReveal
       card={<GameCard arrive="turn" face={devCardFace(card)} titleId="drawn-card-title" />}
@@ -97,7 +95,8 @@ export function DrawnCardModal({ mark, onClose }: { mark: DeckMark; onClose: () 
       }
     >
       <button className="ceremonyCommit verb verb-lg" onClick={onClose} type="button">
-        {kept ? "Keep It" : commitVerb("gift", gained && RESOURCE_LABELS[gained])}
+        {/* A yield is paid on the draw: the slip says what it gave, the button only closes. */}
+        {kept ? "Keep It" : "Done"}
       </button>
     </DrawnReveal>
   );

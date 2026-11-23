@@ -211,6 +211,7 @@ export function AssemblyDock({ sitting }: { sitting: Sitting }) {
       className="sit-dock"
       data-c="sit-dock"
       onClick={() => sitting.setMinimised(false)}
+      title={`Assembly: ${where}`}
       type="button"
     >
       <Ico path="assembly/agora" size="ui" />

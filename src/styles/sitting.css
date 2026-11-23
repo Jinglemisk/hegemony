@@ -6,22 +6,30 @@
 /* The sitting starts under the alarms row, and the top HUD (the bar and every alarm
    disc, an offer's among them) stands above its scrim, in full colour and in reach. */
 .modalBackdrop.sitting-scrim {
+  --sit-top: calc(var(--bar-h) + var(--hit) * 2 + var(--s-4)); /* 128: under the alarms */
   z-index: var(--z-takeover);
   align-items: flex-start;
-  padding: calc(var(--bar-h) + var(--hit) * 2 + var(--s-4)) var(--s-16) var(--s-4);
+  overflow: hidden;
+  /* Centred on the board: clear of the sidebar on the left, the outliner on the right. */
+  padding: var(--sit-top) calc(var(--sh-outliner-w) + var(--s-4)) var(--s-4)
+    calc(var(--sh-side-w) + var(--s-4));
 }
 .frame.is-sitting .hud-top {
   z-index: var(--z-modal);
 }
 
+/* One height at every stage and text size: the head, the seats and the foot stay, the
+   body between them scrolls. */
 .sitting {
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: calc(var(--u) * 290);
-  max-height: 100%;
-  overflow-y: auto;
+  height: calc(var(--vh) - var(--sit-top) - var(--s-4));
   text-align: left;
+}
+.sitting > :not(.sit-body) {
+  flex: none;
 }
 
 /* ── Head and foot ─────────────────────────────────────────────────────────── */
@@ -141,9 +149,16 @@
 
 .sit-body {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: var(--s-3);
+  min-height: 0;
   padding: var(--s-4) var(--s-6);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.sit-body > * {
+  flex: none;
 }
 .sit-sec {
   display: flex;
@@ -252,9 +267,10 @@
   justify-content: center;
   min-height: calc(var(--card-hand) * 88 / 63);
   padding: var(--s-3);
-  border-radius: var(--s-2);
+  border-radius: var(--r-panel);
   color: var(--ink-63);
-  box-shadow: inset 0 0 0 var(--rule) var(--ink-45);
+  background: var(--socket);
+  box-shadow: var(--socket-open-rim);
   font: italic var(--t-14) / var(--lh-20) var(--f-body);
   text-align: center;
 }
@@ -295,9 +311,10 @@
   align-self: flex-start;
 }
 .sitting .deck-line {
+  border-radius: var(--r-panel);
   color: var(--ink-66);
-  background: var(--bone);
-  box-shadow: inset 0 0 0 var(--rule) var(--line);
+  background: var(--socket);
+  box-shadow: var(--socket-rim);
 }
 .sitting .deck-line b {
   color: var(--ink);
@@ -557,13 +574,15 @@
   align-items: center;
   gap: var(--s-2);
   padding: var(--s-1) var(--s-3) var(--s-1) var(--s-1);
-  border-radius: var(--r-24);
-  background: var(--ivory);
-  box-shadow: inset 0 0 0 var(--rule) var(--line);
+  border-radius: var(--r-panel);
+  background: var(--plaque);
+  box-shadow: var(--plaque-rim);
 }
 /* Your seat, ringed in your own glaze (the row sets --owner to it). */
 .sit-seats li.is-you {
-  box-shadow: inset 0 0 0 var(--rule-2) var(--owner);
+  box-shadow:
+    inset 0 0 0 var(--rule-2) var(--owner),
+    var(--plaque-rim);
 }
 .sit-seats li > span {
   display: flex;
