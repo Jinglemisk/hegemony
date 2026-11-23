@@ -36,13 +36,16 @@ import { ModalShell } from "./ModalShell";
 export function IdeasModal({
   onClose,
   draftDone = false,
+  initial = null,
 }: {
   onClose?: () => void;
   /** The draft has just ended: show it with no controls, and the commit into Year I. */
   draftDone?: boolean;
+  /** The Idea picked where the sheet was opened from (a drawer's tile), selected. */
+  initial?: NationalIdeaId | null;
 }) {
   const { G, viewerId, currentPlayerId, moves } = useGameUi();
-  const [selected, setSelected] = useState<NationalIdeaId | null>(null);
+  const [selected, setSelected] = useState<NationalIdeaId | null>(initial);
   const [target, setTarget] = useState<IdeaPopChoice | undefined>();
   const setup = G.phase === "setupIdeas" || draftDone;
   const buying = !setup;

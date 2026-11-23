@@ -26,9 +26,9 @@ import { realmAlarms } from "../game/alarms";
 import type { BuildingId, HegemonyState, PlayerId, TradePlaces } from "../game/types";
 import type { DevShell } from "../dev/scenes";
 import { IdeasModal } from "./board/modals/IdeasModal";
+import type { NationalIdeaId } from "../game/ideaTypes";
 import { HungerModal } from "./board/modals/HungerModal";
 import { PopulationPickerModal } from "./board/modals/PopulationPickerModal";
-import { FoundColonyPopover } from "./board/modals/FoundColonyPopover";
 import { MovePopsTargetPopover } from "./board/map/MovePopsPopover";
 import { selectionCaption, type MapSelectionMode } from "./board/map/mapSelection";
 import { useMapSelection } from "./board/map/useMapSelection";
@@ -118,7 +118,7 @@ type ActiveModal =
   /** The card a buy drew, found from where the seat stood before it. */
   | { kind: "drawnCard"; mark: DeckMark }
   | { kind: "hand" }
-  | { kind: "ideas" };
+  | { kind: "ideas"; idea?: NationalIdeaId };
 
 /**
  * The decision host: the one forced moment that owns the screen, picked in the
@@ -238,6 +238,14 @@ export function HegemonyBoard({
   const currentPlayerId = toPlayerId(ctx.currentPlayer);
   const viewerId = toPlayerId(playerID);
   const viewer = G.players[viewerId];
+  // Another seat takes the screen: the left window closes (every part of it holds to
+  // the pick, so a fresh sea closes the drawer, the place and its pops).
+  const [leftFor, setLeftFor] = useState(viewerId);
+  if (leftFor !== viewerId) {
+    setLeftFor(viewerId);
+    setSubject({ kind: "realm" });
+    setSelectedTileId(null);
+  }
   // While the Assembly sits the shell only reads: the sitting owns every action.
   const sitting = useSitting(G, viewerId);
   const inAssembly = Boolean(G.assembly);
@@ -489,6 +497,14 @@ export function HegemonyBoard({
           return;
         }
 
+        // A site to found on: the map disarms and the site's place panel opens with
+        // the Found pop beside it, which asks who goes and confirms.
+        if (mapSelection.selection.mode.kind === "foundColony") {
+          clearMapSelection();
+          drawer.pickWith({ kind: "tile", tileId }, "found");
+          return;
+        }
+
         const element =
           typeof document !== "undefined"
             ? document.querySelector(`[data-tile-id="${tileId}"]`)
@@ -517,7 +533,7 @@ export function HegemonyBoard({
         return;
       }
     },
-    [mapSelection, setMapSelectionTarget, ctx.phase],
+    [mapSelection, setMapSelectionTarget, clearMapSelection, drawer, ctx.phase],
   );
 
   const requestBuildBuilding = useCallback(
@@ -541,12 +557,10 @@ export function HegemonyBoard({
 
   // A luxury good's mooring picked, from its raft or the outliner: its page opens.
   const pickMooring = (vertexId: string) => pick({ kind: "mooring", vertexId });
-  // Found, from a tile's page: arm the mode and open its popover on that tile.
-  const foundHere = (tileId: string) => {
-    const element = document.querySelector(`[data-tile-id="${tileId}"]`);
-    if (!element) return;
+  // Found a colony: the drawer closes and the map lights every legal site.
+  const armFound = () => {
+    drawer.show(null);
     if (mapSelection.selection?.mode.kind !== "foundColony") armSelection({ kind: "foundColony" });
-    setMapSelectionTarget({ tileId, anchor: element.getBoundingClientRect() });
   };
 
   return (
@@ -608,7 +622,7 @@ export function HegemonyBoard({
                     {/* The left window: the sidebar's drawers and the place panel. */}
                     <LeftShell
                       actions={{
-                        onFound: foundHere,
+                        onFound: armFound,
                         onMoveOut: (tileId) =>
                           armSelection({ kind: "movePops", sourceTileId: tileId }),
                         onBuild: requestBuildBuilding,
@@ -619,7 +633,7 @@ export function HegemonyBoard({
                         },
                         onCompose: (partner, anchor) =>
                           setComposing({ seat: viewerId, anchor, partner }),
-                        onIdeasModal: () => setActiveModal({ kind: "ideas" }),
+                        onIdeasModal: (idea) => setActiveModal({ kind: "ideas", idea }),
                       }}
                       income={projectedIncome}
                       drawer={drawer}
@@ -741,7 +755,7 @@ export function HegemonyBoard({
                   />
                 ) : null}
                 {activeModal?.kind === "ideas" && !drafting ? (
-                  <IdeasModal onClose={closeModal} />
+                  <IdeasModal initial={activeModal.idea} onClose={closeModal} />
                 ) : null}
                 {activeModal?.kind === "populationPrompt" ? (
                   <PopulationPickerModal
@@ -776,20 +790,6 @@ export function HegemonyBoard({
                       const { mode } = mapSelection.selection!;
                       const { tileId, anchor } = mapSelection.selection!.target!;
 
-                      if (mode.kind === "foundColony") {
-                        return (
-                          <FoundColonyPopover
-                            anchor={anchor}
-                            onCancel={mapSelection.clear}
-                            onConfirm={(sourceTileId, pop) => {
-                              moves.foundColony(tileId, sourceTileId, pop);
-                              mapSelection.clear();
-                            }}
-                            tileId={tileId}
-                          />
-                        );
-                      }
-
                       if (mode.kind === "tradePops") {
                         return (
                           <TradePopsPopover
@@ -805,7 +805,7 @@ export function HegemonyBoard({
                       if (mode.kind === "movePops") {
                         return (
                           <MovePopsTargetPopover
-                            anchor={anchor}
+                            key={tileId}
                             onCancel={mapSelection.clear}
                             onConfirm={(source, target, pops) => {
                               moves.movePops(source, target, pops);

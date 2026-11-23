@@ -7,25 +7,24 @@
 
 /* ---- what this replaces: hidden, removed at integration ---------------------- */
 
-/* The map's question and its compass stand clear of the sidebar. The compass draws
-   with the map, at the screen's own resolution, so its offset is design px times --k. */
+/* The map's question stands clear of the sidebar. */
 .frame .map-caption {
   left: calc(var(--sh-side-w) + var(--s-4));
 }
+/* The compass stands at the board's top-right, under the bar and left of the
+   outliner: the one corner no drawer, place panel, pop, alarm, toast or hand ever
+   reaches. It draws with the map, at the screen's own resolution, so its offset is
+   design px times --k. */
 .frame .lm-compass-anchor {
   top: calc((var(--sh-top-h) + var(--s-3)) * var(--k));
-  left: calc((var(--sh-side-w) + var(--s-3)) * var(--k));
-}
-/* An open drawer covers the alarms' corner: the row stands beside it instead, so an
-   offer or a deal waiting on an answer stays in reach. */
-.frame:has(.lw-drawer) .alarms {
-  left: calc(var(--sh-side-w) + var(--sh-drawer-w) + var(--s-3));
+  right: calc((var(--sh-outliner-w) + var(--s-3)) * var(--k));
+  left: auto;
 }
 
-/* ---- the sidebar: a Greek column under the top bar --------------------------- */
+/* ---- the sidebar: a Greek column under the alarms' row --------------------------- */
 .lw-side {
   position: fixed;
-  top: var(--sh-top-h);
+  top: var(--sh-side-top);
   bottom: 0;
   left: 0;
   z-index: var(--z-bar);
@@ -99,10 +98,10 @@
   background: var(--col-anthemion);
 }
 
-/* ---- a drawer: full height beside the sidebar -------------------------------- */
+/* ---- a drawer: beside the sidebar, down to the screen's foot -------------------------------- */
 .lw-drawer {
   position: fixed;
-  top: var(--sh-top-h);
+  top: var(--sh-side-top);
   bottom: 0;
   left: var(--sh-side-w);
   z-index: var(--z-bar);
@@ -512,20 +511,29 @@
   color: var(--ink-66);
   font-family: var(--f-sans);
 }
+/* Fixed columns: a seat's column the coin's width, the name the rest, on one line (the
+   foot line carries it whole), so every row is the same height. */
 .lw-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-variant-numeric: tabular-nums;
+}
+.lw-table thead th[scope="col"] {
+  width: 40px;
 }
 .lw-table thead th {
   padding: 0 0 6px;
 }
 .lw-table th[scope="row"] {
+  overflow: hidden;
   padding: 6px 4px 6px 0;
   font-family: var(--f-name);
   font-weight: 700;
   letter-spacing: var(--track-name);
   text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .lw-table th[scope="row"] .ico {
   display: inline-block;
@@ -594,10 +602,10 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: var(--s-3);
+  gap: var(--s-2);
   min-height: 0;
   overflow: auto;
-  padding: var(--s-4) var(--s-4) var(--s-2);
+  padding: var(--s-3) var(--s-4) var(--s-2);
   scrollbar-color: var(--bz) transparent;
   scrollbar-width: thin;
 }
@@ -655,7 +663,7 @@
 .pp-sec {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--s-1);
   min-width: 0;
 }
 .pp-slots {
@@ -677,10 +685,20 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Seven slots or more: three short rows, icon beside the word, in the same box. */
+.pp-slots:has(> :nth-child(7)) .ch-socket {
+  display: flex;
+  justify-content: center;
+  height: 36px;
+  padding-block: 0;
+}
+.pp-slots:has(> :nth-child(7)) .ch-socket > .ico {
+  flex: none;
+}
 .pp-classes {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--s-1);
 }
 .pp-class {
   display: grid;
@@ -715,8 +733,58 @@
 .ch-knob.is-short[aria-disabled="true"] {
   color: var(--clay-ink);
 }
-.pp-note {
-  margin: 0;
+/* A section's head and its notices: a short word each, the sentence in its tooltip. */
+.pp-sec-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  min-height: var(--ic-24);
+}
+.pp-marks {
+  display: flex;
+  gap: var(--s-1);
+  min-width: 0;
+}
+.pp-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-width: 0;
+  max-width: 132px;
+  padding: 0 var(--s-1);
+  border-radius: var(--r-panel);
+  color: var(--ink);
+  background: var(--tile-warn);
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+}
+.pp-mark > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pp-mark:focus-visible {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: var(--rule);
+}
+.pp-coming {
+  color: var(--pos);
+}
+.pp-slot-tip {
+  display: block;
+  min-width: 0;
+}
+.pp-slot-tip > .ch-socket {
+  width: 100%;
+}
+/* Locked while the turn is shut: hatched like a locked control, its reason on hover. */
+.pp-slots button.ch-socket[aria-disabled="true"] {
+  background: var(--hatch);
+  box-shadow: var(--hatch-rim);
+  cursor: default;
+}
+.pp-slots button.ch-socket[aria-disabled="true"]:hover {
   color: var(--ink-66);
 }
 .pp-facts {
@@ -732,16 +800,10 @@
   align-items: center;
   gap: var(--s-2);
 }
-.pp-lore,
-.pp-lore .lore {
+.pp-lore {
   margin: 0;
   font-family: var(--f-body);
   font-style: italic;
-}
-.pp-lore .lore-rule {
-  margin: var(--s-2) 0 0;
-  color: var(--ink-66);
-  font-style: normal;
 }
 /* A footer act: its name and price, and under it the engine's reason. */
 .pp-act-tip {
@@ -793,6 +855,12 @@
 }
 .pp-pop.is-build {
   height: 476px;
+}
+.pp-pop.is-found {
+  height: 476px;
+}
+.pp-pop.is-move {
+  height: 380px;
 }
 .pp-pop.is-seat {
   width: 360px;
@@ -851,6 +919,48 @@
 .pp-opt-line {
   grid-column: 2 / 4;
   color: var(--ink-66);
+}
+.pp-opt[aria-pressed="true"] {
+  background: var(--socket-open-hover);
+  box-shadow: inset 4px 0 0 var(--clay);
+}
+/* A pop's small heads and lines: Found's "Send a pop from", Move's "Who travels". */
+.pp-pop-k {
+  padding: var(--s-2) 14px var(--s-1);
+}
+.pp-pop-line {
+  margin: 0;
+  padding: var(--s-1) 14px var(--s-2);
+}
+/* A class to send: its count here, and − n + on the right. */
+.pp-step {
+  display: grid;
+  grid-template-rows: auto auto;
+  grid-template-columns: var(--ic-32) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2px 10px;
+  padding: var(--s-2) 14px;
+  border-top: var(--rule) solid var(--line);
+}
+.pp-step > .ico {
+  grid-row: 1 / 3;
+}
+.pp-step .pp-opt-line {
+  grid-column: 2;
+}
+.pp-step-ctl {
+  display: flex;
+  grid-row: 1 / 3;
+  grid-column: 3;
+  align-items: center;
+  gap: var(--s-2);
+}
+.pp-step-n {
+  min-width: var(--s-6);
+  font-family: var(--f-name);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
 }
 .pp-opt-line.is-why {
   color: var(--clay-ink);

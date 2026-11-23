@@ -350,9 +350,14 @@
 /* The hand's tray and view (frame/hand.css): the tab and a fact's head at the floor,
    a reason and the facts at 14. */
 .hand-tab,
+.hand-plate-k,
 .hand-view-fact {
   font-size: var(--t-13);
   line-height: var(--lh-16);
+}
+.hand-plate-n {
+  font-size: var(--t-16);
+  line-height: var(--lh-20);
 }
 .hand-empty,
 .hand-view-why,
@@ -434,6 +439,7 @@
 .lw-tile-v,
 .pp-v,
 .pp-class-n b,
+.pp-step-n,
 .lw-next-when b {
   font-size: var(--t-20);
   line-height: var(--lh-24);
@@ -459,8 +465,8 @@
 .lw-none,
 .lw-why,
 .lw-table th[scope="row"],
-.pp-note,
 .pp-opt-line,
+.pp-pop-line,
 .pp-act-why {
   font-size: var(--t-14);
   line-height: var(--lh-20);
@@ -470,6 +476,7 @@
 .lw-row-next,
 .lw-row-n,
 .pp-k,
+.pp-mark,
 .pp-v small,
 .pp-slots .ch-socket {
   font-size: var(--t-13);

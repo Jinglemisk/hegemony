@@ -8,6 +8,7 @@ import {
   currentVoteWeight,
   demotionTarget,
   getBuildBuildingStatus,
+  getFoundColonyStatus,
   getDemotePopStatus,
   getPromotePopStatus,
   getUpgradeColonyToCityStatus,
@@ -49,6 +50,11 @@ import type { DrawerProps } from "../Drawer";
 
 const placeIcon = ({ settlement }: OwnedHolding) => `settlements/${settlement.kind}`;
 
+/** What founding costs this seat now: the engine's price on any tile, Laws applied. */
+const foundCost = (G: HegemonyState, viewer: PlayerId) =>
+  getFoundColonyStatus(G, viewer, G.board.tiles[0]?.id ?? "").cost ??
+  G.ruleset.actionCosts.foundColony;
+
 /**
  * What a place is short of next, from the engine's own statuses: empty, a colony's
  * way to a city, a Port's claim, open slots, room.
@@ -76,7 +82,7 @@ function nextFor(G: HegemonyState, viewer: PlayerId, { tile, settlement }: Owned
 
 /** Overview: the realm's figures, a threat, its places and its cards. */
 export function RealmOverview({ onPick, actions }: DrawerProps) {
-  const { G, viewerId } = useGameUi();
+  const { G, viewerId, turnBlocked } = useGameUi();
   const holdings = getOwnedHoldings(G, viewerId);
   const names = settlementNames(G.board.tiles);
   const pieces = playerPieces(G, viewerId);
@@ -89,17 +95,36 @@ export function RealmOverview({ onPick, actions }: DrawerProps) {
   const sits = nextAssemblyYear(G);
   const threats = victoryThreats(G);
   const held = G.devHands[viewerId].length;
+  // Found a colony: the map lights every site the engine would take.
+  const sites = G.board.tiles.filter((tile) => getFoundColonyStatus(G, viewerId, tile.id).can);
+  const noFound =
+    turnBlocked ??
+    (pieces.coloniesRemaining === 0
+      ? "No colony pieces left."
+      : sites.length === 0
+        ? (shortWords(G.players[viewerId].resources, foundCost(G, viewerId)) ??
+          "No site to found on now.")
+        : null);
 
   return (
     <>
       <div className="lw-tiles">
         <Tile
+          ariaLabel={
+            noFound
+              ? `Colonies left: ${pieces.coloniesRemaining}. Found a colony: ${noFound}`
+              : `Colonies left: ${pieces.coloniesRemaining}. Found a colony: light every site`
+          }
+          disabled={noFound !== null}
           icon="settlements/colony"
           label="Colonies left"
+          onClick={actions.onFound}
           tip={{
             key: "col",
-            title: "Colony pieces",
-            line: `${pieces.coloniesRemaining} of ${pieces.colonyLimit} left to found with.`,
+            title: "Found a colony",
+            line: `${pieces.coloniesRemaining} of ${pieces.colonyLimit} colony pieces left. ${
+              noFound ?? `Press to light the ${sites.length} sites you may found on.`
+            }`,
           }}
           value={pieces.coloniesRemaining}
         />

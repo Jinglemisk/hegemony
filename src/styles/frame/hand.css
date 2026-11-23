@@ -1,36 +1,40 @@
 /* ============================================================================
    The hand: its tray at the bottom edge and the hand view (HandTray, HandModal).
    The tray is one fixed box, x 624, 480 × 72 at design size: it never moves or
-   resizes, whatever opens beside it. A card rises out of it under the pointer or
-   focus — the tray lifts the card's slot; the face never slides or scales.
+   resizes, whatever opens beside it. Each card shows as a plate; under the pointer or
+   focus the whole card stands above its plate, fading in where it lies — the face
+   never slides or scales.
    ========================================================================== */
 
 .hand-tray {
-  --slot-w: var(--card-hand);
-  --slot-h: calc(var(--card-hand) * 88 / 63);
-  /* Side by side while they fit; past that each slot overlaps the last. */
+  --tab-w: 104px;
+  --room: calc(var(--sh-hand-w) - var(--tab-w) - var(--s-2));
+  --plate-w: 120px;
+  /* Side by side while they fit; past that each plate overlaps the last. */
   --step: min(
-    calc(var(--slot-w) + var(--s-2)),
-    calc((var(--sh-hand-w) - var(--slot-w)) / max(var(--n, 1) - 1, 1))
+    calc(var(--plate-w) + 6px),
+    calc((var(--room) - var(--plate-w)) / max(var(--n, 1) - 1, 1))
   );
   position: fixed;
   bottom: 0;
   left: var(--sh-hand-x);
-  display: block;
+  display: flex;
+  gap: var(--s-2);
   width: var(--sh-hand-w);
   height: var(--sh-hand-h);
 }
 
-/* The tab over the tray: how many, and the way into the hand view. */
+/* The tab, inside the tray at its left: how many, and the way into the hand view. */
 .hand-tab {
-  position: absolute;
-  bottom: calc(100% + var(--s-1));
-  left: 0;
   display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  padding: var(--s-1) var(--s-1) var(--s-1) var(--s-3);
-  border-radius: var(--r-panel);
+  flex: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--s-1);
+  box-sizing: border-box;
+  width: var(--tab-w);
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-panel) var(--r-panel) 0 0;
   color: var(--glaze-ink);
   background: var(--glaze);
   box-shadow: var(--back-rim);
@@ -43,9 +47,10 @@
 .hand-view-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--s-1);
   min-height: var(--hit);
-  padding: 0 var(--s-3);
+  padding: 0 var(--s-2);
   border: 0;
   border-radius: var(--r-panel);
   color: var(--glaze-ink);
@@ -59,6 +64,10 @@
 .hand-view-btn:hover {
   background: var(--back-hover);
 }
+.hand-view-btn:focus-visible {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: var(--rule-2);
+}
 .hand-view-btn kbd {
   padding: 0 var(--s-1);
   border-radius: var(--r-panel);
@@ -67,49 +76,96 @@
   font: inherit;
 }
 
-/* A slot: the card's place in the tray, the tray's height, showing the card's top.
-   The rest is clipped, never laid below the screen's edge (where it would make the
-   page scroll), until the card rises out of the tray whole. */
+/* The plates' row: each card's plate, its kind over its name, the tray's height. */
+.hand-slots {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
 .hand-slot {
+  --at: calc(var(--i) * var(--step));
   position: absolute;
-  top: 0;
-  left: calc(var(--i) * var(--step));
+  bottom: 0;
+  left: var(--at);
   display: block;
-  width: var(--slot-w);
-  height: var(--sh-hand-h);
-  overflow: clip;
+  width: var(--plate-w);
 }
-.hand-slot > /* A card's tooltip stands over the card risen out of the tray, not over the tray. */
-.sharedTooltip.hand-tip {
-  translate: 0 calc(var(--sh-hand-h) - var(--card-hand) * 88 / 63 - var(--s-2));
-}
-.hand-card-btn {
-  transition: translate var(--dur-settle) var(--ease-out);
-}
+/* Risen: the slot takes the whole card above its plate, kept inside the tray's span,
+   so the card is on screen whole and its tooltip stands above it. */
 .hand-slot:hover,
 .hand-slot:focus-within {
+  --lift-at: min(var(--at), calc(var(--room) - var(--card-hand)));
   z-index: var(--z-lift);
-  overflow: visible;
-}
-.hand-slot:hover > .hand-card-btn,
-.hand-slot:focus-within > .hand-card-btn {
-  translate: 0 calc(var(--sh-hand-h) - var(--slot-h) - var(--s-2));
+  left: var(--lift-at);
+  width: var(--card-hand);
 }
 .hand-card-btn {
-  display: block;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   padding: 0;
   border: 0;
-  border-radius: var(--s-2);
   background: none;
   cursor: pointer;
 }
 .hand-card-btn:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--s-1);
+  outline: none;
 }
-.hand-slot .gc {
+.hand-face {
+  display: none;
+  margin-bottom: var(--s-2);
+}
+.hand-slot:hover .hand-face,
+.hand-slot:focus-within .hand-face {
+  display: block;
+  animation: hand-rise var(--dur-settle) var(--ease-out);
+}
+.hand-face .gc {
   filter: drop-shadow(0 var(--s-1) var(--s-2) var(--sea-shade));
+}
+@keyframes hand-rise {
+  from {
+    opacity: 0;
+  }
+}
+.hand-plate {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: var(--plate-w);
+  height: var(--sh-hand-h);
+  overflow: hidden;
+  border-radius: var(--s-2) var(--s-2) 0 0;
+  color: var(--ink);
+  background: var(--ivory);
+  box-shadow: var(--tile-rim);
+  text-align: left;
+}
+.hand-slot:hover .hand-plate,
+.hand-slot:focus-within .hand-plate {
+  margin-left: calc(var(--at) - var(--lift-at));
+}
+.hand-card-btn:focus-visible .hand-plate {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: calc(-1 * var(--rule-2));
+}
+.hand-plate-k {
+  padding: var(--s-1) var(--s-2);
+  color: var(--deck-dev-ink);
+  background: var(--deck-dev);
+  font-family: var(--f-sans);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+.hand-plate-n {
+  padding: var(--s-1) var(--s-2) 0;
+  overflow: hidden;
+  font-family: var(--f-name);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Empty: the same box, a dashed glaze plate that opens the hand view. */
@@ -146,32 +202,36 @@
 }
 
 /* ---- the hand view: one fixed box whatever the hand holds ------------------- */
+/* It opens over the board, between the sidebar and the outliner, above the hand's
+   row, so the alarms, the outliner and the dock stay where they were. */
+.modalBackdrop.hand-scrim {
+  padding: var(--sh-side-top) var(--sh-outliner-w) calc(var(--sh-hand-h) + var(--s-2))
+    var(--sh-side-w);
+}
 .hand-view {
-  --view-card: 236px;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  width: 1056px;
-  max-width: calc(var(--vw) - var(--s-12));
-  height: 792px;
-  max-height: calc(var(--vh) - var(--s-8));
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 208px;
+  flex: none;
+  width: 760px;
+  height: 440px;
   text-align: left;
 }
 .hand-view > .ch-head {
+  grid-column: 1 / 3;
   border-radius: var(--r-panel) var(--r-panel) 0 0;
-}
-.hand-view .gc-ceremony {
-  --gc-w: var(--view-card);
 }
 .hand-view-body {
   min-height: 0;
   margin-top: var(--sh-meander-h);
   overflow: auto;
-  padding: var(--s-4) var(--s-6);
+  padding: var(--s-3) var(--s-4);
 }
 .hand-view-row {
   display: flex;
-  justify-content: center;
-  gap: var(--s-4);
+  flex-wrap: wrap;
+  justify-content: safe center;
+  gap: var(--s-3);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -181,8 +241,8 @@
   flex: none;
   flex-direction: column;
   align-items: center;
-  gap: var(--s-3);
-  width: var(--view-card);
+  gap: var(--s-2);
+  width: var(--card-hand);
 }
 .hand-view-why {
   margin: 0;
@@ -197,23 +257,26 @@
   text-align: center;
 }
 
-/* Under the cards, three facts across the box's foot. */
+/* Beside the cards, the deck's three facts down the box's right. */
 .hand-view-facts {
-  display: grid;
-  grid-auto-columns: minmax(0, 1fr);
-  grid-auto-flow: column;
-  border-top: var(--rule) solid var(--bz-dk-30);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: var(--sh-meander-h);
+  overflow: auto;
+  border-left: var(--rule) solid var(--bz-dk-30);
+  border-radius: 0 0 var(--r-panel) 0;
   background: var(--bz-dk-12);
 }
 .hand-view-facts > div {
   display: grid;
   align-content: start;
   justify-items: start;
-  gap: var(--s-2);
-  padding: var(--s-3) var(--s-4) var(--s-4);
+  gap: var(--s-1);
+  padding: var(--s-2) var(--s-3) var(--s-3);
 }
 .hand-view-facts > div + div {
-  border-left: var(--rule) solid var(--bz-dk-30);
+  border-top: var(--rule) solid var(--bz-dk-30);
 }
 .hand-view-facts p {
   margin: 0;
@@ -234,13 +297,14 @@
 /* A card's choice, asked in place of the row: the card, then what it asks. */
 .hand-view-choose {
   display: grid;
-  grid-template-columns: var(--view-card) minmax(0, 1fr);
+  grid-column: 1 / 3;
+  grid-template-columns: var(--card-hand) minmax(0, 1fr);
   align-items: start;
-  gap: var(--s-8);
+  gap: var(--s-6);
   min-height: 0;
   margin-top: var(--sh-meander-h);
   overflow: auto;
-  padding: var(--s-6) var(--s-8);
+  padding: var(--s-4) var(--s-6);
 }
 .hand-view-ask {
   display: grid;

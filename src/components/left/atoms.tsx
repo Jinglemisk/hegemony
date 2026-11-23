@@ -90,6 +90,7 @@ export function Tile({
           aria-disabled={disabled || undefined}
           aria-label={ariaLabel}
           className={`${classes} is-press`}
+          data-row={tip.key}
           onClick={disabled ? undefined : onClick}
           type="button"
         >
@@ -133,6 +134,7 @@ export function Row({
         {...on}
         aria-label={ariaLabel}
         className={`lw-row${lit ? " is-lit" : ""}`}
+        data-row={tip.key}
         data-tone={tone}
         onClick={onClick}
         type="button"

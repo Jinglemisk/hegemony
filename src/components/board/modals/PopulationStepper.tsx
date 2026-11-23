@@ -46,8 +46,14 @@ export function PopulationStepper({
             <em>Available {maxByPop[pop]}</em>
           </span>
           <div className="stepperControls">
-            <button disabled={pops[pop] <= 0} onClick={() => setAmount(pop, pops[pop] - 1)}>
-              -
+            <button
+              aria-label={`Remove a ${formatPopLabel(pop, 1)}`}
+              disabled={pops[pop] <= 0}
+              onClick={() => setAmount(pop, pops[pop] - 1)}
+              title={`Remove a ${formatPopLabel(pop, 1)}`}
+              type="button"
+            >
+              −
             </button>
             <input
               aria-label={`${formatPopLabel(pop, 2)} to select`}
@@ -58,11 +64,14 @@ export function PopulationStepper({
               onChange={(event) => setAmount(pop, Number(event.target.value))}
             />
             <button
+              aria-label={`Add a ${formatPopLabel(pop, 1)}`}
               disabled={
                 pops[pop] >= maxByPop[pop] ||
                 (totalLimit !== undefined && selectedTotal >= totalLimit)
               }
               onClick={() => setAmount(pop, pops[pop] + 1)}
+              title={`Add a ${formatPopLabel(pop, 1)}`}
+              type="button"
             >
               +
             </button>

@@ -88,3 +88,12 @@ export function inertAround(keep: HTMLElement): () => void {
   }
   return () => made.forEach((element) => (element.inert = false));
 }
+
+/**
+ * Moves the focus to `target` once the surface that is closing or opening has redrawn:
+ * for a hand-back whose target is not the opener `useReturnFocus` remembers (a drawer's
+ * sidebar button, a place's Back, the row a place was picked from).
+ */
+export function focusSoon(target: () => HTMLElement | null) {
+  window.setTimeout(() => target()?.focus({ preventScroll: true }), 0);
+}

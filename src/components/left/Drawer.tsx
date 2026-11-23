@@ -1,10 +1,17 @@
-import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 import type { Resources } from "../../game/types";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { useGameUi } from "../board/GameUiContext";
 import { Panel, PanelHead } from "../chrome/Panel";
 import { Ico } from "../frame/parts";
-import { FOCUSABLE } from "../overlays/focus";
+import { FOCUSABLE, focusSoon } from "../overlays/focus";
 import { FootContext, type FootLine } from "./words";
 import { CardsDrawer } from "./drawers/CardsDrawer";
 import { AgoraDrawer, IdeasDrawer, VictoryDrawer } from "./drawers/TableDrawers";
@@ -23,11 +30,24 @@ const REALM_TABS: ReadonlyArray<{ id: DrawerId; label: string; icon: string }> =
 ];
 
 const HEADS: Partial<Record<DrawerId, { title: string; icon: string }>> = {
-  ideas: { title: "National Ideas", icon: "assembly/national-idea" },
+  ideas: { title: "Ideas", icon: "assembly/national-idea" },
   agora: { title: "Agora", icon: "assembly/agora" },
   trade: { title: "Trade", icon: "market/handshake" },
   victory: { title: "Victory", icon: "victory/laurel" },
   cards: { title: "Cards", icon: "events/venture" },
+};
+
+/** The foot line before anything is pointed at: what there is to point at. The line's
+ *  box stands whatever it says. */
+const IDLE: Record<DrawerId, string> = {
+  overview: "Point at a tile for what it means.",
+  cities: "Point at a place for what it needs next.",
+  people: "Point at a class for what it makes.",
+  ideas: "Point at an Idea for what it does.",
+  agora: "Point at a Law or an orator for what it does.",
+  trade: "Point at an offer, a good or a deal for its terms.",
+  victory: "Point at a title for what wins it.",
+  cards: "Point at a card for what it does.",
 };
 
 /** What a drawer's body is given: where a pick goes, and the board's commands. */
@@ -53,8 +73,12 @@ export function Drawer({
   onTab: (id: DrawerId) => void;
   onClose: () => void;
 }) {
-  const { viewerId } = useGameUi();
+  const { G, viewerId } = useGameUi();
   const realm = REALM_TABS.some((tab) => tab.id === id);
+  const idle =
+    id === "cards" && G.devHands[viewerId].length === 0
+      ? "No cards held: buy one in the dock."
+      : IDLE[id];
   const head = HEADS[id];
   const title = realm ? `Realm of ${PLAYER_GLAZES[viewerId].name}` : (head?.title ?? "");
   // The foot line belongs to the drawer and tab it was pointed in.
@@ -108,25 +132,16 @@ export function Drawer({
         onClose={onClose}
         title={title}
       />
-      {realm ? (
-        <div aria-label="Realm" className="lw-tabs" role="tablist">
-          {REALM_TABS.map((tab) => (
-            <button
-              aria-selected={tab.id === id}
-              className="lw-tab"
-              key={tab.id}
-              onClick={() => onTab(tab.id)}
-              role="tab"
-              type="button"
-            >
-              <Ico path={tab.icon} size="ui" />
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      ) : null}
+      {realm ? <RealmTabs id={id} onTab={onTab} /> : null}
       <FootContext.Provider value={footValue}>
-        <div className="lw-body">{content}</div>
+        <div
+          aria-labelledby={realm ? `lw-tab-${id}` : undefined}
+          className="lw-body"
+          id={realm ? "lw-tabpanel" : undefined}
+          role={realm ? "tabpanel" : undefined}
+        >
+          {content}
+        </div>
       </FootContext.Provider>
       <footer aria-live="polite" className="lw-foot">
         {line ? (
@@ -134,9 +149,55 @@ export function Drawer({
             <b>{line.title}</b> {line.line}
           </>
         ) : (
-          <span className="lw-foot-idle">Point at a tile for what it does.</span>
+          <span className="lw-foot-idle">{idle}</span>
         )}
       </footer>
     </Panel>
+  );
+}
+
+/**
+ * Realm's three tabs: one tab stop (the selected tab), the arrow keys, Home and End move
+ * between them, and each names the panel it shows.
+ */
+function RealmTabs({ id, onTab }: { id: DrawerId; onTab: (id: DrawerId) => void }) {
+  const move = (event: KeyboardEvent<HTMLDivElement>) => {
+    const at = REALM_TABS.findIndex((tab) => tab.id === id);
+    const last = REALM_TABS.length - 1;
+    const to =
+      event.key === "ArrowRight"
+        ? (at + 1) % REALM_TABS.length
+        : event.key === "ArrowLeft"
+          ? (at + last) % REALM_TABS.length
+          : event.key === "Home"
+            ? 0
+            : event.key === "End"
+              ? last
+              : null;
+    if (to === null) return;
+    event.preventDefault();
+    const next = REALM_TABS[to].id;
+    onTab(next);
+    focusSoon(() => document.getElementById(`lw-tab-${next}`));
+  };
+  return (
+    <div aria-label="Realm" className="lw-tabs" onKeyDown={move} role="tablist">
+      {REALM_TABS.map((tab) => (
+        <button
+          aria-controls="lw-tabpanel"
+          aria-selected={tab.id === id}
+          className="lw-tab"
+          id={`lw-tab-${tab.id}`}
+          key={tab.id}
+          onClick={() => onTab(tab.id)}
+          role="tab"
+          tabIndex={tab.id === id ? 0 : -1}
+          type="button"
+        >
+          <Ico path={tab.icon} size="ui" />
+          {tab.label}
+        </button>
+      ))}
+    </div>
   );
 }

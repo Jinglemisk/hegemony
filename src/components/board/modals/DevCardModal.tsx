@@ -30,7 +30,8 @@ import { GameCard } from "../../cards/GameCard";
 import { useConfirm } from "../../chrome/confirmContext";
 import { Lacquer, Plaque } from "../../chrome/controls";
 import { PanelHead } from "../../chrome/Panel";
-import { Chips, Delta, SeatMark } from "../../frame/parts";
+import { Chips, Delta, SeatMark, Tip, TipBody } from "../../frame/parts";
+import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { deckMark } from "../helpers";
 import type { DeckMark } from "../helpers";
@@ -170,7 +171,12 @@ export function HandModal({ onClose, onBuy }: { onClose: () => void; onBuy: () =
   const standing = standingHappiness(G, viewerId);
 
   return (
-    <ModalShell className="hand-view" label="Your hand" onDismiss={onClose}>
+    <ModalShell
+      backdropClassName="hand-scrim"
+      className="hand-view"
+      label="Your hand"
+      onDismiss={onClose}
+    >
       <PanelHead
         closeLabel="Close the hand"
         icon="events/venture"
@@ -204,7 +210,20 @@ export function HandModal({ onClose, onBuy }: { onClose: () => void; onBuy: () =
                   const direct = resolvePlay(plays, {});
                   return (
                     <li className="hand-view-slot" key={entry.id}>
-                      <GameCard face={devCardFace(face)} />
+                      {/* At hand size the sentence is read from the card's tooltip. */}
+                      <Tooltip
+                        ariaLabel={face.name}
+                        content={
+                          <Tip title={face.name}>
+                            <TipBody>{face.text}</TipBody>
+                          </Tip>
+                        }
+                        focusable
+                        preferredPlacement="above"
+                        triggerAs="div"
+                      >
+                        <GameCard face={devCardFace(face)} size="hand" />
+                      </Tooltip>
                       {blocked || plays.length === 0 ? (
                         <p className="hand-view-why">{blocked ?? "It can't be played now."}</p>
                       ) : (
@@ -335,7 +354,7 @@ function HandChoice({
   const blocked = devCardBlocked(G, viewerId, instanceId);
   return (
     <div className="hand-view-choose">
-      <GameCard face={devCardFace(card)} />
+      <GameCard face={devCardFace(card)} size="hand" />
       <div className="hand-view-ask">
         <p className="body">
           <AnnotatedText links={false} text={card.text} />
