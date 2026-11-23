@@ -115,15 +115,6 @@
   background: var(--glaze);
   box-shadow: var(--pressed-rim);
 }
-.rd-mode:focus-visible,
-.rd-act:focus-visible,
-.rd-line:focus-visible,
-.rd-row:focus-visible,
-.rd-sec-head:focus-visible,
-.rd-outl-tab:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: calc(-1 * var(--rule-2));
-}
 
 /* ---- row c: Trade, Buy a card, the Dole, each its name over its cost ---------- */
 .rd-acts {

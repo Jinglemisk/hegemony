@@ -522,10 +522,6 @@
   background: none;
   cursor: pointer;
 }
-.gc-turn:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--s-1);
-}
 
 /* ── Arrivals ──────────────────────────────────────────────────────────────── */
 /* A card lands at its place and stays there: nothing translates or scales it, so the
@@ -609,10 +605,6 @@
   border-radius: var(--gc-r, var(--s-2));
   background: none;
   cursor: pointer;
-}
-.hand-card:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--s-1);
 }
 .drawnReveal .gc-ceremony .gc-face {
   box-shadow:

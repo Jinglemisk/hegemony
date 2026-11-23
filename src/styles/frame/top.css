@@ -305,13 +305,6 @@ button.alarm-disc {
   flex: 1;
   padding-inline: var(--s-1);
 }
-.menu-row:focus-visible,
-.menu-seat:focus-visible,
-.menu-btn:focus-visible,
-.top-seal:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--rule-2);
-}
 
 /* ---- the menu's windows: movable panels, the head their handle ---------------- */
 .menu-windows {

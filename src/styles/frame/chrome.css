@@ -432,12 +432,7 @@ button.ch-socket[data-state="open"]:hover {
 .ch-unroll-y {
   animation: ch-unroll-y var(--dur-unroll) var(--ease-out);
 }
-.ch-unroll-up {
-  animation: ch-unroll-up var(--dur-unroll) var(--ease-out);
-}
-.ch-drop {
-  animation: ch-drop var(--dur-drop) var(--ease-drop) both;
-}
+
 .ch-settle {
   animation: ch-settle var(--dur-settle) var(--ease-out) both;
 }
@@ -454,15 +449,6 @@ button.ch-socket[data-state="open"]:hover {
 @keyframes ch-unroll-y {
   from {
     clip-path: inset(-24px -24px 100% -24px);
-  }
-  to {
-    clip-path: inset(-24px);
-  }
-}
-/* … the Chronicle rises out of its line … */
-@keyframes ch-unroll-up {
-  from {
-    clip-path: inset(100% -24px -24px -24px);
   }
   to {
     clip-path: inset(-24px);

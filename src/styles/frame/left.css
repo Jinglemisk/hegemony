@@ -78,10 +78,6 @@
   background: var(--ivory);
   box-shadow: var(--col-btn-hover-rim);
 }
-.lw-side-btn:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--rule-2);
-}
 .lw-side-btn[aria-pressed="true"] {
   background: var(--ivory);
   box-shadow: var(--col-btn-on-rim);
@@ -146,10 +142,6 @@
   letter-spacing: var(--track-caps);
   text-transform: uppercase;
   cursor: pointer;
-}
-.lw-tab:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--rule-2);
 }
 .lw-tab[aria-selected="true"] {
   color: var(--glaze-ink);
@@ -231,10 +223,6 @@
 }
 .lw-tile.is-press:hover:not([aria-disabled="true"]) {
   box-shadow: var(--tile-hover-rim);
-}
-.lw-tile.is-press:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--rule-2);
 }
 .lw-tile.is-lit,
 .lw-row.is-lit,
@@ -352,10 +340,6 @@
 }
 .lw-row:hover {
   box-shadow: var(--tile-hover-rim);
-}
-.lw-row:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--rule-2);
 }
 .lw-row[data-tone="warn"] {
   box-shadow:
@@ -562,9 +546,6 @@
   outline: var(--rule-2) solid var(--ochre);
   outline-offset: calc(-1 * var(--rule-2));
 }
-.lw-table tr:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-}
 
 /* ---- the place panel: 604×404 out of the sidebar, at the bottom-left ---------- */
 .pp {
@@ -594,10 +575,6 @@
   border-radius: var(--r-round);
   background: none;
   cursor: pointer;
-}
-.ch-head-coinbtn:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--rule-2);
 }
 .ch-head-coinbtn:hover .ch-coin {
   filter: var(--hover-glow);
@@ -768,10 +745,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.pp-mark:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--rule);
-}
 .pp-coming {
   color: var(--pos);
 }
@@ -902,10 +875,6 @@
 }
 .pp-opt:hover:not([aria-disabled="true"]) {
   background: var(--socket-open-hover);
-}
-.pp-opt:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: calc(-1 * var(--rule-2));
 }
 .pp-opt[aria-disabled="true"] {
   cursor: default;

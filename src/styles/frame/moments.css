@@ -293,19 +293,6 @@
   filter: none;
   transform: none;
 }
-:is(.ch-moment, .trade-card, .sharedPopover)
-  :is(
-    .ceremonyCommit,
-    .eventResolveButton,
-    .ghostVerb,
-    .placementCancelButton,
-    .btn,
-    .sit-btn,
-    .confirm-btn
-  ):focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--rule-2);
-}
 /* A toggle that is on is pressed glaze. */
 :is(.ch-moment, .trade-card) :is(.btn.is-on, .sit-btn[aria-pressed="true"]) {
   color: var(--glaze-ink);
@@ -407,10 +394,6 @@
   box-shadow: var(--knob-rim);
   filter: var(--hover-glow);
 }
-.trade-x:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--rule-2);
-}
 .trade-card :is(.trade-chip, .trade-pick, .trade-add, .trade-lease-pick .btn) {
   border-radius: var(--r-panel);
   background: var(--plaque);
@@ -492,13 +475,13 @@
   color: var(--bz-hi);
   background: none;
 }
-.sharedPopover :is(.popoverChoiceStack button, .placementPickerChip) {
+.sharedPopover .placementPickerChip {
   border: 0;
   border-radius: var(--r-panel);
   background: var(--plaque);
   box-shadow: var(--plaque-rim);
 }
-.sharedPopover :is(.popoverChoiceStack button, .placementPickerChip).selectedChoice {
+.sharedPopover .placementPickerChip.selectedChoice {
   box-shadow:
     inset 0 0 0 var(--rule-2) var(--clay),
     var(--plaque-rim);

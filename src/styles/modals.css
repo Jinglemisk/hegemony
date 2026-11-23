@@ -38,11 +38,6 @@
   background: linear-gradient(180deg, #d15225, var(--clay-deep));
 }
 
-.placementSection {
-  display: grid;
-  gap: 7px;
-}
-
 .placementSectionLabel {
   color: var(--clay-deep);
   font-family: var(--f-name);
@@ -75,12 +70,6 @@
   box-shadow: inset 0 0 0 1px rgb(255 248 231 / 56%);
 }
 
-.placementPickerChip .terrainChip {
-  width: 26px;
-  height: 26px;
-  flex: 0 0 auto;
-}
-
 .placementPickerChip .miniIcon {
   flex: 0 0 auto;
 }
@@ -106,17 +95,6 @@
   font-style: normal;
 }
 
-.placementPreviewCard {
-  position: relative;
-  display: grid;
-  gap: 7px;
-  padding: 9px 10px 11px 12px;
-  border: 1px solid rgb(143 46 19 / 28%);
-  border-left: 2px solid var(--ledger-accent);
-  border-radius: 6px;
-  background: linear-gradient(90deg, rgb(192 70 28 / 6%), transparent 48%), rgb(255 248 231 / 46%);
-}
-
 .placementPreviewTag {
   color: var(--clay-deep);
   font-family: var(--f-name);
@@ -124,29 +102,8 @@
   text-transform: uppercase;
 }
 
-.placementCostRow {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 10px;
-  padding-top: 2px;
-}
-
-.placementCostChips {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
 .placementCostNote {
   color: var(--muted);
-}
-
-.placementEmptyState {
-  margin: 0;
-  padding: 28px 8px;
-  color: rgb(36 25 16 / 76%);
-  text-align: center;
 }
 
 .placementCancelButton {
@@ -234,10 +191,6 @@
 .foundColonyClose:not(:disabled):hover {
   border-color: var(--clay);
   background: var(--panel-soft);
-}
-
-.foundColonyPreview {
-  margin: 0;
 }
 
 .foundColonyActions {
@@ -754,34 +707,6 @@
 .placementTargetName {
   margin: 0 0 8px;
   color: var(--fg);
-}
-
-/* Three pop choices side by side fitted a 620px modal; in a 312px popover each
-   button gets ~92px and "Citizen" clipped to "C…". One per row instead — the
-   popover has height to spare and the board does not care. */
-.popoverChoiceStack {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.popoverChoiceStack button {
-  grid-template-columns: 24px minmax(0, 1fr) auto;
-  grid-template-rows: auto;
-  text-align: left;
-}
-
-.popoverChoiceStack .miniIcon {
-  grid-row: auto;
-}
-
-.popoverChoiceStack strong {
-  justify-self: end;
-  white-space: nowrap;
-}
-
-/* Popovers whose content genuinely needs more than the default 312px — the move
-   stepper is three rows of label · available · − · n · +. */
-.foundColonyPopover.widePopover {
-  width: min(392px, calc(var(--vw) - 24px));
 }
 
 /* ── The tile subject line (components/board/TileSubject.tsx) ──────────────

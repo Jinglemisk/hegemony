@@ -123,33 +123,6 @@
   text-transform: none;
 }
 
-.popChoiceGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.popChoiceGrid button {
-  display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 7px;
-  min-height: 48px;
-  text-align: left;
-  text-transform: capitalize;
-}
-
-.popChoiceGrid button span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.popChoiceGrid .selectedChoice {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgb(192 70 28 / 20%);
-}
-
 .modalActions {
   display: flex;
   justify-content: flex-end;

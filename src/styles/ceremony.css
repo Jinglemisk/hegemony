@@ -828,12 +828,6 @@
   display: grid;
 }
 
-.tabletFootRow {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
-}
-
 /* A fate is DEALT: it comes in off the deck, off-axis, and squares up. */
 @keyframes fateDeal {
   from {

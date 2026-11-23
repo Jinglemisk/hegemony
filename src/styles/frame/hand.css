@@ -64,10 +64,6 @@
 .hand-view-btn:hover {
   background: var(--back-hover);
 }
-.hand-view-btn:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--rule-2);
-}
 .hand-view-btn kbd {
   padding: 0 var(--s-1);
   border-radius: var(--r-panel);
@@ -203,10 +199,6 @@
 }
 .hand-empty:hover {
   border-color: var(--bz-hi);
-}
-.hand-empty:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--rule-2);
 }
 
 /* ---- the hand view: one fixed box whatever the hand holds ------------------- */

@@ -59,9 +59,6 @@
   margin: 0;
   font: italic 400 var(--t-body) / var(--l-body) var(--f-body);
 }
-.lore-rule {
-  margin: 0;
-}
 
 /* ---- Costs: the cost card, every priced act one line, its price as one icon per
    unit (Catan's pips), so the weight of a price reads before its number ---------- */

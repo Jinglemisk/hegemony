@@ -12,11 +12,3 @@
     display: none;
   }
 }
-/* Below 1240px the consult names would reach the purse: the icons stay, each name in
-   its tooltip. */
-
-@media (max-width: 760px) {
-  .popChoiceGrid {
-    grid-template-columns: 1fr;
-  }
-}

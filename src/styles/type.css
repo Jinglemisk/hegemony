@@ -395,9 +395,6 @@
 .mechanicsEffectRows li,
 .mechanicsSlot,
 .mechanicsBlockedReason,
-.cityIdentity strong,
-.holdingSummaryMetrics,
-.holdingSummaryMetrics .cityMeterText strong,
 .holdingNetYield strong,
 .ruleCardList li strong,
 .ruleCardList li span,
@@ -408,7 +405,6 @@
 }
 .compendiumFlavor,
 .compendiumNote,
-.placementEmptyState,
 .mechanicsExplanation,
 .modalHeader p,
 .popStepperLabel strong {

@@ -410,8 +410,6 @@
   opacity: 0;
 }
 .lm-moor:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--rule-2);
   opacity: 1;
 }
 /* Dimmed in Political, a good comes back whole under the pointer. */

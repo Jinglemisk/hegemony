@@ -151,9 +151,6 @@
 .sit-acts.is-end {
   justify-content: flex-end;
 }
-.sit-acts.is-split {
-  justify-content: space-between;
-}
 
 /* ── Body ──────────────────────────────────────────────────────────────────── */
 

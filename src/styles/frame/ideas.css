@@ -139,10 +139,6 @@
 .ideas-list.is-view .idea-choice[aria-disabled="true"] {
   opacity: 1;
 }
-.idea-choice:focus-visible {
-  outline: var(--rule-2) solid var(--clay);
-  outline-offset: var(--s-1);
-}
 /* A seat's mark: its glaze and blazon. A bought Idea's mark carries the year. */
 .idea-seat {
   position: relative;
