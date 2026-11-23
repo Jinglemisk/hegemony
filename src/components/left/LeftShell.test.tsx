@@ -59,7 +59,17 @@ const actions: LeftActions = {
   onIdeasModal: vi.fn(),
 };
 
-function Harness({ G, moves, start }: { G: HegemonyState; moves: GameMoves; start: PlaceSubject }) {
+function Harness({
+  G,
+  moves,
+  start,
+  blocked = null,
+}: {
+  G: HegemonyState;
+  moves: GameMoves;
+  start: PlaceSubject;
+  blocked?: string | null;
+}) {
   const [subject, setSubject] = useState<PlaceSubject>(start);
   const drawer = useLeftDrawer(subject, setSubject);
   return (
@@ -72,7 +82,7 @@ function Harness({ G, moves, start }: { G: HegemonyState; moves: GameMoves; star
         currentPlayerId: "0",
         phase: "gameplay",
         isActive: true,
-        turnBlocked: null,
+        turnBlocked: blocked,
         humans: ["0"],
         moves,
         events: createCommandEvents(() => {}),
@@ -150,4 +160,35 @@ it("moves between Realm's tabs with the arrow keys and returns focus on close", 
   });
   expect(document.querySelector(".lw-drawer")).toBeNull();
   expect(document.activeElement).toBe(button(/^Realm$/));
+});
+
+it("locks a place's open slots with the turn gate's reason, like its footer acts", () => {
+  const G = game();
+  const tile = G.board.tiles.find((candidate) =>
+    candidate.settlements.some(
+      (settlement) => settlement.owner === "0" && settlement.kind !== "colony",
+    ),
+  )!;
+  const build = vi.fn();
+  const moves = new Proxy({} as GameMoves, { get: () => build });
+  act(() =>
+    root.render(
+      <Harness
+        G={G}
+        blocked="The Assembly is sitting."
+        moves={moves}
+        start={{ kind: "tile", tileId: tile.id }}
+      />,
+    ),
+  );
+  const slots = [...document.querySelectorAll<HTMLButtonElement>(".pp-slots button")];
+  expect(slots.length).toBeGreaterThan(0);
+  slots.forEach((slot, i) => {
+    expect(slot.getAttribute("aria-disabled")).toBe("true");
+    expect(slot.getAttribute("aria-label")).toMatch(
+      new RegExp(`slot \\d+ of \\d+: The Assembly is sitting\\.$`),
+    );
+    act(() => slot.click());
+    expect(document.querySelector(".pp-pop"), `slot ${i}`).toBeNull();
+  });
 });
