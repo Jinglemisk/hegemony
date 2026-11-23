@@ -271,7 +271,8 @@ function TableRow({
   const { lit, on } = usePoint({ key: `r-${row.key}`, title: row.name, line: row.line });
   return (
     <tr {...on} className={lit ? "is-lit" : undefined} tabIndex={0}>
-      <th scope="row">
+      {/* A long name ellipsizes; pointing at the row writes it whole in the foot line. */}
+      <th data-truncates="summary" scope="row">
         <Ico path={row.icon} size="ui" />
         {row.name}
       </th>

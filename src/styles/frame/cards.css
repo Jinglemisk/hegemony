@@ -634,6 +634,14 @@
 .deck-line b {
   color: var(--ivory);
 }
+/* The count opens the kinds left: a control, so 32 tall, standing into the line's
+   own padding so the line keeps its height. */
+.deck-line .deck-hover {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit);
+  margin-block: calc(-1 * var(--s-1));
+}
 .deck-stack {
   position: relative;
   flex: none;
