@@ -8,6 +8,7 @@ import { Plaque } from "../../chrome/controls";
 import { SeatCoin } from "../../chrome/SeatCoin";
 import { useTextScale } from "../../chrome/textScale";
 import type { TextScale } from "../../chrome/textScale";
+import { ESCAPE } from "../../overlays/escapeStack";
 import { Popover } from "../../overlays/Popover";
 import { Tooltip } from "../../overlays/Tooltip";
 import { Ico, Tip, TipBody } from "../parts";
@@ -64,6 +65,7 @@ export function Menu({
           ariaLabel="Menu"
           className="top-pop menu-pop"
           dismissOnOutside
+          escapeRank={ESCAPE.menu}
           onDismiss={() => setOpen(false)}
         >
           <MenuCard

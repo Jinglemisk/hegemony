@@ -1,4 +1,6 @@
 import { useEffect, useRef, type ReactNode } from "react";
+import { ESCAPE, useEscapeLayer } from "../../overlays/escapeStack";
+import { trapTab } from "../../overlays/focus";
 
 type ModalShellProps = {
   children: ReactNode;
@@ -38,10 +40,6 @@ type ModalShellProps = {
 
 const CORNERS = ["tl", "tr", "bl", "br"] as const;
 
-/** Everything the browser will let a player reach with Tab. */
-const FOCUSABLE =
-  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-
 /**
  * The one modal grammar. Every dialog renders through this: backdrop, dialog
  * semantics, Escape-to-close and backdrop-to-close all live here so they behave
@@ -78,66 +76,25 @@ export function ModalShell({
     }
 
     const opener = surface.ownerDocument.activeElement;
-    const reachable = () =>
-      [...surface.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
-        (element) => element.offsetParent !== null || element === surface,
-      );
 
     // The dialog itself, not its first button. A screen reader then announces
     // the whole dialog on entry, and the commit does not arrive already wearing
     // a focus ring the player did not ask for.
     surface.focus();
-
-    const trap = (event: KeyboardEvent) => {
-      if (event.key !== "Tab") {
-        return;
-      }
-
-      const items = reachable();
-      const active = surface.ownerDocument.activeElement;
-      const inside = active instanceof Node && surface.contains(active);
-
-      if (items.length === 0) {
-        event.preventDefault();
-        surface.focus();
-        return;
-      }
-
-      const edge = event.shiftKey ? items[0] : items[items.length - 1];
-
-      if (!inside || active === edge) {
-        event.preventDefault();
-        (event.shiftKey ? items[items.length - 1] : items[0]).focus();
-      }
-    };
-
-    const document_ = surface.ownerDocument;
-    document_.addEventListener("keydown", trap, true);
+    const untrap = trapTab(surface);
 
     return () => {
-      document_.removeEventListener("keydown", trap, true);
+      untrap();
 
-      if (opener instanceof HTMLElement && document_.contains(opener)) {
+      if (opener instanceof HTMLElement && surface.ownerDocument.contains(opener)) {
         opener.focus();
       }
     };
   }, []);
 
-  useEffect(() => {
-    if (!onDismiss) {
-      return;
-    }
-
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.stopPropagation();
-        onDismiss();
-      }
-    };
-
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [onDismiss]);
+  // Escape closes it (escapeStack); a blocking dialog takes the key and does nothing,
+  // so nothing under it closes either.
+  useEscapeLayer(ESCAPE.dialog, () => onDismiss?.());
 
   return (
     <div

@@ -31,6 +31,28 @@
   display: contents;
 }
 
+/* ---- the focus ring: one rule for every control in the frame ----------------
+   An ink ring in a pale gilt halo, 2px clear of the control: the ink reads on
+   parchment, the halo on glaze and the sea. It replaces the control's own shadow
+   while the keyboard is on it. A surface focused by script to announce itself
+   (tabindex -1: a dialog, a popover) and the map's own marks take none.
+   --focus-gap moves the ring: in, for a row inside a scroller that would clip it
+   (with --focus-at: inset, so the halo stays inside too); out, past a ring a
+   control draws around itself. */
+.frame :focus-visible:not([tabindex="-1"], .living-map, .lm-tile) {
+  outline: var(--focus-w) solid var(--focus-ink);
+  outline-offset: var(--focus-gap, var(--focus-w));
+  box-shadow: var(--focus-at, 0 0 0 calc(var(--focus-gap, var(--focus-w)) + 2 * var(--focus-w)))
+    var(--focus-halo);
+}
+:is(.rd-act, .rd-line, .rd-row, .rd-sec-head, .rd-outl-tab, .pp-opt, .lw-table tr) {
+  --focus-gap: calc(-2 * var(--focus-w));
+  --focus-at: inset 0 0 0 calc(3 * var(--focus-w));
+}
+.deal-disc {
+  --focus-gap: 7px; /* clear of its .deal-ring, drawn 4px outside it */
+}
+
 /* ---- panel: parchment or glaze in a cast bronze rule ----------------------- */
 :where(.ch-panel) {
   position: relative;
@@ -191,10 +213,6 @@
     transform var(--dur-press) var(--ease-out),
     filter var(--dur-hover) var(--ease-out);
 }
-.ch-ctl:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--rule-2);
-}
 .ch-ctl:hover:not([aria-disabled="true"]) {
   filter: var(--hover-glow);
   transform: translateY(-1px);
@@ -220,8 +238,8 @@
   box-shadow: var(--pressed-rim);
 }
 .ch-knob {
-  width: var(--hit);
-  height: var(--hit);
+  width: var(--knob-d);
+  height: var(--knob-d);
   padding: 0;
   border-radius: var(--r-round);
   color: var(--bz-dk);
@@ -286,10 +304,6 @@ button.ch-socket {
 button.ch-socket[data-state="open"]:hover {
   color: var(--clay-ink);
   background: var(--socket-open-hover);
-}
-button.ch-socket:focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--rule-2);
 }
 /* One socket per place: glaze for a filled place, gold for a worked one. */
 .ch-meter {

@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { getFoundColonyStatus } from "../../../game/rules";
 import { tradePopSources, tradePopTargets } from "../../../game/trade";
 import type { HegemonyState, PlayerId } from "../../../game/types";
+import { ESCAPE, useEscapeLayer } from "../../overlays/escapeStack";
 import { getOwnedHoldings } from "../helpers";
 import type { MapSelection, MapSelectionMode } from "./mapSelection";
 
@@ -39,21 +40,9 @@ export function useMapSelection({
     setSelection((current) => (current ? { ...current, target } : current));
   }, []);
 
-  // One Escape route for every mode, rather than a handler per flow.
-  useEffect(() => {
-    if (!selection) {
-      return;
-    }
-
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        clear();
-      }
-    };
-
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [selection, clear]);
+  // One Escape route for every mode, rather than a handler per flow: an armed map is
+  // a pop (Move, Found), over the window it was armed from.
+  useEscapeLayer(ESCAPE.pop, clear, Boolean(selection));
 
   const candidateTileIds = useMemo(() => {
     if (!selection) {

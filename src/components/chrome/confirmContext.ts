@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, type ReactNode, type RefObject } from "react";
 
 /**
  * One spending action's question for the confirm bar. The caller builds every
@@ -19,6 +19,8 @@ export type ConfirmAsk = {
 
 type ConfirmState = {
   pending: ConfirmAsk | null;
+  /** What had the focus when the question was asked: the focus goes back there. */
+  opener: RefObject<Element | null>;
   ask: (question: ConfirmAsk) => void;
   close: () => void;
 };

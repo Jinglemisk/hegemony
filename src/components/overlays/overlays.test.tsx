@@ -89,6 +89,41 @@ describe("Tooltip", () => {
     expect(document.body.querySelector("[role=tooltip]")).toBeNull();
   });
 
+  it("closes on a press and stays shut until the pointer leaves and comes back", () => {
+    act(() => {
+      root.render(
+        <Tooltip content="Ideas">
+          <button type="button">Ideas</button>
+        </Tooltip>,
+      );
+    });
+    const button = container.querySelector("button")!;
+    const tip = () => document.body.querySelector("[role=tooltip]");
+    const pointer = (type: string, relatedTarget: Element | null = null) =>
+      act(() => {
+        const event = new MouseEvent(type, { bubbles: true, relatedTarget });
+        if (type === "pointerdown") Object.defineProperty(event, "pointerType", { value: "mouse" });
+        button.dispatchEvent(event);
+      });
+
+    pointer("mouseover", document.body);
+    expect(tip()).not.toBeNull();
+    pointer("pointerdown");
+    expect(tip()).toBeNull();
+    // The drawer it opened hands the focus back by script: no tip over it.
+    act(() => button.focus());
+    expect(tip()).toBeNull();
+    act(() => button.blur());
+
+    act(() => {
+      button.dispatchEvent(
+        new MouseEvent("mouseout", { bubbles: true, relatedTarget: document.body }),
+      );
+    });
+    pointer("mouseover", document.body);
+    expect(tip()).not.toBeNull();
+  });
+
   it("supports a block trigger without nesting block content inside a span", () => {
     act(() => {
       root.render(

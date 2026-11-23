@@ -26,11 +26,6 @@
   margin: 0;
   padding: 0;
 }
-.frame :focus-visible,
-.endturn-confirm :focus-visible {
-  outline: var(--rule-2) solid var(--ochre);
-  outline-offset: var(--rule-2);
-}
 
 .ico {
   display: block;

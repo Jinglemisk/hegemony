@@ -1,9 +1,10 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Resources } from "../../game/types";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { useGameUi } from "../board/GameUiContext";
 import { Panel, PanelHead } from "../chrome/Panel";
 import { Ico } from "../frame/parts";
+import { FOCUSABLE } from "../overlays/focus";
 import { FootContext, type FootLine } from "./words";
 import { CardsDrawer } from "./drawers/CardsDrawer";
 import { AgoraDrawer, IdeasDrawer, VictoryDrawer } from "./drawers/TableDrawers";
@@ -64,6 +65,20 @@ export function Drawer({
     [id, line?.key],
   );
 
+  // Opened (or turned to another drawer from the sidebar), it takes the focus: its
+  // selected tab, else the first control in its body, else its close disc; so Tab
+  // goes on from inside it rather than through the sidebar's remaining buttons.
+  const ref = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const root = ref.current;
+    if (!root || root.contains(document.activeElement)) return;
+    const target =
+      root.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]') ??
+      root.querySelector(".lw-body")?.querySelector<HTMLElement>(FOCUSABLE) ??
+      root.querySelector<HTMLElement>(FOCUSABLE);
+    target?.focus({ preventScroll: true });
+  }, [id]);
+
   let content: ReactNode = null;
   if (id === "overview") content = <RealmOverview {...body} />;
   if (id === "cities") content = <RealmCities {...body} />;
@@ -83,6 +98,7 @@ export function Drawer({
       data-c="drawer"
       data-drawer={id}
       data-exclude
+      ref={ref}
       role="region"
     >
       <PanelHead

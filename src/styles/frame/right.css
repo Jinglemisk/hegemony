@@ -88,15 +88,15 @@
   grid-area: modes;
   display: flex;
   align-items: center;
-  gap: var(--s-2);
-  padding: 0 var(--s-3);
+  justify-content: space-between;
+  padding: 0 var(--s-2);
   box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--bz-dk-30);
 }
 .rd-mode {
   display: grid;
   place-items: center;
-  width: 46px;
-  height: 46px;
+  width: var(--hit-often);
+  height: var(--hit-often);
   padding: 0;
   border: 0;
   border-radius: var(--r-panel);
@@ -274,6 +274,10 @@
   flex-direction: column;
   min-height: 0;
   padding-top: var(--sh-meander-h);
+}
+.rd-log-body .chronFilter {
+  width: var(--knob-d);
+  height: var(--knob-d);
 }
 .rd-log-body .chronicleFilters {
   justify-content: flex-end;

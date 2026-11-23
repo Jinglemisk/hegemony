@@ -1,5 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
-import type { KeyboardEvent, MouseEvent, ReactNode, Ref } from "react";
+import type { MouseEvent, ReactNode, Ref } from "react";
 import { canAfford, getBuyDevCardStatus, getDoleStatus, usesLeft } from "../../../game/rules";
 import { playerDole } from "../../../game/ideaRules";
 import { offerWindowReason } from "../../../game/trade";
@@ -13,7 +13,9 @@ import { useGameUi } from "../../board/GameUiContext";
 import { useConfirm } from "../../chrome/confirmContext";
 import { Panel, PanelHead } from "../../chrome/Panel";
 import { SeatCoin } from "../../chrome/SeatCoin";
+import { ESCAPE, useEscapeLayer } from "../../overlays/escapeStack";
 import { Tooltip } from "../../overlays/Tooltip";
+import { useReturnFocus } from "../../overlays/focus";
 import { MAP_MODES } from "../map3d/modes";
 import type { MapMode } from "../map3d/modes";
 import { Chips, Delta, Ico, Tip, TipBody, TipWarn } from "../parts";
@@ -44,28 +46,11 @@ export function Dock({
   const [open, setOpen] = useState(false);
   const line = useRef<HTMLButtonElement>(null);
   const logId = useId();
-  const close = () => {
-    setOpen(false);
-    line.current?.focus();
-  };
-  // Escape inside the Chronicle closes it and hands focus back to its line.
-  const closeOnEscape = (event: KeyboardEvent) => {
-    if (event.key === "Escape" && open) {
-      event.stopPropagation();
-      close();
-    }
-  };
+  // Escape closes the log; focus goes back to its line (ChronicleLog).
+  useEscapeLayer(ESCAPE.chronicle, () => setOpen(false), open);
 
   return (
-    <div className="rd-dock" data-c="dock" data-exclude onKeyDown={closeOnEscape}>
-      {open ? (
-        <Panel className="rd-log ch-unroll-y" corners={["tl"]} id={logId}>
-          <PanelHead closeLabel="Close the Chronicle" onClose={close} title="Chronicle" />
-          <div className="rd-log-body" data-gate-skip>
-            <LogBody />
-          </div>
-        </Panel>
-      ) : null}
+    <div className="rd-dock" data-c="dock" data-exclude>
       <MapLegend mode={mode} />
       <Panel className="rd-dk" corners={open ? [] : ["tl"]}>
         <div className="rd-line-row">
@@ -75,12 +60,14 @@ export function Dock({
             open={open}
             ref={line}
           />
+          {/* Right after its line, so Tab reaches it from there; drawn above the dock. */}
+          {open ? <ChronicleLog id={logId} onClose={() => setOpen(false)} /> : null}
         </div>
         <div aria-label="Map mode" className="rd-modes" role="group">
           {MAP_MODES.map((m, i) => (
             <Tooltip
               content={
-                <Tip title={m.label}>
+                <Tip title={`${m.label} map`}>
                   <TipBody>{`Key ${i + 1}.`}</TipBody>
                 </Tip>
               }
@@ -89,7 +76,7 @@ export function Dock({
             >
               <button
                 aria-keyshortcuts={String(i + 1)}
-                aria-label={m.label}
+                aria-label={`${m.label} map`}
                 aria-pressed={m.id === mode}
                 className="rd-mode"
                 onClick={() => onMode(m.id)}
@@ -104,6 +91,21 @@ export function Dock({
         <div className="rd-end">{children}</div>
       </Panel>
     </div>
+  );
+}
+
+/** The full log, opened upward out of the dock: it takes the focus, and gives it back
+ *  to the line when it closes. */
+function ChronicleLog({ id, onClose }: { id: string; onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useReturnFocus(ref, ".rd-log-body button");
+  return (
+    <Panel className="rd-log ch-unroll-y" corners={["tl"]} id={id} ref={ref}>
+      <PanelHead closeLabel="Close the Chronicle" onClose={onClose} title="Chronicle" />
+      <div className="rd-log-body" data-gate-skip>
+        <LogBody />
+      </div>
+    </Panel>
   );
 }
 

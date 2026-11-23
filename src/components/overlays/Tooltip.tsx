@@ -40,14 +40,18 @@ export function Tooltip({
   triggerAs?: "span" | "div";
   tooltipClassName?: string;
   preferredPlacement?: VerticalPlacement;
-  /** Beside the trigger instead of above or below it (a column of controls). */
-  side?: "right";
+  /** Beside the trigger instead of above or below it (a column of controls, or a
+   *  list whose tips open clear of it). */
+  side?: "right" | "left";
 }) {
   const tooltipId = useId();
   const triggerRef = useRef<HTMLElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpenState] = useState(false);
   const suppressedTouchPointerRef = useRef<number | null>(null);
+  // Pressed: the tip closes and stays shut until the pointer leaves and comes back,
+  // so it never stands over what the press opened.
+  const pressedRef = useRef(false);
   // A tooltip with underlined terms locks after resting (TipCard): then the pointer
   // may leave the trigger for the card, and the stack closes only after a grace.
   const lockedRef = useRef(false);
@@ -107,8 +111,14 @@ export function Tooltip({
     if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
   };
   // A first tap opens the tooltip instead of clicking; with nothing to say, it clicks.
+  // A mouse or pen press closes it.
   const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
-    if (event.pointerType !== "touch" || !content) return;
+    if (event.pointerType !== "touch") {
+      pressedRef.current = true;
+      setOpen(false);
+      return;
+    }
+    if (!content) return;
 
     if (open) {
       suppressedTouchPointerRef.current = null;
@@ -145,9 +155,17 @@ export function Tooltip({
         style={triggerStyle}
         onBlur={handleBlur}
         onClickCapture={handleClickCapture}
-        onFocus={() => setOpen(true)}
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => (lockedRef.current ? closeSoon() : setOpen(false))}
+        onFocus={(event) => {
+          if (!pressedRef.current && keyboardFocus(event.target)) setOpen(true);
+        }}
+        onMouseEnter={() => {
+          if (!pressedRef.current) setOpen(true);
+        }}
+        onMouseLeave={() => {
+          pressedRef.current = false;
+          if (lockedRef.current) closeSoon();
+          else setOpen(false);
+        }}
         onPointerCancel={handlePointerCancel}
         onPointerDown={handlePointerDown}
         ref={(element) => {
@@ -187,6 +205,16 @@ export function Tooltip({
         : null}
     </>
   );
+}
+
+/** Focus the keyboard put there (`:focus-visible`), not a press's or a panel's
+ *  hand-back after a press: only that opens a tip on focus. */
+function keyboardFocus(target: EventTarget) {
+  try {
+    return (target as Element).matches(":focus-visible");
+  } catch {
+    return true;
+  }
 }
 
 function addDescription(children: ReactNode, describedBy?: string) {
