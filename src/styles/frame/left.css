@@ -225,7 +225,6 @@
 }
 .lw-tile.is-press:hover:not([aria-disabled="true"]) {
   box-shadow: var(--tile-hover-rim);
-  transform: translateY(-1px);
 }
 .lw-tile.is-press:focus-visible {
   outline: var(--rule-2) solid var(--ochre);
@@ -347,7 +346,6 @@
 }
 .lw-row:hover {
   box-shadow: var(--tile-hover-rim);
-  transform: translateY(-1px);
 }
 .lw-row:focus-visible {
   outline: var(--rule-2) solid var(--ochre);

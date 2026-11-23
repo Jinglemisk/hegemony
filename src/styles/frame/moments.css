@@ -273,8 +273,7 @@
     .sit-btn,
     .confirm-btn
   ):is(:hover:not(:disabled, [aria-disabled="true"])) {
-  filter: var(--hover-glow);
-  transform: translateY(-1px);
+  filter: var(--hover-glow) var(--hover-lift);
 }
 :is(.ch-moment, .trade-card, .sharedPopover)
   :is(

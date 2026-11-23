@@ -131,7 +131,6 @@ button:focus-visible {
 .iconButton:not(:disabled):not([aria-disabled="true"]):hover {
   border-color: var(--accent);
   box-shadow: var(--lift-shadow);
-  transform: translateY(-1px);
 }
 
 /* eventResolveButton brings its own clay fill but only a border-COLOUR, so it
@@ -150,7 +149,6 @@ button:focus-visible {
 
 .eventResolveButton:not(:disabled):not([aria-disabled="true"]):hover {
   box-shadow: var(--lift-shadow);
-  transform: translateY(-1px);
 }
 
 .iconButton {

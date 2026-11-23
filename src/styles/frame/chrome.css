@@ -214,8 +214,7 @@
     filter var(--dur-hover) var(--ease-out);
 }
 .ch-ctl:hover:not([aria-disabled="true"]) {
-  filter: var(--hover-glow);
-  transform: translateY(-1px);
+  filter: var(--hover-glow) var(--hover-lift);
 }
 .ch-ctl:active:not([aria-disabled="true"]) {
   filter: var(--press-dim);
