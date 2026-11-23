@@ -279,8 +279,14 @@ const PROBE = () => {
       !el.closest(".sharedTooltip, .ch-confirm-scrim")
     )
       return true;
-    const x = rect.left + rect.width / 2;
+    // A run a card lies across is under that card: its ends are tested as well as
+    // its middle, so the card's own paint is never sampled as the run's ground.
     const y = rect.top + rect.height / 2;
+    return [rect.left + 2, rect.left + rect.width / 2, rect.right - 2].some((x) =>
+      coveredAt(el, x, y),
+    );
+  };
+  const coveredAt = (el, x, y) => {
     if (x < 0 || y < 0 || x >= window.innerWidth || y >= window.innerHeight) return true;
     for (const hit of document.elementsFromPoint(x, y)) {
       if (hit === el || el.contains(hit)) return false;
@@ -291,6 +297,20 @@ const PROBE = () => {
       if (s.backgroundImage !== "none" || (parse(s.backgroundColor)?.a ?? 0) > 0.05) return true;
     }
     return true;
+  };
+  /** A text rect cut down to every ancestor box that clips it. */
+  const clipToAncestors = (el, rect) => {
+    let [left, top, right, bottom] = [rect.left, rect.top, rect.right, rect.bottom];
+    for (let node = el; node && node !== document.body; node = node.parentElement) {
+      const s = getComputedStyle(node);
+      if (s.overflowX === "visible" && s.overflowY === "visible") continue;
+      const box = node.getBoundingClientRect();
+      left = Math.max(left, box.left);
+      top = Math.max(top, box.top);
+      right = Math.min(right, box.right);
+      bottom = Math.min(bottom, box.bottom);
+    }
+    return new window.DOMRect(left, top, Math.max(0, right - left), Math.max(0, bottom - top));
   };
   const walker = document.createTreeWalker(document.body, window.NodeFilter.SHOW_TEXT);
   const seen = new Set();
@@ -304,7 +324,11 @@ const PROBE = () => {
     if (style.visibility === "hidden" || style.display === "none") continue;
     const range = document.createRange();
     range.selectNodeContents(textNode);
-    const rects = [...range.getClientRects()].filter((r) => r.width > 1 && r.height > 1);
+    // A line cut with an ellipsis runs on past its box: only what its clipping
+    // ancestors let through is drawn, so only that is sampled.
+    const rects = [...range.getClientRects()]
+      .map((r) => clipToAncestors(el, r))
+      .filter((r) => r.width > 1 && r.height > 1);
     if (!rects.length || covered(el, rects[0])) continue;
     const op = effOpacity(el);
     if (op < 0.05) continue;
