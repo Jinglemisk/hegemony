@@ -378,9 +378,14 @@
   --sh-card-x: 100px; /* an alarm's card: one slot under the alarms row, … */
   --sh-card-y: 114px;
   --sh-card-w: 480px; /* … at most this wide */
+  /* The toast lane, right of the alarm card's slot: it ends short of the compass at
+     the board's top-right (1052 against 1068). */
+  --sh-toast-w: 456px;
+  --sh-toast-h: 64px; /* one toast */
   --sh-hand-x: 624px; /* the hand's tray */
   --sh-hand-w: 480px;
   --sh-hand-h: 72px;
+  --sh-sit-head: 100px; /* the Assembly sheet's head, at every stage */
   --sh-confirm-w: 680px; /* the confirm bar over the board's centre … */
   --sh-confirm-h: 96px; /* … one height at every text size: its words scroll inside */
   --sh-compose-h: 312px; /* the trade composer: one height, its rows scroll */

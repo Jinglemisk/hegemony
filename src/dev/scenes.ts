@@ -262,6 +262,14 @@ export const DEV_SCENES: Record<string, (G: HegemonyState) => DevScene> = {
       draft.devDrawPile.unshift(take("foraging"));
     }),
   }),
+  // Five cards in hand, one bought this turn: the tray at its fullest.
+  "full-hand": (G) => ({
+    G: produce(clearFate(G), (draft) => {
+      const seat = draft.currentPlayer;
+      for (const [index, id] of draft.devDrawPile.splice(0, 5).entries())
+        draft.devHands[seat].push({ id, turn: index === 4 ? draft.turn : draft.turn - 1 });
+    }),
+  }),
   // The next seat draws Free Settlers at its income: place the freeman, or decline.
   "fate-pop": (G) => ({
     G: endCurrentTurn(

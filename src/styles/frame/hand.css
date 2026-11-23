@@ -160,12 +160,20 @@
   text-transform: uppercase;
 }
 .hand-plate-n {
+  box-sizing: border-box;
+  max-width: var(--step);
   padding: var(--s-1) var(--s-2) 0;
   overflow: hidden;
   font-family: var(--f-name);
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+/* Overlapped, a name ellipsizes where the next plate starts, never running under it;
+   the last plate, and the one risen, show theirs whole (as far as the plate allows). */
+.hand-slot:last-child .hand-plate-n,
+.hand-slot:is(:hover, :focus-within) .hand-plate-n {
+  max-width: none;
 }
 
 /* Empty: the same box, a dashed glaze plate that opens the hand view. */
