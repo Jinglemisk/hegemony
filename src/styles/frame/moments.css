@@ -373,8 +373,8 @@
   box-shadow: var(--head-edge);
 }
 .endturn-confirm .confirm-title {
-  --name-size: var(--t-16);
-  --name-lh: var(--lh-24);
+  --name-size: var(--t-head);
+  --name-lh: var(--l-head);
   color: var(--glaze-ink);
 }
 .endturn-confirm .confirm-calm {

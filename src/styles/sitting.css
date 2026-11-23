@@ -66,8 +66,8 @@
   min-width: 0;
 }
 .sit-title h2 {
-  --name-size: var(--t-24);
-  --name-lh: var(--lh-32);
+  --name-size: var(--t-sheet);
+  --name-lh: var(--l-sheet);
   margin: 0;
   letter-spacing: var(--track-name);
 }
@@ -89,7 +89,7 @@
   color: var(--ink-63);
 }
 .sit-rail li.is-done {
-  color: var(--olive);
+  color: var(--pos-ink);
 }
 .sit-rail li.is-now {
   color: var(--ivory);
@@ -137,7 +137,7 @@
 }
 .sit-btn.is-yea {
   border-color: var(--olive);
-  color: var(--olive);
+  color: var(--pos-ink);
 }
 .sit-btn .price {
   text-transform: none;
@@ -189,7 +189,7 @@
   gap: var(--s-1);
   margin: 0;
   color: var(--ink-66);
-  font: var(--t-13) / var(--lh-16) var(--f-sans);
+  font: var(--t-14) / var(--lh-20) var(--f-sans);
 }
 .sit-warn {
   margin: 0;
@@ -443,7 +443,7 @@
 }
 .sit-side.is-yea,
 .sit-side.is-yea .sit-sec {
-  color: var(--olive);
+  color: var(--pos-ink);
 }
 .sit-side.is-nay,
 .sit-side.is-nay .sit-sec {
@@ -502,7 +502,7 @@
   font: var(--t-13) / var(--lh-16) var(--f-sans);
 }
 .sit-order-v.is-yea {
-  color: var(--olive);
+  color: var(--pos-ink);
 }
 .sit-order-v.is-nay {
   color: var(--clay-ink);

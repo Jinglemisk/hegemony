@@ -14,8 +14,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--rule-2);
-  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
-  font-variant-numeric: tabular-nums lining-nums;
+  font: 700 var(--t-num) / var(--l-num) var(--f-sans);
 }
 
 .r-head {
@@ -39,7 +38,7 @@
   column-gap: var(--s-2);
   align-items: start;
   padding-block: var(--s-1);
-  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
+  font: 500 var(--t-14) / var(--lh-20) var(--f-sans);
 }
 .chron-row + .chron-row {
   box-shadow: inset 0 var(--rule) 0 var(--ink-12);
@@ -119,7 +118,7 @@
   gap: var(--rule);
 }
 .cost-free {
-  color: var(--olive);
+  color: var(--pos-ink);
   font-weight: 700;
 }
 /* A Law or an Idea reprices the act: the line washes olive when it is cheaper, clay

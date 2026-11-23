@@ -78,12 +78,23 @@ drawn on a 1440×900 canvas and scaled uniformly (1.2 at 1920×1080). At design 
 | Secondary lines, tooltips' body                 | 14 px            | 16.8     |
 | Body                                            | 15–16 px         | 18–19    |
 | Numbers in panels                               | ≥ 16 px          |          |
-| Names / titles                                  | 20–24 px         |          |
+| A head's title (panel, drawer, window, card)    | 20 px            | 24       |
+| A moment's sheet title (Assembly, ceremonies)   | 24 px            | 28.8     |
+| A drawn verb (lacquer, plaque), sentence case   | 15 px            | 18       |
 
+- **Type roles.** One size per tier, as tokens (`--t-head`, `--t-sheet`, `--t-verb` in
+  `tokens.css`): every head's title at 20, every moment sheet's at 24, every lacquer and
+  plaque verb in Alegreya Sans 15. Small caps keep `--track-caps`; tracking lives on the
+  role, never on a reset. Every figure is lining and tabular (Alegreya's old-style 0
+  reads as an o); proper names and the top bar's figures stay in Cinzel.
 - **Text scale.** A Text size setting (Standard / Large = 115 % / Largest = 130 %) scales
   every text token. Boxes keep their size and their contents scroll inside.
-- **Contrast.** 4.5:1 for all text, measured against the lightest texture pixel. 3:1 for icons
-  and disabled controls.
+- **Contrast.** 4.5:1 for all text, measured against the texture pixel behind it that reads
+  worst (for ink, parchment's darkest grain, about rgb 237 215 170; a footer band's 219 198
+  154). 3:1 for icons and disabled controls. Text inks are their own tokens: `--ink-72` for quiet text,
+  `--pos-ink` and `--neg-ink` for a change that helps or hurts, `--clay-ink` for clay words.
+  `ui:conduct` photographs the page with its text hidden and samples the real pixels, so
+  textured grounds are checked.
 - **Targets.** Every control is at least 32 px; frequent ones are 44 px or more. Every control
   has an accessible name, a visible focus ring and a tooltip.
 - **Motion.** Movement takes 200–320 ms. Everything stops under `prefers-reduced-motion`.

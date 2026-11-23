@@ -105,6 +105,8 @@
 .endturn-confirm {
   width: var(--sh-dock-w);
   display: grid;
+  /* One column the card's width: a long title ellipsizes, it never widens the card. */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--s-2);
   padding: var(--s-4);
   border-radius: var(--r-8);
@@ -123,8 +125,8 @@
     var(--shadow-float);
 }
 .confirm-title {
-  --name-size: var(--t-20);
-  --name-lh: var(--lh-24);
+  --name-size: var(--t-head);
+  --name-lh: var(--l-head);
   margin: 0;
   letter-spacing: var(--track-name);
 }

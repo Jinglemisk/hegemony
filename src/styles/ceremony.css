@@ -265,7 +265,7 @@
 }
 
 .hungerCount b.is-met {
-  color: var(--pos);
+  color: var(--pos-ink);
 }
 
 .hungerFoot {
@@ -383,8 +383,10 @@
   height: var(--ic-16);
 }
 
+/* Out of reach: struck through and quieter, still read at 4.5:1 (no whole-row dim,
+   which took the row's words to 2:1). */
 .oddsRowOut {
-  opacity: 0.42;
+  color: var(--ink-72);
 }
 
 .oddsRowOut .oddsLabel {
@@ -698,20 +700,20 @@
 }
 
 .oddsEffect.positive {
-  color: var(--pos);
+  color: var(--pos-ink);
 }
 
 .oddsEffect.negative {
-  color: var(--neg);
+  color: var(--neg-ink);
 }
 
-/* A row with no outcome says so with the faintest mark on the tablet. */
+/* A row with no outcome says so in the quiet ink. */
 .oddsEffect.muted {
-  color: var(--ink-30);
+  color: var(--ink-72);
 }
 
 .oddsRowPast {
-  opacity: 0.42;
+  color: var(--ink-72);
 }
 
 .oddsRowHit {
@@ -762,7 +764,7 @@
 }
 
 .ageRank {
-  color: var(--ink-30);
+  color: var(--ink-72);
   text-align: center;
 }
 
@@ -821,7 +823,7 @@
 
 .ageSeatCrowned .ageRank,
 .ageSeatCrowned .ageCards {
-  color: var(--clay-ink);
+  color: var(--clay-deep);
 }
 
 .tabletFoot {
