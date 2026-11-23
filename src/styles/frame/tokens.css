@@ -33,27 +33,12 @@
   /* ---- type scale ---------------------------------------------------------
      The floor is 13 at design size (15.6 at 1080p); see the plan's Standards.
      --text-scale is the player's Text size setting (1 / 1.15 / 1.3, written on
-     <html> by useTextScale): every size and leading below rides it, so text grows
-     inside boxes that keep their size. */
+     <html> by useTextScale): every size and leading rides it (the --t-* and --lh-*
+     rule after this one), so text grows inside boxes that keep their size. */
   --text-scale: 1;
   --f-name: "Cinzel", Copperplate, Georgia, serif; /* proper names, titles only */
   --f-body: "Alegreya", "Iowan Old Style", Palatino, Georgia, serif;
   --f-sans: "Alegreya Sans", "Gill Sans", Helvetica, Arial, sans-serif;
-  --t-13: calc(13px * var(--text-scale)); /* the floor: small-caps tags, units */
-  --t-14: calc(14px * var(--text-scale)); /* secondary lines, a tooltip's body */
-  --t-15: calc(15px * var(--text-scale)); /* body */
-  --t-16: calc(16px * var(--text-scale)); /* body, numbers in panels */
-  --t-20: calc(20px * var(--text-scale));
-  --t-22: calc(22px * var(--text-scale)); /* a panel's name */
-  --t-24: calc(24px * var(--text-scale));
-  --t-28: calc(28px * var(--text-scale));
-  --t-34: calc(34px * var(--text-scale)); /* a scene's one figure */
-  --t-72: calc(72px * var(--text-scale)); /* the year's numeral on its card's back */
-  --lh-16: calc(16px * var(--text-scale));
-  --lh-20: calc(20px * var(--text-scale));
-  --lh-24: calc(24px * var(--text-scale));
-  --lh-28: calc(28px * var(--text-scale));
-  --lh-32: calc(32px * var(--text-scale));
   /* The top bar's figures and labels hold these sizes at every Text size: its cells
      are 44 high in a 50 bar, a 20 figure over a 13 label already fills them, and
      every cell's tooltip (which does scale) carries its words whole. */
@@ -64,27 +49,6 @@
   --lh-bar-24: 24px;
   --track-caps: 0.08em;
   --track-name: 0.04em;
-  /* roles */
-  --t-cap: var(--t-13);
-  --l-cap: var(--lh-16); /* the floor: chips, caps labels, deltas */
-  --t-body: var(--t-15);
-  --l-body: var(--lh-20); /* panel body */
-  --t-num: var(--t-16);
-  --l-num: var(--lh-20); /* bar numbers */
-  --t-lead: var(--t-16);
-  --l-lead: var(--lh-20); /* the ruler's name */
-  --t-count: var(--t-24);
-  --l-count: var(--lh-28); /* pop counts */
-  /* The hierarchy, one size per tier (the plan's Standards):
-     a head's title — every panel, drawer, window and card, the place panel's
-     included — at 20; a moment's sheet (the Assembly, a ceremony) at 24; a drawn
-     verb (lacquer, plaque) at 15 in sentence case. */
-  --t-head: var(--t-20);
-  --l-head: var(--lh-28); /* Cinzel's capitals stand tall: 28 holds them at every Text size */
-  --t-sheet: var(--t-24);
-  --l-sheet: var(--lh-32);
-  --t-verb: var(--t-15);
-  --l-verb: var(--lh-20);
 
   /* ---- icons --------------------------------------------------------------- */
   --ic-16: 16px;
@@ -544,6 +508,53 @@
   --ease-drop: cubic-bezier(0.2, 1.4, 0.4, 1); /* lands with a small bounce */
 
   color-scheme: light;
+}
+
+/* The type scale rides the player's Text size (--text-scale, written on <html>).
+   Card faces are fixed-format (the owner's rule: card faces never slide or scale):
+   inside a card the scale is re-derived at 1, so a face prints the same at every Text
+   size and its sentence, in the card's tooltip, carries the player's size. */
+:root,
+.gc {
+  --t-13: calc(13px * var(--text-scale)); /* the floor: small-caps tags, units */
+  --t-14: calc(14px * var(--text-scale)); /* secondary lines, a tooltip's body */
+  --t-15: calc(15px * var(--text-scale)); /* body */
+  --t-16: calc(16px * var(--text-scale)); /* body, numbers in panels */
+  --t-20: calc(20px * var(--text-scale));
+  --t-22: calc(22px * var(--text-scale)); /* a panel's name */
+  --t-24: calc(24px * var(--text-scale));
+  --t-28: calc(28px * var(--text-scale));
+  --t-34: calc(34px * var(--text-scale)); /* a scene's one figure */
+  --t-72: calc(72px * var(--text-scale)); /* the year's numeral on its card's back */
+  --lh-16: calc(16px * var(--text-scale));
+  --lh-20: calc(20px * var(--text-scale));
+  --lh-24: calc(24px * var(--text-scale));
+  --lh-28: calc(28px * var(--text-scale));
+  --lh-32: calc(32px * var(--text-scale));
+  /* roles */
+  --t-cap: var(--t-13);
+  --l-cap: var(--lh-16); /* the floor: chips, caps labels, deltas */
+  --t-body: var(--t-15);
+  --l-body: var(--lh-20); /* panel body */
+  --t-num: var(--t-16);
+  --l-num: var(--lh-20); /* bar numbers */
+  --t-lead: var(--t-16);
+  --l-lead: var(--lh-20); /* the ruler's name */
+  --t-count: var(--t-24);
+  --l-count: var(--lh-28); /* pop counts */
+  /* The hierarchy, one size per tier (the plan's Standards):
+     a head's title — every panel, drawer, window and card, the place panel's
+     included — at 20; a moment's sheet (the Assembly, a ceremony) at 24; a drawn
+     verb (lacquer, plaque) at 15 in sentence case. */
+  --t-head: var(--t-20);
+  --l-head: var(--lh-28); /* Cinzel's capitals stand tall: 28 holds them at every Text size */
+  --t-sheet: var(--t-24);
+  --l-sheet: var(--lh-32);
+  --t-verb: var(--t-15);
+  --l-verb: var(--lh-20);
+}
+.gc {
+  --text-scale: 1;
 }
 
 /* ---- the top: the bar, the seal, the alarms, the menu, tooltips, banners ------- */

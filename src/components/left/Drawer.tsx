@@ -136,7 +136,7 @@ export function Drawer({
       <FootContext.Provider value={footValue}>
         <div
           aria-labelledby={realm ? `lw-tab-${id}` : undefined}
-          className="lw-body"
+          className="lw-body ch-scroll-fade"
           id={realm ? "lw-tabpanel" : undefined}
           role={realm ? "tabpanel" : undefined}
         >

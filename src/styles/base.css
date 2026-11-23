@@ -109,10 +109,8 @@ button[aria-disabled="true"] {
   outline-offset: var(--focus-w);
 }
 
-/* The v1 chip: the setup pop picker's two buttons, and under the placement
-   cards' clay confirm (.eventResolveButton). Layout (grid, min-height, padding)
+/* The v1 chip: the setup pop picker's Close. Layout (grid, min-height, padding)
    stays on each specific class and wins by order. */
-.primaryButton,
 .iconButton {
   min-height: 40px;
   border: 1px solid var(--button-line);
@@ -125,39 +123,13 @@ button[aria-disabled="true"] {
   padding: 0 12px;
 }
 
-.primaryButton {
-  color: var(--ivory);
-  border-color: rgb(192 70 28 / 76%);
-}
-
-.primaryButton:disabled,
-.primaryButton[aria-disabled="true"],
 .iconButton:disabled,
 .iconButton[aria-disabled="true"] {
   opacity: 0.45;
 }
 
-.primaryButton:not(:disabled):not([aria-disabled="true"]):hover,
 .iconButton:not(:disabled):not([aria-disabled="true"]):hover {
   border-color: var(--accent);
-  box-shadow: var(--lift-shadow);
-}
-
-/* eventResolveButton brings its own clay fill but only a border-COLOUR, so it
-   needs the width/style back — plus the disabled/hover feedback the global used
-   to give it. */
-.eventResolveButton {
-  border: 1px solid;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.eventResolveButton:disabled,
-.eventResolveButton[aria-disabled="true"] {
-  opacity: 0.45;
-}
-
-.eventResolveButton:not(:disabled):not([aria-disabled="true"]):hover {
   box-shadow: var(--lift-shadow);
 }
 

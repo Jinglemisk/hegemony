@@ -1,4 +1,3 @@
-import type { Terrain } from "../../game/types";
 import type { GlyphId } from "./glyphs";
 
 /**
@@ -118,15 +117,6 @@ const GLYPH_PLACEHOLDERS: Partial<Record<GlyphId, string | undefined>> = {
 export function glyphPlaceholder(glyph: GlyphId): string | undefined {
   return GLYPH_PLACEHOLDERS[glyph];
 }
-
-/** Forest gets its own picture here; the registry gives it the wood tree. */
-export const TERRAIN_PLACEHOLDERS: Record<Terrain, string | undefined> = {
-  plains: placeholder("terrain/plains"),
-  forest: placeholder("terrain/forest"),
-  mountain: placeholder("terrain/mountain"),
-  hill: placeholder("terrain/hill"),
-  oracle: placeholder("terrain/oracle"),
-};
 
 export const CHROME_PLACEHOLDERS = {
   settings: placeholder("chrome/settings"),

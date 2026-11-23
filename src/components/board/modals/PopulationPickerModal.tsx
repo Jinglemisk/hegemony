@@ -2,6 +2,7 @@ import { useState } from "react";
 import { clonePops, totalPops } from "../../../game/rules";
 import type { Pops } from "../../../game/types";
 import { Prose } from "../../AnnotatedText";
+import { Lacquer, Plaque } from "../../chrome/controls";
 import { ModalShell } from "./ModalShell";
 import { PopulationStepper } from "./PopulationStepper";
 
@@ -86,14 +87,13 @@ export function PopulationPickerModal({
       </div>
 
       <div className="modalActions">
-        <button onClick={onCancel}>Cancel</button>
-        <button
-          className="primaryButton"
+        <Plaque onClick={onCancel}>Cancel</Plaque>
+        <Lacquer
           disabled={remaining !== 0 || citizensOff}
           onClick={() => onConfirm(clonePops(pops))}
         >
           {confirmLabel}
-        </button>
+        </Lacquer>
       </div>
     </ModalShell>
   );

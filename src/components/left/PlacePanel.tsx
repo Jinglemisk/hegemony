@@ -246,7 +246,7 @@ export function PlacePanel({
         role="region"
       >
         <PanelHead {...headProps} />
-        <div className="pp-body">{body}</div>
+        <div className="pp-body ch-scroll-fade">{body}</div>
         {foot ? <footer className="pp-foot">{foot}</footer> : null}
       </Panel>
       {view.kind === "settlement" && pop === "grow" && view.own ? (
@@ -461,21 +461,22 @@ function SettlementBody({
   );
 }
 
-/** A notice on a section's head: a short word, its whole sentence in the tooltip. */
+/** A notice on a section's head: a short word, its whole sentence in the tooltip. Not
+ *  a stop of its own (it is no control, and too small for one): the sentence is read
+ *  with the section's heading. */
 function Mark({ icon, word, line }: { icon: string; word: string; line: string }) {
   return (
     <Tooltip
-      ariaLabel={line}
       content={
         <Tip title={word}>
           <TipBody>{line}</TipBody>
         </Tip>
       }
-      focusable
       triggerClassName="pp-mark"
     >
       <Ico path={icon} size="chip" />
-      <span>{word}</span>
+      <span aria-hidden="true">{word}</span>
+      <span className="visuallyHidden">{line}</span>
     </Tooltip>
   );
 }
@@ -572,9 +573,8 @@ function ClassRow({
         key={kind}
       >
         <Knob
-          className={why ? "is-short" : undefined}
           disabled={why !== null}
-          label={`${capitalize(what)} in ${name}`}
+          label={`${capitalize(what)} in ${name}${why ? `: ${why}` : ""}`}
           onClick={() =>
             ask({
               icon: kind === "promote" ? "pops/promote" : "pops/demote",

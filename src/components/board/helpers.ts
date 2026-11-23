@@ -21,7 +21,6 @@ import type {
 import { presentBuildingEffects } from "../../ui/effects";
 import { formatResourceDelta } from "../../ui/formatters";
 import { RESOURCE_ORDER } from "../../ui/resourceVisuals";
-import { settlementNameOf } from "../../ui/settlementNames";
 import { SETTLEMENT_SORT } from "./constants";
 import type { OwnedHolding, PopEconomy, SettlementEntry } from "./types";
 
@@ -109,23 +108,6 @@ export function getBuildingBenefitText(
   const deltaText = formatResourceDelta(projected);
 
   return deltaText === "none" ? presentBuildingEffects(building.effects).text : deltaText;
-}
-
-/** One consistent line for every settlement picker: the place's NAME and rank,
- *  the ground it stands on, and whether it shares the tile with a rival (shared
- *  slots are split, and an upgrade would evict them). */
-export function settlementPickerLabel(G: HegemonyState, tile: HexTile, ownerID: PlayerId): string {
-  const own = tile.settlements.find((candidate) => candidate.owner === ownerID);
-  const name = own ? settlementNameOf(G.board.tiles, own.id) : "Open ground";
-  const kind = own ? capitalize(own.kind) : "";
-  const rivals = tile.settlements.filter((candidate) => candidate.owner !== ownerID);
-  const shared = rivals.length
-    ? ` · shares tile with ${rivals.map((candidate) => G.players[candidate.owner].name).join(", ")}`
-    : "";
-
-  const slotText = `${tile.slots} slots${tile.resource ? ` for ${tile.resource.type}` : ""}`;
-
-  return `${name}${kind ? ` · ${kind}` : ""} · ${capitalize(tile.terrain)}, ${slotText}${shared}`;
 }
 
 function createEmptyResources(): Resources {

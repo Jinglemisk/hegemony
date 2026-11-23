@@ -388,8 +388,8 @@
   line-height: var(--lh-16);
 }
 .hand-plate-n {
-  font-size: var(--t-16);
-  line-height: var(--lh-20);
+  font-size: var(--t-15);
+  line-height: var(--lh-16);
 }
 .hand-empty,
 .hand-view-why,
@@ -401,8 +401,6 @@
 /* The legacy sheets the moments use (modals, overlays, intel, assembly, ceremony,
    ledger), raised to the floor: their tags at 13, secondary lines at 14, body at 15,
    numbers at 16. */
-.placementSectionLabel,
-.placementPreviewTag,
 .mechanicsSlot > span:first-child,
 .mechanicsBlockedReason strong,
 .codexSearchHitContext,
@@ -412,13 +410,11 @@
 .fieldGroup em,
 .placementChipText strong,
 .placementChipText em,
-.placementCostNote,
 .eventTableRow,
 .eventTableDie,
 .eventTableEffect,
 .codexSearchHitLabel,
 .codexSearchEmpty,
-.placementTargetName,
 .mechanicsHeading,
 .mechanicsEffectRows li,
 .mechanicsSlot,
@@ -440,10 +436,6 @@
 }
 .stepperControls button {
   font-size: var(--t-16);
-}
-.foundColonyClose {
-  font-size: var(--t-20);
-  line-height: 1;
 }
 /* The riot's sum: the one carved numeral on its sheet. */
 .riotSum {
@@ -469,6 +461,17 @@
 .lw-next-when b {
   font-size: var(--t-20);
   line-height: var(--lh-24);
+}
+/* … in a head that keeps its height at every Text size (frame/left.css): the leading
+   tightens so two lines fit it at 130 %. */
+:is(.pp, .pp-pop) > .ch-head .ch-head-title {
+  line-height: 1.15;
+}
+:is(.pp, .pp-pop) > .ch-head .ch-head-sub {
+  line-height: 1.25;
+}
+.lw-drawer > .ch-head .ch-head-title {
+  line-height: 1.05;
 }
 .lw-tile.is-place .lw-tile-v,
 .lw-row-name,

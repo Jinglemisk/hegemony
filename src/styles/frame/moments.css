@@ -442,39 +442,6 @@
 }
 
 /* ---- the map's popovers: parchment in the rule, a glaze head ---------------- */
-.foundColonyPopover {
-  border: 0;
-  border-radius: var(--r-panel);
-  background: var(--parch);
-  box-shadow: var(--rule-frame), var(--shadow-panel);
-  animation: ch-settle var(--dur-settle) var(--ease-out) both;
-}
-.foundColonyPopover {
-  padding-top: 0;
-}
-.foundColonyHeader {
-  position: relative;
-  margin: 0 -13px var(--sh-meander-h);
-  padding: var(--s-1) var(--s-2) var(--s-1) 13px;
-  border-radius: var(--r-panel) var(--r-panel) 0 0;
-  color: var(--glaze-ink);
-  background: var(--glaze);
-  box-shadow: var(--head-edge);
-}
-.foundColonyHeader::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  bottom: calc(-1 * var(--sh-meander-h));
-  left: 0;
-  height: var(--sh-meander-h);
-  background: var(--meander);
-  filter: var(--shadow-meander);
-}
-.foundColonyHeader .placementPreviewTag {
-  color: var(--bz-hi);
-  background: none;
-}
 .sharedPopover .placementPickerChip {
   border: 0;
   border-radius: var(--r-panel);
@@ -485,24 +452,6 @@
   box-shadow:
     inset 0 0 0 var(--rule-2) var(--clay),
     var(--plaque-rim);
-}
-
-.foundColonyArrow {
-  border-color: var(--bz-lo);
-  background: var(--parch-fill);
-}
-.foundColonyClose {
-  width: var(--hit);
-  height: var(--hit);
-  border: 0;
-  border-radius: var(--r-round);
-  color: var(--bz-dk);
-  background: var(--knob);
-  box-shadow: var(--knob-rim);
-}
-.foundColonyClose:not(:disabled):hover {
-  background: var(--knob);
-  filter: var(--hover-glow);
 }
 
 /* ---- the Assembly's pill: a sitting minimised waits under the alarms -------- */

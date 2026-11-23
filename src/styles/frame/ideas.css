@@ -106,18 +106,24 @@
   gap: var(--s-2);
   min-height: var(--ic-ui);
 }
+/* A bought Idea's year tag stands out past its coin's edge: the word steps clear of it. */
+.idea-hold:has(.idea-seat[data-year]) {
+  gap: var(--s-4);
+}
 .idea-mark {
   white-space: nowrap;
 }
+/* Taken: the words in full ink beside the holder's coin. */
 .idea-mark.is-taken {
-  color: var(--ink-63);
+  color: var(--ink);
 }
 /* Yours: the words in ink; your glaze is on the seat disc above them. */
 .idea-mark.is-own {
   color: var(--ink);
 }
-/* A taken Idea keeps its holder's mark at full strength; its card fades (`is-dim`). The
-   one chosen, or just taken, is ringed (`is-picked`). */
+/* A taken Idea keeps its holder's mark and its words at full strength; its card's
+   picture goes grey (`is-taken`). The one chosen, or just taken, is ringed
+   (`is-picked`). */
 .idea-choice.is-taken[aria-disabled="true"] {
   opacity: 1;
 }
