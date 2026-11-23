@@ -16,7 +16,7 @@ import { createPortal } from "react-dom";
 import type { VerticalPlacement } from "../../ui/anchoring";
 import { overlayRoot } from "../chrome/canvas";
 import { TipCard } from "./TipCard";
-import { TIP_GRACE_MS, claimTip, releaseTip } from "./tipTiming";
+import { TIP_GRACE_MS, TIP_OPEN_MS, claimTip, releaseTip } from "./tipTiming";
 import { useAnchoredOverlay } from "./useAnchoredOverlay";
 
 export function Tooltip({
@@ -64,6 +64,12 @@ export function Tooltip({
   // may leave the trigger for the card, and the stack closes only after a grace.
   const lockedRef = useRef(false);
   const closeTimer = useRef<number | undefined>(undefined);
+  // A hover waits TIP_OPEN_MS before the tip opens.
+  const openTimer = useRef<number | undefined>(undefined);
+  const cancelOpen = () => {
+    window.clearTimeout(openTimer.current);
+    openTimer.current = undefined;
+  };
   const cancelClose = () => {
     window.clearTimeout(closeTimer.current);
     closeTimer.current = undefined;
@@ -85,7 +91,13 @@ export function Tooltip({
     cancelClose();
     closeTimer.current = window.setTimeout(() => setOpen(false), TIP_GRACE_MS);
   };
-  useEffect(() => () => window.clearTimeout(closeTimer.current), []);
+  useEffect(
+    () => () => {
+      window.clearTimeout(closeTimer.current);
+      window.clearTimeout(openTimer.current);
+    },
+    [],
+  );
   useEffect(() => () => releaseTip(shut), [shut]);
   const position = useAnchoredOverlay(
     open ? triggerRef : null,
@@ -135,6 +147,7 @@ export function Tooltip({
   const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
     if (event.pointerType !== "touch") {
       pressedRef.current = true;
+      cancelOpen();
       setOpen(false);
       return;
     }
@@ -180,9 +193,12 @@ export function Tooltip({
           if (!pressedRef.current && keyboardFocus(event.target)) setOpen(true);
         }}
         onMouseEnter={() => {
-          if (!pressedRef.current) setOpen(true);
+          if (pressedRef.current || open) return;
+          cancelOpen();
+          openTimer.current = window.setTimeout(() => setOpen(true), TIP_OPEN_MS);
         }}
         onMouseLeave={() => {
+          cancelOpen();
           pressedRef.current = false;
           if (lockedRef.current) closeSoon();
           else setOpen(false);

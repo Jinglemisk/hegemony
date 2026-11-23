@@ -15,7 +15,7 @@ import { EndTurn } from "../frame/EndTurn";
 import { MechanicsDetails } from "../MechanicsDetails";
 import { ModalShell } from "../board/modals/ModalShell";
 import { Popover } from "./Popover";
-import { TIP_LOCK_MS } from "./tipTiming";
+import { TIP_LOCK_MS, TIP_OPEN_MS } from "./tipTiming";
 import { Tooltip } from "./Tooltip";
 
 let container: HTMLDivElement;
@@ -130,6 +130,7 @@ describe("Tooltip", () => {
   });
 
   it("closes on a press and stays shut until the pointer leaves and comes back", () => {
+    vi.useFakeTimers();
     act(() => {
       root.render(
         <Tooltip content="Ideas">
@@ -147,6 +148,9 @@ describe("Tooltip", () => {
       });
 
     pointer("mouseover", document.body);
+    // A hover waits before the tip opens, so a passing pointer opens nothing.
+    expect(tip()).toBeNull();
+    act(() => vi.advanceTimersByTime(TIP_OPEN_MS));
     expect(tip()).not.toBeNull();
     pointer("pointerdown");
     expect(tip()).toBeNull();
@@ -161,6 +165,7 @@ describe("Tooltip", () => {
       );
     });
     pointer("mouseover", document.body);
+    act(() => vi.advanceTimersByTime(TIP_OPEN_MS));
     expect(tip()).not.toBeNull();
   });
 
@@ -187,13 +192,16 @@ describe("Tooltip", () => {
       });
 
     move(document.body, granary);
+    act(() => vi.advanceTimersByTime(TIP_OPEN_MS));
     // Rested on, the tip with a term locks, so leaving it waits out a grace…
     act(() => vi.advanceTimersByTime(TIP_LOCK_MS));
     move(granary, dole);
+    act(() => vi.advanceTimersByTime(TIP_OPEN_MS));
     // …but the next tip takes the screen at once rather than standing beside it.
     expect(tips().map((tip) => tip.textContent)).toEqual(["Dole"]);
 
     move(dole, granary);
+    act(() => vi.advanceTimersByTime(TIP_OPEN_MS));
     expect(tips().map((tip) => tip.textContent)).toEqual(["Food"]);
   });
 

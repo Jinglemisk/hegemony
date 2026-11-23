@@ -1,3 +1,8 @@
+/** How long the pointer rests on a trigger before its tooltip opens, so sweeping the
+ *  pointer across the screen doesn't flash a tooltip at every stop. Keyboard focus
+ *  and touch open at once. */
+export const TIP_OPEN_MS = 400;
+
 /** How long the pointer rests on a tooltip with underlined terms before it locks. */
 export const TIP_LOCK_MS = 600;
 
