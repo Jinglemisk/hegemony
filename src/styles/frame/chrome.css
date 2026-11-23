@@ -388,7 +388,7 @@ button.ch-socket[data-state="open"]:hover {
   gap: var(--s-4);
   width: var(--sh-confirm-w);
   height: var(--sh-confirm-h);
-  padding: var(--s-3) var(--s-4);
+  padding: var(--s-2) var(--s-4);
 }
 .ch-confirm-words {
   min-width: 0;
@@ -397,13 +397,20 @@ button.ch-socket[data-state="open"]:hover {
   scrollbar-gutter: stable;
   scrollbar-width: thin;
 }
+/* The question holds two lines at most (its title carries the whole), so the
+   detail's first line shows at every text size: 2 × 26 + 26 in 80 at Largest. */
 .ch-confirm-q {
+  display: -webkit-box;
   margin: 0;
+  overflow: hidden;
   font-family: var(--f-sans);
   font-weight: 700;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 .ch-confirm-d {
-  margin: var(--s-1) 0 0;
+  margin: 0;
   color: var(--ink-66);
   font-family: var(--f-sans);
 }

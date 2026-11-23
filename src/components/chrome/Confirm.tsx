@@ -112,7 +112,7 @@ export function ConfirmHost() {
       >
         <Ico path={pending.icon} size="tile" />
         <div className="ch-confirm-words">
-          <p className="ch-confirm-q" id={`${id}-q`}>
+          <p className="ch-confirm-q" id={`${id}-q`} title={pending.question}>
             {pending.question}
           </p>
           {pending.detail ? (
