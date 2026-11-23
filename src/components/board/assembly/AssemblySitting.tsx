@@ -46,6 +46,8 @@ import { DeckLine } from "../../cards/DeckLine";
 import { GameCard } from "../../cards/GameCard";
 import { Chips, Delta, Ico, SeatMark, Turns } from "../../frame/parts";
 import { Tooltip } from "../../overlays/Tooltip";
+import { useConfirm } from "../../chrome/confirmContext";
+import { SpendDetail } from "../../chrome/confirmDetail";
 import { useGameUi } from "../GameUiContext";
 import { ModalShell } from "../modals/ModalShell";
 import { ResolutionDetails, StandingLawDetails } from "./AssemblyPresentation";
@@ -233,6 +235,7 @@ export function AssemblyDock({ sitting }: { sitting: Sitting }) {
 
 function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }) {
   const { moves, viewerId } = useGameUi();
+  const ask = useConfirm();
   const [repealing, setRepealing] = useState(false);
   const [drawing, setDrawing] = useState(false);
   const influence = G.players[viewerId].resources.influence;
@@ -275,7 +278,22 @@ function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }
                       effectiveCost={draw.cost}
                       enabled={draw.can}
                       heading={`Draw from ${politician.name}`}
-                      onClick={() => moves.assemblyDraw(viewerId, politician.id)}
+                      onClick={() =>
+                        ask({
+                          icon: "assembly/politician",
+                          question: `Are you sure you want to draw from ${politician.name}?`,
+                          detail: (
+                            <SpendDetail
+                              cost={draw.cost}
+                              G={G}
+                              note={`A ${politician.kind === "law" ? "Law" : "Directive"} from the top of the deck.`}
+                              viewerId={viewerId}
+                            />
+                          ),
+                          verb: "Draw",
+                          onYes: () => moves.assemblyDraw(viewerId, politician.id),
+                        })
+                      }
                       triggerClassName="sit-tip"
                     >
                       Draw <Chips amounts={draw.cost} short={influence < draw.price} />
@@ -291,8 +309,25 @@ function Proposal({ G, session }: { G: HegemonyState; session: AssemblySession }
           onRepeal={
             repealing
               ? (cardId) => {
-                  setRepealing(false);
-                  moves.assemblyProposeRepeal(viewerId, cardId);
+                  const name = getResolutionCard(G.definition.content, cardId)?.name ?? "this Law";
+                  ask({
+                    icon: "assembly/repeal",
+                    question: `Are you sure you want to propose repealing ${name}?`,
+                    detail: (
+                      <SpendDetail
+                        command={{ type: "assemblyProposeRepeal", cardId }}
+                        cost={repeal.cost}
+                        G={G}
+                        note="The house votes on it at the ballot."
+                        viewerId={viewerId}
+                      />
+                    ),
+                    verb: "Propose the repeal",
+                    onYes: () => {
+                      setRepealing(false);
+                      moves.assemblyProposeRepeal(viewerId, cardId);
+                    },
+                  });
                 }
               : undefined
           }
@@ -898,6 +933,7 @@ function itemSide(G: HegemonyState, item: BallotItem, viewer: PlayerId) {
 
 function Vote({ G, session }: { G: HegemonyState; session: AssemblySession }) {
   const { moves, viewerId } = useGameUi();
+  const ask = useConfirm();
   const outlook = voteOutlook(G)!;
   const line = voteLine(G, viewerId)!;
   const caster = outlook.caster.playerID;
@@ -969,7 +1005,23 @@ function Vote({ G, session }: { G: HegemonyState; session: AssemblySession }) {
                       enabled={status.can}
                       heading={`Buy a vote with ${payment}`}
                       key={payment}
-                      onClick={() => moves.assemblyBribe(viewerId, payment)}
+                      onClick={() =>
+                        ask({
+                          icon: "assembly/bribe",
+                          question: `Are you sure you want to buy a vote with ${status.price} ${payment}?`,
+                          detail: (
+                            <SpendDetail
+                              command={{ type: "assemblyBribe", payment }}
+                              cost={status.cost as Partial<Resources>}
+                              G={G}
+                              note="It counts for this sitting only."
+                              viewerId={viewerId}
+                            />
+                          ),
+                          verb: "Buy the vote",
+                          onYes: () => moves.assemblyBribe(viewerId, payment),
+                        })
+                      }
                       triggerClassName="sit-tip"
                     >
                       <Ico path="assembly/bribe" size="ui" />

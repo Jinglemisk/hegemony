@@ -356,7 +356,10 @@
   --sh-hand-x: 624px; /* the hand's tray */
   --sh-hand-w: 480px;
   --sh-hand-h: 72px;
-  --sh-confirm-w: 680px; /* the confirm bar over the board's centre */
+  --sh-confirm-w: 680px; /* the confirm bar over the board's centre … */
+  --sh-confirm-h: 96px; /* … one height at every text size: its words scroll inside */
+  --sh-notice-w: 360px; /* the turn notice, the same at every text size */
+  --sh-notice-h: 280px;
   --sh-corner: 38px; /* a bronze corner piece … */
   --sh-corner-out: 9px; /* … and how far it stands proud of the panel */
   --sh-meander-h: 7px; /* the meander strip under a head or the top bar */

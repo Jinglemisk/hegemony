@@ -1,43 +1,12 @@
 import type { MouseEvent, ReactNode } from "react";
-import type { Resources } from "../../game/types";
-import { formatNumber } from "../../ui/formatters";
-import { RESOURCE_ORDER } from "../../ui/resourceVisuals";
 import { Tooltip } from "../overlays/Tooltip";
-import { Delta, Ico, Tip, TipBody } from "../frame/parts";
+import { Ico, Tip, TipBody } from "../frame/parts";
 import { usePoint, type FootLine } from "./words";
 
 /**
- * The left window's shared parts: the confirm bar's cost line, and the drawer's icon
- * tile and row, whose sentence is their tooltip and, once pointed at, the drawer's
- * foot line.
+ * The left window's shared parts: the drawer's icon tile and row, whose sentence is
+ * their tooltip and, once pointed at, the drawer's foot line.
  */
-
-/** "This will cost 2 gold: gold 2 → 0." for the confirm bar, the after value a Delta. */
-export function CostDetail({
-  store,
-  cost,
-  more,
-}: {
-  store: Resources;
-  cost: Partial<Resources>;
-  more?: string;
-}) {
-  const paid = RESOURCE_ORDER.filter((resource) => (cost[resource] ?? 0) > 0);
-  if (paid.length === 0) return more ? <>{more}</> : null;
-  return (
-    <>
-      {`This will cost ${paid.map((r) => `${formatNumber(cost[r] ?? 0)} ${r}`).join(", ")}: `}
-      {paid.map((resource, i) => (
-        <span key={resource}>
-          {i > 0 ? ", " : null}
-          {`${resource} `}
-          <Delta from={store[resource]} to={store[resource] - (cost[resource] ?? 0)} />
-        </span>
-      ))}
-      .{more ? ` ${more}` : null}
-    </>
-  );
-}
 
 /**
  * A drawer's figure tile: an icon, a number and its label. With `onClick` it is a

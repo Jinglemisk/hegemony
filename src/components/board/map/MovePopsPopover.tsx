@@ -9,6 +9,8 @@ import {
 import type { Pops } from "../../../game/types";
 import { settlementNameOf } from "../../../ui/settlementNames";
 import { Prose } from "../../AnnotatedText";
+import { useConfirm } from "../../chrome/confirmContext";
+import { SpendDetail } from "../../chrome/confirmDetail";
 import { useGameUi } from "../GameUiContext";
 import { Chips, Turns } from "../../frame/parts";
 import { actionRequirementText, gameplayActionDisabled } from "../helpers";
@@ -36,6 +38,7 @@ export function MovePopsTargetPopover({
   onConfirm: (sourceTileId: string, targetTileId: string, pops: Pops) => void;
 }) {
   const { G, viewerId: playerID, turnBlocked } = useGameUi();
+  const ask = useConfirm();
   const [pops, setPops] = useState<Pops>(() => clonePops(EMPTY_POPS));
 
   const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
@@ -76,7 +79,25 @@ export function MovePopsTargetPopover({
         disabled={gameplayActionDisabled(status, turnBlocked) || totalPops(pops) === 0}
         title={actionRequirementText(status, turnBlocked)}
         onCancel={onCancel}
-        onConfirm={() => onConfirm(sourceTileId, tileId, clonePops(pops))}
+        onConfirm={() => {
+          const travellers = clonePops(pops);
+          const from = settlementNameOf(G.board.tiles, source.id);
+          ask({
+            icon: "pops/move",
+            question: `Are you sure you want to send ${formatPops(travellers)} from ${from}?`,
+            detail: (
+              <SpendDetail
+                command={{ type: "movePops", sourceTileId, targetTileId: tileId, pops: travellers }}
+                cost={status.cost ?? {}}
+                G={G}
+                note="They arrive next turn."
+                viewerId={playerID}
+              />
+            ),
+            verb: "Send",
+            onYes: () => onConfirm(sourceTileId, tileId, travellers),
+          });
+        }}
       />
     </TilePopover>
   );

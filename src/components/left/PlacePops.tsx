@@ -33,9 +33,9 @@ import { getBuildingBenefitText } from "../board/helpers";
 import { Panel, PanelHead } from "../chrome/Panel";
 import { Lacquer } from "../chrome/controls";
 import { useConfirm } from "../chrome/confirmContext";
+import { SpendDetail } from "../chrome/confirmDetail";
 import { Chips, Ico, Tip, TipBody } from "../frame/parts";
 import { Tooltip } from "../overlays/Tooltip";
-import { CostDetail } from "./atoms";
 import { refusal } from "./words";
 
 /**
@@ -135,7 +135,15 @@ export function GrowOptions({
                 ask({
                   icon: POP_RASTERS[pop],
                   question: `Are you sure you want to grow a ${formatPopLabel(pop, 1)} in ${name}?`,
-                  detail: <CostDetail cost={status.cost ?? {}} more={more} store={store} />,
+                  detail: (
+                    <SpendDetail
+                      command={{ type: "growPop", tileId: tile.id, pop }}
+                      cost={status.cost ?? {}}
+                      G={G}
+                      note={more}
+                      viewerId={viewerId}
+                    />
+                  ),
                   verb: "Grow",
                   onYes: () => moves.growPop(tile.id, pop),
                 });
@@ -208,10 +216,17 @@ export function BuildOptions({
                   icon: BUILDING_RASTERS[building.id],
                   question: `Are you sure you want to raise a ${building.name} in ${name}?`,
                   detail: (
-                    <CostDetail
+                    <SpendDetail
+                      command={{
+                        type: "buildBuilding",
+                        tileId: tile.id,
+                        buildingId: building.id,
+                        ...(claim ? { claimVertexId: claim.vertexId } : {}),
+                      }}
                       cost={cost}
-                      more={`${line.charAt(0).toUpperCase()}${line.slice(1)}.`}
-                      store={store}
+                      G={G}
+                      note={line}
+                      viewerId={viewerId}
                     />
                   ),
                   verb: "Raise it",

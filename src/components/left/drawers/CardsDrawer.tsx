@@ -7,7 +7,8 @@ import { Lacquer, Plaque } from "../../chrome/controls";
 import { useConfirm } from "../../chrome/confirmContext";
 import { Chips, Ico, Tip, TipBody } from "../../frame/parts";
 import { Tooltip } from "../../overlays/Tooltip";
-import { CostDetail, Tile } from "../atoms";
+import { Tile } from "../atoms";
+import { SpendDetail } from "../../chrome/confirmDetail";
 import { refusal } from "../words";
 import type { DrawerProps } from "../Drawer";
 
@@ -83,7 +84,7 @@ export function CardsDrawer({ actions }: DrawerProps) {
               ask({
                 icon: "events/convoy",
                 question: "Are you sure you want to buy a development card?",
-                detail: <CostDetail cost={cost} more="Once a turn." store={store} />,
+                detail: <SpendDetail cost={cost} G={G} note="Once a turn." viewerId={viewerId} />,
                 verb: "Buy a card",
                 onYes: actions.onBuyCard,
               })

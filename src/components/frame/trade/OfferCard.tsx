@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { PLAYER_IDS } from "../../../game/data";
 import { totalPops } from "../../../game/core/pops";
 import {
@@ -24,6 +24,7 @@ import { seatName } from "../../../ui/formatters";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { ActionButton } from "../../ActionButton";
 import { useGameUi } from "../../board/GameUiContext";
+import { SeatCoin } from "../../chrome/SeatCoin";
 import { Prose } from "../../AnnotatedText";
 import { Delta, Ico } from "../parts";
 import {
@@ -76,19 +77,6 @@ const sameSides = (a: Sides, b: Sides) =>
   (["gives", "gets"] as const).every((side) =>
     itemsOf(a[side]).every((item) => itemCount(a[side], item) === itemCount(b[side], item)),
   );
-
-function Glaze({ seat, size = "lg" }: { seat: PlayerId; size?: "lg" | "sm" }) {
-  const glaze = PLAYER_GLAZES[seat];
-  return (
-    <span
-      className={`name trade-glaze is-${size}`}
-      style={{ "--owner": glaze.color } as CSSProperties}
-      title={glaze.name}
-    >
-      {glaze.blazon}
-    </span>
-  );
-}
 
 /** One side's lines; editable with − n + steppers and a + picker for what is missing. */
 function Column({
@@ -400,7 +388,7 @@ function CardHead({
 }) {
   return (
     <header className="trade-head">
-      <Glaze seat={seat} />
+      <SeatCoin className="trade-coin" seat={seat} size={32} />
       <span className="trade-words">
         {kicker ? <span className="kicker">{kicker}</span> : null}
         <span className="name trade-title">{title}</span>
@@ -455,13 +443,13 @@ export function ComposeCard({
               <button
                 aria-label={on ? `Take ${glaze.name} off the offer` : `Offer to ${glaze.name}`}
                 aria-pressed={on}
-                className={`name trade-seat${to.length === 0 ? "" : on ? " is-on" : " is-off"}`}
+                className={`trade-seat${to.length === 0 ? "" : on ? " is-on" : " is-off"}`}
                 key={id}
                 onClick={() => toggle(id)}
-                style={{ "--owner": glaze.color } as CSSProperties}
+                title={on ? `Take ${glaze.name} off the offer` : `Offer to ${glaze.name}`}
                 type="button"
               >
-                {glaze.blazon}
+                <SeatCoin aria-hidden="true" seat={id} size={32} />
               </button>
             );
           })}
@@ -659,7 +647,7 @@ function Answers({
               : holdsWords(G, seat, offer.terms.get);
         return (
           <div className={`trade-row is-${mark}`} key={seat}>
-            <Glaze seat={seat} size="sm" />
+            <SeatCoin className="trade-coin" seat={seat} size={24} />
             <span className="body body-sm trade-row-words">
               <b className="name">{name}</b>
               {status ? (

@@ -373,10 +373,14 @@ button.ch-socket:focus-visible {
   align-items: center;
   gap: var(--s-4);
   width: var(--sh-confirm-w);
+  height: var(--sh-confirm-h);
   padding: var(--s-3) var(--s-4);
 }
 .ch-confirm-words {
   min-width: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 .ch-confirm-q {
   margin: 0;
@@ -387,6 +391,10 @@ button.ch-socket:focus-visible {
   margin: var(--s-1) 0 0;
   color: var(--ink-66);
   font-family: var(--f-sans);
+}
+.ch-confirm-warn {
+  color: var(--neg);
+  font-weight: 700;
 }
 .ch-confirm-acts {
   display: flex;

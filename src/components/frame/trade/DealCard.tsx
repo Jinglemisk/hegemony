@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import {
   dealIncomeLines,
   dealsAwaitingAnswer,
@@ -12,6 +11,7 @@ import { toRoman } from "../../../ui/formatters";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { ActionButton } from "../../ActionButton";
 import { useGameUi } from "../../board/GameUiContext";
+import { SeatCoin } from "../../chrome/SeatCoin";
 import { Ico } from "../parts";
 import { dealTitle, loanWords } from "./tradeView";
 
@@ -38,13 +38,7 @@ export function DealCard({ deal, onClose }: { deal: Deal; onClose: () => void })
   return (
     <section aria-label={dealTitle(G, deal, seat)} className="trade-card deal-card">
       <header className="trade-head">
-        <span
-          className="name trade-glaze is-lg"
-          style={{ "--owner": glaze.color } as CSSProperties}
-          title={glaze.name}
-        >
-          {glaze.blazon}
-        </span>
+        <SeatCoin className="trade-coin" seat={glaze.id} size={32} title={glaze.name} />
         <span className="trade-words">
           <span className="kicker">Standing deal</span>
           <span className="name trade-title">{dealTitle(G, deal, seat)}</span>

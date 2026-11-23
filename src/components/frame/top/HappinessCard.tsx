@@ -1,12 +1,10 @@
 import type { RefObject } from "react";
 import { getCivicCalmStatus, usesLeft } from "../../../game/rules";
 import type { CivicCalmPayment } from "../../../game/rules";
-import { happinessLevel } from "../../../game/happiness";
-import { transition } from "../../../game/legalMoves";
 import { unrestOutcome } from "../../../game/unrest";
-import type { HegemonyState, PlayerId, Resource } from "../../../game/types";
+import type { HegemonyState, PlayerId } from "../../../game/types";
 import { presentUnrestOutcome } from "../../../ui/effects";
-import { RESOURCE_LABELS, formatResourceCost } from "../../../ui/formatters";
+import { formatResourceCost } from "../../../ui/formatters";
 import { sign, tone } from "../../../ui/frameFormat";
 import type { HappinessDisplay } from "../../../ui/frameSelectors";
 import { Prose } from "../../AnnotatedText";
@@ -14,9 +12,10 @@ import { useGameUi } from "../../board/GameUiContext";
 import { Panel, PanelHead } from "../../chrome/Panel";
 import { Lacquer } from "../../chrome/controls";
 import { useConfirm } from "../../chrome/confirmContext";
+import { SpendDetail } from "../../chrome/confirmDetail";
 import { Popover } from "../../overlays/Popover";
 import { Tooltip } from "../../overlays/Tooltip";
-import { Chips, Delta, Tip, TipBody, Turns } from "../parts";
+import { Chips, Tip, TipBody, Turns } from "../parts";
 
 /**
  * The happiness card, dropped from the bar's mood: what raises and lowers the level,
@@ -95,7 +94,6 @@ export function HappinessCard({
               blocked={turnBlocked}
               G={G}
               key={payment}
-              level={display.value}
               payment={payment}
               viewerId={viewerId}
             />
@@ -111,13 +109,11 @@ function CalmButton({
   G,
   viewerId,
   payment,
-  level,
   blocked,
 }: {
   G: HegemonyState;
   viewerId: PlayerId;
   payment: CivicCalmPayment;
-  level: number;
   /** The turn's own gate: not this seat's turn, a decision waiting. */
   blocked: string | null;
 }) {
@@ -128,40 +124,21 @@ function CalmButton({
   const reason = blocked ?? status.reasons[0] ?? null;
   const label = payment === "gold" ? "Calm, paid in gold" : "Calm, paid in influence";
 
-  const confirm = () => {
-    // The engine plays the Calm on a copy: what the store and the level become.
-    const result = (() => {
-      try {
-        return transition(G.definition, G, viewerId, { type: "civicCalm", payment });
-      } catch {
-        return null;
-      }
-    })();
-    const after = result?.ok ? result.state : null;
-    const store = G.players[viewerId].resources;
+  const confirm = () =>
     ask({
       icon: "unrest/calm-verb",
-      question: `Are you sure you want to buy Calm for ${formatResourceCost(cost)}?`,
-      detail: after ? (
-        <>
-          {`This will cost ${formatResourceCost(cost)}: `}
-          {(Object.keys(cost) as Resource[]).map((resource) => (
-            <span key={resource}>
-              {`${RESOURCE_LABELS[resource]} `}
-              <Delta from={store[resource]} to={after.players[viewerId].resources[resource]} />
-              {", "}
-            </span>
-          ))}
-          {"happiness "}
-          <Delta format={sign} from={level} to={happinessLevel(after, viewerId)} />
-        </>
-      ) : (
-        `This will cost ${formatResourceCost(cost)}.`
+      question: `Are you sure you want to buy Calm for ${formatResourceCost(cost).toLowerCase()}?`,
+      detail: (
+        <SpendDetail
+          command={{ type: "civicCalm", payment }}
+          cost={cost}
+          G={G}
+          viewerId={viewerId}
+        />
       ),
       verb: "Calm",
       onYes: () => moves.civicCalm(payment),
     });
-  };
 
   return (
     <Tooltip

@@ -26,7 +26,8 @@ import { Band } from "../../chrome/Panel";
 import { SeatCoin } from "../../chrome/SeatCoin";
 import { useConfirm } from "../../chrome/confirmContext";
 import { Chips, Ico, Turns } from "../../frame/parts";
-import { CostDetail, Tile } from "../atoms";
+import { Tile } from "../atoms";
+import { SpendDetail } from "../../chrome/confirmDetail";
 import { refusal, usePoint } from "../words";
 import type { DrawerProps } from "../Drawer";
 import { Threat } from "./RealmDrawer";
@@ -61,7 +62,15 @@ export function IdeasDrawer({ actions }: DrawerProps) {
     ask({
       icon: "assembly/national-idea",
       question: `Are you sure you want to take ${idea.name} as your next Idea?`,
-      detail: <CostDetail cost={status.cost} more={idea.text} store={store} />,
+      detail: (
+        <SpendDetail
+          command={{ type: "buyIdea", ideaId: idea.id }}
+          cost={status.cost}
+          G={G}
+          note={idea.text}
+          viewerId={viewerId}
+        />
+      ),
       verb: "Take the Idea",
       onYes: () => moves.buyIdea(idea.id),
     });

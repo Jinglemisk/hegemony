@@ -3,20 +3,18 @@ import type { KeyboardEvent, MouseEvent, ReactNode, Ref } from "react";
 import { canAfford, getBuyDevCardStatus, getDoleStatus, usesLeft } from "../../../game/rules";
 import { playerDole } from "../../../game/ideaRules";
 import { offerWindowReason } from "../../../game/trade";
-import type { Resources } from "../../../game/types";
 import { deedSeat } from "../../../ui/frameSelectors";
-import { RESOURCE_LABELS } from "../../../ui/formatters";
-import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
 import { AnnotatedText } from "../../AnnotatedText";
 import { ActionLogPanel } from "../../board/command/ActionLogPanel";
 import { useGameUi } from "../../board/GameUiContext";
 import { useConfirm } from "../../chrome/confirmContext";
+import { SpendDetail } from "../../chrome/confirmDetail";
 import { Panel, PanelHead } from "../../chrome/Panel";
 import { SeatCoin } from "../../chrome/SeatCoin";
 import { Tooltip } from "../../overlays/Tooltip";
 import { MAP_MODES } from "../map3d/modes";
 import type { MapMode } from "../map3d/modes";
-import { Chips, Delta, Ico, Tip, TipBody, TipWarn } from "../parts";
+import { Chips, Ico, Tip, TipBody, TipWarn } from "../parts";
 
 /**
  * The dock, flush in the bottom-right corner, three rows: the Chronicle's newest line
@@ -157,29 +155,6 @@ function ChronicleLine({
   );
 }
 
-/** "This costs 3 influence for 1 food: influence 9 → 6, food 0 → 1": the price, then the
- *  store before and after, each a Delta. */
-function storeAfter(held: Resources, cost: Partial<Resources>, gets: Partial<Resources> = {}) {
-  const words = (amounts: Partial<Resources>) =>
-    RESOURCE_ORDER.filter((r) => (amounts[r] ?? 0) > 0)
-      .map((r) => `${amounts[r]} ${RESOURCE_LABELS[r].toLowerCase()}`)
-      .join(" and ");
-  const moved = RESOURCE_ORDER.filter((r) => (cost[r] ?? 0) !== 0 || (gets[r] ?? 0) !== 0);
-  const got = words(gets);
-  return (
-    <>
-      {`This costs ${words(cost)}${got ? ` for ${got}` : ""}: `}
-      {moved.map((r, i) => (
-        <span key={r}>
-          {i > 0 ? ", " : null}
-          {RESOURCE_LABELS[r].toLowerCase()}{" "}
-          <Delta from={held[r]} to={held[r] - (cost[r] ?? 0) + (gets[r] ?? 0)} />
-        </span>
-      ))}
-    </>
-  );
-}
-
 /** Trade, Buy a card and the Dole: each its name over its cost, read off the engine's
  *  status for the command. Buy a card and the Dole ask once before they spend. */
 function DockActions({
@@ -220,7 +195,7 @@ function DockActions({
           ask({
             icon: "events/convoy",
             question: "Are you sure you want to buy a development card?",
-            detail: storeAfter(held, buy.cost ?? {}),
+            detail: <SpendDetail cost={buy.cost ?? {}} G={G} viewerId={viewerId} />,
             verb: "Buy a card",
             onYes: onBuyCard,
           })
@@ -236,7 +211,14 @@ function DockActions({
           ask({
             icon: "unrest/bread-dole",
             question: `Are you sure you want to buy ${doleGets.food} food with the Dole?`,
-            detail: storeAfter(held, dole.cost ?? {}, doleGets),
+            detail: (
+              <SpendDetail
+                command={{ type: "dole" }}
+                cost={dole.cost ?? {}}
+                G={G}
+                viewerId={viewerId}
+              />
+            ),
             verb: "Buy food",
             onYes: () => moves.dole(),
           })

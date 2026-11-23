@@ -2,9 +2,9 @@ import type { HegemonyState, HexTile, PlayerId } from "../../game/types";
 import { RESOURCE_GLYPHS, SETTLEMENT_GLYPHS, TERRAIN_GLYPHS } from "../../ui/iconRegistry";
 import { TERRAIN_PLACEHOLDERS } from "../../ui/icons/placeholders";
 import { Icon } from "../../ui/icons/Icon";
-import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { settlementNameOf } from "../../ui/settlementNames";
 import { settlementPickerLabel } from "./helpers";
+import { SeatCoin } from "../chrome/SeatCoin";
 
 /**
  * WHICH TILE you are acting on, told in icons.
@@ -58,16 +58,10 @@ export function TileSubject({
         ) : null}
 
         {/* A rival on the same tile is the one fact here that changes what you
-            would do, so it stays — as the seat's own glaze and blazon, which is
+            would do, so it stays — as the seat's coin, which is
             how every other owner mark in the game is drawn. */}
         {rivals.map((rival) => (
-          <span
-            className="tileSubjectRival"
-            key={rival.id}
-            style={{ background: PLAYER_GLAZES[rival.owner].color }}
-          >
-            {PLAYER_GLAZES[rival.owner].blazon}
-          </span>
+          <SeatCoin key={rival.id} seat={rival.owner} size={20} />
         ))}
       </span>
     </p>

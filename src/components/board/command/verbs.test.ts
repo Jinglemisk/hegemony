@@ -17,7 +17,12 @@ const openTurn = () =>
 
 /** The gate as the board asks it, for the viewer at `seat`. */
 const blockedFor = (G: HegemonyState, seat = "0") =>
-  turnBlocked({ isActive: G.currentPlayer === seat, phase: G.phase, pending: turnPending(G) });
+  turnBlocked({
+    isActive: G.currentPlayer === seat,
+    phase: G.phase,
+    pending: turnPending(G),
+    acting: G.players[G.currentPlayer].name,
+  });
 
 describe("the turn gate", () => {
   it("is open on the viewer's own turn", () => {
@@ -45,7 +50,8 @@ describe("the turn gate", () => {
   });
 
   it("then the seat, then the phase", () => {
-    expect(blockedFor(openTurn(), "1")).toBe("Current player's turn only.");
+    const G = openTurn();
+    expect(blockedFor(G, "1")).toBe(`${G.players[G.currentPlayer].name} is acting.`);
     const setup = scenario().build();
     expect(blockedFor(setup, setup.currentPlayer)).toBe("Gameplay only.");
   });

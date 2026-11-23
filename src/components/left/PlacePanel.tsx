@@ -31,7 +31,9 @@ import {
   totalPops,
   usesLeft,
 } from "../../game/rules";
+import { previewUpgradeColonyToCity } from "../../game/economy/preview";
 import { occupiedBuildingSlots } from "../../game/ideaRules";
+import { enumerateLegalCommands } from "../../game/legalMoves";
 import { isCoastalTile } from "../../game/mapTopology";
 import type { ActionStatus } from "../../game/rules";
 import type {
@@ -61,9 +63,10 @@ import { Panel, PanelHead } from "../chrome/Panel";
 import { Knob, Lacquer, Plaque } from "../chrome/controls";
 import { Socket, SocketMeter } from "../chrome/Socket";
 import { useConfirm } from "../chrome/confirmContext";
+import { SpendDetail } from "../chrome/confirmDetail";
+import { placeChanges } from "../../ui/confirmPreview";
 import { Chips, Ico, Tip, TipBody } from "../frame/parts";
 import { Tooltip } from "../overlays/Tooltip";
-import { CostDetail } from "./atoms";
 import { composeAnchor, refusal, titleCase } from "./words";
 import type { DrawerId } from "./Drawer";
 import type { LeftActions } from "./LeftShell";
@@ -483,7 +486,19 @@ function ClassRow({
             ask({
               icon: kind === "promote" ? "pops/promote" : "pops/demote",
               question: `Are you sure you want to ${what} in ${name}?`,
-              detail: <CostDetail cost={status.cost ?? {}} more={capLine} store={store} />,
+              detail: (
+                <SpendDetail
+                  command={{
+                    type: kind === "promote" ? "promotePop" : "demotePop",
+                    tileId: tile.id,
+                    from: pop,
+                  }}
+                  cost={status.cost ?? {}}
+                  G={G}
+                  note={capLine}
+                  viewerId={viewerId}
+                />
+              ),
               verb: capitalize(kind),
               onYes: () =>
                 kind === "promote" ? moves.promotePop(tile.id, pop) : moves.demotePop(tile.id, pop),
@@ -604,7 +619,15 @@ function OwnActions({
           ask({
             icon: "settlements/upgrade",
             question: `Are you sure you want to make ${name} a city?`,
-            detail: <CostDetail cost={up.cost ?? {}} store={store} />,
+            detail: (
+              <SpendDetail
+                command={{ type: "upgradeColonyToCity", tileId: tile.id }}
+                cost={up.cost ?? {}}
+                extra={placeChanges(previewUpgradeColonyToCity(G, viewerId, tile.id), tile.id)}
+                G={G}
+                viewerId={viewerId}
+              />
+            ),
             verb: "Make it a city",
             onYes: () => moves.upgradeColonyToCity(tile.id),
           })
@@ -725,10 +748,14 @@ function FoundAction({ tile, onFound }: { tile: HexTile; onFound: (tileId: strin
           icon: "settlements/found",
           question: `Are you sure you want to found a colony on this ${tile.terrain}?`,
           detail: (
-            <CostDetail
+            <SpendDetail
+              command={enumerateLegalCommands(G, viewerId).find(
+                (command) => command.type === "foundColony" && command.tileId === tile.id,
+              )}
               cost={found.cost ?? {}}
-              more="Then pick the place a pop leaves from."
-              store={store}
+              G={G}
+              note="Then pick the place a pop leaves from."
+              viewerId={viewerId}
             />
           ),
           verb: "Found it",

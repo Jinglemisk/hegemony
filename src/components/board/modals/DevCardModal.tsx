@@ -12,14 +12,7 @@ import {
 } from "../../../game/devCards";
 import type { DevCardPlay } from "../../../game/devCards";
 import { settlementRoom } from "../../../game/settlement";
-import type {
-  DevCard,
-  HegemonyState,
-  LogMoment,
-  PlayerId,
-  Resource,
-  Resources,
-} from "../../../game/types";
+import type { DevCard, HegemonyState, LogMoment, PlayerId, Resource } from "../../../game/types";
 import { deckLine, devCardFace } from "../../../ui/cardFace";
 import { RESOURCE_LABELS, formatSignedNumber } from "../../../ui/formatters";
 import { SETTLEMENT_GLYPHS } from "../../../ui/iconRegistry";
@@ -28,9 +21,10 @@ import { AnnotatedText } from "../../AnnotatedText";
 import { DeckLine } from "../../cards/DeckLine";
 import { GameCard } from "../../cards/GameCard";
 import { useConfirm } from "../../chrome/confirmContext";
+import { SpendDetail } from "../../chrome/confirmDetail";
 import { Lacquer, Plaque } from "../../chrome/controls";
 import { PanelHead } from "../../chrome/Panel";
-import { Chips, Delta, SeatMark } from "../../frame/parts";
+import { Chips, SeatMark } from "../../frame/parts";
 import { useGameUi } from "../GameUiContext";
 import { deckMark } from "../helpers";
 import type { DeckMark } from "../helpers";
@@ -247,7 +241,7 @@ export function HandModal({ onClose, onBuy }: { onClose: () => void; onBuy: () =
                   ask({
                     icon: "events/convoy",
                     question: "Are you sure you want to buy a card?",
-                    detail: <CostAfter cost={cost} stock={G.players[viewerId].resources} />,
+                    detail: <SpendDetail cost={cost} G={G} viewerId={viewerId} />,
                     verb: "Buy a card",
                     onYes: onBuy,
                   })
@@ -293,23 +287,6 @@ function resolvePlay(plays: DevCardPlay[], choice: Omit<DevCardPlay, "card">) {
   const play = forTarget.find((option) => option.resource === resource && option.tileId === tileId);
   const settled = targets.length <= 1 && resources.length <= 1 && tiles.length <= 1;
   return { targets, target, resources, resource, tiles, tileId, play, settled };
-}
-
-/** "This will cost 2 gold: gold 2 → 0", the store after in green or red. */
-function CostAfter({ cost, stock }: { cost: Partial<Resources>; stock: Resources }) {
-  const paid = (Object.keys(cost) as Resource[]).filter((resource) => (cost[resource] ?? 0) > 0);
-  return (
-    <>
-      This will cost <Chips amounts={cost} />:{" "}
-      {paid.map((resource, index) => (
-        <span key={resource}>
-          {index ? ", " : null}
-          {RESOURCE_LABELS[resource]}{" "}
-          <Delta from={stock[resource]} to={stock[resource] - (cost[resource] ?? 0)} />
-        </span>
-      ))}
-    </>
-  );
 }
 
 /** A card's choice, asked in place of the row: the card, its sentence, the choices, Play. */

@@ -61,6 +61,8 @@ export function Popover({
     const away = (event: PointerEvent) => {
       const target = event.target as Node;
       const control = isElementRef(anchor) ? anchor.current : null;
+      // The confirm bar asks over the popover that opened it: answering it is no press away.
+      if ((target as Element).closest?.(".ch-confirm-scrim")) return;
       if (!ref.current?.contains(target) && !control?.contains(target)) dismiss();
     };
     document.addEventListener("pointerdown", away);

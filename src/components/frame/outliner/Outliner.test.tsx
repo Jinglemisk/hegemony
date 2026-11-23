@@ -91,7 +91,7 @@ it("keeps every outliner header's words through folds and a tuck, and asks befor
   act(() => dole.click());
   expect(sent).toEqual([]);
   const confirm = container.querySelector('[role="alertdialog"]')!;
-  expect(confirm.textContent).toContain("This costs 3 influence for 1 food");
+  expect(confirm.textContent).toContain("This will cost 3 influence: Food 10→11, Influence 9→6.");
   act(() => button("Buy food").click());
   expect(sent).toEqual(["dole"]);
 });
