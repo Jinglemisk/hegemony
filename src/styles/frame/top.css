@@ -257,6 +257,9 @@ button.alarm-disc {
   grid-template-columns: 1fr 1fr;
   gap: var(--s-1);
 }
+.menu-seats.is-rows {
+  grid-template-columns: 1fr;
+}
 .menu-seat {
   display: flex;
   align-items: center;

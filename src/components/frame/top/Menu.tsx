@@ -128,7 +128,8 @@ function MenuCard({
         </ul>
         <section aria-label="View as" className="menu-sec">
           <h3 className="menu-sec-label">View as</h3>
-          <div className="menu-seats">
+          {/* Two seats a row; at Large and Largest one, so every name shows whole. */}
+          <div className={`menu-seats${scale === "standard" ? "" : " is-rows"}`}>
             {PLAYER_IDS.map((seat) => {
               const glaze = PLAYER_GLAZES[seat];
               const acting = seat === currentPlayerId;
