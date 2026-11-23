@@ -3,7 +3,8 @@ import { getGrowPopStatus } from "../game/rules";
 import { realmPops } from "../game/core/query";
 import { happinessLevel } from "../game/happiness";
 import { scenario } from "../game/testing/scenario";
-import { previewSpend } from "./confirmPreview";
+import { previewUpgradeColonyToCity } from "../game/economy/preview";
+import { placeChanges, previewSpend } from "./confirmPreview";
 
 /** Seat 0's open turn, stocked to grow, with no fate card drawn and an odd count of
  *  slaves, so one more slave costs a point of happiness. */
@@ -51,5 +52,22 @@ describe("a confirm's preview", () => {
       { label: "Gold", from: 20, to: 18 },
       { label: "Food", from: 20, to: 21 },
     ]);
+  });
+
+  it("names a new city's room from the engine's economy preview", () => {
+    const G = scenario()
+      .withSettlement("0", "0,0", "city", { citizens: 1, freemen: 2, slaves: 1 })
+      .withSettlement("0", "-3,3", "colony", { citizens: 0, freemen: 0, slaves: 1 })
+      .withResources("0", "wealthy")
+      .mutate((draft) => {
+        draft.phase = "gameplay";
+        draft.pendingPlayerEvent = null;
+      })
+      .build();
+    const room = placeChanges(previewUpgradeColonyToCity(G, "0", "-3,3"), "-3,3").find(
+      (change) => change.label === "Room",
+    );
+    expect(room).toBeDefined();
+    expect(room!.to).toBeGreaterThan(room!.from);
   });
 });
