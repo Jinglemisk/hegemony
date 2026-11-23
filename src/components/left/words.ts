@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect } from "react";
 import type { ActionStatus } from "../../game/rules";
 import type { Resources } from "../../game/types";
 import { formatNumber } from "../../ui/formatters";
@@ -61,9 +61,16 @@ export const FootContext = createContext<{
   point: (line: FootLine) => void;
 }>({ lit: null, point: () => {} });
 
-/** A tile's pointer and focus handlers: the tile last pointed at writes the foot line. */
+/** A tile's pointer and focus handlers: the tile last pointed at writes the foot line,
+ *  and writes it again while lit when its sentence changes (an Idea just taken), so the
+ *  line always says what the tile says now. */
 export function usePoint(line: FootLine) {
   const { lit, point } = useContext(FootContext);
+  const isLit = lit === line.key;
+  const { key, title, line: words } = line;
+  useEffect(() => {
+    if (isLit) point({ key, title, line: words });
+  }, [isLit, key, title, words, point]);
   const on = () => point(line);
-  return { lit: lit === line.key, on: { onPointerEnter: on, onFocus: on } };
+  return { lit: isLit, on: { onPointerEnter: on, onFocus: on } };
 }

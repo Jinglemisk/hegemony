@@ -192,7 +192,7 @@ export function HandModal({ onClose, onBuy }: { onClose: () => void; onBuy: () =
         />
       ) : (
         <>
-          <div className="hand-view-body">
+          <div className="hand-view-body ch-scroll-fade">
             {hand.length ? (
               <ul aria-label="Your cards" className="hand-view-row">
                 {hand.map((entry) => {

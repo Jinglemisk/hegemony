@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import {
   POP_TYPES,
   formatPops,
@@ -45,10 +45,18 @@ export function FoundColonyPopover({
   const [picked, setPop] = useState<PopType>(() => firstAvailablePop(source?.pops));
   // A source without the class picked sends the first class it has.
   const pop = source && source.pops[picked] > 0 ? picked : firstAvailablePop(source?.pops);
+  const holds = (each: PopType) => (source?.pops[each] ?? 0) > 0;
 
   // Opening moves focus in, to the first choice, and closing hands it back.
   const ref = useRef<HTMLDivElement>(null);
   useReturnFocus(ref, ".pp-opt");
+  // …and scrolls the body so the pop picked to go is in view under the sources (where
+  // the DOM can scroll: jsdom has no scrollIntoView).
+  useLayoutEffect(() => {
+    ref.current?.querySelector(".pp-opt.is-who[aria-pressed='true']")?.scrollIntoView?.({
+      block: "nearest",
+    });
+  }, []);
 
   if (!target) return null;
   const store = G.players[viewerId].resources;
@@ -86,7 +94,7 @@ export function FoundColonyPopover({
         sub={`On the ${target.terrain} · the pop arrives next turn`}
         title="Found a colony"
       />
-      <div className="pp-pop-body">
+      <div className="pp-pop-body ch-scroll-fade">
         <h3 className="pp-k pp-pop-k">It would make a turn</h3>
         <p className="pp-pop-line">
           {preview ? <Chips amounts={preview.income} empty="nothing" signed /> : "—"}
@@ -114,23 +122,23 @@ export function FoundColonyPopover({
           );
         })}
         <h3 className="pp-k pp-pop-k">Who goes</h3>
-        {POP_TYPES.map((candidate) => {
-          const here = source?.pops[candidate] ?? 0;
+        {/* Only the classes the source holds: the one picked is always in view, and
+            the source's line above already says who lives there. */}
+        {POP_TYPES.filter(holds).map((candidate) => {
           const label = `A ${formatPopLabel(candidate, 1)}`;
           return (
             <button
-              aria-disabled={here <= 0 || undefined}
-              aria-label={here > 0 ? label : `${label}: none in ${from}`}
+              aria-label={label}
               aria-pressed={candidate === pop}
-              className="pp-opt"
+              className="pp-opt is-who"
               key={candidate}
-              onClick={here > 0 ? () => setPop(candidate) : undefined}
+              onClick={() => setPop(candidate)}
               type="button"
             >
               <Ico path={POP_RASTERS[candidate]} size="tile" />
               <span className="pp-opt-n">{label}</span>
               <span className="pp-opt-line">
-                {here} in {from}
+                {source?.pops[candidate] ?? 0} in {from}
               </span>
             </button>
           );

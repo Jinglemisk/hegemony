@@ -22,6 +22,7 @@ import {
   turnEndUnrest,
 } from "../game/rules";
 import { requiredDecision } from "../game/actors";
+import { transition } from "../game/legalMoves";
 import { realmAlarms } from "../game/alarms";
 import type { BuildingId, HegemonyState, PlayerId, TradePlaces } from "../game/types";
 import type { DevShell } from "../dev/scenes";
@@ -106,6 +107,36 @@ const PLACEMENT_LABELS: Record<SetupPlacement, string> = {
   city: "second city",
   colony: "founding colony",
 };
+
+const PLACEMENT_COMMANDS = {
+  capital: "placeCapital",
+  city: "placeCity",
+  colony: "placeColony",
+} as const;
+
+/**
+ * Why a starting place can't stand on a tile, or null when it can: the engine's own
+ * verdict, asked by trying the placement (with the picker's opening pops) on a draft
+ * that is thrown away. Which pops go never decides where, so the tile's answer holds
+ * for every pick.
+ */
+function setupRefusal(
+  G: HegemonyState,
+  playerID: PlayerId,
+  placement: SetupPlacement,
+  tileId: string,
+): string | null {
+  const total = G.ruleset.placementPopCounts[placement];
+  const citizens = G.ruleset.placementCitizens[placement];
+  const pops = { citizens, freemen: Math.max(0, total - citizens), slaves: 0 };
+  const result = transition(G.definition, G, playerID, {
+    type: PLACEMENT_COMMANDS[placement],
+    tileId,
+    pops,
+  });
+  if (result.ok) return null;
+  return result.reasons[0] ?? `Your ${PLACEMENT_LABELS[placement]} can't stand on that tile.`;
+}
 
 /**
  * Exactly one dialog owns the screen at a time — the union makes that a type
@@ -204,6 +235,9 @@ export function HegemonyBoard({
   // What the map last picked, which the place panel shows: the sea (nothing), a tile,
   // or a luxury good's mooring.
   const [subject, setSubject] = useState<PlaceSubject>({ kind: "realm" });
+  // Why the last tile picked for a starting place was refused, for the caption, while
+  // the same seat is still placing the same piece.
+  const [setupWhy, setSetupWhy] = useState<{ why: string; at: string } | null>(null);
   // A pick from a drawer, the outliner or the map: the subject and its lit tile.
   const pick = useCallback((next: PlaceSubject) => {
     setSubject(next);
@@ -534,11 +568,14 @@ export function HegemonyBoard({
       ) {
         const placement: SetupPlacement =
           ctx.phase === "setupCapital" ? "capital" : ctx.phase === "setupCity" ? "city" : "colony";
-        setActiveModal({ kind: "populationPrompt", placement, tileId });
+        // A tile the engine refuses opens no picker: the caption says why instead.
+        const why = setupRefusal(G, viewerId, placement, tileId);
+        setSetupWhy(why ? { why, at: `${ctx.phase}:${viewerId}` } : null);
+        if (!why) setActiveModal({ kind: "populationPrompt", placement, tileId });
         return;
       }
     },
-    [mapSelection, setMapSelectionTarget, clearMapSelection, drawer, ctx.phase],
+    [mapSelection, setMapSelectionTarget, clearMapSelection, drawer, ctx.phase, G, viewerId],
   );
 
   const requestBuildBuilding = useCallback(
@@ -564,7 +601,9 @@ export function HegemonyBoard({
   const caption = mapSelection.selection
     ? selectionCaption(mapSelection.selection.mode, mapSelection.candidateTileIds.length)
     : isSetup
-      ? pendingSetupCopy
+      ? setupWhy?.at === `${ctx.phase}:${viewerId}`
+        ? `Not there: ${setupWhy.why}`
+        : pendingSetupCopy
       : null;
 
   // A luxury good's mooring picked, from its raft or the outliner: its page opens.
@@ -795,12 +834,11 @@ export function HegemonyBoard({
                 {mapSelection.selection?.target
                   ? (() => {
                       const { mode } = mapSelection.selection!;
-                      const { tileId, anchor } = mapSelection.selection!.target!;
+                      const { tileId } = mapSelection.selection!.target!;
 
                       if (mode.kind === "tradePops") {
                         return (
                           <TradePopsPopover
-                            anchor={anchor}
                             mode={mode}
                             onCancel={mapSelection.clear}
                             onConfirm={() => placeTradePops(tileId, mode.direction)}

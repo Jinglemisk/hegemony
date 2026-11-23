@@ -357,11 +357,13 @@
   line-height: 1;
   opacity: 0.8;
 }
+/* A condition keeps its words together: it takes its own line when it doesn't fit
+   beside the icons, and breaks only between words when it doesn't fit the panel. */
 .gc-cond {
-  max-width: calc(var(--gc-e) * 4.6);
   color: var(--ivory-70);
-  letter-spacing: 0.1em;
-  text-align: left;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-wrap: balance;
 }
 .gc-but {
   display: flex;
@@ -451,6 +453,11 @@
 .gc.is-dim .gc-face {
   filter: saturate(0.5);
   opacity: var(--dim);
+}
+/* Taken by another seat (an Idea): its picture goes grey, its words keep their full
+   ink, and the holder's coin beside it says whose it is. */
+.gc.is-taken .gc-window > img {
+  filter: grayscale(1);
 }
 
 /* ── The back: lacquer, a key border top and bottom, a ring for the mark ───── */

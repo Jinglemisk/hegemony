@@ -41,8 +41,8 @@ import { refusal } from "./words";
 
 /**
  * What opens beside the place panel, above the hand's row: the Grow and Build
- * options, and a rival's card. Each is one fixed box; a choice closes it and asks
- * through the confirm bar.
+ * options, and a rival's card. Each is one fixed box; a choice asks through the
+ * confirm bar, and the pop closes on yes (Cancel keeps it open, as Move and Found do).
  */
 
 /** A pop takes the focus to its first open option, and hands it back to its opener. */
@@ -126,7 +126,7 @@ export function GrowOptions({
         sub={more ?? "One grow at a time"}
         title={`Grow in ${name}`}
       />
-      <div className="pp-pop-body">
+      <div className="pp-pop-body ch-scroll-fade">
         {GROWABLE_POPS.map((pop) => {
           const status = getGrowPopStatus(G, viewerId, tile.id, pop);
           const label = `A ${formatPopLabel(pop, 1)}`;
@@ -137,8 +137,7 @@ export function GrowOptions({
               key={pop}
               line="Ready"
               name={label}
-              onPick={() => {
-                onClose();
+              onPick={() =>
                 ask({
                   icon: POP_RASTERS[pop],
                   question: `Are you sure you want to grow a ${formatPopLabel(pop, 1)} in ${name}?`,
@@ -152,9 +151,12 @@ export function GrowOptions({
                     />
                   ),
                   verb: "Grow",
-                  onYes: () => moves.growPop(tile.id, pop),
-                });
-              }}
+                  onYes: () => {
+                    onClose();
+                    moves.growPop(tile.id, pop);
+                  },
+                })
+              }
               why={refusal(status, turnBlocked, store)}
             />
           );
@@ -206,7 +208,7 @@ export function BuildOptions({
         sub="One of each a place"
         title={`Build in ${name}`}
       />
-      <div className="pp-pop-body">
+      <div className="pp-pop-body ch-scroll-fade">
         {options.map(({ building, status, claim }) => {
           const cost = status.cost ?? building.cost;
           const why = refusal(status, turnBlocked, store);
@@ -221,8 +223,7 @@ export function BuildOptions({
               key={`${building.id}-${claim?.vertexId ?? ""}`}
               line={line}
               name={label}
-              onPick={() => {
-                onClose();
+              onPick={() =>
                 ask({
                   icon: BUILDING_RASTERS[building.id],
                   question: `Are you sure you want to raise a ${building.name} in ${name}?`,
@@ -241,9 +242,12 @@ export function BuildOptions({
                     />
                   ),
                   verb: "Raise it",
-                  onYes: () => onBuild(tile.id, building.id, claim?.vertexId),
-                });
-              }}
+                  onYes: () => {
+                    onClose();
+                    onBuild(tile.id, building.id, claim?.vertexId);
+                  },
+                })
+              }
               tip={
                 <Tip title={building.name}>
                   <TipBody>{presentBuildingEffects(building.effects).text}</TipBody>

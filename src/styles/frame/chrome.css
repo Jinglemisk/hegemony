@@ -273,6 +273,34 @@
   text-shadow: none;
   cursor: default;
 }
+/* A knob that can't be turned lies flat: no bronze, no shadow, a quiet glyph (the
+   reason is in its tooltip); a live one stays the lit bronze disc. */
+.ch-knob[aria-disabled="true"] {
+  background: var(--bz-dk-12);
+  box-shadow: inset 0 0 0 var(--rule) var(--bz-dk-30);
+}
+
+/* ---- the scroll cue: a scroller with more below fades into its foot ---------
+   One class for every scrolling body (a drawer, the place panel, a pop, a list):
+   the fade is driven by the scroller's own position, so it is there exactly while
+   there is more below and lifts over the last stretch of the scroll; a body that
+   doesn't overflow has no timeline and never fades. Without scroll-driven
+   animation nothing is masked and the scrollbar is the only cue. */
+@keyframes ch-scroll-fade {
+  from {
+    mask-image: linear-gradient(to bottom, black calc(100% - var(--s-6)), transparent);
+  }
+  to {
+    mask-image: none;
+  }
+}
+@supports (animation-timeline: scroll(self)) {
+  .ch-scroll-fade {
+    animation: ch-scroll-fade linear both;
+    animation-timeline: scroll(self);
+    animation-range: 90% 100%;
+  }
+}
 
 /* ---- sockets and meters ----------------------------------------------------- */
 .ch-socket {

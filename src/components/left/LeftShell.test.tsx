@@ -14,11 +14,14 @@ import { ConfirmHost, ConfirmProvider } from "../chrome/Confirm";
 import { useLeftDrawer } from "./drawerState";
 import { LeftShell, type LeftActions } from "./LeftShell";
 import type { PlaceSubject } from "./PlacePanel";
+import { FootContext, usePoint } from "./words";
 
 /**
  * The left window's logic: a site to found on is confirmed on its own place panel (the
  * map is never armed behind it, so no other tile can take the colony), Realm's tabs
- * move with the arrow keys, and closing a drawer gives focus back to its button.
+ * move with the arrow keys, closing a drawer gives focus back to its button, a locked
+ * place says why on every control, a keyboard pick from the outliner moves the focus in,
+ * a cancelled Grow keeps its pop, and the foot line follows the state.
  */
 
 let container: HTMLDivElement;
@@ -64,11 +67,14 @@ function Harness({
   moves,
   start,
   blocked = null,
+  outlinerPick,
 }: {
   G: HegemonyState;
   moves: GameMoves;
   start: PlaceSubject;
   blocked?: string | null;
+  /** A stand-in outliner row that picks this place. */
+  outlinerPick?: PlaceSubject;
 }) {
   const [subject, setSubject] = useState<PlaceSubject>(start);
   const drawer = useLeftDrawer(subject, setSubject);
@@ -88,6 +94,13 @@ function Harness({
         events: createCommandEvents(() => {}),
       }}
     >
+      {outlinerPick ? (
+        <div data-c="outliner">
+          <button onClick={() => setSubject(outlinerPick)} type="button">
+            Outliner row
+          </button>
+        </div>
+      ) : null}
       <ConfirmProvider>
         <LeftShell
           actions={actions}
@@ -190,4 +203,94 @@ it("locks a place's open slots with the turn gate's reason, like its footer acts
     act(() => slot.click());
     expect(document.querySelector(".pp-pop"), `slot ${i}`).toBeNull();
   });
+  // The ladder's knobs give the same reason.
+  const knobs = [...document.querySelectorAll<HTMLButtonElement>(".pp-knobs button")].filter(
+    (knob) => /^(Promote|Demote)/.test(knob.getAttribute("aria-label") ?? ""),
+  );
+  expect(knobs.length).toBeGreaterThan(0);
+  for (const knob of knobs) {
+    expect(knob.getAttribute("aria-disabled")).toBe("true");
+    expect(knob.getAttribute("aria-label")).toMatch(/: The Assembly is sitting\.$/);
+  }
+});
+
+it("moves the focus into a place opened by the keyboard from the outliner", () => {
+  const G = game();
+  const tile = G.board.tiles.find((candidate) =>
+    candidate.settlements.some((settlement) => settlement.owner === "0"),
+  )!;
+  const moves = new Proxy({} as GameMoves, { get: () => () => {} });
+  act(() =>
+    root.render(
+      <Harness
+        G={G}
+        moves={moves}
+        outlinerPick={{ kind: "tile", tileId: tile.id }}
+        start={{ kind: "realm" }}
+      />,
+    ),
+  );
+  const row = button(/^Outliner row$/);
+  act(() => {
+    row.focus();
+    row.click();
+  });
+  act(() => vi.runAllTimers());
+  const panel = document.querySelector(".pp")!;
+  expect(panel).not.toBeNull();
+  expect(panel.contains(document.activeElement)).toBe(true);
+  expect(document.activeElement).toBe(panel.querySelector(".pp-body button"));
+});
+
+it("keeps the Grow pop open when its confirm is cancelled, and closes it on yes", () => {
+  const G = game();
+  const tile = G.board.tiles.find((candidate) =>
+    candidate.settlements.some((settlement) => settlement.owner === "0"),
+  )!;
+  const growPop = vi.fn();
+  const moves = new Proxy({} as GameMoves, {
+    get: (_, name) => (name === "growPop" ? growPop : () => {}),
+  });
+  act(() => root.render(<Harness G={G} moves={moves} start={{ kind: "tile", tileId: tile.id }} />));
+
+  act(() => button(/^Grow here/).click());
+  const option = () =>
+    [...document.querySelectorAll<HTMLButtonElement>(".pp-pop.is-grow .pp-opt")].find(
+      (el) => !el.getAttribute("aria-disabled"),
+    )!;
+  expect(option()).toBeDefined();
+  const confirmButtons = () => [
+    ...document.querySelectorAll<HTMLButtonElement>(".ch-confirm button"),
+  ];
+
+  act(() => option().click());
+  expect(document.querySelector(".ch-confirm")).not.toBeNull();
+  act(() => confirmButtons()[0].click());
+  expect(document.querySelector(".ch-confirm")).toBeNull();
+  expect(document.querySelector(".pp-pop.is-grow")).not.toBeNull();
+  expect(growPop).not.toHaveBeenCalled();
+
+  act(() => option().click());
+  act(() => confirmButtons().at(-1)!.click());
+  expect(growPop).toHaveBeenCalledTimes(1);
+  expect(document.querySelector(".pp-pop.is-grow")).toBeNull();
+});
+
+it("rewrites the foot line when the lit tile's sentence changes (an Idea just taken)", () => {
+  const point = vi.fn();
+  function Probe({ line }: { line: string }) {
+    usePoint({ key: "i-x", title: "Idea", line });
+    return null;
+  }
+  const draw = (line: string, lit: string | null = "i-x") =>
+    root.render(
+      <FootContext.Provider value={{ lit, point }}>
+        <Probe line={line} />
+      </FootContext.Provider>,
+    );
+  act(() => draw("Free: take it.", null));
+  expect(point).not.toHaveBeenCalled();
+  act(() => draw("Free: take it."));
+  act(() => draw("Yours."));
+  expect(point).toHaveBeenLastCalledWith({ key: "i-x", title: "Idea", line: "Yours." });
 });

@@ -30,7 +30,7 @@ export function GameCard({
   size?: CardSize;
   /** The name's id, for a dialog labelled by its card. */
   titleId?: string;
-  /** A state around the face: `is-picked`, `is-dim`, `is-new`. The face never changes. */
+  /** A state around the face: `is-picked`, `is-dim`, `is-taken`, `is-new`. The face never changes. */
   className?: string;
   /** The back's mark: the year's numeral. Without it the back wears the kind's icon. */
   back?: ReactNode;

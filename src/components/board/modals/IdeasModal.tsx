@@ -181,7 +181,7 @@ export function IdeasModal({
                 selected === idea.id || idea.id === fresh
                   ? "is-picked"
                   : taken
-                    ? "is-dim"
+                    ? "is-taken"
                     : undefined
               }
               face={ideaCardFace(idea, G.ruleset, G.definition.content)}

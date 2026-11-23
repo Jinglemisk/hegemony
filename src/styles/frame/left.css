@@ -117,6 +117,21 @@
   padding-left: var(--s-3);
   border-radius: 0 var(--r-panel) 0 0;
 }
+/* The left window's heads hold one height at every Text size (type.css tightens their
+   leading): a place's name and a pop's ellipsize on one line over the sub line, a
+   drawer's wraps to two lines. */
+:is(.pp, .pp-pop, .lw-drawer) > .ch-head {
+  flex: none;
+  box-sizing: border-box;
+  height: var(--s-16);
+  padding-block: var(--s-1);
+}
+.lw-drawer > .ch-head .ch-head-title {
+  display: -webkit-box;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
 .lw-tabs {
   display: grid;
   grid-auto-columns: 1fr;
@@ -125,13 +140,19 @@
   padding: var(--s-4) var(--s-3) var(--s-2);
   border-bottom: var(--rule) solid var(--line);
 }
+/* One height at every Text size: the icon over its word, centred, the word clipped
+   to the tab (its name is the word itself). */
 .lw-tab {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: var(--s-1);
-  min-height: var(--hit);
-  padding: var(--s-2) var(--s-1) 6px;
+  box-sizing: border-box;
+  height: calc(var(--u) * 14);
+  min-width: 0;
+  overflow: hidden;
+  padding: 0 var(--s-1);
   border: 0;
   border-radius: var(--r-panel);
   color: var(--ink);
@@ -233,14 +254,22 @@
 .lw-tile[aria-disabled="true"] {
   cursor: default;
 }
+/* A press that can't be taken now (an Idea once the game's purchase is spent) is
+   hatched like any unavailable control; its reason is its tooltip and foot line. */
+.lw-tile.is-press[aria-disabled="true"] {
+  background: var(--hatch);
+  box-shadow: var(--hatch-rim);
+}
 .lw-tile.is-yours {
   background: var(--tile-yours);
   box-shadow:
     inset 0 0 0 2px var(--clay),
     var(--tile-rim);
 }
+/* Another seat's (an Idea taken): the picture goes grey, the words keep their ink and
+   the holder's coin says whose. */
 .lw-tile.is-taken > .ico {
-  opacity: var(--dim);
+  filter: grayscale(1);
 }
 .lw-tile-v {
   font-family: var(--f-name);
@@ -294,6 +323,11 @@
   display: flex;
   justify-content: center;
   margin: var(--s-2) 0;
+}
+/* A drawer's own verbs (Offer a trade, Buy a card, View the hand) stand 36 high, so
+   they hold 32 screen px at the smallest scale. */
+.lw-body .ch-ctl {
+  min-height: var(--knob-d);
 }
 .lw-none {
   display: flex;
@@ -370,12 +404,15 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* What a place needs next, on up to two lines; its tooltip holds it whole. */
 .lw-row-next {
+  display: -webkit-box;
   min-width: 0;
   overflow: hidden;
   color: var(--ink-66);
   text-overflow: ellipsis;
-  white-space: nowrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 .lw-row-n {
   display: inline-flex;
@@ -711,9 +748,6 @@
   grid-column: 3;
   gap: var(--s-1);
 }
-.ch-knob.is-short[aria-disabled="true"] {
-  color: var(--clay-ink);
-}
 /* A section's head and its notices: a short word each, the sentence in its tooltip. */
 .pp-sec-head {
   display: flex;
@@ -827,9 +861,6 @@
   flex-direction: column;
   width: var(--pp-pop-w);
 }
-.pp-pop.is-grow {
-  height: 252px;
-}
 .pp-pop.is-build {
   height: 476px;
 }
@@ -838,6 +869,10 @@
 }
 .pp-pop.is-move {
   height: 380px;
+}
+.pp-pop.is-grow,
+.pp-pop.is-trade {
+  height: 252px;
 }
 .pp-pop.is-seat {
   width: 360px;

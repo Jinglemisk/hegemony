@@ -91,12 +91,3 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-
-.popoverActionTooltipTrigger {
-  display: flex;
-  width: 100%;
-}
-
-.popoverActionTooltipTrigger > button {
-  width: 100%;
-}

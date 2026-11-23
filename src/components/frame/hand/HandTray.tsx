@@ -104,7 +104,8 @@ export function HandTray({ onOpen }: { onOpen: () => void }) {
                 type="button"
               >
                 {/* The risen card: shown whole above the tray under the pointer or focus.
-                    The slot grows to hold it, so the tooltip stands above the card. */}
+                    The slot grows upward to hold it (its width and its hit area stay the
+                    plate's), so the tooltip stands above the card. */}
                 <span className="hand-face">
                   <GameCard face={devCardFace(card)} size="hand" />
                 </span>

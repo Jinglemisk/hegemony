@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { NationalIdeaId } from "../../game/ideaTypes";
 import type { BuildingId, PlayerId, Resources } from "../../game/types";
 import { ESCAPE, useEscapeLayer } from "../overlays/escapeStack";
-import { focusSoon } from "../overlays/focus";
+import { FOCUSABLE, focusSoon } from "../overlays/focus";
 import { Drawer, type DrawerId } from "./Drawer";
 import { isRealmDrawer, type LeftDrawer } from "./drawerState";
 import { PlacePanel, type PlaceSubject } from "./PlacePanel";
@@ -70,6 +70,23 @@ export function LeftShell({
   if (placeOpen && opener?.at !== subject) {
     setOpener({ at: subject, element: document.activeElement });
   }
+
+  // Opened by the keyboard from the outliner, the place takes the focus (its first
+  // control), so Tab goes on inside it rather than through the outliner's rows. A
+  // drawer's row lands on Back instead (pickFrom); a map tile keeps the focus.
+  const openerElement = opener?.element ?? null;
+  useEffect(() => {
+    if (!placeOpen || !(openerElement instanceof HTMLElement)) return;
+    if (!openerElement.closest('[data-c="outliner"]') || !keyboardFocused(openerElement)) return;
+    focusSoon(() => {
+      const panel = document.querySelector<HTMLElement>(".pp");
+      return (
+        panel?.querySelector(".pp-body")?.querySelector<HTMLElement>(FOCUSABLE) ??
+        panel?.querySelector<HTMLElement>(FOCUSABLE) ??
+        null
+      );
+    });
+  }, [openerElement, placeOpen]);
 
   const pickFrom = (from: DrawerId) => (next: PlaceSubject) => {
     const row = rowKey(document.activeElement);
@@ -153,3 +170,13 @@ const sidebarButton = (id: DrawerId) => () =>
 /** The drawer row or tile an element is, by its foot-line key. */
 const rowKey = (element: Element | null) =>
   element instanceof HTMLElement ? (element.dataset.row ?? null) : null;
+
+/** Focus the keyboard put there: shown with a ring (`:focus-visible`). */
+function keyboardFocused(element: HTMLElement) {
+  if (document.activeElement !== element) return false;
+  try {
+    return element.matches(":focus-visible");
+  } catch {
+    return true;
+  }
+}
