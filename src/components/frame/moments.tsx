@@ -14,7 +14,7 @@ import type { TitleChange, TitleHolders } from "../../game/victory";
 import { describeBundle } from "../../game/trade";
 import { presentUnrestOutcome } from "../../ui/effects";
 import { formatPopLabel, formatSignedNumber, seatName } from "../../ui/formatters";
-import { settlementNameOf } from "../../ui/settlementNames";
+import { namePlaces, settlementNameOf } from "../../ui/settlementNames";
 import { titleValue } from "../../ui/frameFormat";
 
 /**
@@ -173,7 +173,7 @@ function presentMoment(
         body: (
           <>
             <b>{card?.name ?? moment.cardId}</b>
-            {on}: {moment.outcome}.
+            {on}: {namePlaces(G.board.tiles, moment.outcome, about)}.
           </>
         ),
       };
@@ -190,7 +190,7 @@ function presentMoment(
             Content at {formatSignedNumber(moment.level)}:{" "}
             {card ? (
               <>
-                <b>{card.name}</b>, {moment.outcome}.
+                <b>{card.name}</b>, {namePlaces(G.board.tiles, moment.outcome ?? "", about)}.
               </>
             ) : (
               "kept in hand."

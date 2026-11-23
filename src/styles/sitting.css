@@ -54,10 +54,21 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* One height at every stage and text size: the seat chips stand in one row that
+   scrolls sideways, each chip the row's height, and the note beside them scrolls. */
 .sit-foot {
   justify-content: space-between;
+  height: var(--sh-sit-foot);
   margin-top: auto;
+  padding-block: var(--s-2);
   border-top: var(--rule) solid var(--line);
+}
+.sit-foot > .sit-note {
+  flex: 1 0 calc(var(--u) * 44); /* 176: the seats give way first */
+  min-width: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 .sit-title {
   display: flex;
@@ -570,14 +581,20 @@
 
 .sit-seats {
   display: flex;
-  flex-wrap: wrap;
+  flex: 0 1 auto;
+  align-items: stretch;
   gap: var(--s-2);
+  min-width: 0;
+  max-height: 100%;
   margin: 0;
-  padding: 0;
+  padding: var(--s-1);
+  overflow-x: auto;
   list-style: none;
+  scrollbar-width: thin;
 }
 .sit-seats li {
   display: flex;
+  flex: none;
   align-items: center;
   gap: var(--s-2);
   padding: var(--s-1) var(--s-3) var(--s-1) var(--s-1);

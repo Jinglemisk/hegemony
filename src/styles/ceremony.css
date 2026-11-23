@@ -550,7 +550,12 @@
    Lit at the top, the mood's own ink through the middle, shaded at the foot:
    three stops, so the button reads as a raised object. It emitted the same value
    twice for a while, which is a flat fill with extra steps. */
+/* Its icon, when it has one, stands inline before its words, the two centred. */
 .ceremonyCommit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
   width: 100%;
   padding: 15px 0;
   border: 0;

@@ -8,7 +8,7 @@ import {
 } from "../../../game/rules";
 import { previewFoundedSettlement } from "../../../game/economy/preview";
 import type { PopType } from "../../../game/types";
-import { formatPopLabel } from "../../../ui/formatters";
+import { formatPopLabel, withArticle } from "../../../ui/formatters";
 import { POP_RASTERS } from "../../../ui/iconRegistry";
 import { settlementNameOf } from "../../../ui/settlementNames";
 import { Panel, PanelHead } from "../../chrome/Panel";
@@ -144,7 +144,7 @@ export function FoundColonyPopover({
             source &&
             ask({
               icon: "settlements/found",
-              question: `Are you sure you want to found a colony on the ${target.terrain}, a ${formatPopLabel(pop, 1)} from ${from}?`,
+              question: `Are you sure you want to found a colony on the ${target.terrain}, ${withArticle(formatPopLabel(pop, 1))} from ${from}?`,
               detail: (
                 <SpendDetail
                   command={{ type: "foundColony", tileId, sourceTileId: source.tile.id, pop }}

@@ -4,7 +4,9 @@ import { realmPops } from "../game/core/query";
 import { happinessLevel } from "../game/happiness";
 import { scenario } from "../game/testing/scenario";
 import { previewUpgradeColonyToCity } from "../game/economy/preview";
-import { placeChanges, previewSpend } from "./confirmPreview";
+import { currentVoteWeight } from "../game/assembly";
+import { emptyBundle } from "../game/trade";
+import { placeChanges, previewSpend, previewTrade } from "./confirmPreview";
 
 /** Seat 0's open turn, stocked to grow, with no fate card drawn and an odd count of
  *  slaves, so one more slave costs a point of happiness. */
@@ -42,6 +44,32 @@ describe("a confirm's preview", () => {
     edge.players["0"].unrestTokens += happinessLevel(edge, "0") - (riotAt + 1);
     expect(happinessLevel(edge, "0")).toBe(riotAt + 1);
     expect(previewSpend(edge, "0", { command: grow }).warn).toMatch(/Riot line/);
+  });
+
+  it("says what a promotion does to the seat's votes", () => {
+    const G = openTurn();
+    const tileId = G.players["0"].settlements[0];
+    const promote = { type: "promotePop", tileId, from: "freemen" } as const;
+    const { changes } = previewSpend(G, "0", { command: promote });
+    const votes = currentVoteWeight(G, "0");
+    expect(changes).toContainEqual({ label: "Votes", from: votes, to: votes + 1 });
+  });
+
+  it("lists every store, class of pops and hand of cards a trade moves", () => {
+    const G = openTurn();
+    const gives = { ...emptyBundle(), resources: { wood: 2 } };
+    gives.pops = { citizens: 0, freemen: 0, slaves: 1 };
+    const gets = { ...emptyBundle(), resources: { stone: 1 }, cards: 1 };
+    const { changes } = previewTrade(G, "0", gives, gets);
+    const slaves = realmPops(G, "0").slaves;
+    expect(changes.map(({ label, from, to }) => ({ label, from, to }))).toEqual(
+      expect.arrayContaining([
+        { label: "Wood", from: 20, to: 18 },
+        { label: "Stone", from: 20, to: 21 },
+        { label: "Slaves", from: slaves, to: slaves - 1 },
+        { label: "Cards", from: G.devHands["0"].length, to: G.devHands["0"].length + 1 },
+      ]),
+    );
   });
 
   it("without a command, takes the price and the gain from the store", () => {

@@ -103,6 +103,9 @@ const NUMBER_WORD = [
 /** Small counts as words, larger ones as numerals. */
 export const numberWord = (n: number) => NUMBER_WORD[n] ?? formatNumber(n);
 
+/** "a Workshop", "an Estate": the article a word takes, by its first letter. */
+export const withArticle = (word: string) => `${/^[aeiou]/i.test(word) ? "an" : "a"} ${word}`;
+
 /** "Demos, Civic Elite and Voice". */
 export const listed = (names: string[]) =>
   names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;

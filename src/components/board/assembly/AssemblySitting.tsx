@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import {
   assemblySittings,
@@ -188,9 +188,13 @@ function SittingHead({ G, sitting }: { G: HegemonyState; sitting: Sitting }) {
 }
 
 /** Folded to a bar under the compass: where the sitting stands, and the way back. Escape
- *  also restores it, through the shell's keys. */
+ *  also restores it, through the shell's keys. It takes the focus as it folds (Minimise,
+ *  or Escape): the sitting's controls are gone, and Return is the way back. */
 export function AssemblyDock({ sitting }: { sitting: Sitting }) {
   const { G, viewerId } = useGameUi();
+  const pill = useRef<HTMLButtonElement>(null);
+  // After the sitting's own hand-back (a passive cleanup, which runs first).
+  useEffect(() => pill.current?.focus({ preventScroll: true }), []);
   const { session, stage } = sitting;
   const held = session.held[viewerId];
   const item = session.ballot[stage === "result" ? sitting.resultIndex : session.ballotIndex];
@@ -211,6 +215,7 @@ export function AssemblyDock({ sitting }: { sitting: Sitting }) {
       className="sit-dock"
       data-c="sit-dock"
       onClick={() => sitting.setMinimised(false)}
+      ref={pill}
       title={`Assembly: ${where}`}
       type="button"
     >

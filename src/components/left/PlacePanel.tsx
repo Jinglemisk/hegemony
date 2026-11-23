@@ -47,7 +47,7 @@ import type {
   Settlement,
 } from "../../game/types";
 import { cheapestCost } from "../../ui/frameFormat";
-import { formatPopLabel } from "../../ui/formatters";
+import { formatPopLabel, withArticle } from "../../ui/formatters";
 import {
   BUILDING_RASTERS,
   LUXURY_GOOD_RASTERS,
@@ -558,7 +558,7 @@ function ClassRow({
       pop,
     );
     const why = refusal(status, turnBlocked, store);
-    const what = `${kind} a ${formatPopLabel(pop, 1)} to ${formatPopLabel(to, 1)}`;
+    const what = `${kind} ${withArticle(formatPopLabel(pop, 1))} to ${formatPopLabel(to, 1)}`;
     const capLine =
       limit === null ? undefined : `Up to ${limit} ladder moves a turn; ${left} left.`;
     return (

@@ -157,7 +157,10 @@ export function IdeasModal({
         // A hand-size card: its sentence is the tooltip's, and the button reads by name.
         return (
           <ActionButton
-            aria-label={mark ? `${idea.name}, ${mark.toLowerCase()}` : idea.name}
+            // "Selected" is aria-pressed's to say; the name carries only the other marks.
+            aria-label={
+              mark && idea.id !== selected ? `${idea.name}, ${mark.toLowerCase()}` : idea.name
+            }
             aria-pressed={selected === idea.id}
             blockedReason={legal(idea.id) || draftDone ? undefined : rowReason(idea)}
             className={`idea-choice${taken ? " is-taken" : ""}${own ? " is-own" : ""}${idea.id === fresh ? " is-fresh" : ""}`}

@@ -1,10 +1,16 @@
+import { currentVoteWeight } from "../game/assembly";
+import { capitalize } from "../game/core/format";
+import { POP_TYPES } from "../game/core/pops";
+import { realmPops } from "../game/core/query";
 import type { EconomyPreview } from "../game/economy/preview";
-import { happinessLevel } from "../game/happiness";
+import { happinessLevel, standingHappiness } from "../game/happiness";
 import { transition, type GameCommand } from "../game/legalMoves";
+import { tradePreview } from "../game/trade";
 import { unrestOutcome } from "../game/unrest";
-import type { HegemonyState, PlayerId, Resources } from "../game/types";
-import { RESOURCE_LABELS } from "./formatters";
+import type { HegemonyState, PlayerId, Resources, TradeBundle } from "../game/types";
+import { formatPopLabel, RESOURCE_LABELS } from "./formatters";
 import { sign } from "./frameFormat";
+import { POP_RASTERS, RESOURCE_RASTERS } from "./iconRegistry";
 import { RESOURCE_ORDER } from "./resourceVisuals";
 
 /*
@@ -19,6 +25,8 @@ export type ConfirmChange = {
   to: number;
   higherIsBetter?: boolean;
   format?: (n: number) => string;
+  /** An `Ico` path, where a line is drawn with icons (a trade card's foot). */
+  icon?: string;
 };
 
 /** What the confirm reads off the engine for a spend: each changed store, happiness when
@@ -29,6 +37,24 @@ const TIER_WORDS = {
   riot: "This takes you to the Riot line: a Riot starts when your turn ends",
   revolt: "This takes you to the Revolt line: a Revolt starts when your turn ends",
 } as const;
+
+/** The happiness line and, when the move crosses the Riot or Revolt line, its warning. */
+function happinessChange(
+  G: HegemonyState,
+  seat: PlayerId,
+  level: number,
+  then: number,
+): SpendPreview {
+  if (then === level) return { changes: [], warn: null };
+  const was = unrestOutcome(G, seat, level).tier;
+  const now = unrestOutcome(G, seat, then).tier;
+  return {
+    changes: [
+      { label: "Happiness", from: level, to: then, format: sign, icon: RESOURCE_RASTERS.happiness },
+    ],
+    warn: now !== "none" && now !== was ? TIER_WORDS[now] : null,
+  };
+}
 
 /**
  * The engine playing `commands` in order on a copy (`transition`): the state after, or
@@ -81,18 +107,62 @@ export function previewSpend(
   const changes: ConfirmChange[] = RESOURCE_ORDER.filter(
     (r) => store[r] !== before[r] || (cost[r] ?? 0) > 0,
   ).map((r) => ({ label: RESOURCE_LABELS[r], from: before[r], to: store[r] ?? before[r] }));
-  let warn: string | null = null;
-  if (after) {
-    const level = happinessLevel(G, viewerId);
-    const then = happinessLevel(after, viewerId);
-    if (then !== level) {
-      changes.push({ label: "Happiness", from: level, to: then, format: sign });
-      const was = unrestOutcome(G, viewerId, level).tier;
-      const now = unrestOutcome(after, viewerId, then).tier;
-      if (now !== "none" && now !== was) warn = TIER_WORDS[now];
-    }
+  if (!after) return { changes, warn: null };
+  // A pop promoted or demoted moves the seat's votes.
+  const votes = currentVoteWeight(G, viewerId);
+  const votesAfter = currentVoteWeight(after, viewerId);
+  if (votesAfter !== votes) changes.push({ label: "Votes", from: votes, to: votesAfter });
+  const mood = happinessChange(
+    G,
+    viewerId,
+    happinessLevel(G, viewerId),
+    happinessLevel(after, viewerId),
+  );
+  return { changes: [...changes, ...mood.changes], warn: mood.warn };
+}
+
+/**
+ * What a trade leaves `seat` holding, giving `gives` and getting `gets`: each changed
+ * store and happiness as the engine previews it (`tradePreview`), the pops by class and
+ * the held cards the terms move, and the line warning.
+ */
+export function previewTrade(
+  G: HegemonyState,
+  seat: PlayerId,
+  gives: TradeBundle,
+  gets: TradeBundle,
+): SpendPreview {
+  const before = G.players[seat].resources;
+  const after = tradePreview(G, seat, gives, gets);
+  const changes: ConfirmChange[] = RESOURCE_ORDER.filter(
+    (r) => after.resources[r] !== before[r],
+  ).map((r) => ({
+    label: RESOURCE_LABELS[r],
+    from: before[r],
+    to: after.resources[r],
+    icon: RESOURCE_RASTERS[r],
+  }));
+  const pops = realmPops(G, seat);
+  for (const pop of POP_TYPES) {
+    const moved = gets.pops[pop] - gives.pops[pop];
+    if (moved !== 0)
+      changes.push({
+        label: capitalize(formatPopLabel(pop, 2)),
+        from: pops[pop],
+        to: pops[pop] + moved,
+        icon: POP_RASTERS[pop],
+      });
   }
-  return { changes, warn };
+  const held = G.devHands[seat]?.length ?? 0;
+  if (gets.cards !== gives.cards)
+    changes.push({
+      label: "Cards",
+      from: held,
+      to: held + gets.cards - gives.cards,
+      icon: "events/convoy",
+    });
+  const mood = happinessChange(G, seat, standingHappiness(G, seat), after.happiness);
+  return { changes: [...changes, ...mood.changes], warn: mood.warn };
 }
 
 /** A place's room and yield before and after, from an engine economy preview

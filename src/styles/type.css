@@ -69,6 +69,27 @@
   line-height: 1.25;
 }
 
+/* A card face's kickers — the deck band's word, a politician's epithet — keep one
+   size at every Text size: the face is fixed-format, and its tooltip scales. */
+.gc .label,
+.sit-pol .kicker {
+  font-size: var(--t-face-13);
+  line-height: var(--lh-face-16);
+}
+
+/* Numbers in a panel are 16: a title's figures on the three-titles card (what its
+   holder has, how far the next best is), the cost "x → y" a confirm asks about, a
+   deck line's counts, the happiness card's counts, terms and total. */
+.threat-panel .threat-row-words .caption,
+.threat-panel .threat-gap,
+.ch-confirm-d .delta,
+.deck-line .num,
+.mood-line-n,
+.mood-line b,
+.mood-sec .mood-total {
+  font-size: var(--t-16);
+}
+
 .body,
 .body-em,
 .stat,

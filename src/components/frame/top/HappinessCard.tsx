@@ -61,7 +61,7 @@ export function HappinessCard({
         />
         <div className="mood-body">
           <h3 className="mood-sec">
-            What moves it<span>{sign(display.value)}</span>
+            What moves it<span className="num mood-total">{sign(display.value)}</span>
           </h3>
           <ul className="mood-lines">
             {display.lines.map((line) => {

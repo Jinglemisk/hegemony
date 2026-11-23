@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { HegemonyState, LogEntry, PlayerId } from "../../../game/types";
 import { deedSeat } from "../../../ui/frameSelectors";
 import { yearLabel } from "../../../ui/formatters";
+import { namePlaces } from "../../../ui/settlementNames";
 import { PLAYER_GLAZE_LIST } from "../../../ui/playerGlazes";
 import { AnnotatedText } from "../../AnnotatedText";
 import { SeatCoin } from "../../chrome/SeatCoin";
@@ -139,7 +140,10 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
                     link does not. Every one of those terms is still a link on
                     the pages where you act on it. */}
                 <span className="chron-text">
-                  <AnnotatedText links={false} text={entry.message} />
+                  <AnnotatedText
+                    links={false}
+                    text={namePlaces(G.board.tiles, entry.message, entry.about)}
+                  />
                 </span>
               </p>
             ))}

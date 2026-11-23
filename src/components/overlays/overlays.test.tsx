@@ -3,8 +3,13 @@
 import { act, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createCommandEvents } from "../../client/commandAdapter";
+import type { GameMoves } from "../../client/controller";
 import { scenario } from "../../game/testing/scenario";
+import type { HegemonyState } from "../../game/types";
 import { turnEndUnrest } from "../../game/unrest";
+import { GameUiContext } from "../board/GameUiContext";
+import { ConfirmHost, ConfirmProvider } from "../chrome/Confirm";
 import { EndTurn } from "../frame/EndTurn";
 import { MechanicsDetails } from "../MechanicsDetails";
 import { Popover } from "./Popover";
@@ -264,6 +269,46 @@ describe("Popover", () => {
 });
 
 describe("End turn's confirm", () => {
+  const renderConfirm = (
+    G: HegemonyState,
+    onCalm: (payment: "gold" | "influence") => void = () => {},
+    onEndTurn: () => void = () => {},
+  ) =>
+    act(() => {
+      root.render(
+        <GameUiContext.Provider
+          value={{
+            G,
+            viewerId: "0",
+            viewer: G.players["0"],
+            activeEffects: [],
+            currentPlayerId: "0",
+            phase: "gameplay",
+            isActive: true,
+            turnBlocked: null,
+            humans: ["0"],
+            moves: {} as GameMoves,
+            events: createCommandEvents(() => {}),
+          }}
+        >
+          <ConfirmProvider>
+            <EndTurn
+              actingId="0"
+              canEndTurn
+              confirmOpen
+              onCalm={onCalm}
+              onEndTurn={onEndTurn}
+              ruleset={G.ruleset}
+              title="Press and hold to end your turn."
+              unrest={turnEndUnrest(G, "0")}
+              warning={null}
+            />
+            <ConfirmHost />
+          </ConfirmProvider>
+        </GameUiContext.Provider>,
+      );
+    });
+
   it.each([
     [-3, "Ending your turn starts a riot", "Riot at turn end", "Face the riot"],
     [-6, "Ending your turn now means revolt", "Revolt at turn end", "Revolt"],
@@ -271,22 +316,7 @@ describe("End turn's confirm", () => {
     "opens at %s as a popover a press outside closes",
     (level, consequence, head, face) => {
       const G = scenario().opening().withHappiness("0", level).build();
-
-      act(() => {
-        root.render(
-          <EndTurn
-            actingId="0"
-            canEndTurn
-            confirmOpen
-            onCalm={() => {}}
-            onEndTurn={() => {}}
-            ruleset={G.ruleset}
-            title="Press and hold to end your turn."
-            unrest={turnEndUnrest(G, "0")}
-            warning={null}
-          />,
-        );
-      });
+      renderConfirm(G);
 
       // The hold opens the confirm at the line, focused on the plain choice to face it.
       const dialog = document.body.querySelector<HTMLElement>("[role=dialog]")!;
@@ -296,11 +326,52 @@ describe("End turn's confirm", () => {
       expect(dialog.querySelector("h2")?.textContent).toBe(head);
       expect(dialog.querySelector('[aria-label="Close the warning"]')).not.toBeNull();
       expect(document.activeElement?.textContent).toBe(face);
+      // The focused choice comes first in the card's order.
+      expect(dialog.querySelector(".confirm-acts button")?.textContent).toBe(face);
 
       act(() => document.body.dispatchEvent(new Event("pointerdown", { bubbles: true })));
       expect(document.body.querySelector("[role=dialog]")).toBeNull();
     },
   );
+
+  it("asks before Calm spends, and ends the turn only on yes", () => {
+    const G = structuredClone(
+      scenario().opening().withHappiness("0", -3).withResources("0", "wealthy").build(),
+    );
+    G.pendingPlayerEvent = null;
+    const unrest = turnEndUnrest(G, "0");
+    expect(unrest?.calm).not.toBeNull();
+    const onCalm = vi.fn();
+    const onEndTurn = vi.fn();
+    renderConfirm(G, onCalm, onEndTurn);
+
+    const calm = () =>
+      [...document.querySelectorAll<HTMLButtonElement>(".endturn-confirm button")].find((b) =>
+        b.textContent?.startsWith("Calm"),
+      )!;
+    act(() => calm().click());
+    const bar = document.body.querySelector<HTMLElement>("[role=alertdialog]")!;
+    expect(bar.textContent).toContain("Gold");
+    expect(onCalm).not.toHaveBeenCalled();
+
+    // No: nothing spent, the warning stays.
+    const answer = (name: string) =>
+      [...bar.querySelectorAll<HTMLButtonElement>("button")].find((b) => b.textContent === name)!;
+    act(() => answer("Cancel").click());
+    expect(onCalm).not.toHaveBeenCalled();
+    expect(onEndTurn).not.toHaveBeenCalled();
+    expect(document.body.querySelector(".endturn-confirm")).not.toBeNull();
+
+    act(() => calm().click());
+    act(() =>
+      [...document.body.querySelectorAll<HTMLButtonElement>("[role=alertdialog] button")]
+        .find((b) => b.textContent === "Calm and end")!
+        .click(),
+    );
+    expect(onCalm).toHaveBeenCalledTimes(unrest!.calm!.payments.length);
+    expect(onEndTurn).toHaveBeenCalledOnce();
+    expect(document.body.querySelector(".endturn-confirm")).toBeNull();
+  });
 });
 
 function PopoverHarness({ anchor, onDismiss }: { anchor: DOMRect; onDismiss: () => void }) {

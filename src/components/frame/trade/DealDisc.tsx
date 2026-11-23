@@ -5,11 +5,15 @@ import type { Deal } from "../../../game/types";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { useGameUi } from "../../board/GameUiContext";
 import { SeatCoin } from "../../chrome/SeatCoin";
+import { focusSoon } from "../../overlays/focus";
 import { Popover } from "../../overlays/Popover";
 import { Tooltip } from "../../overlays/Tooltip";
 import { Ico, Tip, TipBody } from "../parts";
 import { DealCard } from "./DealCard";
 import { dealTitle, dealWords } from "./tradeView";
+
+/** The focus fell to the page: what had it was taken away. */
+const isLost = () => !document.activeElement || document.activeElement === document.body;
 
 /**
  * One of the viewer's standing deals on the alarms row: a full ring in the partner's
@@ -28,6 +32,24 @@ export function DealDisc({ deal, asking, ask }: { deal: Deal; asking: boolean; a
   useEffect(() => {
     if (asking && ask > 0) setOpen(true);
   }, [asking, ask]);
+
+  // Opened on its own, the card had no control to hand the focus back to: its disc takes it.
+  const close = () => {
+    setOpen(false);
+    focusSoon(() => (isLost() ? disc.current : null));
+  };
+  // Keep or Cancel took their buttons away: the card's next control, else its disc, else
+  // (the deal cancelled, its disc gone) the alarms row's first disc.
+  const answered = () =>
+    focusSoon(() => {
+      const card = `[data-deal-card="${deal.id}"]`;
+      return (
+        document.querySelector<HTMLElement>(`${card} .trade-foot button`) ??
+        document.querySelector<HTMLElement>(`${card} .trade-x`) ??
+        disc.current ??
+        document.querySelector<HTMLElement>(".alarm-disc")
+      );
+    });
 
   return (
     <li className="offer-alarm">
@@ -69,10 +91,10 @@ export function DealDisc({ deal, asking, ask }: { deal: Deal; asking: boolean; a
           ariaLabel={title}
           className="trade-pop alarm-card"
           dismissOnOutside
-          onDismiss={() => setOpen(false)}
+          onDismiss={close}
           slot
         >
-          <DealCard deal={deal} onClose={() => setOpen(false)} />
+          <DealCard deal={deal} onAnswered={answered} onClose={close} />
         </Popover>
       ) : null}
     </li>

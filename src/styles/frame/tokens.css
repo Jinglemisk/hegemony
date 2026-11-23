@@ -58,6 +58,9 @@
      are 44 high in a 50 bar, a 20 figure over a 13 label already fills them, and
      every cell's tooltip (which does scale) carries its words whole. */
   --t-bar-13: 13px;
+  /* A card face is fixed-format: its kickers hold 13 at every Text size. */
+  --t-face-13: 13px;
+  --lh-face-16: 16px;
   --t-bar-20: 20px;
   --lh-bar-16: 16px;
   --lh-bar-20: 20px;
@@ -386,11 +389,12 @@
   --sh-hand-w: 480px;
   --sh-hand-h: 72px;
   --sh-sit-head: 100px; /* the Assembly sheet's head, at every stage */
+  --sh-sit-foot: 88px; /* … and its foot: one row of seat chips, two lines each at Largest */
   --sh-confirm-w: 680px; /* the confirm bar over the board's centre … */
-  --sh-confirm-h: 96px; /* … one height at every text size: its words scroll inside */
+  --sh-confirm-h: 120px; /* … one height at every text size, sized for Largest */
   --sh-compose-h: 312px; /* the trade composer: one height, its rows scroll */
   --sh-deal-h: 406px; /* an open offer and a standing deal: one height, their bodies scroll */
-  --sh-threat-h: 268px; /* the three-titles card */
+  --sh-threat-h: 320px; /* the three-titles card: its head and three whole rows */
   --sh-pill-h: 92px; /* the Assembly's pill, minimised under the alarms */
   --sh-notice-w: 400px; /* the turn notice, the same at every text size */
   --sh-notice-h: 304px;
