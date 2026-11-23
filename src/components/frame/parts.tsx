@@ -149,7 +149,7 @@ export function Delta({
   from,
   to,
   higherIsBetter = true,
-  format = String,
+  format = formatNumber,
 }: {
   from: number;
   to: number;

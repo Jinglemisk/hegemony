@@ -62,8 +62,9 @@
   .rd-outl-tab,
   .pp-opt,
   .lw-table tr,
+  .chronicleList,
   .intelBody,
-  .chronicleList
+  .endturn
 ) {
   --focus-gap: calc(-2 * var(--focus-w));
   --focus-at: inset 0 0 0 calc(3 * var(--focus-w));

@@ -3,31 +3,18 @@ import {
   useEffectEvent,
   useLayoutEffect,
   useRef,
+  useState,
   type ReactNode,
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
 import type { AnchoringOptions, VerticalPlacement } from "../../ui/anchoring";
-import { overlayRoot, overlayScale } from "../chrome/canvas";
+import { OVERLAY_ROOT_ID, overlayRoot, overlayScale } from "../chrome/canvas";
 import { ESCAPE, useEscapeLayer } from "./escapeStack";
 import { FOCUSABLE, lendFocus, trapTab } from "./focus";
 import { isElementRef, useAnchoredOverlay } from "./useAnchoredOverlay";
 
-export function Popover({
-  align,
-  anchor,
-  ariaLabel,
-  centre = false,
-  children,
-  className,
-  dismissOnOutside = false,
-  measureKey,
-  onDismiss,
-  preferredPlacement = "below",
-  escapeRank = ESCAPE.card,
-  focusFirst = false,
-  slot = false,
-}: {
+type PopoverProps = {
   align?: AnchoringOptions["align"];
   /** A spot on the map, or the control that opens the popover. */
   anchor: DOMRect | RefObject<HTMLElement | null>;
@@ -50,7 +37,39 @@ export function Popover({
   /** Stand in a fixed slot its class places (an alarm's card under the alarms row),
    *  never measured off the anchor; the anchor only takes focus back. */
   slot?: boolean;
-}) {
+};
+
+/**
+ * A popover, portalled into the HUD canvas's overlay layer so it is drawn at the
+ * canvas's scale. One opened in the same render that mounts the canvas (a card open
+ * on load) waits a layout pass for that layer, instead of landing unscaled in <body>.
+ */
+export function Popover(props: PopoverProps) {
+  const [root, setRoot] = useState(() =>
+    typeof document === "undefined" ? null : document.getElementById(OVERLAY_ROOT_ID),
+  );
+  useLayoutEffect(() => {
+    if (!root) setRoot(overlayRoot());
+  }, [root]);
+  return root ? <PopoverCard {...props} root={root} /> : null;
+}
+
+function PopoverCard({
+  align,
+  anchor,
+  ariaLabel,
+  centre = false,
+  children,
+  className,
+  dismissOnOutside = false,
+  measureKey,
+  onDismiss,
+  preferredPlacement = "below",
+  escapeRank = ESCAPE.card,
+  focusFirst = false,
+  slot = false,
+  root,
+}: PopoverProps & { root: HTMLElement }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const placed = centre || slot;
   const position = useAnchoredOverlay(
@@ -110,8 +129,6 @@ export function Popover({
     return () => document.removeEventListener("pointerdown", away);
   }, [anchor, dismissOnOutside]);
 
-  if (typeof document === "undefined") return null;
-  const root = overlayRoot();
   const k = overlayScale(root);
 
   return createPortal(

@@ -118,6 +118,10 @@ button.alarm-disc {
   left: var(--sh-card-x);
   max-width: var(--sh-card-w);
 }
+/* One width for every alarm's card, the threat's, an offer's and a deal's. */
+.sharedPopover.is-slot.alarm-card .trade-card {
+  width: var(--sh-card-w);
+}
 .alarm-card-x {
   position: absolute;
   top: var(--s-3);

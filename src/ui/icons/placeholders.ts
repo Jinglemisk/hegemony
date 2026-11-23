@@ -117,7 +117,3 @@ const GLYPH_PLACEHOLDERS: Partial<Record<GlyphId, string | undefined>> = {
 export function glyphPlaceholder(glyph: GlyphId): string | undefined {
   return GLYPH_PLACEHOLDERS[glyph];
 }
-
-export const CHROME_PLACEHOLDERS = {
-  settings: placeholder("chrome/settings"),
-} as const;

@@ -5,6 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { scenario } from "../../game/testing/scenario";
 import { turnEndUnrest } from "../../game/unrest";
+import { HudCanvas } from "../chrome/HudCanvas";
 import { EndTurn } from "../frame/EndTurn";
 import { MechanicsDetails } from "../MechanicsDetails";
 import { ModalShell } from "../board/modals/ModalShell";
@@ -392,6 +393,30 @@ describe("End turn's confirm", () => {
       expect(document.body.querySelector("[role=dialog]")).toBeNull();
     },
   );
+});
+
+describe("Popover opened on load", () => {
+  it("mounts once, inside the canvas it renders with, and keeps its autofocus", () => {
+    act(() =>
+      root.render(
+        <HudCanvas>
+          <Popover
+            anchor={domRect(0, 0, 10, 10)}
+            ariaLabel="Riot warning"
+            onDismiss={() => {}}
+            slot
+          >
+            <button autoFocus type="button">
+              Face the riot
+            </button>
+          </Popover>
+        </HudCanvas>,
+      ),
+    );
+    const card = document.querySelector("[role=dialog]")!;
+    expect(card.parentElement?.id).toBe("hud-overlays");
+    expect(document.activeElement?.textContent).toBe("Face the riot");
+  });
 });
 
 function PopoverHarness({ anchor, onDismiss }: { anchor: DOMRect; onDismiss: () => void }) {

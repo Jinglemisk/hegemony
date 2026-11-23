@@ -208,7 +208,7 @@ export function AssemblyDock({ sitting }: { sitting: Sitting }) {
 
   return (
     <button
-      aria-label={`Assembly, Year ${toRoman(session.year)}: ${where}. Return to the sitting.`}
+      aria-label={`Assembly, Year ${session.year}: ${where}. Return to the sitting.`}
       className="sit-dock"
       data-c="sit-dock"
       onClick={() => sitting.setMinimised(false)}

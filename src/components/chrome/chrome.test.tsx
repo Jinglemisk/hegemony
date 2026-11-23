@@ -12,7 +12,7 @@ import { HudCanvas } from "./HudCanvas";
 import { Band, Panel, PanelHead } from "./Panel";
 import { SeatCoin } from "./SeatCoin";
 import { Socket, SocketMeter } from "./Socket";
-import { useTextScale } from "./textScale";
+import { screenDefault, useTextScale } from "./textScale";
 
 let container: HTMLDivElement;
 let root: Root;
@@ -66,10 +66,18 @@ describe("the Text size setting", () => {
     );
   }
 
+  it("starts at Large, unchosen, where the canvas draws under 0.95", () => {
+    expect(screenDefault(1440, 900)).toBe("standard");
+    expect(screenDefault(1920, 1080)).toBe("standard");
+    expect(screenDefault(1366, 768)).toBe("large");
+    expect(screenDefault(1280, 800)).toBe("large");
+  });
+
   it("writes the factor on <html> and keeps it", () => {
     render(<Sizes />);
     const button = container.querySelector("button")!;
-    expect(button.textContent).toBe("standard");
+    // jsdom's 1024×768 window draws the canvas at 0.75: unchosen, that is Large.
+    expect(button.textContent).toBe("large");
     act(() => button.click());
     expect(button.textContent).toBe("largest");
     expect(document.documentElement.style.getPropertyValue("--text-scale")).toBe("1.3");

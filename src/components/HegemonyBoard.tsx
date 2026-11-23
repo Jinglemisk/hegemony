@@ -504,6 +504,8 @@ export function HegemonyBoard({
       if (isTyping(event.target)) return;
 
       if (event.key === "?") {
+        // The Codex opens on its search: the key must not type itself into it.
+        event.preventDefault();
         setCodexTarget(null);
         toggleWindow("codex");
       }

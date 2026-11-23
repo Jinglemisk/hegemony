@@ -95,6 +95,9 @@
 .bar-cell.pop {
   width: calc(var(--u) * 22.5); /* 90: a class of people, or the room */
 }
+.bar-cell.room {
+  width: calc(var(--u) * 24); /* 96: "room (+1)" whole, with pops at sea */
+}
 .bar-cell.mood {
   width: calc(var(--u) * 39); /* 156 */
 }
@@ -132,7 +135,8 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.bar-cell-d.pos {
+.bar-cell-d.pos,
+.bar-cell-d .pos {
   color: var(--pos-ink);
 }
 .bar-cell-d.neg,

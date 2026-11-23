@@ -134,7 +134,9 @@ export function EndTurn({
             {warning ? <TipWarn>{warning.message}</TipWarn> : null}
           </Tip>
         }
-        preferredPlacement="above"
+        // Left of the dock: a tip above End turn would lie over the dock's modes.
+        side="left"
+        sideOf=".rd-dock"
         triggerClassName="endturn-anchor"
       >
         <button

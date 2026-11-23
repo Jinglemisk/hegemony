@@ -75,6 +75,14 @@ function mix(a: number, b: number, k: number) {
   return out;
 }
 
+/** A colour's own grey: its luminance in every channel. */
+function grey(c: number) {
+  const y = Math.round(0.3 * ((c >> 16) & 255) + 0.59 * ((c >> 8) & 255) + 0.11 * (c & 255));
+  return (y << 16) | (y << 8) | y;
+}
+/** How far Political greys the land nobody holds, so the realms' paint is what reads. */
+const UNHELD = 0.8;
+
 type Placed = {
   el: HTMLElement;
   x: number;
@@ -94,7 +102,23 @@ type Placed = {
   ship?: number;
   /** A building's badge: in Economy it keeps above its tile's chip at (x, y). */
   chip?: { x: number; y: number };
+  /** Where it was last put on screen (its `translate`). */
+  sx?: number;
+  sy?: number;
 };
+
+/** A label's box on the stage, in px. */
+type Box = { left: number; top: number; right: number; bottom: number };
+const meets = (a: Box, b: Box, pad = 2) =>
+  a.left < b.right + pad &&
+  a.right > b.left - pad &&
+  a.top < b.bottom + pad &&
+  a.bottom > b.top - pad;
+const overlap = (a: Box, b: Box) =>
+  Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) *
+  Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+/** Where a good's name may hang off its icon, tried in this order. */
+const NAME_SIDES = ["under", "up", "right", "left"] as const;
 
 export function createRuntime({
   stage,
@@ -198,11 +222,11 @@ export function createRuntime({
    *  way to the mode's own look as the map comes close (1 − the close band). */
   let overview = 1;
   /** A tile's colour: its terrain's; settled, its owner's glaze in the overview, and
-   *  in Political flat in that glaze at every zoom. */
+   *  in Political flat in that glaze at every zoom, the land nobody holds greyed. */
   function wash(tile: MapModel["tiles"][number]) {
     const [lead] = tile.settlements;
     const land = mix(GLAZE[tile.terrain], BONE, 0.5);
-    if (!lead) return land;
+    if (!lead) return mode === "political" ? mix(land, grey(land), UNHELD) : land;
     return mix(land, glazeOf(lead.owner), mode === "political" ? 1 : overview);
   }
 
@@ -311,9 +335,140 @@ export function createRuntime({
         L.el.style.fontSize = `${size.toFixed(1)}px`;
       }
       L.el.style.translate = `${q.x.toFixed(1)}px ${q.y.toFixed(1)}px`;
+      L.sx = q.x;
+      L.sy = q.y;
       const lift = L.hint && (html.hint ?? 0) > 0 ? 100_000 : 0;
       L.el.style.zIndex = String(Math.round(q.y) + lift);
     }
+  }
+
+  /**
+   * Once every label is placed, the few that would overprint another give way. A
+   * realm's name (Political) stands clear of the chrome, inside the board you can see;
+   * a good's icon under a realm's name steps back as it does when faded (focus brings
+   * it back); and a good's name hangs under its icon, or above it, or beside it,
+   * wherever it covers no tile's badge, no plate and no other good.
+   */
+  function settleLabels(html: Record<string, number>) {
+    const origin = stage.getBoundingClientRect();
+    const box = (el: Element): Box => {
+      const r = el.getBoundingClientRect();
+      return {
+        left: r.left - origin.left,
+        right: r.right - origin.left,
+        top: r.top - origin.top,
+        bottom: r.bottom - origin.top,
+      };
+    };
+    const shows = (L: Placed) => L.el.style.display !== "none";
+
+    // Political: each realm's name moved the least way out of any chrome it lies under.
+    const realms: Box[] = [];
+    if ((html.realm ?? 0) > 0.01) {
+      const chrome = chromeRects();
+      const W = origin.width;
+      const H = origin.height;
+      for (const L of placed) {
+        if (!L.el.classList.contains("lm-banner") || !shows(L) || L.sx === undefined) continue;
+        const named = L.el.querySelector(".rn") ?? L.el;
+        let b = box((html.realmline ?? 0) > 0.01 ? L.el : named);
+        let dx = 0;
+        let dy = 0;
+        for (let pass = 0; pass < 3; pass += 1) {
+          const under = chrome.find((r) => meets(b, r, 6));
+          if (!under) break;
+          const moves = [
+            [under.left - 6 - b.right, 0],
+            [under.right + 6 - b.left, 0],
+            [0, under.top - 6 - b.bottom],
+            [0, under.bottom + 6 - b.top],
+          ].filter(
+            ([x, y]) => b.left + x >= 0 && b.right + x <= W && b.top + y >= 0 && b.bottom + y <= H,
+          );
+          const [mx, my] = moves.sort((p, q) => Math.hypot(...p) - Math.hypot(...q))[0] ?? [0, 0];
+          if (!mx && !my) break;
+          dx += mx;
+          dy += my;
+          b = { left: b.left + mx, right: b.right + mx, top: b.top + my, bottom: b.bottom + my };
+        }
+        if (dx || dy)
+          L.el.style.translate = `${(L.sx + dx).toFixed(1)}px ${(L.sy! + dy).toFixed(1)}px`;
+        realms.push(b);
+      }
+    }
+
+    // What a good's name must not cover: the badges and plates on show.
+    const resOn = (html.res ?? 0) > 0.3 || stage.matches(".is-peek, [data-plates-close='keep']");
+    const blocks: Box[] = [];
+    for (const L of placed) {
+      if (!L.far || !shows(L)) continue;
+      const lit = L.el.matches(".is-lit, .is-asked");
+      const res = L.el.querySelector(".lm-res");
+      if (res && (resOn || lit)) blocks.push(box(res));
+      for (const plate of L.el.querySelectorAll(".lm-plate")) {
+        const on = plate.classList.contains("capital")
+          ? (html.capital ?? 0) > 0.3
+          : (html.plates ?? 0) > 0.3 || (plate.classList.contains("is-asked") && lit);
+        if (on) blocks.push(box(plate));
+      }
+    }
+    const goods = placed.filter((L) => L.el.classList.contains("lm-moor"));
+    const icons = goods.map((L) => box(L.el.querySelector("b") ?? L.el));
+    const named = (html.goodName ?? 0) > 0.01;
+    goods.forEach((L, i) => {
+      const icon = icons[i];
+      if (L.el.classList.contains("is-faded")) return;
+      if (realms.some((r) => meets(icon, r))) {
+        L.el.classList.add("is-faded");
+        return;
+      }
+      const name = L.el.querySelector<HTMLElement>(".m-name");
+      if (!name || !named) return;
+      const coin = L.el.querySelector(".lm-moor-coin");
+      const w = name.offsetWidth;
+      const h = name.offsetHeight;
+      const cx = (icon.left + icon.right) / 2;
+      const cy = (icon.top + icon.bottom) / 2;
+      const at = {
+        under: { left: cx - w / 2, top: (coin ? box(coin).bottom : icon.bottom) + 2 },
+        up: { left: cx - w / 2, top: icon.top - 2 - h },
+        right: { left: icon.right + 4, top: cy - h / 2 },
+        left: { left: icon.left - 4 - w, top: cy - h / 2 },
+      };
+      const others = [...blocks, ...icons.filter((_, k) => k !== i)];
+      // Each side as it is, then slid a little: over and under sideways and away from
+      // the icon, beside it up and down.
+      const slides = [0, 8, -8, 16, -16, 24, -24, 32, -32];
+      const tries = slides.flatMap((d) =>
+        NAME_SIDES.flatMap((side) => {
+          const away = side === "up" ? -1 : side === "under" ? 1 : 0;
+          const moves = away
+            ? [0, 6, 12].map((lift) => ({ dx: d, dy: away * lift }))
+            : Math.abs(d) <= 16
+              ? [{ dx: 0, dy: d }]
+              : [];
+          return moves.map(({ dx, dy }) => ({
+            side,
+            dx,
+            dy,
+            left: at[side].left + dx,
+            top: at[side].top + dy,
+          }));
+        }),
+      );
+      const cost = ({ left, top }: { left: number; top: number }) => {
+        const b = { left, top, right: left + w, bottom: top + h };
+        return others.reduce((sum, o) => sum + (meets(b, o) ? 1 + overlap(b, o) : 0), 0);
+      };
+      const best =
+        tries.find((t) => cost(t) === 0) ?? [...tries].sort((a, b) => cost(a) - cost(b))[0];
+      if (best.side === "under") delete L.el.dataset.name;
+      else L.el.dataset.name = best.side;
+      L.el.style.setProperty("--name-dx", `${best.dx}px`);
+      L.el.style.setProperty("--name-dy", `${best.dy}px`);
+      const { left, top } = best;
+      blocks.push({ left, top, right: left + w, bottom: top + h });
+    });
   }
 
   /** Each tile's button covers its hex as drawn, its top and the coast's walls
@@ -400,6 +555,7 @@ export function createRuntime({
     // Trade's hint takes the pointer only where it shows.
     stage.classList.toggle("hint-on", B.html.hint > 0.01);
     placeLabels(v, B.html);
+    settleLabels(B.html);
     placeTiles(v);
     stage.style.setProperty("--turn", `${v.rot.toFixed(4)}rad`);
   }

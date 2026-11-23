@@ -313,17 +313,22 @@
 .rd-outl-title,
 .rd-outl-tab,
 .rd-sec-head,
-.rd-row-fig small,
+.rd-row-fig .rd-row-lent,
 .rd-row-go,
 .rd-ocfg-h {
   font-size: var(--t-13);
   line-height: var(--lh-16);
 }
+/* A section head's count is a number, so 16 like every number in a panel. */
+.rd-sec-end.is-count {
+  font-size: var(--t-16);
+}
 .rd-row-name {
   font-size: var(--t-15);
   line-height: var(--lh-20);
 }
-.rd-row-fig {
+.rd-row-fig,
+.rd-row-fig small {
   font-size: var(--t-16);
   line-height: var(--lh-20);
 }
@@ -346,6 +351,10 @@
   font-size: var(--t-bar-13);
   line-height: var(--lh-bar-16);
 }
+.menu-btn {
+  font-size: var(--t-bar-14);
+  line-height: var(--lh-bar-20);
+}
 .menu-row-sub,
 .menu-row-open,
 .menu-sec-label,
@@ -357,7 +366,6 @@
   font-size: var(--t-13);
   line-height: var(--lh-16);
 }
-.menu-btn,
 .menu-seat-name,
 .sharedTooltip,
 .tip-ledger,

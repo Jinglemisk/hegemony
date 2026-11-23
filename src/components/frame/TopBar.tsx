@@ -5,7 +5,7 @@ import type { UnrestOutcome } from "../../game/unrest";
 import { forecastYearCard, lastYear } from "../../game/year";
 import type { IncomeContribution } from "../../game/economy/income";
 import type { Ruleset } from "../../game/ruleset";
-import { getOwnedSettlement, popsInTransit, settlementCapacity } from "../../game/rules";
+import { getOwnedSettlement, popsInTransit, settlementCapacity, totalPops } from "../../game/rules";
 import type { HegemonyState, PlayerId, PopType, Resource, Resources } from "../../game/types";
 import { yearCardFace } from "../../ui/cardFace";
 import { presentUnrestOutcome } from "../../ui/effects";
@@ -53,6 +53,7 @@ function Clock({ G }: { G: HegemonyState }) {
           ) : null
         }
         focusable
+        triggerRole="img"
         triggerClassName="year"
       >
         <b className="year-n">Year {toRoman(year)}</b>
@@ -107,6 +108,7 @@ function ResourceCell({
         </Tip>
       }
       focusable
+      triggerRole="img"
       triggerClassName={`bar-cell res${short ? " is-short" : ""}`}
     >
       <Ico path={RESOURCE_RASTERS[resource]} size="tile" />
@@ -155,6 +157,7 @@ function PopCell({
         </Tip>
       }
       focusable
+      triggerRole="img"
       triggerClassName="bar-cell res pop"
     >
       <Ico path={POP_RASTERS[pop]} size="tile" />
@@ -166,7 +169,9 @@ function PopCell({
   );
 }
 
-/** Room: the realm's pops in its settlements against what they hold, place by place. */
+/** Room: the realm's pops in its settlements against what they hold, place by place,
+ *  and "(+1)" for those at sea, as the outliner's rows count them: the classes' counts
+ *  include pops at sea, so the two add up. */
 function RoomCell({ G, viewerId }: { G: HegemonyState; viewerId: PlayerId }) {
   const names = settlementNames(G.board.tiles);
   const rows = G.players[viewerId].settlements.flatMap((tileId) => {
@@ -184,19 +189,25 @@ function RoomCell({ G, viewerId }: { G: HegemonyState; viewerId: PlayerId }) {
   });
   const pops = rows.reduce((sum, row) => sum + row.pops, 0);
   const room = rows.reduce((sum, row) => sum + row.room, 0);
+  const atSea = totalPops(popsInTransit(G, viewerId));
 
   return (
     <Tooltip
-      ariaLabel={`Room: ${pops} pops of ${room}`}
+      ariaLabel={`Room: ${pops} pops of ${room}${atSea ? `, ${atSea} more at sea` : ""}`}
       content={
         <Tip title="Room">
           {rows.length > 0 ? (
             <TipLedger
-              rows={rows.map((row) => ({
-                key: row.key,
-                label: row.label,
-                value: `${row.pops} of ${row.room}`,
-              }))}
+              rows={[
+                ...rows.map((row) => ({
+                  key: row.key,
+                  label: row.label,
+                  value: `${row.pops} of ${row.room}`,
+                })),
+                ...(atSea
+                  ? [{ key: "sea", label: "At sea, here next turn", value: `+${atSea}` }]
+                  : []),
+              ]}
             />
           ) : (
             <TipBody>No settlements yet.</TipBody>
@@ -204,6 +215,7 @@ function RoomCell({ G, viewerId }: { G: HegemonyState; viewerId: PlayerId }) {
         </Tip>
       }
       focusable
+      triggerRole="img"
       triggerClassName="bar-cell res pop room"
     >
       <Ico path="pops/capacity" size="tile" />
@@ -212,7 +224,7 @@ function RoomCell({ G, viewerId }: { G: HegemonyState; viewerId: PlayerId }) {
           {pops}
           <small className="bar-cell-of">/{room}</small>
         </b>
-        <i className="bar-cell-d">room</i>
+        <i className="bar-cell-d">room{atSea ? <span className="pos"> (+{atSea})</span> : null}</i>
       </span>
     </Tooltip>
   );

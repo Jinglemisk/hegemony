@@ -1,16 +1,17 @@
 /* DEV parameter dashboard. Deliberately utilitarian — a tool, not game chrome —
    but tinted to the Kerameikos palette so it doesn't clash with the board. */
 
-/* Undragged it stands at the board's top-right corner (TunePanel.tsx sets the spot):
-   left of the outliner, under the banners, clear of all chrome. It once sat on END
-   TURN and swallowed its clicks; never put it over a control. */
+/* Undragged it stands at the sidebar's foot (TunePanel.tsx sets the spot), narrower
+   than the sidebar's column. It once sat on END TURN, then on the Assembly's Minimise
+   and the Codex search: never put it over a control. Whatever covers that corner (the
+   place panel, a dialog, a moment sheet) hides it. */
 .tune-fab {
   position: fixed;
   z-index: var(--z-fab);
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 11px;
   letter-spacing: 0.08em;
-  padding: 7px 11px;
+  padding: 7px 8px;
   color: #f3e9d8;
   background: #2b2622;
   border: 1px solid #7a4a2b;
@@ -20,6 +21,9 @@
   /* Dragged by pointer: no page scroll or text selection under the press. */
   touch-action: none;
   user-select: none;
+}
+body:has([aria-modal="true"], .ch-moment, .frame .pp) .tune-fab {
+  display: none;
 }
 .tune-fab:active {
   cursor: grabbing;

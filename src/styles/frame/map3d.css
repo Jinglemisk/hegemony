@@ -472,6 +472,31 @@
   border: var(--rule) solid var(--map-ship-rule);
   border-radius: 2px;
 }
+/* Where under its icon it would cover a tile's badge, a plate or another good, the
+   runtime hangs the name above the icon or beside it (data-name), or slides it
+   a little (--name-dx, --name-dy). */
+.lm-moor .m-name {
+  translate: var(--name-dx, 0) var(--name-dy, 0);
+}
+.lm-moor[data-name] .m-name {
+  position: absolute;
+  margin: 0;
+}
+.lm-moor[data-name="up"] .m-name {
+  bottom: calc(100% + 2px);
+  left: 50%;
+  translate: calc(-50% + var(--name-dx, 0px)) var(--name-dy, 0);
+}
+.lm-moor:is([data-name="right"], [data-name="left"]) .m-name {
+  top: calc(var(--good) / 2);
+  translate: 0 calc(-50% + var(--name-dy, 0px));
+}
+.lm-moor[data-name="right"] .m-name {
+  left: calc(100% + 4px);
+}
+.lm-moor[data-name="left"] .m-name {
+  right: calc(100% + 4px);
+}
 
 /* The compass: the top left, under the bar. It turns with the map; a click brings
    back the opening view. */
