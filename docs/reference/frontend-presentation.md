@@ -2,7 +2,7 @@
 
 Status: living reference for the implemented frontend.
 
-Last updated: 2026-10-27.
+Last updated: 2026-11-23.
 
 This contract defines how the frontend explains gameplay mechanics without creating a
 second rules engine. Engine selectors, action statuses, and content manifests are the
@@ -270,6 +270,20 @@ The owner's other map calls of 2026-10-27:
 - **The trade key's wording** ("a Port on hex −3,0 takes it", naming a coordinate the board
   never shows) was to become "a Port founded beside it"; the map key had already gone in
   #155, so nothing was left to change.
+
+The owner's map calls of 2026-11-23:
+
+- **The pick wears a gold frame.** The black ring did not show on the dark seats' paint.
+  The selected tile is framed in a white-gold band between ink keylines (the ink carries
+  it on the palest land, the Oracle's), and the gold breathes toward a deeper gold every
+  1.8 s; under reduced motion it holds still at white gold. While the Realm drawer is open,
+  each tile the viewing seat holds wears a narrower frame of the same gold, so the pick
+  still stands out.
+- **Realm names never print over one another** (two touching realms read "DAMONTHERON").
+  The larger realm keeps its place; the other moves along its own land, then shrinks to
+  0.72, and if it still meets a name it is hidden until the view gives it room.
+- **The Oracle stands tall**, about two and a half times its old height (deeper steps, long
+  columns, the same roof), so the island's one sanctuary reads from the overview.
 
 ## Assembly presentation
 

@@ -1,7 +1,7 @@
 import { hexDistance } from "../../../game/mapTopology";
 import type { BuildingId, MaterialResource, PlayerId } from "../../../game/types";
 import { H_TILE, R_TOP, smooth } from "./camera";
-import { pilgrimagePlan, seaRoute, walkPlan } from "./life";
+import { ORACLE_STEP, pilgrimagePlan, seaRoute, walkPlan } from "./life";
 import type { Walk } from "./life";
 import type { MapModel, MapSettlement, MapTile } from "./mapModel";
 import { glazeOf } from "./palette";
@@ -834,7 +834,7 @@ export function layoutMap(model: MapModel, seed: number): Layout {
     put("oraclePriest", { x: t.x - 0.23, y: H_TILE, z: t.y - 0.38, s: FIGURE_SCALE, ry: 0.9 });
     put("oraclePriest", {
       x: t.x + 0.32,
-      y: H_TILE + 0.025,
+      y: H_TILE + ORACLE_STEP,
       z: t.y - 0.04,
       s: FIGURE_SCALE,
       ry: 2.5,

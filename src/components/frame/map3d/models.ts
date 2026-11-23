@@ -16,6 +16,7 @@ import {
 } from "three";
 import { H_TILE } from "./camera";
 import { ART_SEED, FIELD_SHAPES, rng } from "./layout";
+import { ORACLE_STEP } from "./life";
 import type { ModelName, Town } from "./layout";
 import type { MaterialName } from "./palette";
 
@@ -602,37 +603,47 @@ export function createTemplates(): Record<ModelName, Template> {
       add("leafSoft", part.ball(0.047, 7, 5), 0.055, 0.065, 0.015, { sy: 0.8 });
     }),
     ...fields,
-    // The Oracle (Delphi): a tholos on a stepped platform, drawn in every band.
+    // The Oracle (Delphi): a tholos on a stepped platform, drawn in every band. Deep
+    // steps (ORACLE_STEP each) and long columns under the old roof make it about 0.92
+    // tall, 2.4 times what it was, so the island's one sanctuary reads from afar.
     oracleCore: template((add) => {
-      add("stone", part.cyl(0.34, 0.36, 0.025, 20));
-      add("rock", part.cyl(0.29, 0.31, 0.025, 20), 0, 0.025, 0);
-      add("marble", part.cyl(0.24, 0.26, 0.025, 20), 0, 0.05, 0);
-      add("stone", part.cyl(0.11, 0.11, 0.13, 16), 0, 0.075, -0.02);
+      const step = ORACLE_STEP;
+      const base = 3 * step;
+      const column = 0.6;
+      const top = base + column;
+      add("stone", part.cyl(0.34, 0.36, step, 20));
+      add("rock", part.cyl(0.29, 0.31, step, 20), 0, step, 0);
+      add("marble", part.cyl(0.24, 0.26, step, 20), 0, 2 * step, 0);
+      add("stone", part.cyl(0.11, 0.11, column, 16), 0, base, -0.02);
       for (let i = 0; i < 10; i++) {
         const a = (i / 10) * Math.PI * 2;
-        const column = part.cyl(0.011, 0.012, 0.13, 6);
-        add("marble", column, 0.165 * Math.cos(a), 0.075, -0.02 + 0.165 * Math.sin(a), quiet);
+        const shaft = part.cyl(0.015, 0.017, column, 8);
+        add("marble", shaft, 0.165 * Math.cos(a), base, -0.02 + 0.165 * Math.sin(a), quiet);
       }
-      add("marble", part.cyl(0.185, 0.185, 0.018, 24), 0, 0.205, -0.02);
+      add("marble", part.cyl(0.185, 0.185, 0.03, 24), 0, top, -0.02);
       // A dark soffit under an overhanging cone: the roof rises unbroken to its centre.
-      add("clayDark", part.cyl(0.218, 0.218, 0.008, 24), 0, 0.223, -0.02, quiet);
-      add("clay", part.cone(0.218, 0.115, 24), 0, 0.231, -0.02, quiet);
+      add("clayDark", part.cyl(0.218, 0.218, 0.008, 24), 0, top + 0.03, -0.02, quiet);
+      add("clay", part.cone(0.218, 0.115, 24), 0, top + 0.038, -0.02, quiet);
       for (let row = 0; row < 4; row++) {
         for (let i = 0; i < 24; i++) {
           const inner = 0.026 + row * 0.047;
           const a = ((i + (row % 2) * 0.5) * Math.PI) / 12;
           const tile = part.roofTile(inner, inner + 0.046, a + 0.009, a + Math.PI / 12 - 0.009);
-          add((i + row * 2) % 7 === 0 ? "clayLight" : "clay", tile, 0, 0.232, -0.02, quiet);
+          add((i + row * 2) % 7 === 0 ? "clayLight" : "clay", tile, 0, top + 0.039, -0.02, quiet);
         }
       }
-      add("bronze", part.cyl(0.008, 0.012, 0.02, 8), 0, 0.344, -0.02, quiet);
-      add("bronze", part.ball(0.012, 8, 6), 0, 0.369, -0.02);
+      add("bronze", part.cyl(0.008, 0.012, 0.02, 8), 0, top + 0.151, -0.02, quiet);
+      add("bronze", part.ball(0.012, 8, 6), 0, top + 0.176, -0.02);
     }),
     // Close in: the omphalos, the tripod over the cleft, and the laurel.
     oracleDetail: template((add) => {
-      add("stone", part.cyl(0.035, 0.038, 0.012, 12), 0.17, 0.075, 0.12);
-      add("marble", part.dome(0.028), 0.17, 0.087, 0.12);
-      add("bronze", part.torus(0.024, 0.003), 0.17, 0.095, 0.12, { rx: Math.PI / 2, line: false });
+      const deck = 3 * ORACLE_STEP;
+      add("stone", part.cyl(0.035, 0.038, 0.012, 12), 0.17, deck, 0.12);
+      add("marble", part.dome(0.028), 0.17, deck + 0.012, 0.12);
+      add("bronze", part.torus(0.024, 0.003), 0.17, deck + 0.02, 0.12, {
+        rx: Math.PI / 2,
+        line: false,
+      });
       add("door", part.box(0.13, 0.004, 0.022), -0.37, 0, 0.12, { ry: 0.5, line: false });
       add("door", part.box(0.07, 0.004, 0.018), -0.42, 0, 0.16, { ry: -0.4, line: false });
       for (let i = 0; i < 3; i++) {
