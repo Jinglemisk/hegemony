@@ -227,7 +227,8 @@ export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain
     trade: { ...board, lifeShips: 1, tradeRoutes: 1 },
   };
   // Every mode's labels: the capitals' plates at both bands, every plate close in, a
-  // pick's candidates' at any zoom. The goods' icons and names show at every zoom.
+  // pick's candidates' at any zoom. The goods' icons show at every zoom, and their
+  // names in every mode but Political.
   const labels = {
     res: 1 - close,
     capital: fits,
@@ -236,6 +237,8 @@ export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain
     pips: near,
     oracle: near,
     ship: near,
+    good: 1,
+    goodName: 1,
     event: 0,
     realm: 0,
     realmline: 0,
@@ -251,10 +254,14 @@ export function bandAlphas(t: number, hexPx = Infinity, mode: MapMode = "terrain
     // The realm's name lies large across its land at every zoom, in place of the
     // capitals' plates and the tiles' badges; close in, every plate still names its
     // place. Its glaze and counts, a second line, wait for the room of Economy's card.
+    // The goods step back: their names would lie over the realms' names, so only their
+    // icons stay, dimmed.
     political: {
       ...labels,
       res: 0,
       capital: 0,
+      good: 0.4,
+      goodName: 0,
       event: 1,
       realm: 1,
       realmline: card,

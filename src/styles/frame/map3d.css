@@ -396,6 +396,7 @@
 .lm-moor {
   --good: 2.4em;
   display: grid;
+  opacity: var(--a-good, 1);
   justify-items: center;
   padding: 0;
   border: 0;
@@ -411,6 +412,10 @@
 .lm-moor:focus-visible {
   outline: var(--rule-2) solid var(--ochre);
   outline-offset: var(--rule-2);
+  opacity: 1;
+}
+/* Dimmed in Political, a good comes back whole under the pointer. */
+.lm-moor:hover {
   opacity: 1;
 }
 /* The good's icon on an ivory disc, ringed in its holder's colour once claimed. */
@@ -439,6 +444,7 @@
 /* The name on a dark chip: a raft lies off the coast, so the name often falls on a
    tile and its plate. */
 .lm-moor .m-name {
+  opacity: var(--a-goodName, 1);
   margin-top: 2px;
   padding: 2px 6px;
   font-family: var(--f-sans);
