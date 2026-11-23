@@ -560,6 +560,13 @@ export function HegemonyBoard({
     [turnOpen, G, viewerId, moves],
   );
 
+  // What the map is asking, while it asks: an armed mode's pick, or a starting place.
+  const caption = mapSelection.selection
+    ? selectionCaption(mapSelection.selection.mode, mapSelection.candidateTileIds.length)
+    : isSetup
+      ? pendingSetupCopy
+      : null;
+
   // A luxury good's mooring picked, from its raft or the outliner: its page opens.
   const pickMooring = (vertexId: string) => pick({ kind: "mooring", vertexId });
   // Found a colony: the drawer closes and the map lights every legal site.
@@ -613,14 +620,9 @@ export function HegemonyBoard({
                       />
                     </div>
 
-                    {isSetup || mapSelection.selection ? (
-                      <div className="map-caption" role="status">
-                        {mapSelection.selection
-                          ? selectionCaption(
-                              mapSelection.selection.mode,
-                              mapSelection.candidateTileIds.length,
-                            )
-                          : pendingSetupCopy}
+                    {caption ? (
+                      <div className="map-caption" role="status" title={caption}>
+                        {caption}
                       </div>
                     ) : null}
 

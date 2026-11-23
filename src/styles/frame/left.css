@@ -7,9 +7,15 @@
 
 /* ---- what this replaces: hidden, removed at integration ---------------------- */
 
-/* The map's question stands clear of the sidebar. */
+/* The map's question stands under the toast lane, in the board's top band that no
+   drawer, place panel, pop, alarm card or hand reaches; at a larger Text size it
+   ellipsizes, its title holding the whole. */
 .frame .map-caption {
-  left: calc(var(--sh-side-w) + var(--s-4));
+  top: calc(var(--sh-top-h) + var(--s-3) + var(--sh-toast-h) + var(--s-3));
+  left: calc(var(--sh-card-x) + var(--sh-card-w) + var(--s-4));
+  max-width: var(--sh-toast-w);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 /* The compass stands at the board's top-right, under the bar and left of the
    outliner: the one corner no drawer, place panel, pop, alarm, toast or hand ever

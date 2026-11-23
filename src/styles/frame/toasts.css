@@ -9,7 +9,7 @@
   position: fixed;
   top: calc(var(--sh-top-h) + var(--s-3));
   left: calc(var(--sh-card-x) + var(--sh-card-w) + var(--s-4));
-  width: calc(var(--u) * 120); /* 480 */
+  width: var(--sh-toast-w);
 }
 .toast {
   display: grid;
@@ -17,7 +17,7 @@
   align-items: center;
   gap: var(--s-3);
   width: 100%;
-  min-height: calc(var(--u) * 16);
+  min-height: var(--sh-toast-h);
   border: 0;
   text-align: left;
   cursor: pointer;
