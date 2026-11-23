@@ -23,8 +23,7 @@ import type {
 } from "../../game/types";
 import { presentBuildingEffects } from "../../ui/effects";
 import { publicCensus } from "../../ui/frameSelectors";
-import { sign } from "../../ui/frameFormat";
-import { formatPopLabel } from "../../ui/formatters";
+import { formatPopLabel, withArticle, formatSignedNumber } from "../../ui/formatters";
 import { BUILDING_RASTERS, POP_RASTERS } from "../../ui/iconRegistry";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { AnnotatedText } from "../AnnotatedText";
@@ -140,7 +139,7 @@ export function GrowOptions({
               onPick={() =>
                 ask({
                   icon: POP_RASTERS[pop],
-                  question: `Are you sure you want to grow a ${formatPopLabel(pop, 1)} in ${name}?`,
+                  question: `Are you sure you want to grow ${withArticle(formatPopLabel(pop, 1))} in ${name}?`,
                   detail: (
                     <SpendDetail
                       command={{ type: "growPop", tileId: tile.id, pop }}
@@ -226,7 +225,7 @@ export function BuildOptions({
               onPick={() =>
                 ask({
                   icon: BUILDING_RASTERS[building.id],
-                  question: `Are you sure you want to raise a ${building.name} in ${name}?`,
+                  question: `Are you sure you want to raise ${withArticle(building.name)} in ${name}?`,
                   detail: (
                     <SpendDetail
                       command={{
@@ -290,7 +289,7 @@ export function SeatCard({
       "Places",
       `${census.cities} ${census.cities === 1 ? "city" : "cities"} · ${census.colonies} ${census.colonies === 1 ? "colony" : "colonies"}`,
     ],
-    ["Happiness", sign(happinessLevel(G, seat))],
+    ["Happiness", formatSignedNumber(happinessLevel(G, seat))],
     ["Gold", `${G.players[seat].resources.gold} in store`],
     [
       "Titles",

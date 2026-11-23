@@ -598,7 +598,12 @@
   width: min(calc(var(--u) * 190), calc(var(--vw) - var(--s-8))); /* 760 */
 }
 .handReveal .drawn-tray {
+  grid-template-columns: auto minmax(0, 1fr);
   width: min(100%, calc(var(--u) * 100));
+}
+/* A card pick's words over its two answers: Back, then Give. */
+.handReveal .drawn-slip {
+  grid-column: 1 / -1;
 }
 .hand-row {
   display: flex;

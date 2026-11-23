@@ -9,10 +9,10 @@ import { getOwnedSettlement, popsInTransit, settlementCapacity, totalPops } from
 import type { HegemonyState, PlayerId, PopType, Resource, Resources } from "../../game/types";
 import { yearCardFace } from "../../ui/cardFace";
 import { presentUnrestOutcome } from "../../ui/effects";
-import { RESOURCE_LABELS, toRoman } from "../../ui/formatters";
+import { RESOURCE_LABELS, toRoman, formatSignedNumber } from "../../ui/formatters";
 import { gaugeStops } from "../../ui/frameSelectors";
 import type { HappinessDisplay } from "../../ui/frameSelectors";
-import { sign, tone } from "../../ui/frameFormat";
+import { tone } from "../../ui/frameFormat";
 import { POP_RASTERS, RESOURCE_RASTERS } from "../../ui/iconRegistry";
 import { settlementNames } from "../../ui/settlementNames";
 import { yearCardArtUrl } from "../board/events";
@@ -84,7 +84,7 @@ function ResourceCell({
 
   return (
     <Tooltip
-      ariaLabel={`${label} ${owed ? store : value}, ${sign(delta)} next turn${short && !owed ? ", short" : ""}`}
+      ariaLabel={`${label} ${owed ? store : value}, ${formatSignedNumber(delta)} next turn${short && !owed ? ", short" : ""}`}
       content={
         <Tip title={label}>
           {lines.length > 0 ? (
@@ -92,7 +92,7 @@ function ResourceCell({
               rows={lines.map((line) => ({
                 key: line.key,
                 label: line.label,
-                value: sign(line.amount),
+                value: formatSignedNumber(line.amount),
               }))}
             />
           ) : (
@@ -113,8 +113,10 @@ function ResourceCell({
     >
       <Ico path={RESOURCE_RASTERS[resource]} size="tile" />
       <span className="bar-cell-v">
-        <b className="bar-cell-n">{owed ? sign(value) : value}</b>
-        <i className={`bar-cell-d ${tone(delta)}`}>{delta === 0 ? "±0" : sign(delta)}</i>
+        <b className="bar-cell-n">{owed ? formatSignedNumber(value) : value}</b>
+        <i className={`bar-cell-d ${tone(delta)}`}>
+          {delta === 0 ? "±0" : formatSignedNumber(delta)}
+        </i>
       </span>
     </Tooltip>
   );
@@ -281,18 +283,28 @@ function MoodCell({
                         {line.label} <Turns n={line.turns} />
                       </>
                     ),
-                  value: sign(line.amount),
+                  value: formatSignedNumber(line.amount),
                 })),
-                { key: "total", label: noun, value: sign(display.value), total: true },
+                {
+                  key: "total",
+                  label: noun,
+                  value: formatSignedNumber(display.value),
+                  total: true,
+                },
               ]}
             />
             <TipLedger
               rows={[
-                { key: "riot", label: "Riot at", value: sign(display.riotAt), icon: "unrest/riot" },
+                {
+                  key: "riot",
+                  label: "Riot at",
+                  value: formatSignedNumber(display.riotAt),
+                  icon: "unrest/riot",
+                },
                 {
                   key: "revolt",
                   label: "Revolt at",
-                  value: sign(display.revoltAt),
+                  value: formatSignedNumber(display.revoltAt),
                   icon: "unrest/revolt",
                 },
               ]}
@@ -311,7 +323,7 @@ function MoodCell({
         <button
           aria-expanded={open}
           aria-haspopup="dialog"
-          aria-label={`${noun} ${sign(display.value)}, ${word}, ${tokens}; riot at ${sign(display.riotAt)}, revolt at ${sign(display.revoltAt)}. Open for Calm`}
+          aria-label={`${noun} ${formatSignedNumber(display.value)}, ${word}, ${tokens}; riot at ${formatSignedNumber(display.riotAt)}, revolt at ${formatSignedNumber(display.revoltAt)}. Open for Calm`}
           className={`bar-cell mood${atRiot ? " is-riot" : ""}`}
           data-c="mood"
           onClick={() => setOpen((value) => !value)}
@@ -320,7 +332,9 @@ function MoodCell({
         >
           <Ico path={display.value < 0 ? "unrest/discontent" : "unrest/calm"} size="tile" />
           <span className="bar-cell-v">
-            <b className={`bar-cell-n ${tone(display.value)}`}>{sign(display.value)}</b>
+            <b className={`bar-cell-n ${tone(display.value)}`}>
+              {formatSignedNumber(display.value)}
+            </b>
             <i className="bar-cell-d">{word}</i>
           </span>
           <span

@@ -115,6 +115,10 @@
     inset 0 0 0 var(--rule-2) var(--clay),
     var(--shadow-float);
 }
+/* The card's contents sit in the grid as if unwrapped; the wrapper only holds Tab. */
+.endturn-confirm .confirm-card {
+  display: contents;
+}
 .threat-panel .sharedPopoverArrow,
 .endturn-confirm .sharedPopoverArrow {
   display: none;

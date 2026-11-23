@@ -139,8 +139,9 @@
 .threat-row-words b {
   --name-size: var(--t-16);
 }
+/* Two lines at most, so the holder's figures keep one line beside it. */
 .threat-gap {
-  max-width: calc(var(--u) * 64);
+  max-width: calc(var(--u) * 40); /* 160 */
   text-align: right;
 }
 .threat-rows li.is-yours {

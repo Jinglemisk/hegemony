@@ -20,8 +20,7 @@ import type {
   TableInsuranceOption,
 } from "../../../game/types";
 import { presentTableEffect } from "../../../ui/effects";
-import { formatPopLabel } from "../../../ui/formatters";
-import { sign } from "../../../ui/frameFormat";
+import { formatPopLabel, formatSignedNumber } from "../../../ui/formatters";
 import { RESOURCE_RASTERS } from "../../../ui/iconRegistry";
 import { AnnotatedText, Prose } from "../../AnnotatedText";
 import { placeName } from "../../frame/moments";
@@ -266,7 +265,7 @@ export function RiotModal({
           />
           <p className="caption sheetNote">
             {modifier
-              ? `You roll a d${die} ${sign(modifier)}: the worst you can roll is a ${reach.lowest}.`
+              ? `You roll a d${die} ${formatSignedNumber(modifier)}: the worst you can roll is a ${reach.lowest}.`
               : `You roll a d${die}. Each insurance puts the lowest row out of reach.`}
           </p>
         </section>
@@ -341,7 +340,7 @@ export function RiotModal({
             type="button"
           >
             <Ico path="events/die" size="ui" />
-            Roll the Die{modifier ? ` · ${sign(modifier)}` : ""}
+            Roll the Die{modifier ? ` · ${formatSignedNumber(modifier)}` : ""}
           </button>
         ) : null}
       </footer>
@@ -504,7 +503,7 @@ function Insurance({
                   <AnnotatedText
                     className="caption"
                     links={false}
-                    text={`${amount ?? 0} ${resource ?? ""} · ${sign(option.modifier)}`}
+                    text={`${amount ?? 0} ${resource ?? ""} · ${formatSignedNumber(option.modifier)}`}
                   />
                 )}
                 {/* Why it cannot be chosen; the concession says so above. */}
@@ -533,8 +532,8 @@ function Insurance({
         })}
       </ul>
       <p className="caption sheetNote">
-        Each one declared adds {uniform !== null ? `${sign(uniform)}` : "its bonus"} to the roll,
-        paid when you roll the die.
+        Each one declared adds {uniform !== null ? `${formatSignedNumber(uniform)}` : "its bonus"}{" "}
+        to the roll, paid when you roll the die.
       </p>
       <p className="caption sheetNote insCleared">
         <Ico path="unrest/unrest" size="ui" />

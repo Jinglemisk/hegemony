@@ -1,8 +1,7 @@
 import { PLAYER_IDS } from "../../../game/data";
 import { ageEndRanking, victoryCardsHeld, victoryStandings } from "../../../game/victory";
 import type { HegemonyState, PlayerId } from "../../../game/types";
-import { numberWord } from "../../../ui/formatters";
-import { sign } from "../../../ui/frameFormat";
+import { numberWord, formatSignedNumber } from "../../../ui/formatters";
 import { TIEBREAK_RASTERS } from "../../../ui/iconRegistry";
 import { Prose } from "../../AnnotatedText";
 import { Ico } from "../../frame/parts";
@@ -138,7 +137,7 @@ function tiebreakLine(
     : "Tied with no titles";
   switch (tally.decidedBy) {
     case "happiness":
-      return `${tied}. ${winner} on happiness: ${sign(first.happiness)} to ${rival} ${sign(second.happiness)}.`;
+      return `${tied}. ${winner} on happiness: ${formatSignedNumber(first.happiness)} to ${rival} ${formatSignedNumber(second.happiness)}.`;
     case "pops":
       return `${tied}, and on happiness. ${winner} on pops: ${first.pops} to ${rival} ${second.pops}.`;
     default:

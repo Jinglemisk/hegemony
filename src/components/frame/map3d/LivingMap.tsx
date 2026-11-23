@@ -9,10 +9,9 @@ import {
   useState,
 } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import { sign } from "../../../ui/frameFormat";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import type { LeanSide } from "../../../game/trade";
-import { RESOURCE_LABELS } from "../../../ui/formatters";
+import { RESOURCE_LABELS, formatSignedNumber } from "../../../ui/formatters";
 import { BUILDING_RASTERS, LUXURY_GOOD_RASTERS, RESOURCE_RASTERS } from "../../../ui/iconRegistry";
 import { rasterIcon } from "../../../ui/icons/placeholders";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
@@ -182,7 +181,7 @@ const worksOther = (tile: MapTile) => tile.resource !== null && tile.resource !=
 function Readout({ output, free }: { output: number; free: number }) {
   return (
     <span className="rd">
-      {sign(output)} / {free}
+      {formatSignedNumber(output)} / {free}
     </span>
   );
 }
@@ -221,7 +220,7 @@ function EcoCards({ tile }: { tile: MapTile }) {
                   {net.map((k) => (
                     <Fragment key={k}>
                       {icon(RESOURCE_RASTERS[k])}
-                      {sign(s.net[k])}
+                      {formatSignedNumber(s.net[k])}
                     </Fragment>
                   ))}
                 </span>
@@ -312,7 +311,7 @@ function hintRows({ lean }: MapRealm) {
             key,
             icon: RESOURCE_RASTERS[s.resource],
             label: `${verb} ${RESOURCE_LABELS[s.resource].toLowerCase()}`,
-            value: `${sign(s.income)} a turn, holds ${s.stock}`,
+            value: `${formatSignedNumber(s.income)} a turn, holds ${s.stock}`,
           },
         ]
       : [];
@@ -487,7 +486,7 @@ function RealmEvents({ model, layout }: { model: MapModel; layout: Layout }) {
             key={`riot-${riot.x},${riot.z}`}
           >
             {icon("unrest/riot")}
-            {realm.riot === "revolt" ? "Revolt" : "Riot"} {sign(realm.happiness)}
+            {realm.riot === "revolt" ? "Revolt" : "Riot"} {formatSignedNumber(realm.happiness)}
           </div>
         )),
     ];

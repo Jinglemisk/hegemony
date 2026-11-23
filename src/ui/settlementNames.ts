@@ -120,3 +120,25 @@ function computeSettlementNames(tiles: readonly HexTile[]): Map<string, string> 
 
   return names;
 }
+
+/** A tile as the engine's Chronicle writes it: "plains -5,3". */
+const TILE_LABEL = /\b(?:mountain|hill|forest|plains|oracle) (-?\d+,-?\d+)\b/gi;
+
+/**
+ * A Chronicle line as a player reads it: each tile the engine names by terrain and
+ * coordinates ("plains -5,3") becomes the settlement standing there ("Abdera"), the
+ * line's own seat's where two share the tile. A tile with no settlement keeps its label.
+ */
+export function namePlaces(
+  tiles: readonly HexTile[],
+  message: string,
+  about?: string | null,
+): string {
+  return message.replace(TILE_LABEL, (label, tileId: string) => {
+    const standing = tiles.find((tile) => tile.id === tileId)?.settlements ?? [];
+    const settlement = standing.find((s) => s.owner === about) ?? standing[0];
+    if (!settlement) return label;
+    const name = settlementNameOf(tiles, settlement.id);
+    return `${name.charAt(0)}${name.slice(1).toLowerCase()}`;
+  });
+}

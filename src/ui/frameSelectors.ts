@@ -1,3 +1,4 @@
+import { formatSignedNumber } from "./formatters";
 import {
   EMPTY_POPS,
   POP_TYPES,
@@ -17,7 +18,6 @@ import { dealEndTurnReason } from "../game/deals";
 import { PLAYER_IDS } from "../game/data";
 import { playerDole } from "../game/ideaRules";
 import { presentUnrestOutcome } from "./effects";
-import { sign } from "./frameFormat";
 import type { HappinessContribution } from "../game/rules";
 import type { HegemonyState, LogEntry, PlayerId, Pops } from "../game/types";
 
@@ -37,7 +37,7 @@ export function endTurnWarning(G: HegemonyState, playerID: PlayerId) {
     : null;
   if (outcome.tier !== "none") {
     const { noun } = presentUnrestOutcome(G.ruleset, outcome.tier);
-    const unrest = `Ending now starts a ${noun} at ${sign(outcome.level)}.`;
+    const unrest = `Ending now starts a ${noun} at ${formatSignedNumber(outcome.level)}.`;
     return {
       label: `Starts ${noun}`,
       message: hungerMessage ? `${hungerMessage} ${unrest}` : unrest,

@@ -80,7 +80,7 @@ export function placeCapital(
   player.settlements.push(tile.id);
   addLog(
     G,
-    `${getPlayerName(G, playerID)} founded their metropolis on ${tile.terrain} with ${formatPops(pops)}.`,
+    `${getPlayerName(G, playerID)} founded their metropolis at ${formatTileLabel(G, tile.id)} with ${formatPops(pops)}.`,
     playerID,
   );
   return MOVE_OK;
@@ -127,7 +127,7 @@ export function placeCity(
   player.settlements.push(tile.id);
   addLog(
     G,
-    `${getPlayerName(G, playerID)} founded their second city on ${tile.terrain} with ${formatPops(pops)}.`,
+    `${getPlayerName(G, playerID)} founded their second city at ${formatTileLabel(G, tile.id)} with ${formatPops(pops)}.`,
     playerID,
   );
   return MOVE_OK;
@@ -205,7 +205,7 @@ export function foundColony(
   applyFoundColonyRiders(G, playerID, tile);
   addLog(
     G,
-    `${getPlayerName(G, playerID)} sent ${formatPops(foundingPops)} to seed the new colony on ${tile.terrain}.`,
+    `${getPlayerName(G, playerID)} sent ${formatPops(foundingPops)} to seed the new colony at ${formatTileLabel(G, tile.id)}.`,
     playerID,
   );
   return MOVE_OK;
@@ -270,7 +270,7 @@ export function upgradeColonyToCity(
       : "";
   addLog(
     G,
-    `${getPlayerName(G, playerID)} upgraded a colony to a city on ${tile.terrain}.${displacementText}`,
+    `${getPlayerName(G, playerID)} upgraded a colony to a city at ${formatTileLabel(G, tile.id)}.${displacementText}`,
     playerID,
   );
   // A colony driven off takes its buildings with it, a Port among them.
@@ -297,7 +297,7 @@ function addColony(
   G.players[playerID].settlements.push(tile.id);
   addLog(
     G,
-    `${getPlayerName(G, playerID)} founded a colony on ${tile.terrain} with ${formatPops(pops)}.`,
+    `${getPlayerName(G, playerID)} founded a colony at ${formatTileLabel(G, tile.id)} with ${formatPops(pops)}.`,
     playerID,
   );
   return settlement;
@@ -430,7 +430,7 @@ export function growPop(
   markSettlementGrown(G, playerID, tileId);
   addLog(
     G,
-    `${getPlayerName(G, playerID)} grew 1 ${formatPopName(pop, 1)} in ${settlement.kind} on ${tile.terrain}.`,
+    `${getPlayerName(G, playerID)} grew 1 ${formatPopName(pop, 1)} in ${formatTileLabel(G, tileId)}.`,
     playerID,
   );
   return MOVE_OK;

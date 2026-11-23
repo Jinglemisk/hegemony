@@ -206,6 +206,7 @@ export function AgoraDrawer() {
       </div>
       <Band label="Orators" end="stelae under each" />
       <SeatTable
+        caption="Orators: the stelae each seat has authored under each"
         rows={politicianStandings(G).map((standing) => ({
           key: standing.politician.id,
           icon: "assembly/politician",
@@ -222,10 +223,13 @@ export function AgoraDrawer() {
   );
 }
 
-/** A grid of rows by seat: a coin heads each seat's column, a held cell is marked. */
+/** A grid of rows by seat: a coin heads each seat's column, a held cell is marked.
+ *  `caption` names the table for a screen reader; each row is named by its first cell. */
 function SeatTable({
+  caption,
   rows,
 }: {
+  caption: string;
   rows: ReadonlyArray<{
     key: string;
     icon: string;
@@ -236,6 +240,7 @@ function SeatTable({
 }) {
   return (
     <table className="lw-table">
+      <caption className="visuallyHidden">{caption}</caption>
       <thead>
         <tr>
           <th>
@@ -270,7 +275,7 @@ function TableRow({
 }) {
   const { lit, on } = usePoint({ key: `r-${row.key}`, title: row.name, line: row.line });
   return (
-    <tr {...on} className={lit ? "is-lit" : undefined} tabIndex={0}>
+    <tr {...on} aria-label={row.name} className={lit ? "is-lit" : undefined} tabIndex={0}>
       {/* A long name ellipsizes; pointing at the row writes it whole in the foot line. */}
       <th data-truncates="summary" scope="row">
         <Ico path={row.icon} size="ui" />
@@ -315,6 +320,7 @@ export function VictoryDrawer() {
       ))}
       <Band end={`${numberWord(toWin)} win`} label={`The ${numberWord(standings.length)} titles`} />
       <SeatTable
+        caption="The titles: each seat's standing, the holder marked"
         rows={standings.map((standing) => ({
           key: standing.card.id,
           icon: `victory/${standing.card.id}`,
@@ -322,7 +328,7 @@ export function VictoryDrawer() {
           line: `${standing.card.description}, at least ${formatNumber(standing.minimum)}. ${standingLine(G, standing)}`,
           values: PLAYER_IDS.map((id) => ({
             id,
-            value: formatNumber(standing.values[id]).replace("-", "−"),
+            value: formatNumber(standing.values[id]),
             held: id === standing.holder,
           })),
         }))}

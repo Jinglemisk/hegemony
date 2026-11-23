@@ -376,11 +376,12 @@
   --sh-hand-w: 480px;
   --sh-hand-h: 72px;
   --sh-sit-head: 100px; /* the Assembly sheet's head, at every stage */
+  --sh-sit-foot: 88px; /* … and its foot: one row of seat chips, two lines each at Largest */
   --sh-confirm-w: 680px; /* the confirm bar over the board's centre … */
-  --sh-confirm-h: 96px; /* … one height at every text size: its words scroll inside */
+  --sh-confirm-h: 120px; /* … one height at every text size, sized for Largest */
   --sh-compose-h: 312px; /* the trade composer: one height, its rows scroll */
   --sh-deal-h: 406px; /* an open offer and a standing deal: one height, their bodies scroll */
-  --sh-threat-h: 268px; /* the three-titles card */
+  --sh-threat-h: 320px; /* the three-titles card: its head and three whole rows */
   --sh-pill-h: 92px; /* the Assembly's pill, minimised under the alarms */
   --sh-notice-w: 400px; /* the turn notice, the same at every text size */
   --sh-notice-h: 304px;
@@ -514,9 +515,11 @@
 /* The type scale rides the player's Text size (--text-scale, written on <html>).
    Card faces are fixed-format (the owner's rule: card faces never slide or scale):
    inside a card the scale is re-derived at 1, so a face prints the same at every Text
-   size and its sentence, in the card's tooltip, carries the player's size. */
+   size and its sentence, in the card's tooltip, carries the player's size. A
+   politician's epithet in the Assembly is a face's kicker and holds the same way. */
 :root,
-.gc {
+.gc,
+.sit-pol > span.kicker {
   --t-13: calc(13px * var(--text-scale)); /* the floor: small-caps tags, units */
   --t-14: calc(14px * var(--text-scale)); /* secondary lines, a tooltip's body */
   --t-15: calc(15px * var(--text-scale)); /* body */
@@ -554,7 +557,8 @@
   --t-verb: var(--t-15);
   --l-verb: var(--lh-20);
 }
-.gc {
+.gc,
+.sit-pol > span.kicker {
   --text-scale: 1;
 }
 

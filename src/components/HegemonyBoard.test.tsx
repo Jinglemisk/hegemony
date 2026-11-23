@@ -154,6 +154,8 @@ it("seats the Assembly in a modal that folds to a read-only dock and keeps a dra
   act(() => button(/Minimise/).click());
   expect(container.querySelector('[role="dialog"]')).toBeNull();
   expect(container.querySelector(".sit-dock")).not.toBeNull();
+  // Folded, the focus is on the way back, not lost to the page.
+  expect(document.activeElement).toBe(container.querySelector(".sit-dock"));
   act(() => container.querySelector<HTMLButtonElement>(".sit-dock")!.click());
   expect(container.querySelector('[role="dialog"] h2')?.textContent).toBe("The Assembly");
 

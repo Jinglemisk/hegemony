@@ -20,10 +20,12 @@ import type {
   TradePlaces,
   TradeTerms,
 } from "../../../game/types";
+import { previewTrade } from "../../../ui/confirmPreview";
 import { seatName } from "../../../ui/formatters";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { ActionButton } from "../../ActionButton";
 import { useGameUi } from "../../board/GameUiContext";
+import { Knob } from "../../chrome/controls";
 import { SeatCoin } from "../../chrome/SeatCoin";
 import { Prose } from "../../AnnotatedText";
 import { Delta, Ico } from "../parts";
@@ -43,7 +45,6 @@ import {
   offerTitle,
   pickable,
   rowOf,
-  stocksAfter,
   withCount,
 } from "./tradeView";
 import type { Sides, TradeItem, TradeRow } from "./tradeView";
@@ -137,14 +138,14 @@ function Column({
       >
         <Ico path={itemIcon(item)} size="chip" />
         {edit && !isGood(item) ? (
-          <button
-            aria-label={`One less ${itemName(G, item, 1)}`}
-            className="name trade-step"
+          <Knob
+            className="trade-step"
+            label={`One less ${itemName(G, item, 1)}`}
             onClick={() => edit.onChange(withCount(bundle, item, n - 1))}
-            type="button"
+            title={`One less ${itemName(G, item, 1)}`}
           >
             −
-          </button>
+          </Knob>
         ) : null}
         <b className="stat num trade-n">{isGood(item) ? name : n}</b>
         <span className="visuallyHidden">
@@ -153,24 +154,28 @@ function Column({
         </span>
         {edit ? (
           isGood(item) ? (
-            <button
-              aria-label={`Take ${name} off`}
-              className="name trade-step"
+            <Knob
+              className="trade-step"
+              label={`Take ${name} off`}
               onClick={() => edit.onChange(withCount(bundle, item, 0))}
-              type="button"
+              title={`Take ${name} off`}
             >
               ×
-            </button>
+            </Knob>
           ) : (
-            <button
-              aria-disabled={n >= cap ? true : undefined}
-              aria-label={`One more ${itemName(G, item, 1)}`}
-              className="name trade-step"
-              onClick={() => n < cap && edit.onChange(withCount(bundle, item, n + 1))}
-              type="button"
+            <Knob
+              className="trade-step"
+              disabled={n >= cap}
+              label={`One more ${itemName(G, item, 1)}`}
+              onClick={() => edit.onChange(withCount(bundle, item, n + 1))}
+              title={
+                n >= cap
+                  ? `No more ${itemName(G, item, 2)} to trade`
+                  : `One more ${itemName(G, item, 1)}`
+              }
             >
               +
-            </button>
+            </Knob>
           )
         ) : null}
         {before !== n ? (
@@ -357,8 +362,10 @@ function Lease({ lease, onLease }: { lease: LeaseLength; onLease?: (lease: Lease
   );
 }
 
-/** The acting seat's stocks after, each new value toned by whether it helps; `lead`
- *  names whose they are ("Nikos would hold"). */
+/** What a seat would hold after the trade (the shared confirm preview): every store,
+ *  class of pops and hand of cards the terms change and its level, each new value
+ *  toned by whether it helps, then the Riot or Revolt line it crosses. `lead` names
+ *  whose they are ("Nikos would hold"). */
 function After({
   G,
   seat,
@@ -370,18 +377,19 @@ function After({
   sides: Sides;
   lead?: string;
 }) {
-  const changes = stocksAfter(G, seat, sides);
+  const { changes, warn } = previewTrade(G, seat, sides.gives, sides.gets);
   if (changes.length === 0) return null;
   return (
     <span aria-label={lead ?? "Stocks after the trade"} className="trade-after">
       {lead ? <span className="caption trade-lead">{lead}</span> : null}
       {changes.map((change) => (
-        <span className="body body-sm trade-delta" key={change.key}>
-          <Ico path={change.icon} size="chip" />
-          <Delta from={change.from} to={change.to} />
+        <span className="body body-sm trade-delta" key={change.label}>
+          {change.icon ? <Ico path={change.icon} size="chip" /> : null}
           <span className="visuallyHidden">{change.label}</span>
+          <Delta format={change.format} from={change.from} to={change.to} />
         </span>
       ))}
+      {warn ? <span className="caption trade-warn">{warn}.</span> : null}
     </span>
   );
 }
@@ -694,8 +702,9 @@ function Answers({
                   <Prose links={false}>{status}</Prose>
                 </span>
               ) : null}
-              {/* Accepting trades at once, so the row says first what it leaves. */}
-              {accept?.can ? (
+              {/* Accepting trades at once, so the row says first what it leaves; a seat
+                  that can pay and has not answered reads the same. */}
+              {!reply && mark !== "cantPay" && (accept?.can ?? true) ? (
                 <After
                   G={G}
                   lead={`${seatName(G, seat, viewerId, true)} would hold`}
@@ -800,7 +809,7 @@ function Answers({
 /** An open offer: the terms from the offering seat's side, and every named seat's
  *  answer at once. A counter takes the card over, in place, until it is sent. */
 export function OfferCard({ offer, onClose }: { offer: TradeOffer; onClose: () => void }) {
-  const { G } = useGameUi();
+  const { G, viewerId } = useGameUi();
   const [countering, setCountering] = useState<PlayerId | null>(null);
   const counterSeat =
     countering && offer.to.includes(countering) && !offer.answers[countering] ? countering : null;
@@ -832,6 +841,14 @@ export function OfferCard({ offer, onClose }: { offer: TradeOffer; onClose: () =
               others={offer.to}
               sides={{ gives: offer.terms.give, gets: offer.terms.get }}
             />
+            <div className="trade-owner-after">
+              <After
+                G={G}
+                lead={`${seatName(G, offer.from, viewerId, true)} would hold`}
+                seat={offer.from}
+                sides={{ gives: offer.terms.give, gets: offer.terms.get }}
+              />
+            </div>
             <Answers offer={offer} onClose={onClose} onCounter={setCountering} />
           </>
         )}

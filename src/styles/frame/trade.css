@@ -184,11 +184,14 @@
     0 0 0 var(--rule-2) var(--bone),
     0 0 0 4px var(--ink);
 }
+/* A seat left off: its coin in grey, still clear on the glaze (no fade to 0.3). */
 .trade-seat.is-off {
-  opacity: 0.3;
+  filter: grayscale(1);
+  opacity: 0.8;
 }
 .trade-seat.is-off:hover {
-  opacity: 0.7;
+  filter: none;
+  opacity: 1;
 }
 
 /* The two columns and the arrows between: red out, green in. */
@@ -268,7 +271,8 @@
 .trade-chip {
   display: inline-flex;
   align-items: center;
-  height: var(--s-8);
+  gap: 2px;
+  height: calc(var(--s-8) + var(--s-1)); /* a knob and its rim */
   padding: 0 2px 0 var(--s-1);
   border-radius: var(--s-4);
   background: var(--ivory);
@@ -292,24 +296,13 @@
 .trade-was s {
   color: var(--ink-63);
 }
-.trade-step {
-  width: 18px;
-  height: 28px;
-  padding: 0;
-  border: 0;
-  border-radius: var(--r-4);
-  color: var(--ink);
-  background: transparent;
-  --name-size: var(--t-16);
-  --name-lh: var(--lh-20);
-  cursor: pointer;
-}
-.trade-step:hover:not([aria-disabled="true"]) {
-  background: var(--ink-07);
-}
-.trade-step[aria-disabled="true"] {
-  opacity: 0.3;
-  cursor: default;
+/* The steppers are the house knob at 32: a chip is a knob's height and a little. */
+.trade-chip .trade-step {
+  width: var(--s-8);
+  min-width: var(--s-8);
+  height: var(--s-8);
+  min-height: var(--s-8);
+  letter-spacing: 0;
 }
 .trade-add {
   width: var(--s-8);
@@ -406,6 +399,15 @@
 }
 .trade-lead {
   color: var(--ink-66);
+}
+/* The Riot or Revolt line a trade crosses: its own line under the values. */
+.trade-warn {
+  width: 100%;
+  color: var(--neg);
+  font-weight: 700;
+}
+.trade-owner-after {
+  padding: var(--s-2) var(--s-4) 0;
 }
 .trade-delta {
   display: flex;
@@ -603,14 +605,9 @@
 .deal-ask p {
   margin: 0;
 }
-.deal-ask-acts {
-  display: flex;
+/* A short payment's answer: the card's foot, one row on the ask's band. */
+.trade-foot.deal-ask-acts {
+  flex-wrap: nowrap;
   justify-content: flex-end;
-  gap: var(--s-2);
-}
-.deal-ask-acts .btn {
-  height: 36px;
-  border: 0;
-  border-radius: var(--r-4);
-  cursor: pointer;
+  background: var(--bone);
 }

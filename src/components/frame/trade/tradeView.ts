@@ -2,8 +2,7 @@ import { getLuxuryGood } from "../../../game/content";
 import { POP_TYPES } from "../../../game/core/pops";
 import { getOwnedSettlement } from "../../../game/core/query";
 import { DEAL_RESOURCES, dealsOf, describeAmounts, loanOf, partnerIn } from "../../../game/deals";
-import { standingHappiness } from "../../../game/happiness";
-import { partnerCanPay, tradePreview } from "../../../game/trade";
+import { partnerCanPay } from "../../../game/trade";
 import type {
   Deal,
   DealLoan,
@@ -178,35 +177,6 @@ export function pickable(
     })),
     ...goods.map((asset): TradeItem => ({ kind: "lent", id: asset.id })),
   ].filter((item) => !onCard.has(itemKey(item)));
-}
-
-export type StockChange = { key: string; icon: string; label: string; from: number; to: number };
-
-/** The seat's stocks, and its level when goods or slaves change hands, after the
- *  trade: the engine's preview, so the card never works a rule out itself. */
-export function stocksAfter(G: HegemonyState, seat: PlayerId, sides: Sides): StockChange[] {
-  const before = G.players[seat].resources;
-  const after = tradePreview(G, seat, sides.gives, sides.gets);
-  const changes: StockChange[] = RESOURCE_ORDER.filter(
-    (id) => after.resources[id] !== before[id],
-  ).map((id) => ({
-    key: id,
-    icon: RESOURCE_RASTERS[id],
-    label: RESOURCE_LABELS[id].toLowerCase(),
-    from: before[id],
-    to: after.resources[id],
-  }));
-  const level = standingHappiness(G, seat);
-  if (after.happiness !== level) {
-    changes.push({
-      key: "happiness",
-      icon: RESOURCE_RASTERS.happiness,
-      label: "happiness",
-      from: level,
-      to: after.happiness,
-    });
-  }
-  return changes;
 }
 
 /** How an answer reads on the disc and the card. An accept trades at once, so it has

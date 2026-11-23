@@ -4,8 +4,8 @@ import type { CivicCalmPayment } from "../../../game/rules";
 import { unrestOutcome } from "../../../game/unrest";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { presentUnrestOutcome } from "../../../ui/effects";
-import { formatResourceCost } from "../../../ui/formatters";
-import { sign, tone } from "../../../ui/frameFormat";
+import { formatResourceCost, formatSignedNumber } from "../../../ui/formatters";
+import { tone } from "../../../ui/frameFormat";
 import type { HappinessDisplay } from "../../../ui/frameSelectors";
 import { Prose } from "../../AnnotatedText";
 import { useGameUi } from "../../board/GameUiContext";
@@ -56,12 +56,12 @@ export function HappinessCard({
           closeLabel="Close happiness"
           icon={display.value < 0 ? "unrest/discontent" : "unrest/calm"}
           onClose={onClose}
-          sub={`${word[0]!.toUpperCase()}${word.slice(1)} · a Riot starts at ${sign(display.riotAt)}`}
-          title={`Happiness ${sign(display.value)}`}
+          sub={`${word[0]!.toUpperCase()}${word.slice(1)} · a Riot starts at ${formatSignedNumber(display.riotAt)}`}
+          title={`Happiness ${formatSignedNumber(display.value)}`}
         />
         <div className="mood-body">
           <h3 className="mood-sec">
-            What moves it<span>{sign(display.value)}</span>
+            What moves it<span className="num mood-total">{formatSignedNumber(display.value)}</span>
           </h3>
           <ul className="mood-lines">
             {display.lines.map((line) => {
@@ -78,7 +78,7 @@ export function HappinessCard({
                     </span>
                     {line.turns === undefined ? null : <Turns n={line.turns} />}
                   </span>
-                  <b className={`num ${tone(line.amount)}`}>{sign(line.amount)}</b>
+                  <b className={`num ${tone(line.amount)}`}>{formatSignedNumber(line.amount)}</b>
                 </li>
               );
             })}
@@ -87,7 +87,7 @@ export function HappinessCard({
           <p className="mood-note">
             <Prose links={false}>
               {warning ??
-                `A Riot starts at ${sign(display.riotAt)} when you end your turn, a Revolt at ${sign(display.revoltAt)}.`}
+                `A Riot starts at ${formatSignedNumber(display.riotAt)} when you end your turn, a Revolt at ${formatSignedNumber(display.revoltAt)}.`}
             </Prose>
           </p>
           <h3 className="mood-sec">

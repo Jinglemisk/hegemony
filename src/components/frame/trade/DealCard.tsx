@@ -1,3 +1,4 @@
+import { useId } from "react";
 import {
   dealIncomeLines,
   dealsAwaitingAnswer,
@@ -23,8 +24,18 @@ import { dealTitle, loanWords } from "./tradeView";
  * year. Every "can I?" is the engine's.
  */
 
-export function DealCard({ deal, onClose }: { deal: Deal; onClose: () => void }) {
+export function DealCard({
+  deal,
+  onClose,
+  onAnswered,
+}: {
+  deal: Deal;
+  onClose: () => void;
+  /** After Keep or Cancel: the answer's buttons are gone, so the focus moves on. */
+  onAnswered?: () => void;
+}) {
   const { G, moves, viewerId } = useGameUi();
+  const askId = useId();
   const seat = viewerId;
   const partner = partnerIn(deal, seat);
   const name = G.players[partner].name;
@@ -43,7 +54,11 @@ export function DealCard({ deal, onClose }: { deal: Deal; onClose: () => void })
   const get = deal.yearly[partner];
 
   return (
-    <section aria-label={dealTitle(G, deal, seat)} className="trade-card is-deal deal-card">
+    <section
+      aria-label={dealTitle(G, deal, seat)}
+      className="trade-card is-deal deal-card"
+      data-deal-card={deal.id}
+    >
       <header className="trade-head">
         <SeatCoin className="trade-coin" seat={glaze.id} size={32} title={glaze.name} />
         <span className="trade-words">
@@ -100,8 +115,8 @@ export function DealCard({ deal, onClose }: { deal: Deal; onClose: () => void })
         </dl>
 
         {asking && short ? (
-          <div className="deal-ask" role="group" aria-label={`${name} paid short`}>
-            <p className="body body-sm">
+          <div className="deal-ask" id={askId}>
+            <p className="body">
               <b>
                 {name} could pay only {describeAmounts(short.paid)} of {describeAmounts(short.owed)}
                 .
@@ -120,27 +135,40 @@ export function DealCard({ deal, onClose }: { deal: Deal; onClose: () => void })
                 ))}
               </p>
             ) : null}
-            <span className="deal-ask-acts">
-              <button
-                className="btn kicker"
-                onClick={() => moves.dealShortfall(seat, deal.id, false)}
-                type="button"
-              >
-                Cancel deal
-              </button>
-              <button
-                className="btn kicker is-primary"
-                onClick={() => moves.dealShortfall(seat, deal.id, true)}
-                type="button"
-              >
-                Keep deal
-              </button>
-            </span>
           </div>
         ) : null}
       </div>
 
-      {deal.endsYear === null ? (
+      {/* The foot never scrolls: the short payment's answer takes End deal's place. */}
+      {asking && short ? (
+        <footer
+          aria-describedby={askId}
+          aria-label={`${name} paid short`}
+          className="trade-foot deal-ask-acts"
+          role="group"
+        >
+          <button
+            className="btn kicker"
+            onClick={() => {
+              moves.dealShortfall(seat, deal.id, false);
+              onAnswered?.();
+            }}
+            type="button"
+          >
+            Cancel deal
+          </button>
+          <button
+            className="btn kicker is-primary"
+            onClick={() => {
+              moves.dealShortfall(seat, deal.id, true);
+              onAnswered?.();
+            }}
+            type="button"
+          >
+            Keep deal
+          </button>
+        </footer>
+      ) : deal.endsYear === null ? (
         <footer className="trade-foot">
           <span className="caption trade-caption">
             Ending lets this year run out: whoever has not settled still does.

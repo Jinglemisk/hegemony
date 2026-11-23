@@ -5,6 +5,7 @@ import { playerDole } from "../../../game/ideaRules";
 import { offerWindowReason } from "../../../game/trade";
 import { deedSeat } from "../../../ui/frameSelectors";
 import { withTrueMinus } from "../../../ui/formatters";
+import { namePlaces } from "../../../ui/settlementNames";
 import { AnnotatedText } from "../../AnnotatedText";
 import { ActionLogPanel } from "../../board/command/ActionLogPanel";
 import { useGameUi } from "../../board/GameUiContext";
@@ -131,7 +132,9 @@ function ChronicleLine({
 }) {
   const { G } = useGameUi();
   const latest = G.log[G.log.length - 1];
-  const text = withTrueMinus(latest?.message ?? "The table is set.");
+  const text = latest
+    ? withTrueMinus(namePlaces(G.board.tiles, latest.message, latest.about))
+    : "The table is set.";
   const seat = latest ? deedSeat(G, latest) : null;
   return (
     <>

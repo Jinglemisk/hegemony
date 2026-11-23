@@ -3,8 +3,6 @@ import { formatSignedNumber } from "./formatters";
 
 /** The frame's number vocabulary, shared by its components. Per-ID icons are in `iconRegistry`. */
 
-/** −3, 0, +2 — with a true minus sign. */
-export const sign = formatSignedNumber;
 export const tone = (n: number) => (n > 0 ? "pos" : n < 0 ? "neg" : "");
 
 const units = (cost: Partial<Resources>) =>
@@ -19,7 +17,7 @@ export function cheapestCost(costs: Array<Partial<Resources>>): Partial<Resource
 export function titleValue(metric: VictoryMetric, value: number): string {
   switch (metric) {
     case "happiness":
-      return `happiness ${sign(value)}`;
+      return `happiness ${formatSignedNumber(value)}`;
     case "voice":
       return `${value} standing ${value === 1 ? "Law" : "Laws"}`;
     case "cities":

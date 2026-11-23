@@ -437,17 +437,19 @@ button.ch-socket[data-state="open"]:hover {
   height: var(--sh-confirm-h);
   padding: var(--s-2) var(--s-4);
 }
+/* The question holds two lines at most (its title carries the whole) and only the
+   detail under it scrolls, so the cost's "x → y" shows at every text size: two lines
+   of each, 2 × 26 + 2 × 26, in the bar's 104 at Largest. */
 .ch-confirm-words {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   max-height: 100%;
-  overflow-y: auto;
-  scrollbar-gutter: stable;
-  scrollbar-width: thin;
+  overflow: hidden;
 }
-/* The question holds two lines at most (its title carries the whole), so the
-   detail's first line shows at every text size: 2 × 26 + 26 in 80 at Largest. */
 .ch-confirm-q {
   display: -webkit-box;
+  flex: none;
   margin: 0;
   overflow: hidden;
   font-family: var(--f-sans);
@@ -457,7 +459,11 @@ button.ch-socket[data-state="open"]:hover {
   line-clamp: 2;
 }
 .ch-confirm-d {
+  min-height: 0;
   margin: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
   color: var(--ink-66);
   font-family: var(--f-sans);
 }

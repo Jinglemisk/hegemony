@@ -16,7 +16,7 @@ import type { DevCard, HegemonyState, LogMoment, PlayerId, Resource } from "../.
 import { deckLine, devCardFace } from "../../../ui/cardFace";
 import { RESOURCE_LABELS, formatSignedNumber } from "../../../ui/formatters";
 import { SETTLEMENT_GLYPHS } from "../../../ui/iconRegistry";
-import { settlementNameOf } from "../../../ui/settlementNames";
+import { namePlaces, settlementNameOf } from "../../../ui/settlementNames";
 import { AnnotatedText } from "../../AnnotatedText";
 import { DeckLine } from "../../cards/DeckLine";
 import { GameCard } from "../../cards/GameCard";
@@ -90,7 +90,10 @@ export function DrawnCardModal({ mark, onClose }: { mark: DeckMark; onClose: () 
           {kept ? (
             "Kept in your hand. You can play it from your next turn."
           ) : (
-            <AnnotatedText links={false} text={`${capitalize(moment!.outcome)}.`} />
+            <AnnotatedText
+              links={false}
+              text={`${capitalize(namePlaces(G.board.tiles, moment!.outcome, viewerId))}.`}
+            />
           )}
         </p>
       }
@@ -135,7 +138,10 @@ export function HandModal({ onClose, onBuy }: { onClose: () => void; onBuy: () =
         onDismiss={onClose}
         slip={
           <p className="body" role="status">
-            <AnnotatedText links={false} text={`${capitalize(result.outcome)}.`} />
+            <AnnotatedText
+              links={false}
+              text={`${capitalize(namePlaces(G.board.tiles, result.outcome, viewerId))}.`}
+            />
           </p>
         }
       >
