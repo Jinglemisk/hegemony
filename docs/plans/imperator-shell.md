@@ -82,6 +82,13 @@ drawn on a 1440×900 canvas and scaled uniformly (1.2 at 1920×1080). At design 
 
 - **Text scale.** A Text size setting (Standard / Large = 115 % / Largest = 130 %) scales
   every text token. Boxes keep their size and their contents scroll inside.
+  - The sizes above are design px on the 1440×900 canvas. A smaller screen scales the
+    canvas down, so the 13 px floor draws at 11.6 css px at 1280×800 (k = 0.889). Until
+    the player picks a Text size, it starts at Large wherever k < 0.95, which puts that
+    floor back above 13 css px.
+  - The top bar is the one exception: it keeps one size at every Text size, because its
+    44 px cells are already full. Its labels stay whole at every size, and each cell's
+    tooltip, which does scale, carries the full words.
 - **Contrast.** 4.5:1 for all text, measured against the lightest texture pixel. 3:1 for icons
   and disabled controls.
 - **Targets.** Every control is at least 32 px; frequent ones are 44 px or more. Every control
