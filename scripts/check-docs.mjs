@@ -134,7 +134,7 @@ for (const required of ["README.md", "roadmap.md", "questions.md"]) {
   }
 }
 
-for (const required of ["plans", "reference", "reports", "archive"]) {
+for (const required of ["plans", "reference", "reports"]) {
   if (!existsSync(path.join(docsRoot, required))) {
     report(`docs/${required}/: required documentation directory is missing`);
   }
@@ -147,7 +147,7 @@ for (const entry of await readdir(docsRoot, { withFileTypes: true })) {
   }
 }
 
-for (const retired of ["feat", "sim", "design"]) {
+for (const retired of ["feat", "sim", "design", "archive"]) {
   if (existsSync(path.join(docsRoot, retired))) {
     report(`docs/${retired}/: retired mixed-purpose directory must not return`);
   }
@@ -160,9 +160,13 @@ if (docsReadme.split(/\r?\n/).length > 100) {
 }
 
 const planDirectory = path.join(docsRoot, "plans");
-const planFiles = (await readdir(planDirectory))
-  .filter((name) => name.endsWith(".md") && !name.startsWith("_"))
-  .sort();
+const planEntries = (await readdir(planDirectory)).sort();
+for (const name of planEntries) {
+  if (!name.endsWith(".md")) {
+    report(`docs/plans/${name}: only plan files (.md) belong in docs/plans/`);
+  }
+}
+const planFiles = planEntries.filter((name) => name.endsWith(".md"));
 const validStatuses = new Set(["proposed", "ready", "active", "blocked"]);
 const activeSurfaces = [
   docsReadmePath,
@@ -185,7 +189,7 @@ for (const name of planFiles) {
     report(`${relative(file)}: updated must use YYYY-MM-DD`);
   }
   if (!docsReadme.includes(`(plans/${name})`)) {
-    report(`${relative(file)}: missing from docs/README.md active-plan index`);
+    report(`${relative(file)}: missing from the plan table in docs/README.md`);
   }
   for (const required of [
     "## Three-axis parity",
@@ -248,7 +252,7 @@ for (const name of planFiles) {
 const linkedFiles = (await walk(docsRoot)).filter(
   (file) => file.endsWith(".md") || file.endsWith(".html"),
 );
-linkedFiles.push(path.join(root, "README.md"));
+linkedFiles.push(path.join(root, "README.md"), path.join(root, "rules.md"));
 
 for (const file of linkedFiles) {
   const contents = await readFile(file, "utf8");
@@ -265,7 +269,6 @@ if (errors.length > 0) {
 }
 
 const reportCount = (await walk(path.join(docsRoot, "reports"))).length;
-const archiveCount = (await walk(path.join(docsRoot, "archive"))).length;
 console.log(
-  `Documentation checks passed: ${planFiles.length} active plans, ${headings.length} owner questions, ${reportCount} report files, ${archiveCount} archived files.`,
+  `Documentation checks passed: ${planFiles.length} plans, ${headings.length} owner questions, ${reportCount} report files.`,
 );
