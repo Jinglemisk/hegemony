@@ -58,15 +58,15 @@ test("a riot takes a held card in place of a pop, the seat's choice", async ({ p
   await expect(riot).toContainText("2 in hand");
 
   // Only the count shows: the card is drawn after the choice.
-  await riot.getByRole("button", { name: "Give Up a Card" }).click();
+  await riot.getByRole("button", { name: "Give up a card" }).click();
   await expect(riot).toContainText(/One pop to answer/i);
   await expect(riot).toContainText("1 in hand, 1 given up");
 
   await riot.getByRole("button", { name: /^Lose the slave/ }).click();
   const result = page.getByRole("dialog", { name: "Revolt spreads", exact: true });
-  await expect(result).toContainText("went in place of a pop.");
-  await expect(result).toContainText(/A slave left/);
-  await result.getByRole("button", { name: "Endure It", exact: true }).click();
+  await expect(result).toContainText("Held cards, given up for pops2→1");
+  await expect(result).toContainText(/Slaves in \w+\d→\d/i);
+  await result.getByRole("button", { name: "So be it", exact: true }).click();
   await expect(result).toBeHidden();
 });
 

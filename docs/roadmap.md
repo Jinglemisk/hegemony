@@ -7,22 +7,19 @@ Open owner decisions live only in [questions.md](questions.md).
 
 In the owner's order.
 
-1. **Riot screen redesign** — in progress on `feat/riot-screen`. The d6 table as six small
-   cards, insurance as toggle tiles, a die roll, and the result as a card with one line per
-   loss. Ledger: [UI open items](plans/ui-remaining.md).
-2. **Improving the bots** — next. Bots plan with the remaining year cards, estimate whether a
+1. **Improving the bots** — next. Bots plan with the remaining year cards, estimate whether a
    rival accepts a trade, use the year forecast, and value, offer and end trade deals (they
    decline every deal today). Then the larger outcome-driven rework.
    Plan: [improving the bots](plans/outcome-driven-ai.md).
-3. **Development deck, second pass** — the deck and the card system as a whole: the deck's
+2. **Development deck, second pass** — the deck and the card system as a whole: the deck's
    close-out, card balance, bots that play cards well.
    Plan: [development deck](plans/development-deck.md).
-4. **Sim batches** — on the owner's word only. The comparison batches measure the agency
+3. **Sim batches** — on the owner's word only. The comparison batches measure the agency
    package and the development deck against `main` at `d6ebecd`. Design, switches and the
    balance check: [simulation reference](reference/simulation.md#comparison-batches).
-5. **3D map, second pass** — better waves, better object rendering. No plan yet; the map's
+4. **3D map, second pass** — better waves, better object rendering. No plan yet; the map's
    current rules are in the [presentation contract](reference/frontend-presentation.md#map-presentation).
-6. **Multiplayer lobby, then networked play** — no plan yet. The engine already has the
+5. **Multiplayer lobby, then networked play** — no plan yet. The engine already has the
    network-shaped boundary (see the architecture contract below); the server, persistence,
    lobby, seat sessions and reconnect are still to build.
 

@@ -18,7 +18,7 @@
  * majors.
  *
  * The fix is not more overrides. Every class named below is emitted ONLY by a
- * ceremony (`fateCard`, `ceremonyTablet`, `blow`, `oddsRow`…),
+ * ceremony (`fateCard`, `ceremonyTablet`, `blow`, `riotFace`…),
  * so `modals.css` never matches them and has nothing to win. `modals.css` keeps
  * the plain-dialog vocabulary — the calm picker, the placement cards, the
  * compendium's read-only table listings — and no longer has a say in what a fate
@@ -183,8 +183,7 @@
    The fate card's material with no painting: the head, the blow band, then one
    full-bleed hairlined row per settlement holding pops that eat. A pop is a
    round toggle; the marked ones take the wound's band and ring. */
-.hungerCard,
-.lossCard {
+.hungerCard {
   width: min(560px, calc(var(--vw) - var(--s-8)));
   padding: var(--s-6) var(--s-8);
 }
@@ -193,8 +192,7 @@
   margin: var(--s-1) 0 var(--rule-2);
 }
 
-.hungerCard > .blowBand,
-.lossCard > .blowBand {
+.hungerCard > .blowBand {
   margin: var(--s-4) calc(-1 * var(--s-8)) 0;
   padding: var(--s-3) var(--s-8);
 }
@@ -286,39 +284,15 @@
   flex: 1;
 }
 
-/* ── A loss card: a riot's result, a revolt ──────────────────────────────────
-   The hunger card's frame with no picker: one line per thing it cost. */
-.lossLines {
-  display: grid;
-  gap: var(--s-2);
-  margin: 0;
-  padding: 14px 0 0;
-  list-style: none;
-  text-align: left;
-}
-
-.lossLines li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font: 400 var(--t-16) / var(--lh-24) var(--f-body);
-}
-
-.lossLines li.is-muted {
-  color: var(--ink-63);
-}
-
-/* ── The riot sheet ──────────────────────────────────────────────────────────
-   Insurance on the left, the table on the right: each declaration strikes the
-   rows it puts out of reach, so the trade reads as rows, not arithmetic. */
+/* ── The riot sheet: a riot and a revolt ─────────────────────────────────────
+   One size from the sheet to the result and at every text size: the glaze head, a
+   body of fixed height that scrolls inside only when a larger text needs it, and the
+   foot with its note and its one act. */
 .riotSheet {
   display: grid;
-  width: min(960px, calc(var(--vw) - var(--s-8)));
-  max-height: calc(var(--vh) - var(--s-8));
-  overflow-y: auto;
-  border-radius: var(--r-8);
-  background: var(--ivory);
-  box-shadow: var(--card-edge), var(--shadow-deal);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(calc(var(--u) * 262), calc(var(--vw) - var(--s-8))); /* 1048 */
+  height: min(calc(var(--u) * 176), calc(var(--vh) - var(--s-8))); /* 704 */
   text-align: left;
 }
 
@@ -327,31 +301,42 @@
   align-items: center;
   gap: var(--s-4);
   padding: var(--s-4) var(--s-6);
-  border-bottom: var(--rule) solid var(--ink-12);
-  background: var(--bone);
 }
 
-.sheetTitle h2 {
+.sheetTitle {
+  display: grid;
+  gap: var(--rule-2);
+}
+
+.sheetTitle h2,
+.sheetTitle p {
   margin: 0;
 }
 
 .sheetBody {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--s-6);
+  align-content: start;
+  gap: var(--s-4);
   padding: var(--s-4) var(--s-6);
+}
+
+.sheetSecRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-4);
+  margin-bottom: var(--s-2);
+}
+
+.sheetSecRow .caption {
+  color: var(--ink-72);
+  text-align: right;
 }
 
 .sheetSec {
   display: block;
-  margin: 0 0 var(--s-2);
-  color: var(--ink-63);
+  color: var(--ink-72);
   letter-spacing: 0.2em;
-}
-
-.sheetNote {
-  margin: var(--s-2) 0 0;
-  color: var(--ink-63);
 }
 
 .sheetFoot {
@@ -359,22 +344,21 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--s-4);
-  padding: var(--s-3) var(--s-6) var(--s-4);
+  min-height: calc(var(--u) * 19); /* 76: the die and the commit alike */
+  padding: var(--s-2) var(--s-6);
   border-top: var(--rule) solid var(--ink-12);
-  color: var(--ink-63);
 }
 
-.sheetFoot .ceremonyCommit {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--s-2);
-  width: auto;
-  padding: var(--s-3) var(--s-6);
+.sheetNote {
+  min-width: 0;
+  color: var(--ink-72);
 }
 
-.sheetCol .oddsRows {
-  margin: 0;
+/* The sheet's one act, as wide as its words. */
+.ch-ctl.sheetAct {
+  flex: none;
+  min-height: calc(var(--u) * 11); /* 44 */
+  padding-inline: var(--s-6);
 }
 
 /* The sheet's glyphs use the shell's physical sizes at every viewport. */
@@ -383,110 +367,246 @@
   height: var(--ic-16);
 }
 
-/* Out of reach: struck through and quieter, still read at 4.5:1 (no whole-row dim,
-   which took the row's words to 2:1). */
-.oddsRowOut {
-  color: var(--ink-72);
-}
-
-.oddsRowOut .oddsLabel {
-  text-decoration: line-through;
-}
-
-.insRows {
+/* The table: the six faces of the die, side by side. */
+.riotFaces {
   display: grid;
-  gap: var(--s-2);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--s-3);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.insRow {
+.riotFace {
+  position: relative;
+  display: flex;
+}
+
+.riotFace .gc-hand {
+  --gc-w: 100%;
+}
+
+/* A sealed face: its insurance's seal over the picture, the words left whole. */
+.riotSeal {
+  position: absolute;
+  top: calc(var(--u) * 8.5); /* the picture window's top */
+  right: 0;
+  left: 0;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
+  justify-items: center;
+  gap: var(--s-1);
+  pointer-events: none;
+}
+
+.riotSealDisc {
+  display: grid;
+  place-items: center;
+  width: var(--s-12);
+  height: var(--s-12);
+  border-radius: var(--r-round);
+  background: var(--medallion);
+  box-shadow: var(--medallion-rim);
+}
+
+.riotSealWord {
+  padding: 0 var(--s-2);
+  border-radius: var(--r-4);
+  color: var(--glaze-ink);
+  background: var(--glaze);
+}
+
+/* The insurance: three toggle tiles, what each takes under it. */
+.riotTiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--s-3);
-  padding: var(--s-2) var(--s-3);
-  border-radius: 6px;
-  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.insRow.is-on {
-  background: rgb(94 110 58 / 10%);
-  box-shadow: inset 0 0 0 var(--rule-2) var(--olive);
-}
-
-.insRow.is-off {
-  opacity: 0.55;
-}
-
-.insWords {
+.riotTile {
   display: grid;
+  gap: var(--s-2);
   min-width: 0;
 }
 
-.insWords .caption {
-  color: var(--ink-63);
+.riotTileTip {
+  display: grid;
 }
 
-.insPick {
+.ch-ctl.riotToggle {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  justify-content: stretch;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: var(--s-16);
+  padding: var(--s-2) var(--s-3);
+  text-align: left;
+  white-space: normal;
+}
+
+.riotTileWords {
+  display: grid;
+  gap: var(--rule-2);
+  min-width: 0;
+}
+
+.riotToggle .caption {
+  color: var(--ink-72);
+}
+
+.riotToggle[aria-pressed="true"] .caption {
+  color: var(--glaze-ink-66);
+}
+
+/* The tile's bonus on a bronze coin. */
+.riotTileBonus {
+  display: grid;
+  place-items: center;
+  width: var(--knob-d);
+  height: var(--knob-d);
+  border-radius: var(--r-round);
+  color: var(--ink);
+  background: var(--knob);
+  box-shadow: var(--knob-rim);
+}
+
+.riotTileFoot {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--s-2);
+  min-height: var(--knob-d);
+  padding-inline: var(--s-3);
+  color: var(--ink-72);
 }
 
-.insPick select {
-  min-height: var(--hit);
-  border: var(--rule) solid var(--ink-30);
-  border-radius: var(--r-4);
+.riotTileFoot .delta {
   color: var(--ink);
-  background: var(--ivory);
-  font: 700 var(--t-14) / var(--lh-20) var(--f-sans);
 }
 
-.insCheck {
+.ch-ctl.riotPick {
+  padding-inline: var(--s-3);
+}
+
+.riotPicker {
   display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border: 0;
-  border-radius: var(--r-4);
-  color: var(--ivory);
-  background: var(--ivory);
-  box-shadow: inset 0 0 0 var(--rule-2) var(--ink-30);
-  font: 700 var(--t-20) / 1 var(--f-sans);
+  gap: var(--s-2);
+  padding: var(--s-3);
 }
 
-.insCheck:not(:disabled):hover {
-  box-shadow: inset 0 0 0 var(--rule-2) var(--olive);
-}
-
-.insCheck[aria-pressed="true"] {
-  background: var(--olive);
-  box-shadow: none;
-}
-
-.insCleared {
-  display: flex;
-  align-items: center;
+.riotPickList {
+  display: grid;
   gap: var(--s-2);
 }
 
+.riotPickList .ch-ctl.ch-plaque {
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* The roll, in the foot where Roll the die stood. */
 .riotRoll {
-  display: grid;
-  place-content: center;
-  justify-items: center;
+  display: flex;
+  align-items: center;
   gap: var(--s-4);
 }
 
-.riotSum {
-  line-height: 1;
+.riotSheet .lacquerDie {
+  width: calc(var(--u) * 14); /* 56 */
+  height: calc(var(--u) * 14);
+  border-radius: var(--s-2);
 }
 
-.riotSumMute {
-  color: var(--ink-63);
+.riotSheet .diePips {
+  grid-template-rows: repeat(3, calc(var(--u) * 2.5));
+  grid-template-columns: repeat(3, calc(var(--u) * 2.5));
+  gap: var(--s-1);
+}
+
+.riotSheet .pip {
+  width: calc(var(--u) * 2.5);
+  height: calc(var(--u) * 2.5);
+}
+
+.riotSum.is-waiting {
+  visibility: hidden;
+}
+
+/* The result: the card the die found, and beside it what it took. */
+.lossSpread {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--s-8);
+}
+
+.lossSpread > .gc-ceremony {
+  --gc-w: calc(var(--u) * 66); /* 264 */
+}
+
+/* One card alone needs no held voice to line its panel up with others'. */
+.lossSpread .gc-voice:empty {
+  display: none;
+}
+
+.lossSlip {
+  display: grid;
+  align-content: start;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.lossLines {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  border-top: var(--rule) solid var(--ink-12);
+  list-style: none;
+}
+
+.lossLines li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) 0;
+  border-bottom: var(--rule) solid var(--ink-12);
+}
+
+.lossLines li.is-muted {
+  color: var(--ink-72);
+}
+
+/* The pops-or-cards choice, on the card it answers. */
+.riotChoice {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-panel);
+  background: var(--socket);
+  box-shadow: var(--socket-rim);
+}
+
+.riotChoice p {
+  margin: 0;
+}
+
+.riotChoice .caption {
+  color: var(--ink-72);
+}
+
+.riotActs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+}
+
+.riotActs .ch-ctl.ch-plaque {
+  min-height: calc(var(--u) * 11); /* 44 */
+  padding-inline: var(--s-6);
 }
 
 /* ── The blow ────────────────────────────────────────────────────────────────
@@ -664,76 +784,6 @@
   visibility: hidden;
 }
 
-/* ── The odds ────────────────────────────────────────────────────────────────
-   Every row the die did NOT find recedes; the one it found takes a clay wash and
-   a bar on its first cell only, and its numeral steps up. The table's whole
-   purpose at this moment is to have a focal point, and it had none: nothing
-   receded and every row wore an identical accent bar. */
-.oddsRows {
-  margin: 0 0 20px;
-  padding: 0;
-  list-style: none;
-  text-align: left;
-}
-
-.oddsRow {
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) auto;
-  border-top: var(--rule) solid var(--ink-12);
-}
-
-.oddsRow > * {
-  display: flex;
-  align-items: center;
-  padding: var(--s-2) 10px;
-}
-
-.oddsFace {
-  justify-content: center;
-  color: var(--ink-66);
-}
-
-.oddsEffects {
-  flex-wrap: wrap;
-  gap: var(--s-1) 10px;
-  justify-content: flex-end;
-  white-space: nowrap;
-}
-
-.oddsEffect {
-  font-style: normal;
-}
-
-.oddsEffect.positive {
-  color: var(--pos-ink);
-}
-
-.oddsEffect.negative {
-  color: var(--neg-ink);
-}
-
-/* A row with no outcome says so in the quiet ink. */
-.oddsEffect.muted {
-  color: var(--ink-72);
-}
-
-.oddsRowPast {
-  color: var(--ink-72);
-}
-
-.oddsRowHit {
-  border-top-color: rgb(192 70 28 / 50%);
-}
-
-.oddsRowHit > * {
-  background: rgb(192 70 28 / 13%);
-}
-
-.oddsRowHit .oddsFace {
-  color: var(--clay-ink);
-  box-shadow: inset 3px 0 0 var(--clay);
-}
-
 /* ── The age ends ────────────────────────────────────────────────────────────
    The third moment that earns the dark table, and the one that had never been
    given it: the end of the game rendered in the plain log register, with a
@@ -877,8 +927,8 @@
 }
 
 /* The die: thrown, caught by the table, one last shudder. The rotation is done
-   by 77% — 400ms of 520ms — so the face stops changing exactly as the cube
-   stops turning, and the tail is the settle. */
+   by 77% — 800ms of 1000ms (LacquerDie's FLIP_MS of TUMBLE_MS) — so the face stops
+   changing exactly as the cube stops turning, and the tail is the settle. */
 @keyframes dieTumble {
   0% {
     transform: translate3d(0, -22px, 0) rotate(-24deg) scale(0.82);
@@ -918,27 +968,13 @@
 }
 
 .lacquerDie {
-  animation: dieTumble 520ms cubic-bezier(0.2, 0.72, 0.3, 1) both;
+  animation: dieTumble 1000ms cubic-bezier(0.2, 0.72, 0.3, 1) both;
 }
 
 /* Soft only while the faces are changing; the settled face is crisp. The class
    comes off the moment the die stops. */
 .lacquerDie.dieRolling .diePips {
   filter: blur(0.6px);
-}
-
-/* The table dims around the row the die found, rather than arriving dimmed. */
-.oddsRow {
-  transition:
-    opacity 300ms ease 380ms,
-    border-color 300ms ease 380ms;
-}
-
-.oddsRow > * {
-  transition:
-    background-color 300ms ease 380ms,
-    color 300ms ease 380ms,
-    box-shadow 300ms ease 380ms;
 }
 
 /* A commit that has just changed its mind about the mood shouldn't jump colour. */
@@ -964,8 +1000,6 @@
     filter: none;
   }
 
-  .oddsRow,
-  .oddsRow > *,
   .ceremonyCommit {
     transition: none;
   }

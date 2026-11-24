@@ -1,12 +1,12 @@
 import { produce } from "immer";
-import type { HegemonyState, PlayerId, Resources } from "./types";
+import type { HegemonyState, PlayerId, Resources, TableLoss } from "./types";
 import { civicCalm, getCivicCalmStatus } from "./civic";
 import type { CivicCalmPayment } from "./civic";
 import { addLog, getPlayerName, realmPops } from "./core/query";
 import { countPlayerPopType } from "./settlement";
 import { happinessContributions, happinessLevel } from "./happiness";
 import { startRiot } from "./riot";
-import { describeRemoval, removePops } from "./tables";
+import { describeRemoval, notePopLosses, removePops } from "./tables";
 
 /**
  * Unrest consequences. Happiness is a level derived from the board (game/happiness.ts);
@@ -76,6 +76,8 @@ export function applyUnrestAtTurnEnd(G: HegemonyState, playerID: PlayerId) {
 function revolt(G: HegemonyState, playerID: PlayerId, { slaves, leaving }: UnrestOutcome) {
   const player = G.players[playerID];
   const left = removePops(G, playerID, leaving, ["slaves"]);
+  const taken: TableLoss[] = [];
+  notePopLosses(G, playerID, left.left, taken);
   const tokensCleared = player.unrestTokens;
 
   player.unrestTokens = 0;
@@ -85,7 +87,14 @@ function revolt(G: HegemonyState, playerID: PlayerId, { slaves, leaving }: Unres
     G,
     `${getPlayerName(G, playerID)}'s realm revolts at turn end: ${left.total > 0 ? `${describeRemoval(left)} walk away` : "no slaves are left to walk away"}, and the Unrest tokens clear.`,
     playerID,
-    { kind: "revolt", slaves, left: left.left, tokensCleared, level: happinessLevel(G, playerID) },
+    {
+      kind: "revolt",
+      slaves,
+      left: left.left,
+      tokensCleared,
+      level: happinessLevel(G, playerID),
+      taken,
+    },
   );
 }
 

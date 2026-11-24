@@ -6,6 +6,7 @@ import { applyResourceDeltaWithFloors, createResourceDelta } from "./core/resour
 import { releaseLuxuriesAfterPortLoss } from "./luxury";
 import { mulberry32 } from "./core/rng";
 import type {
+  BuildingId,
   EventTableDefinition,
   EventTableRow,
   HegemonyState,
@@ -14,6 +15,7 @@ import type {
   PopType,
   Settlement,
   TableEffect,
+  TableLoss,
   TableRollRecord,
 } from "./types";
 
@@ -88,12 +90,14 @@ export function rollOnTable(
   );
 
   const outcomes: string[] = [];
+  const taken: TableLoss[] = [];
   let wanted = 0;
 
   for (const effect of row.effects) {
     const applied = applyTableEffect(G, playerID, effect);
     wanted += applied.pops;
     outcomes.push(...applied.outcomes);
+    taken.push(...applied.taken);
   }
 
   // A row takes no more pops than stand in the seat's settlements: those on the move are
@@ -113,6 +117,7 @@ export function rollOnTable(
     modifier,
     rowLabel: row.label,
     outcomes,
+    taken,
     year: G.year,
   };
   G.lastTableRoll = record;
@@ -124,16 +129,16 @@ function applyTableEffect(
   G: HegemonyState,
   playerID: PlayerId,
   effect: TableEffect,
-): { outcomes: string[]; pops: number } {
+): { outcomes: string[]; pops: number; taken: TableLoss[] } {
   const player = G.players[playerID];
   const name = getPlayerName(G, playerID);
 
   switch (effect.type) {
     case "none":
-      return { outcomes: ["No losses."], pops: 0 };
+      return { outcomes: ["No losses."], pops: 0, taken: [] };
 
     case "losePops":
-      return { outcomes: [], pops: effect.count };
+      return { outcomes: [], pops: effect.count, taken: [] };
 
     case "loseResource": {
       const held = player.resources[effect.resource];
@@ -150,7 +155,12 @@ function applyTableEffect(
       if (short) outcomes.push("Couldn't pay in full.");
 
       addLog(G, `${name} — ${outcomes.join(" ")}`);
-      return { outcomes, pops: short };
+      const to = player.resources[effect.resource];
+      return {
+        outcomes,
+        pops: short,
+        taken: [{ kind: "stock", resource: effect.resource, from: held, to }],
+      };
     }
 
     case "destroyBuilding": {
@@ -160,18 +170,20 @@ function applyTableEffect(
         addLog(G, `${name} — ${destroyed.name} burns to the ground.`);
         // A burned Port may have been the last beside a good: the good goes back.
         const released = releaseLuxuriesAfterPortLoss(G, playerID, destroyed.tileId);
+        const { building, tileId, left } = destroyed;
         return {
           outcomes: [
             `${destroyed.name} destroyed.`,
             ...released.map((good) => `${good} goes back to the board.`),
           ],
           pops: 0,
+          taken: [{ kind: "building", building, tileId, from: left + 1, to: left }],
         };
       }
 
       // Nothing to burn: the fallback pops are lost instead, so a buildingless
       // player's roll 1 stays strictly worse than roll 2's two pops never inverting.
-      return { outcomes: ["No buildings to burn."], pops: effect.popLossFallback };
+      return { outcomes: ["No buildings to burn."], pops: effect.popLossFallback, taken: [] };
     }
   }
 }
@@ -222,6 +234,34 @@ export function removePops(
   return summary;
 }
 
+/**
+ * Note pops that have left in `taken`: one entry per settlement and class, with its count
+ * before and after. Read once they have gone, so a later call for the same settlement and
+ * class moves only its `to`.
+ */
+export function notePopLosses(
+  G: HegemonyState,
+  playerID: PlayerId,
+  left: readonly PopLeave[],
+  taken: TableLoss[],
+) {
+  const groups = new Map<string, PopLeave & { n: number }>();
+  for (const leave of left) {
+    const key = `${leave.tileId}:${leave.pop}`;
+    const group = groups.get(key);
+    if (group) group.n += 1;
+    else groups.set(key, { ...leave, n: 1 });
+  }
+  for (const { tileId, pop, n } of groups.values()) {
+    const to = getOwnedSettlement(G, tileId, playerID)?.pops[pop] ?? 0;
+    const noted = taken.find(
+      (loss) => loss.kind === "pops" && loss.tileId === tileId && loss.pop === pop,
+    );
+    if (noted) noted.to = to;
+    else taken.push({ kind: "pops", tileId, pop, from: to + n, to });
+  }
+}
+
 /** The pop a loss takes next, and from where: what a riot's card would keep. */
 export function nextPopLoss(
   G: HegemonyState,
@@ -254,12 +294,13 @@ export function describeRemoval(summary: Pick<RemovalSummary, "byType">): string
   return parts.join(", ");
 }
 
-/** Burn one random owned building (seeded). Returns its display name and tile, or null if
- *  the player owns none. A settlement holds one of each building, so the one burned is gone. */
+/** Burn one random owned building (seeded). Returns it, its display name, its tile and the
+ *  buildings left there, or null if the player owns none. A settlement holds one of each
+ *  building, so the one burned is gone. */
 function destroyRandomBuilding(
   G: HegemonyState,
   playerID: PlayerId,
-): { name: string; tileId: string } | null {
+): { building: BuildingId; name: string; tileId: string; left: number } | null {
   const owned: Array<{ settlement: Settlement; index: number }> = [];
 
   for (const tileId of G.players[playerID].settlements) {
@@ -280,5 +321,10 @@ function destroyRandomBuilding(
   const [removed] = target.settlement.buildings.splice(target.index, 1);
   const name =
     getBuildings(G.definition.content).find((building) => building.id === removed)?.name ?? removed;
-  return { name, tileId: target.settlement.tileId };
+  return {
+    building: removed,
+    name,
+    tileId: target.settlement.tileId,
+    left: target.settlement.buildings.length,
+  };
 }

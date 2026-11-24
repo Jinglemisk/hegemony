@@ -33,7 +33,8 @@ import lateGameJson from "./late-game.json?raw";
  * rival bought). Part B's: `?dev=year` (Year II's card, Plague, before the Assembly),
  * `?dev=year-back` (its back, held), `?dev=year-term` (Year III's card, Drought),
  * `?dev=riot-confirm` and `?dev=revolt-confirm` (End turn's confirm at each line),
- * `?dev=riot` (the riot sheet), `?dev=riot-result`, `?dev=riot-cards` (a riot rolled on
+ * `?dev=riot` (the riot sheet), `?dev=riot-result` (a riot rolled on 1, a Temple and a pop
+ * lost), `?dev=riot-cards` (a riot rolled on
  * two pops, the seat holding two development cards), `?dev=revolt` (the revolt card),
  * `?dev=rival-unrest` (a rival's riot and another's revolt, toasted), `?dev=threat` (a rival
  * holding three titles, with the title toasts), `?dev=race` and `?dev=age-end` (the two
@@ -122,7 +123,14 @@ export const DEV_SCENES: Record<string, (G: HegemonyState) => DevScene> = {
   }),
   "riot-result": (G) => {
     const seat = G.currentPlayer;
-    const rioting = apply(atLevel(clearFate(G), G.ruleset.economy.unrest.riotThreshold), END_TURN);
+    // The die lands on 1, the mob torches the works: the capital's Temple and a pop.
+    const built = produce(clearFate(G), (draft) => {
+      getOwnedSettlement(draft, draft.players[seat].settlements[0], seat)?.buildings.push("temple");
+    });
+    const rioting = landOn(
+      apply(atLevel(built, G.ruleset.economy.unrest.riotThreshold), END_TURN),
+      1,
+    );
     return {
       G: apply(rioting, { type: "resolveRiot" }),
       shell: { riotResult: true, viewer: seat },
@@ -136,14 +144,10 @@ export const DEV_SCENES: Record<string, (G: HegemonyState) => DevScene> = {
         draft.devHands[seat].push({ id: draft.devDrawPile.splice(index, 1)[0], turn: 0 });
       }
     });
-    const rioting = produce(
+    // The die lands on 2, Revolt spreads: two pops.
+    const rioting = landOn(
       apply(atLevel(held, G.ruleset.economy.unrest.riotThreshold), END_TURN),
-      (draft) => {
-        // The die lands on 2, Revolt spreads: two pops.
-        let state = 1;
-        while (1 + Math.floor(mulberry32(state).value * 6) !== 2) state += 1;
-        draft.rng = state;
-      },
+      2,
     );
     return { G: apply(rioting, { type: "resolveRiot" }), shell: { viewer: seat } };
   },
@@ -603,4 +607,13 @@ export function fastForwardToAssembly(initial: HegemonyState): HegemonyState {
   }
 
   return G;
+}
+
+/** The seat's riot die set to land on `face`, through the game's own rng. */
+function landOn(G: HegemonyState, face: number): HegemonyState {
+  return produce(G, (draft) => {
+    let state = 1;
+    while (1 + Math.floor(mulberry32(state).value * 6) !== face) state += 1;
+    draft.rng = state;
+  });
 }

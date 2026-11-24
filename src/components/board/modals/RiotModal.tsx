@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { Ref } from "react";
 import {
   CONCESSION_FROM,
   getBuyRiotInsuranceStatus,
@@ -10,38 +11,46 @@ import {
 } from "../../../game/rules";
 import { getRiotTable } from "../../../game/content";
 import type {
+  EventTableDefinition,
   HegemonyState,
   LogEntry,
   LogMoment,
   PlayerId,
   Resource,
   Resources,
-  TableEffect,
+  RiotInsuranceId,
+  RiotLosses,
+  RiotPay,
   TableInsuranceOption,
 } from "../../../game/types";
-import { presentTableEffect } from "../../../ui/effects";
-import { formatPopLabel, formatSignedNumber } from "../../../ui/formatters";
-import { RESOURCE_RASTERS } from "../../../ui/iconRegistry";
-import { AnnotatedText, Prose } from "../../AnnotatedText";
-import { placeName } from "../../frame/moments";
-import { Ico } from "../../frame/parts";
 import type { GameCommand } from "../../../game/legalMoves";
+import { riotRowFace } from "../../../ui/cardFace";
 import { playOnCopy, previewSpend } from "../../../ui/confirmPreview";
+import { RESOURCE_LABELS, formatPopLabel, formatSignedNumber } from "../../../ui/formatters";
+import { RESOURCE_RASTERS } from "../../../ui/iconRegistry";
+import { Prose } from "../../AnnotatedText";
+import { GameCard } from "../../cards/GameCard";
 import { useConfirm } from "../../chrome/confirmContext";
 import { ConfirmDetail } from "../../chrome/confirmDetail";
+import { Lacquer, Plaque } from "../../chrome/controls";
+import { placeName } from "../../frame/moments";
+import { Chips, Delta, Ico, Tip, TipBody, TipWarn } from "../../frame/parts";
+import { Popover } from "../../overlays/Popover";
+import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
-import { ceremonyMood, commitVerb } from "./ceremonyMood";
-import { EventTableRows } from "./EventTableRows";
 import { LacquerDie } from "./LacquerDie";
-import { LossCard } from "./LossCard";
-import { leaveLines, nextFoot, tokensLine } from "./lossLines";
+import { LossSheet, LossSpread, SoBeIt } from "./LossSheet";
+import { nextFoot, takenLines, tokensLine } from "./lossLines";
+import { TUMBLE_MS, prefersReducedMotion } from "./roll";
 import type { LossLine } from "./lossLines";
-import { ModalShell } from "./ModalShell";
 
 type RiotEntry = LogEntry & { moment: Extract<LogMoment, { kind: "riot" }> };
 
 /** An insurance chosen on the sheet, paid only when the die is rolled. */
-type Declared = { optionId: TableInsuranceOption["id"]; tileId?: string };
+type Declared = { optionId: RiotInsuranceId; tileId?: string };
+
+/** Sheet → roll → (pay: a pop or a card, while the engine asks) → result. */
+type Stage = "sheet" | "roll" | "pay" | "result";
 
 const declareCommand = ({ optionId, tileId }: Declared): GameCommand => ({
   type: "buyRiotInsurance",
@@ -49,36 +58,26 @@ const declareCommand = ({ optionId, tileId }: Declared): GameCommand => ({
   ...(tileId ? { demoteTarget: { tileId, from: CONCESSION_FROM } } : {}),
 });
 
-/** How long the landed die holds the sheet before the result card. */
-const ROLL_BEAT_MS = 1600;
+/** How long the landed die holds the table, its card lit, before the card is read. */
+const HOLD_MS = 700;
 
-const INSURANCE_ICON: Record<TableInsuranceOption["id"], string> = {
+const CARD_TITLE_ID = "riot-card-title";
+
+const INSURANCE_ICON: Record<RiotInsuranceId, string> = {
   breadDole: "unrest/bread-dole",
   concession: "unrest/concession",
   patronage: "unrest/patronage",
 };
 
-function blowIconOf(effect: TableEffect | undefined): string {
-  switch (effect?.type) {
-    case "losePops":
-      return "pops/pop-loss";
-    case "loseResource":
-      return RESOURCE_RASTERS[effect.resource];
-    case "destroyBuilding":
-      return "buildings/ruin";
-    default:
-      return "unrest/calm";
-  }
-}
-
 /**
- * The riot, at a committed turn end. The sheet sets insurance against the table: each
- * declared insurance strikes the rows it puts out of reach. The roll lands on the
- * same table. A seat holding development cards then answers each pop the row takes:
- * lose it, or give up a held card drawn at random. Then the result card says what it
- * all cost. Blocking: it mounts while `G.pendingRiot` stands, so the handoff waits for
- * the roll and the answers, and the result stays until the seat endures it although
- * the turn has already passed (the parent holds it open via `onRolled` /
+ * The riot, at a committed turn end, on one sheet of one size from first to last. The
+ * table is six cards, one per face of the die; each insurance chosen seals the lowest
+ * card still open. The roll tumbles about a second and lights the card it found. That
+ * card is then read in the shared format, one line for each thing it took, before and
+ * after, from the engine's own record. While the seat holds development cards the engine
+ * asks, pop by pop, whether a card goes instead, and the choice sits on that card.
+ * Blocking: it mounts while `G.pendingRiot` stands, and the result stays until the seat
+ * closes it although the turn has passed (the parent holds it via `onRolled` /
  * `onDismissResult`).
  */
 export function RiotModal({
@@ -96,347 +95,374 @@ export function RiotModal({
   const [seat] = useState<PlayerId>(
     () => pending?.playerID ?? latestRiot(G.log)?.about ?? currentPlayerId,
   );
-  const [stage, setStage] = useState<"sheet" | "roll" | "pay" | "result">(
+  const [stage, setStage] = useState<Stage>(
     pending ? (pending.losses ? "pay" : "sheet") : "result",
   );
+  const [dieDown, setDieDown] = useState(false);
+  const [still] = useState(prefersReducedMotion);
   const entry = pending ? null : latestRiot(G.log, seat);
+  const losses = pending?.losses ?? null;
   // The die as it landed: the riot's line once it closed, the record while its pops wait.
-  const paying = Boolean(pending?.losses);
-  const rolled = entry ? entry.moment : paying ? G.lastTableRoll : null;
+  const rolled = entry ? entry.moment : losses ? G.lastTableRoll : null;
   const landed = Boolean(rolled);
+  const after: Stage = losses ? "pay" : "result";
 
   useEffect(() => {
     if (stage !== "roll" || !landed) return;
-    const timer = window.setTimeout(() => setStage(paying ? "pay" : "result"), ROLL_BEAT_MS);
-    return () => window.clearTimeout(timer);
-  }, [stage, landed, paying]);
+    const down = window.setTimeout(() => setDieDown(true), still ? 0 : TUMBLE_MS);
+    const read = window.setTimeout(() => setStage(after), still ? 0 : TUMBLE_MS + HOLD_MS);
+    return () => {
+      window.clearTimeout(down);
+      window.clearTimeout(read);
+    };
+  }, [stage, landed, after, still]);
 
-  const riotTable = getRiotTable(G.definition.content);
-  const name = G.players[seat].name;
+  // Stillness skips the tumble; the last answer closes the riot and its result follows.
+  const shown: Stage =
+    stage === "roll" && landed && still ? after : stage === "pay" && entry ? "result" : stage;
 
-  // The last answer closes the riot: its result follows the answers.
-  if ((stage === "result" || stage === "pay") && entry) {
-    const moment = entry.moment;
-    const row = riotTable.rows.find((candidate) => candidate.roll === moment.modified);
-    const first = row?.effects[0];
-    const presented = first ? presentTableEffect(first) : null;
-    // The roll is said nowhere else on the card, so the foot carries it.
-    const rolled = moment.modifier ? `${moment.roll} + ${moment.modifier}` : String(moment.roll);
-    const foot = nextFoot(G, entry);
-    const insurance = moment.insurance.flatMap((id): LossLine[] => {
-      const option = riotTable.insurance?.find((candidate) => candidate.id === id);
-      if (!option) return [];
-      if (option.demotesPop)
-        return [
-          {
-            key: id,
-            icon: "pops/demote",
-            text: (
-              <Prose links={false}>
-                A citizen of{" "}
-                <b>{moment.concessionTileId ? placeName(G, seat, moment.concessionTileId) : "?"}</b>{" "}
-                became a freeman ({option.label.toLowerCase()}).
-              </Prose>
-            ),
-          },
-        ];
-      return (Object.entries(option.cost) as Array<[Resource, number]>).map(([resource, n]) => ({
-        key: `${id}-${resource}`,
-        icon: RESOURCE_RASTERS[resource],
-        text: `${n} ${resource} paid for ${option.label.toLowerCase()}.`,
-      }));
+  // Focus lands on a safe control: the first insurance (a toggle) on the sheet, the
+  // commit on the result. Otherwise the sheet itself holds it, never the board.
+  const firstTile = useRef<HTMLButtonElement>(null);
+  const commit = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const target =
+        shown === "sheet" ? firstTile.current : shown === "result" ? commit.current : null;
+      (target ?? document.querySelector<HTMLElement>(".riotSheet"))?.focus();
     });
+    return () => window.clearTimeout(timer);
+  }, [shown]);
+
+  const table = getRiotTable(G.definition.content);
+  const options = table.insurance ?? [];
+  const kicker = `Turn end · ${G.players[seat].name}’s realm`;
+
+  if (shown === "result") {
+    if (!entry) return null;
+    const moment = entry.moment;
+    const foot = nextFoot(G, entry);
+    // The roll is said nowhere else on the sheet, so the foot carries it.
+    const sum = moment.modifier ? `${moment.roll} + ${moment.modifier}` : String(moment.roll);
+    const taken: LossLine[] = moment.taken
+      ? takenLines(G, seat, moment.taken)
+      : // A save from before the engine kept the counts: its words, as written.
+        moment.outcomes.map((text, index) => ({
+          key: `said-${index}`,
+          icon: "unrest/riot",
+          text,
+        }));
     return (
-      <LossCard
-        blow={
-          presented?.magnitude
-            ? { ...presented, condition: moment.outcomes.join(" ") }
-            : {
-                text: "No losses",
-                tone: "muted",
-                magnitude: "0",
-                subject: "Losses",
-                condition: "the mob goes home",
-              }
-        }
-        blowIcon={blowIconOf(first)}
-        commit={commitVerb(ceremonyMood(presented?.tone ?? "neutral"))}
-        foot={{ ...foot, when: `Rolled ${rolled} · ${foot.when}` }}
-        kicker="Riot"
-        lines={[
-          ...leaveLines(G, seat, moment.left),
-          ...cardLines(G, moment.cards),
-          ...insurance,
-          tokensLine(moment.tokensCleared, moment.level),
-        ]}
-        onCommit={onDismissResult}
-        title={moment.rowLabel}
-      />
+      <LossSheet
+        act={<SoBeIt next={foot.next} onClick={onDismissResult} ref={commit} />}
+        icon="unrest/riot"
+        kicker={kicker}
+        labelledBy={CARD_TITLE_ID}
+        note={`Rolled ${sum} · ${foot.when} · ${foot.next}`}
+        title="Riot"
+        voice="The die has spoken."
+      >
+        <LossSpread
+          face={riotRowFace(rowOf(table, moment.modified))}
+          lines={[
+            ...(taken.length ? taken : [NO_LOSSES]),
+            ...insuranceLines(G, seat, moment.insurance, moment.concessionTileId),
+            tokensLine(moment.tokensCleared, moment.level),
+          ]}
+          titleId={CARD_TITLE_ID}
+        />
+      </LossSheet>
     );
   }
 
-  // The chosen insurance as the engine would take it, in order: null when one would not go.
-  const commands = declared.map(declareCommand);
-  const declaredState = pending && !paying ? playOnCopy(G, seat, commands) : null;
-  const modifier = rolled
-    ? rolled.modifier
-    : insuranceRollBonus(
-        [...(pending?.boughtInsurance ?? []), ...declared.map((choice) => choice.optionId)],
-        G.definition.content,
-      );
-  const reach = riotRollReach(G, modifier);
-  const die = riotTable.die ?? 6;
   const canAct = viewerCanAct && seat === currentPlayerId && Boolean(pending);
-  const rolledRecord = rolled
-    ? {
-        tableId: "riot" as const,
-        playerID: seat,
-        roll: rolled.roll,
-        modified: rolled.modified,
-        modifier,
-        rowLabel: rolled.rowLabel,
-        outcomes: rolled.outcomes,
-        year: entry?.year ?? G.year,
-      }
-    : null;
-  const next = paying ? riotPopNext(G, seat) : null;
+
+  if (shown === "pay" && losses && rolled) {
+    const answer = (pay: RiotPay) => {
+      onRolled();
+      moves.resolveRiotPop(pay);
+    };
+    const lines = takenLines(G, seat, losses.taken);
+    return (
+      <LossSheet
+        icon="unrest/riot"
+        kicker={kicker}
+        note="The card is drawn after you choose. It is discarded, not played."
+        title="Riot"
+        voice="The die has spoken. The mob will take a pop, or a card in its place."
+      >
+        <LossSpread
+          face={riotRowFace(rowOf(table, rolled.modified))}
+          lines={lines.length ? lines : [NOTHING_YET]}
+          titleId={CARD_TITLE_ID}
+        >
+          <RiotChoice canAct={canAct} losses={losses} onAnswer={answer} seat={seat} />
+        </LossSpread>
+      </LossSheet>
+    );
+  }
+
+  // The insurance in the order it seals: what the engine holds, then what is chosen.
+  const bought = entry?.moment.insurance ?? pending?.boughtInsurance ?? [];
+  const order = [
+    ...bought,
+    ...declared.map((choice) => choice.optionId).filter((id) => !bought.includes(id)),
+  ];
+  const sheet = stage === "sheet" && Boolean(pending) && !losses;
+  const commands = declared.map(declareCommand);
+  // The chosen insurance as the engine would take it: null when one would not go.
+  const declaredState = sheet ? playOnCopy(G, seat, commands) : null;
+  const modifier = rolled ? rolled.modifier : insuranceRollBonus(order, G.definition.content);
+  const reach = riotRollReach(G, modifier);
+  const die = table.die ?? 6;
+  const tokens = pending?.tokensCleared ?? entry?.moment.tokensCleared ?? 0;
+
+  const roll = () => {
+    const go = () => {
+      onRolled();
+      setStage("roll");
+      for (const choice of declared)
+        moves.buyRiotInsurance(
+          choice.optionId,
+          choice.tileId ? { tileId: choice.tileId, from: CONCESSION_FROM } : undefined,
+        );
+      moves.resolveRiot();
+    };
+    if (!declared.length) return go();
+    const { changes } = previewSpend(G, seat, { command: commands });
+    const concession = declared.find((choice) => choice.tileId)?.tileId;
+    ask({
+      icon: "events/die",
+      question: `Are you sure you want to pay for ${declared.length === 1 ? "this insurance" : `${declared.length} insurances`} and roll the die?`,
+      detail: (
+        <ConfirmDetail
+          changes={changes}
+          cost={declaredCost(options, declared)}
+          note={
+            concession ? `A citizen of ${placeName(G, seat, concession)} becomes a freeman.` : null
+          }
+        />
+      ),
+      verb: "Roll the die",
+      onYes: go,
+    });
+  };
 
   return (
-    <ModalShell
-      backdropClassName="eventModalBackdrop"
-      ceremony="wound"
-      className="riotSheet"
-      labelledBy="riot-title"
-    >
-      <header className="sheetHead">
-        <Ico path="unrest/riot" size="disc" />
-        <div className="sheetTitle">
-          <span className="fateKicker label">Turn end · {name}’s realm</span>
-          <h2 className="display" id="riot-title">
-            Riot
-          </h2>
-          <p className="fateVoice body-em">
-            {paying
-              ? "The die has spoken. The mob will take a pop, or a card in its place."
-              : "The agora fills with angry voices. Declare your concessions before the die decides."}
-          </p>
-        </div>
-      </header>
-
-      <div className="sheetBody">
-        {stage === "roll" && rolled ? (
-          <div className="riotRoll">
-            <LacquerDie value={rolled.roll} />
-            <span className="riotSum display num">
-              {rolled.roll}
-              {modifier ? (
-                <>
-                  {" "}
-                  <span className="riotSumMute">+ {modifier} =</span> {rolled.modified}
-                </>
-              ) : null}
-            </span>
-          </div>
-        ) : paying ? (
-          <RiotPops seat={seat} />
-        ) : pending ? (
-          <Insurance
-            after={declaredState ?? G}
-            canAct={canAct}
-            declared={declared}
-            onToggle={(choice) =>
-              setDeclared((current) =>
-                current.some((one) => one.optionId === choice.optionId)
-                  ? current.filter((one) => one.optionId !== choice.optionId)
-                  : [...current, choice],
-              )
+    <LossSheet
+      act={
+        stage === "roll" ? (
+          <span aria-live="polite" className="riotRoll">
+            {rolled ? (
+              <>
+                <LacquerDie value={rolled.roll} />
+                <span
+                  className={dieDown ? "riotSum stat-lg num" : "riotSum stat-lg num is-waiting"}
+                >
+                  {rolled.roll}
+                  {modifier ? ` + ${modifier} → ${rolled.modified}` : ""}
+                </span>
+              </>
+            ) : null}
+          </span>
+        ) : (
+          <Tooltip
+            content={
+              <Tip title="Roll the die">
+                <TipBody>
+                  {modifier
+                    ? `Roll a d${die} ${formatSignedNumber(modifier)}, and pay the insurance you chose.`
+                    : `Roll a d${die} with no insurance.`}
+                </TipBody>
+                {declared.length && !declaredState ? (
+                  <TipWarn>The insurance chosen cannot all be paid.</TipWarn>
+                ) : null}
+              </Tip>
             }
-            seat={seat}
-          />
-        ) : null}
-        <section className="sheetCol">
-          <h3 className="sheetSec label">The table</h3>
-          <EventTableRows
-            links={false}
-            reach={reach}
-            register="ceremony"
-            result={rolledRecord}
-            table={riotTable}
-          />
-          <p className="caption sheetNote">
+            preferredPlacement="above"
+          >
+            <Lacquer
+              className="sheetAct"
+              disabled={!canAct || (declared.length > 0 && !declaredState)}
+              onClick={roll}
+            >
+              <Ico path="events/die" size="ui" />
+              Roll the die
+            </Lacquer>
+          </Tooltip>
+        )
+      }
+      icon="unrest/riot"
+      kicker={kicker}
+      note={
+        <Prose links={false}>
+          {`Your ${tokens} Unrest ${tokens === 1 ? "token has" : "tokens have"} cleared. Losses take slaves first.`}
+        </Prose>
+      }
+      title="Riot"
+      voice="The agora fills with angry voices. Declare your concessions before the die decides."
+    >
+      <section aria-labelledby="riot-table-label" className="riotSec">
+        <div className="sheetSecRow">
+          <span className="sheetSec label" id="riot-table-label">
+            The table
+          </span>
+          <span className="caption">
             {modifier
               ? `You roll a d${die} ${formatSignedNumber(modifier)}: the worst you can roll is a ${reach.lowest}.`
-              : `You roll a d${die}. Each insurance puts the lowest row out of reach.`}
-          </p>
-        </section>
-      </div>
-
-      <footer className="sheetFoot">
-        <span className="caption">
-          <Prose links={false}>Losses take slaves first.</Prose>
-        </span>
-        {paying && stage === "pay" ? (
-          <span className="hungerActs">
-            <button
-              className="ghostVerb verb"
-              disabled={!canAct || !getResolveRiotPopStatus(G, seat, "pop").can}
-              onClick={() => {
-                onRolled();
-                moves.resolveRiotPop("pop");
-              }}
-              type="button"
-            >
-              Lose the {next ? formatPopLabel(next.pop, 1) : "pop"}
-            </button>
-            <button
-              className="ceremonyCommit verb verb-lg"
-              disabled={!canAct || !getResolveRiotPopStatus(G, seat, "card").can}
-              onClick={() => {
-                onRolled();
-                moves.resolveRiotPop("card");
-              }}
-              type="button"
-            >
-              <Ico path="events/convoy" size="ui" />
-              Give Up a Card
-            </button>
+              : `You roll a d${die}. Each insurance seals the lowest card still open.`}
           </span>
-        ) : pending && !paying ? (
-          <button
-            className="ceremonyCommit verb verb-lg"
-            disabled={!canAct || (declared.length > 0 && !declaredState)}
-            onClick={() => {
-              const roll = () => {
-                onRolled();
-                setStage("roll");
-                for (const choice of declared)
-                  moves.buyRiotInsurance(
-                    choice.optionId,
-                    choice.tileId ? { tileId: choice.tileId, from: CONCESSION_FROM } : undefined,
-                  );
-                moves.resolveRiot();
-              };
-              if (!declared.length) return roll();
-              const { changes } = previewSpend(G, seat, { command: commands });
-              const concession = declared.find((choice) => choice.tileId)?.tileId;
-              ask({
-                icon: "events/die",
-                question: `Are you sure you want to pay for ${declared.length === 1 ? "this insurance" : `${declared.length} insurances`} and roll the die?`,
-                detail: (
-                  <ConfirmDetail
-                    changes={changes}
-                    cost={declaredCost(G, declared)}
-                    note={
-                      concession
-                        ? `A citizen of ${placeName(G, seat, concession)} becomes a freeman.`
-                        : null
-                    }
-                  />
-                ),
-                verb: "Roll the die",
-                onYes: roll,
-              });
-            }}
-            type="button"
-          >
-            <Ico path="events/die" size="ui" />
-            Roll the Die{modifier ? ` · ${formatSignedNumber(modifier)}` : ""}
-          </button>
-        ) : null}
-      </footer>
-    </ModalShell>
+        </div>
+        <RiotFaces
+          hit={dieDown && rolled ? rolled.modified : null}
+          seals={sealsOf(order, options, reach.lowest)}
+          table={table}
+        />
+      </section>
+      <section aria-labelledby="riot-insurance-label" className="riotSec">
+        <div className="sheetSecRow">
+          <span className="sheetSec label" id="riot-insurance-label">
+            Insurance
+          </span>
+          <span className="caption">Each adds to the roll. Paid when you roll the die.</span>
+        </div>
+        <InsuranceTiles
+          after={sheet ? (declaredState ?? G) : null}
+          bought={bought}
+          canAct={canAct}
+          declared={declared}
+          firstRef={firstTile}
+          onRetarget={(tileId) =>
+            setDeclared((current) =>
+              current.map((choice) => (choice.tileId ? { ...choice, tileId } : choice)),
+            )
+          }
+          onToggle={(choice) =>
+            setDeclared((current) =>
+              current.some((one) => one.optionId === choice.optionId)
+                ? current.filter((one) => one.optionId !== choice.optionId)
+                : [...current, choice],
+            )
+          }
+          seat={seat}
+        />
+      </section>
+    </LossSheet>
   );
 }
 
+const NO_LOSSES: LossLine = {
+  key: "none",
+  icon: "unrest/calm",
+  text: "No losses: the mob goes home",
+  muted: true,
+};
+
+const NOTHING_YET: LossLine = {
+  key: "none",
+  icon: "unrest/riot",
+  text: "Nothing yet: each pop is yours to answer",
+  muted: true,
+};
+
+function rowOf(table: EventTableDefinition, modified: number) {
+  return table.rows.find((row) => row.roll === modified) ?? table.rows[table.rows.length - 1];
+}
+
+/** Which insurance seals each face: in the order chosen, each its bonus's worth of the
+ *  lowest faces still open, never past the lowest the engine says a roll can reach. */
+function sealsOf(
+  order: readonly RiotInsuranceId[],
+  options: readonly TableInsuranceOption[],
+  lowest: number,
+) {
+  const seals = new Map<number, TableInsuranceOption>();
+  let face = 1;
+  for (const id of order) {
+    const option = options.find((candidate) => candidate.id === id);
+    for (let step = 0; option && step < option.modifier && face < lowest; step += 1) {
+      seals.set(face, option);
+      face += 1;
+    }
+  }
+  return seals;
+}
+
 /**
- * The rolled riot's pops, one at a time: what the next one is, and the hand that may
- * stand in for it. The hand shows only its count, so nobody sees which card would go.
+ * The six faces of the die as small cards. A sealed face wears its insurance's seal and
+ * stays readable; once the die lands, the face it found is ringed. The rest keep their
+ * full ink: a faded face fails the contrast floor.
  */
-function RiotPops({ seat }: { seat: PlayerId }) {
-  const { G } = useGameUi();
-  const losses = G.pendingRiot!.losses!;
-  const next = riotPopNext(G, seat);
-  const held = G.devHands[seat].length;
-  const owed = losses.owed;
+function RiotFaces({
+  table,
+  seals,
+  hit,
+}: {
+  table: EventTableDefinition;
+  seals: ReadonlyMap<number, TableInsuranceOption>;
+  hit: number | null;
+}) {
   return (
-    <section className="sheetCol">
-      <h3 className="sheetSec label">Pops or cards</h3>
-      <p className="body">
-        <Prose links={false}>
-          {`${owed === 1 ? "One pop" : `${owed} pops`} to answer. For each, lose it or give up a held card drawn at random.`}
-        </Prose>
-      </p>
-      <ul className="insRows">
-        {next ? (
-          <li className="insRow">
-            <Ico path={`pops/${next.pop}`} size="tile" />
-            <span className="insWords">
-              <b className="title">Next to go</b>
-              <span className="caption">
-                A {formatPopLabel(next.pop, 1)} from {placeName(G, seat, next.tileId)}
+    <ol className="riotFaces">
+      {table.rows.map((row) => {
+        const seal = seals.get(row.roll);
+        const landed = hit === row.roll;
+        return (
+          <li
+            className={["riotFace", seal ? "is-sealed" : null, landed ? "is-hit" : null]
+              .filter(Boolean)
+              .join(" ")}
+            key={row.roll}
+          >
+            <GameCard
+              className={landed ? "is-picked" : undefined}
+              face={riotRowFace(row)}
+              size="hand"
+            />
+            {seal ? (
+              <span className="riotSeal">
+                <span className="riotSealDisc">
+                  <Ico path={INSURANCE_ICON[seal.id]} size="ui" />
+                </span>
+                <span className="riotSealWord label">
+                  Sealed<span className="visuallyHidden"> by {seal.label}</span>
+                </span>
               </span>
-            </span>
+            ) : null}
           </li>
-        ) : null}
-        <li className="insRow">
-          <Ico path="events/convoy" size="tile" />
-          <span className="insWords">
-            <b className="title">Held cards</b>
-            <span className="caption">
-              {held} in hand{losses.cards.length ? `, ${losses.cards.length} given up` : ""}
-            </span>
-          </span>
-        </li>
-      </ul>
-      <p className="caption sheetNote">
-        The card is drawn after you choose. It is discarded, not played.
-      </p>
-    </section>
+        );
+      })}
+    </ol>
   );
 }
 
-/** "Caravan went in place of a pop." — one line per card a riot took. */
-function cardLines(G: HegemonyState, cards: readonly string[]): LossLine[] {
-  return cards.map((cardId, index) => ({
-    key: `card-${index}`,
-    icon: "events/convoy",
-    text: `${G.definition.content.devCards.find((card) => card.id === cardId)?.name ?? "A card"} went in place of a pop.`,
-  }));
-}
-
-/** What the chosen insurance costs in stores, summed from the table. */
-function declaredCost(G: HegemonyState, declared: readonly Declared[]): Partial<Resources> {
-  const table = getRiotTable(G.definition.content).insurance ?? [];
-  const cost: Partial<Resources> = {};
-  for (const { optionId } of declared)
-    for (const [resource, n] of Object.entries(
-      table.find((option) => option.id === optionId)?.cost ?? {},
-    ) as Array<[Resource, number]>)
-      cost[resource] = (cost[resource] ?? 0) + n;
-  return cost;
-}
-
 /**
- * The insurance column: each declaration a choice, once, paid only when the die is
- * rolled (one confirm for them all). Whether one more can be chosen is the engine's
- * status on the state after the ones already chosen (`after`).
+ * The three insurances as toggle tiles: the price on the tile, and under it what it
+ * takes, before and after, read off the engine playing the choices on a copy (`after`).
+ * Whether one more can be chosen is the engine's status on that copy. Once the die is
+ * cast (`after` null) the tiles only show what was chosen.
  */
-function Insurance({
+function InsuranceTiles({
   seat,
   canAct,
   declared,
+  bought,
   after,
   onToggle,
+  onRetarget,
+  firstRef,
 }: {
   seat: PlayerId;
   canAct: boolean;
   declared: readonly Declared[];
-  after: HegemonyState;
+  bought: readonly RiotInsuranceId[];
+  after: HegemonyState | null;
   onToggle: (choice: Declared) => void;
+  onRetarget: (tileId: string) => void;
+  firstRef: Ref<HTMLButtonElement>;
 }) {
   const { G } = useGameUi();
-  const pending = G.pendingRiot!;
-  const riotTable = getRiotTable(G.definition.content);
+  const options = getRiotTable(G.definition.content).insurance ?? [];
   // Concession targets: every owned settlement with a citizen to demote.
   const targets = useMemo(
     () =>
@@ -445,77 +471,43 @@ function Insurance({
       ),
     [G, seat],
   );
-  const [target, setTarget] = useState(0);
-  const tileId = targets[Math.min(target, targets.length - 1)];
-  // The bonus is data: one number when every option adds the same.
-  const bonuses = new Set((riotTable.insurance ?? []).map((option) => option.modifier));
-  const uniform = bonuses.size === 1 ? [...bonuses][0] : null;
+  const [target, setTarget] = useState<string | undefined>();
+  const tileId = target && targets.includes(target) ? target : targets[0];
 
   return (
-    <section className="sheetCol">
-      <h3 className="sheetSec label">Insurance</h3>
-      <ul className="insRows">
-        {(riotTable.insurance ?? []).map((option) => {
-          const bought = pending.boughtInsurance.includes(option.id);
-          const chosen = declared.find((choice) => choice.optionId === option.id);
-          const status = getBuyRiotInsuranceStatus(after, seat, option.id);
-          const usable = option.demotesPop ? targets.length > 0 : status.can;
-          const open = chosen !== undefined || (usable && status.can);
-          const [resource, amount] =
-            (Object.entries(option.cost) as Array<[Resource, number]>)[0] ?? [];
-          const concessionAt = bought ? pending.concessionTileId : chosen?.tileId;
-          return (
-            <li
-              className={bought || chosen ? "insRow is-on" : usable ? "insRow" : "insRow is-off"}
-              key={option.id}
+    <ul className="riotTiles">
+      {options.map((option, index) => {
+        const chosen = declared.find((choice) => choice.optionId === option.id);
+        const on = bought.includes(option.id) || chosen !== undefined;
+        const status = after ? getBuyRiotInsuranceStatus(after, seat, option.id) : null;
+        const blocked =
+          option.demotesPop && !targets.length
+            ? "No citizen to demote."
+            : !on && status && !status.can
+              ? status.reasons[0]
+              : null;
+        const locked = !after || !canAct || bought.includes(option.id);
+        const [resource] = Object.keys(option.cost) as Resource[];
+        const price = option.demotesPop
+          ? "A citizen demoted"
+          : `${option.cost[resource]} ${RESOURCE_LABELS[resource]}`;
+        return (
+          <li className={on ? "riotTile is-on" : "riotTile"} key={option.id}>
+            <Tooltip
+              content={
+                <Tip title={option.label}>
+                  <TipBody>
+                    {`${option.demotesPop ? "A citizen of the settlement you pick becomes a freeman" : `Pay ${price}`} when you roll. It seals the lowest card still open: ${formatSignedNumber(option.modifier)} to the roll.`}
+                  </TipBody>
+                  {blocked ? <TipWarn>{blocked}</TipWarn> : null}
+                </Tip>
+              }
+              triggerClassName="riotTileTip"
             >
-              <Ico path={INSURANCE_ICON[option.id]} size="tile" />
-              <span className="insWords">
-                <b className="title">{option.label}</b>
-                {option.demotesPop ? (
-                  concessionAt ? (
-                    <span className="caption">
-                      <Prose links={false}>
-                        {`A citizen of ${placeName(G, seat, concessionAt)} ${bought ? "became" : "becomes"} a freeman`}
-                      </Prose>
-                    </span>
-                  ) : targets.length ? (
-                    <label className="caption insPick">
-                      <Prose links={false}>Demote a citizen:</Prose>
-                      <select
-                        disabled={!canAct}
-                        onChange={(event) => setTarget(Number(event.target.value))}
-                        value={Math.min(target, targets.length - 1)}
-                      >
-                        {targets.map((candidate, index) => (
-                          <option key={candidate} value={index}>
-                            {placeName(G, seat, candidate)}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  ) : (
-                    <span className="caption">
-                      <Prose links={false}>No citizen to demote</Prose>
-                    </span>
-                  )
-                ) : (
-                  <AnnotatedText
-                    className="caption"
-                    links={false}
-                    text={`${amount ?? 0} ${resource ?? ""} · ${formatSignedNumber(option.modifier)}`}
-                  />
-                )}
-                {/* Why it cannot be chosen; the concession says so above. */}
-                {!bought && !chosen && !status.can && (usable || !option.demotesPop) ? (
-                  <span className="caption">{status.reasons[0]}</span>
-                ) : null}
-              </span>
-              <button
-                aria-label={`Declare ${option.label.toLowerCase()}`}
-                aria-pressed={bought || chosen !== undefined}
-                className="insCheck"
-                disabled={bought || !canAct || !open}
+              <Plaque
+                aria-pressed={on}
+                className="riotToggle"
+                disabled={locked || Boolean(blocked)}
                 onClick={() =>
                   onToggle(
                     option.demotesPop && tileId
@@ -523,25 +515,270 @@ function Insurance({
                       : { optionId: option.id },
                   )
                 }
-                type="button"
+                ref={index === 0 ? firstRef : undefined}
               >
-                {bought || chosen ? "✓" : null}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-      <p className="caption sheetNote">
-        Each one declared adds {uniform !== null ? `${formatSignedNumber(uniform)}` : "its bonus"}{" "}
-        to the roll, paid when you roll the die.
-      </p>
-      <p className="caption sheetNote insCleared">
-        <Ico path="unrest/unrest" size="ui" />
-        Your {pending.tokensCleared} Unrest{" "}
-        {pending.tokensCleared === 1 ? "token has" : "tokens have"} cleared.
-      </p>
-    </section>
+                <Ico path={INSURANCE_ICON[option.id]} size="tile" />
+                <span className="riotTileWords">
+                  <span className="title">{option.label}</span>
+                  {option.demotesPop ? (
+                    <span className="caption">{price}</span>
+                  ) : (
+                    <Chips amounts={option.cost} />
+                  )}
+                </span>
+                <span className="riotTileBonus stat num">
+                  {formatSignedNumber(option.modifier)}
+                </span>
+              </Plaque>
+            </Tooltip>
+            <span className="riotTileFoot caption">
+              {!after && !on ? null : option.demotesPop ? (
+                <ConcessionPick
+                  after={on ? after : null}
+                  disabled={locked}
+                  onPick={(picked) => {
+                    setTarget(picked);
+                    onRetarget(picked);
+                  }}
+                  seat={seat}
+                  targets={targets}
+                  tileId={chosen?.tileId ?? tileId}
+                />
+              ) : (
+                <>
+                  <Ico path={RESOURCE_RASTERS[resource]} size="chip" />
+                  <span>{RESOURCE_LABELS[resource]}</span>
+                  {on && after ? (
+                    <Delta
+                      from={G.players[seat].resources[resource]}
+                      to={after.players[seat].resources[resource]}
+                    />
+                  ) : on ? (
+                    <span>paid</span>
+                  ) : (
+                    <span className="delta num">{G.players[seat].resources[resource]}</span>
+                  )}
+                </>
+              )}
+            </span>
+          </li>
+        );
+      })}
+    </ul>
   );
+}
+
+/**
+ * Whose citizen the concession demotes: a plaque naming the settlement that opens a
+ * short list of the others. With the concession chosen, that settlement's citizens
+ * before and after.
+ */
+function ConcessionPick({
+  seat,
+  targets,
+  tileId,
+  disabled,
+  after,
+  onPick,
+}: {
+  seat: PlayerId;
+  targets: readonly string[];
+  tileId: string | undefined;
+  disabled: boolean;
+  after: HegemonyState | null;
+  onPick: (tileId: string) => void;
+}) {
+  const { G } = useGameUi();
+  const anchor = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
+  if (!tileId) return <span>No citizen to demote</span>;
+  const citizens = (state: HegemonyState, at: string) =>
+    state.board.tiles
+      .find((tile) => tile.id === at)
+      ?.settlements.find((settlement) => settlement.owner === seat)?.pops.citizens ?? 0;
+  const name = placeName(G, seat, tileId);
+
+  return (
+    <>
+      <Ico path="pops/citizens" size="chip" />
+      {targets.length < 2 ? (
+        <span>{name}</span>
+      ) : (
+        <Tooltip
+          content={
+            <Tip title="Whose citizen">
+              <TipBody>{`Pick the settlement whose citizen becomes a freeman. Now ${name}.`}</TipBody>
+            </Tip>
+          }
+          preferredPlacement="above"
+        >
+          <Plaque
+            aria-expanded={open}
+            aria-haspopup="dialog"
+            className="riotPick"
+            disabled={disabled}
+            onClick={() => setOpen(true)}
+            ref={anchor}
+          >
+            {name}
+            <span aria-hidden="true">▾</span>
+          </Plaque>
+        </Tooltip>
+      )}
+      {after ? <Delta from={citizens(G, tileId)} to={citizens(after, tileId)} /> : null}
+      {open ? (
+        <Popover
+          anchor={anchor}
+          ariaLabel="Whose citizen"
+          className="riotPicker"
+          dismissOnOutside
+          focusFirst
+          onDismiss={() => setOpen(false)}
+          preferredPlacement="above"
+        >
+          <span className="label">Whose citizen</span>
+          <div className="riotPickList">
+            {targets.map((candidate) => {
+              const place = placeName(G, seat, candidate);
+              return (
+                <Tooltip
+                  content={
+                    <Tip title={place}>
+                      <TipBody>{`A citizen of ${place} becomes a freeman.`}</TipBody>
+                    </Tip>
+                  }
+                  key={candidate}
+                  side="right"
+                >
+                  <Plaque
+                    aria-pressed={candidate === tileId}
+                    onClick={() => {
+                      onPick(candidate);
+                      setOpen(false);
+                    }}
+                  >
+                    <span>{place}</span>
+                    <span className="num">{citizens(G, candidate)}</span>
+                    <Ico path="pops/citizens" size="chip" />
+                  </Plaque>
+                </Tooltip>
+              );
+            })}
+          </div>
+        </Popover>
+      ) : null}
+    </>
+  );
+}
+
+/**
+ * The pops the roll took, one at a time, while the seat holds a card that may stand in
+ * for one: what goes next, the hand's count (never which card), and the two answers.
+ */
+function RiotChoice({
+  seat,
+  losses,
+  canAct,
+  onAnswer,
+}: {
+  seat: PlayerId;
+  losses: RiotLosses;
+  canAct: boolean;
+  onAnswer: (pay: RiotPay) => void;
+}) {
+  const { G } = useGameUi();
+  const next = riotPopNext(G, seat);
+  const held = G.devHands[seat].length;
+  const pop = next ? formatPopLabel(next.pop, 1) : "pop";
+  const where = next ? placeName(G, seat, next.tileId) : null;
+  const popStatus = getResolveRiotPopStatus(G, seat, "pop");
+  const cardStatus = getResolveRiotPopStatus(G, seat, "card");
+  const { owed } = losses;
+  return (
+    <div className="riotChoice">
+      <p className="body">
+        <Prose links={false}>
+          {`${owed === 1 ? "One pop" : `${owed} pops`} to answer. For each, lose it or give up a held card drawn at random.`}
+        </Prose>
+      </p>
+      <p className="caption">
+        {where ? `Next to go: a ${pop} from ${where} · ` : null}
+        {held} in hand{losses.cards.length ? `, ${losses.cards.length} given up` : ""}
+      </p>
+      <div className="riotActs">
+        <Tooltip
+          content={
+            <Tip title={`Lose the ${pop}`}>
+              <TipBody>{where ? `A ${pop} from ${where} leaves.` : "The pop leaves."}</TipBody>
+              {popStatus.can ? null : <TipWarn>{popStatus.reasons[0]}</TipWarn>}
+            </Tip>
+          }
+          preferredPlacement="above"
+        >
+          <Plaque disabled={!canAct || !popStatus.can} onClick={() => onAnswer("pop")}>
+            Lose the {pop}
+          </Plaque>
+        </Tooltip>
+        <Tooltip
+          content={
+            <Tip title="Give up a card">
+              <TipBody>
+                {`A held card drawn at random is discarded in the ${pop}’s place. You hold ${held}.`}
+              </TipBody>
+              {cardStatus.can ? null : <TipWarn>{cardStatus.reasons[0]}</TipWarn>}
+            </Tip>
+          }
+          preferredPlacement="above"
+        >
+          <Plaque disabled={!canAct || !cardStatus.can} onClick={() => onAnswer("card")}>
+            <Ico path="events/convoy" size="ui" />
+            Give up a card
+          </Plaque>
+        </Tooltip>
+      </div>
+    </div>
+  );
+}
+
+/** "Bread dole: 4 Food paid" — one line for each insurance the riot was rolled with. */
+function insuranceLines(
+  G: HegemonyState,
+  seat: PlayerId,
+  ids: readonly RiotInsuranceId[],
+  concessionTileId: string | null,
+): LossLine[] {
+  const options = getRiotTable(G.definition.content).insurance ?? [];
+  return ids.flatMap((id): LossLine[] => {
+    const option = options.find((candidate) => candidate.id === id);
+    if (!option) return [];
+    const paid = option.demotesPop
+      ? `a citizen of ${concessionTileId ? placeName(G, seat, concessionTileId) : "a settlement"} became a freeman`
+      : `${(Object.entries(option.cost) as Array<[Resource, number]>)
+          .map(([resource, n]) => `${n} ${RESOURCE_LABELS[resource]}`)
+          .join(", ")} paid`;
+    return [
+      {
+        key: `insurance-${id}`,
+        icon: INSURANCE_ICON[id],
+        text: `${option.label}: ${paid}`,
+        muted: true,
+      },
+    ];
+  });
+}
+
+/** What the chosen insurance costs in stores, summed from the table. */
+function declaredCost(
+  options: readonly TableInsuranceOption[],
+  declared: readonly Declared[],
+): Partial<Resources> {
+  const cost: Partial<Resources> = {};
+  for (const { optionId } of declared)
+    for (const [resource, n] of Object.entries(
+      options.find((option) => option.id === optionId)?.cost ?? {},
+    ) as Array<[Resource, number]>)
+      cost[resource] = (cost[resource] ?? 0) + n;
+  return cost;
 }
 
 function latestRiot(log: readonly LogEntry[], seat?: PlayerId): RiotEntry | null {

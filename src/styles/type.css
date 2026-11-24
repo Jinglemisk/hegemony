@@ -75,6 +75,8 @@
 .threat-panel .threat-row-words .caption,
 .threat-panel .threat-gap,
 .ch-confirm-d .delta,
+.lossLines .delta,
+.riotTileFoot .delta,
 .deck-line .num,
 .mood-line-n,
 .mood-line b,
@@ -93,7 +95,6 @@
 
 /* Step 13's ceremony cards keep the frame's floor (--t-13). */
 .hungerCard .label,
-.lossCard .label,
 .drawnReveal .label,
 .riotSheet .label,
 .ageEnd .label {
@@ -101,7 +102,6 @@
 }
 
 .hungerCard .caption,
-.lossCard .caption,
 .drawnReveal .caption,
 .riotSheet .caption,
 .ageEnd .caption {
@@ -109,16 +109,12 @@
 }
 
 .ageEnd .verb,
-.riotSheet .verb,
-.lossCard .verb,
 .hungerCard .verb,
 .drawnReveal .verb {
   font-size: var(--t-13);
 }
 
 .ageEnd .verb.verb-lg,
-.riotSheet .verb.verb-lg,
-.lossCard .verb.verb-lg,
 .drawnReveal .verb.verb-lg {
   font-size: var(--t-14);
 }
@@ -462,10 +458,6 @@
 }
 .stepperControls button {
   font-size: var(--t-16);
-}
-/* The riot's sum: the one carved numeral on its sheet. */
-.riotSum {
-  font-size: calc(var(--t-22) * 2);
 }
 /* The Idea draft and purchase (frame/ideas.css). */
 .ideas-heading p,
