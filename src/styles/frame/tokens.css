@@ -336,7 +336,7 @@
   --fan-from: 0.4; /* a sub-circle grows out of its disc from this scale */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 
-  /* ==== the Imperator shell (docs/plans/imperator-shell.md) =================
+  /* ==== the Imperator shell (docs/archive/plans/imperator-shell.md) =================
      The material: parchment and black glaze in a cast bronze frame. Spent by
      src/styles/frame/chrome.css and the primitives in src/components/chrome/. */
 

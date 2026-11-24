@@ -163,6 +163,65 @@ authority only to execute commands; React receives `PlayerView.state`, never tha
 Changing the hot-seat viewer recomputes the projection so only that seat's private Assembly
 and event decision data becomes visible.
 
+## The shell
+
+The game screen is the Imperator shell (#193, its plan
+[archived](../archive/plans/imperator-shell.md)): a full-height sidebar of drawers on the left
+(Realm, Ideas, Agora, Trade, Victory, Cards), one docked place panel, the outliner on the
+right (it folds to its own head), the dock with End turn under it, the top bar, and the hand
+tray. One left window is open at a time. Panels are parchment or black glaze with bronze
+corners, and each seat is shown as its struck coin. Every spend goes through the confirm bar,
+which shows the engine's own before → after numbers (`confirmPreview`); a trade or deal card
+is its own question and shows its after-values instead. Tooltips wait 400 ms on hover, open at
+once on keyboard focus or touch, and only one is ever shown.
+
+### Standards
+
+**Text and readability.** [Xbox Accessibility Guideline 101](https://learn.microsoft.com/en-us/gaming/accessibility/xbox-accessibility-guidelines/101)
+sets 18 px body height at 1080p for PC and asks for text scaling to 200 %.
+[XAG 102](https://learn.microsoft.com/en-us/gaming/accessibility/xbox-accessibility-guidelines/102)
+sets 4.5:1 contrast for text, and 3:1 for large text and inactive controls. The shell is
+drawn on a 1440×900 canvas and scaled uniformly (1.2 at 1920×1080). At design size:
+
+| Role                                            | Size at 1440×900 | At 1080p |
+| ----------------------------------------------- | ---------------- | -------- |
+| Smallest text anywhere (small-caps tags, units) | 13 px            | 15.6     |
+| Secondary lines, tooltips' body                 | 14 px            | 16.8     |
+| Body                                            | 15–16 px         | 18–19    |
+| Numbers in panels                               | ≥ 16 px          |          |
+| A head's title (panel, drawer, window, card)    | 20 px            | 24       |
+| A moment's sheet title (Assembly, ceremonies)   | 24 px            | 28.8     |
+| A drawn verb (lacquer, plaque), sentence case   | 15 px            | 18       |
+
+- **Type roles.** One size per tier, as tokens (`--t-head`, `--t-sheet`, `--t-verb` in
+  `tokens.css`): every head's title at 20, every moment sheet's at 24, every lacquer and
+  plaque verb in Alegreya Sans 15. Small caps keep `--track-caps`; tracking lives on the
+  role, never on a reset. Every figure is lining and tabular (Alegreya's old-style 0
+  reads as an o); proper names and the top bar's figures stay in Cinzel.
+- **Text scale.** A Text size setting (Standard / Large = 115 % / Largest = 130 %) scales
+  every text token. Boxes keep their size and their contents scroll inside.
+  - The sizes above are design px on the 1440×900 canvas. A smaller screen scales the
+    canvas down, so the 13 px floor draws at 11.6 css px at 1280×800 (k = 0.889). Until
+    the player picks a Text size, it starts at Large wherever k < 0.95, which puts that
+    floor back above 13 css px.
+  - The top bar is the one exception: it keeps one size at every Text size, because its
+    44 px cells are already full. Its labels stay whole at every size, and each cell's
+    tooltip, which does scale, carries the full words.
+- **Contrast.** 4.5:1 for all text, measured against the texture pixel behind it that reads
+  worst (for ink, parchment's darkest grain, about rgb 237 215 170; a footer band's 219 198
+  154). 3:1 for icons and disabled controls. Text inks are their own tokens: `--ink-72` for quiet text,
+  `--pos-ink` and `--neg-ink` for a change that helps or hurts, `--clay-ink` for clay words.
+  `ui:conduct` photographs the page with its text hidden and samples the real pixels, so
+  textured grounds are checked.
+- **Targets.** Every control is at least 32 px; frequent ones are 44 px or more. Every control
+  has an accessible name, a visible focus ring and a tooltip.
+- **Motion.** Movement takes 200–320 ms. Everything stops under `prefers-reduced-motion`.
+- **Geometry.**
+  - Nothing overprints. A panel's size never depends on its contents or state.
+  - `ui:audit` and `ui:conduct` are clean at 1280×800, 1440×900 and 1920×1080.
+  - `ui:check` ratchets only down: colours live in `tokens.css`, sizes in `type.css`, and
+    z-index comes from `--z-*`.
+
 ## Map presentation
 
 The board is the 3D map, drawn with three.js. The owner ruled on 2026-10-26 that there is

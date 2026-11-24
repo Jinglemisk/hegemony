@@ -39,7 +39,6 @@ resource chips, two token tables) are scheduled in the
 | `TYPE-1` | a decision | Two type sizes sit under spec, on purpose     |
 | `DUP-1`  | nothing    | Four repeated glossary words, judged and left |
 | `RIOT-1` | later      | Redesign the riot screen in the current UI    |
-| `IMP-1`  | active     | The Imperator-style overhaul, being built     |
 
 ### Shipped or closed
 
@@ -451,9 +450,9 @@ each effect of the rolled row is shown as a card, in the shared card format, wit
 loss (pops, burned buildings, resources, cards given up). Today the result shows one headline
 loss and lists the rest in a caption under it.
 
-## IMP-1 — the Imperator-style overhaul · **active**
+## IMP-1 — the Imperator-style overhaul · **shipped** (#193)
 
-Owner, 2026-11-23: build the Improved proposal end to end; the [Imperator shell plan](imperator-shell.md) holds it.
+Owner, 2026-11-23: build the Improved proposal end to end. Merged as #193; the [plan](../archive/plans/imperator-shell.md) is archived and its standards live in the [presentation contract](../reference/frontend-presentation.md#the-shell).
 
 Owner, 2026-11-04: the UI is overhauled at a later date. The proposal page and its source are in
 [the report](../reports/product/2026-11-04-imperator-ui-overhaul/README.md). When it resumes, the
