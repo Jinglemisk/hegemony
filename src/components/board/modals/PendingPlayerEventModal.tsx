@@ -17,8 +17,9 @@ import { GameCard } from "../../cards/GameCard";
 import { SeatMark } from "../../frame/parts";
 import { eventCardArtUrl } from "../events";
 import { capitalize } from "../helpers";
-import { ceremonyMood, commitVerb } from "./ceremonyMood";
-import { DrawnReveal } from "./DrawnReveal";
+import { Plaque } from "../../chrome/controls";
+import { ceremonyMood, fateCommit } from "./ceremonyMood";
+import { DrawnCommit, DrawnReveal } from "./DrawnReveal";
 import { useGameUi } from "../GameUiContext";
 import { TileListbox } from "../TileListbox";
 
@@ -95,29 +96,8 @@ export function PendingPlayerEventModal() {
   const canConfirm = isActive && (!popEffect || targetTileIds.length > 0);
   const canDecline = canDeclinePlayerEvent(G, playerID);
   const blow = presentEventEffects(effects);
-  // The mood decides the frame AND the verb. A card that hurts you should not ask
-  // to be "claimed" — you endure it. One word and one colour, read off the
-  // effects the engine already presented.
+  // The mood decides the frame; the commit names what the card does, from its effect.
   const mood = ceremonyMood(blow.tone);
-  const tokenEffect = effects.find((effect) => effect.type === "unrestTokens");
-  const actionLabel = tokenEffect
-    ? tokenEffect.change === "placeOne"
-      ? "Place Unrest"
-      : "Clear Unrest"
-    : popEffect
-      ? "Place Pop"
-      : commitVerb(mood, blow.subject);
-
-  const commit = (
-    <button
-      className="ceremonyCommit verb verb-lg"
-      disabled={!canConfirm}
-      onClick={() => moves.resolvePendingPlayerEvent(popEffect ? targetTileId : undefined)}
-    >
-      {actionLabel}
-    </button>
-  );
-
   return (
     // Blocking on purpose: a drawn event must be answered, never dismissed. The card,
     // the fates' deck line, the settlement slip when it asks for one, then the commit,
@@ -192,20 +172,15 @@ export function PendingPlayerEventModal() {
       }
     >
       {canDecline ? (
-        <span className="hungerActs">
-          <button
-            className="ghostVerb verb"
-            disabled={!isActive}
-            onClick={() => moves.declinePendingPlayerEvent()}
-            type="button"
-          >
-            Decline
-          </button>
-          {commit}
-        </span>
-      ) : (
-        commit
-      )}
+        <Plaque disabled={!isActive} onClick={() => moves.declinePendingPlayerEvent()}>
+          Decline
+        </Plaque>
+      ) : null}
+      <DrawnCommit
+        disabled={!canConfirm}
+        label={fateCommit(effects, mood)}
+        onClick={() => moves.resolvePendingPlayerEvent(popEffect ? targetTileId : undefined)}
+      />
     </DrawnReveal>
   );
 }

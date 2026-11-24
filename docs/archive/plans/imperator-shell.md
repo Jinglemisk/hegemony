@@ -1,7 +1,7 @@
 ---
-status: active
-phase: "UI"
-updated: 2026-11-23
+archive_status: shipped
+archived: 2026-11-24
+shipping_evidence: "Built on feat/imperator-shell and merged as #193 on 2026-11-23; owner polish (drawn-card commits, title cards, tooltip delay, map pick frame) followed in the next PR"
 ---
 
 # The Imperator shell
@@ -9,7 +9,7 @@ updated: 2026-11-23
 ## Outcome
 
 The game screen becomes the **Improved proposal** of the
-[Imperator overhaul page](../reports/product/2026-11-04-imperator-ui-overhaul/README.md)
+[Imperator overhaul page](../../reports/product/2026-11-04-imperator-ui-overhaul/README.md)
 (owner, 2026-11-23: "implement this new and improved UI end to end"). A player reads the
 realm from a full-height sidebar of drawers, acts on a place from one docked place panel,
 watches their realm in an outliner, ends the turn from a three-row dock, and every surface is
@@ -166,4 +166,4 @@ findings.
 ## Retirement
 
 After merge, update `docs/reference/frontend-presentation.md` and close `IMP-1` in the
-[UI ledger](ui-remaining.md), then archive this plan.
+[UI ledger](../../plans/ui-remaining.md), then archive this plan.

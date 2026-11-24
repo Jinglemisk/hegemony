@@ -8,13 +8,14 @@ import { PLAYER_IDS } from "../../../game/data";
 import { scenario } from "../../../game/testing/scenario";
 import { victoryStandings } from "../../../game/victory";
 import type { HegemonyState, PlayerId } from "../../../game/types";
+import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { GameUiProvider } from "../../board/GameUiProvider";
 import { Drawer } from "../Drawer";
 
 /**
  * The Victory drawer answers "is anyone about to win", so the one thing worth pinning
  * is that it cannot say something the rules do not. Its predecessor once named a sole
- * leader on a tie, because its own tiebreak started from seat 0. Marks and the foot
+ * leader on a tie, because its own tiebreak started from seat 0. Frames and the foot
  * line are read off the DOM: the defect lived in what the panel painted.
  */
 
@@ -72,15 +73,19 @@ function render(G: HegemonyState) {
       </GameUiProvider>,
     ),
   );
-  return [...container.querySelectorAll<HTMLTableRowElement>(".lw-table tbody tr")];
+  return [...container.querySelectorAll<HTMLElement>(".vc-card")];
 }
 
-/** The seat whose cell the row marks held, and what the foot line says of it. */
-function read(row: HTMLTableRowElement) {
-  const held = [...row.querySelectorAll("td")].findIndex((cell) => cell.dataset.held);
-  act(() => row.focus());
+/** The seat whose glaze frames the card and whose count it marks held, and what the
+ *  foot line says of it. */
+function read(card: HTMLElement) {
+  const held = [...card.querySelectorAll(".vc-counts li")].findIndex((count) =>
+    count.classList.contains("is-held"),
+  );
+  act(() => card.focus());
   return {
     held: held >= 0 ? PLAYER_IDS[held] : null,
+    frame: card.dataset.held ?? null,
     foot: container.querySelector(".lw-foot")?.textContent ?? "",
   };
 }
@@ -93,8 +98,9 @@ describe("the Victory drawer against the rules", () => {
 
     expect(rows).toHaveLength(standings.length);
     standings.forEach(({ holder, leader }, index) => {
-      const { held, foot } = read(rows[index]);
+      const { held, frame, foot } = read(rows[index]);
       expect(held).toBe(holder);
+      expect(frame).toBe(holder ? PLAYER_GLAZES[holder].glaze.toLowerCase() : null);
       if (holder) expect(foot).toContain(`Held by ${G.players[holder].name}.`);
       else if (leader) expect(foot).toContain(`${G.players[leader].name} leads`);
       else expect(foot).toContain("Tied: no one holds it.");

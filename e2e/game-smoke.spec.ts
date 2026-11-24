@@ -36,12 +36,9 @@ test("setup, forced decision, normal command, and deterministic reload", async (
   await expect(forcedDecision).toBeVisible();
   const decisionTitle = await forcedDecision.getByRole("heading").textContent();
   await forcedDecision
-    // A fate's commit verb takes the card's mood now — you ENDURE a wound and
-    // TAKE a gift, by name when the gift has one ("Take the Gold"). Pop and token
-    // cards name their placement or clearing operation.
-    .getByRole("button", {
-      name: /^(Endure It|Take It|Take the .+|So Be It|Place Pop|Place Unrest|Clear Unrest)$/,
-    })
+    // A fate's commit names what the card does, from its effect: "Take the Gold",
+    // "Lose the Food", "Settle the Freeman", "Clear the Unrest".
+    .getByRole("button", { name: /^(Take|Lose|Settle|Place|Clear) the .+$/ })
     .click();
   await expect(forcedDecision).toBeHidden();
 

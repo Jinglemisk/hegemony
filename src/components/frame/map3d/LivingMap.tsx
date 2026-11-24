@@ -48,6 +48,8 @@ type BoardProps = {
   /** How the resource badges are drawn: the player's choice. */
   plates: Plates;
   selectedTileId: string | null;
+  /** Whose tiles wear the pick's frame: the viewing seat's while its Realm drawer is open. */
+  framedSeat?: PlayerId | null;
   highlightTileIds?: readonly string[];
   placementActive?: boolean;
   onTileAction: (tileId: string) => void;
@@ -428,13 +430,13 @@ function heartland(tiles: readonly MapTile[], home: string | null): MapTile[] {
 }
 
 /** Political's realm names, large across each realm's land: at the middle of its
- *  largest stretch of touching tiles, at every zoom. */
+ *  largest stretch of touching tiles, at every zoom. Each carries that stretch's tiles
+ *  and the realm's size, so the runtime can move it along its land, or shrink or hide
+ *  it, where it would print over another realm's name. */
 function RealmBanners({ model }: { model: MapModel }) {
   return model.realms.flatMap((realm) => {
-    const land = heartland(
-      model.tiles.filter((t) => t.settlements[0]?.owner === realm.owner),
-      realm.home,
-    );
+    const held = model.tiles.filter((t) => t.settlements[0]?.owner === realm.owner);
+    const land = heartland(held, realm.home);
     if (land.length === 0) return [];
     const mid = (pick: (t: MapTile) => number) =>
       land.reduce((sum, t) => sum + pick(t), 0) / land.length;
@@ -442,6 +444,8 @@ function RealmBanners({ model }: { model: MapModel }) {
       <div
         className="lm-banner"
         data-alpha="realm"
+        data-along={JSON.stringify(land.map((t) => [t.x, t.y]))}
+        data-size={held.length}
         data-wx={mid((t) => t.x)}
         data-wy={mid((t) => t.y)}
         key={`realm-${realm.owner}`}
@@ -525,6 +529,7 @@ function LivingMap({
   mode,
   plates,
   selectedTileId,
+  framedSeat = null,
   highlightTileIds,
   placementActive = false,
   onTileAction,
@@ -543,6 +548,17 @@ function LivingMap({
   const candidates = useMemo(
     () => (placementActive ? new Set(highlightTileIds ?? []) : null),
     [placementActive, highlightTileIds],
+  );
+  const framed = useMemo(
+    () =>
+      framedSeat
+        ? new Set(
+            model.tiles
+              .filter((t) => t.settlements.some((s) => s.owner === framedSeat))
+              .map((t) => t.id),
+          )
+        : null,
+    [model, framedSeat],
   );
 
   // A tile hovered, or a realm's trade hint.
@@ -616,8 +632,8 @@ function LivingMap({
   }, [shape, plates.size]);
 
   useLayoutEffect(() => {
-    runtime.current?.setMarks({ selected: selectedTileId, focus: focusRing, candidates });
-  }, [shape, selectedTileId, focusRing, candidates]);
+    runtime.current?.setMarks({ selected: selectedTileId, focus: focusRing, candidates, framed });
+  }, [shape, selectedTileId, focusRing, candidates, framed]);
 
   // A pick (from the map, a drawer or the outliner) eases the camera until the place is
   // clear of the chrome that opens for it (the place panel, the sidebar: anything marked

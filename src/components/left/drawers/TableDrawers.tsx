@@ -25,7 +25,8 @@ import { useGameUi } from "../../board/GameUiContext";
 import { Band } from "../../chrome/Panel";
 import { SeatCoin } from "../../chrome/SeatCoin";
 import { useConfirm } from "../../chrome/confirmContext";
-import { Chips, Ico, Turns } from "../../frame/parts";
+import { Chips, Ico, Tip, TipBody, Turns } from "../../frame/parts";
+import { Tooltip } from "../../overlays/Tooltip";
 import { Tile } from "../atoms";
 import { SpendDetail } from "../../chrome/confirmDetail";
 import { refusal, usePoint } from "../words";
@@ -301,7 +302,8 @@ const standingLine = (G: HegemonyState, { holder, leader, minimum }: VictoryCard
       ? `${G.players[leader].name} leads, short of ${formatNumber(minimum)}.`
       : "Tied: no one holds it.";
 
-/** Victory: the threat first, then every title by seat with its holder marked. */
+/** Victory: the threat first, then the titles as cards, each seat's count on each and
+ *  the holder's glaze framing the one it holds. */
 export function VictoryDrawer() {
   const { G, viewerId } = useGameUi();
   const standings = victoryStandings(G);
@@ -319,20 +321,58 @@ export function VictoryDrawer() {
         />
       ))}
       <Band end={`${numberWord(toWin)} win`} label={`The ${numberWord(standings.length)} titles`} />
-      <SeatTable
-        caption="The titles: each seat's standing, the holder marked"
-        rows={standings.map((standing) => ({
-          key: standing.card.id,
-          icon: `victory/${standing.card.id}`,
-          name: standing.card.name,
-          line: `${standing.card.description}, at least ${formatNumber(standing.minimum)}. ${standingLine(G, standing)}`,
-          values: PLAYER_IDS.map((id) => ({
-            id,
-            value: formatNumber(standing.values[id]),
-            held: id === standing.holder,
-          })),
-        }))}
-      />
+      <ol aria-label="The titles" className="vc-list">
+        {standings.map((standing) => (
+          <TitleCard key={standing.card.id} standing={standing} />
+        ))}
+      </ol>
     </>
+  );
+}
+
+/** One title as a card: its name, its rule, and every seat's count; held, it takes the
+ *  holder's glaze as its frame and the holder's count stands in a pill of it. */
+function TitleCard({ standing }: { standing: VictoryCardStanding }) {
+  const { G } = useGameUi();
+  const { card, holder, minimum, values } = standing;
+  const rule = `${card.description}, at least ${formatNumber(minimum)}.`;
+  const line = `${rule} ${standingLine(G, standing)}`;
+  const { lit, on } = usePoint({ key: `t-${card.id}`, title: card.name, line });
+  const nameId = `vc-${card.id}`;
+  return (
+    <li>
+      <Tooltip
+        content={
+          <Tip title={card.name}>
+            <TipBody>{line}</TipBody>
+          </Tip>
+        }
+        triggerAs="div"
+        triggerClassName="lw-tip"
+      >
+        <article
+          {...on}
+          aria-labelledby={nameId}
+          className={`vc-card${lit ? " is-lit" : ""}`}
+          data-held={holder ? PLAYER_GLAZES[holder].glaze.toLowerCase() : undefined}
+          tabIndex={0}
+        >
+          <h3 className="vc-name" id={nameId}>
+            <Ico path={`victory/${card.id}`} size="ui" />
+            {card.name}
+          </h3>
+          <p className="vc-rule">{rule}</p>
+          <ul className="vc-counts">
+            {PLAYER_IDS.map((id) => (
+              <li className={id === holder ? "is-held" : undefined} key={id}>
+                <SeatCoin seat={id} size={22} />
+                <b>{formatNumber(values[id])}</b>
+                {id === holder ? <span className="visuallyHidden">, holds it</span> : null}
+              </li>
+            ))}
+          </ul>
+        </article>
+      </Tooltip>
+    </li>
   );
 }

@@ -1,5 +1,5 @@
 /* ============================================================================
-   Moments in the Imperator frame (docs/plans/imperator-shell.md, slice 5): every
+   Moments in the Imperator frame (docs/archive/plans/imperator-shell.md, slice 5): every
    dialog ModalShell draws — the fate, year and drawn cards, the riot, revolt and
    hunger cards, the game's end, the turn notice, the Idea draft and purchase, the
    Assembly sitting — and the trade cards, the map's popovers and the Assembly's
@@ -169,9 +169,6 @@
 }
 .ch-moment .drawn-wait {
   color: var(--clay-ink);
-}
-.ch-moment .drawn-tray .ghostVerb {
-  color: var(--ink);
 }
 
 /* The game's end: no longer a chamfered tablet; the frame holds it. */

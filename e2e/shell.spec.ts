@@ -5,10 +5,10 @@ import { expect, test } from "@playwright/test";
 test("one left window: the seal, the outliner and a drawer's pick share it", async ({ page }) => {
   await page.goto("/?dev=late-game&seed=42");
   await page.locator(".living-map[data-ready]").waitFor();
-  // The seat's fate card comes first.
+  // The seat's fate card comes first: Rats.
   await page
     .getByRole("dialog")
-    .getByRole("button", { name: /^Endure it$/i })
+    .getByRole("button", { name: "Lose the Food", exact: true })
     .click();
 
   const left = page.locator('[data-c="drawer"], [data-c="place"]');
@@ -24,8 +24,12 @@ test("one left window: the seal, the outliner and a drawer's pick share it", asy
     "aria-pressed",
     "true",
   );
+  // While it is open, the seat's own tiles wear the pick's gold frame on the map.
+  const map = page.locator(".living-map");
+  await expect(map).toHaveAttribute("data-framed", /^[1-9]\d*$/);
   await seal.click();
   await expect(realm).toBeHidden();
+  await expect(map).not.toHaveAttribute("data-framed");
 
   // The outliner's Assembly rows open the Agora drawer.
   const outliner = page.getByRole("complementary", { name: "Outliner" });

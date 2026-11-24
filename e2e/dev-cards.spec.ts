@@ -33,7 +33,7 @@ test("buys a development card, then plays one from the hand", async ({ page }) =
   await page.getByRole("alertdialog").getByRole("button", { name: "Buy a card" }).click();
   const drawn = page.getByRole("dialog", { name: "Foraging", exact: true });
   await expect(drawn).toContainText(/\+\d+ food/i);
-  await drawn.getByRole("button", { name: "Done" }).click();
+  await drawn.getByRole("button", { name: "Take the Food", exact: true }).click();
   await expect(drawn).toBeHidden();
 
   // The hand plays the Caravan, its kind chosen; the table is told what it did.
