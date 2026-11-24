@@ -5,7 +5,7 @@ import type { AxialCell } from "./mapTopology";
 import type { HexTile } from "./types";
 
 /**
- * The Archipelago board generator (docs/plans/board-modes.md, slice 0).
+ * The Archipelago board generator.
  *
  * A pure function of the seed and the terrain deck. It lays the whole deck as islands in
  * groups around the board's centre. The oracle is dealt like any other card and lands on

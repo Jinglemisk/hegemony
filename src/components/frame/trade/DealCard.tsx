@@ -18,7 +18,7 @@ import { Delta, Ico } from "../parts";
 import { dealTitle, loanWords } from "./tradeView";
 
 /**
- * A standing deal, from one of its seats (docs/plans/trade-deals.md): what each side
+ * A standing deal, from one of its seats (rules.md, Standing deals): what each side
  * hands over every year, the goods lent, and what the seat's next income takes from it.
  * A partner's short payment asks here, keep or cancel; End runs the deal out with the
  * year. Every "can I?" is the engine's.

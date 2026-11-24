@@ -463,7 +463,7 @@ export const ACTIVE_EFFECT_MECHANIC_PARITY = {
 export type TradeWorkflowStep = "offer" | "answer" | "counter" | "settle" | "withdraw" | "close";
 
 /**
- * Player trade's workflow, step by step (docs/plans/player-trade.md): the engine, the
+ * Player trade's workflow, step by step (rules.md, Trade): the engine, the
  * offer card, the bots' rule for the step and the trade figures in telemetry.
  */
 export type TradeWorkflowCoverage = {

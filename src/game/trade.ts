@@ -32,7 +32,7 @@ import type {
 } from "./types";
 
 /**
- * Player trade (docs/plans/player-trade.md). An offer goes to the table or to named
+ * Player trade (rules.md, Trade). An offer goes to the table or to named
  * seats. The first named seat to accept trades: settlement rechecks both sides and
  * moves everything at once, and the offer closes. A counter waits for the offering
  * seat to take it, and dies with the offer if another seat accepts first. Offers are

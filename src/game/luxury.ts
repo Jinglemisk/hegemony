@@ -10,7 +10,7 @@ import type { MoveResult } from "./core/results";
 import { MOVE_OK, invalid } from "./core/results";
 
 /**
- * Luxury goods (docs/plans/luxury-goods.md). One module owns every luxury
+ * Luxury goods (rules.md, Luxury goods). One module owns every luxury
  * calculation; the unrest thresholds, the Beloved metric, the ledger, the sim's
  * valuation, and every UI surface read these selectors instead of restating them.
  *
@@ -18,7 +18,7 @@ import { MOVE_OK, invalid } from "./core/results";
  * it is active. {@link activeClaims} derives activity in one stable ordering from
  * ownership and suppression, so no state can contradict it.
  *
- * The Port rule (docs/plans/agency-package.md, ruling 7): a good counts only while its
+ * The Port rule (rules.md, Luxury goods): a good counts only while its
  * holder has a Port beside it. Ownership carries that: a good is claimed by a new Port,
  * goes in trade only to a seat with a Port beside it, and goes back to the board when its
  * holder's last Port beside it falls, so a held good always has one.

@@ -122,4 +122,4 @@ occupied slots: Harbour Planning Ports occupy zero while remaining real building
 for Law building-count limits. Piece supply, Dole prices, yearly realm income and
 vote-purchase limits are engine selectors. Acquisition and founding/upgrade grants
 use the same capacity and transit-room checks. See [the player guide](../../rules.md#national-ideas)
-for the roster and [the plan](../plans/national-ideas.md) for the defaults.
+for the roster and defaults.

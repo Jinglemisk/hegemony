@@ -18,7 +18,7 @@ import type {
 } from "./types";
 
 /**
- * The event-table engine seam (docs/archive/plans/event-tables.md): one function rolls every
+ * The event-table engine seam: one function rolls every
  * dice table in the game, which is the riot's today. Tables are content data
  * ({@link ./data}); this module owns the die, the modifier/clamp arithmetic, and the
  * effect interpreter. All randomness runs through the game's own mulberry32 state so

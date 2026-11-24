@@ -18,10 +18,8 @@ npm run sim -- <command> [args] [--file path]
 All commands operate on a JSON save file (default `.sim/game.json`, gitignored).
 `--file` targets a different save so several games can run side by side.
 
-**See also:** [simulation reports](../reports/simulation/) — the dated campaign
-writeups and their reports — plus the
-[archived balance/tuning plan](../archive/notes/simulation-plan.md). How the bots
-work: [AI reference](ai.md).
+**See also:** [simulation reports](../reports/simulation/) for the balance check and its
+script, and the [AI reference](ai.md) for how the bots work.
 
 ## Quick start
 
@@ -152,8 +150,8 @@ Works from any phase — bots will finish a manual setup too. Policies:
   different weights. Those weights apply to placement, Idea picks and purchases,
   economic moves and Assembly choices. See the [weight table](ai.md).
 
-The stepping-stone bots `greedy`, `smart`, `beam`, `political` and `settler` were removed
-on 2026-11-01; master keeps each one's score term or search. Older reports still name them.
+The stepping-stone bots `greedy`, `smart`, `beam`, `political` and `settler` are gone;
+master keeps each one's score term or search.
 
 Every search policy answers the offers that name its seat, and the master family
 offers on its turn and in a sitting (see [AI](ai.md#trade)). The runner routes by who
@@ -203,50 +201,9 @@ check with no income. For a full-game gate:
 npm run sim -- batch --games 40 --turns 56 --policy master --seed 1000
 ```
 
-For the Step 10 handoff, run these jobs separately:
-
-```bash
-step10_out=$(mktemp -d)
-# Ten seeds × four cyclic seat rotations = forty actual games.
-npm run sim -- batch --games 10 --turns 56 --seats slaver,civic,trader,master --rotate --seed 1000 --report "$step10_out/batch.json" --csv "$step10_out/batch.csv"
-npm run dev -- --port 5199
-npm run ui:audit
-npm run ui:conduct
-node docs/reference/design/shell-v2/gates.mjs http://127.0.0.1:5199 --query '?dev=preload&seed=42' --click '.fateCard .ceremonyCommit' --out "$step10_out/gates"
-node docs/reference/design/shell-v2/gates.mjs http://127.0.0.1:5199 --query '?dev=assembly4&seed=42' --out "$step10_out/gates-asm"
-```
-
-Look for forty finishes by the title race or Year-14 deck end, no action caps or
-illegal commands, four setup picks per game, and at most one Idea purchase per seat.
-In `results.perPolicy`, compare wins, all six final titles and final-card distributions.
-Check whether slaves/Estates, citizens/Forums/Laws and freemen/Marketplaces/Ports
-appear in their builds (the trader raised 12 Marketplaces in the 40 games of Step 17's
-batch), that trades and Doles fund useful actions, and that hunger falls
-when a seat can pay for food. Under the owner ruling of 2026-10-03,
-calm covers the buyer's current turn-end check and still cannot take Beloved.
-Compare `currencyVerbs.civicCalm` (calm bought), `riots.perGame` and
-`riots.revoltsPerGame` with the earlier batch; look for legal calm purchases when
-a +2 lift avoids a visible riot or revolt. Since Step 19 a riot is charged what
-the riot table takes, so expect less calm and more riots than in the batches
-before it: a riot that calm would only move a year is faced. Unused Ideas need
-context, not quotas.
-The balance check owns the 20–45% win-rate decision and any balance changes.
-
-Time the forty-game rotation before starting the balance check's larger conditions. The
-runtime target is under twenty minutes on one core; `--jobs 4` plays the same forty
-games on four worker processes and writes the same report. The performance follow-up
-keeps width 3 and depth 4; cached queries and scores
-must preserve choices, full-game finishes and the absence of action caps.
-
-The 2026-10-03 performance follow-up ran those forty rotations serially through
-the runner and CLI telemetry hooks in a scratch Vitest harness: 17 minutes
-6 seconds, no caps, and the same 13/14/5/8 wins for slaver/civic/trader/master.
-The mixed seed-1000 game also matched all 425 commands and resulting states
-against the original engine and AI. The lead still times the CLI itself.
-
 The balance check plays 60 games on a four-master table (`--games 60`) and 160 on the
-mixed table (`--games 40 --rotate`); its commands are in the
-[player trade plan](../plans/player-trade.md#the-balance-check). `--games` counts base seeds;
+mixed table (`--games 40 --rotate`); see [the balance check](#the-balance-check). `--games`
+counts base seeds;
 rotation multiplies the actual games by four and records that total in `meta.games`.
 Rotation is cyclic, not all 24 permutations. Repeating a personality in two seats
 counts two finished seat-games per game; `results.perPolicy[name].winRate` uses that denominator.
@@ -269,10 +226,8 @@ npm run sim -- auto --turns 56 --seats slaver,civic,trader,master --file "$examp
 
 Seat choices are command-line options, not new save fields: repeat them on `auto`.
 Random openings stay uniform; policy openings use each seat's personality, and
-fixed openings keep their scripted placements but score Ideas by seat.
-`?dev=bots&seed=42` still runs `master` in every browser seat; the lead should let
-one game finish. Audit and shell gates must retain the 25-row conduct ceiling and
-pass at 1280, 1440 and 1920. No shell components change in Step 10.
+fixed openings keep their scripted placements but score Ideas by seat. `?dev=bots&seed=42`
+runs `master` in every browser seat.
 
 Income and the player draw are recorded at turn start, including on Year 14's last
 turn. Each hunger choice counts as one hunger turn: it is made when a seat ends its
@@ -291,32 +246,27 @@ whole batch's game rows, turn snapshots and counts.
 Each CSV row is one seat at the start of one player-turn, after the acting seat's
 income and before it acts. After a game's turns come four more rows, one a seat, with
 `final` set to 1: the state the game ended on. In a finished game no turn row shows
-it, since the last turn's effects land after its snapshot. The columns
-added in Step 18 sit at the end, so older columns keep their places: `policy` (the
+it, since the last turn's effects land after its snapshot. The later
+columns sit at the end: `policy` (the
 seat's personality that game), `actingSeat`, `winner` (the game's winner, empty for a
 capped game), `final`, `belovedHolder` (the seat holding Beloved, empty for none; the
 same on all four rows) and `activeLuxuries`.
 
-- `--board` — `continental` (default since 2026-10-24: seeded random terrain, as in the
-  live game), `archipelago` (the same deck laid as islands in groups by the
-  [generator](../reports/simulation/2026-10-25-archipelago-generator.md), drawn from the
-  game seed) or `scenario` (the authored fixed board; `new --opening fixed` falls back to
-  it). Reports before 2026-10-24 ran on the authored board unless they say otherwise. Until
-  2026-10-25 the first and last were named `shuffled` and `classic`; older reports use those
-  names, and the old names are now rejected. Recorded in the report and in saves/scripts.
+- `--board` — `continental` (default: seeded random terrain, as in the live game), `archipelago` (the same deck laid as 6 to 9 islands in 3 or 4 groups by a seeded generator, drawn from
+  the game seed) or `scenario` (the authored fixed board; `new --opening fixed` falls back to
+  it). The old names `shuffled` and `classic` are rejected. Recorded in the report and in saves/scripts.
 - Island hopping is the ruleset value `placement.seaReach`, set with `--ruleset-patch`. A
   colony that does not border one of the seat's settlements must lie on a coastal tile
   within that many hexes of one of the seat's coastal settlements, in play and for the
   founding colony at setup (the capital is then the only one, so an inland capital's colony
   must border it). `null`, the ruleset's default, is any shore to any shore. No rule reads
   the board's name; instead the board brings its own patch. `--board archipelago` applies
-  `{"placement":{"seaReach":3}}` (Q81) under `--ruleset-patch`, so a patch that sets
+  `{"placement":{"seaReach":3}}` under `--ruleset-patch`, so a patch that sets
   `seaReach` keeps its own: `4` for hop 4, `null` for any shore. Scenario brings no patch.
   The report's `meta.rulesetPatch` and the save record the applied patch.
 - Shared tiles are the ruleset value `placement.maxColoniesPerTile`: 1 by default, a tile
   holds one settlement. `--board continental` applies `{"placement":{"maxColoniesPerTile":2}}`,
-  so two rivals' colonies may share a tile and split its slots, as every board allowed
-  before 2026-11-03. A patch that sets the value keeps its own.
+  so two rivals' colonies may share a tile and split its slots. A patch that sets the value keeps its own.
 - `--years N|open` — the game's length (`victory.years`, 14 by default), folded into the
   ruleset patch. A game longer than the 14-card year deck reshuffles it; `open` plays until
   the race is won, with a safety stop at year 40. `batch`'s default `--turns` follows it.
@@ -333,8 +283,8 @@ same on all four rows) and `activeLuxuries`.
   With `all` the setup draft is skipped and nothing is bought in play. A partial list
   must leave an Idea for every seat. `meta.withoutIdeas` records the list, and the
   definition ID changes with the content.
-- `--restore id,id` — plays the content an [agency package](../plans/agency-package.md)
-  change replaced, for the comparisons that turn each change off one at a time.
+- `--restore id,id` — plays the content an agency-package change replaced, for the
+  [comparison batches](#comparison-batches) that turn each change off one at a time.
   `manumission` counts each slave three times for unrest again; `capital-works` puts
   Capital Works back among the Ideas, and the report gives it a row once a seat holds
   it; `forum-rites` deals Forum Rites in Rural Messengers' place, every citizen making
@@ -450,8 +400,7 @@ spending from the stock change.
   payment, bank trade per material, ladder rung, growth, bought vote, riot insurance and
   politician draw, with per-seat-game rates. A hunger pick adds one count per pop sent
   away, by class. The summary prints every item under 0.2 a game as "Low reach". A zero
-  is a bot that cannot see the move, a weak move, or a move that does nothing; the
-  [reach audit](../reports/simulation/2026-10-04-v2-ai-reach-audit.md) shows how to tell
+  is a bot that cannot see the move, a weak move, or a move that does nothing
 - `classes` (cut) — slave, freeman and citizen percentiles over every turn snapshot of
   the group's seats
 - `drawSwings` — each resolved player card's immediate change in resources, pops and
@@ -513,11 +462,7 @@ The balance check's rules read these fields:
 The summary prints each of these. The balance check's script,
 `docs/reports/simulation/2026-10-26-balance-check/tools/check.mjs`, reads them from a report
 and its CSV, adds the runaway-leader rules, and prints each rule with a 95% interval over
-seeds and a verdict. Reports written before player trade's second PR used
-older names: `perSeat`, `perPolicy` and `winsByPolicy` are now `results`;
-`hungerPerPolicy` is `hunger.perPolicy`; `influenceByPolicy` is
-`perYear[].influence.perPolicy`; `assembly.lawsEnacted` is
-`assembly.seats.total.lawsPassed`.
+seeds and a verdict.
 
 **Economy switches.** Three ruleset values turn player trade's economy on piece by
 piece, so the same seeds can play the game before it beside the game after it:
@@ -566,6 +511,77 @@ package.
 Identical inputs produce byte-identical reports (minus `meta.generatedAt`), and
 the same CSV, whatever `--jobs` is. Compare two patches by running two batches with
 the same `--seed` and diffing the reports.
+
+### The balance check
+
+Bot games judged against fixed rules. Each batch runs on the efficiency cores:
+
+```bash
+taskpolicy -b node --import tsx src/sim/cli.ts batch --turns 56 --seed 1000 --jobs 4 <table> --report <out>.json --csv <out>.csv
+node docs/reports/simulation/2026-10-26-balance-check/tools/check.mjs <report> [<report> ...]
+```
+
+`check.mjs` prints each rule's limit, the measured value, a 95% interval and a verdict.
+
+| Table                  | `<table>`                                                                    | Games | Judges                      |
+| ---------------------- | ---------------------------------------------------------------------------- | ----- | --------------------------- |
+| Four masters, no Ideas | `--board continental --games 60 --policy master --without-ideas all`         | 60    | Runaway leader, level rules |
+| Four masters, no Ideas | `--board archipelago --games 60 --policy master --without-ideas all`         | 60    | The same                    |
+| Mixed, rotated         | `--board continental --games 40 --seats slaver,civic,trader,master --rotate` | 160   | Win rates, level rules      |
+
+| Rule                           | Limit                                                                                                             | Tables       |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------- | ------------ |
+| Riots stay rare                | The riot table is reached on at most 10% of turns from year 8                                                     | All          |
+| Influence plateaus             | Median stock grows at most 5 a year, years 10 to 14                                                               | All          |
+| Luxuries do not decide Beloved | Beloved's holder is the sole luxury leader in at most 60% of the turns it is held                                 | All          |
+| No runaway leader              | The year-5 income leader wins at most 40%; at year 10 the leader holds at most 2.5× the laggard's pops and income | Masters only |
+| Every build viable             | Each personality wins 20–45%, a benchmark; one whose whole interval is over 45%, with no bug to explain it, fails | Mixed        |
+| Recorded only                  | Hunger, draw swings, game length and the share of games won by the race                                           | All          |
+
+- Year-5 income and year-10 pops and income are read after each seat's own turn that year.
+  Income is gross: wood, stone, gold, and food when positive. The laggard counts as at least 1;
+  a game with a tied year-5 income lead is left out.
+- Intervals are bootstraps over seeds, since a seed's rotations share a board. A verdict whose
+  interval crosses its limit is marked "within noise".
+- The year-10 stock ratio is retired: realms spend what they earn, so it reads an empty store.
+  `check.mjs` still prints it and does not yet compute the pops and income ratios.
+
+### Comparison batches
+
+They measure the agency package and the development deck, each batch on the owner's word.
+The baseline is `main` at `d6ebecd`, run from its own checkout; Ventures exists only there, so
+the deck-against-Ventures batch is that baseline against today. `d6ebecd` lets rivals share a
+tile on every board: add `{"placement":{"maxColoniesPerTile":2}}` on the Archipelago to keep
+that difference apart.
+
+**Design.** 40 seeds × four rotations (`--games 40 --seats slaver,civic,trader,master --rotate`,
+one `--seed` throughout): 160 mixed games a board, on the Archipelago and Continental, Ideas on,
+plus equal-master runs on the same seeds for the leader rule. Keep seeds and seatings paired and
+read `perGame[].yearCards`, since a new draw shifts later RNG. Judge with the balance check
+above; an interval across a line is neither a pass nor a fail.
+
+Today's default is the full package. Each switch turns one change off against it (JSON goes in
+a `--ruleset-patch` file):
+
+| Change                          | Switch                                                                                   | The batch must show                                                                  |
+| ------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Optional pops                   | `{"events":{"optionalPops":false}}`                                                      | Who declines; declined slaves that would cross an unrest line; accepted freemen fed  |
+| Manumission                     | `--restore manumission`; also with `{"turnCaps":{"ladder":1}}`                           | Proposals and passes, losses on passing, turns to recover                            |
+| Rural Messengers, Capital Works | `--restore forum-rites`, `--restore capital-works`                                       | Forum value, where citizens sit, Ideas picked, influence spent                       |
+| Assembly order, kept Laws       | `{"assembly":{"keptLaws":false}}`                                                        | Draws blocked when drawn, kept Laws passed, repeals carried, influence on dead draws |
+| Port rule                       | `{"economy":{"luxury":{"needsPort":false}}}`                                             | Ports lost by cause, released goods and who claims them, riots after a loss          |
+| Calm cap                        | `{"turnCaps":{"calm":1}}`                                                                | Riots and revolts avoided, gold and influence on calm                                |
+| Ladder cap                      | `{"turnCaps":{"ladder":1}}`                                                              | Pops moved up or down a turn, slaves held                                            |
+| Growing cap                     | `{"turnCaps":{"grow":1}}`                                                                | Pops grown a year, hunger losses, game length, the year-5 leader                     |
+| Dole cap                        | `{"turnCaps":{"dole":null}}`                                                             | Food from the Dole, hunger losses, food traded                                       |
+| Free card, riot's card          | `{"devCards":{"freeCard":false}}`, `{"devCards":{"riotCard":false}}`, apart and together | The free card's reach by build, year and size; pops saved; rival-card targets        |
+| Year forecast                   | None: the full package against `d6ebecd`, once bots read the forecast                    | Whether a warning changes reserves, building or trade and cuts lasting losses        |
+| Boards                          | Continental against Archipelago on the same seeds                                        | Hunger, food traded, Ports, wins by seat and personality, race against clock endings |
+| Combined                        | The full package against `d6ebecd`                                                       | Both benchmarks, scarcity kept, no build favoured                                    |
+
+Each comparison gets a dated report in [`reports/simulation/`](../reports/simulation/). Once they
+are read, delete `--restore` (`src/sim/restore.ts`) and the `capital` scope of the `extraSlots`
+effect, which only the restored Capital Works uses.
 
 ### `replay` — regression net
 

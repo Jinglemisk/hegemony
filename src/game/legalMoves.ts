@@ -225,7 +225,7 @@ export type GameCommand =
   | { type: "tradeAnswer"; offerId: string; answer: TradeAnswer }
   | { type: "tradeSettle"; offerId: string; partner: PlayerId; places: TradePlaces }
   | { type: "tradeWithdraw"; offerId: string }
-  // ── Standing deals (docs/plans/trade-deals.md). A seat ends one on its own turn, and
+  // ── Standing deals (rules.md, Standing deals). A seat ends one on its own turn, and
   //    answers a partner's short payment at its income: keep takes what was paid.
   | { type: "dealEnd"; dealId: string }
   | { type: "dealShortfall"; dealId: string; keep: boolean }

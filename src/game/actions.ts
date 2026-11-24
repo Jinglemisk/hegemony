@@ -366,7 +366,7 @@ export function buildBuilding(
     return invalid(...status.reasons);
   }
 
-  // A new Port claims an unclaimed good beside it (luxury-goods.md §3.2). Resolve
+  // A new Port claims an unclaimed good beside it (rules.md, Luxury goods). Resolve
   // WHICH good before paying anything: with two reachable, the choice is the player's —
   // a typed command field, never a default the engine guesses. With none left to claim,
   // legality has already allowed it under the Port rule: it stands as a backup, or as a

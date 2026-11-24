@@ -82,14 +82,14 @@ export interface DevCardRules {
   riotCard: boolean;
 }
 
-/** Player event cards (docs/plans/agency-package.md). A seat may decline a pop card, which
+/** Player event cards (rules.md, Years and events). A seat may decline a pop card, which
  *  goes to the bottom of the player deck. On in the game; a batch turns it off to measure
  *  it, and no screen offers the switch. */
 export interface EventRules {
   optionalPops: boolean;
 }
 
-/** Player trade (docs/plans/player-trade.md). Off, no seat offers and the Assembly's
+/** Player trade (rules.md, Trade). Off, no seat offers and the Assembly's
  *  preparation has no Ready step: a seat that seals is ready. */
 export interface TradeRules {
   enabled: boolean;
@@ -101,7 +101,7 @@ export interface DoleRules {
   food: number;
 }
 
-/** Per-turn caps on the utility actions (docs/plans/agency-package.md, ruling 8): how many
+/** Per-turn caps on the utility actions (rules.md, Taking a turn): how many
  *  times a seat may use each in its own turn, one unit a use at the usual price. Promotions
  *  and demotions share the ladder's cap. Growing counts per settlement, and a standing
  *  `growLimit` Law scales it. Null is no cap, as the Dole had none before the package. */
@@ -154,8 +154,8 @@ export interface EconomyRules {
    *  stock but food: income takes food below its floor (`applyIncome`). Costs remain
    *  affordability-gated and are never rescued by clamping. */
   stockpileFloors: Partial<Record<Resource, number>>;
-  /** Phase 4 luxury goods (docs/plans/luxury-goods.md). Slice 1 seats the coastal
-   *  vertex markers; the Port, claims, and the happiness offset land in slice 2. */
+  /** Luxury goods (rules.md, Luxury goods): the coastal moorings, Port claims and the
+   *  happiness they give. */
   luxury: LuxuryRules;
 }
 
@@ -169,7 +169,7 @@ export interface LuxuryRules {
   happinessPerGood: number;
   /** A good counts only while its holder has a Port beside it: losing the last such Port
    *  sends it back to the board, a Port may stand beside a claimed good, and a good goes in
-   *  trade only to a seat with a Port beside it (docs/plans/agency-package.md). Off, a good
+   *  trade only to a seat with a Port beside it (rules.md, Luxury goods). Off, a good
    *  stays its holder's for the game with no Port, a Port needs an unclaimed good, and goods
    *  trade freely. On in the game; a batch turns it off to measure it, and no screen offers
    *  the switch. */
@@ -204,14 +204,14 @@ export interface PlacementRules {
   /** Coastal leapfrog (roadmap-appendix Q13a): holding any settlement on a coastal
    *  tile lets you found colonies on any other coastal tile — sailing, not teleporting. */
   coastalLeapfrog: boolean;
-  /** Island hopping (board-modes plan, Q81): founding across water reaches only coastal
+  /** Island hopping (rules.md, Taking a turn): founding across water reaches only coastal
    *  tiles within this many hexes of one of the seat's own coastal settlements, in play
    *  and on the founding voyage, where the capital is the only one. Null is any shore to
    *  any shore. Founding beside an own settlement is never limited. */
   seaReach: number | null;
   /** A tile holds at most this many colonies (and no city may share). One by default: a
    *  tile holds one settlement. The Continental board's patch makes it two, so two rivals'
-   *  colonies may share a tile and split its slots (board-modes plan, shared colonies). */
+   *  colonies may share a tile and split its slots (rules.md, Settlements). */
   maxColoniesPerTile: number;
   /** Cities repel other cities within this hex distance — 1 means no two cities may sit
    *  adjacent. Both the upgrade and the founding-voyage paths read it (was inline `> 1`). */
@@ -239,7 +239,7 @@ export interface AssemblyRules {
   /** Whether a tied vote carries. The design's default is that ties fail. */
   tiesPass: boolean;
   /** Repeals are voted first, and a Law still blocked at its turn is kept by its seat for
-   *  the next sitting (docs/plans/agency-package.md). Off, the ballot runs in seat order
+   *  the next sitting (rules.md, The Assembly). Off, the ballot runs in seat order
    *  and a blocked Law cannot be proposed. On in the game; a batch turns it off to
    *  measure it, and no screen offers the switch. */
   keptLaws: boolean;

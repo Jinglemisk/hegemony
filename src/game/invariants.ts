@@ -218,7 +218,7 @@ export function collectInvariantViolations(
   validateOffers(G, add);
   validateDeals(G, add);
 
-  // Luxury goods (luxury-goods.md §3.4/§3.5): unique physical objects with at most
+  // Luxury goods (rules.md, Luxury goods): unique physical objects with at most
   // one owner, a real claim origin, and non-negative suppression. Activity is never
   // stored, so there is no `active` flag to cross-check — that is the point.
   const luxuryIds = new Set<string>();

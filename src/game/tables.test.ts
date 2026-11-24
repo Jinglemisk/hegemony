@@ -14,7 +14,7 @@ function opening(): HegemonyState {
     .build();
 }
 
-describe("the event-table component (docs/archive/plans/event-tables.md)", () => {
+describe("the event-table component", () => {
   it("every table is a full d6: six rows, faces 1-6, exactly once each", () => {
     expect(RIOT_TABLE.rows.map((row) => row.roll).sort()).toEqual([1, 2, 3, 4, 5, 6]);
   });

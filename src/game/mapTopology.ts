@@ -1,7 +1,7 @@
 import { shuffleWithSeed } from "./core/rng";
 
 /**
- * The board's topology (docs/plans/board-modes.md): which cells hold land, which tiles
+ * The board's topology: which cells hold land, which tiles
  * border each other, where the coast is, and the vertices the luxury goods moor at.
  * Every rule, bot and renderer that asks a question about the board's shape asks it
  * here, of the tiles themselves. Nothing reads the layout's name or the builder's

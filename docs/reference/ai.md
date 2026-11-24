@@ -1,9 +1,9 @@
 # Bot players
 
 The bots are simulation policies for balance batches and browser development.
-Step 10 adds `slaver`, `civic` and `trader` as weight vectors over the shared
+`slaver`, `civic` and `trader` are weight vectors over the shared
 political scorer and master search. They are not separate implementations.
-The [outcome-driven AI plan](../plans/outcome-driven-ai.md) remains future work.
+The [bot plan](../plans/outcome-driven-ai.md) holds the work still to do.
 
 ## Contract
 
@@ -12,8 +12,8 @@ engine-enumerated commands. Costs, yields, capacity, happiness, Ideas, Laws and
 victory titles come from engine selectors. Each hypothetical action uses the
 canonical transition; execution uses that same transition in the browser and sim.
 
-The view hides the seed, game RNG, draw order, next year card and rival private
-Assembly cards. Setup Idea picks are public as they land. Choices are pure functions of the view,
+The view hides the seed, game RNG, the draw order below next year's card, and rival
+private Assembly cards. Bots see next year's card but do not use it yet. Setup Idea picks are public as they land. Choices are pure functions of the view,
 commands and injected bot RNG. Placement and Idea ties use that bot stream;
 ordinary search ties keep enumeration order. Bot randomness never changes the
 game's card or die stream. `?dev=bots` still uses `master` for every browser seat.
@@ -118,8 +118,8 @@ seat has to buy itself, now, by the Dole or a trade. And setup buys no food: it 
 land for fourteen years and the forecast sees six, so a starting store and six years
 of income would make any site look fed. The forecast does not trade: what a deal is
 worth is weighed before it is offered (see Trade). It buys as if the Dole had no
-per-turn cap: planning within the cap of three is left for the bot work of the agency
-package. In play a bot never takes a fourth Dole, since it picks from the legal moves.
+per-turn cap: planning within the cap of three is left for the
+[bot work](../plans/outcome-driven-ai.md). In play a bot never takes a fourth Dole, since it picks from the legal moves.
 
 On a later forecast turn the seat also buys calm when its level stands at the riot
 or the revolt line and one calm moves it off: once a year, through the engine's calm on
@@ -370,7 +370,8 @@ it pays.
   a unit. A deal worth something by itself is searched with the beam; the one whose
   best turn beats the best turn without it by the margin goes to every rival that could
   pay and gains no title from it. The search takes the Dole, so a deal worse than the
-  Dole's food never wins.
+  Dole's food never wins. A bot offers stocks only, never pops or goods; it answers any
+  offer, pops and goods included.
 - **Offering in a sitting.** A seat short of the influence for the draw or repeal it
   wants, or of the gold or influence for the votes its own proposal needs, offers for
   it in the preparation, then presses Ready.
@@ -379,6 +380,9 @@ it pays.
 - **Cards.** A bot puts no held card in a trade: it declines an offer that asks it for
   one and takes no counter that does. A card it would receive counts for nothing in the
   deal's worth, since `tradeForEval` leaves cards where they are.
+- **Deals.** A bot declines any offer with a yearly line or a loan, so no bot holds a
+  standing deal. Valuing, offering and ending deals, and answering a short payment, wait for
+  the bot work.
 
 The runner routes by who may act, as a server will: a seat an open offer names answers
 before the turn goes on, a bot before any person, and an answer does not count toward

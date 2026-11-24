@@ -82,7 +82,7 @@ unions; they are the presentation API for Step 3 and PR #57.
 | Politicians            |                           4 |
 | Resolution cards       | 22 (16 Laws + 6 Directives) |
 | Victory cards          |                           6 |
-| National Ideas         |                          12 |
+| National Ideas         |                          11 |
 
 The IDs are deliberately explicit. `src/parity/featureParity.test.ts` compares
 them with the live authored rosters, inventories the flat event effects, and

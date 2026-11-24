@@ -10,7 +10,7 @@ import { portBeside, scenario } from "./testing/scenario";
 import { endTurn } from "./turn";
 import type { HegemonyState, PlayerId, Pops, TradeBundle, TradeTerms } from "./types";
 
-// Standing deals (docs/plans/trade-deals.md): yearly lines settle at each seat's own
+// Standing deals (rules.md, Standing deals): yearly lines settle at each seat's own
 // income, a short payment waits on the partner's answer, ending runs the year out, and a
 // lent good counts for its borrower while its owner keeps it.
 
