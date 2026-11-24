@@ -1,6 +1,6 @@
 // The balance check: every rule with its limit, the measured value, a 95% interval and a
 // verdict, for each batch report given; then the figures v1 also recorded. The rules and how
-// they run are in docs/plans/player-trade.md, "The balance check".
+// they run are in docs/reference/simulation.md, "The balance check".
 //   node docs/reports/simulation/2026-10-26-balance-check/tools/check.mjs <report> [<report> ...]
 // A <report> is a batch report's path, with or without .json; its turn CSV sits beside it.
 //

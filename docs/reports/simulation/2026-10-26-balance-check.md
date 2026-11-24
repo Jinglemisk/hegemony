@@ -9,7 +9,7 @@ and 4 hours 24 minutes.
 
 Do the v2 rules pass the balance check? It used to be called Step 11. Its rules, and the owner's
 answers of 2026-10-25 (Q80) on how they are judged, are in the
-[player trade plan](../../plans/player-trade.md#the-balance-check). The answers in short: the
+[simulation reference](../../reference/simulation.md#the-balance-check). The answers in short: the
 runaway leader is judged where all four seats play the master bot, win rates are a benchmark
 with a flag over 45%, and v1 is compared only on the figures both versions record.
 
@@ -23,8 +23,8 @@ with a flag over 45%, and v1 is compared only on the figures both versions recor
   | `archipelago-masters-60` | Four masters, no Ideas                                    | Archipelago | 60                      |
   | `continental-mixed-160`  | Slaver, civic, trader and master rotated, all Ideas | Continental | 160 (40 seeds × 4 seatings) |
 
-- **Files** ([folder](2026-10-26-balance-check/)): each batch's report and turn CSV; the logs
-  and timings in `logs/`; the script output in `check.txt` and `open-points.txt`.
+- **Files** ([folder](2026-10-26-balance-check/)): the script output in `check.txt` and `open-points.txt`. The
+  reports, CSVs and logs are not kept; the commands below rebuild them from the seeds.
 
 ```bash
 taskpolicy -b node --import tsx src/sim/cli.ts batch --turns 56 --seed 1000 --jobs 4 --board continental --games 60 --policy master --without-ideas all --report <out>.json --csv <out>.csv
@@ -106,7 +106,7 @@ games.
 
 v2 realms spend their stock as they earn it: end gold is a median 0 to 1. So the ratio reads the
 poorest realm's empty store, not a runaway, as the
-[sim parity audit](2026-10-10-v2-sim-parity-audit.md) warned. On the mixed table the slaver holds
+sim parity audit warned. On the mixed table the slaver holds
 the largest stock in 124 of 152 games, which is its build at work.
 
 By pops, the baseline's other snowball measure, the year-10 leader holds 1.6 times the laggard on
@@ -131,8 +131,8 @@ left out. The two earlier Archipelago blocks, at hop 4 and read at the start of 
 
 ## Against v1
 
-The figures both versions record, from the [v1-vs-v2 report](2026-10-19-v1-vs-v2.md) and its
-[baseline](2026-09-05-shallow-economy-baseline.md). v1 counts riots at both tiers, since a v1
+The figures both versions record, from the v1-vs-v2 report and its
+baseline. v1 counts riots at both tiers, since a v1
 revolt-tier riot rolled the table; v2's revolts roll nothing and are not in its riot count.
 
 |                                      | v1 smart (10)     | v1 master (3)    | Continental masters | Archipelago masters | Mixed              |
@@ -161,10 +161,10 @@ Both are [Q84](../../questions.md):
   year-5 turn. The year's last seat is read after the next year card is turned, so its income
   already carries that card. Read at the start of each seat's turn instead, the leader wins 32%
   on Continental (37% after), 43% on Archipelago (42%) and 26% on the mixed table (25%). On the
-  40-game batch of [2026-10-25](2026-10-25-archipelago-batches.md) it moved Continental from 50%
+  40-game batch of 2026-10-25 it moved Continental from 50%
   to 65%.
 - **Legibility** is the one rule not checked: it needs a desk recount against the paper's section
-  5.11, a to-do in the [plan](../../plans/player-trade.md#the-balance-check).
+  5.11, a to-do in the [simulation reference](../../reference/simulation.md#the-balance-check).
 
 ## Earlier figures: Q80's same-policy batches
 
@@ -212,4 +212,4 @@ batch.
   35%. Polis Builder is held at the end of 17 games where it was 4. The other two
   columns have not been run again.
 
-The trade batches that followed (2026-10-22) are in [their report](2026-10-22-trade-paired.md).
+The trade batches that followed (2026-10-22) are in their report.
