@@ -8,7 +8,14 @@ import { happinessLevel } from "./happiness";
 import { canAfford, payCost } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
 import type { ActionStatus, MoveResult } from "./core/results";
-import { describeRemoval, landedRow, nextPopLoss, removePops, rollOnTable } from "./tables";
+import {
+  describeRemoval,
+  landedRow,
+  nextPopLoss,
+  notePopLosses,
+  removePops,
+  rollOnTable,
+} from "./tables";
 import type {
   HegemonyState,
   PlayerId,
@@ -178,10 +185,10 @@ export function resolveRiot(G: HegemonyState, playerID: PlayerId): MoveResult {
   }
 
   const line = G.log.length;
-  const { pops } = rollOnTable(G, playerID, getRiotTable(G.definition.content), {
+  const { pops, record } = rollOnTable(G, playerID, getRiotTable(G.definition.content), {
     modifier: insuranceRollBonus(pending.boughtInsurance, G.definition.content),
   });
-  pending.losses = { owed: pops, left: [], cards: [], line };
+  pending.losses = { owed: pops, left: [], cards: [], line, taken: [...record.taken] };
   return settleRiotLosses(G, playerID);
 }
 
@@ -222,8 +229,13 @@ export function resolveRiotPop(G: HegemonyState, playerID: PlayerId, pay: RiotPa
     takeRiotPops(G, playerID, losses, 1);
   } else {
     const kept = nextPopLoss(G, playerID);
+    const held = G.devHands[playerID].length;
     const card = discardAtRandom(G, playerID)!;
     losses.cards.push(card.id);
+    const to = G.devHands[playerID].length;
+    const noted = losses.taken.find((loss) => loss.kind === "cards");
+    if (noted) noted.to = to;
+    else losses.taken.push({ kind: "cards", from: held, to });
     addLog(
       G,
       `${getPlayerName(G, playerID)} gives up ${card.name} to the mob in place of ${kept ? `a ${formatPopName(kept.pop, 1)}` : "a pop"}.`,
@@ -241,6 +253,7 @@ function takeRiotPops(G: HegemonyState, playerID: PlayerId, losses: RiotLosses, 
   if (removed.total > 0)
     addLog(G, `${getPlayerName(G, playerID)} — Lost ${describeRemoval(removed)}.`);
   losses.left.push(...removed.left);
+  notePopLosses(G, playerID, removed.left, losses.taken);
 }
 
 /** Wait for the seat's answers while it may pay a card; otherwise take what is owed and
@@ -271,6 +284,7 @@ function settleRiotLosses(G: HegemonyState, playerID: PlayerId): MoveResult {
     concessionTileId: pending.concessionTileId,
     tokensCleared: pending.tokensCleared,
     level: happinessLevel(G, playerID),
+    taken: losses.taken,
   };
   return finishTurn(G);
 }

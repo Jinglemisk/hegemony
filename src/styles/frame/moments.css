@@ -116,7 +116,7 @@
   border-bottom: 0;
   border-radius: var(--r-panel) var(--r-panel) 0 0;
 }
-.ch-moment.riotSheet .sheetHead .icon {
+.ch-moment.riotSheet .sheetHead .ico {
   border-radius: var(--r-round);
   background: var(--medallion);
   box-shadow: var(--medallion-rim);
@@ -127,16 +127,6 @@
 }
 .ch-moment.riotSheet .sheetFoot {
   border-top-color: var(--bz-dk-30);
-}
-.ch-moment :is(.insRow, .oddsRow) {
-  border-color: var(--bz-dk-30);
-}
-.ch-moment .insRow {
-  background: var(--socket);
-  box-shadow: var(--socket-rim);
-}
-.ch-moment .insRow.is-on {
-  background: var(--socket-worked);
 }
 
 /* The hunger card and a loss card: the head's band across the top, the rows flat. */

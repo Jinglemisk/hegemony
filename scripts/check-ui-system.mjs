@@ -32,9 +32,9 @@ const listMode = process.argv.includes("--list");
  */
 const budgets = {
   "font-size": 4,
-  "font-shorthand": 48,
+  "font-shorthand": 45,
   "raw-hex": 22,
-  "raw-rgb-hsl": 62,
+  "raw-rgb-hsl": 59,
   "raw-z-index": 0,
   "printed-mechanics": 0,
   "raw-tip-markup": 0,

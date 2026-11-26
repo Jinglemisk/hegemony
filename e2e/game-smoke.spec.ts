@@ -70,10 +70,10 @@ test("setup, forced decision, normal command, and deterministic reload", async (
   await expect(riot).toBeVisible();
   await expect(riot).toContainText("Turn end · Damon’s realm");
   await expect(page.getByRole("img", { name: /Nikos is acting/ })).toHaveCount(0);
-  await riot.getByRole("button", { name: "Roll the Die", exact: true }).click();
+  await riot.getByRole("button", { name: "Roll the die", exact: true }).click();
   const result = page.getByRole("dialog", { name: "Blood in the streets", exact: true });
   await expect(result).toBeVisible();
-  await result.getByRole("button", { name: "Endure It", exact: true }).click();
+  await result.getByRole("button", { name: "So be it", exact: true }).click();
   await expect(result).toBeHidden();
 
   // The turn notice names Nikos's turn; the screen is Nikos's once it begins.

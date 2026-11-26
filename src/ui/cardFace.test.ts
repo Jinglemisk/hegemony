@@ -9,6 +9,8 @@ import {
   fateCardFace,
   ideaCardFace,
   resolutionCardFace,
+  revoltFace,
+  riotRowFace,
   yearCardFace,
 } from "./cardFace";
 import type { CardFace, EqRow } from "./cardFace";
@@ -22,6 +24,8 @@ const FACES: CardFace[] = [
   ...content.playerEvents.map((card) => fateCardFace(card)),
   ...content.resolutions.map((card) => resolutionCardFace(card, DEFAULT_RULESET, content)),
   ...content.nationalIdeas.map((idea) => ideaCardFace(idea, DEFAULT_RULESET, content)),
+  ...content.riotTable.rows.map(riotRowFace),
+  revoltFace("Half", 3),
 ];
 
 /** An equation read back in the study's own mini-syntax, icons by their file name. */

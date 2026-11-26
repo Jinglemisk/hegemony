@@ -288,6 +288,8 @@ export interface RiotLosses {
   cards: DevCardId[];
   /** The roll's Chronicle line, which takes the riot's moment once every pop is answered. */
   line: number;
+  /** Everything the riot has taken so far, each with its count before and after. */
+  taken: TableLoss[];
 }
 
 /** The last table roll, kept on state so the UI can show the outcome after the move
@@ -303,8 +305,21 @@ export interface TableRollRecord {
   rowLabel: string;
   /** Human-readable lines for each applied effect. */
   outcomes: string[];
+  /** The stocks and buildings the row took, each with its count before and after. */
+  taken: TableLoss[];
   year: number;
 }
+
+/**
+ * One thing a riot or a revolt took, with its count before and after, for the seat's
+ * loss card: a stock, a building (the settlement's count of them), a settlement's pops of
+ * one class, or the held cards given up in place of pops.
+ */
+export type TableLoss =
+  | { kind: "stock"; resource: Resource; from: number; to: number }
+  | { kind: "building"; building: BuildingId; tileId: string; from: number; to: number }
+  | { kind: "pops"; tileId: string; pop: PopType; from: number; to: number }
+  | { kind: "cards"; from: number; to: number };
 
 /** Per-material bank rates: `sell` materials buy 1 gold; 1 material costs `buy` gold.
  *  Derived once at game creation (roadmap-appendix Q14) and static all game. */
@@ -566,8 +581,18 @@ export type LogMoment =
       tokensCleared: number;
       /** The seat's happiness level once the riot resolved. */
       level: number;
+      /** What it took, before and after. Absent from a save made before it was kept. */
+      taken?: TableLoss[];
     }
-  | { kind: "revolt"; slaves: number; left: PopLeave[]; tokensCleared: number; level: number }
+  | {
+      kind: "revolt";
+      slaves: number;
+      left: PopLeave[];
+      tokensCleared: number;
+      level: number;
+      /** The pops that left, before and after. Absent from a save made before it was kept. */
+      taken?: TableLoss[];
+    }
   /** A settled trade, its terms read from the offering seat. */
   | { kind: "trade"; from: PlayerId; partner: PlayerId; terms: TradeTerms }
   /** A development card the table sees resolve: a yield on its draw, or a held card

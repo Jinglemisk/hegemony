@@ -157,6 +157,10 @@ describe("turn-end unrest", () => {
       ],
       tokensCleared: 2,
       level: happinessLevel(G, "0"),
+      taken: [
+        { kind: "pops", tileId: capital.tileId, pop: "slaves", from: 5, to: 2 },
+        { kind: "pops", tileId: colony.tileId, pop: "slaves", from: 4, to: 3 },
+      ],
     });
   });
 });

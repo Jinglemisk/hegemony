@@ -12,16 +12,18 @@ import type {
   DevCard,
   EventCard,
   EventEffect,
+  EventTableRow,
   HegemonyState,
   Resources,
   Stat,
+  TableEffect,
   UnrestTokenChange,
   YearCard,
   YearTerm,
 } from "../game/types";
 import { presentEventEffect, presentLawEffect, presentYearCard } from "./effects";
 import type { EffectTone } from "./effects";
-import { formatSignedNumber, toRoman } from "./formatters";
+import { RESOURCE_LABELS, formatSignedNumber, toRoman } from "./formatters";
 import {
   BUILDING_RASTERS,
   IDEA_RASTERS,
@@ -43,7 +45,7 @@ import { RESOURCE_ORDER } from "./resourceVisuals";
  * How many cards are left is never on the face: it is the deck line's, under the card.
  */
 
-export type CardDeck = "year" | "fate" | "law" | "directive" | "idea" | "dev";
+export type CardDeck = "year" | "fate" | "law" | "directive" | "idea" | "dev" | "riot";
 export type CardSize = "ceremony" | "hand" | "mini";
 
 /** A corner: its bronze icon (or a short text where the vocabulary has none), and its
@@ -87,7 +89,7 @@ const KIND = {
   directive: { icon: "assembly/directive", label: "Kind: Directive" },
   idea: { icon: "assembly/national-idea", label: "Kind: National Idea" },
   dev: { icon: "events/convoy", label: "Kind: Development card" },
-} as const satisfies Record<Exclude<CardDeck, "year">, CardMark>;
+} as const satisfies Record<Exclude<CardDeck, "year" | "riot">, CardMark>;
 
 const RIVAL = "chrome/dossier";
 const EVERY = "victory/demos";
@@ -558,6 +560,87 @@ export function devCardFace(card: DevCard): CardFace {
     voice: card.flavor,
     equation: { rows: [row], but: [] },
     sentence: card.text,
+  };
+}
+
+/** One effect of a riot's row, as a cost. */
+function tableRow(effect: TableEffect): EqRow {
+  switch (effect.type) {
+    case "none":
+      return { tone: null, tokens: [ic("unrest/calm"), cond("no losses")] };
+    case "losePops":
+      return { tone: "cost", tokens: [n(`−${effect.count}`), ic("pops/crowd")] };
+    case "destroyBuilding":
+      return { tone: "cost", tokens: [n("−1"), ic("buildings/ruin")] };
+    case "loseResource":
+      return {
+        tone: "cost",
+        tokens: [
+          n(`−${effect.amount}`),
+          ic(RESOURCE_RASTERS[effect.resource]),
+          ...(effect.popLossIfShort
+            ? [cond("short"), n(`−${effect.popLossIfShort}`), ic("pops/crowd")]
+            : []),
+        ],
+      };
+  }
+}
+
+/** A riot row's effects in words, for the card's sentence. */
+function tableWords(effect: TableEffect): string {
+  const pops = (count: number) => `${count} ${count === 1 ? "pop" : "pops"}`;
+  switch (effect.type) {
+    case "none":
+      return "nothing is lost";
+    case "losePops":
+      return `lose ${pops(effect.count)}`;
+    case "destroyBuilding":
+      return `a building burns, or ${pops(effect.popLossFallback)} more with none to burn`;
+    case "loseResource":
+      return `lose ${effect.amount} ${RESOURCE_LABELS[effect.resource]}${
+        effect.popLossIfShort ? `, and ${pops(effect.popLossIfShort)} if you cannot pay it all` : ""
+      }`;
+  }
+}
+
+/** A face of the riot's die: its number in the kind corner, what the row takes. */
+export function riotRowFace(row: EventTableRow): CardFace {
+  const rows = row.effects.map(tableRow);
+  const words = row.effects.map(tableWords).join("; ");
+  return {
+    deck: "riot",
+    name: row.label,
+    band: "Riot",
+    kind: { text: String(row.roll), label: `Die face ${row.roll}` },
+    reach: REACH.you,
+    timing: TIMING.now,
+    duration: DURATION.once,
+    art: { icon: subject(rows) },
+    equation: { rows, but: [] },
+    sentence: `${words.charAt(0).toUpperCase()}${words.slice(1)}.`,
+  };
+}
+
+/** The revolt: its share of the slaves walks away (`left` of them), and the tokens clear. */
+export function revoltFace(share: string, left: number): CardFace {
+  return {
+    deck: "riot",
+    name: "Revolt",
+    band: "Revolt",
+    kind: { icon: "unrest/revolt", label: "Kind: Revolt" },
+    reach: REACH.you,
+    timing: TIMING.now,
+    duration: DURATION.once,
+    art: { icon: "unrest/revolt" },
+    voice: "The fields are empty by morning.",
+    equation: {
+      rows: [
+        { tone: "cost", tokens: [n(`−${left}`), ic(POP_RASTERS.slaves)] },
+        { tone: "gain", tokens: unrestTokens("clearAll") },
+      ],
+      but: [],
+    },
+    sentence: `${share} your slaves walk away, rounded down, and your Unrest tokens clear.`,
   };
 }
 

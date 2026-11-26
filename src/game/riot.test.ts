@@ -5,6 +5,7 @@ import {
   getBuyRiotInsuranceStatus,
   resolveRiot,
   resolveRiotPop,
+  riotPopNext,
   riotRollReach,
 } from "./riot";
 import { beginTurnFor, endTurn } from "./turn";
@@ -372,6 +373,43 @@ describe("a riot's card", () => {
     ]);
   });
 
+  it("keeps what it took, each before and after, for the seat's loss card", () => {
+    // The mob torches the works: a building at the roll, then a pop or a card.
+    const G = riotWithCards(1, ["caravan", "settlers"]);
+    const capital = owned(G, P0_CAPITAL, "0");
+    capital.buildings = ["temple", "granary"];
+    expect(resolveRiot(G, "0").ok).toBe(true);
+    const burned = G.pendingRiot!.losses!.taken;
+    expect(burned).toEqual([
+      { kind: "building", building: expect.any(String), tileId: P0_CAPITAL, from: 2, to: 1 },
+    ]);
+
+    // Row 1's pop and its fallback both ask; one card, then one pop.
+    resolveRiotPop(G, "0", "card");
+    const next = G.pendingRiot?.losses?.owed ? riotPopNext(G, "0") : null;
+    const before = next ? owned(G, next.tileId, "0").pops[next.pop] : 0;
+    if (next) resolveRiotPop(G, "0", "pop");
+    const moment = G.log.find((entry) => entry.moment?.kind === "riot")!.moment!;
+    expect(moment.kind === "riot" && moment.taken).toEqual([
+      burned[0],
+      { kind: "cards", from: 2, to: 1 },
+      ...(next
+        ? [{ kind: "pops", tileId: next.tileId, pop: next.pop, from: before, to: before - 1 }]
+        : []),
+    ]);
+  });
+
+  it("keeps a stock's count before and after", () => {
+    // Granary sacked: 3 food.
+    const G = riotWithCards(4, []);
+    G.players["0"].resources.food = 10;
+    resolveRiot(G, "0");
+    const moment = G.log.find((entry) => entry.moment?.kind === "riot")!.moment!;
+    expect(moment.kind === "riot" && moment.taken).toEqual([
+      { kind: "stock", resource: "food", from: 10, to: 7 },
+    ]);
+  });
+
   it("takes the rest of the pops once the hand is empty", () => {
     const G = riotWithCards(2, ["caravan"]);
     const pops = totalPopsOf(G, "0");
@@ -405,5 +443,11 @@ describe("a riot's card", () => {
     expect(G.players["0"]).toMatchObject({ revolts: 1, popsLostToUnrest: 6 });
     expect(G.pendingRiot).toBeNull();
     expect(G.devHands["0"]).toHaveLength(1);
+    // The card lists each settlement's slaves before and after.
+    const moment = G.log.find((entry) => entry.moment?.kind === "revolt")!.moment!;
+    const taken = moment.kind === "revolt" ? (moment.taken ?? []) : [];
+    expect(taken.every((loss) => loss.kind === "pops" && loss.pop === "slaves")).toBe(true);
+    expect(taken.reduce((sum, loss) => sum + loss.from - loss.to, 0)).toBe(6);
+    expect(taken.find((loss) => loss.kind === "pops" && loss.tileId === P0_CAPITAL)?.from).toBe(8);
   });
 });

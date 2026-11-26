@@ -82,18 +82,21 @@ it("queues Damon's riot result, then the turn notice, before Nikos's event", () 
   const button = (name: string) =>
     [...dialog().querySelectorAll("button")].find((candidate) => candidate.textContent === name)!;
 
-  expect(dialog().querySelector("h2")?.textContent).toBe("Riot");
-  act(() => button("Roll the Die").click());
+  // The dialog's name: the sheet's head, then the rolled card's.
+  const named = () =>
+    document.getElementById(dialog().getAttribute("aria-labelledby")!)?.textContent;
+  expect(named()).toBe("Riot");
+  act(() => button("Roll the die").click());
 
   expect(G.currentPlayer).toBe("1");
   expect(G.pendingPlayerEvent?.card.name).toBe("Shipment");
-  // The die lands on the sheet, then the result card says what it cost.
-  expect(dialog().querySelector("h2")?.textContent).toBe("Riot");
+  // The die lands on the sheet, then the rolled card says what it cost.
+  expect(named()).toBe("Riot");
   act(() => vi.advanceTimersByTime(2000));
-  expect(dialog().querySelector("h2")?.textContent).toBe("Granary sacked");
-  expect(dialog().textContent).toContain("Lost 3 Food.");
+  expect(named()).toBe("Granary sacked");
+  expect(dialog().querySelector(".lossLines")?.textContent).toMatch(/Food\d+→\d+/);
   expect(dialog().textContent).toContain("Then: Nikos’s turn");
-  act(() => button("Endure It").click());
+  act(() => button("So be it").click());
 
   // The turn notice names Nikos's turn; the fate card drawn for it waits behind it.
   expect(dialog().querySelector("h2")?.textContent).toBe("Nikos’s turn");

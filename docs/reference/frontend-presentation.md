@@ -156,6 +156,14 @@ turn's confirm at the riot and revolt lines reads `turnEndUnrest`, which tries c
 the real action on a draft. Bots never wait on any of these: against bots the year card,
 the cover and the seat's own cards do not show.
 
+The riot is one sheet of one size from insurance to result (`RiotModal`, RIOT-1). Its table
+is six small cards, one per face of the die, and each insurance chosen seals the lowest card
+still open with its own seal. The die tumbles about a second (not at all under reduced
+motion) and rings the card it found; that card is then read in the shared card format
+beside one line per loss, before → after, from the engine's record (`TableLoss` on the roll
+and the riot's moment), never recomputed. A seat holding development cards answers pop or
+card on that same card. The revolt is read on the same sheet.
+
 Controls dispatch canonical `GameCommand` values through `src/client/controller.ts` and
 render engine-derived legal-option/status projections. They never call domain mutators
 directly or submit displayed costs and outcomes as authority. The controller retains local

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
+import { prefersReducedMotion } from "./roll";
 
 /**
  * The die, as an object on the table: a lacquer cube with ivory pips.
  *
- * It **flips through faces for 400ms and settles**, because a number that simply
+ * It **flips through faces for most of a second and settles**, because a number that simply
  * appears is a number the engine told you, and a number that lands is a number
  * you rolled. The result is already decided — nothing here touches the outcome,
  * and the settle is unconditional even if the component unmounts mid-flip.
@@ -24,7 +25,8 @@ import { useEffect, useState } from "react";
  * flip IS the harm.
  */
 
-const FLIP_MS = 400;
+/** The faces flip for most of the tumble (TUMBLE_MS), then the cube settles. */
+const FLIP_MS = 800;
 const FLIP_INTERVAL_MS = 70;
 
 /** Which of the nine cells a face lights, in the usual arrangement. */
@@ -38,13 +40,6 @@ const FACES: Record<number, readonly number[]> = {
 };
 
 const randomFace = () => 1 + Math.floor(Math.random() * 6);
-
-function prefersReducedMotion() {
-  return (
-    typeof window !== "undefined" &&
-    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true
-  );
-}
 
 export function LacquerDie({ value }: { value: number }) {
   const settled = Math.min(6, Math.max(1, Math.round(value)));

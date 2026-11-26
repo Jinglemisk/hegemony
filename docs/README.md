@@ -12,7 +12,6 @@ Start here. The player guide is [rules.md](../rules.md) at the repository root.
 
 | Plan                                             | Status    | Path                                              |
 | ------------------------------------------------ | --------- | ------------------------------------------------- |
-| [UI open items](plans/ui-remaining.md)           | `active`  | Riot screen redesign                              |
 | [Improving the bots](plans/outcome-driven-ai.md) | `ready`   | Bots: forecasts, trade and deals, then the rework |
 | [Development deck](plans/development-deck.md)    | `ready`   | Second pass at the deck and the card system       |
 | [Game settings](plans/game-settings.md)          | `blocked` | Setup screen, after card balance                  |

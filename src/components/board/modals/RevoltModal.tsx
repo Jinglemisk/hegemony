@@ -1,15 +1,18 @@
+import { useEffect, useRef } from "react";
 import type { LogEntry, LogMoment } from "../../../game/types";
+import { revoltFace } from "../../../ui/cardFace";
 import { presentUnrestOutcome } from "../../../ui/effects";
 import { useGameUi } from "../GameUiContext";
-import { commitVerb } from "./ceremonyMood";
-import { LossCard } from "./LossCard";
-import { leaveLines, nextFoot, tokensLine } from "./lossLines";
+import { LossSheet, LossSpread, SoBeIt } from "./LossSheet";
+import { nextFoot, takenLines, tokensLine } from "./lossLines";
+
+const CARD_TITLE_ID = "revolt-card-title";
 
 /**
  * The revolt card: the largest loss in the game, read by the seat that revolted once
- * its turn has passed. No roll and no choice: the ruleset's share of the slaves
- * leaves, rounded down, and the Unrest tokens clear. With no slaves it costs only the
- * tokens, as intended.
+ * its turn has passed, on the riot's sheet. No roll and no choice: the ruleset's share of
+ * the slaves leaves, rounded down, and the Unrest tokens clear. With no slaves it costs
+ * only the tokens, as intended.
  */
 export function RevoltModal({
   entry,
@@ -20,27 +23,30 @@ export function RevoltModal({
 }) {
   const { G } = useGameUi();
   const owner = entry.about!;
-  const { slaves, left, tokensCleared, level } = entry.moment;
+  const { left, tokensCleared, level, taken = [] } = entry.moment;
+  const foot = nextFoot(G, entry);
+  const commit = useRef<HTMLButtonElement>(null);
+
+  // The one control is safe to land on: it only closes the card.
+  useEffect(() => {
+    const timer = window.setTimeout(() => commit.current?.focus());
+    return () => window.clearTimeout(timer);
+  }, []);
 
   return (
-    <LossCard
-      blow={{
-        text: `−${left.length} slaves`,
-        tone: "negative",
-        magnitude: left.length ? `−${left.length}` : "0",
-        subject: "Slaves",
-        condition: slaves
-          ? `${presentUnrestOutcome(G.ruleset, "revolt").fraction} of ${slaves}, rounded down`
-          : "no slaves are left to walk away",
-      }}
-      blowIcon="pops/slaves"
-      commit={commitVerb("wound")}
-      foot={nextFoot(G, entry)}
+    <LossSheet
+      act={<SoBeIt next={foot.next} onClick={onClose} ref={commit} />}
+      icon="unrest/revolt"
       kicker={`Turn end · ${G.players[owner].name}’s realm`}
-      lines={[...leaveLines(G, owner, left), tokensLine(tokensCleared, level)]}
-      onCommit={onClose}
+      labelledBy={CARD_TITLE_ID}
+      note={`${foot.when} · ${foot.next}`}
       title="Revolt"
-      voice="The fields are empty by morning."
-    />
+    >
+      <LossSpread
+        face={revoltFace(presentUnrestOutcome(G.ruleset, "revolt").share, left.length)}
+        lines={[...takenLines(G, owner, taken), tokensLine(tokensCleared, level)]}
+        titleId={CARD_TITLE_ID}
+      />
+    </LossSheet>
   );
 }

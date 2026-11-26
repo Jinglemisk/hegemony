@@ -78,6 +78,10 @@
   --deck: var(--deck-dev);
   --deck-ink: var(--deck-dev-ink);
 }
+.deck-riot {
+  --deck: var(--deck-riot);
+  --deck-ink: var(--deck-riot-ink);
+}
 
 /* ── Turning over ──────────────────────────────────────────────────────────── */
 .gc-flip {
