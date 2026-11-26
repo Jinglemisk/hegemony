@@ -9,7 +9,7 @@ scarcity, politics and shifting fortune.
 
 </div>
 
-![Hegemony — statesmen gathered around the board](docs/reference/assets/codex-showcase/light-hero-tableau.png)
+![Hegemony — statesmen gathered around the board](docs/reference/assets/readme-hero.png)
 
 Each player leads a city-state across a shared map of islands. Settle land, raise
 cities, keep your people fed and content, trade with your rivals and pass Laws in the
@@ -70,7 +70,7 @@ games and balance batches.
 
 ## Status
 
-Playable today as local hotseat, with luxury goods, player trade and National Ideas
-in. Next: the development deck replaces Ventures, then the
-[agency package](docs/plans/agency-package.md) (a year forecast, optional event pops,
-bulk buys, Port-held goods), then balance and networked multiplayer.
+Playable today as local hotseat, with luxury goods, player trade and standing deals,
+National Ideas, the development deck and a 3D map. The mechanics are frozen; next come a
+riot screen redesign, better bots, a second pass at the cards, balance batches, a second
+pass at the map, and a multiplayer lobby. The [roadmap](docs/roadmap.md) tracks them.

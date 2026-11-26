@@ -51,7 +51,7 @@ import type { Sides, TradeItem, TradeRow } from "./tradeView";
 import { useTradePick } from "./tradePick";
 
 /**
- * The compact offer card (docs/reference/design/showcases/trade-screens). One card
+ * The compact offer card. One card
  * composes an offer and answers it; nothing takes over the screen. Its two columns are
  * what the acting seat wants and what it gives; a counter edits them
  * in place, each changed line showing what it was. Every "can I?" is the engine's

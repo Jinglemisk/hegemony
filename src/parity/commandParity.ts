@@ -264,7 +264,7 @@ export const COMMAND_PARITY = {
     ),
     simulation: simulated("master-rule", "withdrawAnswered"),
   },
-  // Bots make no deals and decline every offer that would leave one (docs/plans/trade-deals.md),
+  // Bots make no deals and decline every offer that would leave one (docs/reference/ai.md, Trade),
   // so no bot ever holds a deal to end or a short payment to answer.
   dealEnd: {
     frontend: interactive(

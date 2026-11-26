@@ -17,7 +17,7 @@ import type {
 } from "./types";
 
 /**
- * Standing deals (docs/plans/trade-deals.md). A trade with yearly lines or lent goods
+ * Standing deals (rules.md, Standing deals). A trade with yearly lines or lent goods
  * leaves a deal behind. Making it is the year's exchange for both seats. From the next
  * year each seat settles once a year at its own income, so a stock never moves on
  * another seat's turn: it pays its own line and takes its partner's, the two lines its

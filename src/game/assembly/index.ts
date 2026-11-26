@@ -1,5 +1,5 @@
 /**
- * The Assembly & Politicians layer (Phase 3-B · docs/archive/plans/assembly-politicians.md).
+ * The Assembly & Politicians layer.
  *
  *   types    — the state shapes, the LawEffect / DirectiveEffect vocabularies
  *   deck     — the four politicians and the 22-card Appendix B deck (content)

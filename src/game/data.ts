@@ -82,7 +82,7 @@ export const SETTLEMENT_RULES: Record<
   },
 };
 
-// ── Event tables (docs/archive/plans/event-tables.md) ────────────────────────────────────────
+// ── Event tables ────────────────────────────────────────
 //
 // Content data for the dice-table component. Adding a table here (plus a trigger)
 // is the whole cost of a new one — the engine seam and the modal are shared.
@@ -172,7 +172,7 @@ export const BUILDINGS: BuildingDefinition[] = [
   },
 ];
 
-/** The seven coastal luxury goods (luxury-goods.md §6): 2n − 1 for four seats (owner, Q81).
+/** The seven coastal luxury goods (rules.md, Luxury goods): 2n − 1 for four seats (owner, Q81).
  *  Order is the authored seating order onto the board's selected moorings. */
 export const LUXURY_GOODS: LuxuryGoodDefinition[] = [
   { id: "tyrian-dye", name: "Tyrian Dye", flavour: "the murex trade" },

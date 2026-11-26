@@ -165,8 +165,7 @@ and event decision data becomes visible.
 
 ## The shell
 
-The game screen is the Imperator shell (#193, its plan
-[archived](../archive/plans/imperator-shell.md)): a full-height sidebar of drawers on the left
+The game screen is the Imperator shell: a full-height sidebar of drawers on the left
 (Realm, Ideas, Agora, Trade, Victory, Cards), one docked place panel, the outliner on the
 right (it folds to its own head), the dock with End turn under it, the top bar, and the hand
 tray. One left window is open at a time. Panels are parchment or black glaze with bronze

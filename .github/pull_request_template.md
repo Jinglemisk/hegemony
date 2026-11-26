@@ -24,7 +24,7 @@ change is not ready to merge.
 - [ ] New or changed `GameCommand` members are classified in `src/parity/commandParity.ts`.
 - [ ] New automatic mechanics are visible to players where needed and represented in sim telemetry and AI evaluation.
 - [ ] Consequential AI decisions have clearly-use, clearly-avoid, and edge-case behavior tests.
-- [ ] Any deliberately deferred axis is recorded as incomplete work in `docs/roadmap.md`.
+- [ ] Any deliberately deferred axis is recorded as open work in its plan under `docs/plans/`.
 
 ## Architecture impact
 

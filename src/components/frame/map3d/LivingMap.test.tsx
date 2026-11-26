@@ -10,7 +10,7 @@ import type { HegemonyState } from "../../../game/types";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 
 /**
- * The slice-1 exit gate for the moorings (docs/plans/luxury-goods.md): the rendered map
+ * The moorings gate (rules.md, Luxury goods): the rendered map
  * carries a mooring at every selected vertex, addressable by its canonical vertex id,
  * with an accessible name that identifies both adjacent tiles. The scene needs a GPU and
  * starts after the first render; the moorings over it are plain HTML, rendered here.

@@ -810,7 +810,7 @@ function createPolicyProjectionState(G: HegemonyState, playerID: PlayerId): Hege
       },
     },
     // The forecast buys food as if the Dole had no per-turn cap: planning within it is
-    // left for the bot work (docs/plans/agency-package.md, ruling 8).
+    // left for the bot work (docs/plans/outcome-driven-ai.md).
     ruleset: { ...G.ruleset, turnCaps: { ...G.ruleset.turnCaps, dole: null } },
     // Arrivals and the engine's purchases write log lines; keep them off the real log.
     log: [],
@@ -1401,7 +1401,6 @@ function beamSearch(
 // policy now branches here during the setup phases and scores placements with ONE shared
 // evaluator. `master` uses the default weights; personalities
 // apply their own weights during setup too. `random` keeps its uniform pick.
-// See docs/archive/plans/policy-placement.md.
 
 export function isSetupPhase(G: HegemonyState): boolean {
   return (
@@ -1483,7 +1482,7 @@ const UPGRADE_SITE_WEIGHT = 6;
 
 /** The placement score: `smart`'s economy plus the bounded frontier, minus one for each
  *  contested tile (half the default frontier weight, so a contested tile still counts for
- *  something; measured by the opening A/B in docs/archive/plans/policy-placement.md),
+ *  something; measured by an opening A/B),
  *  plus the luxury claims a city on this site could reach and the colonies that
  *  could still be upgraded. Once the pops sit on the tile, the income projection IS the
  *  site score, so no bespoke site heuristic is needed; coast access shows up through the
@@ -1630,7 +1629,7 @@ export function choosePlacement(
 // by the heuristic below rather than blind search. It rests on a DIFFERENTIAL lens (my
 // gain minus the STRONGEST rival's, so "does this hurt me, help me, or help a rival
 // more?"). The political score adds a political-position term to `evaluateSmart`
-// outside a sitting. See docs/archive/plans/influence-aware-ai.md.
+// outside a sitting.
 
 function playerIds(G: HegemonyState): PlayerId[] {
   return Object.keys(G.players) as PlayerId[];
@@ -2192,7 +2191,7 @@ function chooseDrawRepealOrPass(
 // turns on"). Expansion is the heart of the game, so the frontier term prices it: the
 // reachable, unclaimed, yielding frontier, so the search prefers placements that OPEN
 // expansion, not just the fattest single tile. It was measured on its own as the
-// `settler` bot; see docs/reports/simulation/2026-07-21-map-foresight.md.
+// `settler` bot.
 
 /** Total yield on the player's next legally reachable settlement frontier. This is a
  * measured-low-weight signal: it nudges WHICH direction to expand without
@@ -2451,8 +2450,8 @@ function playBuilder(
 // ── Trade ────────────────────────────────────────────────────────────────────────────
 //
 // Bots answer, counter and offer by the score they play with: their weights, what they
-// save toward, and the food and calm the forecast buys (docs/plans/player-trade.md,
-// Bots). A deal is weighed on the match as it would stand after the trade, which the
+// save toward, and the food and calm the forecast buys (docs/reference/ai.md,
+// Trade). A deal is weighed on the match as it would stand after the trade, which the
 // engine builds; a bot takes one worth the margin to it that hands its partner no
 // title. Pacing: one offer a turn and one a sitting, read off the engine's count.
 
@@ -2560,7 +2559,7 @@ function counterTerms(G: HegemonyState, offer: TradeOffer): TradeTerms[] {
  * and hands the offering seat no title; else counter once, with the one-unit change
  * that would make it so; else decline. The first accept trades, so a bot answers at
  * once. A bot gives no held card: it declines an offer that asks it for one. Nor does
- * it make deals yet: it declines yearly lines and lent goods (docs/plans/trade-deals.md).
+ * it make deals yet: it declines yearly lines and lent goods (docs/reference/ai.md, Trade).
  */
 function answerOffer(
   G: HegemonyState,

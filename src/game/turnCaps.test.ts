@@ -12,7 +12,7 @@ import type { HegemonyState } from "./types";
 import { startNewYear } from "./year";
 
 /**
- * The per-turn caps on the utility actions (docs/plans/agency-package.md, ruling 8): each
+ * The per-turn caps on the utility actions (rules.md, Taking a turn): each
  * use is one unit at the usual price, three a turn, growing counted per settlement.
  */
 

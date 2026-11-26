@@ -44,7 +44,7 @@ export type GameOverReason = "victoryRace" | "deckExhausted";
 
 export type BuildingId = "marketplace" | "estate" | "forum" | "temple" | "granary" | "port";
 
-/** The seven coastal luxury goods (docs/plans/luxury-goods.md §6): 2n − 1 for four seats. */
+/** The seven coastal luxury goods (rules.md, Luxury goods): 2n − 1 for four seats. */
 export type LuxuryGoodId =
   "tyrian-dye" | "pearls" | "coral" | "glassware" | "incense" | "fine-linen" | "silphium";
 
@@ -216,7 +216,7 @@ export interface TileResource {
   type: MaterialResource;
 }
 
-// ── Event tables (roadmap-appendix D9/D10 · docs/archive/plans/event-tables.md) ─────────────
+// ── Event tables ─────────────
 //
 // Dice-and-table as one reusable, data-driven component: a table is content data and
 // `rollOnTable` (game/tables.ts) is the only engine seam. The riot is the one table.
@@ -374,7 +374,7 @@ export interface HexTile {
 export interface HegemonyBoard {
   tiles: HexTile[];
   /** The board's luxury goods — board-level, never duplicated into player buckets:
-   *  a good is one physical object with at most one owner (luxury-goods.md §3.4). */
+   *  a good is one physical object with at most one owner (rules.md, Luxury goods). */
   luxuries: LuxuryAsset[];
 }
 
@@ -445,7 +445,7 @@ export interface TradeBundle {
   /** Held development cards, by count only: the giver picks which (TradePlaces.cards). */
   cards: number;
   /** Stocks handed over now and again every later year, at the giver's own income: a
-   *  deal (docs/plans/trade-deals.md). */
+   *  deal (rules.md, Standing deals). */
   yearly?: Partial<Resources>;
   /** Goods lent, by asset id: the taker counts them while the deal stands, the giver
    *  keeps them. */
@@ -481,7 +481,7 @@ export interface DealShortfall {
 }
 
 /**
- * A standing deal between two seats (docs/plans/trade-deals.md). Its first exchange
+ * A standing deal between two seats (rules.md, Standing deals). Its first exchange
  * happened when it was made. From the next year each seat settles once a year at its
  * own income: it pays its yearly line and takes its partner's.
  */
@@ -671,7 +671,7 @@ export interface HegemonyState {
   rng: number;
   log: LogEntry[];
 
-  // ── The Assembly (Phase 3-B · docs/archive/plans/assembly-politicians.md) ────────────────
+  // ── The Assembly ────────────────
   //
   // Politician power, descriptive patrons and Voice are all board-derived.
 

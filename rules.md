@@ -378,7 +378,8 @@ offer with yearly lines or a loan.
 
 Once per turn, after your event card, pay **2 gold** on the Civic disc (**Buy a card**)
 and draw the top card of the development deck. One deck of **40 cards** serves the
-table; when it runs out, the discards are shuffled into a new pile.
+table; when it runs out, the discards are shuffled into a new pile. If every card is in a hand,
+none can be bought.
 
 **Yields** (20 cards) resolve the moment they are drawn: everyone sees the card, you
 take what it gives, and it goes to the discards. Your settlements are your capital,
@@ -394,7 +395,7 @@ included.
 **Held cards** go into your hand, face down. Everyone sees how many cards each seat
 holds (the count on its disc), never which. On your turn, **Your hand** on the Civic
 disc plays **one held card a turn**, never one you drew this turn. It resolves at once
-and goes to the discards, face up, and the table is told what it did.
+and goes to the discards, face up, and the table is told what it did. There is no hand limit.
 
 - **Caravan** (4) — 1 wood, stone or food for each of your settlements: one kind, chosen
   when you play it.
@@ -402,7 +403,7 @@ and goes to the discards, face up, and the table is told what it did.
   settlements with room.
 - **Master Builder** (1) — your next building or colony upgrade this turn costs 2 less
   wood or stone: one kind, chosen when you play it.
-- **Festival Day** (3) — clear one of your Unrest tokens.
+- **Festival Day** (3) — clear one of your Unrest tokens. You need one to play it.
 
 **Rival cards** (8) are held cards you play on a rival you pick. They cannot take what
 the rival does not have.
@@ -695,24 +696,24 @@ with no bonus. **Voice** counts only authored Laws still standing; Directives ad
 The **Agora** consult shows, at any time, when the house sits next, the standing Laws,
 each politician's Laws and monuments by seat, and Voice.
 
-| Politician    | Law               | Standing rule                                                                                                             |
-| ------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Demosthenes   | Land Reform       | Working slaves make food on any terrain, including hills. No new Estates; existing ones keep working.                     |
-| Demosthenes   | Sacred Fields     | Temples also make 2 food; a Temple costs 6 stone.                                                                         |
-| Demosthenes   | Manumission       | Slave promotion is free; slaves count twice for unrest, rounded after counting.                                           |
-| Demosthenes   | Tenant Rights     | Grow a slave for 2 gold or a freeman for 3 gold.                                                                          |
-| Demosthenes   | Grain Levy        | Freemen eat no food; Marketplaces do nothing.                                                                             |
-| Demosthenes   | Festival Calendar | Calm costs 2 food or 2 influence.                                                                                         |
-| Perdiccas     | Public Works      | Estates and Granaries cost 3 wood; Marketplaces cost 2 wood and 2 gold. Colonies hold 3 pops. Other building prices stay. |
-| Perdiccas     | Guild Charter     | The capital may grow twice as often (six a turn); other cities keep three, colonies never grow.                           |
-| Perdiccas     | Rural Messengers  | Colony citizens make 2 influence; colony freemen make no gold, but still eat. City citizens and Forums are unchanged.     |
-| Perdiccas     | Civic Pride       | Flat +1 happiness per realm; each city pays 1 gold a year, as far as the realm's gold goes.                               |
-| Perdiccas     | Master Builders   | Cities gain one slot; only three colony pieces may be placed. Existing fourth colonies stay.                              |
-| Kleistophenes | Homestead Act     | Colonies may hold one building, including a Port; cities lose one slot.                                                   |
-| Kleistophenes | Colonial Charter  | Found for 1 food and a pop; upgrade for 6 stone. Pieces and placement rules still apply.                                  |
-| Kleistophenes | Frontier Spirit   | Founding adds a free slave to the new colony, with no Unrest token; colonies hold 3 pops.                                 |
-| Kleistophenes | Harbour Dues      | Ports cost 2 stone; Marketplaces cost 3 wood and 4 gold. A Port still needs a coast and a good beside it.                 |
-| Kleistophenes | Rural Bloc        | +1 vote per colony, −1 per city; at least one base vote.                                                                  |
+| Politician    | Law               | Standing rule                                                                                                                    |
+| ------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Demosthenes   | Land Reform       | Working slaves make food on any terrain, including hills. No new Estates; existing ones keep working.                            |
+| Demosthenes   | Sacred Fields     | Temples also make 2 food; a Temple costs 6 stone.                                                                                |
+| Demosthenes   | Manumission       | Slave promotion is free; slaves count twice for unrest, rounded after counting.                                                  |
+| Demosthenes   | Tenant Rights     | Grow a slave for 2 gold or a freeman for 3 gold.                                                                                 |
+| Demosthenes   | Grain Levy        | Freemen eat no food; Marketplaces do nothing.                                                                                    |
+| Demosthenes   | Festival Calendar | Calm costs 2 food or 2 influence.                                                                                                |
+| Perdiccas     | Public Works      | Estates and Granaries cost 3 wood; Marketplaces cost 2 wood and 2 gold. Colonies hold 3 pops. Other building prices stay.        |
+| Perdiccas     | Guild Charter     | The capital may grow twice as often (six a turn); other cities keep three, colonies never grow.                                  |
+| Perdiccas     | Rural Messengers  | Colony citizens make 2 influence; colony freemen make no gold, but still eat. City citizens and Forums are unchanged.            |
+| Perdiccas     | Civic Pride       | Flat +1 happiness per realm; each city pays 1 gold a year, as far as the realm's gold goes.                                      |
+| Perdiccas     | Master Builders   | Cities gain one slot; one colony piece fewer may be placed (three, or four with Frontier Charter). Existing extra colonies stay. |
+| Kleistophenes | Homestead Act     | Colonies may hold one building, including a Port; cities lose one slot.                                                          |
+| Kleistophenes | Colonial Charter  | Found for 1 food and a pop; upgrade for 6 stone. Pieces and placement rules still apply.                                         |
+| Kleistophenes | Frontier Spirit   | Founding adds a free slave to the new colony, with no Unrest token; colonies hold 3 pops.                                        |
+| Kleistophenes | Harbour Dues      | Ports cost 2 stone; Marketplaces cost 3 wood and 4 gold. A Port still needs a coast and a good beside it.                        |
+| Kleistophenes | Rural Bloc        | +1 vote per colony, −1 per city; at least one base vote.                                                                         |
 
 Stratokles offers six one-time **Directives**. Choose one rival before sealing the
 proposal; the target is revealed before voting. They consume no Law slot and leave

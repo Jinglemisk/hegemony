@@ -19,7 +19,7 @@ import { calculateIncome } from "./economy/income";
 import { realmPops } from "./core/query";
 import type { HegemonyState, PlayerId, Pops, TradeBundle, TradePlaces, TradeTerms } from "./types";
 
-// Player trade, PR 1 (docs/plans/player-trade.md): offers to the table or named seats,
+// Player trade (rules.md, Trade): offers to the table or named seats,
 // answers out of turn, and the first accept settles: one settlement that rechecks both
 // sides and moves everything.
 

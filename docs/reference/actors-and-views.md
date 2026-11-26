@@ -11,16 +11,16 @@ projection. Neither client input nor a view is authority.
 `src/game/actors.ts` owns the shared query. `currentPlayer` remains the ordinary setup and
 gameplay actor, but it is not treated as universal authorization.
 
-| Workflow          | Eligible actors              | Accepted command family                                                 |
-| ----------------- | ---------------------------- | ----------------------------------------------------------------------- |
-| Setup             | `currentPlayer`              | Placement for the exact setup phase                                     |
-| Normal turn       | `currentPlayer`              | Economy/population actions, trade offers and settlements, and `endTurn` |
-| Player event      | Decision owner               | `resolveEvent`                                                          |
-| Riot at turn end  | Decision owner               | Insurance or `resolveRiot`                                              |
-| Assembly proposal | Every seat not yet Ready     | Draw, discard, propose, repeal or pass; trade; `assemblyReady`          |
-| Assembly voting   | Current sequential voter     | Buy a vote or cast a vote                                               |
-| Assembly closing  | Suspended turn's active seat | `assemblyClose`                                                         |
-| Game over         | Nobody                       | None                                                                    |
+| Workflow          | Eligible actors              | Accepted command family                                                                            |
+| ----------------- | ---------------------------- | -------------------------------------------------------------------------------------------------- |
+| Setup             | `currentPlayer`              | Placement for the exact setup phase                                                                |
+| Normal turn       | `currentPlayer`              | Economy/population actions, trade offers and settlements, `dealEnd`, `dealShortfall` and `endTurn` |
+| Player event      | Decision owner               | `resolveEvent`                                                                                     |
+| Riot at turn end  | Decision owner               | Insurance or `resolveRiot`                                                                         |
+| Assembly proposal | Every seat not yet Ready     | Draw, discard, propose, repeal or pass; trade, `dealEnd`; `assemblyReady`                          |
+| Assembly voting   | Current sequential voter     | Buy a vote or cast a vote                                                                          |
+| Assembly closing  | Suspended turn's active seat | `assemblyClose`                                                                                    |
+| Game over         | Nobody                       | None                                                                                               |
 
 `eligibleActors(state)` powers UI activity and observation metadata.
 `commandActorEligibility(state, actor, command)` is the authoritative command-family gate used
@@ -49,8 +49,8 @@ The projection preserves board, public resources, settlements, Laws, revealed ba
 discards, results, and public logs. It removes or canonicalizes authority-only information:
 
 - seed and serialized RNG are replaced with zero;
-- draw piles preserve counts only, using opaque card identifiers; the next year card
-  is hidden from every seat, spectators and bots alike;
+- draw piles preserve counts only, using opaque card identifiers; next year's card, the top
+  of the year pile, is public in every view; the rest of that pile shows its count only;
 - another seat's held Assembly card, sealed proposal and set-aside draw are null during
   proposal; a discarded draw waits in `assembly.setAside` and reaches its politician's
   discard pile only when the ballot is read, and a sealed repeal's log line does not
@@ -67,7 +67,7 @@ discards, results, and public logs. It removes or canonicalizes authority-only i
 A pending hunger choice is public: every view sees which seat must send how many pops away,
 and the chosen pops in the Chronicle once they leave.
 
-Trade offers are public (D5 of the trade plan): every view sees every open offer, its terms and
+Trade offers are public: every view sees every open offer, its terms and
 each answer. The one exception is the held cards a giver picked (`places.cards` on an offer or a
 counter): every other seat sees how many, never which. Once a trade settles, the cards are in the
 receiver's hand, which only it sees.

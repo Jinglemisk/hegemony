@@ -1,94 +1,38 @@
 # Hegemony documentation
 
-This is the documentation control plane. Start here instead of reading the whole
-tree. The roadmap establishes sequence and exit gates; plans define unshipped
-work; references describe the game that exists; reports preserve dated evidence;
-and the archive is historical context, never current authority.
+Start here. The player guide is [rules.md](../rules.md) at the repository root.
 
-Last updated: 2026-11-05.
+- [Roadmap](roadmap.md) — the owner's paths and the binding contracts.
+- [Questions](questions.md) — the only place for open owner questions.
+- [`plans/`](plans/) — work not yet shipped, one plan per path.
+- [`reference/`](reference/) — how the game and its tooling work today.
+- [`reports/`](reports/) — only the sim results the coming batches compare against.
 
-## Now
+## Plans
 
-**Current initiative:** the [agency package](plans/agency-package.md) (owner, 2026-10-31), with
-the [development deck](plans/development-deck.md), card list signed off 2026-10-31 (#163).
-[Player trade](plans/player-trade.md)'s two PRs, the [code-health plan](plans/code-health.md)'s
-five, and v2 (#121, its [plan](archive/plans/v2-migration.md) archived) are merged.
+| Plan                                             | Status    | Path                                              |
+| ------------------------------------------------ | --------- | ------------------------------------------------- |
+| [UI open items](plans/ui-remaining.md)           | `active`  | Riot screen redesign                              |
+| [Improving the bots](plans/outcome-driven-ai.md) | `ready`   | Bots: forecasts, trade and deals, then the rework |
+| [Development deck](plans/development-deck.md)    | `ready`   | Second pass at the deck and the card system       |
+| [Game settings](plans/game-settings.md)          | `blocked` | Setup screen, after card balance                  |
 
-**Owner blockers:** none. Base income is 0
-(owner, 2026-10-24). The [balance check](plans/player-trade.md#the-balance-check)'s
-[first report](reports/simulation/2026-10-26-balance-check.md) has win rates in range and Beloved
-within noise; Q84 (2026-10-26) retired the stock ratio for pops and income ratios and left hunger
-to the bots.
+Every file in `docs/plans/` must appear in this table. A plan has frontmatter (`status`:
+proposed, ready, active or blocked; `phase`; `updated`) and a `## Three-axis parity` section
+with `Engine / backend`, `Frontend` and `Simulation & AI` lines.
 
-**Next:** the build order (Port rule, per-turn caps, shared colonies on Continental, the year
-forecast, bot planning, card trading, telemetry, the deck's close-out, then batches on the owner's
-go) and the small cleanup items are in the [roadmap](roadmap.md#current-initiative--the-agency-package-and-the-development-deck).
+## The rule for shipped work
 
-The full-game browser test waits.
-
-**The board:** 3D only, no 2D fallback (owner, 2026-10-26). The owner settled its last open
-calls on 2026-10-27; the [frontend presentation reference](reference/frontend-presentation.md#map-presentation)
-holds them.
-
-**Locked sequence:** V1 includes luxury goods, full Catan-style player trade, all eleven
-National Ideas, and the intended typed Resolution/Idea effects. The v1 mechanics freeze
-precedes full multiplayer. The mechanics are frozen (owner, 2026-10-27) but for the
-[agency package](plans/agency-package.md). What remains is balance: the deck, events and year cards.
-
-## Active plans
-
-| Plan                                                | Phase    | Status     | Position                                                                                |
-| --------------------------------------------------- | -------- | ---------- | --------------------------------------------------------------------------------------- |
-| [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`    | Reopened after the agency package as a bot overhaul (owner, 2026-11-01)                 |
-| [Luxury goods](plans/luxury-goods.md)               | 4        | `active`   | Slices 1–2 shipped on `main`; the v2 migration carries them unchanged                   |
-| [UI — what is left](plans/ui-remaining.md)          | —        | `active`   | The one UI ledger; the KYKLOS triage ledgers are archived                               |
-| [Code health](plans/code-health.md)                 | post-v2  | `active`   | Five cleanup PRs before trade; all merged, trade next                                   |
-| [Player trade](plans/player-trade.md)               | post-v2  | `active`   | PRs #131 and #132 merged; the owner plays trade next; holds the balance check           |
-| [Development deck](plans/development-deck.md)       | post-v2  | `active`   | Slices 1-3 built: the deck, the free card, a riot's card, card trading; close-out next  |
-| [Board modes](plans/board-modes.md)                 | post-v2  | `proposed` | Engine and sim (#145); Q81 answered: hop 3, seven goods, the oracle on an island        |
-| [Game settings](plans/game-settings.md)             | post-v2  | `proposed` | Length and base income built in the engine; the setup screen is parked                  |
-| [National Ideas](plans/national-ideas.md)           | v2       | `active`   | Step 9 shipped (#88); twelve v2 rules, open setup draft (#95), influence purchase       |
-| [Agency package](plans/agency-package.md)           | post-v2  | `active`   | Manumission, Capital Works, Messengers, optional pops, kept Laws, Port rule, caps built |
-| [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked`  | Final typed Resolution/Idea effects and evidence before multiplayer                     |
-| [Trade deals](plans/trade-deals.md)                 | post-v2  | `active`   | Yearly deals and lent goods: built; bots still decline them                             |
-
-Every file in `docs/plans/` must appear in this table. Start a substantial feature
-from [the plan template](plans/_template.md).
+When work ships, its lasting facts go into [rules.md](../rules.md) (player rules) or the
+matching `reference/` file (engine, bots, UI, tooling), and its plan is deleted. No dated
+logs, no shipped lists, no archive: git history keeps the past. A report is deleted once
+nothing compares against it.
 
 ## Owner questions
 
-[questions.md](questions.md) is the only place for unresolved owner questions. A
-question includes context, options, a recommendation, and an empty `Answer:` slot.
-When answered, incorporate the result into the affected plan and remove the
-question in the same change. There is no separate decision ledger.
+A question in [questions.md](questions.md) has context, options, a recommendation and an empty
+`Answer:`. Once answered, fold the result into the plan or reference it affects and delete the
+question in the same change.
 
-## Workflow
-
-```text
-Idea → owner question → accepted plan → implementation PRs → validation → archive
-```
-
-1. Place sequence and exit gates in the [roadmap](roadmap.md).
-2. Put implementation detail in one active plan and classify all three parity axes.
-3. Open focused implementation PRs with the required parity evidence.
-4. Update living references as behavior changes and save dated evidence as reports.
-5. After validation, move the completed plan to `archive/plans/` with shipping evidence.
-
-## Navigation
-
-- [Roadmap](roadmap.md) — mandatory parity contract, phase order, and exit gates.
-- [Questions](questions.md) — unresolved owner decisions only.
-- [`plans/`](plans/) — proposed, ready, active, or blocked work only.
-- [`reference/`](reference/) — living rules, effective-value and parity-manifest contracts, AI, simulation, and design descriptions.
-- [Frontend presentation contract](reference/frontend-presentation.md) — authoritative UI explanation,
-  accessibility, overlay, and integration rules.
-- [Actors and views](reference/actors-and-views.md) — workflow eligibility, redaction,
-  spectator safety, and fair AI observation.
-- [Runtime architecture](reference/architecture.md) — engine purity, canonical commands,
-  versioning, invariants, and mechanical gates.
-- [`reports/`](reports/) — immutable dated audits, playtests, and simulation evidence.
-- [`archive/`](archive/) — shipped or superseded plans and historical work notes.
-
-Run `npm run docs:check` before submitting documentation changes. CI checks plan
-metadata, active-plan index coverage, question placement, root layout, local links,
-and repository-relative path portability.
+Run `npm run docs:check` before submitting doc changes. It checks plan metadata, this table,
+question format, root layout and that every local link resolves.

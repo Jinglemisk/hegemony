@@ -46,10 +46,6 @@ cards on each side, and the giving seat's places name the cards it picks.
 - Behavioral parity tests exhaustively prove browser command construction and byte-identical
   browser, simulator, replay, and direct-engine execution.
 - Knip rejects unused files, exports, types, dependencies, and unlisted binaries.
-- Prettier gates active source and living documentation; immutable archives and reports retain
-  their historical formatting.
+- Prettier gates source and living documentation; `docs/reports/` keeps its own formatting.
 - CI runs typecheck, documentation checks, lint, formatting, dead-code analysis, the bounded
   Vitest suite once, production build, and one deterministic Chromium smoke journey.
-
-The shipped implementation history and non-goals remain in the
-[archived Phase 3.6 plan](../archive/plans/phase-3.6-architecture-hardening.md).
