@@ -135,11 +135,6 @@
   font-weight: 400;
 }
 
-.eventTableEffect .richIcon {
-  width: 14px;
-  height: 14px;
-}
-
 /* Codex (Q18) — the read-only rule reference. It is a ledger page now, not a
    modal, so it inherits the card's surface and carries no plate of its own.
    Every section renders from ruleset or content data; nothing is hand-written. */

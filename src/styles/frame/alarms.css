@@ -22,10 +22,6 @@
   background: color-mix(in srgb, var(--tone) 16%, var(--ivory));
   box-shadow: inset 0 0 0 var(--rule-2) var(--tone);
 }
-.alarm-disc .ico {
-  width: var(--ic-48);
-  height: var(--ic-48);
-}
 .alarm-disc.is-up {
   --tone: var(--olive);
 }
@@ -46,10 +42,6 @@
   border: 0;
   --tone: var(--clay);
 }
-.alarm-disc.is-year > .ico {
-  width: var(--ic-48);
-  height: var(--ic-48);
-}
 .alarm-badge {
   position: absolute;
   right: 0;
@@ -60,10 +52,6 @@
   height: var(--s-8);
   border-radius: var(--r-round);
 }
-.alarm-badge .ico {
-  width: var(--ic-24);
-  height: var(--ic-24);
-}
 
 /* ---- the threat: three titles, one turn start from the race ---------------- */
 .threat {
@@ -72,10 +60,6 @@
 .threat > .alarm-disc {
   padding: 0;
   border: 0;
-}
-.threat > .alarm-disc .ico {
-  width: var(--ic-48);
-  height: var(--ic-48);
 }
 /* One size at every text size and count of threats: the seats scroll inside. */
 .threat-panel {

@@ -31,7 +31,7 @@
   --gc-corner: var(--s-8);
   --gc-corner-ic: var(--ic-24);
   --gc-plate: calc(var(--u) * 24); /* 96 */
-  --gc-e: var(--ic-24);
+  --gc-e: var(--s-6);
 }
 
 .gc-hand {
@@ -41,9 +41,9 @@
   --gc-gap: var(--s-1);
   --gc-band: var(--s-6);
   --gc-corner: calc(var(--u) * 5); /* 20 */
-  --gc-corner-ic: var(--ic-16);
+  --gc-corner-ic: var(--s-4);
   --gc-plate: var(--ic-48);
-  --gc-e: var(--ic-16);
+  --gc-e: var(--s-4);
 }
 
 .gc-mini {
@@ -300,6 +300,8 @@
 }
 
 /* ── The equation: icons first, one row per effect ─────────────────────────── */
+/* --gc-e is the equation's spacing step; its icons are the text standard's, sized by
+   the numeral they stand beside (GameCard sets the numeral's role on each). */
 .gc-eq {
   display: grid;
   gap: calc(var(--gc-e) * 0.22);
@@ -335,11 +337,6 @@
   position: relative;
   display: inline-grid;
   place-items: center;
-}
-.gc-ic img {
-  display: block;
-  width: var(--gc-e);
-  height: var(--gc-e);
 }
 /* Struck: none, may not, does nothing. */
 .gc-ic.is-struck::after {

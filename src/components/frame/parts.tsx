@@ -10,12 +10,12 @@ import { Prose } from "../AnnotatedText";
 import { SeatCoin } from "../chrome/SeatCoin";
 
 /**
- * The frame's atoms, after the Hybrid arc mock: a raster icon at one of the four
- * declared sizes, a signed number, a price as number-and-icon pairs, a countdown, a
+ * The frame's atoms, after the Hybrid arc mock: a raster icon at one of the icon
+ * standard's sizes (icons.css: chip in text, ui 24, tile 32), a signed number, a price as number-and-icon pairs, a countdown, a
  * change, and the tooltip body (title, paragraphs, ledger rows).
  */
 
-export type IcoSize = "chip" | "ui" | "tile" | "disc";
+export type IcoSize = "chip" | "ui" | "tile";
 
 export function Ico({
   path,

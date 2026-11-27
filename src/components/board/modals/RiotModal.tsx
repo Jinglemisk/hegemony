@@ -27,14 +27,13 @@ import type { GameCommand } from "../../../game/legalMoves";
 import { riotRowFace } from "../../../ui/cardFace";
 import { playOnCopy, previewSpend } from "../../../ui/confirmPreview";
 import { RESOURCE_LABELS, formatPopLabel, formatSignedNumber } from "../../../ui/formatters";
-import { RESOURCE_RASTERS } from "../../../ui/iconRegistry";
 import { Prose } from "../../AnnotatedText";
 import { GameCard } from "../../cards/GameCard";
 import { useConfirm } from "../../chrome/confirmContext";
 import { ConfirmDetail } from "../../chrome/confirmDetail";
 import { Lacquer, Plaque } from "../../chrome/controls";
 import { placeName } from "../../frame/moments";
-import { Chips, Delta, Ico, Tip, TipBody, TipWarn } from "../../frame/parts";
+import { Delta, Ico, Tip, TipBody, TipWarn } from "../../frame/parts";
 import { Popover } from "../../overlays/Popover";
 import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
@@ -437,10 +436,13 @@ function RiotFaces({
 }
 
 /**
- * The three insurances as toggle tiles: the price on the tile, and under it what it
- * takes, before and after, read off the engine playing the choices on a copy (`after`).
- * Whether one more can be chosen is the engine's status on that copy. Once the die is
- * cast (`after` null) the tiles only show what was chosen.
+ * The three insurances as toggle tiles, each saying in one line what it takes: its
+ * cost, and the store or the settlement before and after, read off the engine playing
+ * the choice on a copy (`after` for one chosen; the choice with this one added for one
+ * not). Whether one more can be chosen is the engine's status on that copy. Once the
+ * die is cast (`after` null) the tiles only show what was chosen. The line lies over
+ * its tile, outside the toggle, so the Concession's settlement can be a control of its
+ * own; a click anywhere else on it falls through to the toggle.
  */
 function InsuranceTiles({
   seat,
@@ -487,10 +489,18 @@ function InsuranceTiles({
               ? status.reasons[0]
               : null;
         const locked = !after || !canAct || bought.includes(option.id);
+        const choice: Declared =
+          option.demotesPop && tileId ? { optionId: option.id, tileId } : { optionId: option.id };
+        const preview = !after
+          ? null
+          : on
+            ? after
+            : playOnCopy(G, seat, [...declared, choice].map(declareCommand));
         const [resource] = Object.keys(option.cost) as Resource[];
         const price = option.demotesPop
           ? "A citizen demoted"
           : `${option.cost[resource]} ${RESOURCE_LABELS[resource]}`;
+        const lineId = `riot-line-${option.id}`;
         return (
           <li className={on ? "riotTile is-on" : "riotTile"} key={option.id}>
             <Tooltip
@@ -505,59 +515,45 @@ function InsuranceTiles({
               triggerClassName="riotTileTip"
             >
               <Plaque
+                aria-describedby={lineId}
                 aria-pressed={on}
                 className="riotToggle"
                 disabled={locked || Boolean(blocked)}
-                onClick={() =>
-                  onToggle(
-                    option.demotesPop && tileId
-                      ? { optionId: option.id, tileId }
-                      : { optionId: option.id },
-                  )
-                }
+                onClick={() => onToggle(choice)}
                 ref={index === 0 ? firstRef : undefined}
               >
                 <Ico path={INSURANCE_ICON[option.id]} size="tile" />
-                <span className="riotTileWords">
-                  <span className="title">{option.label}</span>
-                  {option.demotesPop ? (
-                    <span className="caption">{price}</span>
-                  ) : (
-                    <Chips amounts={option.cost} />
-                  )}
-                </span>
+                <span className="title">{option.label}</span>
                 <span className="riotTileBonus stat num">
                   {formatSignedNumber(option.modifier)}
                 </span>
               </Plaque>
             </Tooltip>
-            <span className="riotTileFoot caption">
-              {!after && !on ? null : option.demotesPop ? (
-                <ConcessionPick
-                  after={on ? after : null}
+            <span className="riotTileLine caption" id={lineId}>
+              {option.demotesPop ? (
+                <ConcessionLine
                   disabled={locked}
                   onPick={(picked) => {
                     setTarget(picked);
                     onRetarget(picked);
                   }}
+                  preview={preview}
                   seat={seat}
                   targets={targets}
                   tileId={chosen?.tileId ?? tileId}
                 />
               ) : (
                 <>
-                  <Ico path={RESOURCE_RASTERS[resource]} size="chip" />
-                  <span>{RESOURCE_LABELS[resource]}</span>
-                  {on && after ? (
-                    <Delta
-                      from={G.players[seat].resources[resource]}
-                      to={after.players[seat].resources[resource]}
-                    />
-                  ) : on ? (
-                    <span>paid</span>
-                  ) : (
-                    <span className="delta num">{G.players[seat].resources[resource]}</span>
-                  )}
+                  <Prose links={false}>{on && !after ? `Paid ${price}` : `Costs ${price}`}</Prose>
+                  {preview ? (
+                    <>
+                      {` · ${RESOURCE_LABELS[resource]} `}
+                      <Delta
+                        from={G.players[seat].resources[resource]}
+                        to={preview.players[seat].resources[resource]}
+                      />
+                    </>
+                  ) : null}
                 </>
               )}
             </span>
@@ -569,29 +565,29 @@ function InsuranceTiles({
 }
 
 /**
- * Whose citizen the concession demotes: a plaque naming the settlement that opens a
- * short list of the others. With the concession chosen, that settlement's citizens
- * before and after.
+ * The Concession's line: whose citizen it demotes, the settlement a plaque that opens
+ * a short list of the others when there are several, and that settlement's citizens
+ * before and after (`preview`).
  */
-function ConcessionPick({
+function ConcessionLine({
   seat,
   targets,
   tileId,
   disabled,
-  after,
+  preview,
   onPick,
 }: {
   seat: PlayerId;
   targets: readonly string[];
   tileId: string | undefined;
   disabled: boolean;
-  after: HegemonyState | null;
+  preview: HegemonyState | null;
   onPick: (tileId: string) => void;
 }) {
   const { G } = useGameUi();
   const anchor = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
-  if (!tileId) return <span>No citizen to demote</span>;
+  if (!tileId) return <>No citizen to demote</>;
   const citizens = (state: HegemonyState, at: string) =>
     state.board.tiles
       .find((tile) => tile.id === at)
@@ -600,9 +596,9 @@ function ConcessionPick({
 
   return (
     <>
-      <Ico path="pops/citizens" size="chip" />
+      <Prose links={false}>A citizen in</Prose>{" "}
       {targets.length < 2 ? (
-        <span>{name}</span>
+        name
       ) : (
         <Tooltip
           content={
@@ -611,6 +607,7 @@ function ConcessionPick({
             </Tip>
           }
           preferredPlacement="above"
+          triggerClassName="riotPickTip"
         >
           <Plaque
             aria-expanded={open}
@@ -624,8 +621,14 @@ function ConcessionPick({
             <span aria-hidden="true">▾</span>
           </Plaque>
         </Tooltip>
-      )}
-      {after ? <Delta from={citizens(G, tileId)} to={citizens(after, tileId)} /> : null}
+      )}{" "}
+      is demoted
+      {preview ? (
+        <>
+          {" · Citizens "}
+          <Delta from={citizens(G, tileId)} to={citizens(preview, tileId)} />
+        </>
+      ) : null}
       {open ? (
         <Popover
           anchor={anchor}

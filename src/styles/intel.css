@@ -130,8 +130,6 @@
 }
 
 .holdingNetYield .miniResourceIcon {
-  width: 15px;
-  height: 15px;
   flex: 0 0 auto;
 }
 
@@ -150,11 +148,4 @@
   color: var(--subtle);
   font-weight: 500;
   opacity: 0.75;
-}
-
-/* A resource's icon in the Codex's tables. */
-
-.marketRowIcon {
-  width: 24px;
-  height: 24px;
 }

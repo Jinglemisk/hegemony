@@ -167,7 +167,7 @@ export function EndTurn({
           type="button"
         >
           <span className="endturn-disc" data-c="disc">
-            <Ico path="events/end-turn" size="disc" />
+            <Ico path="events/end-turn" size="tile" />
           </span>
           <span className="kicker endturn-label" data-c="chip">
             End turn

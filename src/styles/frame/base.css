@@ -50,22 +50,6 @@
 .delta-arr {
   color: var(--ink-45);
 }
-.ico-chip {
-  width: var(--ic-chip);
-  height: var(--ic-chip);
-}
-.ico-ui {
-  width: var(--ic-ui);
-  height: var(--ic-ui);
-}
-.ico-tile {
-  width: var(--ic-tile);
-  height: var(--ic-tile);
-}
-.ico-disc {
-  width: var(--ic-disc);
-  height: var(--ic-disc);
-}
 
 /* A price: number-and-icon pairs, alternatives joined by a dot. No words. */
 .price {

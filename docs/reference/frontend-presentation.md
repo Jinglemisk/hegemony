@@ -157,8 +157,11 @@ the real action on a draft. Bots never wait on any of these: against bots the ye
 the cover and the seat's own cards do not show.
 
 The riot is one sheet of one size from insurance to result (`RiotModal`, RIOT-1). Its table
-is six small cards, one per face of the die, and each insurance chosen seals the lowest card
-still open with its own seal. The die tumbles about a second (not at all under reduced
+is six small cards, one per face of the die, each holding a three-line name and one effect
+box height so the boxes line up, and each insurance chosen seals the lowest card still open
+with its own seal. Each insurance tile says what it takes in one line, from the engine
+playing the choice on a copy: "Costs 4 Food · Food 10 → 6", or the Concession's settlement
+and its citizens, the settlement a control of its own when there are several. The die tumbles about a second (not at all under reduced
 motion) and rings the card it found; that card is then read in the shared card format
 beside one line per loss, before → after, from the engine's record (`TableLoss` on the roll
 and the riot's moment), never recomputed. A seat holding development cards answers pop or
@@ -214,6 +217,13 @@ drawn on a 1440×900 canvas and scaled uniformly (1.2 at 1920×1080). At design 
   - The top bar is the one exception: it keeps one size at every Text size, because its
     44 px cells are already full. Its labels stay whole at every size, and each cell's
     tooltip, which does scale, carries the full words.
+- **Icon sizes** (owner, 2026-11-28). Four, set in one sheet (`icons.css`) and nowhere
+  else. An icon in text (a term in a sentence, a chip, a price, a card's equation) is
+  1.25em of its words and never under 20, so it grows with the Text size; detailed
+  pictures (a pop's figure, a citizen) were unreadable at 14–16. Standing alone it is
+  24 on a row, a button, the bar or a tab, 32 on a tile or a disc, 48 as card art. A
+  layout with no room for an icon makes room; it never shrinks the icon. The top bar's
+  text holds its size, so its icons do too.
 - **Contrast.** 4.5:1 for all text, measured against the texture pixel behind it that reads
   worst (for ink, parchment's darkest grain, about rgb 237 215 170; a footer band's 219 198
   154). 3:1 for icons and disabled controls. Text inks are their own tokens: `--ink-72` for quiet text,
@@ -226,8 +236,8 @@ drawn on a 1440×900 canvas and scaled uniformly (1.2 at 1920×1080). At design 
 - **Geometry.**
   - Nothing overprints. A panel's size never depends on its contents or state.
   - `ui:audit` and `ui:conduct` are clean at 1280×800, 1440×900 and 1920×1080.
-  - `ui:check` ratchets only down: colours live in `tokens.css`, sizes in `type.css`, and
-    z-index comes from `--z-*`.
+  - `ui:check` ratchets only down: colours live in `tokens.css`, sizes in `type.css`,
+    icon sizes in `icons.css`, and z-index comes from `--z-*`.
 
 ## Map presentation
 

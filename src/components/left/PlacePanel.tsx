@@ -318,6 +318,8 @@ function SettlementBody({
   const resource = settlementSlaveResource(tile, G);
   const ground = buildingGround(G, settlement.owner, tile.id);
   const raise = own && ground.raisable > 0 ? () => onPop("build") : undefined;
+  // Seven sockets or more pack three short rows: the icon stands beside its word there.
+  const slotIcon = settlement.buildings.length + Math.max(working, open) >= 7 ? "chip" : "ui";
   const held = luxuriesBeside(G, tile.id)
     .filter((asset) => asset.owner === settlement.owner)
     .map((asset) => luxuryName(G, asset));
@@ -397,7 +399,7 @@ function SettlementBody({
           <div className="pp-slots">
             {settlement.buildings.map((id, i) => (
               <Socket key={`${id}-${i}`} state="filled">
-                <Ico path={BUILDING_RASTERS[id]} size="ui" />
+                <Ico path={BUILDING_RASTERS[id]} size={slotIcon} />
                 <span>{capitalize(id)}</span>
               </Socket>
             ))}
@@ -405,7 +407,7 @@ function SettlementBody({
               <Socket key={`w-${i}`} state="worked">
                 <Ico
                   path={resource ? RESOURCE_RASTERS[resource] : "resources/stockpile"}
-                  size="ui"
+                  size={slotIcon}
                 />
                 <span>Worked</span>
               </Socket>

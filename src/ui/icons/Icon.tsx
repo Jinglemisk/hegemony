@@ -5,15 +5,14 @@ import { glyphPlaceholder } from "./placeholders";
  * The one component that draws a glyph. Everything else in the UI asks for an
  * icon by name and gets a consistent line at a consistent weight.
  *
- * Three sizes, and they are the only three: inline beside text, on a verb, and
- * on a rail. A fourth size always turns out to be someone eyeballing a layout,
- * and it is how a set stops looking drawn by one hand.
+ * Two sizes off the app's icon standard (icons.css): inline, in text, and rail,
+ * standing alone on a row or a tab. A size eyeballed for one layout is how a set
+ * stops looking drawn by one hand.
  */
-export type IconSize = "inline" | "verb" | "rail";
+export type IconSize = "inline" | "rail";
 
 const SIZE_CLASS: Record<IconSize, string> = {
   inline: "icon-inline",
-  verb: "icon-verb",
   rail: "icon-rail",
 };
 

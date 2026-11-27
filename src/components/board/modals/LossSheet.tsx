@@ -44,7 +44,7 @@ export function LossSheet({
       labelledBy={labelledBy}
     >
       <header className="sheetHead">
-        <Ico path={icon} size="disc" />
+        <Ico path={icon} size="tile" />
         <div className="sheetTitle">
           <span className="label">{kicker}</span>
           <h2 className="display" id={SHEET_TITLE_ID}>

@@ -7,7 +7,7 @@
  * special case.
  *
  * Stroke width is NOT scaled with the icon. A 1.7 stroke on a 24 viewBox drawn
- * at 14px renders at ~1px, which is exactly right — scaling the stroke would
+ * at 20px renders at ~1.4px, which is right — scaling the stroke would
  * make small icons fat and rail icons spindly. `vector-effect` is deliberately
  * not used for the same reason.
  */
@@ -21,7 +21,7 @@
   stroke-linejoin: round;
 }
 
-/* A placeholder raster (assets/icons/placeholder) rides the same three sizes. */
+/* A placeholder raster (assets/icons/placeholder) rides the same sizes. */
 img.icon {
   object-fit: contain;
 }
@@ -32,19 +32,28 @@ img.icon {
   stroke: none;
 }
 
-/* The three sizes, and only these three, in rem off the fixed 16px root: design px
-   that the HUD canvas scales with everything else. */
-.icon-inline {
-  width: 0.875rem; /* 14px @1440 — beside body text */
-  height: 0.875rem;
+/* The icon standard (owner, 2026-11-28): the only rules in the app that size an icon
+   (`npm run ui:check` counts any other). Both drawers of icons ride it, the glyph
+   (`Icon`) and the raster (`Ico`), and so does every term's icon in a sentence.
+   - In text: 1.25em of the words beside it, never under 20 design px, so it grows
+     with the Text size. Inline glyphs, chips, prices, a term in a sentence.
+   - Standing alone: 24 on a row, a button, the bar, a tab; 32 on a tile or a disc.
+   48 is card art, sized by the card's print. A layout that has no room for an icon
+   makes room; it never shrinks the icon. */
+.icon-inline,
+.ico-chip,
+.richIcon {
+  width: var(--ic-text);
+  height: var(--ic-text);
 }
 
-.icon-verb {
-  width: 1.125rem; /* 18px — on a pressable verb */
-  height: 1.125rem;
+.icon-rail,
+.ico-ui {
+  width: var(--ic-24);
+  height: var(--ic-24);
 }
 
-.icon-rail {
-  width: 1.5rem; /* 24px — a tab rail, a panel heading */
-  height: 1.5rem;
+.ico-tile {
+  width: var(--ic-32);
+  height: var(--ic-32);
 }

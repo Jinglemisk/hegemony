@@ -35,12 +35,6 @@
 button.alarm-disc {
   cursor: pointer;
 }
-.alarm-disc .ico,
-.alarm-disc.is-year > .ico,
-.threat > .alarm-disc .ico {
-  width: calc(var(--u) * 7);
-  height: calc(var(--u) * 7);
-}
 .alarm-disc.is-down {
   background: var(--alarm-face-hurt);
   box-shadow:
@@ -78,14 +72,10 @@ button.alarm-disc {
 .alarm-badge {
   right: -6px;
   bottom: -6px;
-  width: var(--s-6);
-  height: var(--s-6);
+  width: calc(var(--u) * 7); /* 28: a 24 icon inside its rim */
+  height: calc(var(--u) * 7);
   background: var(--alarm-face);
   box-shadow: var(--alarm-rim);
-}
-.alarm-badge .ico {
-  width: var(--ic-16);
-  height: var(--ic-16);
 }
 /* The seat on an offer or a deal: its coin on the rim. */
 .alarm-disc .ch-coin.offer-badge {

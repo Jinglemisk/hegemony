@@ -76,7 +76,7 @@ export function DealDisc({ deal, asking, ask }: { deal: Deal; asking: boolean; a
           type="button"
         >
           <span aria-hidden="true" className="deal-ring" />
-          <Ico path="market/handshake" size="ui" />
+          <Ico path="market/handshake" size="tile" />
           <SeatCoin aria-hidden="true" className="offer-badge" seat={partner} />
           {asking ? (
             <span aria-hidden="true" className="name offer-mark">

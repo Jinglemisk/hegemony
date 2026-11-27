@@ -111,7 +111,7 @@ function ResourceCell({
       triggerRole="img"
       triggerClassName={`bar-cell res${short ? " is-short" : ""}`}
     >
-      <Ico path={RESOURCE_RASTERS[resource]} size="tile" />
+      <Ico path={RESOURCE_RASTERS[resource]} size="ui" />
       <span className="bar-cell-v">
         <b className="bar-cell-n">{owed ? formatSignedNumber(value) : value}</b>
         <i className={`bar-cell-d ${tone(delta)}`}>
@@ -162,7 +162,7 @@ function PopCell({
       triggerRole="img"
       triggerClassName="bar-cell res pop"
     >
-      <Ico path={POP_RASTERS[pop]} size="tile" />
+      <Ico path={POP_RASTERS[pop]} size="ui" />
       <span className="bar-cell-v">
         <b className="bar-cell-n">{total}</b>
         <i className="bar-cell-d">{label.toLowerCase()}</i>
@@ -220,7 +220,7 @@ function RoomCell({ G, viewerId }: { G: HegemonyState; viewerId: PlayerId }) {
       triggerRole="img"
       triggerClassName="bar-cell res pop room"
     >
-      <Ico path="pops/capacity" size="tile" />
+      <Ico path="pops/capacity" size="ui" />
       <span className="bar-cell-v">
         <b className="bar-cell-n">
           {pops}
@@ -330,7 +330,7 @@ function MoodCell({
           ref={button}
           type="button"
         >
-          <Ico path={display.value < 0 ? "unrest/discontent" : "unrest/calm"} size="tile" />
+          <Ico path={display.value < 0 ? "unrest/discontent" : "unrest/calm"} size="ui" />
           <span className="bar-cell-v">
             <b className={`bar-cell-n ${tone(display.value)}`}>
               {formatSignedNumber(display.value)}

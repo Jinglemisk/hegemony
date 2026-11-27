@@ -104,7 +104,7 @@
   align-items: center;
   justify-content: center;
   gap: var(--s-2);
-  min-height: var(--ic-ui);
+  min-height: var(--ic-24);
 }
 /* A bought Idea's year tag stands out past its coin's edge: the word steps clear of it. */
 .idea-hold:has(.idea-seat[data-year]) {
@@ -151,8 +151,8 @@
   display: grid;
   flex: none;
   place-items: center;
-  width: var(--ic-ui);
-  height: var(--ic-ui);
+  width: var(--ic-24);
+  height: var(--ic-24);
   border-radius: var(--r-round);
   color: var(--ivory);
   background: var(--owner);

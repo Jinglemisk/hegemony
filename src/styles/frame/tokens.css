@@ -15,7 +15,7 @@
   /* ---- gate contract ---------------------------------------------------- */
   --gate-space: "0 4 8 12 16 24 32 48 64";
   --gate-grid: 4;
-  --gate-icons: "16 24 32 48";
+  --gate-icons: "text 24 32 48";
   --gate-hit: 32;
   --gate-text: 13;
 
@@ -51,16 +51,14 @@
   --track-caps: 0.08em;
   --track-name: 0.04em;
 
-  /* ---- icons --------------------------------------------------------------- */
-  --ic-16: 16px;
+  /* ---- icons: four sizes, and only these (icons.css spends them) ------------
+     In text an icon is 1.25em of its words, never under 20, so it grows with the
+     Text size; the em resolves where the token is spent. Standing alone it is 24
+     (rows, buttons, the bar, tabs), 32 (tiles, discs) or 48 (card art). */
+  --ic-text: max(20px, 1.25em);
   --ic-24: 24px;
   --ic-32: 32px;
   --ic-48: 48px;
-  /* roles */
-  --ic-chip: var(--ic-16); /* inside price chips */
-  --ic-ui: var(--ic-24); /* bar, tabs, header, yields, buttons */
-  --ic-tile: var(--ic-32); /* fan options, pop columns */
-  --ic-disc: var(--ic-32); /* verb discs, the hourglass */
 
   /* ---- controls and regions (grid multiples) ----------------------------- */
   --hit: calc(var(--u) * 8); /* 32: every control's short edge */
@@ -68,11 +66,11 @@
      disc 32 screen px, a control pressed every turn 44. */
   --knob-d: calc(var(--u) * 9); /* 36 */
   --hit-often: calc(var(--u) * 12.5); /* 50: map modes, alarm discs, sidebar buttons */
-  --bar-h: calc(var(--u) * 12); /* 48: a control and a half, so the bar's icons read at 32 */
+  --bar-h: calc(var(--u) * 12); /* 48: a control and a half */
   --row-h: calc(var(--u) * 10); /* 40: realm tabs */
   --chip-h: calc(var(--u) * 5); /* 20: the end-turn label */
   --name-h: var(--lh-20); /* 20: a verb's name under its disc */
-  --price-h: var(--ic-16); /* 16: the end-turn label's lift off the bottom, less one step */
+  --price-h: var(--s-4); /* 16: the end-turn label's lift off the bottom, less one step */
   --badge: calc(var(--u) * 4); /* 16: the advisory count */
   --caret: var(--s-2); /*  8: "opens more" mark */
   --rival-d: calc(var(--u) * 7); /* 28: a ruler's disc; the ring brings it to --hit */

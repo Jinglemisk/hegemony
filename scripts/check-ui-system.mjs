@@ -6,8 +6,9 @@
  * printed chrome via `title=` sentences. All three are counted here, with the
  * forms that slipped past the first count: sizes inside the `font:` shorthand or
  * a name's `--name-size`, and `rgb()`/`hsl()` colours. A fourth rule counts
- * z-index numbers off the `--z-*` scale, and a fifth tooltip markup hand-rolled
- * around its shared parts.
+ * z-index numbers off the `--z-*` scale, a fifth tooltip markup hand-rolled
+ * around its shared parts, and a sixth an icon sized anywhere but the one sheet
+ * that sets the icon standard.
  *
  * This is a RATCHET, not a gate. Every existing violation is grandfathered by
  * COUNT in `budgets` below; the run fails when a count RISES, and prints the new
@@ -38,7 +39,28 @@ const budgets = {
   "raw-z-index": 0,
   "printed-mechanics": 0,
   "raw-tip-markup": 0,
+  "icon-size": 0,
 };
+
+/** icons.css sets the icon standard: four sizes (in text, 24, 32, 48), and the only
+ *  rules that size an icon. A size set on an icon anywhere else is a per-screen
+ *  override, and is how a 14px figure nobody can read comes back. */
+const ICON_STANDARD = "src/styles/icons.css";
+
+/** A selector whose subject is an icon: an `.ico*`/`.icon*`/`.richIcon` element, a class
+ *  named for an icon (`.miniIcon`), or an img inside one. */
+const ICON_CLASS = /\.(?:ico|richIcon)[\w-]*|\.[\w-]*Icon\b/;
+function targetsIcon(selector) {
+  return selector.split(",").some((complex) => {
+    const compounds = complex.trim().split(/\s*[\s>+~]\s*/);
+    const subject = compounds.at(-1) ?? "";
+    return (
+      ICON_CLASS.test(subject) ||
+      (/^img\b/.test(subject) && compounds.slice(0, -1).some((part) => ICON_CLASS.test(part)))
+    );
+  });
+}
+const ICON_BOX = /(?:^|[;{\s])((?:min-|max-)?(?:width|height|inline-size|block-size))\s*:/g;
 
 /** The tooltip's parts (`Tip`, `TipBody`) own its markup: a title holds only its name
  *  and a countdown, and every paragraph takes its terms' icons. */
@@ -136,6 +158,19 @@ for (const file of files) {
   const raw = await readFile(file, "utf8");
   const source = stripComments(raw);
   const lines = source.split(/\r?\n/);
+
+  // (f) an icon sized outside the standard. Rule by rule, not line by line: the
+  //     selector and the size are on different lines.
+  if (extension === ".css" && name !== ICON_STANDARD) {
+    for (const rule of source.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      if (!targetsIcon(rule[1])) continue;
+      const bodyStart = rule.index + rule[1].length + 1;
+      for (const box of rule[2].matchAll(ICON_BOX)) {
+        const at = source.slice(0, bodyStart + box.index).split("\n").length;
+        record("icon-size", file, at, `${rule[1].trim().replace(/\s+/g, " ")} { ${box[1]} }`);
+      }
+    }
+  }
 
   lines.forEach((line, index) => {
     const lineNumber = index + 1;

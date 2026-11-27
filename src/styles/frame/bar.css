@@ -103,8 +103,6 @@
 }
 .bar-cell .ico {
   flex: none;
-  width: calc(var(--u) * 7);
-  height: calc(var(--u) * 7);
 }
 .bar-cell-v {
   display: flex;
@@ -206,12 +204,6 @@
   width: var(--u);
   height: var(--u);
   background: var(--clay);
-}
-
-/* Inline icons in the HUD's text take the chip size. */
-.hud .richIcon {
-  width: var(--ic-chip);
-  height: var(--ic-chip);
 }
 
 /* ---- the menu's plaque: bronze, at the bar's right end -------------------------- */

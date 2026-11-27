@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { CardFace, CardMark, CardSize, EqRow, EqToken } from "../../ui/cardFace";
 import { rasterIcon } from "../../ui/icons/placeholders";
+import { Ico } from "../frame/parts";
 
 /**
  * Every card in the game, printed one way (`cardFace.ts` builds the face): the band in
@@ -153,8 +154,8 @@ function Equation({ equation, size }: { equation: CardFace["equation"]; size: Ca
 function Token({ token, numeral }: { token: EqToken; numeral: string }) {
   if ("icon" in token)
     return (
-      <span className={`gc-ic${token.struck ? " is-struck" : ""}`}>
-        <img alt="" src={rasterIcon(token.icon)} />
+      <span className={`gc-ic ${numeral}${token.struck ? " is-struck" : ""}`}>
+        <Ico path={token.icon} size="chip" />
       </span>
     );
   if ("n" in token) return <span className={`gc-n ${numeral}`}>{token.n}</span>;
