@@ -11,7 +11,7 @@ import {
   settlementCapacity,
   totalPops,
 } from "../../../game/rules";
-import { dealsAwaitingAnswer, dealsOf, loanOf, partnerIn } from "../../../game/deals";
+import { dealsAwaitingAnswer, dealsOf, isClosedDeal, loanOf, partnerIn } from "../../../game/deals";
 import type { PlayerId, SettlementKind } from "../../../game/types";
 import { turnsUntilYear } from "../../../ui/frameSelectors";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
@@ -362,8 +362,16 @@ function useSections(
       key: deal.id,
       coin: partner,
       name: dealTitle(G, deal, viewerId),
-      figure: <span className="rd-row-go">{short ? "Answer ▸" : "Yearly"}</span>,
-      figureWords: short ? "a short payment waits on your answer" : "yearly",
+      figure: (
+        <span className="rd-row-go">
+          {short ? "Answer ▸" : isClosedDeal(deal) ? "Closed" : "Yearly"}
+        </span>
+      ),
+      figureWords: short
+        ? "a short payment waits on your answer"
+        : isClosedDeal(deal)
+          ? "closed"
+          : "yearly",
       detail: `${dealWords(G, deal, viewerId)}.`,
       needs: short,
       onPress: () => openAlarm(`[data-deal="${deal.id}"]`),

@@ -495,10 +495,16 @@ export interface DealShortfall {
   paid: Partial<Resources>;
 }
 
+/** A seat's latest settlement of a deal: the year and what it paid then. */
+export interface DealSettlement {
+  year: number;
+  paid: Partial<Resources>;
+}
+
 /**
  * A standing deal between two seats (rules.md, Standing deals). Its first exchange
  * happened when it was made. From the next year each seat settles once a year at its
- * own income: it pays its yearly line and takes its partner's.
+ * own income: it pays its yearly line and takes what its partner has paid.
  */
 export interface Deal {
   id: string;
@@ -513,6 +519,13 @@ export interface Deal {
   endsYear: number | null;
   /** A seat that paid short, by seat: its partner answers at its next income. */
   short: Partial<Record<PlayerId, DealShortfall>>;
+  /** What each seat's partner has paid and the seat has not yet taken, by the seat it
+   *  waits for. A payment leaves its payer's stock and waits here, so a seat takes only
+   *  what was paid. */
+  waiting: Partial<Record<PlayerId, Partial<Resources>>>;
+  /** Each seat's latest settlement: a deal that ends at once hands back a payment its
+   *  partner has not matched that year. */
+  settled: Partial<Record<PlayerId, DealSettlement>>;
 }
 
 /** What a seat names for its own side of a trade: where the pops it gives leave, where

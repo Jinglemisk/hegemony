@@ -622,8 +622,8 @@ Replays are byte-identical to the original run.
 The save is a _recipe_: replaying `history` from its pinned definition and seed
 reproduces `state` byte-for-byte. Saves double as shareable bug reports and
 balance scenarios. Loading re-hashes the definition and rejects tampering, unsupported
-schema versions, or a recipe/state mismatch. The state schema is 12 and the command
-schema 6 (`src/game/version.ts`); older recipes are rejected. The save container
+schema versions, or a recipe/state mismatch. The state schema is 31 and the command
+schema 12 (`src/game/version.ts`); older recipes are rejected. The save container
 format remains v2.
 
 **Phase 3.6 architecture:** definition pinning, the canonical atomic transition, workflow

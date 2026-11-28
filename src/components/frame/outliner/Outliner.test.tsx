@@ -130,6 +130,8 @@ it("names two deals with one seat by their terms, marks a lent good and counts p
     madeYear: G.year,
     endsYear: null,
     short: {},
+    waiting: {},
+    settled: {},
   });
   G.deals = [
     deal("d1", { "0": { stone: 3 }, "1": { food: 2 } }),

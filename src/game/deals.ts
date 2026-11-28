@@ -20,10 +20,16 @@ import type {
  * Standing deals (rules.md, Standing deals). A trade with yearly lines or lent goods
  * leaves a deal behind. Making it is the year's exchange for both seats. From the next
  * year each seat settles once a year at its own income, so a stock never moves on
- * another seat's turn: it pays its own line and takes its partner's, the two lines its
- * income shows. A seat short of its line pays what it holds, and its partner chooses at
- * its next income to take that and pay in full, or to cancel the deal at once. Either
- * seat may end a deal on its own turn: the year runs out, then it closes.
+ * another seat's turn: it pays its own line and takes what its partner has paid, the two
+ * lines its income shows.
+ *
+ * A payment leaves its payer's stock and waits on the deal until its receiver's income.
+ * So a seat takes only what was paid, and no stock comes from nowhere: the seat that
+ * plays first in a year takes that year's payment at its next income. A seat short of its
+ * line pays what it holds, and its partner chooses at its next income to take that and
+ * pay in full, or to cancel the deal at once. Either seat may end a deal on its own turn:
+ * the year runs out, then it closes. A closed deal stays on the state until what was paid
+ * on it is taken.
  *
  * A lent good stays its owner's, for the Port rule and for trade; only the count moves
  * to the borrower ({@link holderOf}). A one-turn loan goes back at the end of the
@@ -84,17 +90,25 @@ export function nextIncomeYear(G: HegemonyState, seat: PlayerId): number {
   return G.players[seat].collectedThisTurn ? G.year + 1 : G.year;
 }
 
-/** What a seat takes from its partner at its next settlement: the partner's line, with
- *  each stock it paid short of replaced by what it paid. */
-export function dealReceipt(deal: Deal, seat: PlayerId): Partial<Resources> {
+/** A seat's place in a year's order of play. The opener moves on one seat each year. */
+function placeIn(G: HegemonyState, year: number, seat: PlayerId): number {
+  const seats = PLAYER_IDS.length;
+  const opener = PLAYER_IDS.indexOf(G.yearOpener) + (year - G.year);
+  return (((PLAYER_IDS.indexOf(seat) - opener) % seats) + seats) % seats;
+}
+
+/** What a seat takes at its next income: what waits for it, and its partner's line for
+ *  each income the partner has before then. The line is the promise: a partner short of
+ *  it pays less. */
+export function dealReceipt(G: HegemonyState, deal: Deal, seat: PlayerId): Partial<Resources> {
   const partner = partnerIn(deal, seat);
-  const short = deal.short[partner];
-  const line = { ...deal.yearly[partner] };
-  if (!short) return line;
-  for (const resource of DEAL_RESOURCES) {
-    if ((short.owed[resource] ?? 0) > 0) line[resource] = short.paid[resource] ?? 0;
+  const takes = { ...deal.waiting[seat] };
+  const mine = nextIncomeYear(G, seat);
+  for (let year = nextIncomeYear(G, partner); year <= mine; year += 1) {
+    const first = year < mine || placeIn(G, year, partner) < placeIn(G, year, seat);
+    if (first && settlesIn(deal, year)) addAmounts(takes, deal.yearly[partner] ?? {});
   }
-  return line;
+  return takes;
 }
 
 /** A deal line in a seat's income: a stock it pays or takes, at its next income. */
@@ -109,10 +123,9 @@ export type DealIncomeLine = {
 export function dealIncomeLines(G: HegemonyState, seat: PlayerId): DealIncomeLine[] {
   const year = nextIncomeYear(G, seat);
   return dealsOf(G, seat).flatMap((deal) => {
-    if (!settlesIn(deal, year)) return [];
     const partner = partnerIn(deal, seat);
-    const pays = deal.yearly[seat] ?? {};
-    const takes = dealReceipt(deal, seat);
+    const pays = settlesIn(deal, year) ? (deal.yearly[seat] ?? {}) : {};
+    const takes = dealReceipt(G, deal, seat);
     return [
       ...DEAL_RESOURCES.map((resource) => ({ resource, amount: -(pays[resource] ?? 0) })),
       ...DEAL_RESOURCES.map((resource) => ({ resource, amount: takes[resource] ?? 0 })),
@@ -137,30 +150,56 @@ function addAmounts(into: Partial<Resources>, amounts: Partial<Resources>) {
   }
 }
 
+/** Take `amounts` out of `from`, as far as it holds them. */
+function removeAmounts(from: Partial<Resources>, amounts: Partial<Resources>) {
+  for (const resource of DEAL_RESOURCES) {
+    const left = (from[resource] ?? 0) - (amounts[resource] ?? 0);
+    if (left > 0) from[resource] = left;
+    else delete from[resource];
+  }
+}
+
+/** A seat takes what waits for it on a deal. */
+function takeWaiting(G: HegemonyState, deal: Deal, seat: PlayerId): Partial<Resources> {
+  const taken = deal.waiting[seat] ?? {};
+  delete deal.waiting[seat];
+  const stocks = G.players[seat].resources;
+  for (const resource of DEAL_RESOURCES) stocks[resource] += taken[resource] ?? 0;
+  return taken;
+}
+
 /**
- * One seat's settlement: it pays its line from what it holds and takes `receipt`. A
- * stock it holds too little of is paid as far as it goes, and the shortfall waits on its
- * partner's answer.
+ * One seat's settlement: it pays its line from what it holds, and the payment waits for
+ * its partner; then it takes what waits for it. A stock it holds too little of is paid as
+ * far as it goes, and the shortfall waits on its partner's answer. Past the deal's last
+ * year nothing is due, and the seat only takes.
  */
-function settleSide(G: HegemonyState, deal: Deal, seat: PlayerId, receipt: Partial<Resources>) {
+function settleSide(G: HegemonyState, deal: Deal, seat: PlayerId) {
   const partner = partnerIn(deal, seat);
   const stocks = G.players[seat].resources;
-  const owed = deal.yearly[seat] ?? {};
+  const due = settlesIn(deal, G.year);
+  const owed = due ? (deal.yearly[seat] ?? {}) : {};
   const paid: Partial<Resources> = {};
   const shortOwed: Partial<Resources> = {};
   const shortPaid: Partial<Resources> = {};
   for (const resource of DEAL_RESOURCES) {
-    const due = owed[resource] ?? 0;
-    if (due === 0) continue;
-    const pays = Math.min(due, Math.max(0, stocks[resource]));
+    const line = owed[resource] ?? 0;
+    if (line === 0) continue;
+    const pays = Math.min(line, Math.max(0, stocks[resource]));
     stocks[resource] -= pays;
     paid[resource] = pays;
-    if (pays < due) {
-      shortOwed[resource] = due;
+    if (pays < line) {
+      shortOwed[resource] = line;
       shortPaid[resource] = pays;
     }
   }
-  for (const resource of DEAL_RESOURCES) stocks[resource] += receipt[resource] ?? 0;
+  if (hasAmounts(paid)) {
+    const waits = deal.waiting[partner] ?? {};
+    addAmounts(waits, paid);
+    deal.waiting[partner] = waits;
+  }
+  if (due) deal.settled[seat] = { year: G.year, paid };
+  const receipt = takeWaiting(G, deal, seat);
 
   const name = getPlayerName(G, seat);
   const other = getPlayerName(G, partner);
@@ -190,13 +229,15 @@ export function dealsAwaitingAnswer(G: HegemonyState, seat: PlayerId): Deal[] {
   return dealsOf(G, seat).filter((deal) => deal.short[partnerIn(deal, seat)]);
 }
 
-/** A seat's income settles each of its deals due this year, but one whose partner paid
- *  short: that waits for the seat's answer. */
+/** A seat's income settles each of its deals due this year, and takes what waits for it
+ *  on a closed one. A deal whose partner paid short waits for the seat's answer. */
 export function settleDealsAtIncome(G: HegemonyState, seat: PlayerId) {
   for (const deal of dealsOf(G, seat)) {
-    if (!settlesIn(deal, G.year) || deal.short[partnerIn(deal, seat)]) continue;
-    settleSide(G, deal, seat, dealReceipt(deal, seat));
+    if (deal.short[partnerIn(deal, seat)]) continue;
+    const due = settlesIn(deal, G.year) && !isClosedDeal(deal);
+    if (due || hasAmounts(deal.waiting[seat])) settleSide(G, deal, seat);
   }
+  dropSpentDeals(G);
 }
 
 /** Arm a seat's one-turn loans at its turn start: they go back at this turn's end. */
@@ -217,12 +258,32 @@ function loanReturnLine(G: HegemonyState, loan: DealLoan): string {
   return `${name ?? loan.assetId} goes back from ${getPlayerName(G, loan.borrower)} to ${owner}.`;
 }
 
-function isSpent(deal: Deal): boolean {
+/** Whether a deal has stopped: no line repeats and no good is lent. */
+export function isClosedDeal(deal: Deal): boolean {
   return (
     deal.loans.length === 0 &&
     !hasAmounts(deal.yearly[deal.seats[0]]) &&
     !hasAmounts(deal.yearly[deal.seats[1]])
   );
+}
+
+/** A closed deal leaves the state once nothing paid on it waits to be taken. */
+function dropSpentDeals(G: HegemonyState) {
+  G.deals = G.deals.filter(
+    (deal) =>
+      !isClosedDeal(deal) ||
+      hasAmounts(deal.waiting[deal.seats[0]]) ||
+      hasAmounts(deal.waiting[deal.seats[1]]),
+  );
+}
+
+/** A deal stops: its lent goods go back, no line repeats and no answer is owed. What
+ *  was paid on it still waits for its receiver. */
+function stopDeal(G: HegemonyState, deal: Deal) {
+  deal.loans = [];
+  deal.yearly = {};
+  deal.short = {};
+  deal.endsYear ??= G.year;
 }
 
 /** At a seat's turn end its one-turn loans of this turn go back; a deal left with
@@ -235,26 +296,59 @@ export function returnLoansAtTurnEnd(G: HegemonyState, seat: PlayerId) {
       return !back;
     });
   }
-  G.deals = G.deals.filter((deal) => !isSpent(deal));
+  dropSpentDeals(G);
 }
 
-/** As the year turns, the deals ended in it close and their lent goods go back. */
+/** As the year turns, the deals ended in it close and their lent goods go back. Both
+ *  seats have settled the year; the payment of the seat that played second still waits
+ *  for its partner's next income. */
 export function closeDealsAtYearEnd(G: HegemonyState) {
   for (const deal of G.deals) {
-    if (deal.endsYear === null || deal.endsYear > G.year) continue;
+    if (deal.endsYear === null || deal.endsYear > G.year || isClosedDeal(deal)) continue;
     for (const loan of deal.loans) addLog(G, loanReturnLine(G, loan), loan.borrower);
     addLog(
       G,
       `The deal between ${getPlayerName(G, deal.seats[0])} and ${getPlayerName(G, deal.seats[1])} closes.`,
       deal.seats[0],
     );
+    stopDeal(G, deal);
   }
-  G.deals = G.deals.filter((deal) => deal.endsYear === null || deal.endsYear > G.year);
+  dropSpentDeals(G);
 }
 
-/** A deal closes at once: its lent goods go back and nothing more moves. */
+/** Whether a seat's payment of this year goes back to it if the deal closes now: it has
+ *  paid this year and its partner has not. */
+export function dealPaymentReturns(G: HegemonyState, deal: Deal, seat: PlayerId): boolean {
+  const mine = deal.settled[seat];
+  return (
+    mine?.year === G.year &&
+    deal.settled[partnerIn(deal, seat)]?.year !== G.year &&
+    hasAmounts(mine.paid)
+  );
+}
+
+/**
+ * A deal closes at once, part-way through a year. A seat that has paid this year while
+ * its partner has not gets that payment back: it waits for its own next income, where
+ * its partner would have taken it. Payments both seats matched stay where they wait.
+ */
 function closeNow(G: HegemonyState, deal: Deal) {
-  G.deals = G.deals.filter((open) => open.id !== deal.id);
+  for (const seat of deal.seats) {
+    if (!dealPaymentReturns(G, deal, seat)) continue;
+    const partner = partnerIn(deal, seat);
+    const mine = deal.settled[seat]!;
+    removeAmounts((deal.waiting[partner] ??= {}), mine.paid);
+    const back = deal.waiting[seat] ?? {};
+    addAmounts(back, mine.paid);
+    deal.waiting[seat] = back;
+    addLog(
+      G,
+      `${getPlayerName(G, seat)}'s payment of ${describeAmounts(mine.paid)} goes back at its next income.`,
+      seat,
+    );
+  }
+  stopDeal(G, deal);
+  dropSpentDeals(G);
 }
 
 /** A lent good that leaves its owner (its last Port beside it fell) ends its deal at
@@ -262,13 +356,13 @@ function closeNow(G: HegemonyState, deal: Deal) {
 export function endDealLending(G: HegemonyState, assetId: string) {
   const found = loanOf(G, assetId);
   if (!found) return;
-  closeNow(G, found.deal);
   const [a, b] = found.deal.seats;
   addLog(
     G,
     `The deal between ${getPlayerName(G, a)} and ${getPlayerName(G, b)} ends: its lent good left its owner.`,
     a,
   );
+  closeNow(G, found.deal);
 }
 
 /**
@@ -299,6 +393,8 @@ export function makeDeal(G: HegemonyState, seat: PlayerId, partner: PlayerId, te
     madeYear: G.year,
     endsYear: null,
     short: {},
+    waiting: {},
+    settled: {},
   };
   G.deals.push(deal);
 }
@@ -329,7 +425,8 @@ export function getDealShortfallStatus(
 }
 
 /** The answer to a partner's short payment: take what it paid and pay in full, or
- *  cancel the deal at once. */
+ *  cancel the deal at once. A cancelling seat pays nothing more and takes what was paid
+ *  for the years it paid its own side. */
 export function dealShortfall(
   G: HegemonyState,
   seat: PlayerId,
@@ -342,17 +439,22 @@ export function dealShortfall(
   const deal = getDeal(G, dealId)!;
   const partner = partnerIn(deal, seat);
   if (!keep) {
-    closeNow(G, deal);
     addLog(
       G,
       `${getPlayerName(G, seat)} cancels the deal with ${getPlayerName(G, partner)} over a short payment.`,
       seat,
     );
+    closeNow(G, deal);
+    const taken = takeWaiting(G, deal, seat);
+    if (hasAmounts(taken)) {
+      addLog(G, `${getPlayerName(G, seat)} takes ${describeAmounts(taken)} paid before.`, seat);
+    }
+    dropSpentDeals(G);
     return MOVE_OK;
   }
-  const receipt = dealReceipt(deal, seat);
   delete deal.short[partner];
-  settleSide(G, deal, seat, receipt);
+  settleSide(G, deal, seat);
+  dropSpentDeals(G);
   return MOVE_OK;
 }
 

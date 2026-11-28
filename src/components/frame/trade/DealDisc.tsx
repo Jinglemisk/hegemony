@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { partnerIn } from "../../../game/deals";
+import { isClosedDeal, partnerIn } from "../../../game/deals";
 import type { Deal } from "../../../game/types";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { useGameUi } from "../../board/GameUiContext";
@@ -57,7 +57,9 @@ export function DealDisc({ deal, asking, ask }: { deal: Deal; asking: boolean; a
         content={
           <Tip title={title}>
             <TipBody>{words}.</TipBody>
-            {deal.endsYear !== null ? <TipBody>Runs out with this year.</TipBody> : null}
+            {deal.endsYear !== null && !isClosedDeal(deal) ? (
+              <TipBody>Runs out with this year.</TipBody>
+            ) : null}
             <p className="tip-act">
               {asking ? "Click to answer a short payment" : "Click to see or end it"}
             </p>

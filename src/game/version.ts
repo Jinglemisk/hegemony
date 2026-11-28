@@ -100,7 +100,12 @@ export const ENGINE_VERSION = "0.1.0";
  *  standing deal on the state; seats settle deals at their own income, and a lent good
  *  counts for its borrower. Command v12 carries the new terms and adds ending a deal and
  *  answering a short payment. Older saves are rejected, not migrated. */
-export const STATE_SCHEMA_VERSION = 30;
+/** v31 (trade deals, payments wait): a seat took its partner's yearly line before the
+ *  partner had paid it, so a cancelled or ended deal could leave stock that came from
+ *  nowhere. A payment now waits on the deal until its receiver's income, and a deal
+ *  carries what waits and each seat's latest settlement. Commands are unchanged. Older
+ *  saves are rejected, not migrated. */
+export const STATE_SCHEMA_VERSION = 31;
 export const COMMAND_SCHEMA_VERSION = 12;
 
 export const SAVE_FORMAT_VERSION = 2;
