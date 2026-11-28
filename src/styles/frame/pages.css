@@ -34,7 +34,7 @@
 .chron-row {
   margin: 0;
   display: grid;
-  grid-template-columns: var(--ic-chip) minmax(0, 1fr);
+  grid-template-columns: var(--ic-text) minmax(0, 1fr);
   column-gap: var(--s-2);
   align-items: start;
   padding-block: var(--s-1);
@@ -44,8 +44,8 @@
   box-shadow: inset 0 var(--rule) 0 var(--ink-12);
 }
 .chron-seal .idea-seat {
-  width: var(--ic-chip);
-  height: var(--ic-chip);
+  width: var(--ic-text);
+  height: var(--ic-text);
 }
 /* In the log a term is not emphasis: the glyph is the information, and a highlight
    on nearly every noun says nothing. The signed numbers keep their olive and oxblood. */
@@ -90,7 +90,7 @@
 .cost-line {
   position: relative;
   display: grid;
-  grid-template-columns: var(--ic-ui) minmax(0, 1fr) auto;
+  grid-template-columns: var(--ic-24) minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--s-2);
   min-height: var(--ln);

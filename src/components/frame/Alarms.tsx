@@ -140,7 +140,7 @@ function UnrestDisc({
         triggerRole="img"
         triggerClassName="alarm-disc is-down is-loud"
       >
-        <Ico path={UNREST_TIER_RASTERS[tier]} size="ui" />
+        <Ico path={UNREST_TIER_RASTERS[tier]} size="tile" />
       </Tooltip>
     </li>
   );
@@ -179,7 +179,7 @@ function EffectDisc({
           triggerRole="img"
           triggerClassName="alarm-disc is-down is-loud"
         >
-          <Ico path="unrest/starvation" size="ui" />
+          <Ico path="unrest/starvation" size="tile" />
         </Tooltip>
       </li>
     );
@@ -202,7 +202,7 @@ function EffectDisc({
       >
         <Ico
           path={ACTIVE_EFFECT_MECHANIC_RASTERS[descriptor.mechanics[0]?.type ?? "standingLaw"]}
-          size="ui"
+          size="tile"
         />
       </Tooltip>
     </li>
@@ -232,7 +232,7 @@ function OneTitleShortDisc({ G, seats }: { G: HegemonyState; seats: VictoryThrea
         triggerRole="img"
         triggerClassName="alarm-disc is-down"
       >
-        <Ico path="victory/laurel" size="ui" />
+        <Ico path="victory/laurel" size="tile" />
       </Tooltip>
     </li>
   );
@@ -262,7 +262,7 @@ function AssemblyDisc({
         triggerRole="img"
         triggerClassName="alarm-disc"
       >
-        <Ico path="assembly/agora" size="ui" />
+        <Ico path="assembly/agora" size="tile" />
       </Tooltip>
     </li>
   );
@@ -303,7 +303,7 @@ function PortDisc({
         triggerRole="img"
         triggerClassName={`alarm-disc is-up${ready ? " is-loud" : ""}`}
       >
-        <Ico path="resources/luxury" size="ui" />
+        <Ico path="resources/luxury" size="tile" />
       </Tooltip>
     </li>
   );

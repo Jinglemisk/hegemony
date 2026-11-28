@@ -342,8 +342,7 @@ const resources: RuleChapter = {
               key={resource}
               term={
                 <span style={resourceCssVars(resource)} className="ruleResTerm">
-                  <ResourceIcon resource={resource} className="marketRowIcon" />{" "}
-                  {RESOURCE_LABELS[resource]}
+                  <ResourceIcon resource={resource} /> {RESOURCE_LABELS[resource]}
                 </span>
               }
             >

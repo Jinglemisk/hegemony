@@ -466,8 +466,8 @@
   gap: var(--s-2);
 }
 .lw-pips i {
-  width: var(--ic-16);
-  height: var(--ic-16);
+  width: var(--s-4);
+  height: var(--s-4);
   border-radius: var(--r-round);
   background: var(--ivory);
   box-shadow: inset 0 0 0 2px var(--bz);
@@ -817,11 +817,6 @@
   justify-content: center;
   height: 36px;
   padding-block: 0;
-}
-.pp-slots:has(> :nth-child(7)) .ch-socket > .ico {
-  flex: none;
-  width: var(--ic-chip);
-  height: var(--ic-chip);
 }
 .pp-classes {
   display: flex;

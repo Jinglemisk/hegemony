@@ -65,7 +65,7 @@ export function OfferDisc({ offer }: { offer: TradeOffer }) {
           type="button"
         >
           <span aria-hidden="true" className="offer-ring" />
-          <Ico path="market/handshake" size="ui" />
+          <Ico path="market/handshake" size="tile" />
           <SeatCoin aria-hidden="true" className="offer-badge" seat={offer.from} />
           {mine ? (
             <span aria-hidden="true" className="name offer-mark">

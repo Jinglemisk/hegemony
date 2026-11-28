@@ -126,7 +126,7 @@ export function Outliner({
             onClick={() => setCfgOpen((value) => !value)}
             ref={gear}
           >
-            <Ico path="chrome/settings" size="chip" />
+            <Ico path="chrome/settings" size="ui" />
           </Knob>
         </Tooltip>
         {/* One knob, tucking and showing: it stays put, so the focus stays on it. */}
@@ -253,7 +253,7 @@ function OutlinerRow({ row }: { row: Row }) {
             <SeatCoin aria-hidden="true" className="rd-row-coin" seat={row.coin} />
           ) : (
             <span aria-hidden="true" className="rd-row-ic">
-              <Ico path={row.icon ?? "settlements/city"} size="chip" />
+              <Ico path={row.icon ?? "settlements/city"} size="ui" />
             </span>
           )}
           <span className={`rd-row-name${row.place ? " is-place" : ""}`}>{row.name}</span>

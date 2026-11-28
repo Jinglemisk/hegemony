@@ -57,7 +57,3 @@
   -webkit-line-clamp: 1;
   line-clamp: 1;
 }
-.toast-body .richIcon {
-  width: var(--ic-chip);
-  height: var(--ic-chip);
-}

@@ -113,7 +113,7 @@ it("seals a card per insurance, rolls, and reads the rolled card's losses from t
   const sealed = dialog().querySelectorAll(".riotFace.is-sealed");
   expect(sealed).toHaveLength(1);
   expect(sealed[0].textContent).toContain("Sealed by Bread dole");
-  expect(dialog().querySelector(".riotTileFoot")?.textContent).toBe("Food10→6");
+  expect(dialog().querySelector(".riotTileLine")?.textContent).toBe("Costs 4 Food · Food 10→6");
   act(() => button(/^Bread dole/).click());
   expect(dialog().querySelectorAll(".riotFace.is-sealed")).toHaveLength(0);
 
@@ -146,4 +146,28 @@ it("asks pops or cards on the rolled card, a line for each answer", () => {
   expect(name()).toBe("Revolt spreads");
   expect(lines()[0]).toBe("Held cards, given up for pops2→1");
   expect(lines()[1]).toMatch(/^Slaves in .+\d→\d$/);
+});
+
+it("names the Concession's settlement in its line, and the picker moves it to another", () => {
+  const G = riot(4);
+  // A citizen in each of the seat's settlements, so the Concession has two to pick from.
+  for (const tileId of G.players["0"].settlements) {
+    const settlement = G.board.tiles
+      .find((tile) => tile.id === tileId)
+      ?.settlements.find((one) => one.owner === "0");
+    if (settlement) settlement.pops.citizens = Math.max(1, settlement.pops.citizens);
+  }
+  mount(G);
+  const line = () => dialog().querySelector("#riot-line-concession")?.textContent ?? "";
+  const first = line();
+  expect(first).toMatch(/^A Citizen in .+▾ is demoted · Citizens \d→\d$/);
+
+  act(() => button(/▾$/).click());
+  const picker = document.querySelector<HTMLElement>('[aria-label="Whose citizen"]')!;
+  const other = [...picker.querySelectorAll("button")].find(
+    (candidate) => candidate.getAttribute("aria-pressed") === "false",
+  )!;
+  act(() => other.click());
+  expect(line()).not.toBe(first);
+  expect(line()).toContain(other.querySelector("span")!.textContent!);
 });

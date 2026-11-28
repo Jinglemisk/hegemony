@@ -116,10 +116,12 @@
 }
 
 /* ---- row c: Trade, Buy a card, the Dole, each its name over its cost ---------- */
+/* Each button as wide as its words, the room left shared out: the Dole's exchange
+   needs more than Trade, and its icons hold their size at every Text size. */
 .rd-acts {
   grid-area: acts;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, auto);
 }
 .rd-act-tip {
   display: block;
@@ -138,7 +140,7 @@
   gap: 0;
   width: 100%;
   height: 100%;
-  padding: var(--rule-2);
+  padding: 0 var(--rule-2); /* at Largest the icon, name and price fill all 66 */
   border: 0;
   color: var(--ink);
   background: transparent;
@@ -152,12 +154,6 @@
   color: var(--ink-66);
   background: var(--hatch);
   cursor: default;
-}
-.rd-act > .ico {
-  /* At Large and Largest text the icon gives way, so the name and cost stay whole
-     inside the row's fixed height. */
-  flex: 0 1 var(--ic-ui);
-  min-height: 0;
 }
 .rd-act[aria-disabled="true"] .ico {
   opacity: var(--dim);
@@ -173,7 +169,6 @@
 }
 .rd-act .price {
   justify-content: center;
-  line-height: var(--lh-16);
 }
 .rd-exchange {
   display: inline-flex;
@@ -468,7 +463,7 @@
 /* One line a row: its icon or coin, its name, a mark if it needs you, its figure. */
 .rd-row {
   display: grid;
-  grid-template-columns: var(--ic-ui) minmax(0, max-content) auto 1fr auto;
+  grid-template-columns: var(--ic-32) minmax(0, max-content) auto 1fr auto;
   align-items: center;
   gap: 0 var(--s-2);
   width: 100%;
@@ -490,8 +485,8 @@
 .rd-row-ic {
   display: grid;
   place-items: center;
-  width: var(--ic-ui);
-  height: var(--ic-ui);
+  width: var(--ic-32);
+  height: var(--ic-32);
   border-radius: var(--r-round);
   background: var(--medallion);
   box-shadow: var(--medallion-rim);

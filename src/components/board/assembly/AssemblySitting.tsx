@@ -155,7 +155,7 @@ function SittingHead({ G, sitting }: { G: HegemonyState; sitting: Sitting }) {
 
   return (
     <header className="sit-head">
-      <Ico path="assembly/agora" size="disc" />
+      <Ico path="assembly/agora" size="tile" />
       <div className="sit-title">
         <span className="kicker" lang="el">
           ΕΚΚΛΗΣΙΑ

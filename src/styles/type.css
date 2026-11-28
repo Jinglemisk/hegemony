@@ -76,7 +76,7 @@
 .threat-panel .threat-gap,
 .ch-confirm-d .delta,
 .lossLines .delta,
-.riotTileFoot .delta,
+.riotTileLine .delta,
 .deck-line .num,
 .mood-line-n,
 .mood-line b,
@@ -316,6 +316,8 @@
 }
 .rd-act-name,
 .rd-act-sub,
+.rd-act .price,
+.rd-exchange,
 .rd-legend-title,
 .rd-outl-title,
 .rd-sec-head,

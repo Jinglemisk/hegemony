@@ -46,9 +46,9 @@ export function YearDisc({
           onClick={onOpen}
           type="button"
         >
-          <Ico path="events/year" size="ui" />
+          <Ico path="events/year" size="tile" />
           <span className="alarm-badge">
-            <Ico path={yearCardIcon(card)} size="chip" />
+            <Ico path={yearCardIcon(card)} size="ui" />
           </span>
         </button>
       </Tooltip>
@@ -98,7 +98,7 @@ export function ThreatAlarm({
         ref={disc}
         type="button"
       >
-        <Ico path="unrest/threshold" size="ui" />
+        <Ico path="unrest/threshold" size="tile" />
       </button>
       {open ? (
         <Popover

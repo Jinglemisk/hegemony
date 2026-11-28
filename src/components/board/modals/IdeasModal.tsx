@@ -244,7 +244,7 @@ export function IdeasModal({
         onDismiss={onClose}
       >
         <header className="ideas-head">
-          <Ico path="assembly/national-idea" size="disc" />
+          <Ico path="assembly/national-idea" size="tile" />
           <div className="ideas-title">
             <span className="kicker">
               {purchases === 1 ? "Once" : `${formatNumber(purchases)} times`} per game

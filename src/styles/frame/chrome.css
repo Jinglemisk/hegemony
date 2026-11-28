@@ -371,7 +371,7 @@ button.ch-socket[data-state="open"]:hover {
 
 /* ---- seat coins: the coin struck in the seat's glaze, ringed in bronze ------ */
 .ch-coin {
-  --coin-d: var(--ic-ui);
+  --coin-d: var(--ic-24);
   display: inline-block;
   flex: none;
   width: var(--coin-d);
