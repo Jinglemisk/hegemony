@@ -45,8 +45,9 @@ export interface ArchipelagoLimits {
   /** Sea cells between neighbouring islands of a group: islands whose gap is at most `max`
    *  belong to one group. */
   groupGap: Range;
-  /** Sea cells between two groups: never fewer than `min`, and each group has a neighbour
-   *  within `max`. */
+  /** Sea cells between two groups: never fewer than `min`, and channels of at most `max`
+   *  join every group to the rest. A sail reaches one hex past the gap, so `max` is the
+   *  board's sea reach less one; the gap is read between tiles a seat can settle. */
   channelGap: Range;
   /** Every tile of a group lies within this many hexes of the group's middle. With the
    *  islands' span held too, no group can be a chain. */
@@ -71,7 +72,7 @@ export const ARCHIPELAGO_LIMITS: ArchipelagoLimits = {
   groups: { min: 3, max: 4 },
   islandsPerGroup: { min: 2, max: 3 },
   groupGap: { min: 1, max: 1 },
-  channelGap: { min: 2, max: 3 },
+  channelGap: { min: 2, max: 2 },
   groupRadius: 4,
   mapRadius: 6,
   aspect: { min: 0.8, max: 1.35 },
@@ -226,6 +227,23 @@ function gapBetween(a: readonly AxialCell[], b: readonly AxialCell[]) {
   return nearest - 1;
 }
 
+/** Whether channels of at most `gap` sea cells join every group to the first, straight or
+ *  through other groups. A group with a near neighbour is not enough: two pairs of
+ *  groups can each lie close and still be cut off from each other. */
+function groupsJoin(groups: readonly AxialCell[][], gap: number) {
+  const joined = new Set(groups.length > 0 ? [0] : []);
+  for (let grew = true; grew;) {
+    grew = false;
+    groups.forEach((group, at) => {
+      if (joined.has(at)) return;
+      if (![...joined].some((to) => gapBetween(group, groups[to]) <= gap)) return;
+      joined.add(at);
+      grew = true;
+    });
+  }
+  return joined.size === groups.length;
+}
+
 /** Each limit the board breaks, in words; an empty list is a board that passes. */
 export function checkArchipelago(tiles: readonly HexTile[], limits: ArchipelagoLimits): string[] {
   const broken: string[] = [];
@@ -269,9 +287,10 @@ export function checkArchipelago(tiles: readonly HexTile[], limits: ArchipelagoL
       at === index ? [] : [gapBetween(groupTiles[index], other)],
     );
     if (gaps.some((gap) => gap < limits.channelGap.min)) broken.push("two groups too close");
-    if (gaps.length > 0 && Math.min(...gaps) > limits.channelGap.max) {
-      broken.push("a group too far from the others");
-    }
+  }
+  const settleable = groupTiles.map((group) => group.filter((tile) => tile.terrain !== "oracle"));
+  if (!groupsJoin(settleable, limits.channelGap.max)) {
+    broken.push("a group out of reach of the others");
   }
 
   if (tiles.some((tile) => hexDistance(tile, origin) > limits.mapRadius)) {

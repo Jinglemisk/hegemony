@@ -11,6 +11,7 @@ import { hexDistance } from "./mapTopology";
 import { boardRulesetPatch, deriveRuleset } from "./ruleset";
 import { canPlaceColonyOnTile } from "./settlement";
 import { createInitialStateFromDefinition } from "./state";
+import { colonyOn } from "./testing/scenario";
 import type { HexTile, PlayerId } from "./types";
 
 const DEFINITION = createModeDefinition("standard");
@@ -137,6 +138,42 @@ describe("archipelago generator", () => {
   it("draws the same board from the same seed", () => {
     expect(generateArchipelago(42, DECK)).toEqual(generateArchipelago(42, DECK));
     expect(generateArchipelago(42, DECK).tiles).not.toEqual(generateArchipelago(43, DECK).tiles);
+  });
+
+  // Seeds 232, 243 and 282 laid a group four hexes from the rest while the reach was three.
+  it("leaves no land out of the board's sea reach on 203 matches", () => {
+    for (const seed of [...SEEDS, 232, 243, 282]) {
+      const G = createInitialStateFromDefinition(ARCHIPELAGO_RULES, seed, "archipelago");
+      const land = G.board.tiles.filter((tile) => tile.terrain !== "oracle");
+      // Everything one seat could ever found from its first colony, by the founding rule.
+      const held = new Set([colonyOn(G, "0", land[0].id).tileId]);
+      for (let grew = true; grew;) {
+        grew = false;
+        for (const tile of land) {
+          if (held.has(tile.id) || !canPlaceColonyOnTile(G, "0", tile).can) continue;
+          colonyOn(G, "0", tile.id);
+          held.add(tile.id);
+          grew = true;
+        }
+      }
+      expect(held.size, `seed ${seed}`).toBe(land.length);
+    }
+  });
+
+  it("flags a group no channel joins to the others", () => {
+    // Seed 110 under the old limit of three sea cells: one group lies four hexes away.
+    const wider = { ...ARCHIPELAGO_LIMITS, channelGap: { min: 2, max: 3 } };
+    const board = generateArchipelago(110, DECK, wider);
+    expect(checkArchipelago(board.tiles, wider)).toEqual([]);
+    expect(checkArchipelago(board.tiles, ARCHIPELAGO_LIMITS)).toEqual([
+      "a group out of reach of the others",
+    ]);
+  });
+
+  it("joins groups by channels the board's sea reach can cross", () => {
+    expect(ARCHIPELAGO_LIMITS.channelGap.max + 1).toBeLessThanOrEqual(
+      ARCHIPELAGO_RULES.ruleset.placement.seaReach!,
+    );
   });
 
   it("deals a fallback board that passes when every draw fails", () => {
