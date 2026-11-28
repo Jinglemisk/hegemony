@@ -51,7 +51,7 @@ import lateGameJson from "./late-game.json?raw";
  * `?dev=shared-tiles` (two neighbouring tiles near the centre, each shared by two rivals'
  * colonies, as Continental allows: their plates stand side by side close in).
  * `?dev=deals`: on the Year 9 board, Damon's two standing deals, a yearly swap with Nikos
- * and Theron's Pearls on loan; `?dev=deal-short` a year on, with Nikos's short payment
+ * and Theron's Pearls on loan; `?dev=deal-short` two years on, with Nikos's short payment
  * waiting on Damon's answer.
  */
 
@@ -325,13 +325,18 @@ function standingDeals(initial: HegemonyState): HegemonyState {
   return G;
 }
 
-/** `?dev=deals` a year on: Nikos paid 1 of his 2 food, and Damon's answer waits. */
+/** `?dev=deals` two years on: last year Damon paid in full and played first, then Nikos
+ *  paid 1 of his 2 food. It waits on the deal, and Damon's answer waits. */
 function shortPayment(G: HegemonyState): HegemonyState {
   return produce(G, (draft) => {
     const deal = draft.deals.find((open) => open.seats.includes("1"));
     if (!deal) return;
-    deal.madeYear -= 1;
+    deal.madeYear -= 2;
     deal.short["1"] = { owed: { food: 2 }, paid: { food: 1 } };
+    deal.settled["0"] = { year: draft.year - 1, paid: { stone: 3 } };
+    deal.settled["1"] = { year: draft.year - 1, paid: { food: 1 } };
+    deal.waiting["0"] = { food: 1 };
+    draft.players["1"].resources.food -= 1;
   });
 }
 

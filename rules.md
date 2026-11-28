@@ -349,22 +349,29 @@ with anything in the last two leaves a standing deal behind.
 
 - **Every year:** wood, stone, food, gold or influence handed over now and again every year
   after. The trade itself is this year's exchange. From next year each seat settles at its own
-  income, at the start of its own turn: it pays its line and takes its partner's, and its income
-  shows both, for example −2 food and +5 wood. Your stocks never move on another seat's turn.
+  income, at the start of its own turn: it pays its line and takes what its partner has paid, and
+  its income shows both, for example −2 food and +5 wood. A payment waits on the deal until its
+  receiver's income, so nothing is taken that was not paid: in a year you play before your
+  partner, their payment for that year reaches you at your next income. Your stocks never move
+  on another seat's turn.
 - **On loan:** a luxury good lent, not sold. Its owner keeps it, and the Port beside it; the
   borrower needs no Port and counts the good's +2 happiness while the loan stands. A lent good
   is not sold, traded or lent again until it comes back. Pick **One turn** (back after the
   borrower's next turn, or after this one when the borrower made the deal on its own turn) or
   **Until ended**. If its owner loses the last Port beside it, the good goes back to the board
-  and the deal ends at once.
+  and the deal ends at once: a seat that has paid this year when its partner has not gets that
+  payment back at its next income.
 - **Your deals** sit on the alarms row, one disc each, in the partner's glaze. The card shows
   what moves every year, the goods on loan and what your next income takes from the deal.
 - **Ending:** either seat may end a deal on its own turn, or in the Assembly's preparation.
   The year runs out: a seat that has not settled this year still does, then the deal closes
-  and lent goods go back.
+  and lent goods go back. A payment still waiting is taken at its receiver's next income, and
+  the deal's disc stays until then.
 - **Short payments:** a seat that holds too little pays what it has. At your next income you
   answer: **Keep** takes what they paid and pays your side in full; **Cancel** ends the deal at
-  once, with nothing more moving. Your turn does not end until you answer.
+  once and you pay nothing more. A payment they made this year, which you have not matched,
+  goes back to them at their next income; one from a year you paid your side is yours to take.
+  Your turn does not end until you answer.
 
 **Trading with bots.** A bot answers an offer at once: it accepts a deal that leaves it
 better off and hands you no title, counters once with one unit more or less on one

@@ -1,7 +1,14 @@
 import { getLuxuryGood } from "../../../game/content";
 import { POP_TYPES } from "../../../game/core/pops";
 import { getOwnedSettlement } from "../../../game/core/query";
-import { DEAL_RESOURCES, dealsOf, describeAmounts, loanOf, partnerIn } from "../../../game/deals";
+import {
+  DEAL_RESOURCES,
+  dealsOf,
+  describeAmounts,
+  isClosedDeal,
+  loanOf,
+  partnerIn,
+} from "../../../game/deals";
 import { partnerCanPay } from "../../../game/trade";
 import type {
   Deal,
@@ -253,9 +260,16 @@ export function loanWords(G: HegemonyState, loan: DealLoan, seat: PlayerId): str
     : `${good} lent to ${G.players[loan.borrower].name}, ${length}`;
 }
 
-/** The deal in a line: "You give 2 food a year, get 3 stone a year; Pearls lent to you". */
+/** The deal in a line: "You give 2 food a year, get 3 stone a year; Pearls lent to you".
+ *  A closed deal names the payment still to be taken. */
 export function dealWords(G: HegemonyState, deal: Deal, seat: PlayerId): string {
   const partner = partnerIn(deal, seat);
+  if (isClosedDeal(deal)) {
+    const mine = deal.waiting[seat];
+    return mine && describeAmounts(mine) !== "nothing"
+      ? `Closed: ${describeAmounts(mine)} comes at your next income`
+      : `Closed: ${describeAmounts(deal.waiting[partner] ?? {})} waits for ${G.players[partner].name}'s next income`;
+  }
   const give = deal.yearly[seat];
   const get = deal.yearly[partner];
   const lines = [

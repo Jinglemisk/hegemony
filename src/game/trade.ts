@@ -607,6 +607,8 @@ export function tradePreview(
         madeYear: draft.year,
         endsYear: null,
         short: {},
+        waiting: {},
+        settled: {},
       };
       draft.deals.push(preview);
     }

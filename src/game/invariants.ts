@@ -2,6 +2,7 @@ import { PLAYER_IDS } from "./data";
 import { getPlayerEventCards, getResolutionCards, getYearCards } from "./content";
 import type { BallotItem, PoliticianId } from "./assembly/types";
 import type { HegemonyState, PlayerId, Pops, Settlement } from "./types";
+import { isClosedDeal } from "./deals";
 import { playerPieces } from "./settlement";
 import { devDeckInstances } from "./devCards";
 import { COMMAND_SCHEMA_VERSION, STATE_SCHEMA_VERSION } from "./version";
@@ -444,7 +445,8 @@ function validateOffers(
 }
 
 /** A deal joins two seats, stands no later than its year, and lends each good once, from
- *  its owner in the deal to the other seat. */
+ *  its owner in the deal to the other seat. A closed deal stays only while a payment
+ *  waits on it. */
 function validateDeals(
   G: HegemonyState,
   add: (code: string, path: string, message: string) => void,
@@ -460,8 +462,29 @@ function validateDeals(
     if (a === b || !PLAYER_IDS.includes(a) || !PLAYER_IDS.includes(b)) {
       add("deal.seats", `${path}.seats`, "must name two distinct seats");
     }
-    if (deal.madeYear > G.year || (deal.endsYear !== null && deal.endsYear !== G.year)) {
+    const closed = isClosedDeal(deal);
+    const waits = Object.entries(deal.waiting);
+    if (
+      deal.madeYear > G.year ||
+      (deal.endsYear !== null && (deal.endsYear > G.year || (deal.endsYear < G.year && !closed)))
+    ) {
       add("deal.calendar", path, "made after this year, or ended in another year and still open");
+    }
+    if (closed && !waits.some(([, amounts]) => Object.values(amounts ?? {}).some(Boolean))) {
+      add("deal.spent", path, "closed with nothing waiting, and still on the state");
+    }
+    for (const [seat, amounts] of waits) {
+      if (!deal.seats.includes(seat as PlayerId))
+        add("deal.waiting", `${path}.waiting.${seat}`, "not a seat of the deal");
+      for (const amount of Object.values(amounts ?? {})) {
+        if (!Number.isInteger(amount) || (amount ?? 0) < 0) {
+          add(
+            "deal.waiting",
+            `${path}.waiting.${seat}`,
+            "waiting counts are whole and not negative",
+          );
+        }
+      }
     }
     for (const [seat, line] of Object.entries(deal.yearly)) {
       if (!deal.seats.includes(seat as PlayerId))

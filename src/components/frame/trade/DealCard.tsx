@@ -1,8 +1,10 @@
 import { useId } from "react";
 import {
   dealIncomeLines,
+  dealPaymentReturns,
   dealsAwaitingAnswer,
   describeAmounts,
+  isClosedDeal,
   partnerIn,
 } from "../../../game/deals";
 import { getDealEndStatus } from "../../../game/trade";
@@ -65,9 +67,11 @@ export function DealCard({
           <span className="kicker">Standing deal</span>
           <span className="name trade-title">{dealTitle(G, deal, seat)}</span>
           <span className="caption trade-caption">
-            {deal.endsYear !== null
-              ? "Ending: it runs out with this year."
-              : `Made in Year ${toRoman(deal.madeYear)}. Settles once a year, at each seat's own income.`}
+            {isClosedDeal(deal)
+              ? "Closed. What was paid on it is taken at the next income."
+              : deal.endsYear !== null
+                ? "Ending: it runs out with this year."
+                : `Made in Year ${toRoman(deal.madeYear)}. Each seat pays at its own income and takes what the other has paid.`}
           </span>
         </span>
         <button aria-label="Close" className="name trade-x" onClick={onClose} type="button">
@@ -99,19 +103,24 @@ export function DealCard({
               ))}
             </>
           ) : null}
-          <dt className="caps">Your next income</dt>
-          <dd className="body body-sm deal-income">
-            {income.length
-              ? income.map((line) => (
-                  <span className="trade-delta" key={`${line.resource}${line.amount}`}>
-                    <Ico path={RESOURCE_RASTERS[line.resource]} size="chip" />
-                    <b className={`stat num ${line.amount > 0 ? "is-up" : "is-down"}`}>
-                      {line.amount > 0 ? `+${line.amount}` : `−${-line.amount}`}
-                    </b>
-                  </span>
-                ))
-              : "Nothing: this year is settled."}
-          </dd>
+          {/* While a short payment waits, the answer below says what moves now. */}
+          {asking ? null : (
+            <>
+              <dt className="caps">Your next income</dt>
+              <dd className="body body-sm deal-income">
+                {income.length
+                  ? income.map((line) => (
+                      <span className="trade-delta" key={`${line.resource}${line.amount}`}>
+                        <Ico path={RESOURCE_RASTERS[line.resource]} size="chip" />
+                        <b className={`stat num ${line.amount > 0 ? "is-up" : "is-down"}`}>
+                          {line.amount > 0 ? `+${line.amount}` : `−${-line.amount}`}
+                        </b>
+                      </span>
+                    ))
+                  : "Nothing: this year is settled."}
+              </dd>
+            </>
+          )}
         </dl>
 
         {asking && short ? (
@@ -122,7 +131,10 @@ export function DealCard({
                 .
               </b>{" "}
               Keep the deal and you take what {name} paid and pay your side in full. Cancel and it
-              ends now, with nothing more moving.
+              ends now:{" "}
+              {dealPaymentReturns(G, deal, partner)
+                ? `you pay nothing, and what ${name} paid this year goes back to them.`
+                : `you take what ${name} paid and pay nothing more.`}
             </p>
             {keep.length ? (
               <p className="body body-sm trade-after" aria-label="If you keep it, you would hold">

@@ -960,7 +960,9 @@ const trade: RuleChapter = {
         <Note>
           An offer may also carry stocks every year and luxury goods on loan. The trade is this
           year&rsquo;s exchange; from next year each seat settles at its own income, paying its line
-          and taking its partner&rsquo;s, so your stocks never move on another seat&rsquo;s turn.
+          and taking what its partner has paid, so your stocks never move on another seat&rsquo;s
+          turn. In a year you play before your partner, their payment reaches you at your next
+          income.
         </Note>
         <Note>
           A lent good stays its owner&rsquo;s, Port and all; the borrower needs no Port and counts
